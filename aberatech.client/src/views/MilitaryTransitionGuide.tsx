@@ -3355,9 +3355,9 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                 >
                   <Typography sx={{ marginBottom: 2 }}>
                     Submit your request for orders through your BN S1 who will then send it up to
-                    get processed by your higher headquarters' G1 equivalent. At Fort Benning, you
-                    can <strong>request your orders 90 days</strong> out from your terminal leave or
-                    ETS date.{' '}
+                    get processed by your higher headquarters' G1 equivalent. At Fort Moore, you can{' '}
+                    <strong>request your orders 90 days</strong> out from your terminal leave or ETS
+                    date.{' '}
                     <strong>
                       You can also request your orders earlier for extenuating circumstances
                     </strong>
@@ -3368,7 +3368,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     STORY ABOUT HOW I LEARNED THIS:
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    I was paying for my apartment outside of Fort Benning AND my wife's apartment in
+                    I was paying for my apartment outside of Fort Moore AND my wife's apartment in
                     Chicago while she was in residency. It made financial sense to move to Chicago
                     during my CSP so I requested my orders early. I had already briefed this as part
                     of my transition plan to my leadership.{' '}
@@ -3430,14 +3430,14 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     <iframe
                       title="Interview Tips"
                       src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/networking/Interview_Tips.pdf&embedded=true"
-                      frameBorder="0"
-                      scrolling="no"
                       style={{
                         width: '100%',
                         maxWidth: '800px', // Adjust width as needed
                         height: '741px', // Adjust height as needed
                         borderRadius: '8px',
-                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+                        border: 'none', // Replaces frameBorder="0"
+                        overflow: 'hidden' // Replaces scrolling="no"
                       }}
                     />
                   </Box>
@@ -4161,7 +4161,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       </Link>
                       .
                     </strong>{' '}
-                    You have to do it in that order according to the Fort Benning Reserve officer
+                    You have to do it in that order according to the Fort Moore Reserve officer
                     counselor.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
