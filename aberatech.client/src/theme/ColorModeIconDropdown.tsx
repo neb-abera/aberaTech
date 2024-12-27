@@ -30,9 +30,9 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
           display: 'inline-flex',
           width: '2.25rem',
           height: '2.25rem',
-          borderRadius: (theme).shape.borderRadius,
+          borderRadius: theme.shape.borderRadius,
           border: '1px solid',
-          borderColor: (theme).palette.divider,
+          borderColor: theme.palette.divider
         })}
       />
     );
@@ -40,7 +40,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
   const icon = {
     light: <LightModeIcon />,
-    dark: <DarkModeIcon />,
+    dark: <DarkModeIcon />
   }[resolvedMode];
   return (
     <React.Fragment>
@@ -67,9 +67,9 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
             variant: 'outlined',
             elevation: 0,
             sx: {
-              my: '4px',
-            },
-          },
+              my: '4px'
+            }
+          }
         }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}

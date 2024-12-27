@@ -14,30 +14,29 @@ import EdgesensorHighRoundedIcon from '@mui/icons-material/EdgesensorHighRounded
 import ViewQuiltRoundedIcon from '@mui/icons-material/ViewQuiltRounded';
 
 const items = [
-    {
-        icon: <ViewQuiltRoundedIcon />,
-        title: 'Dashboard',
-        description:
-            'This item could provide a snapshot of the most important metrics or data points related to the product.',
-        imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/dash-light.png")`,
-        imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/dash-dark.png")`,
-    },
-    {
-        icon: <EdgesensorHighRoundedIcon />,
-        title: 'Mobile integration',
-        description:
-            'This item could provide information about the mobile app version of the product.',
-        imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/mobile-light.png")`,
-        imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/mobile-dark.png")`,
-    },
-    {
-        icon: <DevicesRoundedIcon />,
-        title: 'Available on all platforms',
-        description:
-            'This item could let users know the product is available on all platforms, such as web, mobile, and desktop.',
-        imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/devices-light.png")`,
-        imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/devices-dark.png")`,
-    },
+  {
+    icon: <ViewQuiltRoundedIcon />,
+    title: 'Dashboard',
+    description:
+      'This item could provide a snapshot of the most important metrics or data points related to the product.',
+    imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/dash-light.png")`,
+    imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/dash-dark.png")`
+  },
+  {
+    icon: <EdgesensorHighRoundedIcon />,
+    title: 'Mobile integration',
+    description: 'This item could provide information about the mobile app version of the product.',
+    imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/mobile-light.png")`,
+    imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/mobile-dark.png")`
+  },
+  {
+    icon: <DevicesRoundedIcon />,
+    title: 'Available on all platforms',
+    description:
+      'This item could let users know the product is available on all platforms, such as web, mobile, and desktop.',
+    imageLight: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/devices-light.png")`,
+    imageDark: `url("${import.meta.env.VITE_TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/images/templates/templates-images/devices-dark.png")`
+  }
 ];
 
 interface ChipProps {
@@ -49,19 +48,18 @@ const Chip = styled(MuiChip)<ChipProps>(({ theme }) => ({
     {
       props: ({ selected }) => selected,
       style: {
-        background:
-          'linear-gradient(to bottom right, hsl(210, 98%, 48%), hsl(210, 98%, 35%))',
+        background: 'linear-gradient(to bottom right, hsl(210, 98%, 48%), hsl(210, 98%, 35%))',
         color: 'hsl(0, 0%, 100%)',
-        borderColor: (theme).palette.primary.light,
+        borderColor: theme.palette.primary.light,
         '& .MuiChip-label': {
-          color: 'hsl(0, 0%, 100%)',
+          color: 'hsl(0, 0%, 100%)'
         },
         ...theme.applyStyles('dark', {
-          borderColor: (theme).palette.primary.dark,
-        }),
-      },
-    },
-  ],
+          borderColor: theme.palette.primary.dark
+        })
+      }
+    }
+  ]
 }));
 
 interface MobileLayoutProps {
@@ -73,7 +71,7 @@ interface MobileLayoutProps {
 export function MobileLayout({
   selectedItemIndex,
   handleItemClick,
-  selectedFeature,
+  selectedFeature
 }: MobileLayoutProps) {
   if (!items[selectedItemIndex]) {
     return null;
@@ -84,7 +82,7 @@ export function MobileLayout({
       sx={{
         display: { xs: 'flex', sm: 'none' },
         flexDirection: 'column',
-        gap: 2,
+        gap: 2
       }}
     >
       <Box sx={{ display: 'flex', gap: 2, overflow: 'auto' }}>
@@ -107,23 +105,20 @@ export function MobileLayout({
             minHeight: 280,
             backgroundImage: 'var(--items-imageLight)',
             ...theme.applyStyles('dark', {
-              backgroundImage: 'var(--items-imageDark)',
-            }),
+              backgroundImage: 'var(--items-imageDark)'
+            })
           })}
           style={
             items[selectedItemIndex]
               ? ({
                   '--items-imageLight': items[selectedItemIndex].imageLight,
-                  '--items-imageDark': items[selectedItemIndex].imageDark,
+                  '--items-imageDark': items[selectedItemIndex].imageDark
                 } as any)
               : {}
           }
         />
         <Box sx={{ px: 2, pb: 2 }}>
-          <Typography
-            gutterBottom
-            sx={{ color: 'text.primary', fontWeight: 'medium' }}
-          >
+          <Typography gutterBottom sx={{ color: 'text.primary', fontWeight: 'medium' }}>
             {selectedFeature.title}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
@@ -147,28 +142,19 @@ export default function Features() {
   return (
     <Container id="features" sx={{ py: { xs: 8, sm: 16 } }}>
       <Box sx={{ width: { sm: '100%', md: '60%' } }}>
-        <Typography
-          component="h2"
-          variant="h4"
-          gutterBottom
-          sx={{ color: 'text.primary' }}
-        >
+        <Typography component="h2" variant="h4" gutterBottom sx={{ color: 'text.primary' }}>
           Product features
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{ color: 'text.secondary', mb: { xs: 2, sm: 4 } }}
-        >
-          Provide a brief overview of the key features of the product. For example,
-          you could list the number of features, their types or benefits, and
-          add-ons.
+        <Typography variant="body1" sx={{ color: 'text.secondary', mb: { xs: 2, sm: 4 } }}>
+          Provide a brief overview of the key features of the product. For example, you could list
+          the number of features, their types or benefits, and add-ons.
         </Typography>
       </Box>
       <Box
         sx={{
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row-reverse' },
-          gap: 2,
+          gap: 2
         }}
       >
         <div>
@@ -177,7 +163,7 @@ export default function Features() {
               display: { xs: 'none', sm: 'flex' },
               flexDirection: 'column',
               gap: 2,
-              height: '100%',
+              height: '100%'
             }}
           >
             {items.map(({ icon, title, description }, index) => (
@@ -191,12 +177,12 @@ export default function Features() {
                     height: '100%',
                     width: '100%',
                     '&:hover': {
-                      backgroundColor: (theme).palette.action.hover,
-                    },
+                      backgroundColor: theme.palette.action.hover
+                    }
                   }),
                   selectedItemIndex === index && {
-                    backgroundColor: 'action.selected',
-                  },
+                    backgroundColor: 'action.selected'
+                  }
                 ]}
               >
                 <Box
@@ -209,11 +195,11 @@ export default function Features() {
                       gap: 1,
                       textAlign: 'left',
                       textTransform: 'none',
-                      color: 'text.secondary',
+                      color: 'text.secondary'
                     },
                     selectedItemIndex === index && {
-                      color: 'text.primary',
-                    },
+                      color: 'text.primary'
+                    }
                   ]}
                 >
                   {icon}
@@ -234,7 +220,7 @@ export default function Features() {
           sx={{
             display: { xs: 'none', sm: 'flex' },
             width: { xs: '100%', md: '70%' },
-            height: 'var(--items-image-height)',
+            height: 'var(--items-image-height)'
           }}
         >
           <Card
@@ -243,7 +229,7 @@ export default function Features() {
               height: '100%',
               width: '100%',
               display: { xs: 'none', sm: 'flex' },
-              pointerEvents: 'none',
+              pointerEvents: 'none'
             }}
           >
             <Box
@@ -254,14 +240,14 @@ export default function Features() {
                 backgroundSize: 'contain',
                 backgroundImage: 'var(--items-imageLight)',
                 ...theme.applyStyles('dark', {
-                  backgroundImage: 'var(--items-imageDark)',
-                }),
+                  backgroundImage: 'var(--items-imageDark)'
+                })
               })}
               style={
                 items[selectedItemIndex]
                   ? ({
                       '--items-imageLight': items[selectedItemIndex].imageLight,
-                      '--items-imageDark': items[selectedItemIndex].imageDark,
+                      '--items-imageDark': items[selectedItemIndex].imageDark
                     } as any)
                   : {}
               }
