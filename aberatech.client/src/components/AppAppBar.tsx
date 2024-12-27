@@ -13,7 +13,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import ColorModeIconDropdown from '../theme/ColorModeIconDropdown';
-import { Link } from "react-router";
+import { Link } from 'react-router';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -26,7 +26,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   borderColor: theme.palette.divider,
   backgroundColor: alpha(theme.palette.background.default, 0.4),
   boxShadow: theme.shadows[1],
-  padding: '8px 12px',
+  padding: '8px 12px'
 }));
 
 export default function AppAppBar() {
@@ -44,19 +44,24 @@ export default function AppAppBar() {
         boxShadow: 0,
         bgcolor: 'transparent',
         backgroundImage: 'none',
-        mt: 'calc(var(--template-frame-height, 0px) + 28px)',
+        mt: 'calc(var(--template-frame-height, 0px) + 28px)'
       }}
     >
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
             <FingerprintIcon />
-                      <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Button variant="text" color="info" size="small">
-                <Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>Home</Link>
+                <Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                  Home
+                </Link>
               </Button>
               <Button variant="text" color="info" size="small">
-                <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}> Military Transition Guide </ Link>
+                <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                  {' '}
+                  Military Transition Guide{' '}
+                </Link>
               </Button>
             </Box>
           </Box>
@@ -64,7 +69,7 @@ export default function AppAppBar() {
             sx={{
               display: { xs: 'none', md: 'flex' },
               gap: 1,
-              alignItems: 'center',
+              alignItems: 'center'
             }}
           >
             <ColorModeIconDropdown />
@@ -80,24 +85,33 @@ export default function AppAppBar() {
               onClose={toggleDrawer(false)}
               PaperProps={{
                 sx: {
-                  top: 'var(--template-frame-height, 0px)',
-                },
+                  top: 'var(--template-frame-height, 0px)'
+                }
               }}
             >
               <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
                 <Box
                   sx={{
                     display: 'flex',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'flex-end'
                   }}
                 >
                   <IconButton onClick={toggleDrawer(false)}>
                     <CloseRoundedIcon />
                   </IconButton>
-                              </Box>
+                </Box>
                 {/*nebdebug todo: links broken*/}
-                <MenuItem><Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>Home</Link></MenuItem>
-                <MenuItem> <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}>Military Transition Guide</Link></MenuItem>
+                <MenuItem>
+                  <Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                    Home
+                  </Link>
+                </MenuItem>
+                <MenuItem>
+                  {' '}
+                  <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                    Military Transition Guide
+                  </Link>
+                </MenuItem>
                 <Divider sx={{ my: 3 }} />
               </Box>
             </Drawer>

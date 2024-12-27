@@ -34,7 +34,7 @@ export default function Footer() {
         alignItems: 'center',
         gap: { xs: 4, sm: 8 },
         py: { xs: 8, sm: 10 },
-        textAlign: { sm: 'center', md: 'left' },
+        textAlign: { sm: 'center', md: 'left' }
       }}
     >
       <Box
@@ -42,7 +42,7 @@ export default function Footer() {
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
           width: '100%',
-          justifyContent: 'space-between',
+          justifyContent: 'space-between'
         }}
       >
         <Box
@@ -50,7 +50,7 @@ export default function Footer() {
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
-            minWidth: { xs: '100%', sm: '60%' },
+            minWidth: { xs: '100%', sm: '60%' }
           }}
         >
           <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
@@ -74,17 +74,12 @@ export default function Footer() {
                 slotProps={{
                   htmlInput: {
                     autoComplete: 'off',
-                    'aria-label': 'Enter your email address',
-                  },
+                    'aria-label': 'Enter your email address'
+                  }
                 }}
                 sx={{ width: '250px' }}
               />
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{ flexShrink: 0 }}
-              >
+              <Button variant="contained" color="primary" size="small" sx={{ flexShrink: 0 }}>
                 Subscribe
               </Button>
             </Stack>
@@ -94,7 +89,7 @@ export default function Footer() {
           sx={{
             display: { xs: 'none', sm: 'flex' },
             flexDirection: 'column',
-            gap: 1,
+            gap: 1
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
@@ -120,7 +115,7 @@ export default function Footer() {
           sx={{
             display: { xs: 'none', sm: 'flex' },
             flexDirection: 'column',
-            gap: 1,
+            gap: 1
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
@@ -140,7 +135,7 @@ export default function Footer() {
           sx={{
             display: { xs: 'none', sm: 'flex' },
             flexDirection: 'column',
-            gap: 1,
+            gap: 1
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
@@ -164,16 +159,14 @@ export default function Footer() {
           pt: { xs: 4, sm: 8 },
           width: '100%',
           borderTop: '1px solid',
-          borderColor: 'divider',
+          borderColor: 'divider'
         }}
       >
         <div>
           <Link color="text.secondary" variant="body2" href="#">
             Privacy Policy
           </Link>
-          <Typography sx={{ display: 'inline', mx: 0.5, opacity: 0.5 }}>
-            &nbsp;•&nbsp;
-          </Typography>
+          <Typography sx={{ display: 'inline', mx: 0.5, opacity: 0.5 }}>&nbsp;•&nbsp;</Typography>
           <Link color="text.secondary" variant="body2" href="#">
             Terms of Service
           </Link>
