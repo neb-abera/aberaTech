@@ -8,17 +8,21 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import { Link } from 'react-router';
-import { SxProps, Theme } from '@mui/system';
 
-interface LongAfterETSProps {
-  disableCustomTheme?: boolean; // Existing prop
-  sx?: SxProps<Theme>; // New prop for Box styling
-  sx1?: SxProps<Theme>; // If you're using sx1 for inner Boxes
-}
-
-export default function LongAfterETS(props: LongAfterETSProps) {
+export default function LongAfterETS() {
   return (
-    <Box sx={props.sx}>
+    <Box
+      sx={(theme) => ({
+        p: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: theme.shadows[1],
+        width: '100%',
+        marginBottom: 2,
+        textAlign: 'left'
+      })}
+    >
       <Typography variant="h2" component="h2" sx={{ marginBottom: 2, textAlign: 'center' }}>
         <strong>Long after you ETS</strong>
       </Typography>
@@ -38,7 +42,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                 Your first post-transition job might not be what you wanted, or how you thought it was going to be. It's
                 okay to job-hop.
@@ -64,7 +79,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                 Attend conferences for your chosen profession.
               </Typography>
@@ -91,7 +117,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                 You have benefits that last long after you ETS.
               </Typography>
@@ -110,7 +147,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Box
                 component="a"
                 href="https://nvf.org/veteran-service-officers/"
@@ -164,7 +212,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Box
                 component="a"
                 href="https://www.va.gov/disability/get-help-filing-claim/"
@@ -228,7 +287,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Typography>
                 If you lose your DD214, you can request a copy from{' '}
                 <Link to="https://www.va.gov/records/get-military-service-records/" target="_blank" rel="noopener">
@@ -247,7 +317,18 @@ export default function LongAfterETS(props: LongAfterETSProps) {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box sx={props.sx1}>
+            <Box
+              sx={(theme) => ({
+                p: 2,
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: theme.shadows[1],
+                width: '100%',
+                marginBottom: 2,
+                textAlign: 'left'
+              })}
+            >
               <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>Give back to veterans.</Typography>
               <Typography>You got a lot of help along the way. Do what you can to give back.</Typography>
             </Box>

@@ -8,17 +8,21 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import { Link } from 'react-router';
-import { SxProps, Theme } from '@mui/system';
 
-interface ZeroToThirtyDays {
-  disableCustomTheme?: boolean; // Existing prop
-  sx?: SxProps<Theme>; // New prop for Box styling
-  sx1?: SxProps<Theme>; // If you're using sx1 for inner Boxes
-}
-
-export default function ZeroToThirtyDays(props: ZeroToThirtyDays) {
+export default function ZeroToThirtyDays() {
   return (
-    <Box sx={props.sx}>
+    <Box
+      sx={(theme) => ({
+        p: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: theme.shadows[1],
+        width: '100%',
+        marginBottom: 2,
+        textAlign: 'left'
+      })}
+    >
       <Typography variant="h2" component="h2" sx={{ marginBottom: 2, textAlign: 'center' }}>
         <strong>0-30 days post ETS</strong>
       </Typography>
