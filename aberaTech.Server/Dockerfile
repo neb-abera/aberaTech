@@ -9,7 +9,7 @@ EXPOSE 8081
 
 
 # Base image for the client
-FROM node:22.10.2 AS clientbase
+FROM node:22 AS clientbase
 WORKDIR /client
 COPY ["aberatech.client/package.json", "aberatech.client/package-lock.json", "./"]
 RUN npm install
