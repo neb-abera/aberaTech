@@ -22,6 +22,8 @@ import G1Schedule from '../assets/g1_contact_info.png';
 import { Theme } from '@mui/system';
 import { Shadows } from '@mui/material/styles';
 import ZeroToThirtyDays from './ZeroToThirtyDays.tsx';
+import TerminalLeave from './TerminalLeave.tsx';
+import ZeroToTenDays from './ZeroToTenDays.tsx';
 
 export default function MilitaryTransitionGuide(props: { disableCustomTheme?: boolean }) {
   return (
@@ -60,21 +62,18 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           })}
         >
           <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-            I made this guide to share the lessons I learned during my transition. I embedded links,
-            documents, and videos. Please click on those to ensure that you understand the topic in
-            its breadth and depth. This is a work in progress so feel free to send me questions,
-            comments, and recommendations.
+            I made this guide to share the lessons I learned during my transition. I embedded links, documents, and
+            videos. Please click on those to ensure that you understand the topic in its breadth and depth. This is a
+            work in progress so feel free to send me questions, comments, and recommendations.
           </Typography>
 
           <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-            I included some personal stories in this guide, that you can skip over if you're not
-            interested, to illustrate the importance of some of these lessons. Please don't think
-            that I did it to attack individual people in this guide. Most people do the best they
-            can with the information and tools they have. But, you can have good people stuck in a
-            bad bureaucratic system that causes unintended consequences for transitioning
-            servicemembers. You will need to get the bureaucracy to work for you, not against you.
-            Do not get discouraged by it. You need to advocate for yourself, your transition is
-            worth fighting for.
+            I included some personal stories in this guide, that you can skip over if you're not interested, to
+            illustrate the importance of some of these lessons. Please don't think that I did it to attack individual
+            people in this guide. Most people do the best they can with the information and tools they have. But, you
+            can have good people stuck in a bad bureaucratic system that causes unintended consequences for
+            transitioning servicemembers. You will need to get the bureaucracy to work for you, not against you. Do not
+            get discouraged by it. You need to advocate for yourself, your transition is worth fighting for.
           </Typography>
         </Box>
         <Box
@@ -118,64 +117,51 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    <strong>
-                      The earlier you can complete the Transition Assistance Program (TAP) the
-                      better
-                    </strong>
-                    . I recommend completing TAP as early as possible. That's because not having a
-                    completed DD Form 2648 will prevent you from being able to schedule a Career
-                    Skills Program (CSP) internship.
+                    <strong>The earlier you can complete the Transition Assistance Program (TAP) the better</strong>. I
+                    recommend completing TAP as early as possible. That's because not having a completed DD Form 2648
+                    will prevent you from being able to schedule a Career Skills Program (CSP) internship.
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
                     <strong>
-                      Retiring soldiers can begin TAP 24 months out from their ETS. Everyone else
-                      can begin TAP at 18 months from their prospective ETS date
+                      Retiring soldiers can begin TAP 24 months out from their ETS. Everyone else can begin TAP at 18
+                      months from their prospective ETS date
                     </strong>
-                    . You start TAP by going to your installation's TAP center, registering for the
-                    program, and getting a counselor assigned.
+                    . You start TAP by going to your installation's TAP center, registering for the program, and getting
+                    a counselor assigned.
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
                     You can find the information for Fort Moore at{' '}
-                    <Link
-                      to="https://home.army.mil/moore/About/garrison/DHR/TAP"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://home.army.mil/moore/About/garrison/DHR/TAP" target="_blank" rel="noopener">
                       Fort Moore | Army Transition Assistance Program (TAP).
                     </Link>
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
                     <strong>
-                      Ensure you have access to your TSP account, you are getting the Army matching
-                      contributions, and move your retirement to a fund you like
+                      Ensure you have access to your TSP account, you are getting the Army matching contributions, and
+                      move your retirement to a fund you like
                     </strong>
-                    . The general rule of thumb is if you're young, or don't need access to your
-                    retirement, invest it in "riskier" funds like the S fund. If you're older, or
-                    more risk-averse, choose "safer" funds.
+                    . The general rule of thumb is if you're young, or don't need access to your retirement, invest it
+                    in "riskier" funds like the S fund. If you're older, or more risk-averse, choose "safer" funds.
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    <strong>STORY ABOUT HOW I LEARNED THIS:</strong> I began TAP at around the
-                    11-month mark, told my TAP counselor I wanted to do a CSP in Chicago, and then
-                    my TAP counselor spread out my appointments all the way out until the 6-month
-                    mark. My TAP counselor didn't seem very familiar with CSP but said we would
-                    discuss at a future appointment. It seemed reasonable at the time since I didn't
-                    know any better. At around the 9-month mark, I reached out to my installation's
-                    CSP coordinator but she said she wouldn't give me the CSP documents until I was
-                    TAP complete. I then had to go back to my TAP counselor and tell her I needed
-                    her to re-schedule all of my appointments so that I could be done as quickly as
-                    possible. When I completed TAP at about the 8-month mark, I found out that I had
-                    to get O6 approval for my CSP in Chicago since it was outside of a 50-mile
-                    radius from Fort Moore. Fort Moore also didn't have any CSP options available
-                    for my timeline (remote or in-person). I had to personally reach out to
-                    countless companies to create a CSP, and then get JAG and Installation Command
-                    approval. I even flew out to a job conference in DC to approach a Northrop
-                    Grumman recruiter that I'd lost contact with. I got the approval from Northrop
-                    Grumman too late for JAG approval and I lost out on my dream CSP. That didn't
-                    end up mattering though because my packet had actually not been sent up to the
-                    approval authority by the bureaucracy. But that's another story. I had great
-                    Company, Battalion, and Brigade commanders, along with the support of my unit,
-                    so everything eventually worked out. You might not, so you will need to advocate
-                    for yourself and understand requirements and timelines in-depth.
+                    <strong>STORY ABOUT HOW I LEARNED THIS:</strong> I began TAP at around the 11-month mark, told my
+                    TAP counselor I wanted to do a CSP in Chicago, and then my TAP counselor spread out my appointments
+                    all the way out until the 6-month mark. My TAP counselor didn't seem very familiar with CSP but said
+                    we would discuss at a future appointment. It seemed reasonable at the time since I didn't know any
+                    better. At around the 9-month mark, I reached out to my installation's CSP coordinator but she said
+                    she wouldn't give me the CSP documents until I was TAP complete. I then had to go back to my TAP
+                    counselor and tell her I needed her to re-schedule all of my appointments so that I could be done as
+                    quickly as possible. When I completed TAP at about the 8-month mark, I found out that I had to get
+                    O6 approval for my CSP in Chicago since it was outside of a 50-mile radius from Fort Moore. Fort
+                    Moore also didn't have any CSP options available for my timeline (remote or in-person). I had to
+                    personally reach out to countless companies to create a CSP, and then get JAG and Installation
+                    Command approval. I even flew out to a job conference in DC to approach a Northrop Grumman recruiter
+                    that I'd lost contact with. I got the approval from Northrop Grumman too late for JAG approval and I
+                    lost out on my dream CSP. That didn't end up mattering though because my packet had actually not
+                    been sent up to the approval authority by the bureaucracy. But that's another story. I had great
+                    Company, Battalion, and Brigade commanders, along with the support of my unit, so everything
+                    eventually worked out. You might not, so you will need to advocate for yourself and understand
+                    requirements and timelines in-depth.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -202,16 +188,14 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                 >
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
                     <strong>
-                      The most important skill to have is the ability to search for the answer to
-                      your questions
+                      The most important skill to have is the ability to search for the answer to your questions
                     </strong>
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    Learn how to use google search to find what you need. I like to google to search
-                    Reddit and quora for the answers I'm looking for. Just add "Reddit" or "quora"
-                    to your search terms, and try to look for the most recent posts with the most
-                    discussion. The most upvoted answers are usually the best. The dissenting
-                    opinions are also important to understand.
+                    Learn how to use google search to find what you need. I like to google to search Reddit and quora
+                    for the answers I'm looking for. Just add "Reddit" or "quora" to your search terms, and try to look
+                    for the most recent posts with the most discussion. The most upvoted answers are usually the best.
+                    The dissenting opinions are also important to understand.
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
                     "best ______ Reddit"
@@ -245,9 +229,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     <strong>Reach out to people after you have done your homework</strong>
                   </Typography>
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    Use content creators on YouTube, TikTok, and Reddit to help your transition.
-                    Just use what you're interested in as a search term and they will feed you the
-                    people that are related to that topic.
+                    Use content creators on YouTube, TikTok, and Reddit to help your transition. Just use what you're
+                    interested in as a search term and they will feed you the people that are related to that topic.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -273,17 +256,13 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    Use Credential Assistance (CA) to pay for relevant education. CA does not incur
-                    a service obligation for any soldier, including officers.{' '}
-                    <Link
-                      to="https://home.army.mil/moore/About/garrison/DHR/TAP"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    Use Credential Assistance (CA) to pay for relevant education. CA does not incur a service obligation
+                    for any soldier, including officers.{' '}
+                    <Link to="https://home.army.mil/moore/About/garrison/DHR/TAP" target="_blank" rel="noopener">
                       Updates to Army Credentialing Assistance Policy
                     </Link>{' '}
-                    Paragraph 10a. "The service obligation for the CA program has been removed per
-                    reference 1a, dated 13 October 2021."
+                    Paragraph 10a. "The service obligation for the CA program has been removed per reference 1a, dated
+                    13 October 2021."
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -314,8 +293,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     sx={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginBottom: 2 }}
                   />
                   <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-                    This is one of the intro videos they show you. You can go to this website to see
-                    an example of some of the classes you will take{' '}
+                    This is one of the intro videos they show you. You can go to this website to see an example of some
+                    of the classes you will take{' '}
                     <Link to="https://www.armytap.army.mil/" target="_blank" rel="noopener">
                       TAP Online
                     </Link>
@@ -345,37 +324,33 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                 >
                   <Typography sx={{ marginBottom: 2 }}>
                     <span style={{ fontWeight: 'bold' }}>
-                      You need to ensure that all of your illnesses and injuries are appropriately
-                      recorded in your medical record.
+                      You need to ensure that all of your illnesses and injuries are appropriately recorded in your
+                      medical record.
                     </span>{' '}
-                    You also need to follow up with anything that's happened earlier in your career
-                    (even if you let it go untreated). If you don't get follow-up treatments for
-                    something, later the VA will assume it didn't bother you so therefore it wasn't
-                    a problem.
+                    You also need to follow up with anything that's happened earlier in your career (even if you let it
+                    go untreated). If you don't get follow-up treatments for something, later the VA will assume it
+                    didn't bother you so therefore it wasn't a problem.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
                     <span style={{ fontWeight: 'bold' }}>
-                      The best way to complete the VA disability process is through the Benefits
-                      Delivery at Discharge (BDD) program when you're between 180 and 90 days from
-                      your ETS.
+                      The best way to complete the VA disability process is through the Benefits Delivery at Discharge
+                      (BDD) program when you're between 180 and 90 days from your ETS.
                     </span>{' '}
-                    The benefit of doing a BDD is that it will be substantially easier to get your
-                    benefits paid upon ETS. You will upload your medical record (which you will have
-                    to request at about the 7-8 month mark), complete a physical, register a VA
-                    account, and initiate an online BDD claim.
+                    The benefit of doing a BDD is that it will be substantially easier to get your benefits paid upon
+                    ETS. You will upload your medical record (which you will have to request at about the 7-8 month
+                    mark), complete a physical, register a VA account, and initiate an online BDD claim.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
                     <span style={{ fontWeight: 'bold' }}>
-                      DO NOT PAY ANYBODY FOR ANY HELP WITH VA DISABILITY SERVICES. THERE ARE A LOT
-                      OF SCAM ARTISTS WHO WILL TAKE YOUR MONEY
+                      DO NOT PAY ANYBODY FOR ANY HELP WITH VA DISABILITY SERVICES. THERE ARE A LOT OF SCAM ARTISTS WHO
+                      WILL TAKE YOUR MONEY
                     </span>{' '}
-                    There are so many free resources that can help you. TAP has a good VA disability
-                    class, YouTube has some popular disability content creators, and there are
-                    plenty of resources online. The VA has dedicated people to help you, veteran
-                    organizations like DAV provide free help, and I'm sure you know folks who have
-                    gone through the process that can help. Do not do it alone, but also don't pay
+                    There are so many free resources that can help you. TAP has a good VA disability class, YouTube has
+                    some popular disability content creators, and there are plenty of resources online. The VA has
+                    dedicated people to help you, veteran organizations like DAV provide free help, and I'm sure you
+                    know folks who have gone through the process that can help. Do not do it alone, but also don't pay
                     anyone to help.
                   </Typography>
                 </Box>
@@ -410,29 +385,27 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       What date do you want to leave the Army? (ETS date)
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      What do you want to do after you leave the Army? Do you want to start a
-                      different career, pursue education, start your own company, retire etc?
+                      What do you want to do after you leave the Army? Do you want to start a different career, pursue
+                      education, start your own company, retire etc?
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      What are your priorities for your transition? How important is moving to a
-                      specific location to you vs getting your dream job vs maximizing total
-                      compensation etc?
+                      What are your priorities for your transition? How important is moving to a specific location to
+                      you vs getting your dream job vs maximizing total compensation etc?
                     </Typography>
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Here are some books to help you think about what the next stage of your life can
-                    look like
+                    Here are some books to help you think about what the next stage of your life can look like
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Immerse yourself in transition books, videos, and surround yourself with people
-                    willing to answer your questions
+                    Immerse yourself in transition books, videos, and surround yourself with people willing to answer
+                    your questions
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Here are the most highly recommended books from West Point's Association of
-                    Graduates. I recommend reading them all.
+                    Here are the most highly recommended books from West Point's Association of Graduates. I recommend
+                    reading them all.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 1 }}>
@@ -498,28 +471,24 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    Below are some books you can read to help you{' '}
-                    <strong>learn how businesses operate</strong>. This is important because you
-                    don't want to stand out during your job search. If you want to start your own
+                    Below are some books you can read to help you <strong>learn how businesses operate</strong>. This is
+                    important because you don't want to stand out during your job search. If you want to start your own
                     business this is even more important.
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    You want to give your future employer the impression that you're an experienced
-                    professional that is pivoting to another career.
+                    You want to give your future employer the impression that you're an experienced professional that is
+                    pivoting to another career.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    You don't want to give the impression that you're "starting over" as an
-                    entry-level employee. They'll assume you require extensive training, they're
-                    unsure if you'll be an asset to their organization, and they don't know if you
-                    have professional attributes (being on time, communicating expectations,
-                    teamwork etc.)
+                    You don't want to give the impression that you're "starting over" as an entry-level employee.
+                    They'll assume you require extensive training, they're unsure if you'll be an asset to their
+                    organization, and they don't know if you have professional attributes (being on time, communicating
+                    expectations, teamwork etc.)
                   </Typography>
 
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Read an MBA summary book
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>Read an MBA summary book</Typography>
 
                   <Typography sx={{ marginBottom: 1 }}>
                     <Link
@@ -574,16 +543,12 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Identify companies you want to do an internship at. Here are some popular
-                    websites to find internships:
+                    Identify companies you want to do an internship at. Here are some popular websites to find
+                    internships:
                   </Typography>
 
                   <Typography sx={{ marginBottom: 1 }}>
-                    <Link
-                      to="https://skillbridge.osd.mil/locations.htm"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://skillbridge.osd.mil/locations.htm" target="_blank" rel="noopener">
                       DOD Skillbridge
                     </Link>
                   </Typography>
@@ -605,42 +570,25 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   </Typography>
 
                   <Typography sx={{ marginBottom: 1 }}>
-                    <Link
-                      to="https://amazon.jobs/en/landing_pages/mil-transition"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://amazon.jobs/en/landing_pages/mil-transition" target="_blank" rel="noopener">
                       Amazon Skillbridge Fellowship
                     </Link>
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    You can find more by googling the company's name plus "SkillBridge" or "military
-                    transition."
+                    You can find more by googling the company's name plus "SkillBridge" or "military transition."
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Some internships are competitive or have specific cohorts. Find ones that meet
-                    your timeline. You can also create your own CSP.{' '}
-                    <strong>
-                      There are additional requirements to create your own CSP but it'll be worth
-                      it.
-                    </strong>{' '}
-                    You can see the required documents if you scroll to the CSP portion below or go
-                    to the{' '}
-                    <Link
-                      to="https://github.com/nebyou-abera/transition/tree/main/csp"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    Some internships are competitive or have specific cohorts. Find ones that meet your timeline. You
+                    can also create your own CSP.{' '}
+                    <strong>There are additional requirements to create your own CSP but it'll be worth it.</strong> You
+                    can see the required documents if you scroll to the CSP portion below or go to the{' '}
+                    <Link to="https://github.com/nebyou-abera/transition/tree/main/csp" target="_blank" rel="noopener">
                       CSP folder
                     </Link>{' '}
                     of my{' '}
-                    <Link
-                      to="https://github.com/nebyou-abera/transition"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://github.com/nebyou-abera/transition" target="_blank" rel="noopener">
                       GitHub
                     </Link>
                     .
@@ -668,25 +616,20 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     textAlign: 'left'
                   })}
                 >
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Recommendations during TAP
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>Recommendations during TAP</Typography>
 
                   <Typography component="ol" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      <strong>Take it seriously</strong>, take notes, and passionately prioritize
-                      your transition.
+                      <strong>Take it seriously</strong>, take notes, and passionately prioritize your transition.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      <strong>Do more</strong>! Get your resume reviewed iteratively, take
-                      nonchargeable leave to job conferences,{' '}
-                      <strong>develop your LinkedIn network, read developmental books</strong>, etc.
+                      <strong>Do more</strong>! Get your resume reviewed iteratively, take nonchargeable leave to job
+                      conferences, <strong>develop your LinkedIn network, read developmental books</strong>, etc.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      <strong>Tell your TAP counselor what date you want to be TAP complete</strong>{' '}
-                      so that they can plan accordingly. They have the flexibility, if there's
-                      availability, to move your appointments around so that you can be done as soon
-                      as possible.
+                      <strong>Tell your TAP counselor what date you want to be TAP complete</strong> so that they can
+                      plan accordingly. They have the flexibility, if there's availability, to move your appointments
+                      around so that you can be done as soon as possible.
                     </Typography>
                   </Typography>
                 </Box>
@@ -715,21 +658,18 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                     Develop your network as early and as often as possible.
                   </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Here is a quote from a mentor on Veterati:
-                  </Typography>
+                  <Typography sx={{ marginBottom: 2 }}>Here is a quote from a mentor on Veterati:</Typography>
 
                   <Typography sx={{ fontStyle: 'italic', marginBottom: 2 }}>
-                    "Most jobs aren't publicly advertised. Most jobs, advertised or not, are filled
-                    by networking of some kind; applicants known to current employees, applicants
-                    known to someone the employee knows, (and trusts), or recruiters. Few jobs are
-                    filled by blindly interviewing random resumes that survived the artificial
-                    intelligence (AI)-powered algorithm “keyword” screening."
+                    "Most jobs aren't publicly advertised. Most jobs, advertised or not, are filled by networking of
+                    some kind; applicants known to current employees, applicants known to someone the employee knows,
+                    (and trusts), or recruiters. Few jobs are filled by blindly interviewing random resumes that
+                    survived the artificial intelligence (AI)-powered algorithm “keyword” screening."
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Understand how to have a productive 20-minute networking meeting or you will
-                    waste each other's time.
+                    Understand how to have a productive 20-minute networking meeting or you will waste each other's
+                    time.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
@@ -741,8 +681,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     >
                       "The 20-Minute Networking Meeting"
                     </Link>{' '}
-                    by Perez and Ballinger. There is also an accompanying video in Handshake in
-                    USMA's Career Center Resources.
+                    by Perez and Ballinger. There is also an accompanying video in Handshake in USMA's Career Center
+                    Resources.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
@@ -778,8 +718,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     sx={{ width: '100%', height: '500px' }}
                   />
                   <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
-                    This document, from a Veterati mentor, provides essential tips and advice for
-                    veterans transitioning to civilian careers.
+                    This document, from a Veterati mentor, provides essential tips and advice for veterans transitioning
+                    to civilian careers.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -848,28 +788,27 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    I recommend looking at profiles of people that have jobs you're interested in or
-                    came from the same background as you.
+                    I recommend looking at profiles of people that have jobs you're interested in or came from the same
+                    background as you.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You can even reach out to them for a networking meeting to answer any questions
-                    you have. It's best to develop relationships in advance. You don't want to cold
-                    call someone and ask for a referral.
+                    You can even reach out to them for a networking meeting to answer any questions you have. It's best
+                    to develop relationships in advance. You don't want to cold call someone and ask for a referral.
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Add/follow people that have jobs you're interested in, their managers, the
-                    company page, and the company's HR managers and recruiters.
+                    Add/follow people that have jobs you're interested in, their managers, the company page, and the
+                    company's HR managers and recruiters.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    In some companies, managers do the hiring. In others, HR does the hiring. In
-                    some, both have a say in the process.
+                    In some companies, managers do the hiring. In others, HR does the hiring. In some, both have a say
+                    in the process.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Recruiters often post job opportunities, networking events, highlight trends,
-                    give out excellent advice, etc.
+                    Recruiters often post job opportunities, networking events, highlight trends, give out excellent
+                    advice, etc.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -995,14 +934,13 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Join organizations that will get you in contact with people that want to help
-                    you.
+                    Join organizations that will get you in contact with people that want to help you.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    They can be veteran-focused charities, educational institutions, minority
-                    organizations, professional societies, etc. Use your network to find people that
-                    know the answers to your questions. You aren't the first person to do anything;
-                    find someone who has done what you want to do and get their help!
+                    They can be veteran-focused charities, educational institutions, minority organizations,
+                    professional societies, etc. Use your network to find people that know the answers to your
+                    questions. You aren't the first person to do anything; find someone who has done what you want to do
+                    and get their help!
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
@@ -1056,21 +994,18 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Once you are TAP complete, you will get a signed DD Form 2648 and you can use
-                    that to contact the Career Skills Program Installation Administrator (IA) and
-                    ask for the requirements to do a CSP.
+                    Once you are TAP complete, you will get a signed DD Form 2648 and you can use that to contact the
+                    Career Skills Program Installation Administrator (IA) and ask for the requirements to do a CSP.
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Successfully completing a CSP at a company often results in a job offer from the
-                    company.
+                    Successfully completing a CSP at a company often results in a job offer from the company.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    At a minimum, they have to give you an interview. Most of the time, they only
-                    accept people they are interested in hiring. The benefit for them is they got a
-                    cost-free employee that they got to try out for months. You will be a known
-                    quantity, they'll have built a relationship with you, you'll have already had
-                    months of relevant experience doing that specific job, etc.
+                    At a minimum, they have to give you an interview. Most of the time, they only accept people they are
+                    interested in hiring. The benefit for them is they got a cost-free employee that they got to try out
+                    for months. You will be a known quantity, they'll have built a relationship with you, you'll have
+                    already had months of relevant experience doing that specific job, etc.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
@@ -1083,29 +1018,24 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
 
                   <Typography component="ol" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
-                      The{' '}
-                      <strong>
-                        approval authority for CSPs within a 50-mile radius of your installation
-                      </strong>{' '}
-                      is the first field grade in your chain with command authority, which{' '}
+                      The <strong>approval authority for CSPs within a 50-mile radius of your installation</strong> is
+                      the first field grade in your chain with command authority, which{' '}
                       <strong>is usually your Battalion Commander</strong>. The{' '}
                       <strong>
-                        approval authority for CSPs outside of a 50-mile radius and lasting 60 or
-                        fewer days is an O6 commander (can be delegated to O5). The approval
-                        authority for CSPs outside of a 50-mile radius, and between 61 and 180 days,
-                        is the first commanding general in your chain of command (can be delegated
-                        down to an O6 commander).
+                        approval authority for CSPs outside of a 50-mile radius and lasting 60 or fewer days is an O6
+                        commander (can be delegated to O5). The approval authority for CSPs outside of a 50-mile radius,
+                        and between 61 and 180 days, is the first commanding general in your chain of command (can be
+                        delegated down to an O6 commander).
                       </strong>{' '}
-                      I heard a rumor that the MCOE CG is now the approval authority for Fort Moore
-                      CSPs outside of 50 miles and longer than 60 days. I used 1st SFAB's O6
-                      commander for my CSP approval.
+                      I heard a rumor that the MCOE CG is now the approval authority for Fort Moore CSPs outside of 50
+                      miles and longer than 60 days. I used 1st SFAB's O6 commander for my CSP approval.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
-                      You aren't limited to the CSPs offered by your installation. You can do any
-                      internship in the DOD SkillBridge network.{' '}
+                      You aren't limited to the CSPs offered by your installation. You can do any internship in the DOD
+                      SkillBridge network.{' '}
                       <strong>
-                        You can also make your own internships if none of the offered options fit
-                        your needs and desires.
+                        You can also make your own internships if none of the offered options fit your needs and
+                        desires.
                       </strong>{' '}
                       Check below, or see the{' '}
                       <Link
@@ -1116,36 +1046,30 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                         CSP folder
                       </Link>{' '}
                       on my{' '}
-                      <Link
-                        to="https://github.com/nebyou-abera/transition"
-                        target="_blank"
-                        rel="noopener"
-                      >
+                      <Link to="https://github.com/nebyou-abera/transition" target="_blank" rel="noopener">
                         GitHub
                       </Link>
-                      , to see what documents you need for that. In general, you need to find a
-                      company that will work with you, create a training plan, and get JAG and
-                      INSCOM approval. Make sure you give JAG about 30 days to review and approve
-                      your CSP.
+                      , to see what documents you need for that. In general, you need to find a company that will work
+                      with you, create a training plan, and get JAG and INSCOM approval. Make sure you give JAG about 30
+                      days to review and approve your CSP.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
                       <strong>
-                        Your CSP, and any terminal leave you decide to take, need to start and end
-                        within the 180-day window between your ETS.
+                        Your CSP, and any terminal leave you decide to take, need to start and end within the 180-day
+                        window between your ETS.
                       </strong>{' '}
-                      For example, you can do 180 days of a CSP but you'll have 0 days of terminal
-                      leave (so you'll have to take your "ordinary" leave before the CSP). You can
-                      do 120 days of CSP and 60 days of terminal leave, which will equal 180 days
-                      together.{' '}
+                      For example, you can do 180 days of a CSP but you'll have 0 days of terminal leave (so you'll have
+                      to take your "ordinary" leave before the CSP). You can do 120 days of CSP and 60 days of terminal
+                      leave, which will equal 180 days together.{' '}
                       <strong>
-                        You can take leave before the 180-day window but you can't mark the DA 31 as
-                        transition leave. It needs to be marked as annual (ordinary) leave.
+                        You can take leave before the 180-day window but you can't mark the DA 31 as transition leave.
+                        It needs to be marked as annual (ordinary) leave.
                       </strong>{' '}
-                      If you decide to take leave before the 180 days before CSP, do not call it
-                      terminal leave to your S1 or leadership, that will only cause confusion.{' '}
+                      If you decide to take leave before the 180 days before CSP, do not call it terminal leave to your
+                      S1 or leadership, that will only cause confusion.{' '}
                       <strong>
-                        I recommend that you leave 10 business days before your terminal leave date
-                        so that you can come back and clear the installation.
+                        I recommend that you leave 10 business days before your terminal leave date so that you can come
+                        back and clear the installation.
                       </strong>
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
@@ -1157,16 +1081,14 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       >
                         sell extra leave days back to the Army
                       </Link>{' '}
-                      but they will be taxed at the marginal tax rate of ~22-25% and you won't get
-                      BAH for it.
+                      but they will be taxed at the marginal tax rate of ~22-25% and you won't get BAH for it.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
-                      If you want to maximize the amount of money you get, use your earned leave
-                      before and/or after your CSP.
+                      If you want to maximize the amount of money you get, use your earned leave before and/or after
+                      your CSP.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 2 }}>
-                      Reach out and apply to companies early; you need their signature for your CSP
-                      packet.
+                      Reach out and apply to companies early; you need their signature for your CSP packet.
                     </Typography>
                   </Typography>
                 </Box>
@@ -1201,17 +1123,16 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     >
                       get access to LinkedIn premium for 12 months
                     </Link>{' '}
-                    as a veteran. I'd recommend activating it when you feel comfortable navigating
-                    LinkedIn and you are ready to grow your network.
+                    as a veteran. I'd recommend activating it when you feel comfortable navigating LinkedIn and you are
+                    ready to grow your network.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    The main benefit I saw from premium was being able to send messages to people
-                    outside your network. I didn't really care about seeing who was looking at my
-                    profile.{' '}
+                    The main benefit I saw from premium was being able to send messages to people outside your network.
+                    I didn't really care about seeing who was looking at my profile.{' '}
                     <strong>
-                      I don't see the value of LinkedIn Premium once you've done the heavy lifting
-                      of building your network
+                      I don't see the value of LinkedIn Premium once you've done the heavy lifting of building your
+                      network
                     </strong>
                     . So, I'm not going to pay for it once it expires.
                   </Typography>
@@ -1245,42 +1166,40 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   <Typography sx={{ marginBottom: 2 }}>Hello,</Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Thank you for your interest in the CSP Individual Internship. Please review the
-                    eligibility criteria below and the instructions for submitting the documents.
+                    Thank you for your interest in the CSP Individual Internship. Please review the eligibility criteria
+                    below and the instructions for submitting the documents.
                   </Typography>
 
                   <Typography component="ol" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Requires Soldier to be 6 months/180 days of ETS or retirement date [not
-                      inclusive of the terminal leave time].
+                      Requires Soldier to be 6 months/180 days of ETS or retirement date [not inclusive of the terminal
+                      leave time].
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      CSP participation may only involve ONE company or training program within the
-                      180 days not to exceed 120 days.
+                      CSP participation may only involve ONE company or training program within the 180 days not to
+                      exceed 120 days.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Establish POC with the company, internship start/end dates, and a weekly
-                      internship curriculum.
+                      Establish POC with the company, internship start/end dates, and a weekly internship curriculum.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Requires Command approval and signatures on submission of all documents
-                      required.
+                      Requires Command approval and signatures on submission of all documents required.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
                       Completion of TAP [include the Form 2648 with packet received at completion].
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Requires submission of the Internship packet 1 month prior to your planned
-                      start date [for Legal and Regional Coordinator approval process, at this time
-                      Legal is taking 15-30 days to process packets].
+                      Requires submission of the Internship packet 1 month prior to your planned start date [for Legal
+                      and Regional Coordinator approval process, at this time Legal is taking 15-30 days to process
+                      packets].
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      An approved Administrative Absence signed by the O-6 must be acquired to
-                      participate outside 50 miles of Fort Moore.
+                      An approved Administrative Absence signed by the O-6 must be acquired to participate outside 50
+                      miles of Fort Moore.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Be mindful that CSP must begin after or be complete before transition/terminal
-                      leave if you plan to take it during the 6-month window of CSP participation.
+                      Be mindful that CSP must begin after or be complete before transition/terminal leave if you plan
+                      to take it during the 6-month window of CSP participation.
                     </Typography>
                   </Typography>
 
@@ -1290,45 +1209,42 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
 
                   <Typography component="ol" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      CSP Individual Internship Agreement: Complete and submit in the same fillable
-                      format originally provided with digital signatures. (Do not print or scan this
-                      document. Return in the editable digital PDF format with digital signatures.)
+                      CSP Individual Internship Agreement: Complete and submit in the same fillable format originally
+                      provided with digital signatures. (Do not print or scan this document. Return in the editable
+                      digital PDF format with digital signatures.)
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      CSP Participation Memo: Complete and submit in the fillable format provided
-                      with digital signatures. Must have O-6 approval for Administrative Absence.
+                      CSP Participation Memo: Complete and submit in the fillable format provided with digital
+                      signatures. Must have O-6 approval for Administrative Absence.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      DA31: Complete with O-6 signature only if the internship is 50 miles outside
-                      of Fort Moore.
+                      DA31: Complete with O-6 signature only if the internship is 50 miles outside of Fort Moore.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      CSP Commander's Checklist: Complete with both your and Commander's initials.
-                      Please select "No" if any of the questions do not apply.
+                      CSP Commander's Checklist: Complete with both your and Commander's initials. Please select "No" if
+                      any of the questions do not apply.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
                       Please include the TAP Form 2648 provided by your counselor.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Please attach a separate training curriculum including each week you will be
-                      interning (See example attached).
+                      Please attach a separate training curriculum including each week you will be interning (See
+                      example attached).
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Please ensure the dates on the start and end dates DA31 and Participation Memo
-                      are the same.
+                      Please ensure the dates on the start and end dates DA31 and Participation Memo are the same.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      Please include in the Internship Agreement, outcome section, there will be an
-                      interview opportunity. Please label and attach each document individually. Do
-                      not submit the packet as one scanned PDF document.
+                      Please include in the Internship Agreement, outcome section, there will be an interview
+                      opportunity. Please label and attach each document individually. Do not submit the packet as one
+                      scanned PDF document.
                     </Typography>
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    Please ensure you mention in #4 of the agreement the internship will lead to an
-                    interview with the company. Follow all instructions provided to prevent delays
-                    with the final approval process. If you have any questions or concerns, please
-                    do not hesitate to contact me.
+                    Please ensure you mention in #4 of the agreement the internship will lead to an interview with the
+                    company. Follow all instructions provided to prevent delays with the final approval process. If you
+                    have any questions or concerns, please do not hesitate to contact me.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>Warm Regards,</Typography>
@@ -1337,9 +1253,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Career Skills Program Installation Administrator (IA)
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>Soldier for Life TAP Bldg 9230</Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    8150 Marne Rd. Fort Moore, GA 31905
-                  </Typography>
+                  <Typography sx={{ marginBottom: 2 }}>8150 Marne Rd. Fort Moore, GA 31905</Typography>
                   <Typography sx={{ marginBottom: 2 }}>P: XXXX</Typography>
                   <Typography sx={{ marginBottom: 2 }}>E: XXXXX</Typography>
                 </Box>
@@ -1460,44 +1374,38 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     sx={{ width: '100%', height: '500px', marginBottom: 2 }}
                   />
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    This document is only required if you're going through a "med board" and want to
-                    do a CSP.
+                    This document is only required if you're going through a "med board" and want to do a CSP.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    This is important because administratively there will be long wait times without
-                    any notice if you're being kicked out or not. You can use this time to do a CSP
-                    instead of languishing in uncertainty. When they do decide to med-board you or
-                    not, all of a sudden they might tell you you've been med-boarded, they'll send
-                    you a VA and DOD compensation offer to negotiate, and you'll have about 30-60
-                    days or less to get your affairs together and out-process the Army.
+                    This is important because administratively there will be long wait times without any notice if
+                    you're being kicked out or not. You can use this time to do a CSP instead of languishing in
+                    uncertainty. When they do decide to med-board you or not, all of a sudden they might tell you you've
+                    been med-boarded, they'll send you a VA and DOD compensation offer to negotiate, and you'll have
+                    about 30-60 days or less to get your affairs together and out-process the Army.
                   </Typography>
 
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    STORY ABOUT HOW I LEARNED THIS:
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>STORY ABOUT HOW I LEARNED THIS:</Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    My friend and I worked together in the same unit, started separation processes
-                    at around the same time, and ETS'ed at around the same time. I UQR/REFRAD'ed
-                    while he went through a med board.
+                    My friend and I worked together in the same unit, started separation processes at around the same
+                    time, and ETS'ed at around the same time. I UQR/REFRAD'ed while he went through a med board.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
                     <strong>
-                      He went from languishing for months not knowing if he was able to stay in the
-                      Army, to being told he needed to quickly get out.
+                      He went from languishing for months not knowing if he was able to stay in the Army, to being told
+                      he needed to quickly get out.
                     </strong>{' '}
-                    <strong>He didn't do a CSP</strong>, since none that Fort Moore CSP offered fit
-                    his timeline or needs. He also didn't feel he had enough time to make a CSP with
-                    another company. And on top of that,{' '}
-                    <strong>he stayed at our unit working</strong> which messed with his ability to
-                    focus on his transition.
+                    <strong>He didn't do a CSP</strong>, since none that Fort Moore CSP offered fit his timeline or
+                    needs. He also didn't feel he had enough time to make a CSP with another company. And on top of
+                    that, <strong>he stayed at our unit working</strong> which messed with his ability to focus on his
+                    transition.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
                     <strong>
-                      Meanwhile, I spent my time doing an internship, interviewing at companies, and
-                      got dedicated time to work on my transition.
+                      Meanwhile, I spent my time doing an internship, interviewing at companies, and got dedicated time
+                      to work on my transition.
                     </strong>
                   </Typography>
                 </Box>
@@ -1530,11 +1438,10 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     sx={{ width: '100%', height: '500px', marginBottom: 2 }}
                   />
                   <Typography sx={{ marginBottom: 2 }}>
-                    Here is an example training plan for creating your own CSP with a company. Some
-                    companies already have their own training plan if they have already hosted CSP
-                    interns. This is much more thorough than required. My CSP coordinator ended up
-                    only submitting the first sheet. That makes me think that's all that would be
-                    required for approval.
+                    Here is an example training plan for creating your own CSP with a company. Some companies already
+                    have their own training plan if they have already hosted CSP interns. This is much more thorough
+                    than required. My CSP coordinator ended up only submitting the first sheet. That makes me think
+                    that's all that would be required for approval.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -1560,15 +1467,13 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    If you are interested in education, you should apply to universities and
-                    scholarships at this time.{' '}
+                    If you are interested in education, you should apply to universities and scholarships at this time.{' '}
                     <strong>
-                      You should apply to schools outside of what you "think" you can't get into.
-                      Top schools like Harvard, Yale, University of Chicago want veteran
-                      representation
+                      You should apply to schools outside of what you "think" you can't get into. Top schools like
+                      Harvard, Yale, University of Chicago want veteran representation
                     </strong>{' '}
-                    and it'll be easier for you to get in as a veteran. You will still have to put
-                    in a lot of work to "sell yourself" but it will be worth it.
+                    and it'll be easier for you to get in as a veteran. You will still have to put in a lot of work to
+                    "sell yourself" but it will be worth it.
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
@@ -1581,21 +1486,12 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       Yellow Ribbon program
                     </Link>
                     , the{' '}
-                    <Link
-                      to="https://pattillmanfoundation.org/apply/"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://pattillmanfoundation.org/apply/" target="_blank" rel="noopener">
                       Pat Tilman scholarship
                     </Link>
-                    , and a variety of other resources to cover additional expenses. Ensure that you
-                    understand how the GI Bill works. The TAP gives a great GI Bill course and
-                    teaches you tools like the{' '}
-                    <Link
-                      to="https://www.va.gov/education/gi-bill-comparison-tool/"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    , and a variety of other resources to cover additional expenses. Ensure that you understand how the
+                    GI Bill works. The TAP gives a great GI Bill course and teaches you tools like the{' '}
+                    <Link to="https://www.va.gov/education/gi-bill-comparison-tool/" target="_blank" rel="noopener">
                       VA comparison tool
                     </Link>
                     .
@@ -1640,9 +1536,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    TAP has a great course on helping you understand what career fields have great
-                    opportunities, and what locations have better opportunities for your chosen
-                    career field.
+                    TAP has a great course on helping you understand what career fields have great opportunities, and
+                    what locations have better opportunities for your chosen career field.
                   </Typography>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
@@ -1650,9 +1545,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   </Typography>
 
                   <Typography sx={{ marginBottom: 2 }}>
-                    If you're not, where are you interested in living? Are you willing to relocate
-                    for a job? If you are, what is the minimum compensation package that makes
-                    moving worth it to you?
+                    If you're not, where are you interested in living? Are you willing to relocate for a job? If you
+                    are, what is the minimum compensation package that makes moving worth it to you?
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -1681,16 +1575,15 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Learn the art and science of resumes.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Develop a couple of versions of your resume. The{' '}
-                    <strong>most important part is</strong> doing a <strong>brainstorming</strong>{' '}
-                    exercise where you{' '}
-                    <strong>write down every result you've produced in your career</strong>. You can
-                    use old OERs and counseling to help you start. This will help you translate your
-                    Army experiences to civilian terminology. Use the Project, Action, Result model.
+                    Develop a couple of versions of your resume. The <strong>most important part is</strong> doing a{' '}
+                    <strong>brainstorming</strong> exercise where you{' '}
+                    <strong>write down every result you've produced in your career</strong>. You can use old OERs and
+                    counseling to help you start. This will help you translate your Army experiences to civilian
+                    terminology. Use the Project, Action, Result model.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You can use the brainstorming exercise to tailor your resume to highlight
-                    experiences that match the job description.
+                    You can use the brainstorming exercise to tailor your resume to highlight experiences that match the
+                    job description.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -1947,9 +1840,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       UQR/REFRAD request to HRC.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
-                      BDE CDR counseling signed by your CDR and addressed to HRC. This requires you
-                      to draft the document and then{' '}
-                      <strong>schedule a counseling by your BDE CDR (so they can sign it).</strong>
+                      BDE CDR counseling signed by your CDR and addressed to HRC. This requires you to draft the
+                      document and then <strong>schedule a counseling by your BDE CDR (so they can sign it).</strong>
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
                       Get a counseling signed by your installation's Reserve counselor.
@@ -1959,28 +1851,24 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     </Typography>
                   </Typography>
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Do not let your company commander, battalion commander, or S1 try to deter you
-                    from submitting your UQR/REFRAD. They are not the approval authority.
+                    Do not let your company commander, battalion commander, or S1 try to deter you from submitting your
+                    UQR/REFRAD. They are not the approval authority.
                   </Typography>
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    STORY ABOUT HOW I LEARNED THIS:
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>STORY ABOUT HOW I LEARNED THIS:</Typography>
+                  <Typography sx={{ marginBottom: 2 }}>
+                    I had incredible Company, Battalion, and Brigade commanders at my last unit in the Army. I scheduled
+                    my BDE CDR counseling at about 13 months until ETS. I had an awesome Battalion Commander who asked
+                    me to cancel it so that he could work to try to find a BN in Chicago that could take me in a
+                    recruiting or ROTC role. We exhausted those options while I got sent to Airborne school at the
+                    11-month mark and I couldn't do anything about my UQR/REFRAD.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    I had incredible Company, Battalion, and Brigade commanders at my last unit in
-                    the Army. I scheduled my BDE CDR counseling at about 13 months until ETS. I had
-                    an awesome Battalion Commander who asked me to cancel it so that he could work
-                    to try to find a BN in Chicago that could take me in a recruiting or ROTC role.
-                    We exhausted those options while I got sent to Airborne school at the 11-month
-                    mark and I couldn't do anything about my UQR/REFRAD.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    It then took an additional couple of weeks to schedule a counseling session and
-                    get my BDE CDR to sign it. Once I submitted my UQR/REFRAD at about the 9-10
-                    month mark, it waited at HRC. I later found out from my lawyer that the
-                    reviewer/approver was on leave. The unintended consequence of listening to my
-                    Battalion Commander cost my UQR/REFRAD to be delayed by 3 or so months and could
-                    have easily derailed the rest of my transition if my lawyer hadn't made sure the
-                    reviewer/approver prioritized it when he got back.
+                    It then took an additional couple of weeks to schedule a counseling session and get my BDE CDR to
+                    sign it. Once I submitted my UQR/REFRAD at about the 9-10 month mark, it waited at HRC. I later
+                    found out from my lawyer that the reviewer/approver was on leave. The unintended consequence of
+                    listening to my Battalion Commander cost my UQR/REFRAD to be delayed by 3 or so months and could
+                    have easily derailed the rest of my transition if my lawyer hadn't made sure the reviewer/approver
+                    prioritized it when he got back.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -2118,130 +2006,109 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     })}
                   >
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      Retirement & UQR/REFRAD packets can be sent up through your chain of command
-                      at 12 months until ETS.
+                      Retirement & UQR/REFRAD packets can be sent up through your chain of command at 12 months until
+                      ETS.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      You need to get the contact information for the relevant section at your
-                      installation's G1. BN or BDE S1s will send your packet to G1, and it is on G1
-                      to send the packet to HRC. S1s usually do this by sending your packet to a
-                      group G1 email. G1 can be picky and unresponsive, so you need to follow up
-                      with them. They've been known not to respond if something isn't done
-                      correctly.
+                      You need to get the contact information for the relevant section at your installation's G1. BN or
+                      BDE S1s will send your packet to G1, and it is on G1 to send the packet to HRC. S1s usually do
+                      this by sending your packet to a group G1 email. G1 can be picky and unresponsive, so you need to
+                      follow up with them. They've been known not to respond if something isn't done correctly.
                     </Typography>
 
                     <Typography sx={{ marginBottom: 2 }}>
                       At Fort Moore, the G1 equivalent for the installation is called the{' '}
-                      <Link
-                        to="https://www.moore.army.mil/Garrison/DHR/Contacts.html"
-                        target="_blank"
-                        rel="noopener"
-                      >
+                      <Link to="https://www.moore.army.mil/Garrison/DHR/Contacts.html" target="_blank" rel="noopener">
                         Directorate of Human Resources
                       </Link>{' '}
                       and they are at building 35. The{' '}
-                      <strong>information they put out will likely not make it down to you</strong>{' '}
-                      due to personnel turnover and the "telephone game" that happens during info
-                      distribution through the chain of command.{' '}
-                      <strong>Requirements, and the people in charge, change</strong>, so you will
-                      need to{' '}
-                      <strong>know what every echelon in your chain of command requires</strong> all
-                      the way up to HRC. It's daunting but worth it.
+                      <strong>information they put out will likely not make it down to you</strong> due to personnel
+                      turnover and the "telephone game" that happens during info distribution through the chain of
+                      command. <strong>Requirements, and the people in charge, change</strong>, so you will need to{' '}
+                      <strong>know what every echelon in your chain of command requires</strong> all the way up to HRC.
+                      It's daunting but worth it.
                     </Typography>
 
                     <Typography sx={{ marginBottom: 2 }}>
-                      The Army needs an electronic administrative action processing and approval
-                      system. S1s are overwhelmed with administrative tasks and don't have good
-                      systems to track and process them. On top of that, S1s in SFAB don't have
-                      clerks to help them out. I really feel for them. Email is not a good method
-                      for processing and tracking administrative actions. People change duty
-                      positions at every level, and requirements change all the time. S1s are good
-                      people stuck in a bad system.
+                      The Army needs an electronic administrative action processing and approval system. S1s are
+                      overwhelmed with administrative tasks and don't have good systems to track and process them. On
+                      top of that, S1s in SFAB don't have clerks to help them out. I really feel for them. Email is not
+                      a good method for processing and tracking administrative actions. People change duty positions at
+                      every level, and requirements change all the time. S1s are good people stuck in a bad system.
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                       STORY ABOUT HOW I LEARNED THIS:
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      My S1 said he sent my request for orders at around the 8-month mark. He would
-                      respond with something to the effect of "it's pending approval at G1" when I
-                      asked for a progress update. At the 6-month mark before ETS, when it was
-                      getting close for me to move to Chicago for my CSP, he told my 1SG that I had
-                      never sent my request for orders to him. I sent him an email confronting him
-                      about what I perceived as lying and telling him that I was going to escalate
-                      the situation if I didn't get help with my CSP, orders, and Reserve
-                      transition.
+                      My S1 said he sent my request for orders at around the 8-month mark. He would respond with
+                      something to the effect of "it's pending approval at G1" when I asked for a progress update. At
+                      the 6-month mark before ETS, when it was getting close for me to move to Chicago for my CSP, he
+                      told my 1SG that I had never sent my request for orders to him. I sent him an email confronting
+                      him about what I perceived as lying and telling him that I was going to escalate the situation if
+                      I didn't get help with my CSP, orders, and Reserve transition.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      I went to building 35, found the permanent party separation department, and
-                      found out that my request for orders, whether it was sent or not, would not
-                      get approved because for the first time in 2 years, since before COVID, they
-                      were now requiring in-person ETS briefs before soldiers can request orders.
-                      The civilians also said that they had repeatedly pushed this information out
-                      to the S1 channel.{' '}
+                      I went to building 35, found the permanent party separation department, and found out that my
+                      request for orders, whether it was sent or not, would not get approved because for the first time
+                      in 2 years, since before COVID, they were now requiring in-person ETS briefs before soldiers can
+                      request orders. The civilians also said that they had repeatedly pushed this information out to
+                      the S1 channel.{' '}
                       <strong>
-                        Every week at every Army installation there are people suffering transition
-                        nightmares.
+                        Every week at every Army installation there are people suffering transition nightmares.
                       </strong>{' '}
                       <strong>
-                        The Army will then pay the price for these nightmares financially via
-                        unemployment, or the Army's reputation will suffer when stories of these
-                        transition nightmares are spread.
+                        The Army will then pay the price for these nightmares financially via unemployment, or the
+                        Army's reputation will suffer when stories of these transition nightmares are spread.
                       </strong>{' '}
-                      I personally witnessed three examples on my Final Out day when I cleared Fort
-                      Moore on 30 September. I also faced a lot of bureaucratic heartaches and had
-                      to fight hard to get what I needed.
+                      I personally witnessed three examples on my Final Out day when I cleared Fort Moore on 30
+                      September. I also faced a lot of bureaucratic heartaches and had to fight hard to get what I
+                      needed.
                     </Typography>
 
                     <Typography component="ol" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                       <Typography component="li" sx={{ marginBottom: 1 }}>
-                        There are people unable to retire on their original timeline because they
-                        didn't attend a mandatory retirement brief (that they did not know about).
+                        There are people unable to retire on their original timeline because they didn't attend a
+                        mandatory retirement brief (that they did not know about).
                       </Typography>
                       <Typography component="li" sx={{ marginBottom: 1 }}>
-                        Leaders escorting people to clear installation a month after their ETS date.
-                        Their units didn't prioritize the soldier's transition, and the soldier
-                        didn't fight them back hard enough. The person that pays the price in these
-                        scenarios is the soldier. Their transition timeline is messed up and they
-                        are clearing without getting paid.
+                        Leaders escorting people to clear installation a month after their ETS date. Their units didn't
+                        prioritize the soldier's transition, and the soldier didn't fight them back hard enough. The
+                        person that pays the price in these scenarios is the soldier. Their transition timeline is
+                        messed up and they are clearing without getting paid.
                       </Typography>
                       <Typography component="li" sx={{ marginBottom: 1 }}>
-                        People trying to final out with just a unit clearance record (there are so
-                        many more requirements than that).
+                        People trying to final out with just a unit clearance record (there are so many more
+                        requirements than that).
                       </Typography>
                     </Typography>
 
                     <Typography sx={{ marginBottom: 2 }}>
-                      I asked the civilian who issued my DD214 how often horror stories like that
-                      happen. She said they happen every week and that{' '}
+                      I asked the civilian who issued my DD214 how often horror stories like that happen. She said they
+                      happen every week and that{' '}
                       <strong>
-                        the information G1 distributes does not make it down through the S1 channels
-                        to the soldiers.
+                        the information G1 distributes does not make it down through the S1 channels to the soldiers.
                       </strong>
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      You need to be proactive, keep receipts of all interactions, and be willing to
-                      escalate to a higher authority if you don't get the help you need in an
-                      acceptable timeframe.
+                      You need to be proactive, keep receipts of all interactions, and be willing to escalate to a
+                      higher authority if you don't get the help you need in an acceptable timeframe.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      You have the S1 chain, the leadership chain, speaking to civilian supervisors,
-                      ICE complaints, your congressperson, or you can consult a lawyer. The longer
-                      you wait, the less time you give yourself and others to fix your problem
-                      before you have to use a "nuclear" option like a senior-level commander or a
-                      lawyer.
+                      You have the S1 chain, the leadership chain, speaking to civilian supervisors, ICE complaints,
+                      your congressperson, or you can consult a lawyer. The longer you wait, the less time you give
+                      yourself and others to fix your problem before you have to use a "nuclear" option like a
+                      senior-level commander or a lawyer.
                     </Typography>
 
                     <Typography sx={{ marginBottom: 2 }}>
-                      <strong>The system is very bureaucratic</strong> and it's easy for your
-                      administrative actions to fail to make it through. It's worth fighting for.{' '}
+                      <strong>The system is very bureaucratic</strong> and it's easy for your administrative actions to
+                      fail to make it through. It's worth fighting for.{' '}
                       <strong>Do not feel awkward or ashamed about advocating for yourself.</strong>
                     </Typography>
 
-                    <Typography sx={{ marginBottom: 2 }}>
-                      "the squeaky wheel gets the grease"
-                    </Typography>
+                    <Typography sx={{ marginBottom: 2 }}>"the squeaky wheel gets the grease"</Typography>
                     <Typography sx={{ marginBottom: 2 }}>"hungry mouths don't get fed"</Typography>
                   </Box>
                 </TimelineContent>
@@ -2267,12 +2134,12 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     })}
                   >
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      Submit your signed and completed CSP packet to your installation coordinator
-                      several months before your CSP start date.
+                      Submit your signed and completed CSP packet to your installation coordinator several months before
+                      your CSP start date.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      It might take JAG up to 4-8 weeks to review/sign your packet and send it to
-                      the installation command.
+                      It might take JAG up to 4-8 weeks to review/sign your packet and send it to the installation
+                      command.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
                       Your CSP coordinator will inform you when your CSP has been approved.
@@ -2301,8 +2168,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     })}
                   >
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      Do not take no for an answer if your CSP, retirement/UQR, or other transition
-                      documents get "disapproved."
+                      Do not take no for an answer if your CSP, retirement/UQR, or other transition documents get
+                      "disapproved."
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
@@ -2311,76 +2178,67 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     <Typography sx={{ marginBottom: 2 }}>
                       You’re your own best advocate.{' '}
                       <strong>
-                        Your more senior commanders probably don’t even know about your denial, and
-                        likely won't support the denial
+                        Your more senior commanders probably don’t even know about your denial, and likely won't support
+                        the denial
                       </strong>
-                      . “People first” isn’t just a saying. Soldiers transitioning well is in the
-                      best financial and political interests of the Army, on top of the morally
-                      right thing to do.
+                      . “People first” isn’t just a saying. Soldiers transitioning well is in the best financial and
+                      political interests of the Army, on top of the morally right thing to do.
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      Do not let anyone other than the approval authority stop your packet from
-                      reaching the approval authority.
+                      Do not let anyone other than the approval authority stop your packet from reaching the approval
+                      authority.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      The lowest approval authority for a regular CSP is a field grade officer which
-                      is usually a BN CDR. An O3 is not the approval authority for any CSP. If the
-                      CSP is &gt;60 days, then the approval authority is the CG or an O6 that has
-                      delegation authority.{' '}
+                      The lowest approval authority for a regular CSP is a field grade officer which is usually a BN
+                      CDR. An O3 is not the approval authority for any CSP. If the CSP is &gt;60 days, then the approval
+                      authority is the CG or an O6 that has delegation authority.{' '}
                       <strong>Get justifications for disapprovals in writing.</strong>
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      If they do support the denial, your best solution is to fight so hard for your
-                      CSP that it makes approving your CSP the path of least resistance for them.
+                      If they do support the denial, your best solution is to fight so hard for your CSP that it makes
+                      approving your CSP the path of least resistance for them.
                     </Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                       STORY ABOUT HOW I LEARNED THIS:
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      I had to cause a ruckus to get my transition, CSP, and Reserve follow-on
-                      schools requests processed. My Company Commander was incredible, but he forgot
-                      to send my CSP or transition packets up, which cost me a couple of weeks. He
-                      was an incredible leader, though, so he apologized and rectified the
-                      situation. But then, my BN S1 didn't send up my CSP or transition documents to
-                      the approval authority after multiple reminders.
+                      I had to cause a ruckus to get my transition, CSP, and Reserve follow-on schools requests
+                      processed. My Company Commander was incredible, but he forgot to send my CSP or transition packets
+                      up, which cost me a couple of weeks. He was an incredible leader, though, so he apologized and
+                      rectified the situation. But then, my BN S1 didn't send up my CSP or transition documents to the
+                      approval authority after multiple reminders.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      With a week to go until I was supposed to move out of my apartment and leave
-                      for Chicago for my CSP, I had no orders, no approved CSP, and no idea if I
-                      could get a job after ETS or if I had follow-on Reserve schools. The straw
-                      that broke the camel's back was when my S1 asked me to forge the O6 signature
-                      on my CSP (which was going to JAG for approval by a lawyer and then
-                      installation command). I asked my BN CDR to sign my CSP directly but didn’t
-                      get anything back after a couple of weeks.
+                      With a week to go until I was supposed to move out of my apartment and leave for Chicago for my
+                      CSP, I had no orders, no approved CSP, and no idea if I could get a job after ETS or if I had
+                      follow-on Reserve schools. The straw that broke the camel's back was when my S1 asked me to forge
+                      the O6 signature on my CSP (which was going to JAG for approval by a lawyer and then installation
+                      command). I asked my BN CDR to sign my CSP directly but didn’t get anything back after a couple of
+                      weeks.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      With one email to the CG about my problems with my transition to the Reserve,
-                      and a call from my lawyer to the BDE JAG about my CSP, I got my packets
-                      approved all the way to installation command and back in a couple of days. I
-                      had politely been fighting fruitlessly on my own for so long. It takes
-                      personal courage to advocate for yourself after being a team player for so
-                      long.
+                      With one email to the CG about my problems with my transition to the Reserve, and a call from my
+                      lawyer to the BDE JAG about my CSP, I got my packets approved all the way to installation command
+                      and back in a couple of days. I had politely been fighting fruitlessly on my own for so long. It
+                      takes personal courage to advocate for yourself after being a team player for so long.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      My perception at the time was that I gave the Army almost 12 years of my life,
-                      between the NG/USMA/RA, but my unit butchered my transition and then tried a
-                      bit of retaliation when I got help. My BN XO called me, and among other
-                      things, threatened retaliation. I documented and reported the retaliation to
-                      my lawyer and BN CDR. It was all worth the fighting though.
+                      My perception at the time was that I gave the Army almost 12 years of my life, between the
+                      NG/USMA/RA, but my unit butchered my transition and then tried a bit of retaliation when I got
+                      help. My BN XO called me, and among other things, threatened retaliation. I documented and
+                      reported the retaliation to my lawyer and BN CDR. It was all worth the fighting though.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      I completed an incredible CSP, I got to move in with my wife in Chicago after
-                      six years of a long-distance relationship, I have a VET TEC software engineer
-                      bootcamp lined up, and I am executing a transition plan I am proud of.
+                      I completed an incredible CSP, I got to move in with my wife in Chicago after six years of a
+                      long-distance relationship, I have a VET TEC software engineer bootcamp lined up, and I am
+                      executing a transition plan I am proud of.
                     </Typography>
 
                     <Typography sx={{ marginBottom: 2 }}>"Closed mouths don’t get fed"</Typography>
-                    <Typography sx={{ marginBottom: 2 }}>
-                      "The squeaky wheel gets the grease"
-                    </Typography>
+                    <Typography sx={{ marginBottom: 2 }}>"The squeaky wheel gets the grease"</Typography>
 
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                       You earned these benefits, now go get them.
@@ -2409,20 +2267,14 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     })}
                   >
                     <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                      If your CSP packet gets mismanaged, you might find yourself in a position
-                      where your DA 31, authorizing administrative absence from your unit, has been
-                      approved but your CSP packet, authorizing you to work as an intern, is
-                      disapproved or missing.
+                      If your CSP packet gets mismanaged, you might find yourself in a position where your DA 31,
+                      authorizing administrative absence from your unit, has been approved but your CSP packet,
+                      authorizing you to work as an intern, is disapproved or missing.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      <strong>
-                        You can get free legal service at your installation's Trial Defense Service
-                      </strong>{' '}
+                      <strong>You can get free legal service at your installation's Trial Defense Service</strong>{' '}
                       (where the defense counsels hang out at your installation).{' '}
-                      <strong>
-                        You can also consult your BDE JAG, but realize that they work for your BDE
-                        CDR,
-                      </strong>{' '}
+                      <strong>You can also consult your BDE JAG, but realize that they work for your BDE CDR,</strong>{' '}
                       so that's equivalent to asking a prosecutor for legal help.
                     </Typography>
 
@@ -2430,24 +2282,22 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       STORY ABOUT HOW I LEARNED THIS:
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      I found myself in the position described above. My CSP DA 31 was signed and
-                      approved, but the rest of my CSP packet was still stuck in the bureaucracy a
-                      week or so out from leaving. I told my CO leadership and BN S1 that I was
-                      planning to leave anyway since it wasn't my fault they fumbled my transition.
-                      But, I asked my lawyer to help me with that situation, since I was legally
-                      authorized to leave but not legally authorized to do an internship.
+                      I found myself in the position described above. My CSP DA 31 was signed and approved, but the rest
+                      of my CSP packet was still stuck in the bureaucracy a week or so out from leaving. I told my CO
+                      leadership and BN S1 that I was planning to leave anyway since it wasn't my fault they fumbled my
+                      transition. But, I asked my lawyer to help me with that situation, since I was legally authorized
+                      to leave but not legally authorized to do an internship.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      It seemed that my unit was actually okay with letting me be gone, even if the
-                      rest of my packet was not approved. What they didn't seem to like was how much
-                      I was embarrassing them by reaching out to the CG and BDE JAG about the unit
-                      messing up my transition paperwork. I was worried that if something went
-                      wrong, my unit could throw the book at me for being AWOL and pretend like it
-                      was my fault.
+                      It seemed that my unit was actually okay with letting me be gone, even if the rest of my packet
+                      was not approved. What they didn't seem to like was how much I was embarrassing them by reaching
+                      out to the CG and BDE JAG about the unit messing up my transition paperwork. I was worried that if
+                      something went wrong, my unit could throw the book at me for being AWOL and pretend like it was my
+                      fault.
                     </Typography>
                     <Typography sx={{ marginBottom: 2 }}>
-                      I did end up getting my CSP approved last minute, but I think my unit would
-                      have let me be gone either way since I already had a signed DA 31.
+                      I did end up getting my CSP approved last minute, but I think my unit would have let me be gone
+                      either way since I already had a signed DA 31.
                     </Typography>
                   </Box>
                 </TimelineContent>
@@ -2499,9 +2349,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Submit a request for your medical records at about the 7-8 month mark.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    This is usually done at medical records at the installation hospital. It may
-                    take 4-8 weeks for them to process your request. This is especially true for the
-                    busy summer move cycle.
+                    This is usually done at medical records at the installation hospital. It may take 4-8 weeks for them
+                    to process your request. This is especially true for the busy summer move cycle.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -2529,8 +2378,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   <Typography sx={{ marginBottom: 2 }}>
                     You should have an idea of prospective jobs and/or companies by this point.{' '}
                     <strong>
-                      Start targeting specific companies and job titles to build a network where you
-                      want to land.
+                      Start targeting specific companies and job titles to build a network where you want to land.
                     </strong>
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
@@ -2549,8 +2397,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     <strong>
-                      Get a joint email/calendar manager like Microsoft Outlook, Google Calendar +
-                      Gmail, or a meeting manager like{' '}
+                      Get a joint email/calendar manager like Microsoft Outlook, Google Calendar + Gmail, or a meeting
+                      manager like{' '}
                       <Link to="https://calendly.com/" target="_blank" rel="noopener">
                         Calendly{' '}
                       </Link>
@@ -2585,10 +2433,10 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Schedule to turn in your CIF equipment prior to leaving for CSP.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Usually, CIF will require an early turn-in memo signed by your commander to do
-                    this (they usually keep example memos on site). If you are missing anything
-                    during your first turn-in, you can find the item at a local surplus store and
-                    then do a second turn-in when you get your installation clearing papers.
+                    Usually, CIF will require an early turn-in memo signed by your commander to do this (they usually
+                    keep example memos on site). If you are missing anything during your first turn-in, you can find the
+                    item at a local surplus store and then do a second turn-in when you get your installation clearing
+                    papers.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -2624,8 +2472,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     </Link>{' '}
                     prior to your CSP.{' '}
                     <strong>
-                      You need to move on or after the publication date on your orders or
-                      transportation might not pay for your move.
+                      You need to move on or after the publication date on your orders or transportation might not pay
+                      for your move.
                     </strong>
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
@@ -2637,8 +2485,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     >
                       Servicemembers Civil Relief Act
                     </Link>{' '}
-                    to break leases. It is customary, but not a requirement, to give a 30-day
-                    notice.{' '}
+                    to break leases. It is customary, but not a requirement, to give a 30-day notice.{' '}
                     <Link
                       to="https://www.29palms.marines.mil/Portals/56/Docs/SJA/SCRA%20-%20Letter%20for%20Residential%20Lease.pdf"
                       target="_blank"
@@ -2696,9 +2543,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Submit a request for your medical records at about the 7-8 month mark.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    This is usually done at medical records at the installation hospital. It may
-                    take 4-8 weeks for them to process your request. This is especially true for the
-                    busy summer move cycle.
+                    This is usually done at medical records at the installation hospital. It may take 4-8 weeks for them
+                    to process your request. This is especially true for the busy summer move cycle.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -2745,18 +2591,16 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   </Box>
 
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Attend your installation's ETS brief, if it is a requirement by your higher
-                    headquarters' G1, as soon as possible.
+                    Attend your installation's ETS brief, if it is a requirement by your higher headquarters' G1, as
+                    soon as possible.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Sometimes these are done online, and sometimes they are done in person. Once
-                    complete, you can send a request for orders packet with your ETS briefing
-                    certificate to G1 through your BN S1. It will take G1 about 2 weeks to produce
-                    orders for you.
+                    Sometimes these are done online, and sometimes they are done in person. Once complete, you can send
+                    a request for orders packet with your ETS briefing certificate to G1 through your BN S1. It will
+                    take G1 about 2 weeks to produce orders for you.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    At Fort Moore, you fall under the DHR, so look at the box to get info on
-                    speaking to G1.
+                    At Fort Moore, you fall under the DHR, so look at the box to get info on speaking to G1.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -2803,36 +2647,28 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     />
                   </Box>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Reach out to your G1 separations sections to get the most up-to-date information
-                    on separation requirements. For Fort Moore, you can find their contact info{' '}
-                    <Link
-                      to="https://www.moore.army.mil/Garrison/DHR/Contacts.html"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    Reach out to your G1 separations sections to get the most up-to-date information on separation
+                    requirements. For Fort Moore, you can find their contact info{' '}
+                    <Link to="https://www.moore.army.mil/Garrison/DHR/Contacts.html" target="_blank" rel="noopener">
                       here
                     </Link>
                     .
                   </Typography>
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    STORY ABOUT HOW I LEARNED THIS:
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>STORY ABOUT HOW I LEARNED THIS:</Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    I was "waiting" for my orders for months without any believable updates from S1.
-                    I went to my unit's G1, DHR at Fort Moore, and{' '}
+                    I was "waiting" for my orders for months without any believable updates from S1. I went to my unit's
+                    G1, DHR at Fort Moore, and{' '}
                     <strong>
-                      I found out that my packet was never submitted correctly by my BN S1 so they
-                      weren't going to process it
+                      I found out that my packet was never submitted correctly by my BN S1 so they weren't going to
+                      process it
                     </strong>
-                    . That's because{' '}
-                    <strong>they started requiring in-person ETS briefs THAT MONTH</strong>, after a
-                    two-year break due to COVID, and I wouldn't get my orders unless I attended
-                    their brief and received a certificate to put in my request for orders packet.
-                    This info had not been communicated down to the soldier level by BN S1s.{' '}
+                    . That's because <strong>they started requiring in-person ETS briefs THAT MONTH</strong>, after a
+                    two-year break due to COVID, and I wouldn't get my orders unless I attended their brief and received
+                    a certificate to put in my request for orders packet. This info had not been communicated down to
+                    the soldier level by BN S1s.{' '}
                     <strong>
-                      I had to drive 4 hours from a field training exercise to do the ETS brief at
-                      Fort Moore, and then drive another 4 hours back to the field training
-                      exercise.
+                      I had to drive 4 hours from a field training exercise to do the ETS brief at Fort Moore, and then
+                      drive another 4 hours back to the field training exercise.
                     </strong>
                   </Typography>
                 </Box>
@@ -2897,13 +2733,13 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    Identify any vocational training you're interested in and apply for acceptance
-                    in the program. Remember, you need to apply for VA benefits <strong>AND</strong>{' '}
-                    apply for acceptance from the company.
+                    Identify any vocational training you're interested in and apply for acceptance in the program.
+                    Remember, you need to apply for VA benefits <strong>AND</strong> apply for acceptance from the
+                    company.
                   </Typography>
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    For VET TEC, find which company offers what you’re interested in, complete the
-                    train-up programs, then apply for acceptance.
+                    For VET TEC, find which company offers what you’re interested in, complete the train-up programs,
+                    then apply for acceptance.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     These are the{' '}
@@ -2917,12 +2753,10 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     .
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Look at the benefits of an in-person course vs remote. You will get less BAH for
-                    remote vs in-person attendance. Let your social network know you'll be
-                    unavailable during the BootCamp.{' '}
+                    Look at the benefits of an in-person course vs remote. You will get less BAH for remote vs in-person
+                    attendance. Let your social network know you'll be unavailable during the BootCamp.{' '}
                     <strong>
-                      To start the program, you need to be on terminal leave, DOD Skillbridge, or
-                      have ETSed.
+                      To start the program, you need to be on terminal leave, DOD Skillbridge, or have ETSed.
                     </strong>
                   </Typography>
                 </Box>
@@ -2989,33 +2823,23 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     Buy a computer if you don't have one yet.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You'll need it to access VA resources, network, work from home, etc. There are
-                    many resources out there on desktop vs laptop and{' '}
-                    <Link
-                      to="https://www.nytimes.com/wirecutter/reviews/best-laptops/"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    You'll need it to access VA resources, network, work from home, etc. There are many resources out
+                    there on desktop vs laptop and{' '}
+                    <Link to="https://www.nytimes.com/wirecutter/reviews/best-laptops/" target="_blank" rel="noopener">
                       PC vs mac
                     </Link>
                     .
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     A desktop is more powerful. You can save even more money by{' '}
-                    <Link
-                      to="https://www.reddit.com/r/buildapc/wiki/index"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    <Link to="https://www.reddit.com/r/buildapc/wiki/index" target="_blank" rel="noopener">
                       building your own desktop
                     </Link>
-                    . A laptop is less powerful, and usually more expensive per unit of computing
-                    power, but is more portable. I recommend Apple MacBooks, especially a MacBook
-                    Pro, if you want a laptop. Stay away from MacBook Airs if you have any plans to
-                    use it for more than typical web browsing and streaming. MacBooks are more
-                    expensive than PC laptops but include better integration with cell phones, a
-                    more secure environment, and are a requirement if you want to do software
-                    development.
+                    . A laptop is less powerful, and usually more expensive per unit of computing power, but is more
+                    portable. I recommend Apple MacBooks, especially a MacBook Pro, if you want a laptop. Stay away from
+                    MacBook Airs if you have any plans to use it for more than typical web browsing and streaming.
+                    MacBooks are more expensive than PC laptops but include better integration with cell phones, a more
+                    secure environment, and are a requirement if you want to do software development.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     You can also start building a{' '}
@@ -3026,8 +2850,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     >
                       home office
                     </Link>
-                    . This is especially important if you want to pursue a work-from-home or remote
-                    position.
+                    . This is especially important if you want to pursue a work-from-home or remote position.
                   </Typography>
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                     If you plan to do a VET TEC here are the usual computer requirements:
@@ -3040,21 +2863,18 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     :
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Our curriculum, like the rest of the software engineering industry, is heavily
-                    dependent on open-source software, which traditionally has not worked very well
-                    on Windows platforms. For that reason, a computer running macOS or Linux is
-                    greatly preferred. Windows users are required to either switch to a Mac or Linux
-                    computer (preferred), or install Windows Subsystem for Linux 2 (WSL2). Windows
-                    users should expect to spend extra time setting up WSL, installing an Ubuntu
-                    dual boot configuration, and/or running Linux via a virtual machine (via Virtual
-                    Box). Please note that the minimum specs below may not be suitable for running a
-                    virtual machine.
+                    Our curriculum, like the rest of the software engineering industry, is heavily dependent on
+                    open-source software, which traditionally has not worked very well on Windows platforms. For that
+                    reason, a computer running macOS or Linux is greatly preferred. Windows users are required to either
+                    switch to a Mac or Linux computer (preferred), or install Windows Subsystem for Linux 2 (WSL2).
+                    Windows users should expect to spend extra time setting up WSL, installing an Ubuntu dual boot
+                    configuration, and/or running Linux via a virtual machine (via Virtual Box). Please note that the
+                    minimum specs below may not be suitable for running a virtual machine.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You should not use a computer that is actively shared with another person
-                    (especially with another software developer) since you will be making
-                    system-level configuration changes, and possibly deleting information that will
-                    affect those users.
+                    You should not use a computer that is actively shared with another person (especially with another
+                    software developer) since you will be making system-level configuration changes, and possibly
+                    deleting information that will affect those users.
                   </Typography>
                   <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                     Macs with Apple Silicon M1 are permitted in the immersive.
@@ -3077,11 +2897,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   <Typography component="ul" sx={{ marginBottom: 2, paddingLeft: 3 }}>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
                       <strong>Highly Recommended:</strong> Mac OS X (v10.14 minimum,{' '}
-                      <Link
-                        to="https://support.apple.com/en-us/HT211683"
-                        target="_blank"
-                        rel="noopener"
-                      >
+                      <Link to="https://support.apple.com/en-us/HT211683" target="_blank" rel="noopener">
                         LTS
                       </Link>{' '}
                       recommended)
@@ -3095,18 +2911,16 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       >
                         Windows 10 compatible with WSL 2
                       </Link>
-                      - We do not provide full instructional support for Windows users. Our staff
-                      can assist with WSL2/Ubuntu-related issues but may be unable to troubleshoot
-                      Windows-specific issues.
+                      - We do not provide full instructional support for Windows users. Our staff can assist with
+                      WSL2/Ubuntu-related issues but may be unable to troubleshoot Windows-specific issues.
                     </Typography>
                     <Typography component="li" sx={{ marginBottom: 1 }}>
                       <strong>Acceptable Alternative:</strong> Ubuntu Linux (LTS minimum)
                     </Typography>
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Note that Zoom and other communication apps, webcams, and microphones may be
-                    buggy on Ubuntu. This is outside of the control of staff as they cannot support
-                    debugging these issues.
+                    Note that Zoom and other communication apps, webcams, and microphones may be buggy on Ubuntu. This
+                    is outside of the control of staff as they cannot support debugging these issues.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3132,9 +2946,9 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    Look up job conferences to attend in the upcoming months. Don't forget that you
-                    can go to professional conventions or company-hosted conventions to network and
-                    find employment (e.g., DEFCON, Blue Team CON).
+                    Look up job conferences to attend in the upcoming months. Don't forget that you can go to
+                    professional conventions or company-hosted conventions to network and find employment (e.g., DEFCON,
+                    Blue Team CON).
                   </Typography>
                   <Typography>
                     <Link
@@ -3267,8 +3081,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                       Hiring Events
                     </Typography>
                     <Typography sx={{ marginBottom: 1 }}>
-                      Our hiring events connect military community job seekers from around the globe
-                      with American businesses hiring for local, national, and remote opportunities.
+                      Our hiring events connect military community job seekers from around the globe with American
+                      businesses hiring for local, national, and remote opportunities.
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       www.hiringourheroes.org
@@ -3298,15 +3112,10 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    If you're interested in the Reserve/Guard, make sure to explore available MOS,
-                    benefits, bonuses, and locations you're interested in. The reserve career
-                    counselors can send you a list to look through. You can also find the list of
-                    open positions on{' '}
-                    <Link
-                      to="https://www.milsuite.mil/book/community/spaces/apf/s1net"
-                      target="_blank"
-                      rel="noopener"
-                    >
+                    If you're interested in the Reserve/Guard, make sure to explore available MOS, benefits, bonuses,
+                    and locations you're interested in. The reserve career counselors can send you a list to look
+                    through. You can also find the list of open positions on{' '}
+                    <Link to="https://www.milsuite.mil/book/community/spaces/apf/s1net" target="_blank" rel="noopener">
                       milsuite in the S1 Net
                     </Link>
                     .
@@ -3357,36 +3166,26 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    Submit your request for orders through your BN S1 who will then send it up to
-                    get processed by your higher headquarters' G1 equivalent. At Fort Moore, you can{' '}
-                    <strong>request your orders 90 days</strong> out from your terminal leave or ETS
-                    date.{' '}
-                    <strong>
-                      You can also request your orders earlier for extenuating circumstances
-                    </strong>
-                    . Your orders are one of the key documents that will prevent you from moving
-                    forward with clearing and moving.
+                    Submit your request for orders through your BN S1 who will then send it up to get processed by your
+                    higher headquarters' G1 equivalent. At Fort Moore, you can{' '}
+                    <strong>request your orders 90 days</strong> out from your terminal leave or ETS date.{' '}
+                    <strong>You can also request your orders earlier for extenuating circumstances</strong>. Your orders
+                    are one of the key documents that will prevent you from moving forward with clearing and moving.
                   </Typography>
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    STORY ABOUT HOW I LEARNED THIS:
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>STORY ABOUT HOW I LEARNED THIS:</Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    I was paying for my apartment outside of Fort Moore AND my wife's apartment in
-                    Chicago while she was in residency. It made financial sense to move to Chicago
-                    during my CSP so I requested my orders early. I had already briefed this as part
-                    of my transition plan to my leadership.{' '}
+                    I was paying for my apartment outside of Fort Moore AND my wife's apartment in Chicago while she was
+                    in residency. It made financial sense to move to Chicago during my CSP so I requested my orders
+                    early. I had already briefed this as part of my transition plan to my leadership.{' '}
                     <strong>
-                      Transportation may not pay you if you move before the publication date on your
-                      orders.
+                      Transportation may not pay you if you move before the publication date on your orders.
                     </strong>{' '}
-                    My orders had a publication date before I moved to Chicago so I was able to get
-                    paid for the move.
+                    My orders had a publication date before I moved to Chicago so I was able to get paid for the move.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You should begin applying to jobs, even if that is not your goal or you already
-                    have something lined up. You will gain valuable experience during interviews.
-                    Ask for feedback after an interview. Do an AAR with someone you know after every
-                    interview.
+                    You should begin applying to jobs, even if that is not your goal or you already have something lined
+                    up. You will gain valuable experience during interviews. Ask for feedback after an interview. Do an
+                    AAR with someone you know after every interview.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     You can use sites like{' '}
@@ -3397,8 +3196,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     <Link to="https://www.teamblind.com/" target="_blank" rel="noopener">
                       Blind
                     </Link>{' '}
-                    to get inside info on things like the culture of a company, or what to expect
-                    for compensation.
+                    to get inside info on things like the culture of a company, or what to expect for compensation.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3445,9 +3243,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     />
                   </Box>
                   <Typography sx={{ marginBottom: 2 }}>
-                    You should also <strong>begin interviewing for jobs</strong> at this time. Most
-                    companies don't want to entertain prospective applicants until they're 30-90
-                    days out from their availability date.
+                    You should also <strong>begin interviewing for jobs</strong> at this time. Most companies don't want
+                    to entertain prospective applicants until they're 30-90 days out from their availability date.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3476,18 +3273,14 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     If you haven't already, apply for the GI Bill and VET TEC.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    It takes about 30 days to approve and receive your Certificate of Eligibility
-                    (COE), so it's better to have it and not need it than to need it and not have
-                    it.
+                    It takes about 30 days to approve and receive your Certificate of Eligibility (COE), so it's better
+                    to have it and not need it than to need it and not have it.
                   </Typography>
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    STORY ABOUT HOW I LEARNED THIS:
-                  </Typography>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>STORY ABOUT HOW I LEARNED THIS:</Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    I found out about this too late. I missed out on being able to do VET TEC while
-                    I was on terminal leave because I received the VA COE the weekend after the
-                    course deadline for registration. That cost me about a two-month delay in
-                    finding employment.
+                    I found out about this too late. I missed out on being able to do VET TEC while I was on terminal
+                    leave because I received the VA COE the weekend after the course deadline for registration. That
+                    cost me about a two-month delay in finding employment.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3521,16 +3314,15 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     >
                       find which company offers what you’re interested in
                     </Link>
-                    , complete the train-up, and take the entrance exam. It could take you 2 months
-                    to do the train-up and multiple attempts to pass the assessment, so plan
-                    accordingly.
+                    , complete the train-up, and take the entrance exam. It could take you 2 months to do the train-up
+                    and multiple attempts to pass the assessment, so plan accordingly.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
                     Look at all the different pros and cons of the companies.
                   </Typography>
                   <Typography sx={{ marginBottom: 2 }}>
-                    Going remote will give you less BAH than in person. But, going remote will allow
-                    you to be anywhere you want to be.
+                    Going remote will give you less BAH than in person. But, going remote will allow you to be anywhere
+                    you want to be.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3556,8 +3348,8 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                   })}
                 >
                   <Typography sx={{ marginBottom: 2 }}>
-                    If you haven't moved yet, 60-90 days out is the minimum amount of time you need
-                    to start planning for your move. Schedule a transportation brief.{' '}
+                    If you haven't moved yet, 60-90 days out is the minimum amount of time you need to start planning
+                    for your move. Schedule a transportation brief.{' '}
                     <Link
                       to="https://www.military.com/sites/default/files/2017-09/pcs-guide-2017.pdf"
                       target="_blank"
@@ -3605,11 +3397,10 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     <Link to="https://breakline.org/" target="_blank" rel="noopener">
                       BreakLine
                     </Link>{' '}
-                    . If you're doing a bootcamp then apply after you graduate from the bootcamp.
-                    Breakline is probably the best way to break into a tech company, even if you
-                    don’t have a tech background. It's an incredible program and they teach you
-                    interview/resume skills and introduce you to tech companies. Their mission is to
-                    get veterans, minorities, and women into high-paying jobs at tech companies.
+                    . If you're doing a bootcamp then apply after you graduate from the bootcamp. Breakline is probably
+                    the best way to break into a tech company, even if you don’t have a tech background. It's an
+                    incredible program and they teach you interview/resume skills and introduce you to tech companies.
+                    Their mission is to get veterans, minorities, and women into high-paying jobs at tech companies.
                   </Typography>
                 </Box>
               </TimelineContent>
@@ -3661,378 +3452,15 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
                     At 30 days out apply for your installation clearance papers through your BN S1.
                   </Typography>
                   <Typography>
-                    Fort Moore G1 won't process installation clearance paper requests until you've
-                    completed CSP.
+                    Fort Moore G1 won't process installation clearance paper requests until you've completed CSP.
                   </Typography>
                 </Box>
               </TimelineContent>
             </TimelineItem>
           </Timeline>
         </Box>
-        <Box
-          sx={(theme) => ({
-            p: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            boxShadow: theme.shadows[1]
-          })}
-        >
-          <Typography variant="h2" component="h2" sx={{ marginBottom: 2, textAlign: 'center' }}>
-            <strong>0-10 days</strong>
-          </Typography>
-          <Timeline
-            sx={{
-              [`& .${timelineItemClasses.root}:before`]: {
-                flex: 0,
-                padding: 0
-              }
-            }}
-          >
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Upload your Personally Procured Move (PPM) to{' '}
-                    <Link to="https://dps.move.mil/cust" target="_blank" rel="noopener">
-                      DPS
-                    </Link>{' '}
-                    and submit your move packets to transportation.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    You can do this in person or via mail.{' '}
-                    <strong>Submit per diem request to finance.</strong> The instructions are on the
-                    packets you get when you clear those offices.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    You can calculate how much to expect from your PPM using calculators like the
-                    one next to this tile.{' '}
-                    <strong>You will get 95% of the cost to the government</strong> to pay
-                    professionals to move you. The Army will pay you what it'd cost to get you from
-                    your current duty station to your home of record at entry or the location you
-                    entered service.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    <strong>
-                      You need to get empty-weight and full-weight tickets to get paid for your
-                      move.
-                    </strong>{' '}
-                    They'll give you the finer details in your transportation brief. For example, do
-                    not include your personally owned vehicle as part of the net difference in
-                    weight.{' '}
-                    <strong>
-                      Do not try to defraud the system. If you weigh it, then you must move it.
-                    </strong>
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Box
-                    component="a"
-                    href="https://ditymovecalculator.net/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      display: 'block'
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        marginBottom: 2
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src="https://www.lduhtrp.net/image-8389227-12188911"
-                        alt="DITY/Personally Procured Move Calculator - UPDATED FOR 2021"
-                        sx={{
-                          maxWidth: '300px',
-                          width: '100%',
-                          height: 'auto',
-                          borderRadius: 2,
-                          boxShadow: 3
-                        }}
-                      />
-                    </Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', marginBottom: 1 }}>
-                      DITY/Personally Procured Move Calculator - UPDATED FOR 2021
-                    </Typography>
-                    <Typography sx={{ marginBottom: 1 }}>
-                      A comprehensive DITY move calculator for PCS moves, allowing the user to view
-                      eligible allowances and estimate expenses and profit.
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      ditymovecalculator.net
-                    </Typography>
-                  </Box>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Clear your installation and out-process the Army.{' '}
-                    <strong>
-                      If you haven't done it already, you need to do your separation physical during
-                      this period.
-                    </strong>{' '}
-                    If it's been more than 30 days since your Phase 1 physical, you will need to go
-                    into your MEDPROS and add an update to your medical status as per the
-                    instructions on your SHPE packet.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Go to{' '}
-                    <Link to="https://medpros.mods.army.mil/portal/" target="_blank" rel="noopener">
-                      medpros
-                    </Link>
-                    , click on "periodic health assessments," go to the "SHPE" tab, and fill out a
-                    medical update (I believe it's the DD Form 2807-1).
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Make sure your final pay sheet at finance is accurate before you sign. For
-                    example, make sure that you're{' '}
-                    <Link
-                      to="https://www.military.com/military-transition/personal-finances/should-you-sell-back-leave-or-take-terminal-leave.html"
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      selling the number of leave days
-                    </Link>{' '}
-                    you want.
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Don't forget that you'll need lodging and transportation if you've already moved
-                    away from your installation. Costco provides a{' '}
-                    <Link
-                      to="https://www.costcotravel.com/Rental-Cars"
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      rental car discount
-                    </Link>
-                    . You can save money by staying with a friend or even staying in your car.
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-          </Timeline>
-        </Box>
-        <Box
-          sx={(theme) => ({
-            p: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            boxShadow: theme.shadows[1]
-          })}
-        >
-          <Typography variant="h2" component="h2" sx={{ marginBottom: 2, textAlign: 'center' }}>
-            <strong>Terminal leave and ETS</strong>
-          </Typography>
-          <Timeline
-            sx={{
-              [`& .${timelineItemClasses.root}:before`]: {
-                flex: 0,
-                padding: 0
-              }
-            }}
-          >
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Review your DD214 for accuracy.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Make sure your ETS address is correct. Bring copies of awards, school records,
-                    and an SRB/ORB. Correct everything on the spot and do not leave until it is
-                    correct. The civilians are generally helpful. There are benefits tied to how
-                    long you served, the character of your service, and what you did while you were
-                    in. If you claim you did something, and it isn't on the DD214, then that's tough
-                    luck for you.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    If you leave, and your DD214 requires corrections, you will have to{' '}
-                    <Link
-                      to="https://www.hrc.army.mil/content/Correction%20to%20Veterans%20Military%20Records"
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      go through HRC to make corrections
-                    </Link>
-                    , and it will be much more painful.
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot color="primary">
-                  <CircleIcon />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent>
-                <Box
-                  sx={(theme) => ({
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    boxShadow: theme.shadows[1],
-                    width: '100%',
-                    marginBottom: 2,
-                    textAlign: 'left'
-                  })}
-                >
-                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                    Store your DD214, and all other important documents, in a safe location.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    Optimally, in a fire and water-resistant place. Make digital copies and email
-                    them to yourself.
-                  </Typography>
-                  <Typography sx={{ marginBottom: 2 }}>
-                    <Link
-                      to="https://dd214direct.com/whats-the-difference-between-a-member-4-copy-and-service-2-copy-dd214/"
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      The member 4 is used at government agencies when applying for benefits. Member
-                      1 is for civilian organizations.
-                    </Link>
-                  </Typography>
-                  <Typography>
-                    <strong>Upload your DD214 to the VA.</strong> It will go in as a supporting
-                    document to your VA claim.
-                  </Typography>
-                </Box>
-              </TimelineContent>
-            </TimelineItem>
-          </Timeline>
-        </Box>
+        <ZeroToTenDays />
+        <TerminalLeave />
         <ZeroToThirtyDays />
         <LongAfterETS
           sx={(theme) => ({

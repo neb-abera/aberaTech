@@ -40,12 +40,7 @@ const tiers = [
   {
     title: 'Enterprise',
     price: '30',
-    description: [
-      '50 users included',
-      '30 GB of storage',
-      'Help center access',
-      'Phone & email support'
-    ],
+    description: ['50 users included', '30 GB of storage', 'Help center access', 'Phone & email support'],
     buttonText: 'Contact us',
     buttonVariant: 'outlined',
     buttonColor: 'primary'
@@ -76,16 +71,11 @@ export default function Pricing() {
           Pricing
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Quickly build an effective pricing table for your potential customers with this layout.{' '}
-          <br />
+          Quickly build an effective pricing table for your potential customers with this layout. <br />
           It&apos;s built with default Material UI components with little customization.
         </Typography>
       </Box>
-      <Grid
-        container
-        spacing={3}
-        sx={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}
-      >
+      <Grid container spacing={3} sx={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
         {tiers.map((tier) => (
           <Grid size={{ xs: 12, sm: tier.title === 'Enterprise' ? 12 : 6, md: 4 }} key={tier.title}>
             <Card
@@ -99,12 +89,10 @@ export default function Pricing() {
                 tier.title === 'Professional' &&
                   ((theme) => ({
                     border: 'none',
-                    background:
-                      'radial-gradient(circle at 50% 0%, hsl(220, 20%, 35%), hsl(220, 30%, 6%))',
+                    background: 'radial-gradient(circle at 50% 0%, hsl(220, 20%, 35%), hsl(220, 30%, 6%))',
                     boxShadow: `0 8px 12px hsla(220, 20%, 42%, 0.2)`,
                     ...theme.applyStyles('dark', {
-                      background:
-                        'radial-gradient(circle at 50% 0%, hsl(220, 20%, 20%), hsl(220, 30%, 16%))',
+                      background: 'radial-gradient(circle at 50% 0%, hsl(220, 20%, 20%), hsl(220, 30%, 16%))',
                       boxShadow: `0 8px 12px hsla(0, 0%, 0%, 0.8)`
                     })
                   }))
@@ -126,9 +114,7 @@ export default function Pricing() {
                   <Typography component="h3" variant="h6">
                     {tier.title}
                   </Typography>
-                  {tier.title === 'Professional' && (
-                    <Chip icon={<AutoAwesomeIcon />} label={tier.subheader} />
-                  )}
+                  {tier.title === 'Professional' && <Chip icon={<AutoAwesomeIcon />} label={tier.subheader} />}
                 </Box>
                 <Box
                   sx={[
@@ -154,9 +140,7 @@ export default function Pricing() {
                         {
                           width: 20
                         },
-                        tier.title === 'Professional'
-                          ? { color: 'primary.light' }
-                          : { color: 'primary.main' }
+                        tier.title === 'Professional' ? { color: 'primary.light' } : { color: 'primary.main' }
                       ]}
                     />
                     <Typography
