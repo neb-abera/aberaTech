@@ -13,5 +13,13 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2"
   },
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "eslint": "eslint . --debug",
+    "eslint:fix": "eslint . --fix --debug",
+    "prettier": "prettier --check . --log-level debug",
+    "prettier:fix": "prettier --write . --log-level debug",
+    "lint": "npm run eslint && npm run prettier",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+  }
 }
