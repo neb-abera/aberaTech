@@ -1,40 +1,15 @@
 import { fileURLToPath, URL } from 'node:url';
-
 import { defineConfig } from 'vite';
 import plugin from '@vitejs/plugin-react';
-import fs from 'fs';
-import path from 'path';
-import child_process from 'child_process';
-import { env } from 'process';
 
-const baseFolder =
-  env.APPDATA !== undefined && env.APPDATA !== '' ? `${env.APPDATA}/ASP.NET/https` : `${env.HOME}/.aspnet/https`;
+// Determine if the build is running in Docker
+const isDocker = process.env.IN_DOCKER === 'true';
 
-const certificateName = 'aberatech.client';
-const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
-const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
-
-if (!fs.existsSync(baseFolder)) {
-  fs.mkdirSync(baseFolder, { recursive: true });
-}
-
-if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-  if (
-    0 !==
-    child_process.spawnSync(
-      'dotnet',
-      ['dev-certs', 'https', '--export-path', certFilePath, '--format', 'Pem', '--no-password'],
-      { stdio: 'inherit' }
-    ).status
-  ) {
-    throw new Error('Could not create certificate.');
-  }
-}
-
-const target = env.ASPNETCORE_HTTPS_PORT
-  ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`
-  : env.ASPNETCORE_URLS
-    ? env.ASPNETCORE_URLS.split(';')[0]
+// Default target for the API proxy setup (update the target URL if necessary)
+const target = process.env.ASPNETCORE_HTTPS_PORT
+  ? `https://localhost:${process.env.ASPNETCORE_HTTPS_PORT}`
+  : process.env.ASPNETCORE_URLS
+    ? process.env.ASPNETCORE_URLS.split(';')[0]
     : 'https://localhost:7083';
 
 // https://vitejs.dev/config/
@@ -53,9 +28,12 @@ export default defineConfig({
       }
     },
     port: 63813,
-    https: {
-      key: fs.readFileSync(keyFilePath),
-      cert: fs.readFileSync(certFilePath)
-    }
+    https: !isDocker
+      ? {
+          // Only load certificates if not in Docker
+          key: './path/to/key.pem',
+          cert: './path/to/cert.pem'
+        }
+      : undefined // Use undefined instead of false to avoid TypeScript warnings
   }
 });

@@ -20,6 +20,7 @@
     "prettier": "prettier --check . --log-level debug",
     "prettier:fix": "prettier --write . --log-level debug",
     "lint": "npm run eslint && npm run prettier",
-    "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "docker": "docker build -t test-image -f aberaTech.Server/Dockerfile ."
   }
 }

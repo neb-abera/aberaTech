@@ -1,43 +1,58 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# Base image for the client
+FROM node:22 AS clientbase
+WORKDIR /aberatech.client
 
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
+# Copy package files and install dependencies
+COPY ["aberatech.client/package.json", "aberatech.client/package-lock.json", "./"]
+RUN npm install
+
+# This stage is used to build the client project
+FROM clientbase AS clientbuild
+WORKDIR /aberatech.client
+
+# Copy the client source files into the container
+COPY ["aberatech.client/", "./"]
+
+# Add environment variable to disable HTTPS in Vite
+ENV IN_DOCKER=true
+
+# Build the client
+RUN npm run build
+
+# This stage is used to build the server project
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
+
+WORKDIR /aberaTech.Server
+
+# Restore .NET dependencies
+COPY ["aberaTech.Server/aberaTech.Server.csproj", "/aberaTech.Server/"]
+RUN dotnet restore "./aberaTech.Server.csproj"
+
+# Build the .NET backend
+COPY aberaTech.Server /aberaTech.Server
+RUN dotnet build "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Publish server files for deployment
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# Final stage: Build the runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
-# Base image for the client
-FROM node:22 AS clientbase
-WORKDIR /client
-COPY ["aberatech.client/package.json", "aberatech.client/package-lock.json", "./"]
-RUN npm install
-
-# This stage is used to build the client project
-FROM clientbase AS clientbuild
-COPY ["aberatech.client/", "./"]
-RUN npm run build
-
-# This stage is used to build the server project
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/"]
-RUN dotnet restore "./aberaTech.Server/aberaTech.Server.csproj"
-COPY aberaTech.Server .
-WORKDIR "/src/aberaTech.Server"
-RUN dotnet build "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-# This stage is used to publish the server project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# Final stage to serve the client and run the server
-FROM base AS final
-WORKDIR /app
+# Copy .NET publish output into runtime container
 COPY --from=publish /app/publish .
+
+# Create the folder for the client build
 RUN mkdir -p /app/wwwroot
-COPY --from=clientbuild /client/dist /app/wwwroot
+
+# Copy static client build output from Vite
+COPY --from=clientbuild /aberatech.client/dist /app/wwwroot
+
+# Provide the entry point for the .NET backend
 ENTRYPOINT ["dotnet", "aberaTech.Server.dll"]
