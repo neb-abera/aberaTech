@@ -8,24 +8,36 @@ EXPOSE 8080
 EXPOSE 8081
 
 
-# This stage is used to build the service project
+# Base image for the client
+FROM node:22.10.2 AS clientbase
+WORKDIR /client
+COPY ["aberatech.client/package.json", "aberatech.client/package-lock.json", "./"]
+RUN npm install
+
+# This stage is used to build the client project
+FROM clientbase AS clientbuild
+COPY ["aberatech.client/", "./"]
+RUN npm run build
+
+# This stage is used to build the server project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/"]
-COPY ["aberatech.client/aberatech.client.esproj", "aberatech.client/"]
 RUN dotnet restore "./aberaTech.Server/aberaTech.Server.csproj"
-COPY . .
+COPY aberaTech.Server .
 WORKDIR "/src/aberaTech.Server"
 RUN dotnet build "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
+# This stage is used to publish the server project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+# Final stage to serve the client and run the server
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p /app/wwwroot
+COPY --from=clientbuild /client/dist /app/wwwroot
 ENTRYPOINT ["dotnet", "aberaTech.Server.dll"]
