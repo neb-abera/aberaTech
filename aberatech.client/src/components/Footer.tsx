@@ -172,12 +172,7 @@ export default function Footer() {
           </Link>
           <Copyright />
         </div>
-        <Stack
-          direction="row"
-          spacing={1}
-          useFlexGap
-          sx={{ justifyContent: 'left', color: 'text.secondary' }}
-        >
+        <Stack direction="row" spacing={1} useFlexGap sx={{ justifyContent: 'left', color: 'text.secondary' }}>
           <IconButton
             color="inherit"
             size="small"

@@ -103,8 +103,8 @@ export default function Testimonials() {
           Testimonials
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          See what our customers love about our products. Discover how we excel in efficiency,
-          durability, and satisfaction. Join us for quality, innovation, and reliable support.
+          See what our customers love about our products. Discover how we excel in efficiency, durability, and
+          satisfaction. Join us for quality, innovation, and reliable support.
         </Typography>
       </Box>
       <Grid container spacing={2}>
@@ -131,11 +131,7 @@ export default function Testimonials() {
                   justifyContent: 'space-between'
                 }}
               >
-                <CardHeader
-                  avatar={testimonial.avatar}
-                  title={testimonial.name}
-                  subheader={testimonial.occupation}
-                />
+                <CardHeader avatar={testimonial.avatar} title={testimonial.name} subheader={testimonial.occupation} />
                 <img src={logos[index]} alt={`Logo ${index + 1}`} style={logoStyle} />
               </Box>
             </Card>

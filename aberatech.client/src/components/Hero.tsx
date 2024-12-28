@@ -15,11 +15,9 @@ export default function Hero() {
         width: '100%',
         backgroundRepeat: 'no-repeat',
 
-        backgroundImage:
-          'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 90%), transparent)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 90%), transparent)',
         ...theme.applyStyles('dark', {
-          backgroundImage:
-            'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 16%), transparent)'
+          backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 16%), transparent)'
         })
       })}
     >
@@ -32,11 +30,7 @@ export default function Hero() {
           pb: { xs: 8, sm: 12 }
         }}
       >
-        <Stack
-          spacing={2}
-          useFlexGap
-          sx={{ alignItems: 'center', width: { xs: '100%', sm: '70%' } }}
-        >
+        <Stack spacing={2} useFlexGap sx={{ alignItems: 'center', width: { xs: '100%', sm: '70%' } }}>
           <Typography
             variant="h1"
             sx={{
@@ -67,17 +61,11 @@ export default function Hero() {
               color: 'text.primary'
             }}
           >
-            I am a Software Engineer from Chicago. I am an avid reader, and I love learning how to
-            solve problems that require an interdisciplinary approach. If you have any book
-            recommendations please send them my way! I am currently working on projects in C++,
-            TypeScript, and C#.
+            I am a Software Engineer from Chicago. I am an avid reader, and I love learning how to solve problems that
+            require an interdisciplinary approach. If you have any book recommendations please send them my way! I am
+            currently working on projects in C++, TypeScript, and C#.
           </Typography>
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            sx={{ justifyContent: 'left', color: 'text.secondary' }}
-          >
+          <Stack direction="row" spacing={1} useFlexGap sx={{ justifyContent: 'left', color: 'text.secondary' }}>
             <IconButton
               color="inherit"
               size="large"
