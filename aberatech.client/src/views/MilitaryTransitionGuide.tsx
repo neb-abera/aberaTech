@@ -1,3 +1,4 @@
+import React, { Suspense, useState } from 'react';
 import AppAppBar from '../components/AppAppBar';
 import Hero from '../components/Hero';
 import Divider from '@mui/material/Divider';
@@ -5,20 +6,35 @@ import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppTheme from '../theme/AppTheme';
 import Container from '@mui/material/Container';
-import ZeroToThirtyDaysPostETS from '../components/ZeroToThirtyDays.tsx';
-import TerminalLeave from '../components/TerminalLeave.tsx';
-import ZeroToTenDays from '../components/ZeroToTenDays.tsx';
-import ThirtyDays from '../components/ThirtyDays.tsx';
-import ThirtyToNinetyDays from '../components/ThirtyToNinetyDays.tsx';
-import NinetyToOneEightyDays from '../components/NinetyToOneEightyDays.tsx';
-import SixToNineMonths from '../components/SixToNineMonths.tsx';
-import NineToTwelveMonths from '../components/NineToTwelveMonths.tsx';
-import TwelveToEighteenMonths from '../components/TwelveToEighteenMonths.tsx';
-import TwentyFourToEighteenMonths from '../components/TwentyFourToEighteenMonths.tsx';
 import Box from '@mui/material/Box';
-import LongAfterETS from '../components/LongAfterETS.tsx';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+// Lazy-loaded components
+const ZeroToThirtyDaysPostETS = React.lazy(() => import('../components/ZeroToThirtyDays'));
+const TerminalLeave = React.lazy(() => import('../components/TerminalLeave'));
+const ZeroToTenDays = React.lazy(() => import('../components/ZeroToTenDays'));
+const ThirtyDays = React.lazy(() => import('../components/ThirtyDays'));
+const ThirtyToNinetyDays = React.lazy(() => import('../components/ThirtyToNinetyDays'));
+const NinetyToOneEightyDays = React.lazy(() => import('../components/NinetyToOneEightyDays'));
+const SixToNineMonths = React.lazy(() => import('../components/SixToNineMonths'));
+const NineToTwelveMonths = React.lazy(() => import('../components/NineToTwelveMonths'));
+const TwelveToEighteenMonths = React.lazy(() => import('../components/TwelveToEighteenMonths'));
+const EighteenToTwentyFourMonths = React.lazy(() => import('../components/EighteenToTwentyFourMonths.tsx'));
+const LongAfterETS = React.lazy(() => import('../components/LongAfterETS'));
+
+// Fallback loading spinner or placeholder
+const LoadingFallback = () => <div>Loading...</div>;
 
 export default function MilitaryTransitionGuide(props: { disableCustomTheme?: boolean }) {
+  // Maintain open state for multiple accordions (optional)
+  const [expanded, setExpanded] = useState<string | false>(false);
+
+  const handleAccordionChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded ? panel : false);
+  };
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
@@ -69,17 +85,132 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
             get discouraged by it. You need to advocate for yourself, your transition is worth fighting for.
           </Typography>
         </Box>
-        <TwentyFourToEighteenMonths />
-        <TwelveToEighteenMonths />
-        <NineToTwelveMonths />
-        <SixToNineMonths />
-        <NinetyToOneEightyDays />
-        <ThirtyToNinetyDays />
-        <ThirtyDays />
-        <ZeroToTenDays />
-        <TerminalLeave />
-        <ZeroToThirtyDaysPostETS />
-        <LongAfterETS />
+
+        {/* Suspense-wrapped lazy-loaded components */}
+        <Accordion expanded={expanded === 'panel1'} onChange={handleAccordionChange('panel1')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>18 to 24 Months before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <EighteenToTwentyFourMonths />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel2'} onChange={handleAccordionChange('panel2')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>12 to 18 Months before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <TwelveToEighteenMonths />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel3'} onChange={handleAccordionChange('panel3')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>12 to 9 Months before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <NineToTwelveMonths />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel4'} onChange={handleAccordionChange('panel4')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>6 to 9 Months before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <SixToNineMonths />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel5'} onChange={handleAccordionChange('panel5')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>90 to 180 days before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <NinetyToOneEightyDays />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel6'} onChange={handleAccordionChange('panel6')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>30 to 90 Months before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <ThirtyToNinetyDays />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion
+          expanded={expanded === 'panel7'}
+          onChange={handleAccordionChange('panel7')}
+          sx={{ width: '100%' }} // Full width style applied
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>10 to 30 days before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <ThirtyDays />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel8'} onChange={handleAccordionChange('panel8')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>0 to 10 days before ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <ZeroToTenDays />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel9'} onChange={handleAccordionChange('panel9')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Terminal leve</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <TerminalLeave />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel10'} onChange={handleAccordionChange('panel10')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>0 to 30 days after ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <ZeroToThirtyDaysPostETS />
+            </Suspense>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expanded === 'panel11'} onChange={handleAccordionChange('panel11')}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Long after ETS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Suspense fallback={<LoadingFallback />}>
+              <LongAfterETS />
+            </Suspense>{' '}
+          </AccordionDetails>
+        </Accordion>
       </Container>
     </AppTheme>
   );

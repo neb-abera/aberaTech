@@ -11,7 +11,7 @@ import TimelineContent from '@mui/lab/TimelineContent';
 import { Link } from 'react-router';
 import { CardMedia } from '@mui/material';
 
-export default function TwentyFourToEighteenMonths() {
+export default function EighteenToTwentyFourMonths() {
   return (
     <Box
       sx={(theme) => ({

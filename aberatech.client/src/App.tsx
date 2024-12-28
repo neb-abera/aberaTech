@@ -1,17 +1,25 @@
-import { Routes, Route } from 'react-router';
-import Home from './views/Home';
-import MarketingPage from './views/MarketingPage';
-import MilitaryTransitionGuide from './views/MilitaryTransitionGuide';
+import { Route, Routes } from 'react-router';
+import React, { Suspense } from 'react';
 import './App.css';
+
+// Lazy loading the pages
+const Home = React.lazy(() => import('./views/Home'));
+const MarketingPage = React.lazy(() => import('./views/MarketingPage'));
+const MilitaryTransitionGuide = React.lazy(() => import('./views/MilitaryTransitionGuide'));
+
+// Fallback loading spinner or placeholder
+const LoadingFallback = () => <div>Loading...</div>;
 
 function App() {
   return (
     <div>
-      <Routes>
-        <Route index element={<Home />} />
-        <Route path="marketing" element={<MarketingPage />} />
-        <Route path="transition" element={<MilitaryTransitionGuide />} />
-      </Routes>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="marketing" element={<MarketingPage />} />
+          <Route path="transition" element={<MilitaryTransitionGuide />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }
