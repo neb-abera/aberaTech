@@ -87,7 +87,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
         </Box>
 
         {/* Suspense-wrapped lazy-loaded components */}
-        <Accordion expanded={expanded === 'panel1'} onChange={handleAccordionChange('panel1')}>
+        <Accordion expanded={expanded === 'panel1'} onChange={handleAccordionChange('panel1')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>18 to 24 Months before ETS</Typography>
           </AccordionSummary>
@@ -98,7 +98,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel2'} onChange={handleAccordionChange('panel2')}>
+        <Accordion expanded={expanded === 'panel2'} onChange={handleAccordionChange('panel2')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>12 to 18 Months before ETS</Typography>
           </AccordionSummary>
@@ -109,7 +109,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel3'} onChange={handleAccordionChange('panel3')}>
+        <Accordion expanded={expanded === 'panel3'} onChange={handleAccordionChange('panel3')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>12 to 9 Months before ETS</Typography>
           </AccordionSummary>
@@ -120,7 +120,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel4'} onChange={handleAccordionChange('panel4')}>
+        <Accordion expanded={expanded === 'panel4'} onChange={handleAccordionChange('panel4')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>6 to 9 Months before ETS</Typography>
           </AccordionSummary>
@@ -131,7 +131,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel5'} onChange={handleAccordionChange('panel5')}>
+        <Accordion expanded={expanded === 'panel5'} onChange={handleAccordionChange('panel5')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>90 to 180 days before ETS</Typography>
           </AccordionSummary>
@@ -142,9 +142,9 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel6'} onChange={handleAccordionChange('panel6')}>
+        <Accordion expanded={expanded === 'panel6'} onChange={handleAccordionChange('panel6')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>30 to 90 Months before ETS</Typography>
+            <Typography>30 to 90 days before ETS</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Suspense fallback={<LoadingFallback />}>
@@ -168,7 +168,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel8'} onChange={handleAccordionChange('panel8')}>
+        <Accordion expanded={expanded === 'panel8'} onChange={handleAccordionChange('panel8')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>0 to 10 days before ETS</Typography>
           </AccordionSummary>
@@ -179,7 +179,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel9'} onChange={handleAccordionChange('panel9')}>
+        <Accordion expanded={expanded === 'panel9'} onChange={handleAccordionChange('panel9')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>Terminal leve</Typography>
           </AccordionSummary>
@@ -190,7 +190,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel10'} onChange={handleAccordionChange('panel10')}>
+        <Accordion expanded={expanded === 'panel10'} onChange={handleAccordionChange('panel10')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>0 to 30 days after ETS</Typography>
           </AccordionSummary>
@@ -201,7 +201,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
 
-        <Accordion expanded={expanded === 'panel11'} onChange={handleAccordionChange('panel11')}>
+        <Accordion expanded={expanded === 'panel11'} onChange={handleAccordionChange('panel11')} sx={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>Long after ETS</Typography>
           </AccordionSummary>
