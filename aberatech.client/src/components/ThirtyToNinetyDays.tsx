@@ -55,9 +55,16 @@ export default function ThirtyToNinetyDays() {
               })}
             >
               <Typography sx={{ marginBottom: 2 }}>
-                Submit your request for orders through your BN S1 who will then send it up to get processed by your
-                higher headquarters' G1 equivalent. At Fort Moore, you can <strong>request your orders 90 days</strong>{' '}
-                out from your terminal leave or ETS date.{' '}
+                If you're an Army Reservist then you should submit a PAR on IPPS-A for separation orders at least 90
+                days out. If you've met your contractual obligation, but still have an IRR obligation, look at the USAR
+                PAG for T-1-E-2. You should also turn-in your equipment to a Supply soldier, maintain a copy of your
+                turn-in, and submit RSTs for any Battle Assemblies you want to be excused from ~45 days in advance.{' '}
+                <strong>You have an obligation to attend training unless you have orders or an RST.</strong>
+              </Typography>
+              <Typography sx={{ marginBottom: 2 }}>
+                If you're Active Duty submit your request for orders through your BN S1 who will then send it up to get
+                processed by your higher headquarters' G1 equivalent. At Fort Moore, you can{' '}
+                <strong>request your orders 90 days</strong> out from your terminal leave or ETS date.{' '}
                 <strong>You can also request your orders earlier for extenuating circumstances</strong>. Your orders are
                 one of the key documents that will prevent you from moving forward with clearing and moving.
               </Typography>

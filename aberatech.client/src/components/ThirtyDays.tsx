@@ -54,7 +54,9 @@ export default function TerminalLeave() {
               })}
             >
               <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                At 30 days out apply for your installation clearance papers through your BN S1.
+                If you're a Reservist then check on the status of your ETS PAR. Ensure you have RSTs submitted in case
+                your orders are delayed. If you're Active Duty, at 30 days out apply for your installation clearance
+                papers through your BN S1 if you're active duty.
               </Typography>
               <Typography>
                 Fort Moore G1 won't process installation clearance paper requests until you've completed CSP.
