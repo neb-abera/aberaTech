@@ -49,7 +49,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          federated-token: ${{ secrets.GITHUB_TOKEN }}
+          auth-type: oidc
 
       # Step 6: Deploy the Container App with ACR Credentials
       - name: Deploy to Azure Container App
