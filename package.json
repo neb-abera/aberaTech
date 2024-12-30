@@ -1,0 +1,27 @@
+{
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2"
+  },
+  "type": "module",
+  "scripts": {
+    "eslint": "eslint . --debug",
+    "eslint:fix": "eslint . --fix --debug",
+    "prettier": "prettier --check . --log-level debug",
+    "prettier:fix": "prettier --write . --log-level debug",
+    "lint": "npm run eslint && npm run prettier",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "docker:build": "   docker build --build-arg IN_DOCKER=true --no-cache --progress=plain -t abera-tech -f aberaTech.Server/Dockerfile .",
+    "docker:run": "docker run --rm -p 8080:8080 abera-tech"
+  }
+}

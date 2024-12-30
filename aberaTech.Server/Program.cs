@@ -6,8 +6,8 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-app.UseDefaultFiles();
-app.MapStaticAssets();
+app.UseDefaultFiles(); // Serves 'index.html' automatically for root requests.
+app.UseStaticFiles(); // Serves files from wwwroot.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -36,7 +36,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapFallbackToFile("/index.html");
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
