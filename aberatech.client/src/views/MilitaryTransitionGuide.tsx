@@ -11,6 +11,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Link } from 'react-router';
 
 // Lazy-loaded components
 const ZeroToThirtyDaysPostETS = React.lazy(() => import('../components/ZeroToThirtyDays'));
@@ -83,6 +84,13 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
             can have good people stuck in a bad bureaucratic system that causes unintended consequences for
             transitioning servicemembers. You will need to get the bureaucracy to work for you, not against you. Do not
             get discouraged by it. You need to advocate for yourself, your transition is worth fighting for.
+          </Typography>
+
+          <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
+            If you're interested in transitioning to a technical position, I recommend checking out{' '}
+            <Link to="https://github.com/neb-abera/transition" target="_blank" rel="noopener">
+              Everything I learned transitioning from the Army to Software Development
+            </Link>
           </Typography>
         </Box>
 
