@@ -1,58 +1,27 @@
-import { useEffect, useState } from 'react';
+import { Route, Routes } from 'react-router';
+import React, { Suspense } from 'react';
 import './App.css';
 
-interface Forecast {
-    date: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
-}
+// Lazy loading the pages
+const Home = React.lazy(() => import('./views/Home'));
+const MarketingPage = React.lazy(() => import('./views/MarketingPage'));
+const MilitaryTransitionGuide = React.lazy(() => import('./views/MilitaryTransitionGuide'));
+
+// Fallback loading spinner or placeholder
+const LoadingFallback = () => <div>Loading...</div>;
 
 function App() {
-    const [forecasts, setForecasts] = useState<Forecast[]>();
-
-    useEffect(() => {
-        populateWeatherData();
-    }, []);
-
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
-
-    return (
-        <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
-    );
-
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        if (response.ok) {
-            const data = await response.json();
-            setForecasts(data);
-        }
-    }
+  return (
+    <div>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="marketing" element={<MarketingPage />} />
+          <Route path="transition" element={<MilitaryTransitionGuide />} />
+        </Routes>
+      </Suspense>
+    </div>
+  );
 }
 
 export default App;
