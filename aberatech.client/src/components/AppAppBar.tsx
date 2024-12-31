@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, alpha } from '@mui/material/styles';
+import {styled, alpha} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -13,26 +13,28 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import ColorModeIconDropdown from '../theme/ColorModeIconDropdown';
-import { Link } from 'react-router';
+import {Link} from 'react-router';
 
-const StyledToolbar = styled(Toolbar)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  flexShrink: 0,
-  borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
-  backdropFilter: 'blur(24px)',
-  border: '1px solid',
-  borderColor: theme.palette.divider,
+const StyledToolbar = styled(Toolbar)(({theme}) => ({
+  display        : 'flex',
+  alignItems     : 'center',
+  justifyContent : 'space-between',
+  flexShrink     : 0,
+  borderRadius   : `calc(${theme.shape.borderRadius}px + 8px)`,
+  backdropFilter : 'blur(24px)',
+  border         : '1px solid',
+  borderColor    : theme.palette.divider,
   backgroundColor: alpha(theme.palette.background.default, 0.4),
-  boxShadow: theme.shadows[1],
-  padding: '8px 12px'
+  boxShadow      : theme.shadows[1],
+  padding        : '8px 12px'
 }));
 
-export default function AppAppBar() {
+export default function AppAppBar()
+{
   const [open, setOpen] = React.useState(false);
 
-  const toggleDrawer = (newOpen: boolean) => () => {
+  const toggleDrawer = (newOpen: boolean) => () =>
+  {
     setOpen(newOpen);
   };
 
@@ -41,43 +43,49 @@ export default function AppAppBar() {
       position="fixed"
       enableColorOnDark
       sx={{
-        boxShadow: 0,
-        bgcolor: 'transparent',
+        boxShadow      : 0,
+        bgcolor        : 'transparent',
         backgroundImage: 'none',
-        mt: 'calc(var(--template-frame-height, 0px) + 28px)'
+        mt             : 'calc(var(--template-frame-height, 0px) + 28px)'
       }}
     >
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
-            <FingerprintIcon />
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
+            <FingerprintIcon/>
+            <Box sx={{display: {xs: 'none', md: 'flex'}}}>
               <Button variant="text" color="info" size="small">
-                <Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                <Link to="/" style={{color: 'inherit', textDecoration: 'inherit'}}>
                   Home
                 </Link>
               </Button>
               <Button variant="text" color="info" size="small">
-                <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                <Link to="/transition" style={{color: 'inherit', textDecoration: 'inherit'}}>
                   {' '}
                   Military Transition Guide{' '}
+                </Link>
+              </Button>
+              <Button variant="text" color="info" size="small">
+                <Link to="/technical" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  {' '}
+                  Learning Software Development{' '}
                 </Link>
               </Button>
             </Box>
           </Box>
           <Box
             sx={{
-              display: { xs: 'none', md: 'flex' },
-              gap: 1,
+              display   : {xs: 'none', md: 'flex'},
+              gap       : 1,
               alignItems: 'center'
             }}
           >
-            <ColorModeIconDropdown />
+            <ColorModeIconDropdown/>
           </Box>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
-            <ColorModeIconDropdown size="medium" />
+          <Box sx={{display: {xs: 'flex', md: 'none'}, gap: 1}}>
+            <ColorModeIconDropdown size="medium"/>
             <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
-              <MenuIcon />
+              <MenuIcon/>
             </IconButton>
             <Drawer
               anchor="top"
@@ -89,30 +97,36 @@ export default function AppAppBar() {
                 }
               }}
             >
-              <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
+              <Box sx={{p: 2, backgroundColor: 'background.default'}}>
                 <Box
                   sx={{
-                    display: 'flex',
+                    display       : 'flex',
                     justifyContent: 'flex-end'
                   }}
                 >
                   <IconButton onClick={toggleDrawer(false)}>
-                    <CloseRoundedIcon />
+                    <CloseRoundedIcon/>
                   </IconButton>
                 </Box>
                 {/*nebdebug todo: links broken*/}
                 <MenuItem>
-                  <Link to="/" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                  <Link to="/" style={{color: 'inherit', textDecoration: 'inherit'}}>
                     Home
                   </Link>
                 </MenuItem>
                 <MenuItem>
                   {' '}
-                  <Link to="/transition" style={{ color: 'inherit', textDecoration: 'inherit' }}>
+                  <Link to="/transition" style={{color: 'inherit', textDecoration: 'inherit'}}>
                     Military Transition Guide
                   </Link>
                 </MenuItem>
-                <Divider sx={{ my: 3 }} />
+                <MenuItem>
+                  {' '}
+                  <Link to="/technical" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                    Technical Transition Guide
+                  </Link>
+                </MenuItem>
+                <Divider sx={{my: 3}}/>
               </Box>
             </Drawer>
           </Box>
