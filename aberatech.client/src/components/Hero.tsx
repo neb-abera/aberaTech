@@ -61,7 +61,7 @@ export default function Hero() {
               color: 'text.primary'
             }}
           >
-            I am a Software Engineer from Chicago. I am an avid reader, and I love learning how to solve problems that
+            I am a Software Engineer in Washington D.C. I am an avid reader, and I love learning how to solve problems that
             require an interdisciplinary approach. If you have any book recommendations please send them my way! I am
             currently working on projects in C++, TypeScript, and C#.
           </Typography>
