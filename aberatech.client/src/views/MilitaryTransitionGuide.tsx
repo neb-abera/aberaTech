@@ -88,7 +88,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
 
           <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
             If you're interested in transitioning to a technical position, I recommend checking out{' '}
-            <Link to="https://abera.tech/transition" target="_blank" rel="noopener">
+            <Link to="https://abera.tech/technical" target="_blank" rel="noopener">
               Everything I learned transitioning from the Army to Software Development
             </Link>
           </Typography>
