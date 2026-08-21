@@ -1,0 +1,3033 @@
+{
+ "areas": {
+  "AI and Autonomous Systems": [
+   "EN.525.609",
+   "EN.525.610",
+   "EN.525.614",
+   "EN.525.619",
+   "EN.525.627",
+   "EN.525.629",
+   "EN.525.637",
+   "EN.525.648",
+   "EN.525.649",
+   "EN.525.650",
+   "EN.525.655",
+   "EN.525.665",
+   "EN.525.670",
+   "EN.525.671",
+   "EN.525.674",
+   "EN.525.681",
+   "EN.525.724",
+   "EN.525.733",
+   "EN.525.745",
+   "EN.525.747",
+   "EN.525.756",
+   "EN.525.759",
+   "EN.525.764",
+   "EN.525.770",
+   "EN.525.786"
+  ],
+  "Bridge and other courses": [
+   "EN.525.201",
+   "EN.525.202",
+   "EN.525.601",
+   "EN.525.622",
+   "EN.525.647",
+   "EN.525.664",
+   "EN.525.784",
+   "EN.525.801",
+   "EN.525.802",
+   "EN.525.803",
+   "EN.525.804"
+  ],
+  "Communications and Networking": [
+   "EN.525.605",
+   "EN.525.608",
+   "EN.525.614",
+   "EN.525.616",
+   "EN.525.617",
+   "EN.525.618",
+   "EN.525.620",
+   "EN.525.627",
+   "EN.525.628",
+   "EN.525.638",
+   "EN.525.640",
+   "EN.525.641",
+   "EN.525.654",
+   "EN.525.656",
+   "EN.525.678",
+   "EN.525.707",
+   "EN.525.708",
+   "EN.525.722",
+   "EN.525.735",
+   "EN.525.738",
+   "EN.525.747",
+   "EN.525.751",
+   "EN.525.752",
+   "EN.525.754",
+   "EN.525.759",
+   "EN.525.761",
+   "EN.525.768",
+   "EN.525.771",
+   "EN.525.772",
+   "EN.525.776",
+   "EN.525.783",
+   "EN.525.789",
+   "EN.525.791",
+   "EN.525.793"
+  ],
+  "Computer Engineering": [
+   "EN.525.610",
+   "EN.525.612",
+   "EN.525.615",
+   "EN.525.617",
+   "EN.525.634",
+   "EN.525.642",
+   "EN.525.674",
+   "EN.525.677",
+   "EN.525.712",
+   "EN.525.742",
+   "EN.525.743",
+   "EN.525.778",
+   "EN.525.786"
+  ],
+  "Electronics and the Solid State": [
+   "EN.525.606",
+   "EN.525.607",
+   "EN.525.617",
+   "EN.525.621",
+   "EN.525.623",
+   "EN.525.624",
+   "EN.525.651",
+   "EN.525.654",
+   "EN.525.657",
+   "EN.525.658",
+   "EN.525.659",
+   "EN.525.725",
+   "EN.525.726",
+   "EN.525.727",
+   "EN.525.732",
+   "EN.525.754",
+   "EN.525.774",
+   "EN.525.775",
+   "EN.525.779",
+   "EN.525.787",
+   "EN.525.788",
+   "EN.525.790",
+   "EN.525.791"
+  ],
+  "Optics and Photonics": [
+   "EN.525.603",
+   "EN.525.604",
+   "EN.525.613",
+   "EN.525.617",
+   "EN.525.625",
+   "EN.525.636",
+   "EN.525.650",
+   "EN.525.691",
+   "EN.525.753",
+   "EN.525.756",
+   "EN.525.772",
+   "EN.525.796",
+   "EN.525.797",
+   "EN.615.641",
+   "EN.615.654",
+   "EN.615.671",
+   "EN.615.751"
+  ],
+  "RF and Microwave Engineering": [
+   "EN.525.605",
+   "EN.525.617",
+   "EN.525.618",
+   "EN.525.620",
+   "EN.525.623",
+   "EN.525.628",
+   "EN.525.648",
+   "EN.525.654",
+   "EN.525.656",
+   "EN.525.684",
+   "EN.525.738",
+   "EN.525.754",
+   "EN.525.771",
+   "EN.525.774",
+   "EN.525.775",
+   "EN.525.779",
+   "EN.525.787",
+   "EN.525.788",
+   "EN.525.790",
+   "EN.525.791",
+   "EN.615.642"
+  ],
+  "Signal Processing": [
+   "EN.525.614",
+   "EN.525.617",
+   "EN.525.619",
+   "EN.525.627",
+   "EN.525.628",
+   "EN.525.630",
+   "EN.525.631",
+   "EN.525.638",
+   "EN.525.648",
+   "EN.525.655",
+   "EN.525.665",
+   "EN.525.670",
+   "EN.525.674",
+   "EN.525.718",
+   "EN.525.721",
+   "EN.525.724",
+   "EN.525.728",
+   "EN.525.733",
+   "EN.525.735",
+   "EN.525.736",
+   "EN.525.744",
+   "EN.525.745",
+   "EN.525.746",
+   "EN.525.747",
+   "EN.525.748",
+   "EN.525.751",
+   "EN.525.759",
+   "EN.525.762",
+   "EN.525.763",
+   "EN.525.780",
+   "EN.625.603",
+   "EN.625.609",
+   "EN.625.620",
+   "EN.625.710"
+  ],
+  "Systems and Controls": [
+   "EN.525.609",
+   "EN.525.611",
+   "EN.525.614",
+   "EN.525.617",
+   "EN.525.626",
+   "EN.525.628",
+   "EN.525.629",
+   "EN.525.637",
+   "EN.525.644",
+   "EN.525.645",
+   "EN.525.652",
+   "EN.525.653",
+   "EN.525.661",
+   "EN.525.665",
+   "EN.525.666",
+   "EN.525.744",
+   "EN.525.745",
+   "EN.525.763",
+   "EN.525.764",
+   "EN.525.770",
+   "EN.525.777",
+   "EN.625.615",
+   "EN.625.695",
+   "EN.625.714",
+   "EN.625.743"
+  ]
+ },
+ "background": [
+  [
+   "bg_calc",
+   "Calculus I through III"
+  ],
+  [
+   "bg_de",
+   "Differential Equations"
+  ],
+  [
+   "bg_la",
+   "Linear Algebra and Matrix Theory"
+  ],
+  [
+   "bg_cx",
+   "Complex Variables"
+  ],
+  [
+   "bg_phys",
+   "Calculus based Physics I and II"
+  ],
+  [
+   "bg_ugem",
+   "Undergraduate Electromagnetics"
+  ],
+  [
+   "bg_dig",
+   "Digital Logic and State Machines"
+  ],
+  [
+   "bg_c",
+   "Programming in C and C++"
+  ],
+  [
+   "bg_matlab",
+   "MATLAB fluency"
+  ],
+  [
+   "bg_ee",
+   "A full undergraduate EE degree"
+  ],
+  [
+   "bg_eecs",
+   "An undergraduate EE, computer engineering or CS degree"
+  ]
+ ],
+ "concentrations": {
+  "Communications and Networking (transcript)": [
+   "EN.525.608",
+   "EN.525.614",
+   "EN.525.616",
+   "EN.525.618",
+   "EN.525.620",
+   "EN.525.638",
+   "EN.525.640",
+   "EN.525.641",
+   "EN.525.654",
+   "EN.525.678",
+   "EN.525.707",
+   "EN.525.708",
+   "EN.525.722",
+   "EN.525.735",
+   "EN.525.738",
+   "EN.525.747",
+   "EN.525.751",
+   "EN.525.754",
+   "EN.525.759",
+   "EN.525.761",
+   "EN.525.768",
+   "EN.525.771",
+   "EN.525.772",
+   "EN.525.776",
+   "EN.525.783",
+   "EN.525.789",
+   "EN.525.791",
+   "EN.525.793"
+  ],
+  "Photonics (transcript)": [
+   "EN.525.613",
+   "EN.525.625",
+   "EN.525.691",
+   "EN.525.603",
+   "EN.525.636",
+   "EN.525.753",
+   "EN.525.756",
+   "EN.525.772",
+   "EN.525.796",
+   "EN.525.797",
+   "EN.615.641",
+   "EN.615.654",
+   "EN.615.671"
+  ]
+ },
+ "courses": {
+  "EN.525.201": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [
+    "bg_calc",
+    "bg_de",
+    "bg_phys"
+   ],
+   "code": "EN.525.201",
+   "credits": 3.0,
+   "desc": "This course is intended to prepare students lacking an appropriate background for graduate study in electrical and computer engineering. Fundamental mathematical concepts including calculus, differential equations, and linear algebra are reviewed. Circuit theory for linear and nonlinear devices and components is covered. An introduction to electricity and magnetism is presented along with basic wave propagation theory. Finally, Boolean algebra is studied with applications to digital circuit design and analysis.",
+   "excl": [],
+   "external": false,
+   "gradeable": false,
+   "groups": [],
+   "level": 2,
+   "prereq_text": "Two or more semesters of calculus, differential equations, and at least two semesters of calculus-based physics.",
+   "title": "Circuits, Devices and Fields"
+  },
+  "EN.525.202": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [
+    "bg_calc",
+    "bg_de"
+   ],
+   "code": "EN.525.202",
+   "credits": 3.0,
+   "desc": "This course will provide students with foundational knowledge in signals and systems essential for graduate study in electrical and computer engineering, and other related disciplines. Signal and system representations and analysis tools in both continuous time and discrete time are studied. Linear time-invariant systems are defined and analyzed. The Fourier transform, the Laplace transform, and the z-transform are treated along with the sampling theorem. Finally, fundamental concepts in probability, statistics, and random processes are considered.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 2,
+   "prereq_text": "Two or more semesters of calculus and differential equations. Familiarity with computer programming is beneficial.",
+   "title": "Signals and Systems"
+  },
+  "EN.525.601": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.601",
+   "credits": 3.0,
+   "desc": "The 600-level Independent Project course supports technical exploration and skill development through an individually tailored, faculty-supervised project in electrical and computer engineering. The student and supervising faculty member will jointly define the subject matter, study objectives, learning outcomes, and assessment methods, including grading criteria. The project may involve study of instructorrecommended topics using existing lecture materials, textbooks, and journal articles. Learning outcomes will be assessed through agreedupon quizzes, exams, projects, and/or presentations. The final course grade will be based on the student\u2019s demonstrated mastery of the material as measured by these assessments. The supervising faculty member will determine whether the work meets the course\u2019s academic and scholarly standards. Prior to enrollment, an Independent Project proposal form outlining the scope, assessment plan, and deliverables must be approved by the student\u2019s academic advisor, the supervising faculty member, and the ECE program chair. Students are expected to draw on knowledge from prior EP ECE coursework to inform and support their project. 2 Electrical and Computer Engineering",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Independent Project"
+  },
+  "EN.525.603": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.603",
+   "credits": 3.0,
+   "desc": "The course will review the recent advances in photonics technologies for medical imaging and sensing. The course is designed for graduate students with a back ground in optics and engineering. The main topics for the course are: Light Source and Devices for Biomedical Imaging; Fluorescence, Raman, Rayleigh Scatterings; Optical Endoscopy and Virtual biopsy; Novel imaging contrast dyes, nanoparticles, and optical clearing reagents; Label-free optical technologies in clinical applications; Neurophotonics and Optogenetics.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Advanced Topics in Optical Medical Imaging"
+  },
+  "EN.525.604": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.604",
+   "credits": 3.0,
+   "desc": "This course is intended to serve as an introduction to optics and optical instruments that are used in engineering, physical, and life sciences. The course covers first basics of ray optics with the laws of refraction and reflection and goes on to description of lenses, microscopes, telescopes, and imaging devices. Following that basics of wave optics are covered, including Maxwell equations, diffraction and interference. Operational principles and performance of various spectrometric and interferometric devices are covered including both basics (monochromatic, Fabry-Perot and Michelson interferometers), and advanced techniques of near field imaging, laser spectroscopy, Fourier domain spectroscopy, laser Radars and others.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to Optical Instruments"
+  },
+  "EN.525.605": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.605",
+   "credits": 3.0,
+   "desc": "This course provides a background in engineering electromagnetics required for more advanced courses in the field. Topics include vector calculus, Poisson\u2019s and Laplace\u2019s equations, Vector potentials, Green\u2019s functions, magnetostatics, magnetic and dielectric materials, Maxwell\u2019s equations, plane wave propagation and polarization, reflection and refraction at a plane boundary, frequency-dependent susceptibility functions, transmission lines, waveguides, and simple antennas. Practical examples are used throughout the course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Intermediate Electromagnetics"
+  },
+  "EN.525.606": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.606",
+   "credits": 3.0,
+   "desc": "This course explores how materials determine the performance, reliability, and limits of electronic devices. Students learn the physics of electronic materials\u2014band structure, carrier transport, and defect impacts\u2014alongside classical and quantum views of electrical and thermal conduction. Topics include advanced CMOS materials (high-k dielectrics, metal gates, strain engineering, interconnects), wide-bandgap semiconductors (SiC, GaN, Ga2O3) for power and RF systems, and magnetic materials for memory, power conversion, and spintronics. Students also gain experience with materials characterization techniques (XRD, SEM/TEM, C-V, I-V, Hall) while examining industry challenges such as harsh-environment reliability, emerging memory technologies (MRAM, PCM, RRAM), and integration issues like diffusion barriers and thermal stability.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Electronic Materials"
+  },
+  "EN.525.607": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.607",
+   "credits": 3.0,
+   "desc": "Topics include fundamentals of electronic packaging engineering and basic concepts in thermal, mechanical, electrical, and environmental management of modern electronic systems. Emphasis is on highfrequency (and high-speed) package performance and its achievement through the use of advanced analytical tools, proper materials selection, and efficient computer-aided design. Packaging topics include die and lead attachment, substrates, hybrids, surface-mount technology, chip and board environmental protection, connectors, harnesses, and printed and embedded wiring boards.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate degree in a scientific or engineering area, including familiarity with computeraided design and engineering analysis methods for electronic circuits and systems.",
+   "title": "Intro to Electronic Packaging"
+  },
+  "EN.525.608": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.608",
+   "credits": 3.0,
+   "desc": "This course examines voice, data, and video communications through emerging technologies. Considerations include the characteristics and security requirements of the information being encoded, bandwidth requirements and limitations, and transmission standards and equipment. Topics will consider the pragmatics facing the communications system engineer including space, weight, and power. The student will review past and present network architectures and apply trade-off decisions when analyzing new system requirements. Topics include brief histories of telecommunications, speech processing, encoding, digitization, signaling, and transmission; broadband, fiber optics, and wireless network architectures; and encryption, privacy, and security issues. New and disruptive technologies are discussed each offering.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616",
+     "bg_ee"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "Either an undergraduate degree in electrical engineering or 525.616 Communications Systems Engineering, or consent of the instructor.",
+   "title": "Next Generation Telecommunications"
+  },
+  "EN.525.609": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_de",
+    "bg_la"
+   ],
+   "code": "EN.525.609",
+   "credits": 3.0,
+   "desc": "This course closely examines classical methods of representation, analysis, and design of continuous control systems, and introduces state-space representation, analysis and design techniques. Topics include dynamic system representation by linear time invariant ordinary differential equations, state-space representation of linear timeinvariant systems, block diagrams and signal flow graphs, performance measures, sensitivity, stability, root locus analysis, frequency domain analysis, similarity transformations, controllability, and control design methods. Some practical examples are considered. MATLAB is used as a computational tool.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Background in linear algebra and linear differential equations.",
+   "title": "Continuous Control Systems"
+  },
+  "EN.525.610": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_c",
+    "bg_dig"
+   ],
+   "code": "EN.525.610",
+   "credits": 3.0,
+   "desc": "This course examines microprocessors as an integral part of robotic systems. Techniques required for successful incorporation of embedded microprocessor technology are studied and applied to robotic systems. Students will use hardware in a laboratory setting and will develop software that uses features of the microprocessor at a low level to accomplish the real-time performance necessary in robotic applications. Topics will include microprocessor selection, real-time constraints, sensor interfacing, actuator control, and system design considerations.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Experience with C programming and a course in digital systems or computer architecture.",
+   "title": "Microprocessors for Robotic Systems"
+  },
+  "EN.525.611": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.611",
+   "credits": 3.0,
+   "desc": "Convex optimization is at the heart of many disciplines such as machine learning, signal processing, control, medical imaging, etc. In this course, we will cover theory and algorithms for convex optimization. The theory part includes convex analysis, convex optimization problems (LPs, QPs, SOCPS, SDPs, Conic Programs), and Duality Theory. We will then explore a diverse array of algorithms to solve convex optimization problems in a variety of applications, such as gradient methods, sub-gradient methods, accelerated methods, proximal algorithms, Newton\u2019s method, and ADMM. A solid knowledge of Linear Algebra is needed for this course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Modern Convex Optimization"
+  },
+  "EN.525.612": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.612",
+   "credits": 3.0,
+   "desc": "This course focuses on digital hardware design for all major components of a modern, reduced-instructionset computer. Topics covered include instruction set architecture; addressing modes; register-transfer notation; control circuitry; pipelining with hazard control; circuits to support interrupts and other exceptions; microprogramming; computer addition and subtraction circuits using unsigned, two\u2019s-complement, and excess notation; circuits to support multiplication using Robertson\u2019s and Booth\u2019s algorithms; circuits for implementing restoring and non-restoring division; squareroot circuits; floating-point arithmetic notation and circuits; memory and cache memory systems; segmentation and paging; input/ output interfaces; interrupt processing; direct memory access; and several common peripheral devices, including analog-to-digital and digital-to-analog converters. A mini-project is required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.642"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.642 FPGA Design using VHDL or prior knowledge of a hardware description language for FPGA design",
+   "title": "Computer Architecture"
+  },
+  "EN.525.613": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.613",
+   "credits": 3.0,
+   "desc": "In this course, the study of optics is presented from a perspective that uses the electrical engineer\u2019s background in Fourier analysis and linear systems theory. Topics include scalar diffraction theory, Fourier transforming and imaging properties of lenses, spatial frequency analysis of optical systems, spatial filtering and information processing, and holography. The class discusses applications of these concepts in nondestructive evaluation of materials and structures, remote sensing, and medical imaging.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate background in Fourier analysis and linear systems theory.",
+   "title": "Fourier Techniques in Optics"
+  },
+  "EN.525.614": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Communications and Networking",
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_calc"
+   ],
+   "code": "EN.525.614",
+   "credits": 3.0,
+   "desc": "This course provides a foundation in the theory and applications of probability and stochastic processes and an understanding of the mathematical techniques relating to random processes in the areas of signal processing, detection, estimation, and communication. Topics include the axioms of probability, random variables, and distribution functions; functions and sequences of random variables; stochastic processes; and representations of random processes.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "A working knowledge of multi-variable calculus, Fourier transforms, and linear systems theory.",
+   "title": "Probability & Stochastic Processes for Engineers"
+  },
+  "EN.525.615": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_c",
+    "bg_dig"
+   ],
+   "code": "EN.525.615",
+   "credits": 3.0,
+   "desc": "This course applies microprocessors as an integral element of system design. Techniques required for successful incorporation of microprocessor technology are studied and used. Hardware and software design considerations that affect product reliability, performance, and flexibility are covered. Students use hardware to gain familiarity with machine and assembly language for software generation, interfacing to a microprocessor at the hardware level, and emulation to check out system performance. Topics include embedded system operational design, case studies in system failures, communications protocols, and hardware/software system tradeoffs. The course is based on the ARM architecture, and the student will do a series of development and interfacing labs.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Some experience in designing and building digital electronic systems, familiarity with C programming, and a course in digital systems",
+   "title": "Introduction to Embedded Systems"
+  },
+  "EN.525.616": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.616",
+   "credits": 3.0,
+   "desc": "In this course, students receive an introduction to the principles, performance and applications of communication systems. Students examine analog modulation/demodulation systems (amplitude - AM, DSB & SSB; and angle - PM & FM) and digital modulation/demodulation systems (binary and M-ary) in noise and interference. Sub-topics include filtering, sampling, quantization, encoding and the comparison of coherent & noncoherent detection techniques to improve signalto-noise ratio (SNR) and bit error rate (BER) performance. Special topics and/or problems will be assigned that provide knowledge of how communication systems work from a system engineering viewpoint in real-world environments.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "A working knowledge of Fourier transforms, linear systems, and probability theory. Basic working knowledge of MATLAB.",
+   "title": "Communication Systems Engineering"
+  },
+  "EN.525.617": {
+   "areas": [
+    "Communications and Networking",
+    "Computer Engineering",
+    "Electronics and the Solid State",
+    "Optics and Photonics",
+    "RF and Microwave Engineering",
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.617",
+   "credits": 3.0,
+   "desc": "Designing algorithms in a finite precision environment that are accurate, fast, and memory efficient is a challenge that many engineers must face. This course will provide students with the tools they need to meet this challenge. Topics include floating point arithmetic, rounding and discretization errors, problem conditioning, algorithm stability, solving systems of linear equations and least-squares problems, exploiting matrix structure, interpolation, finding zeros and minima of functions, computing Fourier transforms, derivatives, and integrals. Matlab is the computing platform. 4 Electrical and Computer Engineering",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Computation for Engineers"
+  },
+  "EN.525.618": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.618",
+   "credits": 3.0,
+   "desc": "This course introduces and explains fundamental antenna concepts for both antennas and antenna arrays. Electromagnetic theory is reviewed and applied to antenna elements such as dipoles, loops, and aperture antennas, as well as antenna arrays. Antenna analysis is presented from a circuit theory point of view to highlight concepts such as reciprocity and the implications for transmit and receive radiation patterns. The importance of two-dimensional Fourier transforms is explained and applied to aperture antennas. Basic array constraints are examined through case studies of uniform, binomial, and general amplitude distributions. The concept of beam squint is explained through examination of constant-phase versus constant-time phase shifters. The Rotman lens is discussed as an example of a common beamformer. The class concludes with an explanation of antenna measurements.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.605",
+     "EN.615.642"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.605 Intermediate Electromagnetics or EN.615.642 Electromagnetics or permission of the instructor.",
+   "title": "Antenna Systems"
+  },
+  "EN.525.619": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.619",
+   "credits": 3.0,
+   "desc": "This course provides an introduction to the basic concepts and techniques used in digital image and video processing. Two-dimensional sampling and quantization are studied, and the human visual system is reviewed. Edge detection and feature extraction algorithms are introduced for dimensionality reduction and feature classification. High-pass and bandpass spatial filters are studied for use in image enhancement. Applications are discussed in frame interpolation, filtering, coding, noise suppression, and video compression. Some attention will be given to object recognition and classification, texture analysis in remote sensing, and stereo machine vision.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.627 Digital Signal Processing.",
+   "title": "Introduction to Digital Image and Video Processing"
+  },
+  "EN.525.620": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.620",
+   "credits": 3.0,
+   "desc": "This course examines transmission systems used to control the propagation of electromagnetic traveling waves with principal focus emphasizing microwave and millimeter-wave applications. The course reviews standard transmission line systems together with Maxwell\u2019s equations and uses them to establish basic system concepts such as reflection coefficient, characteristic impedance, input impedance, impedance matching, and standing wave ratio. Specific structures are analyzed and described in terms of these basic concepts, including coaxial, rectangular, and circular waveguides, surface waveguides, striplines, microstrips, coplanar waveguides, slotlines, and finlines. Actual transmission circuits are characterized using the concepts and analytical tools developed.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.605"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "Knowledge of intermediate electromagnetics as covered in EN.525.605 Intermediate Electromagnetics.",
+   "title": "Electromagnetic Transmission Systems"
+  },
+  "EN.525.621": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [
+    "bg_ee"
+   ],
+   "code": "EN.525.621",
+   "credits": 3.0,
+   "desc": "Fundamentals of solid state and device physics are presented. Topics in solid-state physics include crystal structure, lattice vibrations, dielectric and magnetic properties, band theory, and transport phenomena. Concepts in quantum and statistical mechanics are also included. Basic semiconductor device operation is described with emphasis on the p-n junction.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate degree in electrical engineering or the equivalent.",
+   "title": "Introduction to Electronics and the Solid State"
+  },
+  "EN.525.622": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.622",
+   "credits": 3.0,
+   "desc": "An introduction to prototyping and design of electronic systems, this course introduces students to the theory underlying the phenomena to be considered when implementing a design. Even seemingly simple design decisions have interesting physics driving considerations made (potentially) across the entire design, and this course aims to provide students with the means to engage with those phenomena intentionally, intelligently, and effectively. Emphasis is placed on developing a firstprinciples understanding of these phenomena, their effects, and how they drive design decisions at every level.Fundamental concepts in electronic device design, such as the practical aspects of driving loads of varying types , reading sensors, layout best practices, etc., will be covered, with extensions into the basics of simple mechanical design (form factor, packaging, fasteners) and computer engineering (configuring microcontrollers, FPGAs, memory considerations). By developing a theoretical foundation grounded in practice, students will be able to determine dynamically the best approach to take when interfacing with an arbitrary transducer, meeting a given requirement, the properties and considerations associated, and what actions to take to maximize the efficacy and robustness of their designs.As an introduction to primarily electrical prototyping and board design, this course introduces students to using CAD tools (both electrical and mechanical) for schematic capture, board design, and basic parametric 3D modeling. While specific tools will be used, the specifics of those tools are not the focus of the course.Course deliverables include design documentation, physical prototypes, and source code (where applicable), with the Final Project deliverables take the place of the final exam. No prerequisites are required, but exposure to design software, general fabrication, and most any programming language will be beneficial.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to Electronics Prototyping and Design"
+  },
+  "EN.525.623": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.623",
+   "credits": 3.0,
+   "desc": "This course addresses foundational microwave circuit concepts and engineering fundamentals. Topics include electromagnetics leading to wave propagation and generation, the transmission line, and impedance/ admittance transformation and matching. Mapping and transformation are presented in the development of the Smith Chart. The Smith Chart is used to perform passive microwave circuit design. Microwave networks and s-matrix are presented; Mason\u2019s rules is introduced. Circuits are physically designed using microstrip concepts, taking into consideration materials properties, connectors, and other components.",
+   "excl": [
+    "EN.525.674"
+   ],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Students who have completed EN.525.674 are restricted from enrolling in EN.525.623",
+   "title": "Principles of RF and Microwave Circuits"
+  },
+  "EN.525.624": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.624",
+   "credits": 3.0,
+   "desc": "This course examines the use of passive and active components to perform practical electronic functions. Simple circuits are designed and evaluated emphasizing the characteristics and tolerances of actual components. Devices studied include diodes and bipolar and field effect transistors. Circuit designs are studied in relation to the device characteristics, including small signal amplifiers and oscillators, and linear power supply and amplifier circuits. SPICE modeling is available to students.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Undergraduate courses in electricity and magnetism, circuit theory, and linear analysis.",
+   "title": "Analog Electronic Circuit Design"
+  },
+  "EN.525.625": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.625",
+   "credits": 3.0,
+   "desc": "This course reviews electromagnetic theory and introduces the interaction of light and matter with an emphasis on laser theory. A fundamental background is established, necessary for advanced courses in optical engineering. Topics include Maxwell\u2019s equations, total power law, introduction to spectroscopy, classical oscillator model, KramersKroenig relations, line broadening mechanisms, rate equations, laser pumping and population inversion, laser amplification, laser resonator design, and Gaussian beam propagation.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.605"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.605 Intermediate Electromagnetics or equivalent.",
+   "title": "Laser Fundamentals"
+  },
+  "EN.525.626": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.626",
+   "credits": 3.0,
+   "desc": "This course considers examples of the use of feedback control in engineering systems and looks for counterparts in biological signaling networks. To do this will require some knowledge of mathematical modeling techniques in biology, so a part of the course will be devoted to this.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Feedback Control in Biological Signaling Pathways"
+  },
+  "EN.525.627": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.627",
+   "credits": 3.0,
+   "desc": "This course examines fundamental principles and applications of Digital Signal Processing. Introductory topics include linear, timeinvariant systems, discrete-time convolution, and frequency-domain representations of discrete-time signals and systems. Sampling and quantization of continuous-time signals are covered. The Discrete Fourier Transform and efficient algorithms for its computation are studied in detail. The z-transform and its application to linear discrete-time systems analysis is studied. The design of digital filters using the windowing, equiripple, impulse invariance, and bilinear transformation methods is treated, along with the implementation of digital filter difference equations using canonical structures. MATLAB is utilized to demonstrate and implement Digital Signal Processing techniques.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "A working knowledge of linear systems and Fourier analysis. Familiarity with MATLAB.",
+   "title": "Digital Signal Processing"
+  },
+  "EN.525.628": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering",
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.628",
+   "credits": 3.0,
+   "desc": "In recent years, compressed sensing (CS) has attracted considerable attention in areas of applied mathematics, computer science, and electrical engineering by suggesting that it may be possible to surpass the traditional limits of sampling theory. CS builds upon the fundamental fact that we can represent many signals using only a few non-zero coe?cients in a suitable basis or dictionary. Optimization can then enable recovery of such signals from very few measurements. Beautiful theoretical results show that structured signals, such as sparse vectors and low-rank matrices, can be recovered from relatively small sets of linear observations. These results raise intriguing possibilities for addressing engineering problems in signal and image processing, and beyond. The goal of this course is to provide students with the theoretical understanding, algorithmic tools, and implementation experience needed to use these tools to solve problems in their own area of interest, or even to begin doing novel work in this area.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Compressed Sensing and Sparse Recovery"
+  },
+  "EN.525.629": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.629",
+   "credits": 3.0,
+   "desc": "This course presents a comprehensive introduction to the theory and design of discrete-time control systems. Representation, modeling, and analysis of discrete-time / sampled-data systems are first studied. Then, the design of discrete-time control systems is introduced using both digital design emulation methods (e.g., emulating a continuoustime compensator via zero-pole mapping, hold equivalents, etc.) and direct design (transform) methods using root locus and frequency domain synthesis techniques (e.g., Bode, Nyquist). The \u201cclassical\u201d approach to discrete-time control system representation, analysis and synthesis is followed by a discussion of the \u201cmodern\u201d approach which includes discrete-time state-space representation of dynamic systems, controllability, observability, similarity transforms, and pole placement via full state feedback methods. Sample rate selection and the effects of quantization are also discussed. As part of this course, the student will research and select (with instructor approval) a conference / journal article or textbook section / chapter discussing an applications-based discrete-time control system concept and / or design process in an area of particular interest to the student. The paper / article should reflect and emphasize one or more of the key topics introduced in this course. The student reviews the paper, implements the concept(s), and develops a final presentation video to be shared with the class. MATLAB will be used in this course for all design and analysis topics; therefore, it is expected that students taking the course have familiarity with MATLAB functional and programming fundamentals.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.609"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.609 Continuous Control Systems; Students should have had previous exposure to MATLAB functional and programming fundamentals.",
+   "title": "Discrete-Time Control Systems"
+  },
+  "EN.525.630": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.630",
+   "credits": 3.0,
+   "desc": "This course builds on the theory of digital signal processing. Opportunities are provided to work on specific applications of digital signal processing involving filtering, deconvolution, spectral estimation, and a variety of other techniques. Students may also suggest their own laboratory topics. Laboratory work involves developing signal processing systems on a personal computer and using them with both real and simulated data. Questions related to hardware realizations are also considered.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.627 Digital Signal Processing.",
+   "title": "Digital Signal Processing Lab"
+  },
+  "EN.525.631": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.631",
+   "credits": 3.0,
+   "desc": "This course explores the use of adaptive filtering algorithms and structures to learn the optimal filter or estimator and track timevarying system dynamics in order to improve the performance over static, fixed filtering techniques. Adaptive systems are implemented as part of the coursework with application to digital communications, beamforming, control systems, and interference cancellation. The final project involves creating an adaptive equalizer for digital communications over a timevarying channel.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.627 Digital Signal Processing. Some knowledge of probability is helpful.",
+   "title": "Adaptive Signal Processing"
+  },
+  "EN.525.634": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_dig",
+    "bg_ugem"
+   ],
+   "code": "EN.525.634",
+   "credits": 3.0,
+   "desc": "This course will discuss the principles of signal integrity and its applications in the proper design of high-speed digital circuits. As interconnect data rates increase, phenomena that have historically been negligible begin to dominate performance, requiring techniques that were not previously necessary. This course is designed to give the students the theoretical and simulation tools needed to determine where signal integrity issues may arise, how to prevent such problems, and how to resolve problems when they arise in practice. A partial list of topics includes distributed circuits and lossless transmission lines, nonideal transmission line effects, crosstalk mitigation, differential pairs and modal analysis, I/O circuits and logic standards, and signal coding and waveshaping techniques.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Thorough knowledge of digital design and circuit theory. Prior coursework in electromagnetics and Laplace transforms will be helpful.",
+   "title": "High Speed Digital Design"
+  },
+  "EN.525.636": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.636",
+   "credits": 3.0,
+   "desc": "This is a on-line laboratory course that teaches students \u201chands-on\u201d skills in optics and photonics by performing weekly experiments at home using custom kits that make use of 3D printed parts, custom optoelectronic boards and RaspberryPi cameras. Critical skills developed through this process include experimental setup and alignment, data collection and analysis (using MATLAB and ImageJ), and quantification of measurement error. Students work in small virtual teams to enhance the laboratory experience with each team member collecting their own data. Nearly a dozen experiments have been selected to provide students with a solid exposure to fundamental principles in optics and photonics and key applications in imaging, communications, and sensing. The emphasis of each experiment is to provide the ability to make quantitative measurements of key properties that can be compared to theoretical models. Topics include radiometry, geometric optics, photodiode sensing circuits, lockin detection technique, diffraction and interferometry, Fourier optics, Mie scattering, polarization, spectroscopy, visible and infrared imaging, visible light wave communications, and Michelson interferometry.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.691",
+     "EN.525.604",
+     "EN.615.671",
+     "EN.615.751"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.691 Fundamentals of Photonics or EN.525.604 Introduction to Optical Instruments or EN.615.671.81 Principles of Optics or EN.615.751.81 Modern Optics or equivalent",
+   "title": "Optics & Photonics Lab"
+  },
+  "EN.525.637": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.637",
+   "credits": 3.0,
+   "desc": "The course will provide a rigorous treatment of reinforcement learning by building on the mathematical foundations laid by optimal control, dynamic programming, and machine learning. Topics include modelbased methods such as deterministic and stochastic dynamic programming, LQR and LQG control, as well as model-free methods that are broadly identified as Reinforcement Learning. In particular, we will cover on and off-policy tabular methods such as Monte Carlo, Temporal Differences, n-step bootstrapping, as well as approximate solution methods, including on- and off-policy approximation, policy gradient methods, including Deep Q-Learning. The course has a final project where students are expected to formulate and solve a problem based on the techniques learned in class.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Foundations of Reinforcement Learning"
+  },
+  "EN.525.638": {
+   "areas": [
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.638",
+   "credits": 3.0,
+   "desc": "This lab-based course introduces students to the modern technology theory and hardware used with communications systems. The course steps through the components of a modern communications architecture using Matlab as a virtual lab and the ADI Pluto software defined radio (provided) as a use at home experimental lab. The student will work with modeling concepts and algorithms in software and hardware. The course focuses on the adaptive signal processing systems at the heart of modern digital wireless, satellite and optical communication systems. As well as the physical and practical impacts of wireless channels, optical transport and practical components. The course reflects modern state of the art communications systems. Example systems using the technology presented are digital cellular, microwave, satellite and optical backhaul and front haul, 5G, wifi, Bluetooth and other communication systems. Experience with MATLAB and or comfort with a programming environment will be very helpful but is not required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to Modern Wireless and Optical Communication Systems"
+  },
+  "EN.525.640": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.640",
+   "credits": 3.0,
+   "desc": "This course presents the fundamentals of satellite communications link design and an in-depth treatment of practical considerations. Existing commercial, civil, and military systems are described and analyzed, including direct broadcast satellites, high throughput satellites, VSAT links, and Earth-orbiting and deep space spacecraft. Topics include satellite orbits, link analysis, antenna and payload design, interference and propagation effects, modulation techniques, coding, multiple access, and Earth station design. The impact of new technology on future systems in this dynamic field is discussed.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Satellite Communications Systems"
+  },
+  "EN.525.641": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.641",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive overview of computer and data communication networks, with emphasis on analysis and modeling. Basic communications principles are reviewed as they pertain to communication networks. Networking principles covered include layered network architecture, data encoding, static and multi-access channel allocation methods (for LAN and WAN), ARQ retransmission strategies, framing, routing strategies, transport protocols, and emerging highspeed networks. In, addition, this course will cover some of the routing protocols, such as RIP, OSPF, BGP, and communications protocols such as IEEE 802.3, IEEE 802.11, SIP, DHCP, DNS, SMPT, and HTTP.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Computer and Data Communication Networks I"
+  },
+  "EN.525.642": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_dig"
+   ],
+   "code": "EN.525.642",
+   "credits": 3.0,
+   "desc": "This lab-oriented course covers the design of digital systems using VHSIC Hardware Description Language (VHDL) and its implementation in Field Programmable Gate Arrays (FPGAs). This technology allows cost-effective unique system realizations by enabling design reuse and simplifying custom circuit design. The design tools are first introduced and used to implement basic circuits. More advanced designs follow, focusing on integrating the FPGA with external peripherals, simple signal processing applications, utilizing soft-core processors, and using intellectual property (IP) cores.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "A solid understanding of digital logic fundamentals.",
+   "title": "FPGA Design Using VHDL"
+  },
+  "EN.525.644": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.644",
+   "credits": 3.0,
+   "desc": "Leveraging lectures and coding assignments, this course provides the theoretical foundations and practical application of optimal control and optimal state estimation algorithms for dynamical systems. Foundational topics include Calculus of Variation, Pontryagin\u2019s Minimum Principle, Dynamic Programing (which serve as a basis for modern Reinforcement Learning), and Nonlinear Observer Design. Practical applications include synthesis of Linear Quadratic Regulators (LQR), Model Predictive Controllers (MPC) and Extended Kalman Filters (EKF) which serve as standard algorithms in the fields of robotics, aerospace, and electromechanical systems. This course will require both analytical derivation exercises on theoretical concepts, as well as hands-on code development as training for practical algorithm implementation. Working knowledge in vector calculus, ordinary differential equations, and linear algebra is required. Continuous Control Systems (EN.525.609 or equivalent), helpful but not required. Working knowledge in MATLAB required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Optimal Control and Estimation: Theory and Applications"
+  },
+  "EN.525.645": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.645",
+   "credits": 3.0,
+   "desc": "This course explores the use of satellite, terrestrial, celestial, radio, magnetic, and inertial systems for the real-time determination of position, velocity, acceleration, and attitude. Particular emphasis is on the historical importance of navigation systems; avionics navigation systems for high performance aircraft; the Global Positioning System; the relationships between navigation, cartography, surveying, and astronomy; and emerging trends for integrating various navigation techniques into single, tightly coupled systems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Modern Navigation Systems"
+  },
+  "EN.525.647": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.647",
+   "credits": 3.0,
+   "desc": "This course covers the principles, mathematical foundations, and techniques of decentralized control for multi-agent systems, focusing on consensus algorithms, distributed optimization, and robustness. By the end of the course, participants will be equipped to design scalable and robust control strategies for dynamic, interconnected systems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Decentralized Control and Consensus in Multi-Agent Systems"
+  },
+  "EN.525.648": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "RF and Microwave Engineering",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab",
+    "bg_ugem"
+   ],
+   "code": "EN.525.648",
+   "credits": 3.0,
+   "desc": "This class introduces the student to the fundamentals of radar system engineering. The radar range equation in its many forms is developed and applied to different situations. Radar transmitters, antennas, and receivers are covered. The concepts of matched filtering, pulse compression, and the radar ambiguity function are introduced, and the fundamentals of radar target detection in a noise background are discussed. Target radar cross-section models are addressed, as well as the effects of the operating environment, including propagation and clutter. MTI and pulsed Doppler processing and performance are addressed. Range, angle, and Doppler resolution/accuracy, as well as fundamental tracking concepts, will also be discussed.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers, EN.525.627 Digital Signal Processing, a working knowledge of electromagnetics, and familiarity with MATLAB.",
+   "title": "Introduction to Radar Systems"
+  },
+  "EN.525.649": {
+   "areas": [
+    "AI and Autonomous Systems"
+   ],
+   "bg": [],
+   "code": "EN.525.649",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive introduction to the principles, technologies, and applications of Smart Grids, with a particular emphasis on renewable and sustainable energy integration. Students will examine the design, control, and optimization of decentralized power generation systems. Key topics include energy storage systems, grid interconnection, power system optimization, demand-side management, Microgrid design and operation, and advanced smart grid technologies. The course also incorporates case studies of distributed generation projects to assess their impacts on grid stability, sustainability, and community energy resilience. 8 Electrical and Computer Engineering",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Smart Grids"
+  },
+  "EN.525.650": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.650",
+   "credits": 3.0,
+   "desc": "This is an introduction course to infrared and electro-optical imaging systems. The prerequisite is an undergraduate degree in electrical engineering. The target audience is for first-year graduate students with an interest in electronic imaging systems. Some basic nomenclature, component descriptions, and performance parameters are introduced. The course begins with some mathematics review, and then follows the light by going through the sources of radiation, the propagation of radiation through the atmosphere, the formation of an image through optics, the conversion of photons to electrical signals via detectors and electronics, the signal processing to enhance the images, and display for human operators and automatic target recognition (ATR). EO/IR sensor design will be discussed. Finally, some examples of EO/IR imagers will be described.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to EO/IR Systems"
+  },
+  "EN.525.651": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.651",
+   "credits": 3.0,
+   "desc": "This course introduces and explains fundamentals of electrical power systems design and engineering. Phasors and their application to power systems analysis are reviewed. The concept of the per-unit system is introduced and applied to circuit calculations. Transformers and their application to electrical power transmission and distribution systems will be covered. Transmission line parameters, their calculation, and transmission line modeling are introduced. Steady-state operation of transmission lines is modeled and investigated. Power flow analysis computational techniques are covered. Short-circuit analysis and the method of symmetrical components are introduced. The concept of power system protection and the role of automatic relays will be covered. Primary and secondary distribution systems and substations are introduced. Renewable energy generation and the integration of renewable energy into the modern power grid will be introduced.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Course in electrical networks and a course in linear algebra and matrix operations. MATLAB required software.",
+   "title": "Introduction to Electric Power Systems"
+  },
+  "EN.525.652": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.652",
+   "credits": 3.0,
+   "desc": "This course prepares the student for technical understanding of the principles and theory of operation of electric motors and motor controls commonly used for electrification. Various types of electric motors including permanent magnet and synchronous reluctance motors and control schemes are covered in this class. The class addresses key performance metrics in electric motor design and construction. Mobile inverter configuration is covered. The course extensively discusses advanced motor control concepts, and their applications for electrification. We use Simulink & Simscape throughout the course. Lab sessions may be integrated as well.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Electric Machines and Control for Electrification"
+  },
+  "EN.525.653": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.653",
+   "credits": 3.0,
+   "desc": "This course explores the advanced principles and techniques used in the control, optimization, and management of modern power systems. The course provides an in-depth understanding of key concepts in power system control, including voltage and frequency regulation, load flow analysis, and stability assessment. Students will also study optimization techniques used in power system operation, such as economic dispatch, unit commitment, and optimal power flow (OPF), to minimize costs and improve system efficiency. Throughout the course, students will develop the skills needed to apply optimization and control methods to real-world power system problems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Power System Control, Optimization, and Grid Management"
+  },
+  "EN.525.654": {
+   "areas": [
+    "Communications and Networking",
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.654",
+   "credits": 3.0,
+   "desc": "This online laboratory-based course focuses on modulation/ demodulation (MODEM) aspects of wireless communications systems. This course is designed to enhance the student\u2019s understanding of fundamental communications waveforms and to present methods commonly used to process them. Students will be exposed to various implementations of MODEM circuits used to process waveforms such as FM, FSK, PSK, and QAM. All work is performed remotely via Internet access to the remote laboratory facility located at the Johns Hopkins University. Following an introduction to this remote laboratory implementation, students will conduct a series of laboratory exercises designed to enhance their understanding of material presented in communications engineering courses. Course modules involve the characterization of waveforms and MODEM circuits through lecture, laboratory exercises, analysis, and online discussion. Materials required for this course include a broadband Internet connection, web browser, word processing software (e.g., MS Word or equivalent), and analysis software (e.g., MATLAB or equivalent) used to process and present data collected.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.616 Communication Systems Engineering or consent of the instructor.",
+   "title": "Communications Circuits Lab"
+  },
+  "EN.525.655": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.655",
+   "credits": 3.0,
+   "desc": "This course gives a foundation in current audio and speech technologies, and covers techniques for sound processing by processing and pattern recognition, acoustics, auditory perception, speech production and synthesis, speech estimation. The course will explore applications of speech and audio processing in human computer interfaces such as speech recognition, speaker identification, coding schemes (e.g. MP3), music analysis, noise reduction. Students should have knowledge of Fourier analysis and signal processing.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Audio Signal Processing"
+  },
+  "EN.525.656": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.656",
+   "credits": 3.0,
+   "desc": "This course presents an engineering approach to the design of antennas for space systems. Students will examine antennas for both large and small space based platforms in earth orbit and beyond. Antenna design is presented in the context of the space environment with particular attention to the flight design and testing cycle, thermal and mechanical considerations, space compatible materials, and high power operation. A primary focus of the course will be single, dual and shaped reflector designs including feed network topologies. Several horn antenna designs including corrugated and multimode horns will be covered as well as feed network components. A variety of other antennas including helices, patches, and arrays will be discussed for applications including: Global Navigation Satellite System (GNSS); Tracking, Telemetry and Command (TT&C); isoflux; smallsat and cubesat antennas. Course Note(s): This course is cross-listed with 675.756 Antenna Design for Space Systems. ECE students can only register for 525.656.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate- or graduate-level introductory antenna systems course, or with approval of the instructor. Electrical and Computer Engineering",
+   "title": "Antenna Design for Space Systems"
+  },
+  "EN.525.657": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.657",
+   "credits": 3.0,
+   "desc": "This course provides students conceptual knowledge about various electronical measuring techniques and how to design instruments based on their requirements. Through this course, students should have in-depth knowledge of common measurement techniques and develop the ability to construct and analyze circuits/components for conditioning, conversion and transmission of analog measurement signals. Students should be able to communicate with industrial instrumentation manufacturers, evaluate sensors, and specify digitized measurement quality (for their given requirements/environment specification). The course culminates with a final project where the student shall design, evaluate, and present their own instrument for evaluation by the instructor (asynchronously).",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.201"
+    ],
+    [
+     "EN.525.624"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "525.201 Circuits, Devices, and Fields and 525.624 Analog Electronic Circuit Design",
+   "title": "Measurement and Instrumentation"
+  },
+  "EN.525.658": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [
+    "bg_dig"
+   ],
+   "code": "EN.525.658",
+   "credits": 3.0,
+   "desc": "An introductory course in digital VLSI design in which students design digital CMOS integrated circuits and systems. The class covers transistor, behavioral, and physical level design using a variety of design tools, including transistor level circuit layout and simulation, logic simulation and synthesis with Verilog HDL, and automated placement and routing. Students will learn the fundamentals of CMOS technology and fabrication, as well as apply that knowledge to current challenges in process scaling and manufacturing. The course will use this foundation as a basis for understanding the operation and design of static CMOS inverters, as well as more complicated combinational logic gates and sequential circuits. Subsequently, more complicated functional blocks such as adders, multipliers, and memory arrays are summarized and integrated into designs at higher levels of abstraction using Verilog HDL and highly automated logic synthesis, placement, and routing tools. The class culminates in a final project in which each student designs a more complicated digital system from architecture to final layout.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Courses in digital design and circuit design fundamentals (Kirchoff\u2019s laws and circuit analysis). Helpful, but not required, is experience in HDL based design, transistor level design, and using Linux-based systems.",
+   "title": "Digital VLSI System Design"
+  },
+  "EN.525.659": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.659",
+   "credits": 3.0,
+   "desc": "This course focuses on transistor-level design of mixed-signal CMOS integrated circuits. After reviewing fundamentals of MOSFET operation, the course will cover design of analog building blocks such as currentmirrors, bias references, amplifiers, and comparators, leading up to the design of digital-to-analog and analog-to-digital converters. Aspects of subthreshold operation, structured design, scalability, parallelism, low power-consumption, and robustness to process variations are discussed in the context of larger systems. The course will include use of Cadence design software to explore transistor operation and to perform functionalblock designs, in the process of incrementally designing a data-converter front-end.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Familiarity with MOSFET and transistor level circuit design fundamentals.",
+   "title": "Mixed-Mode VLSI Circuit Design"
+  },
+  "EN.525.661": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_c",
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.661",
+   "credits": 3.0,
+   "desc": "This hardware-supplemented course covers the guidance, navigationand control principles common to many small fixed-wing and multirotor unmanned aerial vehicles (UAVs). Building on classical control systems and modeling theory, students will learn how to mathematically model UAV flight characteristics and sensors, develop and tune feedback control autopilot algorithms to enable stable flight control, and fuse sensor measurements using extended Kalman filter techniques to estimate the UAV position and orientation. Students will realize these concepts through both simulation and interaction with actual UAV hardware. Throughout the course, students will build a full 6-degreeof-freedom simulation of controlled UAV flight using MATLAB and Simulink. Furthermore, students will reinforce their UAV flight control knowledge by experimenting with tuning and flying actual open-source quadrotor UAVs.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.609"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "Background in control systems (e.g., EN.525.609 Continuous Control Systems) and matrix theory along with a working knowledge of MATLAB. Experience using Simulink is desired. Existing familiarity with C programming language, electronics, and microcontrollers will be helpful but is not required.",
+   "title": "UAV Systems and Control"
+  },
+  "EN.525.664": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.664",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive study of transformers, three phase synchronous generators and motors, and both three phase and single phase induction motors. It begins with foundational principles \u2014such as Amp\u00e8re\u2019s and Faraday\u2019s laws\u2014and shows how these laws lead to the operating principles of transformers and electric machinery. Topics include magnetic circuits; equivalent circuits for transformers, motors, and generators; and the development of rotating magnetic fields that underpin three phase machines. The course examines winding types, single phase induction motor behavior, and special purpose transformers including potential transformers, current transformers, and autotransformers. Students analyze voltage regulation and power conversion efficiency and perform open and short circuit test calculations for transformers and AC machines. Additional topics include conditions for paralleling synchronous generators, the use of synchronous motors as synchronous condensers, transient currents under fault conditions, and both static and transient stability. The course concludes with coverage of special motors such as stepper, reluctance, and hysteresis motors.Course",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.201"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "525.201 or equivalent course in AC Circuit Theory.",
+   "title": "AC Electric Machinery Fundamentals"
+  },
+  "EN.525.665": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.665",
+   "credits": 3.0,
+   "desc": "This course will cover machine perception with a focus on computer vision (i.e., feature detection, stereovision, structure from motion, deep learning object detection) as the primary use case. Additional sensor modalities will be addressed (i.e., radar, lidar) along with data fusion (i.e., Kalman filtering, target tracking) in order to provide a broad understanding of multi-modality machine perception. 10 Electrical and Computer Engineering",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Machine Perception"
+  },
+  "EN.525.666": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_de",
+    "bg_la"
+   ],
+   "code": "EN.525.666",
+   "credits": 3.0,
+   "desc": "This course covers the structure and properties of linear dynamic systems with an emphasis on the single-input, single-output case. Topics include the notion of state-space, state variable equations, review of matrix theory, linear vector spaces, eigenvalues and eigenvectors, the state transition matrix and solution of linear differential equations, internal and external system descriptions, properties of controllability and observability and their applications to minimal realizations, statefeedback controllers, asymptotic observers, and compensator design using state-space and transfer function methods. An introduction to multi-input, multi-output systems is also included, as well as the solution and properties of timevarying systems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "Courses in matrix theory and linear differential equations.",
+   "title": "Linear System Theory"
+  },
+  "EN.525.670": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.670",
+   "credits": 3.0,
+   "desc": "This course will focus on the use of machine learning theory and algorithms to model, classify, and retrieve information from different kinds of real world signals such as audio, speech, image, and video.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Machine Learning for Signal Processing"
+  },
+  "EN.525.671": {
+   "areas": [
+    "AI and Autonomous Systems"
+   ],
+   "bg": [],
+   "code": "EN.525.671",
+   "credits": 3.0,
+   "desc": "This course offers a comprehensive introduction to Deep Learning (DL) and Generative Artificial Intelligence (GenAI), focusing on both foundational principles and advanced techniques. Recent breakthroughs in AI, particularly the development of transformers, have drastically enhanced the performance of large language models (LLMs) and vision models. The curriculum combines mathematical theory with practical examples to deepen understanding of DL and GenAI. Key topics include Neural Networks, Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs), Variational Autoencoders (VAEs), Diffusion Models, and Generative Adversarial Networks (GANs). The course will also cover essential methods for training, testing, regularization, and evaluation, as well as advanced subjects like contrastive learning, transfer learning, transformers, and foundation models. Through handson projects, students will apply DL and GenAI techniques to real-world problems. Python and PyTorch will be used throughout the course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Deep Learning and Generative Artificial Intelligence"
+  },
+  "EN.525.674": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Computer Engineering",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.674",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive introductory presentation of the fundamentals of image processing and analysis both from a theoretical and a practical point of view. The course covers fundamental methods for the processing and analysis of images and describes standard and modern techniques for the understanding of images by humans and computers. Topics include elements of visual perception, sampling and quantization, image transforms, image enhancement, color image processing, image restoration, edge detection, image segmentation, and multiresolution image representation. MATLAB exercises demonstrate key aspects of the course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.202"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "EN.525.202 (Signals and Systems) , or equivalent, and working knowledge of Matlab.",
+   "title": "Image Processing & Analysis"
+  },
+  "EN.525.677": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.677",
+   "credits": 3.0,
+   "desc": "This course introduces techniques for refining signal processing algorithms to hardware implementations described using a hardware descriptive language. Students design, model and simulate signal processing algorithms through different levels of hardware refinement. Hardware structures for finite impulse filter (FIR), infinite impulse filters (IIR) and adaptive equalizers are studied and analyzed throughout the course. Multi-rate and multi-signal concepts are covered during the course and these concepts are applied to different signal processing techniques. Cut-set retiming methods to generate parallel and systolic array filtering structures are also covered in the course. By the end of the course, students are able to refine a signal processing algorithm targeting hardware platforms such as field programmable gate arrays (FPGA). An understanding of digital signal processing and VHDL for FPGAs is required for this course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ],
+    [
+     "EN.525.642"
+    ]
+   ],
+   "level": 6,
+   "prereq_text": "525.627 Digital Signal Processing and 525.642 FPGA Design Using VHDL, or equivalent to each of these courses",
+   "title": "Hardware Architectures for DSP Algorithms"
+  },
+  "EN.525.678": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.678",
+   "credits": 3.0,
+   "desc": "The primary focus of this course is to introduce the next generation mobile networks, including both Cellular and WLAN technologies in great detail, to discuss various types of IP-based mobility protocols, namely Mobile-IP, Mobile IPv6, ProxyMIPv6, SIP-mobility, and Cellular IP, and to explore systems optimization techniques to support seamless handover during Inter RAT handover (e.g., 4G, 5G, and WLAN). Additionally, the course will briefly introduce the principles of cellular communications system and will then move on to describe the evolution of different generations of cellular systems including 2G, 3G, 4G, and 5G as being defined in 3GPP. At the same time it will discuss IEEE WLAN standards as developed by IEEE 802 working group including 802.11 (a, b, g, n) and 802.11 (ax, ay, ac). The Media Independent Handover standard IEEE 802.21 (e.g., integrating WLAN and 3G/4G cellular networks to provide session/service continuity) is also introduced. Further, the course will describe the 4G Long Term Evolution (LTE) in detail, covering its various components\u2014namely Evolved UMTS Terrestrial Radio Access Network (E-UTRAN), EPC (Evolved Packet Network), and IMS (IP Multimedia Subsystem)\u2014and all the associated interfaces and protocols, and the current efforts on 5G evolution and will touch upon various 5G pillars, namely SDN (Software Defined Networking), Network Function Virtualization, Cloud RAN, Network Slicing, Mobile Edge Cloud, and Edge Security. Finally, the course will highlight various standards activities within 3GPP, IEEE, IETF, NGMN, and ITU and will introduce some research problems for future study in the mobility area, presenting various deployment use cases and experimental results from the open-source testbeds.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Next Generation Mobile Networks and Security with 5G"
+  },
+  "EN.525.681": {
+   "areas": [
+    "AI and Autonomous Systems"
+   ],
+   "bg": [],
+   "code": "EN.525.681",
+   "credits": 3.0,
+   "desc": "This introduction level course provides an overview of fundamental concepts and practical skills essential for aspiring AI robotics engineers. Students will explore essential topics such as robot kinematics and control systems, while diving into AI topics in perception, reinforcement learning and imitation learning. Each week combines in-depth theoretical lectures with hands-on projects, empowering participants to work with cutting-edge AI robotics technologies, including deep learning and next generation human-robot interfaces. Students will acquire a diverse skill set essential for tackling real-world challenges. Electrical and Computer Engineering",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to AI in Robotics"
+  },
+  "EN.525.684": {
+   "areas": [
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ee"
+   ],
+   "code": "EN.525.684",
+   "credits": 3.0,
+   "desc": "This course deals with the practical aspects of RF and microwave systems and components. An overview of radar systems is followed by an introduction to communication systems. The majority of the course treats the linear and nonlinear characteristics of individual components and their relation to receiver system performance. Amplifiers, mixers, antennas, filters, and frequency sources are studied, as well as their impact on receiver performance. Top-level receiver designs for a radar system, a wide-band surveillance system, or a communication system application may be studied. Assignments reinforce the course material and may require use of design software.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate degree in electrical engineering or equivalent.",
+   "title": "Microwave Systems & Receiver Design"
+  },
+  "EN.525.691": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.691",
+   "credits": 3.0,
+   "desc": "This course provides the essential background in photonics required to understand modern photonic and fiber-optic systems. Fundamental concepts established in this course are necessary for advanced coursework as well. Topics include: electromagnetic optics, polarization and crystal optics, guided-wave optics, fiber optics, photons in semiconductors, semiconductor photon sources and detectors, electrooptics and acousto-optics.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "An undergraduate course in electromagnetic theory.",
+   "title": "Fundamentals of Photonics"
+  },
+  "EN.525.707": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.707",
+   "credits": 3.0,
+   "desc": "This course presents error-control coding with a view toward applying it as part of the overall design of a data communication or storage and retrieval system. Block, trellis, and turbo codes and associated decoding techniques are covered. Topics include system models, generator and parity check matrix representation of block codes, general decoding principles, cyclic codes, an introduction to abstract algebra and Galois fields, BCH and Reed-Solomon codes, analytical and graphical representation of convolutional codes, performance bounds, examples of good codes, Viterbi decoding, BCJR algorithm, turbo codes, and turbo code decoding.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.625.609"
+    ],
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.616"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "Background in linear algebra, such as EN.625.609 Matrix Theory; in probability, such as EN.525.614 Probability and Stochastic Processes for Engineers; and in digital communications, such as EN.525.616 Communication Systems Engineering. Familiarity with MATLAB or similar programming capability.",
+   "title": "Error Control Coding"
+  },
+  "EN.525.708": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.708",
+   "credits": 3.0,
+   "desc": "Generalization of the iterative decoding techniques invented for turbo codes has led to the theory of factor graphs as a general model for receiver processing. This course will develop the general theory of factor graphs and explore several of its important applications. Illustrations of the descriptive power of this theory include the development of high performance decoding algorithms for classical and modern forward error correction codes (trellis codes, parallel concatenated codes, serially concatenated codes, low-density parity check codes). Additional applications include coded modulation systems in which the error correction coding and modulation are deeply intertwined as well as a new understanding of equalization techniques from the factor graph perspective.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.625.609"
+    ],
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.616"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "Background in linear algebra, such as EN.625.609 Matrix Theory; in probability, such as EN.525.614 Probability and Stochastic Processes for Engineers; and in digital communications, such as EN.525.616 Communication Systems Engineering. Familiarity with MATLAB or similar programming capability.",
+   "title": "Iterative Methods in Communications Systems"
+  },
+  "EN.525.712": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.712",
+   "credits": 3.0,
+   "desc": "This course covers topics essential to modern superscalar processor design. A review of pipelined processor design and hierarchical memory design is followed by advanced topics including the identification of parallelism in processes; multiple diversified functional units in a pipelined processor; static, dynamic, and hybrid branch prediction techniques; the Tomasulo algorithm for efficient resolution of true data dependencies; advanced data flow techniques with and without speculative execution; multiprocessor systems; and multithreaded processors.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.612"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.612 Computer Architecture or equivalent.",
+   "title": "Advanced Computer Architecture"
+  },
+  "EN.525.718": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.718",
+   "credits": 3.0,
+   "desc": "Multirate signal processing techniques find applications in areas such as communication systems, signal compression, and sub-band signal processing. This course provides an in-depth treatment of both the theoretical and practical aspects of multirate signal processing. The course begins with a review of discrete-time systems and the design of digital filters. Sample rate conversion is covered, and efficient implementations using polyphase filters and cascade integrator comb (CIC) filters are considered. The latter part of the course treats filter bank theory and implementation, including quadrature mirror, conjugate quadrature, discrete Fourier transform, and cosine modulated filter banks along with their relationship to transmultiplexers.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing or equivalent and working knowledge of MATLAB.",
+   "title": "Multirate Signal Processing"
+  },
+  "EN.525.721": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.721",
+   "credits": 3.0,
+   "desc": "The fundamentals of statistical signal processing are presented in this course. Topics include matrix factorizations and least squares filtering, optimal linear filter theory, classical and modern spectral estimation, adaptive filters, and optimal processing of spatial arrays.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers, EN.525.627 Digital Signal Processing, linear algebra, and familiarity with a scientific programming language such as MATLAB.",
+   "title": "Advanced Digital Signal Processing"
+  },
+  "EN.525.722": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.722",
+   "credits": 3.0,
+   "desc": "In this course, students examine fundamental concepts of mobile cellular communications and specifics of current and proposed US cellular systems. Topics include frequency reuse; call processing; propagation loss; multipath fading and methods of reducing fades; error correction requirements and techniques; modulation methods; FDMA, TDMA, and CDMA techniques; microcell issues; mobile satellite systems; GSM, cdmaOne, GPRS, EDGE, cdma2000, W-CDMA, LTE and candidate 5G waveforms.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.616"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers or equivalent and EN.525.616 Communication Systems Engineering.",
+   "title": "Wireless and Mobile Cellular Communications"
+  },
+  "EN.525.724": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.724",
+   "credits": 3.0,
+   "desc": "This course focuses on the underlying principles of pattern recognition and on the methods of machine intelligence used to develop and deploy pattern recognition applications in the real world. Emphasis is placed on the pattern recognition application development process, which includes problem identification, concept development, algorithm selection, system integration, and test and validation. Machine intelligence algorithms to be presented include feature extraction and selection, parametric and nonparametric pattern detection and classification, clustering, artificial neural networks, support vector machines, rule-based algorithms, fuzzy logic, genetic algorithms, and others. Case studies drawn from actual machine intelligence applications will be used to illustrate how methods such as pattern detection and classification, signal taxonomy, machine vision, anomaly detection, data mining, and data fusion are applied in realistic problem environments. Students will use the MATLAB programming language and the data from these case studies to build and test their own prototype solutions.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers or equivalent. A course in digital signal or imageprocessing is recommended, such as EN.525.627 Digital Signal Processing, EN.525.619 Introduction to Digital Image and Video Processing, 525.643 RealTime Computer Vision, or 525.746 Image Engineering.",
+   "title": "Introduction to Pattern Recognition"
+  },
+  "EN.525.725": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.725",
+   "credits": 3.0,
+   "desc": "This course is designed to provide students a solid foundation on the fundamentals and principles of power electronics. Analytical modeling and control techniques will be introduced in addition to practical design considerations for switching regulators. Topics include steady state analysis, large and small signal modeling, control loop design, input filter and magnetic design, along with switch realization and efficiency evaluation. Advanced topics such as soft switching and active power factor correction will also be introduced. Each topic will include an inclass modeling and simulation component, utilizing MATLAB/ Simulink, to reinforce concepts and provide the student with a practical design tool for evaluating compliance with typical performance requirements.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.624"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.624 Analog Electronic Circuit Design I or equivalent.",
+   "title": "Power Electronics"
+  },
+  "EN.525.726": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.726",
+   "credits": 3.0,
+   "desc": "This course presents applications and practical considerations for the design of power electronic circuits, building on the fundamentals and principles covered in 525.725 Power Electronics. We will go through the step-by-step design and modeling of a synchronous buck converter including the power stage, small-signal model, controller, full simulation, component selection, and magnetics design. Additional topics covered include circuit board layout, peak current mode control, and practical methods of addressing common challenges in power supply circuits. Students gain hands-on experience through lab-based assignments and a design project. All required test equipment will be provided. Students are expected to have basic soldering skills and experience with electronic test equipment (DC power supplies, oscilloscopes, multimeters).",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.725"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.725 Power Electronics",
+   "title": "Applications of Power Electronics Design"
+  },
+  "EN.525.727": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.727",
+   "credits": 3.0,
+   "desc": "This course extends the fundamental concepts learned during the Power Electronics course by examining advanced power electronics applications. Applications include solar array peak power tracking, dc motor control, three phase electric drive and control, converter soft switching techniques, power factor correction and nonlinear control techniques for optimum dynamic converter performance. Working knowledge of MATLAB\u2019s Simulink is required to demonstrate, through simulation, concepts learned during each module.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.725"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.725 Power Electronics",
+   "title": "Advanced Power Electronics"
+  },
+  "EN.525.728": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.728",
+   "credits": 3.0,
+   "desc": "Both hypothesis testing and estimation theory are covered. The course starts with a review of probability distributions, multivariate Gaussians, and the central limit theorem. Hypothesis testing areas include simple and composite hypotheses and binary and multiple hypotheses. In estimation theory, maximum likelihood estimates and Bayes estimates are discussed. Practical problems in radar and communications are used as examples throughout the course.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers or equivalent.",
+   "title": "Detection & Estimation Theory"
+  },
+  "EN.525.732": {
+   "areas": [
+    "Electronics and the Solid State"
+   ],
+   "bg": [],
+   "code": "EN.525.732",
+   "credits": 3.0,
+   "desc": "This course extends the fundamental concepts of practical electronic circuit design developed in the course 525.624 Analog Electronic Circuit Design, beginning with a review of the general feedback method. Students then examine a range of devices, including operational amplifiers, A/D and D/A converters, and comparators. Applications include active filters, sensor conditioning, nonlinear transfer functions, and analog computation. Students explore these topics through a series of assignments supplemented with breadboard-level experimentation. All required test equipment will be provided to the student.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.624"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.624 Analog Electronic Circuit Design or permission of the instructor.",
+   "title": "Advanced Analog Electronic Circuit Design"
+  },
+  "EN.525.733": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_c"
+   ],
+   "code": "EN.525.733",
+   "credits": 3.0,
+   "desc": "Recent technological advances coupled with increased data availability have opened the door for a wave of revolutionary research in the field of Deep Learning. In particular, Deep Neural Networks (DNNs) continue to improve on state-of-the-art performance in many standard computer vision tasks including image classification, segmentation, object recognition, object localization, and scene recognition. With an emphasis on computer vision, this course will explore deep learning methods and applications in depth as well as evaluation and testing methods. Topics discussed will include network architectures and design, training methods, and regularization strategies in the context of computer vision applications. Following a seminar format, students will be expected to read, understand, and present recent publications describing the current state-ofthe-art deep learning methods. Additionally, team projects will give students an opportunity to apply deep learning methods to real world problems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Students should have taken courses in computer vision and machine learning/pattern recognition, have basic familiarity with OpenCV, Python and C++, as well as prior class instruction in neural networks.",
+   "title": "Deep Learning for Computer Vision"
+  },
+  "EN.525.735": {
+   "areas": [
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.735",
+   "credits": 3.0,
+   "desc": "This course presents the fundamental concepts and techniques of multiple-input multiple-output (MIMO) communications over wireless communication channels. MIMO communications, which involve the use of multiple antennas at the transmitter and receiver, employ the use of signal processing techniques to enhance the reliability and capacity of communication systems without increasing the required spectral bandwidth. MIMO techniques are currently used or planned in many commercial and military communications systems. Topics include the derivation and application of the theoretical MIMO communications capacity formula; channel fading and multipath propagation; the concepts of transmit and receive space diversity; space-time block coding, with a special emphasis on Alamouti coding; space-time trellis coding; spatial multiplexing; and fundamentals of OFDM modulation and its relation to MIMO communications. Examples and applications will be presented as well as related MATLAB homework assignments.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616"
+    ],
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.616 Communication Systems Engineering; EN.525.614 Probability and Stochastic Processes for Engineers, or the equivalent. In addition, a working knowledge of MATLAB is required.",
+   "title": "MIMO Wireless Communications"
+  },
+  "EN.525.736": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.736",
+   "credits": 3.0,
+   "desc": "Students will learn basic and advanced techniques in radar signal processing\u2014many of which are also relevant to other sensing modalities and applications. The focus will be the early-stage processing methods prior to tracking and data exploitation. The course will begin with a brief overview of radar systems and applications, the radar range equation, and radar signal modeling. Students will then learn in-depth about pulsed-Doppler processing, array processing, and space-time adaptive processing. The course will conclude with a brief introduction to synthetic aperture radar. Students will gain significant hands-on experience working with real radar data.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Radar Signal Processing"
+  },
+  "EN.525.738": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.738",
+   "credits": 3.0,
+   "desc": "This course is designed to follow 525.618 Antenna Systems. Advanced techniques needed to analyze antenna systems are studied in detail. Fourier transforms are reviewed and applied to antenna theory and array distributions. The method of moments is studied and used to solve basic integral equations employing different basis functions. Green\u2019s functions for patch antennas are formulated in terms of Sommerfeldlike integrals. Techniques such as saddle-point integration are presented. Topics addressed include computational electromagnetics, Leaky and surface waves, mutual coupling, and Floquet modes. Students should be familiar with complex variables (contour integration), Fourier transforms, and electromagnetics from undergraduate studies.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.618"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.618 Antenna Systems.",
+   "title": "Advanced Antenna Systems"
+  },
+  "EN.525.742": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_c"
+   ],
+   "code": "EN.525.742",
+   "credits": 3.0,
+   "desc": "This lab-oriented course will focus on the design of large-scale systemon-a-chip (SOC) solutions within field-programmable gate arrays (FPGAs). Modern FPGA densities and commercially available cores enable a single developer to design highly complex systems within a single FPGA. This class will provide the student with the ability to design and debug these inherently complex systems. Topics will include highspeed digital signal processing, embedded processor architectures, customization of soft-core processors, interfacing with audio and video sensors, communications interfaces, and networking. The optimum division of algorithms between hardware and software will be discussed, particularly the ability to accelerate software algorithms by building custom hardware. Many labs will center on a common architecture that includes signal processing algorithms in the FPGA fabric, controlled by an embedded processor that provides user interfaces and network communication. Students will also gain experience running Linux on their FPGA-based processing system. Each student will receive an FPGA board and supporting equipment in order to complete lab assignments at home.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.642"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "525.642 FPGA Design Using VHDL, and familiarity with C programming.",
+   "title": "System-on-a-Chip FPGA Design Laboratory"
+  },
+  "EN.525.743": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_c",
+    "bg_eecs"
+   ],
+   "code": "EN.525.743",
+   "credits": 3.0,
+   "desc": "This project-based laboratory course involves the development of embedded system prototypes. Typical projects contain combinations of the following component types: transducers, analog front ends, microcontrollers and processors, FPGAs, digital signal processors, electrical interfaces, wired or wireless connectivity, printed circuit boards required for integration and test, and software/firmware modules needed to operate a designed system. The laboratory activity is a backdrop used to teach key aspects of the development process such as documentation, realistic use of requirements, design partition, integration strategy, interface design, risk mitigation, and design strategies to accommodate available resources. Students will select a project concept and then create an implementation plan that will define the semester\u2019s activity. Students may work independently or in teams to define, develop, test, and document their projects. Students are encouraged to select topics based on their interests and learning objectives. All projects are subject to instructor approval.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.612"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "An undergraduate degree in electrical or computer engineering or computer science, EN.525.612 Computer Architecture, and working knowledge of C or C++ or instructor\u2019s approval.",
+   "title": "Embedded Systems Development Lab"
+  },
+  "EN.525.744": {
+   "areas": [
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.744",
+   "credits": 3.0,
+   "desc": "This course covers the algorithms used to locate a stationary RF signal source, such as a radar, radio, or cell phone. The topics covered include a review of vectors, matrices, and probability; linear estimation and Kalman filters; nonlinear estimation and extended Kalman filters; robust estimation; data association; measurement models for direction of arrival, time difference of arrival, and frequency difference of arrival; geo-location algorithms; and performance analysis. Most of the course material is developed in planar Cartesian coordinates for simplicity; however, the extension to WGS84 coordinates is provided to equip the students for practical applications. Homework consists of both analytical problems and problems that require computer simulation using software such as MATLAB.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers, an undergraduate course in linear algebra/matrix theory, and familiarity with MATLAB.",
+   "title": "Passive Emitter Geo-Location"
+  },
+  "EN.525.745": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.745",
+   "credits": 3.0,
+   "desc": "Theory, analysis, and practical design and implementation of Kalman filters are covered, along with example applications to real-world problems. Topics include a review of random processes and linear system theory; Kalman filter derivations; divergence analysis; numerically robust forms; suboptimal filters and error budget analysis; prediction and smoothing; cascaded, decentralized, and federated filters; linearized, extended, second-order, and adaptive filters; and case studies in GPS, inertial navigation, and ballistic missile tracking.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.666"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers and EN.525.666 Linear System Theory or equivalents; knowledge of MATLAB (or equivalent software package).",
+   "title": "Applied Kalman Filtering"
+  },
+  "EN.525.746": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.746",
+   "credits": 3.0,
+   "desc": "The overall goal of the course is to provide the student with a unified view of the imaging process, concentrating on image creation and processing. Optical, photographic, analog, and digital image systems are highlighted. Topics include image input, output, and processing devices; visual perception; video systems; and fundamentals of image enhancement and compression. Coding, filtering, and transform techniques are covered, with applications to remote sensing and biomedical problems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing or equivalent and knowledge of linear systems.",
+   "title": "Image Engineering"
+  },
+  "EN.525.747": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.747",
+   "credits": 3.0,
+   "desc": "This course emphasizes processing of the human speech waveform, primarily using digital techniques. Theory of speech production and speech perception as related to signals in time and frequency-domains is covered, as well as the measurement of model parameters, shorttime Fourier spectrum, and linear predictor coefficients. Speech coding, recognition, speech synthesis, and speaker identification are discussed. Application areas include telecommunications telephony, Internet VOIP, and man-machine interfaces. Considerations for embedded realization of the speech processing system will be covered as time permits. Several application-oriented software projects will be required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ],
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing and EN.525.614 Probability and Stochastic Processes for Engineers. Background in linear algebra and MATLAB is helpful.",
+   "title": "Speech Processing"
+  },
+  "EN.525.748": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.748",
+   "credits": 3.0,
+   "desc": "This course covers the basics of synthetic aperture radar (SAR) from a signal processing perspective. In particular, the course will examine why there are limiting design considerations for real aperture radar and how a synthetic aperture can overcome these limitations to create highresolution radar imaging. Various SAR geometries will be considered. Image formation algorithms, such as range Doppler, chirp scaling, omega-K, polar formatting, and backprojection, will be reviewed and, in some cases, coded by the student. Other post-processing techniques, such as motion compensation, aperture weighting (or apodization), autofocus, and multilook, will be reviewed. Advanced topics will include interferometric SAR, polarimetry, continuous wave linear FM (CWLFM) SAR, and moving objects in SAR imagery. Students will work through problems involving radar and SAR processing. Students will also develop SAR simulations, in either MATLAB or Python, based on simple point scatterers in a benign background.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.648"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.648 Introduction to Radar Systems, along with either basic MATLAB or Python skills.",
+   "title": "Synthetic Aperture Radar"
+  },
+  "EN.525.751": {
+   "areas": [
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_matlab"
+   ],
+   "code": "EN.525.751",
+   "credits": 3.0,
+   "desc": "Software-defined radio (SDR) has become a common approach to rapid prototyping and deployment of communications equipment. It allows engineers to quickly move from algorithm development to functional prototype, using small form-factor commercial hardware. This course will explore modern SDR technology and implementation techniques. Students will design and implement common radio functions using fieldprogrammable gate arrays (FPGAs) and software frameworks. During the semester, we progress from hardware considerations and basic signal processing techniques to synchronization, digital modulation, and cognitive radio. We finish with a final semester project combining multiple cognitive radio concepts.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.638",
+     "EN.525.616"
+    ],
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.638 Introduction to Wireless Technology or EN.525.616 Communication Systems Engineering; EN.525.627 Digital Signal Processing; and working knowledge of MATLAB and Simulink.",
+   "title": "Software Radio for Wireless Communications"
+  },
+  "EN.525.752": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.752",
+   "credits": 3.0,
+   "desc": "This course explores synchronization techniques in modern digital receivers. Synchronization techniques, from initial detection of a signal to symbol timing recovery, is studied in this course. Students will learn practical synchronization techniques through experimentation and hands-on development. Students develop software to solve synchronization problems relevant to modern wireless communication standards. A semester project involving demodulation and synchronization is required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing",
+   "title": "Digital Receiver Synchronization Techniques"
+  },
+  "EN.525.753": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.753",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive treatment of the generation of laser light, and its properties and applications. Topics include specific laser systems and pumping mechanisms, nonlinear optics, temporal and spatial coherence, guided beams, interferometric and holographic measurements, and remote sensing.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.625"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.625 Laser Fundamentals.",
+   "title": "Laser Systems and Applications"
+  },
+  "EN.525.754": {
+   "areas": [
+    "Communications and Networking",
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.754",
+   "credits": 3.0,
+   "desc": "In this course, students examine modulator and demodulator circuits used in communication and radar systems. A combination of two lectures, three laboratory experiments, and a student design project address the analysis, design, fabrication, and test of common circuits. Signal formats considered include phase and frequency shift keying, as well as the linear modulations used in analog systems. The students will select a project topic of their choosing. The nature and extent of the project will be negotiated with the instructors. The project will consume about two-thirds of the semester and weighs in a similar proportion for the final grade. There are no exams in this course, it is a laboratory and project-based learning experience.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616",
+     "EN.525.624",
+     "EN.525.654"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.616 Communication Systems Engineering or EN.525.624 Analog Electronic Circuit Design or EN.525.654 Communications Circuits Laboratory or permission of the instructor.",
+   "title": "Wireless Communication Circuits"
+  },
+  "EN.525.756": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Optics and Photonics"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.756",
+   "credits": 3.0,
+   "desc": "This course presents a unified perspective on optical propagation in linear media. A basic background is established using electromagnetic theory, spectroscopy, and quantum theory. Properties of the optical field and propagation media (gases, liquids, and solids) are developed, leading to basic expressions describing their interaction. The absorption line strength and shape and Rayleigh scattering are derived and applied to atmospheric transmission, optical window materials, and propagation in water-based liquids. A survey of experimental techniques and apparatus is also part of the course. Applications are presented for each type of medium, emphasizing remote sensing techniques and background noise. Computer codes such as LOWTRAN, FASCODE, and OPTIMATR are discussed.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Undergraduate courses on electromagnetic theory and elementary quantum mechanics. A course on Fourier optics is helpful.",
+   "title": "Optical Propagation, Sensing, and Backgrounds"
+  },
+  "EN.525.759": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Communications and Networking",
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.525.759",
+   "credits": 3.0,
+   "desc": "This course provides an introduction to the basic concepts and techniques used for the compression of digital images and video. Video compression requirements, algorithm components, and ISO Standard video processing algorithms are studied. Image compression components that are used in video compression methods are also identified. Since image and video compression is now integrated in many commercial and experimental video processing methods, knowledge of the compression methods\u2019 effects on image and video quality are factors driving the usability of that data in many data exploitation activities. Topics to be covered include introduction to video systems, Fourier analysis of video signals, properties of the human visual system, motion estimation, basic video compression techniques, videocommunication standards, and error control in video communications. Video processing applications that rely on compression algorithms are also studied. A miniproject is required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing.",
+   "title": "Image Compression, Packet Video, and Video Processing"
+  },
+  "EN.525.761": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.761",
+   "credits": 3.0,
+   "desc": "This course investigates the integration of wireless and wireline networks into seamless networks. The current telecommunications environment in the United States is first discussed, including the state of technology and regulations as they apply to the wireless and wireline hybrid environment. Then each type of these hybrid networks is discussed, including its components, network services, architecture, and possible evolution, as well as important concepts that support the evolution of networks. The integration of wired network advance intelligence, wireless network mobility, and long distance capabilities are shown to provide many new combinations of wired and wireless services to users.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.608",
+     "EN.525.616"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.608 Next-Generation Telecommunications or EN.525.616 Communication Systems Engineering, or permission of instructor.",
+   "title": "Wireless and Wireline Network Integration"
+  },
+  "EN.525.762": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_calc",
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.762",
+   "credits": 3.0,
+   "desc": "This is an introductory course on wavelet analysis, with an emphasis on the fundamental mathematical principles and basic algorithms. We cover the mathematics of signal (function) spaces, orthonormal bases, frames, time-frequency localization, the windowed Fourier transform, the continuous wavelet transform, discrete wavelets, orthogonal and biorthogonal wavelets of compact support, wavelet regularity, and wavelet packets. It is designed as a broad introduction to wavelets for engineers, mathematicians, and physicists.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Competence with multivariable calculus, linear algebra, and a scientific programming language is required, as well as familiarity with Fourier transforms and signal processing fundamentals such as the discrete Fourier transform, convolutions, and correlations.",
+   "title": "Introduction to Wavelets"
+  },
+  "EN.525.763": {
+   "areas": [
+    "Signal Processing",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.763",
+   "credits": 3.0,
+   "desc": "This course will cover principles and techniques for designing, implementing, and analyzing linear and nonlinear state estimators for dynamical systems for which traditional least-squares and linear Kalman filtering approaches might not be sufficient. In particular, emphasis is placed on state space systems that are characterized by partial observability and/or non-Gaussian uncertainties that, generally, arise in applications governed by complex non-linear stochastic dynamics and measurement processes. First, a brief review of matrix theory, state-space models and realizations, probability theory, dynamic system motion models, least-squares estimation, Luenberger observers, and linear Kalman filters (continuous and discrete versions) is presented. Then, these concepts are extended to advanced state estimation concepts and applications, to include: extended Kalman filtering, unscented Kalman filters, Cubature and Cubature-Quadrature Kalman Filters, and particle filtering along with various application examples.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.609"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.609 Continuous Control Systems",
+   "title": "Advanced Linear and Nonlinear Estimation"
+  },
+  "EN.525.764": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Systems and Controls"
+   ],
+   "bg": [
+    "bg_de"
+   ],
+   "code": "EN.525.764",
+   "credits": 3.0,
+   "desc": "This course covers the fundamentals of the design of controllers for nonlinear dynamic systems. Topics include Lyapunov Theory, Describing Functions, Feedback Linearization, Sliding Mode Control, as well as several Adaptive Control Techniques. The course will provide the theatrical background necessary to design and analyze nonlinear controllers while grounding the theory with practical, physical applications.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "A course in Differential Equations (Nonlinear would be helpful, but not required) and EN.525.666 Linear System Theory. Electrical and Computer Engineering 17",
+   "title": "Nonlinear Controls"
+  },
+  "EN.525.768": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.768",
+   "credits": 3.0,
+   "desc": "This is a hands-on course that integrates teaching of concepts in wireless LANs as well as offering students, in an integrated lab environment, the ability to conduct laboratory experiments and design projects that cover a broad spectrum of issues in wireless LANs. The course will describe the characteristics and operation of contemporary wireless network technologies such as the IEEE 802.11 and 802.11s wireless LANs and Bluetooth wireless PANs. Laboratory experiments and design projects include MANET routing protocols, infrastructure and MANET security, deploying hotspots, and intelligent wireless LANs. The course will also introduce tools and techniques to monitor, measure, and characterize the performance of wireless LANs as well as the use of network simulation tools to model and evaluate the performance of MANETs.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Wireless Networks"
+  },
+  "EN.525.770": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.770",
+   "credits": 3.0,
+   "desc": "Intelligent algorithms are, in many cases, practical alternative techniques for tackling and solving a variety of challenging engineering problems. For example, fuzzy control techniques can be used to construct nonlinear controllers via the use of heuristic information when information on the physical system is limited. Such heuristic information may come, for instance, from an operator who has acted as a \"human-in-the-loop\" controller for the process. This course investigates several concepts and techniques commonly referred to as intelligent algorithms; discusses the underlying theory of these methodologies when appropriate; and takes an engineering perspective and approach to the design, analysis, evaluation, and implementation of Intelligent Systems. Fuzzy systems, genetic algorithms, particle swarm and ant colony optimization techniques, and neural networks are the primary concepts discussed in this course, and several engineering applications are presented along the way. Expert (rule-based) systems are also discussed within the context of fuzzy systems. An intelligent algorithms research paper must be selected from the existing literature, implemented by the student, and presented as a final project.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Student familiarity of system-theoretic concepts is desirable.",
+   "title": "Intelligent Algorithms"
+  },
+  "EN.525.771": {
+   "areas": [
+    "Communications and Networking",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ee"
+   ],
+   "code": "EN.525.771",
+   "credits": 3.0,
+   "desc": "This course examines various propagation phenomena that influence transmission of radio frequency signals between two locations on earth and between satellite-earth terminals, with a focus on applications. Frequencies above 30 MHz are considered with emphasis on microwave and millimeter propagation. Topics include free space transmission, propagation, and reception; effects on waves traversing the ionosphere; and attenuation due to atmospheric gases, rain, and clouds. Brightness temperature concepts are discussed, and thermal noise introduced into the receiver system from receiver hardware and from atmospheric contributions are examined. Also described are reflection and diffraction effects by land terrain and ocean, multipath propagation, tropospheric refraction, propagation via surface and elevated ducts, scatter from fluctuations of the refractive index, and scattering due to rain. Atmospheric dynamics that contribute to the various types of propagation conditions in the troposphere are described.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "An undergraduate degree in electrical engineering or equivalent.",
+   "title": "Propagation of Radio Waves in the Atmosphere"
+  },
+  "EN.525.772": {
+   "areas": [
+    "Communications and Networking",
+    "Optics and Photonics"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.772",
+   "credits": 3.0,
+   "desc": "This course investigates the basic aspects of fiber-optic communication systems. Topics include sources and receivers, optical fibers and their propagation characteristics, and optical fiber systems. The principles of operation and properties of optoelectronic components, as well as the signal guiding characteristics of glass fibers, are discussed. System design issues include terrestrial and submerged point-to-point optical links and fiber-optic networks.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.691"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "An undergraduate course in electromagnetic theory, 525.691, or equivalent.",
+   "title": "Fiber-Optic Communication Systems"
+  },
+  "EN.525.774": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.774",
+   "credits": 3.0,
+   "desc": "In this course, students examine RF and microwave circuits appropriate for wireless communications and radar sensing. The course emphasizes the theoretical and experimental aspects of micro-strip design of highly integrated systems. Computer-aided design techniques are introduced and used for the analysis and design of circuits. Circuits are designed, fabricated, and tested, providing a technically stimulating environment in which to understand the foundational principles of circuit development. Couplers, modulators, mixers, and calibrated measurements techniques are also covered.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.623",
+     "EN.525.620"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.623 Principles of Microwave Circuits or EN.525.620 Electromagnetic Transmission Systems.",
+   "title": "RF & Microwave Circuits I"
+  },
+  "EN.525.775": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.775",
+   "credits": 3.0,
+   "desc": "This course builds upon the knowledge gained in 525.774 RF and Microwave Circuits I. Here there is a greater emphasis on designs involving active components. Linear and power amplifiers and oscillators are considered, as well as stability, gain, and their associated design circles. The course uses computer-aided design techniques and students fabricate and test circuits of their own design.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.774"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.774 RF and Microwave Circuits I.",
+   "title": "RF & Microwave Circuits II"
+  },
+  "EN.525.776": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.776",
+   "credits": 3.0,
+   "desc": "Information theory concerns the fundamental limits for data compressibility and the rate at which data may be reliably communicated over a noisy channel. Course topics include measures of information, entropy, mutual information, Markov chains, source coding theorem, data compression, noisy channel coding theorem, error-correcting codes, and bounds on the performance of communication systems. Classroom discussion and homework assignments will emphasize fundamental concepts, and advanced topics and practical applications (e.g., industry standards, gambling/finance, machine learning) will be explored in group and individual research projects.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers or equivalent.",
+   "title": "Information Theory"
+  },
+  "EN.525.777": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.525.777",
+   "credits": 3.0,
+   "desc": "This course examines advanced multivariable control system design methodologies and how the available techniques are applied to produce practical system designs. Both the underlying theories and the use of Matlab to synthesize and analyze feedback designs are covered. We start with control problem formulations that capture performance and stability robustness objectives in the face of system parameter uncertainties and unknown disturbances. Specific design techniques include the linear quadratic regulator, the linear quadratic gaussian regulator with loop transfer recovery, H-infinity design, and mu-synthesis. Nonlinear techniques such as sliding mode control and feedback linearization are introduced as well as adaptive control methods that apply supervised learning while ensuring stability via Lyapunov analysis. Weekly assignments will include graded homework problems and Matlab exercises to practice the covered design and analysis methods.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.666"
+    ],
+    [
+     "EN.525.609"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.666 Linear System Theory and EN.525.609 Continuous Control Systems or the equivalent.",
+   "title": "Control System Design Methods"
+  },
+  "EN.525.778": {
+   "areas": [
+    "Computer Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.778",
+   "credits": 3.0,
+   "desc": "The design of reliable and testable systems, both analog and digital, is considered at the component, circuit, system, and network levels. Using numerous real-world examples, the trade-offs between redundancy, testability, complexity, and fault tolerance are explored. Although the emphasis is predominantly on electronics, related examples from the aerospace and software industries are included. The concepts of fault lists, collapsed fault lists, and other techniques for reducing the complexity of fault simulation are addressed. A quantitative relationship between information theory, error correction codes, and reliability is developed. Finally, the elements of a practical quality assurance system are presented. In addition to homework assignments, students will conduct an in-depth, quantitative case study of a practical system of personal interest.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes or equivalent.",
+   "title": "Design for Reliability, Testability, and Quality Assurance"
+  },
+  "EN.525.779": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.779",
+   "credits": 3.0,
+   "desc": "This course covers the RFIC design process focusing on the RF/ microwave portion of RFIC. An overview of digital circuits and digital signal processing will be given along with semi-conductor fabrication, device models, and RF/microwave design techniques using a typical SiGe process. Part of the course will involve student design projects using a CAD software to design amplifiers, mixers, etc.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.774"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.774 RF and Microwave Circuits I or equivalent.",
+   "title": "RF Integrated Circuits"
+  },
+  "EN.525.780": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.780",
+   "credits": 3.0,
+   "desc": "The fundamental concepts of multidimensional digital signal processing theory as well as several associated application areas are covered in this course. The course begins with an investigation of continuousspace signals and sampling theory in two or more dimensions. The multidimensional discrete Fourier transform is defined, and methods for its efficient calculation are discussed. The design and implementation of two-dimensional non-recursive linear filters are treated. The final part of the course examines the processing of signals carried by propagating waves. This section contains descriptions of computed tomography and related techniques and array signal processing. Several application oriented software projects are required.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.627"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.627 Digital Signal Processing or equivalents. Knowledge of linear algebra and MATLAB is helpful.",
+   "title": "Multidimensional Digital Signal Processing"
+  },
+  "EN.525.783": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.783",
+   "credits": 3.0,
+   "desc": "This course presents an analysis of the performance and design of spread-spectrum communication systems. Both direct-sequence and frequency-hopping systems are studied. Topics include pseudonoise sequences, code synchronization, interference suppression, and the application of error-correcting codes. The use of code-division multiple access in digital cellular systems is examined. The relationships between spread spectrum, cryptographic, and error correction systems are explored. The mathematics of pseudo-random sequences used as spreading codes is compared with the mathematics of complex numbers with which students are already familiar.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616"
+    ],
+    [
+     "EN.525.201"
+    ],
+    [
+     "EN.525.202"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.616 Communication Systems Engineering. Students should have knowledge of material covered in EN.525.201 Circuits, Devices, and Fields and EN.525.202 Signals and Systems.",
+   "title": "Spread Spectrum Communications"
+  },
+  "EN.525.784": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.784",
+   "credits": 3.0,
+   "desc": "This course provides a comprehensive study of magnetic materials and their applications in microwave and millimeter-wave systems. Starting from the quantum physics of magnetism (Zeeman effect, exchange interaction), students progress through the Polder permeability tensor to the design and analysis of non-reciprocal components including circulators, isolators, and phase shifters. Emphasis is placed on practical design methodologies, full-wave electromagnetic simulation, and material characterization. The course concludes with contemporary topics in magnetostatic wave devices and spintronics for next-generation RF applications.Upon completion, students will possess the theoretical foundation and practical skills necessary to specify, design, simulate, and evaluate ferrite-based microwave components for defense, aerospace, telecommunications, and commercial applications.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.606"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.606 Electronic Materials Electrical and Computer Engineering",
+   "title": "Microwave Magnetics and Non-Reciprocal Devices"
+  },
+  "EN.525.786": {
+   "areas": [
+    "AI and Autonomous Systems",
+    "Computer Engineering"
+   ],
+   "bg": [
+    "bg_de",
+    "bg_la",
+    "bg_matlab"
+   ],
+   "code": "EN.525.786",
+   "credits": 3.0,
+   "desc": "This course provides an investigation of human-robot interaction and prosthetic control, with a focus on advanced man-machine interfaces including neural signal processing, electromyography, and motion tracking interfaces for controlling and receiving feedback from robotic devices. The course will also cover human physiology and anatomy, signal processing, intent determination, communications between the human and the device, haptic feedback, and telepresence. It is designed to be a hands-on course with class time spent in the dedicated robotics lab designing interfaces and performing experiments in a Virtual Integration Environment (VIE) and with robotic devices. Additional time in the lab, outside of class time, may be required to complete the course project. Programming for the class will be in MATLAB and Simulink.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Linear algebra, ordinary differential equations, and programming experience with Python or MATLAB",
+   "title": "Human Robotics Interaction"
+  },
+  "EN.525.787": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.787",
+   "credits": 3.0,
+   "desc": "This course is for advanced students who have a background in microwave circuit analysis and design techniques and are familiar with modern microwave computer-aided engineering tools. The course covers the monolithic implementation of microwave circuits on GaAs, or other III/V, substrates, including instruction on processing, masks, simulation, layout, design rule checking, packaging, and testing. The first part of the course includes information and assignments on the analysis and design of MMIC chips. The second part consists of projects in which a chip is designed, reviewed, and evaluated in an engineering environment, resulting in a design that would be ready for submission to a foundry for fabrication.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.775"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.775 RF and Microwave Circuits II.",
+   "title": "Microwave Monolithic Integrated Circuit (MMIC) Design"
+  },
+  "EN.525.788": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.788",
+   "credits": 3.0,
+   "desc": "This course covers additional circuit design techniques applicable to MMICs (and microwave circuits in general). It is an extension of EN.525.774/775 RF and Microwave Circuits I and II and EN.525.787 Microwave Monolithic Integrated Circuit (MMIC) Design, although for students with a microwave background, these particular courses are not prerequisites. The topics covered include broadband matching, optimum loads for efficiency and low intermodulation products, odd mode oscillations, details of nonlinear modeling, time domain simulation of nonlinear circuits, and thermal effects. Students do need to have a background in microwave measurements and microwave CAD tools. No project is required, but there is structured homework involving power MMIC design completed by the student using a foundry library.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.774"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.774 RF & Microwave Circuits I",
+   "title": "Power Microwave Monolithic Integrated Circuit (MMIC) Design"
+  },
+  "EN.525.789": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.789",
+   "credits": 3.0,
+   "desc": "This course provides an in-depth exploration of advanced concepts, technologies, and applications in satellite communications, bridging the foundations of physics and engineering with modern systemlevel challenges. Students begin with the essential mathematical and physical tools \u2014 vector calculus, orbital mechanics, electromagnetics, and relativity\u2014that underpin the design and operation of satellite systems. Building on this foundation, the course progresses through the principles of orbital dynamics, antenna theory, propagation effects, and link budget analysis, before advancing into multi-access protocols, payload architectures, and emerging technologies. Hands-on learning is emphasized through simulations, analytical derivations, and applied projects. Students will use MATLAB/Python to model modulation performance, orbital dynamics, beamforming, Doppler effects, and satellite link behavior. They will also analyze real-world case studies such as GPS, Starlink, and deep-space communication links. The course highlights both current and emerging directions in the field, including optical and quantum communications, 5G/6G integration, megaconstellations, interplanetary networks, and space\u2013economics tradeoffs. In addition to technical mastery, students will develop the ability to critically assess system design choices, balancing physics, hardware limitations, and mission economics.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.616"
+    ],
+    [
+     "EN.525.640"
+    ],
+    [
+     "EN.525.201"
+    ],
+    [
+     "EN.525.202"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.616 Communication Systems Engineering and EN.525.640 Satellite Communications Systems. Students should have knowledge of material covered in EN.525.201 Circuits, Devices, and Fields and EN.525.202 Signals and Systems.",
+   "title": "Advanced Satellite Communications"
+  },
+  "EN.525.790": {
+   "areas": [
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [
+    "bg_ugem"
+   ],
+   "code": "EN.525.790",
+   "credits": 3.0,
+   "desc": "This course addresses foundational power amplifier circuit concepts and engineering fundamentals. The design of high power/high efficiency amplifiers that satisfy specific system requirements (bandwidth, linearity, spectral mask, etc.) are covered. Various device technologies (GaAs, GaN, LDMOS, SiGe), device scaling and modeling, optimum load calculations, amplifier classes (A, B, AB, C, E, F, etc.), waveform engineering, modulation techniques, efficiency enhancement, odd/even mode stability analysis, linearization techniques, power combining, reliability, lifetime calculation, and packaging are studied. The concepts are explored theoretically, and practically using numerous design exercises. This course stresses hands-on design techniques and practical considerations for real-world situations and applications.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.623",
+     "EN.525.620"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.623 Principles of Microwave Circuits or EN.525.620 Electromagnetic Transmission Systems.",
+   "title": "RF Power Amplifier Design Techniques"
+  },
+  "EN.525.791": {
+   "areas": [
+    "Communications and Networking",
+    "Electronics and the Solid State",
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.525.791",
+   "credits": 3.0,
+   "desc": "This advanced laboratory course is designed for students who have completed RF and Microwave Circuits I and II. The course aims to extend the students' theoretical understanding into practical applications by guiding them through the process of designing, constructing, and testing a microwave subsystem, with an emphasis on the development of an independent receiver subsystem. While the primary focus is on receiver subsystems, alternative project proposals are welcome, provided they receive instructor approval within the first week of the course. As such, the course covers the principles and methodologies in designing and fabricating communication receivers and transmitters and provides a comprehensive overview of microwave test equipment and its proper use. Students will engage with RF/microwave laboratory instruments to evaluate the performance of various subsystems. A crucial part of the course is the pre-fabrication design review, where students present their designs for feedback before proceeding to fabrication. The culmination of the course is a final presentation, during which students will contrast simulated performance with actual measured outcomes, showcasing their understanding of the project's entire lifecycle.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.774"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.774 RF and Microwave Circuits l.",
+   "title": "Microwave Communications Laboratory"
+  },
+  "EN.525.793": {
+   "areas": [
+    "Communications and Networking"
+   ],
+   "bg": [],
+   "code": "EN.525.793",
+   "credits": 3.0,
+   "desc": "This course provides a basic introduction to the various building blocks of a modern digital communications system, focusing on the physical layer (PHY). We will first review basic concepts in digital communications, including Shannon theory, Nyquist sampling theory, optimal detection under Gaussian white noise, and basic modulations. We will then treat several building blocks of a digital receiver, including time and frequency synchronization, adaptive equalization and precoding, and error-correction coding/decoding. We will also introduce some advanced communication technologies such as Orthogonal Frequency-Division Multiplexing (OFDM) and Multiple-Input Multiple-Output (MIMO). Finally we will apply the knowledge to some practical wireless and wired systems.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.614"
+    ],
+    [
+     "EN.525.616"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.614 Probability and Stochastic Processes for Engineers; EN.525.616 Communication Systems Engineering.",
+   "title": "Advanced Communication Systems"
+  },
+  "EN.525.796": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [
+    "bg_phys",
+    "bg_ugem"
+   ],
+   "code": "EN.525.796",
+   "credits": 3.0,
+   "desc": "This course provides the student with the fundamental concepts needed to address issues in both the design and test of high-speed optoelectronic systems. This is an emerging field where photonics is combined with high-speed electronics to generate, transmit, and process signals from microwave to terahertz frequencies. The purpose of this course is to introduce fundamental principles and state-ofthe-art system applications. Topics include photonic and high-speed electronic principles, analog fiber optic link, principles of low-phase noise microwave sources, photonic methods for generating low-phase noise microwave signals, photonicbased RF signal processing techniques, and ultra-short optical pulse generation techniques. State-of-the-art applications include the low-phase noise opto-electronic oscillator, carrier envelope phase locked laser for time and frequency standards, photonic-based complex radar signal generators, phased-array antenna architectures including true time-delay beam forming and the ALMA radio-telescope array, photonic analog-to-digital converter techniques, electro-optic sampling, and Terahertz signal generation.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "Bachelor\u2019s degree in electrical engineering or physics. An undergraduate course in electromagnetics is required. A course in microwave theory is preferred.",
+   "title": "Introduction to High-Speed Optoelectronics"
+  },
+  "EN.525.797": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.525.797",
+   "credits": 3.0,
+   "desc": "The purpose of this laboratory course is to expose students to state-of-the-art applications of fiber optic technologies that include continuous-wave (cw) and pulsed fiber lasers, high-speed digital fiber optic communication systems, microwave photonic links, and nonlinear fiber optic signal processing and sensors. The first part of the course will focus on a thorough characterization of fiber laser systems starting with the erbium-doped fiber amplifier and implementing different laser configurations that include multi-mode cw operation, Qswitching and relaxation oscillations, non-linear based mode-locking and single longitudinal mode operation. All of the measurements will be compared to theoretical models. This will provide students with handson experience with concepts that are applicable to all laser systems. In the latter part of the course, students will select a few topics that demonstrate both modern fiber optic systems based on cw lasers, external electro-optic modulators and high-speed photodetectors and applications of nonlinear fiber optics using self-phase modulation, stimulated Brillouin scattering, stimulated Raman scattering, and four wave mixing. These topics highlight the breadth of applications of modern fiber optic systems. Again, all of the experiments will be compared to theoretical models.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [
+    [
+     "EN.525.691",
+     "EN.615.751"
+    ]
+   ],
+   "level": 7,
+   "prereq_text": "EN.525.691 Fundamentals of Photonics or EN.615.751 Modern Optics or equivalent.",
+   "title": "Advanced Fiber Optic Laboratory"
+  },
+  "EN.525.801": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.801",
+   "credits": 3.0,
+   "desc": "Special Project I and II are intended to foster in-depth technical exploration and the development of professional research and communication skills. Each course offers students the opportunity to engage in an individually tailored, faculty-supervised project on a topic relevant to electrical and computer engineering. Students will identify a topic of interest and work closely with an ECE faculty advisor to define the scope and objectives of the project. A key objective of Special Project I and II is the production of a tangible deliverable in the form of a research paper or technical presentation. Students must prepare a formal paper that conforms to the formatting and submission guidelines of a peer-reviewed technical conference or journal relevant to the field of electrical and computer engineering. The paper must meet the technical rigor and quality standards expected of such venues. Submission to an actual conference or journal is encouraged but not required. Projects may involve original research, a novel application or design, or a detailed literature survey with critical analysis and synthesis elements. In all cases, the final submission must demonstrate clear technical contributions and sound engineering practices. The independent study advisor will assess whether the work satisfies the academic and scholarly expectations of the course. Students may take Special Project I, or both Special Project I and II toward the M.S. in Electrical and Computer Engineering. Students must complete at least half of their degree program before registering for this course. A completed independent study proposal form, detailing the scope of work and deliverables, must be approved by the student\u2019s advisor and the ECE program chair prior to enrollment. Students should rely on knowledge gained from previous EP ECE coursework to inform and support their independent study.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 8,
+   "prereq_text": "",
+   "title": "Special Project I"
+  },
+  "EN.525.802": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.802",
+   "credits": 3.0,
+   "desc": "Special Project I and II are intended to foster in-depth technical exploration and the development of professional research and communication skills. Each course offers students the opportunity to engage in an individually tailored, faculty-supervised project on a topic relevant to electrical and computer engineering. Students will identify a topic of interest and work closely with an ECE faculty advisor to define the scope and objectives of the project. A key objective of Special Project I and II is the production of a tangible deliverable in the form of a research paper or technical presentation. Students must prepare a formal paper that conforms to the formatting and submission guidelines of a peerreviewed technical conference or journal relevant to the field of electrical and computer engineering. The paper must meet the technical rigor and quality standards expected of such venues. Submission to an actual conference or journal is encouraged but not required.Projects may involve original research, a novel application or design, or a detailed literature survey with critical analysis and synthesis elements. In all cases, the final submission must demonstrate clear technical contributions and sound engineering practices. The independent study advisor will assess whether the work satisfies the academic and scholarly expectations of the course.Students may take Special Project I, or both Special Project I and II toward the M.S. in Electrical and Computer Engineering. Students must complete at least half of their degree program before registering for this course. A completed independent study proposal form, detailing the scope of work and deliverables, must be approved by the student\u2019s advisor and the ECE program chair prior to enrollment.Students should rely on knowledge gained from previous EP ECE coursework to inform and support their independent study.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 8,
+   "prereq_text": "",
+   "title": "Special Project II"
+  },
+  "EN.525.803": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.803",
+   "credits": 3.0,
+   "desc": "First of two-course sequence designed for students in the electrical and computer engineering graduate program who wish to undertake a thesis project after completing all other requirements for their degree. Students work with an advisor to conduct independent research and development in Electrical and Computer Engineering (ECE) leading to a written thesis and oral presentation to a thesis committee. The intent of the research may be to advance the body of knowledge in one of the technology areas in the ECE program.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 8,
+   "prereq_text": "Completion of all other courses applicable to the ECE graduate degree and approval of the ECE program chair and vice chair. The thesis option is appropriate for highly motivated students with strong academic records.",
+   "title": "Electrical and Computer Engineering Thesis"
+  },
+  "EN.525.804": {
+   "areas": [
+    "Bridge and other courses"
+   ],
+   "bg": [],
+   "code": "EN.525.804",
+   "credits": 3.0,
+   "desc": "Second of two-course sequence designed for students in the electrical and computer engineering graduate program who wish to undertake a thesis project after completing all other requirements for their degree. Students work with an advisor to conduct independent research and development in Electrical and Computer Engineering (ECE) leading to a written thesis and oral presentation to a thesis committee. The intent of the research may be to advance the body of knowledge in one of the technology areas in the ECE program.",
+   "excl": [],
+   "external": false,
+   "gradeable": true,
+   "groups": [],
+   "level": 8,
+   "prereq_text": "Completion of all other courses applicable to the ECE graduate degree and approval of the ECE program chair and vice chair. The thesis option is appropriate for highly motivated students with strong academic records.",
+   "title": "Electrical and Computer Engineering Thesis"
+  },
+  "EN.615.641": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.615.641",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Mathematical Methods for Physics and Engineering"
+  },
+  "EN.615.642": {
+   "areas": [
+    "RF and Microwave Engineering"
+   ],
+   "bg": [],
+   "code": "EN.615.642",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Electromagnetics"
+  },
+  "EN.615.654": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.615.654",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Quantum Mechanics"
+  },
+  "EN.615.671": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.615.671",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Principles of Optics"
+  },
+  "EN.615.751": {
+   "areas": [
+    "Optics and Photonics"
+   ],
+   "bg": [],
+   "code": "EN.615.751",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Modern Optics"
+  },
+  "EN.625.603": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.625.603",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Statistical Methods and Data Analysis"
+  },
+  "EN.625.609": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.625.609",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Matrix Theory"
+  },
+  "EN.625.615": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.625.615",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Introduction to Optimization"
+  },
+  "EN.625.620": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.625.620",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Mathematical Methods for Signal Processing"
+  },
+  "EN.625.695": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.625.695",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 6,
+   "prereq_text": "",
+   "title": "Time Series Analysis"
+  },
+  "EN.625.710": {
+   "areas": [
+    "Signal Processing"
+   ],
+   "bg": [],
+   "code": "EN.625.710",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Fourier Analysis with Applications to Signal Processing and Differential Equations"
+  },
+  "EN.625.714": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.625.714",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Introductory Stochastic Differential Equations with Applications"
+  },
+  "EN.625.743": {
+   "areas": [
+    "Systems and Controls"
+   ],
+   "bg": [],
+   "code": "EN.625.743",
+   "credits": 3.0,
+   "desc": "Cross listed from another Engineering for Professionals program. Counts as a technical elective; the degree allows at most three courses from outside Electrical and Computer Engineering.",
+   "excl": [],
+   "external": true,
+   "gradeable": true,
+   "groups": [],
+   "level": 7,
+   "prereq_text": "",
+   "title": "Stochastic Optimization and Control"
+  }
+ }
+}
