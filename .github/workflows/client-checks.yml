@@ -1,0 +1,69 @@
+# Gate for the React client.
+#
+# Both jobs build a stage of the same Dockerfile a developer builds locally with
+# `make check`, so a green run here means the code passed on the node the server
+# actually uses, and means the same thing it meant on the laptop. Nothing is
+# installed on the runner but Docker.
+name: Client checks
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the running check obsolete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  container-tests:
+    name: Type check and unit tests, in the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Builds only the stages the target needs, so this never builds the
+      # .NET server or the final image.
+      - name: Build the client test stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: clienttest
+          push: false
+          load: false
+          cache-from: type=gha,scope=clienttest
+          cache-to: type=gha,scope=clienttest,mode=max
+
+  style:
+    name: Lint and format, in the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # eslint, typescript-eslint and prettier live in the root package and read
+      # their config from beside it. The build context is the repository root,
+      # so the clientlint stage has all of it.
+      - name: Build the client lint stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: clientlint
+          push: false
+          load: false
+          cache-from: type=gha,scope=clientlint
+          cache-to: type=gha,scope=clientlint,mode=max

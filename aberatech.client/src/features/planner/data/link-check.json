@@ -1,0 +1,698 @@
+{
+  "checkedOn": "2026-08-21",
+  "source": "https://e-catalogue.jhu.edu/search/?P=<code>",
+  "total": 138,
+  "resolvedWithMatchingTitle": 138,
+  "courses": {
+    "EN.525.201": {
+      "httpStatus": 200,
+      "catalogueTitle": "Circuits, Devices and Fields",
+      "titleMatches": true
+    },
+    "EN.525.202": {
+      "httpStatus": 200,
+      "catalogueTitle": "Signals and Systems",
+      "titleMatches": true
+    },
+    "EN.525.601": {
+      "httpStatus": 200,
+      "catalogueTitle": "Independent Project",
+      "titleMatches": true
+    },
+    "EN.525.603": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Topics in Optical Medical Imaging",
+      "titleMatches": true
+    },
+    "EN.525.604": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Optical Instruments",
+      "titleMatches": true
+    },
+    "EN.525.605": {
+      "httpStatus": 200,
+      "catalogueTitle": "Intermediate Electromagnetics",
+      "titleMatches": true
+    },
+    "EN.525.606": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electronic Materials",
+      "titleMatches": true
+    },
+    "EN.525.607": {
+      "httpStatus": 200,
+      "catalogueTitle": "Intro to Electronic Packaging",
+      "titleMatches": true
+    },
+    "EN.525.608": {
+      "httpStatus": 200,
+      "catalogueTitle": "Next Generation Telecommunications",
+      "titleMatches": true
+    },
+    "EN.525.609": {
+      "httpStatus": 200,
+      "catalogueTitle": "Continuous Control Systems",
+      "titleMatches": true
+    },
+    "EN.525.610": {
+      "httpStatus": 200,
+      "catalogueTitle": "Microprocessors for Robotic Systems",
+      "titleMatches": true
+    },
+    "EN.525.611": {
+      "httpStatus": 200,
+      "catalogueTitle": "Modern Convex Optimization",
+      "titleMatches": true
+    },
+    "EN.525.612": {
+      "httpStatus": 200,
+      "catalogueTitle": "Computer Architecture",
+      "titleMatches": true
+    },
+    "EN.525.613": {
+      "httpStatus": 200,
+      "catalogueTitle": "Fourier Techniques in Optics",
+      "titleMatches": true
+    },
+    "EN.525.614": {
+      "httpStatus": 200,
+      "catalogueTitle": "Probability & Stochastic Processes for Engineers",
+      "titleMatches": true
+    },
+    "EN.525.615": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Embedded Systems",
+      "titleMatches": true
+    },
+    "EN.525.616": {
+      "httpStatus": 200,
+      "catalogueTitle": "Communication Systems Engineering",
+      "titleMatches": true
+    },
+    "EN.525.617": {
+      "httpStatus": 200,
+      "catalogueTitle": "Computation for Engineers",
+      "titleMatches": true
+    },
+    "EN.525.618": {
+      "httpStatus": 200,
+      "catalogueTitle": "Antenna Systems",
+      "titleMatches": true
+    },
+    "EN.525.619": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Digital Image and Video Processing",
+      "titleMatches": true
+    },
+    "EN.525.620": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electromagnetic Transmission Systems",
+      "titleMatches": true
+    },
+    "EN.525.621": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Electronics and the Solid State",
+      "titleMatches": true
+    },
+    "EN.525.622": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Electronics Prototyping and Design",
+      "titleMatches": true
+    },
+    "EN.525.623": {
+      "httpStatus": 200,
+      "catalogueTitle": "Principles of RF and Microwave Circuits",
+      "titleMatches": true
+    },
+    "EN.525.624": {
+      "httpStatus": 200,
+      "catalogueTitle": "Analog Electronic Circuit Design",
+      "titleMatches": true
+    },
+    "EN.525.625": {
+      "httpStatus": 200,
+      "catalogueTitle": "Laser Fundamentals",
+      "titleMatches": true
+    },
+    "EN.525.626": {
+      "httpStatus": 200,
+      "catalogueTitle": "Feedback Control in Biological Signaling Pathways",
+      "titleMatches": true
+    },
+    "EN.525.627": {
+      "httpStatus": 200,
+      "catalogueTitle": "Digital Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.628": {
+      "httpStatus": 200,
+      "catalogueTitle": "Compressed Sensing and Sparse Recovery",
+      "titleMatches": true
+    },
+    "EN.525.629": {
+      "httpStatus": 200,
+      "catalogueTitle": "Discrete-Time Control Systems",
+      "titleMatches": true
+    },
+    "EN.525.630": {
+      "httpStatus": 200,
+      "catalogueTitle": "Digital Signal Processing Lab",
+      "titleMatches": true
+    },
+    "EN.525.631": {
+      "httpStatus": 200,
+      "catalogueTitle": "Adaptive Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.634": {
+      "httpStatus": 200,
+      "catalogueTitle": "High Speed Digital Design",
+      "titleMatches": true
+    },
+    "EN.525.636": {
+      "httpStatus": 200,
+      "catalogueTitle": "Optics & Photonics Lab",
+      "titleMatches": true
+    },
+    "EN.525.637": {
+      "httpStatus": 200,
+      "catalogueTitle": "Foundations of Reinforcement Learning",
+      "titleMatches": true
+    },
+    "EN.525.638": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Modern Wireless and Optical Communication Systems",
+      "titleMatches": true
+    },
+    "EN.525.640": {
+      "httpStatus": 200,
+      "catalogueTitle": "Satellite Communications Systems",
+      "titleMatches": true
+    },
+    "EN.525.641": {
+      "httpStatus": 200,
+      "catalogueTitle": "Computer and Data Communication Networks I",
+      "titleMatches": true
+    },
+    "EN.525.642": {
+      "httpStatus": 200,
+      "catalogueTitle": "FPGA Design Using VHDL",
+      "titleMatches": true
+    },
+    "EN.525.644": {
+      "httpStatus": 200,
+      "catalogueTitle": "Optimal Control and Estimation: Theory and Applications",
+      "titleMatches": true
+    },
+    "EN.525.645": {
+      "httpStatus": 200,
+      "catalogueTitle": "Modern Navigation Systems",
+      "titleMatches": true
+    },
+    "EN.525.647": {
+      "httpStatus": 200,
+      "catalogueTitle": "Decentralized Control and Consensus in Multi-Agent Systems",
+      "titleMatches": true
+    },
+    "EN.525.648": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Radar Systems",
+      "titleMatches": true
+    },
+    "EN.525.649": {
+      "httpStatus": 200,
+      "catalogueTitle": "Smart Grids",
+      "titleMatches": true
+    },
+    "EN.525.650": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to EO/IR Systems",
+      "titleMatches": true
+    },
+    "EN.525.651": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Electric Power Systems",
+      "titleMatches": true
+    },
+    "EN.525.652": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electric Machines and Control for Electrification",
+      "titleMatches": true
+    },
+    "EN.525.653": {
+      "httpStatus": 200,
+      "catalogueTitle": "Power System Control, Optimization, and Grid Management",
+      "titleMatches": true
+    },
+    "EN.525.654": {
+      "httpStatus": 200,
+      "catalogueTitle": "Communications Circuits Lab",
+      "titleMatches": true
+    },
+    "EN.525.655": {
+      "httpStatus": 200,
+      "catalogueTitle": "Audio Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.656": {
+      "httpStatus": 200,
+      "catalogueTitle": "Antenna Design for Space Systems",
+      "titleMatches": true
+    },
+    "EN.525.657": {
+      "httpStatus": 200,
+      "catalogueTitle": "Measurement and Instrumentation",
+      "titleMatches": true
+    },
+    "EN.525.658": {
+      "httpStatus": 200,
+      "catalogueTitle": "Digital VLSI System Design",
+      "titleMatches": true
+    },
+    "EN.525.659": {
+      "httpStatus": 200,
+      "catalogueTitle": "Mixed-Mode VLSI Circuit Design",
+      "titleMatches": true
+    },
+    "EN.525.661": {
+      "httpStatus": 200,
+      "catalogueTitle": "UAV Systems and Control",
+      "titleMatches": true
+    },
+    "EN.525.664": {
+      "httpStatus": 200,
+      "catalogueTitle": "AC Electric Machinery Fundamentals",
+      "titleMatches": true
+    },
+    "EN.525.665": {
+      "httpStatus": 200,
+      "catalogueTitle": "Machine Perception",
+      "titleMatches": true
+    },
+    "EN.525.666": {
+      "httpStatus": 200,
+      "catalogueTitle": "Linear System Theory",
+      "titleMatches": true
+    },
+    "EN.525.670": {
+      "httpStatus": 200,
+      "catalogueTitle": "Machine Learning for Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.671": {
+      "httpStatus": 200,
+      "catalogueTitle": "Deep Learning and Generative Artificial Intelligence",
+      "titleMatches": true
+    },
+    "EN.525.674": {
+      "httpStatus": 200,
+      "catalogueTitle": "Image Processing & Analysis",
+      "titleMatches": true
+    },
+    "EN.525.677": {
+      "httpStatus": 200,
+      "catalogueTitle": "Hardware Architectures for DSP Algorithms",
+      "titleMatches": true
+    },
+    "EN.525.678": {
+      "httpStatus": 200,
+      "catalogueTitle": "Next Generation Mobile Networks and Security with 5G",
+      "titleMatches": true
+    },
+    "EN.525.681": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to AI in Robotics",
+      "titleMatches": true
+    },
+    "EN.525.684": {
+      "httpStatus": 200,
+      "catalogueTitle": "Microwave Systems & Receiver Design",
+      "titleMatches": true
+    },
+    "EN.525.691": {
+      "httpStatus": 200,
+      "catalogueTitle": "Fundamentals of Photonics",
+      "titleMatches": true
+    },
+    "EN.525.707": {
+      "httpStatus": 200,
+      "catalogueTitle": "Error Control Coding",
+      "titleMatches": true
+    },
+    "EN.525.708": {
+      "httpStatus": 200,
+      "catalogueTitle": "Iterative Methods in Communications Systems",
+      "titleMatches": true
+    },
+    "EN.525.712": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Computer Architecture",
+      "titleMatches": true
+    },
+    "EN.525.718": {
+      "httpStatus": 200,
+      "catalogueTitle": "Multirate Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.721": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Digital Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.722": {
+      "httpStatus": 200,
+      "catalogueTitle": "Wireless and Mobile Cellular Communications",
+      "titleMatches": true
+    },
+    "EN.525.724": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Pattern Recognition",
+      "titleMatches": true
+    },
+    "EN.525.725": {
+      "httpStatus": 200,
+      "catalogueTitle": "Power Electronics",
+      "titleMatches": true
+    },
+    "EN.525.726": {
+      "httpStatus": 200,
+      "catalogueTitle": "Applications of Power Electronics Design",
+      "titleMatches": true
+    },
+    "EN.525.727": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Power Electronics",
+      "titleMatches": true
+    },
+    "EN.525.728": {
+      "httpStatus": 200,
+      "catalogueTitle": "Detection & Estimation Theory",
+      "titleMatches": true
+    },
+    "EN.525.732": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Analog Electronic Circuit Design",
+      "titleMatches": true
+    },
+    "EN.525.733": {
+      "httpStatus": 200,
+      "catalogueTitle": "Deep Learning for Computer Vision",
+      "titleMatches": true
+    },
+    "EN.525.735": {
+      "httpStatus": 200,
+      "catalogueTitle": "MIMO Wireless Communications",
+      "titleMatches": true
+    },
+    "EN.525.736": {
+      "httpStatus": 200,
+      "catalogueTitle": "Radar Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.738": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Antenna Systems",
+      "titleMatches": true
+    },
+    "EN.525.742": {
+      "httpStatus": 200,
+      "catalogueTitle": "System-on-a-Chip FPGA Design Laboratory",
+      "titleMatches": true
+    },
+    "EN.525.743": {
+      "httpStatus": 200,
+      "catalogueTitle": "Embedded Systems Development Lab",
+      "titleMatches": true
+    },
+    "EN.525.744": {
+      "httpStatus": 200,
+      "catalogueTitle": "Passive Emitter Geo-Location",
+      "titleMatches": true
+    },
+    "EN.525.745": {
+      "httpStatus": 200,
+      "catalogueTitle": "Applied Kalman Filtering",
+      "titleMatches": true
+    },
+    "EN.525.746": {
+      "httpStatus": 200,
+      "catalogueTitle": "Image Engineering",
+      "titleMatches": true
+    },
+    "EN.525.747": {
+      "httpStatus": 200,
+      "catalogueTitle": "Speech Processing",
+      "titleMatches": true
+    },
+    "EN.525.748": {
+      "httpStatus": 200,
+      "catalogueTitle": "Synthetic Aperture Radar",
+      "titleMatches": true
+    },
+    "EN.525.751": {
+      "httpStatus": 200,
+      "catalogueTitle": "Software Radio for Wireless Communications",
+      "titleMatches": true
+    },
+    "EN.525.752": {
+      "httpStatus": 200,
+      "catalogueTitle": "Digital Receiver Synchronization Techniques",
+      "titleMatches": true
+    },
+    "EN.525.753": {
+      "httpStatus": 200,
+      "catalogueTitle": "Laser Systems and Applications",
+      "titleMatches": true
+    },
+    "EN.525.754": {
+      "httpStatus": 200,
+      "catalogueTitle": "Wireless Communication Circuits",
+      "titleMatches": true
+    },
+    "EN.525.756": {
+      "httpStatus": 200,
+      "catalogueTitle": "Optical Propagation, Sensing, and Backgrounds",
+      "titleMatches": true
+    },
+    "EN.525.759": {
+      "httpStatus": 200,
+      "catalogueTitle": "Image Compression, Packet Video, and Video Processing",
+      "titleMatches": true
+    },
+    "EN.525.761": {
+      "httpStatus": 200,
+      "catalogueTitle": "Wireless and Wireline Network Integration",
+      "titleMatches": true
+    },
+    "EN.525.762": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Wavelets",
+      "titleMatches": true
+    },
+    "EN.525.763": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Linear and Nonlinear Estimation",
+      "titleMatches": true
+    },
+    "EN.525.764": {
+      "httpStatus": 200,
+      "catalogueTitle": "Nonlinear Controls",
+      "titleMatches": true
+    },
+    "EN.525.768": {
+      "httpStatus": 200,
+      "catalogueTitle": "Wireless Networks",
+      "titleMatches": true
+    },
+    "EN.525.770": {
+      "httpStatus": 200,
+      "catalogueTitle": "Intelligent Algorithms",
+      "titleMatches": true
+    },
+    "EN.525.771": {
+      "httpStatus": 200,
+      "catalogueTitle": "Propagation of Radio Waves in the Atmosphere",
+      "titleMatches": true
+    },
+    "EN.525.772": {
+      "httpStatus": 200,
+      "catalogueTitle": "Fiber-Optic Communication Systems",
+      "titleMatches": true
+    },
+    "EN.525.774": {
+      "httpStatus": 200,
+      "catalogueTitle": "RF & Microwave Circuits I",
+      "titleMatches": true
+    },
+    "EN.525.775": {
+      "httpStatus": 200,
+      "catalogueTitle": "RF & Microwave Circuits II",
+      "titleMatches": true
+    },
+    "EN.525.776": {
+      "httpStatus": 200,
+      "catalogueTitle": "Information Theory",
+      "titleMatches": true
+    },
+    "EN.525.777": {
+      "httpStatus": 200,
+      "catalogueTitle": "Control System Design Methods",
+      "titleMatches": true
+    },
+    "EN.525.778": {
+      "httpStatus": 200,
+      "catalogueTitle": "Design for Reliability, Testability, and Quality Assurance",
+      "titleMatches": true
+    },
+    "EN.525.779": {
+      "httpStatus": 200,
+      "catalogueTitle": "RF Integrated Circuits",
+      "titleMatches": true
+    },
+    "EN.525.780": {
+      "httpStatus": 200,
+      "catalogueTitle": "Multidimensional Digital Signal Processing",
+      "titleMatches": true
+    },
+    "EN.525.783": {
+      "httpStatus": 200,
+      "catalogueTitle": "Spread Spectrum Communications",
+      "titleMatches": true
+    },
+    "EN.525.784": {
+      "httpStatus": 200,
+      "catalogueTitle": "Microwave Magnetics and Non-Reciprocal Devices",
+      "titleMatches": true
+    },
+    "EN.525.786": {
+      "httpStatus": 200,
+      "catalogueTitle": "Human Robotics Interaction",
+      "titleMatches": true
+    },
+    "EN.525.787": {
+      "httpStatus": 200,
+      "catalogueTitle": "Microwave Monolithic Integrated Circuit (MMIC) Design",
+      "titleMatches": true
+    },
+    "EN.525.788": {
+      "httpStatus": 200,
+      "catalogueTitle": "Power Microwave Monolithic Integrated Circuit (MMIC)  Design",
+      "titleMatches": true
+    },
+    "EN.525.789": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Satellite Communications",
+      "titleMatches": true
+    },
+    "EN.525.790": {
+      "httpStatus": 200,
+      "catalogueTitle": "RF Power Amplifier Design Techniques",
+      "titleMatches": true
+    },
+    "EN.525.791": {
+      "httpStatus": 200,
+      "catalogueTitle": "Microwave Communications Laboratory",
+      "titleMatches": true
+    },
+    "EN.525.793": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Communication Systems",
+      "titleMatches": true
+    },
+    "EN.525.796": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to High-Speed Optoelectronics",
+      "titleMatches": true
+    },
+    "EN.525.797": {
+      "httpStatus": 200,
+      "catalogueTitle": "Advanced Fiber Optic Laboratory",
+      "titleMatches": true
+    },
+    "EN.525.801": {
+      "httpStatus": 200,
+      "catalogueTitle": "Special Project I",
+      "titleMatches": true
+    },
+    "EN.525.802": {
+      "httpStatus": 200,
+      "catalogueTitle": "Special Project II",
+      "titleMatches": true
+    },
+    "EN.525.803": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electrical and Computer Engineering Thesis",
+      "titleMatches": true
+    },
+    "EN.525.804": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electrical and Computer Engineering Thesis",
+      "titleMatches": true
+    },
+    "EN.615.641": {
+      "httpStatus": 200,
+      "catalogueTitle": "Mathematical Methods for Physics and Engineering",
+      "titleMatches": true
+    },
+    "EN.615.642": {
+      "httpStatus": 200,
+      "catalogueTitle": "Electromagnetics",
+      "titleMatches": true
+    },
+    "EN.615.654": {
+      "httpStatus": 200,
+      "catalogueTitle": "Quantum Mechanics",
+      "titleMatches": true
+    },
+    "EN.615.671": {
+      "httpStatus": 200,
+      "catalogueTitle": "Principles Of Optics",
+      "titleMatches": true
+    },
+    "EN.615.751": {
+      "httpStatus": 200,
+      "catalogueTitle": "Modern Optics",
+      "titleMatches": true
+    },
+    "EN.625.603": {
+      "httpStatus": 200,
+      "catalogueTitle": "Statistical Methods and Data Analysis",
+      "titleMatches": true
+    },
+    "EN.625.609": {
+      "httpStatus": 200,
+      "catalogueTitle": "Matrix Theory",
+      "titleMatches": true
+    },
+    "EN.625.615": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introduction to Optimization",
+      "titleMatches": true
+    },
+    "EN.625.620": {
+      "httpStatus": 200,
+      "catalogueTitle": "Mathematical Methods for Signal Processing",
+      "titleMatches": true
+    },
+    "EN.625.695": {
+      "httpStatus": 200,
+      "catalogueTitle": "Time Series Analysis",
+      "titleMatches": true
+    },
+    "EN.625.710": {
+      "httpStatus": 200,
+      "catalogueTitle": "Fourier Analysis with Applications to Signal Processing and Differential Equations",
+      "titleMatches": true
+    },
+    "EN.625.714": {
+      "httpStatus": 200,
+      "catalogueTitle": "Introductory Stochastic Differential Equations with Applications",
+      "titleMatches": true
+    },
+    "EN.625.743": {
+      "httpStatus": 200,
+      "catalogueTitle": "Stochastic Optimization & Control",
+      "titleMatches": true
+    }
+  }
+}
