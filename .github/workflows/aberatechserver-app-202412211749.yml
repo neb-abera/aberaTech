@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - dev
+      - master
 env:
   CONTAINER_APP_CONTAINER_NAME: aberatechserver
   CONTAINER_APP_NAME: aberatechserver-app-202412211749
