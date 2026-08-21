@@ -34,7 +34,7 @@ export default function CourseCard({ code, pinned, onClose }: CourseCardProps) {
 
   const need = missingFor(model.courses, code, new Set(model.plan.courses()));
   const applied = ctx.applied.has(code);
-  const missingBackground = model.data.missingBackground(code, model.background);
+  const gates = model.gates(code);
   const term = model.plan.termOf(code);
   const links = courseLinks(code, course.title);
 
@@ -93,10 +93,43 @@ export default function CourseCard({ code, pinned, onClose }: CourseCardProps) {
           {need.map((m) => model.title(m)).join(', ')}
         </Row>
       )}
-      {missingBackground.length > 0 && (
-        <Row label="Assumes" tone="warning.main">
-          {missingBackground.map((m) => model.data.backgroundLabel(m)).join(', ')}
-        </Row>
+      {gates.map((g) =>
+        g.composite ? (
+          <Box key={g.id} sx={{ mt: 0.75 }}>
+            <Typography variant="body2" sx={{ color: 'warning.main' }}>
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                Assumes:
+              </Box>{' '}
+              {g.label}
+            </Typography>
+            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.25 }}>
+              That is a degree, not a course, so nothing is scheduled for it and the course is not blocked.{' '}
+              {g.missing.length
+                ? `The parts of it you have not ticked are ${g.missing.join(', ')}.`
+                : 'You have ticked every part of it.'}
+            </Typography>
+            {pinned && g.missing.length > 0 && (
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ mt: 0.75 }}
+                onClick={() => {
+                  ctx.update((m) => {
+                    m.expandBackground(g.id, !m.expandedBackground.has(g.id));
+                  });
+                }}
+              >
+                {model.expandedBackground.has(g.id)
+                  ? 'Stop scheduling the equivalent coursework'
+                  : `Add the ${g.missing.length} equivalent ${plural(g.missing.length, 'course')}`}
+              </Button>
+            )}
+          </Box>
+        ) : (
+          <Row key={g.id} label="Assumes" tone="warning.main">
+            {g.label}
+          </Row>
+        )
       )}
       {course.excl.length > 0 && (
         <Row label="Mutually exclusive with" tone="warning.main">

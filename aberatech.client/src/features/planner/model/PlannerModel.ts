@@ -4,6 +4,7 @@
  */
 import { Calendar } from '../core/calendar';
 import { CatalogData } from '../core/catalog';
+import type { Gate } from '../core/catalog';
 import { isPrep, withBackground } from '../core/background';
 import { Plan } from '../core/plan';
 import { closure, missingFor, unmetGroups } from '../core/prereq';
@@ -12,9 +13,9 @@ import type { DegreeAudit } from '../core/rules';
 import { Tracks } from '../core/tracks';
 import type { Catalog, Course } from '../core/types';
 
-/** Stable key for a set of held background ids, so the derived catalog is cached. */
-function bgKey(set: Set<string>): string {
-  return [...set].sort().join('|');
+/** Stable key for the background sets, so the derived catalog is cached. */
+function bgKey(held: Set<string>, expanded: Set<string>): string {
+  return [...held].sort().join('|') + '::' + [...expanded].sort().join('|');
 }
 
 export const DEFAULT_TRACK = 'sp-rf';
@@ -55,6 +56,13 @@ export class PlannerModel {
    * planner asks rather than assumes.
    */
   background = new Set<string>(['bg_calc', 'bg_phys']);
+  /**
+   * Composite background the reader has asked to schedule the parts of. Until a
+   * composite is in here it constrains nothing, because "an undergraduate degree
+   * in electrical engineering" is a sentence about a person, not a prerequisite
+   * the planner should enforce on its own initiative.
+   */
+  expandedBackground = new Set<string>();
   perTerm = 2;
   termsPerYear = 3;
   startTerm = 'Spring';
@@ -85,10 +93,15 @@ export class PlannerModel {
    * preparation course for every background item not yet ticked.
    */
   get courses(): Catalog {
-    const key = bgKey(this.background);
+    const key = bgKey(this.background, this.expandedBackground);
     if (this.cachedBgKey !== key) {
       this.cachedBgKey = key;
-      this.cachedCourses = withBackground(this.data.courses, this.data.background, this.background);
+      this.cachedCourses = withBackground(
+        this.data.courses,
+        this.data.background,
+        this.background,
+        this.expandedBackground
+      );
     }
     return this.cachedCourses;
   }
@@ -144,8 +157,27 @@ export class PlannerModel {
 
   /** Record that the reader does or does not already hold a background item. */
   setBackground(id: string, held: boolean): void {
-    if (held) this.background.add(id);
-    else this.background.delete(id);
+    if (held) {
+      this.background.add(id);
+      this.expandedBackground.delete(id); // nothing to schedule once it is held
+    } else this.background.delete(id);
+    this.rebase();
+    this.rescheduleAll();
+  }
+
+  /** What a course assumes that the reader does not hold, ready to display. */
+  gates(code: string): Gate[] {
+    return this.data.gates(code, this.background);
+  }
+
+  /**
+   * Schedule the parts of a composite the reader is missing, or stop doing so.
+   * Turning it on makes those parts genuine prerequisites, so the automatic
+   * placer inserts them exactly as it would any other.
+   */
+  expandBackground(id: string, on: boolean): void {
+    if (on) this.expandedBackground.add(id);
+    else this.expandedBackground.delete(id);
     this.rebase();
     this.rescheduleAll();
   }

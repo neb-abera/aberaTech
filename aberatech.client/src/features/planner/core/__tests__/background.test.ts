@@ -3,11 +3,12 @@
  * Ticking "I already have this" satisfies one; otherwise it must be placed.
  */
 import { describe, expect, test } from 'vitest';
-import { PREP_PREFIX, prepId, withBackground } from '../background';
+import { COMPOSITE, PREP_PREFIX, holdsBackground, missingParts, prepId, withBackground } from '../background';
+import { CatalogData } from '../catalog';
 import { closure, missingFor } from '../prereq';
 import { Plan } from '../plan';
 import { toyCourse, termOf } from './fixtures';
-import type { Catalog } from '../types';
+import type { Catalog, RawCatalog } from '../types';
 
 const BG: [string, string][] = [
   ['bg_de', 'Differential Equations'],
@@ -79,5 +80,96 @@ describe('planning with background', () => {
   });
   test('preparation ids are recognisable so the interface can style them', () => {
     expect(prepId('bg_de').startsWith(PREP_PREFIX)).toBe(true);
+  });
+});
+
+/**
+ * A degree is not a course. "An undergraduate degree in electrical engineering"
+ * is stated as a prerequisite by five courses in the real catalog, and an
+ * earlier version scheduled it as a single preparation course, which put four
+ * years of work in one slot of one term.
+ */
+describe('a composite background item', () => {
+  const COMP: [string, string][] = [
+    ['bg_calc', 'Calculus I through III'],
+    ['bg_de', 'Differential Equations'],
+    ['bg_la', 'Linear Algebra and Matrix Theory'],
+    ['bg_cx', 'Complex Variables'],
+    ['bg_phys', 'Calculus based Physics I and II'],
+    ['bg_ugem', 'Undergraduate Electromagnetics'],
+    ['bg_dig', 'Digital Logic and State Machines'],
+    ['bg_ee', 'A full undergraduate EE degree']
+  ];
+  const PARTS = COMPOSITE.bg_ee;
+  /** G asks for the degree outright; H offers a course as the alternative. */
+  const CAT: Catalog = {
+    G: toyCourse('G', 'Gated', { bg: ['bg_ee'] }),
+    H: toyCourse('H', 'Either way', { groups: [['C', 'bg_ee']] }),
+    C: toyCourse('C', 'Charlie')
+  };
+
+  test('is never scheduled, however little of it is held', () => {
+    expect(withBackground(CAT, COMP, new Set())[prepId('bg_ee')]).toBeUndefined();
+  });
+
+  test('constrains nothing until the reader opts in, so the course stays takeable', () => {
+    expect(withBackground(CAT, COMP, new Set()).G.groups).toEqual([]);
+  });
+
+  test('opting in schedules the parts that are missing, and only those', () => {
+    const cat = withBackground(CAT, COMP, new Set(['bg_calc', 'bg_phys']), new Set(['bg_ee']));
+    const want = PARTS.filter((p) => p !== 'bg_calc' && p !== 'bg_phys').map((p) => [prepId(p)]);
+    expect(cat.G.groups).toEqual(want);
+    expect(cat[prepId('bg_ee')]).toBeUndefined();
+  });
+
+  test('holding every part satisfies it without ticking it', () => {
+    const held = new Set(PARTS);
+    expect(holdsBackground('bg_ee', held)).toBe(true);
+    expect(missingParts('bg_ee', held)).toEqual([]);
+    expect(withBackground(CAT, COMP, held, new Set(['bg_ee'])).G.groups).toEqual([]);
+  });
+
+  test('ticking it outright satisfies it too, without ticking seven boxes', () => {
+    expect(holdsBackground('bg_ee', new Set(['bg_ee']))).toBe(true);
+  });
+
+  test('names the parts still outstanding', () => {
+    expect(missingParts('bg_ee', new Set(['bg_calc', 'bg_de']))).toEqual(
+      PARTS.filter((p) => p !== 'bg_calc' && p !== 'bg_de')
+    );
+  });
+});
+
+/**
+ * The catalog writes "either an undergraduate degree in electrical engineering
+ * or EN.525.616" as one sentence. It is an OR, and storing it as a course
+ * prerequisite plus a separate background requirement made it an AND, which
+ * demanded both.
+ */
+describe('a background item written beside a course', () => {
+  const COMP: [string, string][] = [['bg_ee', 'A full undergraduate EE degree']];
+  const CAT: Catalog = {
+    H: toyCourse('H', 'Either way', { groups: [['C', 'bg_ee']] }),
+    C: toyCourse('C', 'Charlie')
+  };
+
+  test('leaves the course as the way through when the background is not held', () => {
+    expect(withBackground(CAT, COMP, new Set()).H.groups).toEqual([['C']]);
+  });
+
+  test('satisfies the group outright when the background is held', () => {
+    expect(withBackground(CAT, COMP, new Set(['bg_ee'])).H.groups).toEqual([]);
+  });
+
+  test('is an alternative rather than an assumption, so it is not reported as missing', () => {
+    const data = new CatalogData({
+      courses: CAT,
+      areas: {},
+      concentrations: {},
+      background: COMP
+    } as unknown as RawCatalog);
+    expect(data.missingBackground('H', new Set())).toEqual([]);
+    expect(data.missingBackground('G', new Set())).toEqual([]);
   });
 });

@@ -10,8 +10,9 @@ import { Calendar } from '../calendar';
 import { CatalogData } from '../catalog';
 import { closure } from '../prereq';
 import { degreeAudit, LIMITS } from '../rules';
-import { Tracks } from '../tracks';
-import type { RawCatalog, RawTracks } from '../types';
+import { placeInOrder, Tracks } from '../tracks';
+import type { Catalog, RawCatalog, RawTracks } from '../types';
+import { termOf, toyCourse } from './fixtures';
 
 const data = new CatalogData(rawCatalog as unknown as RawCatalog);
 const tracks = new Tracks(rawTracks as unknown as RawTracks);
@@ -99,5 +100,55 @@ describe('coverage of the signal chain', () => {
   test('the ten course collector cannot fit an antenna course, and says so', () => {
     expect(has('collector-10', SIGNAL_CHAIN.aperture)).toBe(false);
     expect(tracks.get('collector-10')?.tradeoff).toMatch(/aperture|antenna/i);
+  });
+});
+
+/**
+ * placeInOrder promises each course sits "never before a course listed ahead of
+ * it". It used to set the floor one term back to allow pairing, which let a
+ * course with no prerequisites drop into a gap a prerequisite had left open in
+ * the previous term, and run the curated stages backwards.
+ */
+describe('placeInOrder holds the order it is given', () => {
+  const CAT: Catalog = {
+    P: toyCourse('P', 'Papa'),
+    Q: toyCourse('Q', 'Quebec', { groups: [['P']] }),
+    R: toyCourse('R', 'Romeo', { groups: [['Q']] }),
+    S: toyCourse('S', 'Sierra')
+  };
+
+  test('a course never lands earlier than one listed before it', () => {
+    const plan = placeInOrder(CAT, ['P', 'Q', 'R', 'S'], 2);
+    let last = -1;
+    for (const code of ['P', 'Q', 'R', 'S']) {
+      const t = termOf(plan, code);
+      expect(t, `${code} ran backwards`).toBeGreaterThanOrEqual(last);
+      last = t;
+    }
+  });
+
+  test('S fills the gap beside R rather than the one the prerequisite left open', () => {
+    const plan = placeInOrder(CAT, ['P', 'Q', 'R', 'S'], 2);
+    expect(termOf(plan, 'S')).toBe(termOf(plan, 'R'));
+  });
+
+  test('pairing within a term still works, so the plan does not get longer', () => {
+    const plan = placeInOrder(CAT, ['P', 'S'], 2);
+    expect(termOf(plan, 'S')).toBe(termOf(plan, 'P'));
+  });
+
+  test('every curated track still runs its stages forwards', () => {
+    for (const t of tracks.all()) {
+      const plan = tracks.toPlan(data.courses, t.id, 2);
+      let highest = -1;
+      for (const term of plan.terms) {
+        for (const code of term) {
+          const i = t.stages.findIndex((s) => s.courses.includes(code));
+          if (i < 0) continue;
+          expect(i, `${t.name}: ${data.title(code)} runs before an earlier stage`).toBeGreaterThanOrEqual(highest);
+          highest = Math.max(highest, i);
+        }
+      }
+    }
   });
 });

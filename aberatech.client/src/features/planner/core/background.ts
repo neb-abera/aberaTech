@@ -13,6 +13,15 @@
  * prerequisite that the scheduler, the drag legality check and the automatic
  * placer all respect, because it is expressed in exactly the same shape as any
  * other prerequisite.
+ *
+ * With one exception, which is what COMPOSITE below is for. "An undergraduate
+ * degree in electrical engineering" is not a course. It is four years, not a
+ * term, and an earlier version of this file turned it into a single preparation
+ * course anyway, which put a whole degree in one slot of one term and read as
+ * nonsense. A composite is never scheduled. It is the sum of its parts, it is
+ * satisfied when its parts are, and until then the courses that ask for it are
+ * flagged rather than blocked, so you can see exactly which parts you are
+ * missing and choose to schedule those instead.
  */
 import type { Catalog, Course } from './types';
 
@@ -24,6 +33,43 @@ export function prepId(bgKey: string): string {
 
 export function isPrep(code: string): boolean {
   return code.startsWith(PREP_PREFIX);
+}
+
+/**
+ * Background items that are a whole undergraduate degree rather than a subject,
+ * and the parts a degree of that kind actually supplies. Nothing in here is ever
+ * scheduled.
+ *
+ * The parts are the ones this catalog already names elsewhere, so ticking them
+ * off one at a time is a real path rather than a gesture: a reader who has the
+ * mathematics, the physics, the electromagnetics and the digital logic has the
+ * part of an EE degree these courses are reaching for.
+ */
+export const COMPOSITE: Record<string, string[]> = {
+  bg_ee: ['bg_calc', 'bg_de', 'bg_la', 'bg_cx', 'bg_phys', 'bg_ugem', 'bg_dig'],
+  bg_eecs: ['bg_calc', 'bg_de', 'bg_dig', 'bg_c']
+};
+
+export function isComposite(id: string): boolean {
+  return id in COMPOSITE;
+}
+
+/** A composite is satisfied by holding it outright, or by holding every part. */
+export function holdsBackground(id: string, held: Set<string>): boolean {
+  if (held.has(id)) return true;
+  const parts = COMPOSITE[id];
+  return parts !== undefined && parts.every((p) => held.has(p));
+}
+
+/** Parts of a composite still outstanding. Empty when it is satisfied. */
+export function missingParts(id: string, held: Set<string>): string[] {
+  if (holdsBackground(id, held)) return [];
+  return (COMPOSITE[id] ?? []).filter((p) => !held.has(p));
+}
+
+/** True when a group member names a background item rather than a course. */
+export function isBackgroundToken(member: string): boolean {
+  return member.startsWith('bg_');
 }
 
 /**
@@ -81,13 +127,24 @@ export const PREP_SOURCE: Record<string, { jhu: string | null; where: string }> 
 /**
  * Return a catalog in which every unheld background item is a real course and a
  * real prerequisite. Held items vanish entirely, as though satisfied.
+ *
+ * `expanded` names composites the reader has asked to schedule the parts of. A
+ * composite that is neither satisfied nor expanded adds no prerequisite at all:
+ * the course stays takeable and the interface flags it, because refusing to
+ * schedule a course on the strength of a prose sentence about a degree is a
+ * judgement the reader should make, not the planner.
  */
-export function withBackground(catalog: Catalog, background: [string, string][], held: Set<string>): Catalog {
-  const needed = background.filter(([id]) => !held.has(id));
-  if (!needed.length) return stripPrep(catalog);
-
+export function withBackground(
+  catalog: Catalog,
+  background: [string, string][],
+  held: Set<string>,
+  expanded = new Set<string>()
+): Catalog {
   const out: Catalog = {};
-  for (const [id, label] of needed) {
+
+  // Composites are never scheduled, so they never become preparation courses.
+  for (const [id, label] of background) {
+    if (isComposite(id) || held.has(id)) continue;
     const src = PREP_SOURCE[id] ?? { jhu: null, where: 'Taken outside Johns Hopkins.' };
     const course: Course = {
       code: prepId(id),
@@ -108,19 +165,51 @@ export function withBackground(catalog: Catalog, background: [string, string][],
     };
     out[course.code] = course;
   }
+
   for (const [code, c] of Object.entries(catalog)) {
     if (c.prep) continue; // drop preparation from a previous pass
-    const extra = c.bg.filter((b) => !held.has(b)).map((b) => [prepId(b)]);
-    out[code] = extra.length ? { ...c, groups: [...c.groups, ...extra] } : c;
+    const groups = resolveGroups(c, held, expanded, out);
+    out[code] = sameGroups(groups, c.groups) ? c : { ...c, groups };
   }
   return out;
 }
 
-function stripPrep(catalog: Catalog): Catalog {
-  const out: Catalog = {};
-  for (const [code, c] of Object.entries(catalog)) {
-    if (c.prep) continue;
-    out[code] = c.groups.some((g) => g.some(isPrep)) ? { ...c, groups: c.groups.filter((g) => !g.some(isPrep)) } : c;
+/**
+ * The groups a course actually has, once background is taken into account.
+ *
+ * A group may name a background item alongside real courses, which is how the
+ * catalog's "either an undergraduate degree in electrical engineering or
+ * EN.525.616" is written down. Holding the background satisfies that group
+ * outright; not holding it leaves the courses beside it as the way through.
+ */
+function resolveGroups(c: Course, held: Set<string>, expanded: Set<string>, prep: Catalog): string[][] {
+  const groups: string[][] = [];
+
+  for (const g of c.groups) {
+    const tokens = g.filter(isBackgroundToken);
+    if (tokens.some((t) => holdsBackground(t, held))) continue; // group satisfied by background
+    const courses = g.filter((m) => !isBackgroundToken(m) && !isPrep(m));
+    if (courses.length) groups.push(courses);
+    // A group of nothing but unheld background falls through to c.bg below,
+    // rather than becoming an empty group that nothing could ever satisfy.
+    else for (const t of tokens) groups.push(...backgroundGroups(t, held, expanded, prep));
   }
-  return out;
+
+  for (const b of c.bg) groups.push(...backgroundGroups(b, held, expanded, prep));
+  return groups;
+}
+
+/** What an unsatisfied background item adds to a course's prerequisites. */
+function backgroundGroups(id: string, held: Set<string>, expanded: Set<string>, prep: Catalog): string[][] {
+  if (holdsBackground(id, held)) return [];
+  if (!isComposite(id)) return prep[prepId(id)] ? [[prepId(id)]] : [];
+  // A composite only becomes a prerequisite once the reader opts in to it.
+  if (!expanded.has(id)) return [];
+  return missingParts(id, held)
+    .filter((part) => prep[prepId(part)])
+    .map((part) => [prepId(part)]);
+}
+
+function sameGroups(a: string[][], b: string[][]): boolean {
+  return a.length === b.length && a.every((g, i) => g.length === b[i].length && g.every((m, j) => m === b[i][j]));
 }

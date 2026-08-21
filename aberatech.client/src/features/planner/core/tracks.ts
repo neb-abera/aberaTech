@@ -90,7 +90,12 @@ export function placeInOrder(cat: Catalog, order: string[], perTerm = 2): Plan {
     }
     terms[ti].push(code);
     placed.set(code, ti);
-    floor = Math.max(0, ti - 1); // allow pairing within a term, not backtracking
+    // The floor is this term, not the one before it. Pairing still works, since
+    // the next course tries this same term first and only moves on when it is
+    // full. Allowing ti - 1 let a course drop into a gap that a prerequisite had
+    // left open in the previous term, which put it ahead of a course listed
+    // before it and ran the curated stages backwards.
+    floor = ti;
   }
   return new Plan(cat, terms.length ? terms : [[]]);
 }

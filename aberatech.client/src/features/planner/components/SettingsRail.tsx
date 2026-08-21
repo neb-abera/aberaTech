@@ -14,6 +14,7 @@ import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { areaColor } from '../core/areaColors';
+import { holdsBackground, isComposite, missingParts } from '../core/background';
 import { MAX_PER_TERM } from '../model/PlannerModel';
 import type { PlannerModel } from '../model/PlannerModel';
 import TrackPicker from './TrackPicker';
@@ -76,30 +77,46 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
 
       <Section
         title="Background you already have"
-        hint="Anything left unticked becomes a preparation course in the plan, scheduled like any other prerequisite."
+        hint="A subject left unticked becomes a preparation course in the plan, scheduled like any other prerequisite. A whole degree is not scheduled: it ticks itself once its parts are ticked, and the courses that assume one say so on their card."
       >
-        {model.data.background.map(([id, label]) => (
-          <FormControlLabel
-            key={id}
-            sx={{ display: 'flex', ml: 0 }}
-            control={
-              <Checkbox
-                size="small"
-                checked={model.background.has(id)}
-                onChange={(e) => {
-                  update((m) => {
-                    m.setBackground(id, e.target.checked);
-                  });
-                }}
-              />
-            }
-            label={
-              <Typography component="span" variant="body2">
-                {label}
-              </Typography>
-            }
-          />
-        ))}
+        {model.data.background.map(([id, label]) => {
+          const composite = isComposite(id);
+          const parts = composite ? missingParts(id, model.background) : [];
+          const satisfied = holdsBackground(id, model.background);
+          return (
+            <FormControlLabel
+              key={id}
+              sx={{ display: 'flex', ml: 0, alignItems: 'flex-start' }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={satisfied}
+                  // A composite is a summary of the rows above it. Ticking it
+                  // outright is still allowed, because someone who holds the
+                  // degree should not have to tick seven boxes to say so.
+                  indeterminate={composite && !model.background.has(id) && satisfied}
+                  onChange={(e) => {
+                    update((m) => {
+                      m.setBackground(id, e.target.checked);
+                    });
+                  }}
+                />
+              }
+              label={
+                <Box>
+                  <Typography component="span" variant="body2">
+                    {label}
+                  </Typography>
+                  {composite && parts.length > 0 && (
+                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                      {parts.length} of its parts still unticked
+                    </Typography>
+                  )}
+                </Box>
+              }
+            />
+          );
+        })}
       </Section>
 
       <Section title="Schedule">

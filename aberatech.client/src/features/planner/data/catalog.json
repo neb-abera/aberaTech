@@ -262,6 +262,10 @@
   [
    "bg_ee",
    "A full undergraduate EE degree"
+  ],
+  [
+   "bg_eecs",
+   "An undergraduate EE, computer engineering or CS degree"
   ]
  ],
  "concentrations": {
@@ -452,9 +456,7 @@
    "areas": [
     "Communications and Networking"
    ],
-   "bg": [
-    "bg_ee"
-   ],
+   "bg": [],
    "code": "EN.525.608",
    "credits": 3.0,
    "desc": "This course examines voice, data, and video communications through emerging technologies. Considerations include the characteristics and security requirements of the information being encoded, bandwidth requirements and limitations, and transmission standards and equipment. Topics will consider the pragmatics facing the communications system engineer including space, weight, and power. The student will review past and present network architectures and apply trade-off decisions when analyzing new system requirements. Topics include brief histories of telecommunications, speech processing, encoding, digitization, signaling, and transmission; broadband, fiber optics, and wireless network architectures; and encryption, privacy, and security issues. New and disruptive technologies are discussed each offering.",
@@ -463,7 +465,8 @@
    "gradeable": true,
    "groups": [
     [
-     "EN.525.616"
+     "EN.525.616",
+     "bg_ee"
     ]
    ],
    "level": 6,
@@ -1929,7 +1932,7 @@
    ],
    "bg": [
     "bg_c",
-    "bg_ee"
+    "bg_eecs"
    ],
    "code": "EN.525.743",
    "credits": 3.0,
