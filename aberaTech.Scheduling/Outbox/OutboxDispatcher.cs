@@ -160,8 +160,12 @@ public sealed class OutboxDispatcher(
 
             if (result.Accepted)
             {
-                message.State = DeliveryState.Sent;
+                // Sent means "handed over, awaiting a receipt", and the
+                // reconciler will chase it. Delivered is terminal and only a
+                // sender with no receipt channel may claim it directly.
+                message.State = result.DeliveryConfirmed ? DeliveryState.Delivered : DeliveryState.Sent;
                 message.SentAt = now;
+                message.DeliveredAt = result.DeliveryConfirmed ? now : null;
                 message.ProviderMessageId = result.ProviderMessageId;
                 message.NextAttemptAt = null;
                 message.LastError = null;
