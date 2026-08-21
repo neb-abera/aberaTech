@@ -4,7 +4,7 @@
 # `make check`, so a green run here means the code passed on the node the server
 # actually uses, and means the same thing it meant on the laptop. Nothing is
 # installed on the runner but Docker.
-name: Client checks
+name: Checks
 
 on:
   pull_request:
@@ -67,3 +67,27 @@ jobs:
           load: false
           cache-from: type=gha,scope=clientlint
           cache-to: type=gha,scope=clientlint,mode=max
+
+  scheduling-tests:
+    name: Scheduling unit tests, in the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # The daylight saving arithmetic, the queue projection and the delivery
+      # retry schedule. Its own job rather than a step on the client one, so a
+      # failure names which half of the repository broke.
+      - name: Build the scheduling test stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: servertest
+          push: false
+          load: false
+          cache-from: type=gha,scope=servertest
+          cache-to: type=gha,scope=servertest,mode=max
