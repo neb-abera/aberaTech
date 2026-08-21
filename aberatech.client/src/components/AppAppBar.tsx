@@ -74,7 +74,7 @@ export default function AppAppBar()
               <Button variant="text" color="info" size="small">
                 <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
                   {' '}
-                  Course Planner{' '}
+                  Learning RF and Signal Processing{' '}
                 </Link>
               </Button>
             </Box>
@@ -135,7 +135,7 @@ export default function AppAppBar()
                 <MenuItem>
                   {' '}
                   <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                    Course Planner
+                    Learning RF and Signal Processing
                   </Link>
                 </MenuItem>
                 <Divider sx={{my: 3}}/>

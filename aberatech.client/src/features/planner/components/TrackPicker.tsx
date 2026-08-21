@@ -21,8 +21,8 @@ export interface TrackPickerProps {
 
 export default function TrackPicker({ model, onSelect }: TrackPickerProps) {
   const groups: [string, Track[]][] = [
-    ["Ten courses, the master's exactly", model.tracks.byKind('degree')],
-    ['Longer, for mastery', model.tracks.byKind('mastery')]
+    ['Degree length, ten courses', model.tracks.byKind('degree')],
+    ['Longer than the degree', model.tracks.byKind('mastery')]
   ];
 
   return (
@@ -107,7 +107,7 @@ export function TrackBanner({ model }: { model: PlannerModel }) {
       </Typography>
       <Typography variant="body2" sx={{ mt: 1 }}>
         <Box component="span" sx={{ fontWeight: 600 }}>
-          What it costs you.
+          Trade-off.
         </Box>{' '}
         {t.tradeoff}
       </Typography>

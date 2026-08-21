@@ -34,7 +34,7 @@ export class Tracks {
   /**
    * Schedule a track in its curated order, bumping any course whose prerequisite
    * is not yet placed. Ordered rather than optimised, because a track's order is
-   * the pedagogy: the collector track walks the signal chain from the aperture in.
+   * the pedagogy: the receiver tracks walk the signal chain from the antenna inward.
    */
   toPlan(catalog: Catalog, id: string, perTerm = 2): Plan {
     const t = this.get(id);

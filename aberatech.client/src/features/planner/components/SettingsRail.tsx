@@ -42,10 +42,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
         />
       </Section>
 
-      <Section
-        title="Focus areas"
-        hint="Ticking one selects it. Nothing moves on the board until you say so, and a track you already picked is kept."
-      >
+      <Section title="Focus areas" hint="Ticking one selects it. The board does not change until you add or replace.">
         {Object.keys(model.data.areas).map((name) => (
           <AreaToggle
             key={name}
@@ -82,7 +79,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
 
       <Section
         title="Background you already have"
-        hint="A subject left unticked becomes a preparation course in the plan, scheduled like any other prerequisite. A whole degree is not scheduled: it ticks itself once its parts are ticked, and the courses that assume one say so on their card."
+        hint="An unticked subject becomes a preparation course, scheduled like any other prerequisite. A whole degree is not scheduled; it ticks itself once its parts are ticked."
       >
         {model.data.background.map(([id, label]) => {
           const composite = isComposite(id);

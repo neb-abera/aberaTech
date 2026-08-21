@@ -88,7 +88,7 @@ describe('track definitions', () => {
 describe('coverage of the signal chain', () => {
   const has = (id: string, list: string[]) => list.some((c) => tracks.get(id)?.courses.includes(c));
 
-  test('the full collector track covers every stage', () => {
+  test('the full receiver track covers every stage', () => {
     for (const [name, list] of Object.entries(SIGNAL_CHAIN)) {
       expect(has('collector-full', list), `no course covering ${name}`).toBe(true);
     }

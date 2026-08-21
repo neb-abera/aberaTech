@@ -287,7 +287,7 @@ export class PlannerModel {
    * Schedule a set of courses.
    *
    * A track is laid out in its curated order, because that order is the
-   * pedagogy: the collector track walks the signal chain from the aperture in.
+   * pedagogy: the receiver tracks walk the signal chain from the antenna inward.
    * Courses a focus area adds on top of a track follow it, by prerequisite
    * depth, so layering an area on a path does not shuffle the path. With no
    * track there is no curated order to keep, so depth alone decides.

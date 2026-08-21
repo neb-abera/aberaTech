@@ -3,8 +3,8 @@
     "name": "Signal processing core",
     "kind": "degree",
     "length": "10 courses, about 3.3 years at two a term",
-    "goal": "The purest path to detection and estimation mastery. Nothing but the mathematics of pulling structure out of noise.",
-    "tradeoff": "No radio frequency content at all. You will be excellent at the algorithms and unable to say why the receiver missed the signal.",
+    "goal": "The statistical signal processing sequence on its own: detection, estimation and the mathematics under them.",
+    "tradeoff": "No RF content. You will know the algorithms without knowing the hardware they run on.",
     "stages": [
       { "name": "Foundation", "courses": ["EN.525.614", "EN.525.627"] },
       { "name": "The spine", "courses": ["EN.525.728", "EN.525.721", "EN.525.631", "EN.525.718"] },
@@ -12,11 +12,11 @@
     ]
   },
   "sp-rf": {
-    "name": "Signals and RF, balanced",
+    "name": "Signal processing and RF, balanced",
     "kind": "degree",
     "length": "10 courses, about 3.3 years at two a term",
-    "goal": "Split across both of your specialisations, so you can argue with a signal processing engineer and an antenna engineer in the same meeting.",
-    "tradeoff": "Half the depth of either pure track. Adaptive filtering and multirate both fall off the list.",
+    "goal": "Covers signal processing and RF together rather than either one in depth.",
+    "tradeoff": "Less depth than either single-subject track. Adaptive filtering and multirate do not fit.",
     "stages": [
       { "name": "Foundation", "courses": ["EN.525.614", "EN.525.627", "EN.525.616"] },
       { "name": "Signal processing", "courses": ["EN.525.728", "EN.525.744"] },
@@ -25,39 +25,39 @@
     ]
   },
   "collector-10": {
-    "name": "Collection systems, in ten",
+    "name": "Receiver systems, in ten",
     "kind": "degree",
     "length": "10 courses, about 3.3 years at two a term",
-    "goal": "The device end to end at degree length: fields, receiver, programmable logic, software radio, and the exploitation on top.",
-    "tradeoff": "Something has to give at ten courses, and what gives is the aperture. No antenna course fits. Take the long collector track if you want to design the antenna too.",
+    "goal": "A receiver end to end inside ten courses: fields, front end, programmable logic and software radio.",
+    "tradeoff": "Ten courses leaves no room for an antenna course, so the aperture is the part that gives. Take the full receiver track to design that too.",
     "stages": [
       { "name": "Foundation", "courses": ["EN.525.614", "EN.525.627", "EN.525.616"] },
       { "name": "Fields and front end", "courses": ["EN.525.605", "EN.525.684"] },
       { "name": "Digitisation", "courses": ["EN.525.642", "EN.525.742"] },
-      { "name": "Exploitation", "courses": ["EN.525.751", "EN.525.752", "EN.525.744"] }
+      { "name": "Demodulation and analysis", "courses": ["EN.525.751", "EN.525.752", "EN.525.744"] }
     ]
   },
   "sme": {
-    "name": "Signals intelligence subject matter expert",
+    "name": "Statistical signal processing, in depth",
     "kind": "mastery",
     "length": "24 courses, about 8 years at two a term",
-    "goal": "Depth in statistical signal processing, with enough radio frequency and systems work that no part of a collection chain is opaque to you.",
-    "tradeoff": "Light on hardware. You will understand the receiver as a system but will not have built one. Take the collector track if you want the soldering iron too.",
+    "goal": "Depth in statistical signal processing, with enough RF and systems work to follow a receiver end to end.",
+    "tradeoff": "Light on hardware. You will understand a receiver as a system without having built one.",
     "stages": [
       { "name": "Foundation", "courses": ["EN.525.201", "EN.525.202", "EN.525.617", "EN.525.614", "EN.525.627"] },
-      { "name": "The signal processing spine", "courses": ["EN.525.728", "EN.525.721", "EN.525.631", "EN.525.718", "EN.525.630"] },
+      { "name": "Core signal processing", "courses": ["EN.525.728", "EN.525.721", "EN.525.631", "EN.525.718", "EN.525.630"] },
       { "name": "Estimation and geolocation", "courses": ["EN.525.666", "EN.525.745", "EN.525.744"] },
       { "name": "Fields and the front end", "courses": ["EN.525.605", "EN.525.618", "EN.525.623", "EN.525.684"] },
-      { "name": "Where the two fields meet", "courses": ["EN.525.616", "EN.525.751", "EN.525.752", "EN.525.783"] },
+      { "name": "Where they overlap", "courses": ["EN.525.616", "EN.525.751", "EN.525.752", "EN.525.783"] },
       { "name": "Radar and machine learning", "courses": ["EN.525.648", "EN.525.736", "EN.525.670"] }
     ]
   },
   "collector-full": {
-    "name": "Build your own collector",
+    "name": "Build your own receiver",
     "kind": "mastery",
     "length": "32 courses, about 11 years at two a term",
-    "goal": "Every stage of the signal chain, from the aperture to the exploited bits, with the bench work to build and troubleshoot each one. Organised as the signal travels.",
-    "tradeoff": "The longest path here by a wide margin. It buys the ability to design, build, operate and repair the whole device rather than one layer of it.",
+    "goal": "Every stage of the signal chain, antenna to processed output, with the bench work to build and test each one. Ordered as the signal travels.",
+    "tradeoff": "Much longer than the others. Covers design, build and test of the whole receiver rather than one layer of it.",
     "stages": [
       { "name": "1. Foundation", "courses": ["EN.525.201", "EN.525.202", "EN.525.617", "EN.525.614", "EN.525.627"] },
       { "name": "2. The aperture", "courses": ["EN.525.605", "EN.525.618", "EN.525.738", "EN.525.771"] },
@@ -65,7 +65,7 @@
       { "name": "4. Analogue and instrumentation", "courses": ["EN.525.622", "EN.525.624", "EN.525.657"] },
       { "name": "5. Digitisation and programmable logic", "courses": ["EN.525.642", "EN.525.677", "EN.525.612", "EN.525.742"] },
       { "name": "6. Digital signal processing", "courses": ["EN.525.718", "EN.525.631", "EN.525.721"] },
-      { "name": "7. Exploitation", "courses": ["EN.525.616", "EN.525.728", "EN.525.751", "EN.525.752", "EN.525.783", "EN.525.744"] },
+      { "name": "7. Demodulation and analysis", "courses": ["EN.525.616", "EN.525.728", "EN.525.751", "EN.525.752", "EN.525.783", "EN.525.744"] },
       { "name": "8. The bench", "courses": ["EN.525.630", "EN.525.654", "EN.525.791"] }
     ]
   }
