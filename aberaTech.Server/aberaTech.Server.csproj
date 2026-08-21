@@ -13,14 +13,21 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>9.*-*</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\aberatech.client\aberatech.client.esproj">
+    <ProjectReference Include="..\aberaTech.Scheduling\aberaTech.Scheduling.csproj" />
+    <!--
+      For the IDE and for `dotnet run` on a developer machine: it is what makes
+      F5 start the vite dev server. The container build sets SkipClientProject,
+      because the .NET SDK image has no node, and the JavaScript SDK probes for
+      one whether or not it has a build script to run. Nothing is lost by
+      skipping it there: the clientbuild stage builds the real bundle and the
+      final stage copies it into wwwroot.
+    -->
+    <ProjectReference Include="..\aberatech.client\aberatech.client.esproj"
+                      Condition="'$(SkipClientProject)' != 'true'">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
