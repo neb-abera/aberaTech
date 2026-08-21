@@ -22,8 +22,14 @@ public sealed class LoggingMessageSender(ILogger<LoggingMessageSender> logger) :
             message.Id,
             message.Body.Length);
 
-        // A stable synthetic id, so a replay in development behaves like the
-        // real thing: the same message never gets two provider ids.
-        return Task.FromResult(SendResult.Ok($"local-{message.IdempotencyKey}"));
+        // Confirmed, not merely accepted. This sender is the final destination,
+        // so no delivery receipt is ever coming; reporting it as accepted would
+        // leave every development message to time out its receipt window, get
+        // retried five times and dead letter, filling the log with errors about
+        // a provider that does not exist.
+        //
+        // A real carrier must never use this. There, acceptance and delivery are
+        // separate events and the gap between them is the whole problem.
+        return Task.FromResult(SendResult.Confirmed($"local-{message.IdempotencyKey}"));
     }
 }

@@ -79,7 +79,12 @@ services:
       # Loopback only, for the same reason the dev server is: a published port
       # defaults to every interface, and a development database with a known
       # password does not belong on the network.
-      - '127.0.0.1:5432:5432'
+      #
+      # 5433 rather than the default 5432, because this machine runs several
+      # projects at once and the default is the one they all reach for first.
+      # The server container talks to db:5432 on the compose network regardless;
+      # this mapping exists only so a database tool on the host can connect.
+      - '127.0.0.1:5433:5432'
     volumes:
       - scheduling-db:/var/lib/postgresql/data
     healthcheck:

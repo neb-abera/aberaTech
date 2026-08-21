@@ -65,6 +65,26 @@ public class DeliveryPolicyTests
     }
 
     [Fact]
+    public void Acceptance_and_delivery_are_different_claims()
+    {
+        // The distinction the whole design rests on. A provider accepting a
+        // message says nothing about a handset receiving it, so only a sender
+        // that is itself the destination may report delivery directly.
+        var accepted = SendResult.Ok("SM123");
+        var delivered = SendResult.Confirmed("local-abc");
+        var rejected = SendResult.Rejected("blocked");
+
+        Assert.True(accepted.Accepted);
+        Assert.False(accepted.DeliveryConfirmed);
+
+        Assert.True(delivered.Accepted);
+        Assert.True(delivered.DeliveryConfirmed);
+
+        Assert.False(rejected.Accepted);
+        Assert.False(rejected.DeliveryConfirmed);
+    }
+
+    [Fact]
     public void An_accepted_message_with_no_receipt_is_eventually_treated_as_lost()
     {
         // The exact failure mode behind "it said it sent and nobody got it".

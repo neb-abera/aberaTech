@@ -18,7 +18,7 @@ help: ## List the available targets
 dev: ## Hot reloading dev server on http://localhost:3000
 	$(COMPOSE) up --build dev
 
-db: ## Postgres for the scheduling feature, on 127.0.0.1:5432
+db: ## Postgres for the scheduling feature, on 127.0.0.1:5433
 	$(COMPOSE) up -d db
 
 test: ## Client unit tests, against the working tree
