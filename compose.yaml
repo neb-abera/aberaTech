@@ -1,0 +1,56 @@
+# Every way of working on the client runs in a container, so nothing but Docker
+# needs to be installed on the machine.
+#
+#   make dev     hot reloading dev server on http://localhost:3000
+#   make test    unit tests against the working tree
+#   make lint    eslint and prettier against the working tree
+#   make check   the hermetic gate CI runs, built from the Dockerfile alone
+#
+# The services below mount the working tree, so they see uncommitted edits and
+# give a fast loop. `make check` deliberately does not: it builds the clienttest
+# and clientlint stages, which copy the tree into the image, so it measures what
+# a reviewer would actually get.
+name: aberatech
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: aberaTech.Server/Dockerfile
+      target: clientdev
+    ports:
+      - '3000:3000'
+    volumes:
+      # Edits on the host reload in the container.
+      - ./aberatech.client:/client
+      # The host has no node_modules, and the bind mount above would hide the
+      # image's. This anonymous volume keeps the image's tree visible at that
+      # path. Remove it with `make clean` after changing dependencies.
+      - /client/node_modules
+    environment:
+      IN_DOCKER: 'true'
+
+  test:
+    build:
+      context: .
+      dockerfile: aberaTech.Server/Dockerfile
+      target: clientbase
+    volumes:
+      - ./aberatech.client:/client
+      - /client/node_modules
+    environment:
+      IN_DOCKER: 'true'
+    command: ['npm', 'run', 'test']
+
+  # Targets clienttools rather than clientlint on purpose: clientlint runs the
+  # check as a build step, so building it to rewrite badly formatted files would
+  # fail before the container ever started.
+  lint:
+    build:
+      context: .
+      dockerfile: aberaTech.Server/Dockerfile
+      target: clienttools
+    volumes:
+      - .:/repo
+      - /repo/node_modules
+    command: ['sh', '-c', 'npx eslint . && npx prettier --check .']

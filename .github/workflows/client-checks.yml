@@ -1,10 +1,9 @@
 # Gate for the React client.
 #
-# The tests run inside the same container the deploy image is built from, so a
-# green run here means the code passes on the node the server actually uses, not
-# on whatever happens to be installed on a laptop. Style checks run outside the
-# container because eslint and prettier read their config from the repository
-# root, which is not in the Docker build context.
+# Both jobs build a stage of the same Dockerfile a developer builds locally with
+# `make check`, so a green run here means the code passed on the node the server
+# actually uses, and means the same thing it meant on the laptop. Nothing is
+# installed on the runner but Docker.
 name: Client checks
 
 on:
@@ -12,6 +11,14 @@ on:
     branches: [dev, master]
   push:
     branches: [dev]
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the running check obsolete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   container-tests:
@@ -34,32 +41,29 @@ jobs:
           target: clienttest
           push: false
           load: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=clienttest
+          cache-to: type=gha,scope=clienttest,mode=max
 
   style:
-    name: Lint and format
+    name: Lint and format, in the container
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # eslint, typescript-eslint and prettier live in the root package and read
+      # their config from beside it. The build context is the repository root,
+      # so the clientlint stage has all of it.
+      - name: Build the client lint stage
+        uses: docker/build-push-action@v6
         with:
-          node-version: 22
-
-      # The root package holds eslint, typescript-eslint and prettier, and the
-      # config files they read sit beside it.
-      - name: Install root tooling
-        run: npm ci
-
-      - name: Install client dependencies
-        working-directory: aberatech.client
-        run: npm ci
-
-      - name: ESLint
-        run: npx eslint .
-
-      - name: Prettier
-        run: npx prettier --check .
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: clientlint
+          push: false
+          load: false
+          cache-from: type=gha,scope=clientlint
+          cache-to: type=gha,scope=clientlint,mode=max
