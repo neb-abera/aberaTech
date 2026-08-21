@@ -71,6 +71,12 @@ export default function AppAppBar()
                   Learning Software Development{' '}
                 </Link>
               </Button>
+              <Button variant="text" color="info" size="small">
+                <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  {' '}
+                  Course Planner{' '}
+                </Link>
+              </Button>
             </Box>
           </Box>
           <Box
@@ -124,6 +130,12 @@ export default function AppAppBar()
                   {' '}
                   <Link to="/technical" style={{color: 'inherit', textDecoration: 'inherit'}}>
                     Technical Transition Guide
+                  </Link>
+                </MenuItem>
+                <MenuItem>
+                  {' '}
+                  <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                    Course Planner
                   </Link>
                 </MenuItem>
                 <Divider sx={{my: 3}}/>

@@ -1,0 +1,65 @@
+# Gate for the React client.
+#
+# The tests run inside the same container the deploy image is built from, so a
+# green run here means the code passes on the node the server actually uses, not
+# on whatever happens to be installed on a laptop. Style checks run outside the
+# container because eslint and prettier read their config from the repository
+# root, which is not in the Docker build context.
+name: Client checks
+
+on:
+  pull_request:
+    branches: [dev, master]
+  push:
+    branches: [dev]
+
+jobs:
+  container-tests:
+    name: Type check and unit tests, in the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Builds only the stages the target needs, so this never builds the
+      # .NET server or the final image.
+      - name: Build the client test stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: clienttest
+          push: false
+          load: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  style:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The root package holds eslint, typescript-eslint and prettier, and the
+      # config files they read sit beside it.
+      - name: Install root tooling
+        run: npm ci
+
+      - name: Install client dependencies
+        working-directory: aberatech.client
+        run: npm ci
+
+      - name: ESLint
+        run: npx eslint .
+
+      - name: Prettier
+        run: npx prettier --check .

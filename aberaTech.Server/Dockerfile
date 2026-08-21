@@ -10,8 +10,13 @@ EXPOSE 8081
 # Debugging: Print the value of the IN_DOCKER argument
 RUN echo "nebdebug IN_DOCKER is set to: $IN_DOCKER"
 
+# One node image for both the client build and the client tests. Sharing the
+# argument is the point: if the tests ran on a different node than the build,
+# a green test would stop meaning anything about the artifact.
+ARG NODE_IMAGE=node:22
+
 # Base stage for client (React app)
-FROM node:22 AS clientbase
+FROM ${NODE_IMAGE} AS clientbase
 WORKDIR /client
 
 # Install dependencies for the React app
@@ -31,6 +36,26 @@ RUN echo "Contents of /client/dist (to verify React assets exist):" && \
     ls -l /client/dist && \
     echo "Contents of /client/dist/assets:" && \
     ls -l /client/dist/assets
+
+# Client test stage. A leaf: nothing downstream copies from it, so the
+# production image build never pays for it. Run it deliberately:
+#
+#   docker build --target clienttest -f aberaTech.Server/Dockerfile .
+#
+# npm ci rather than npm install, because the whole reason to test in a
+# container is reproducibility, and npm ci installs exactly what
+# package-lock.json describes and fails loudly when the lockfile and
+# package.json disagree.
+#
+# Type checking and unit tests only. eslint and prettier read their config from
+# the repository root, which is outside this build context, so they run in CI
+# rather than here; see .github/workflows/client-checks.yml.
+FROM ${NODE_IMAGE} AS clienttest
+WORKDIR /client
+COPY ["aberatech.client/package.json", "aberatech.client/package-lock.json", "./"]
+RUN npm ci
+COPY ["aberatech.client/", "./"]
+RUN npx tsc -b && npm run test
 
 # .NET build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
