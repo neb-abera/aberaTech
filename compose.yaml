@@ -2,7 +2,8 @@
 # needs to be installed on the machine.
 #
 #   make dev     hot reloading dev server on http://localhost:3000
-#   make test    unit tests against the working tree
+#   make test    client unit tests against the working tree
+#   make servertest  scheduling unit tests against the working tree
 #   make lint    eslint and prettier against the working tree
 #   make check   the hermetic gate CI runs, built from the Dockerfile alone
 #
@@ -59,3 +60,45 @@ services:
       - .:/repo
       - /repo/node_modules
     command: ['sh', '-c', 'npx eslint . && npx prettier --check .']
+
+  # Postgres for the scheduling feature.
+  #
+  # Chosen over any other store for two things the scheduler leans on directly:
+  # SELECT ... FOR UPDATE SKIP LOCKED, which is how the outbox dispatcher claims
+  # work without two replicas either double sending or blocking each other, and
+  # btree_gist exclusion constraints, which let the database itself refuse
+  # overlapping appointments rather than trusting application code to win a race
+  # it cannot see.
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: scheduling
+      POSTGRES_PASSWORD: scheduling
+      POSTGRES_DB: scheduling
+    ports:
+      # Loopback only, for the same reason the dev server is: a published port
+      # defaults to every interface, and a development database with a known
+      # password does not belong on the network.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - scheduling-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U scheduling -d scheduling']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Scheduling unit tests against the working tree, for the same fast loop the
+  # client tests get. `make check` builds the hermetic servertest stage instead.
+  servertest:
+    build:
+      context: .
+      dockerfile: aberaTech.Server/Dockerfile
+      target: build
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: ['dotnet', 'test', 'aberaTech.Server.Tests/aberaTech.Server.Tests.csproj', '--nologo']
+
+volumes:
+  scheduling-db:
