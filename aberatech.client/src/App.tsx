@@ -7,6 +7,7 @@ import TechnicalTransitionGuide from './views/TechnicalTransitionGuide.tsx';
 const Home = React.lazy(() => import('./views/Home'));
 const MarketingPage = React.lazy(() => import('./views/MarketingPage'));
 const MilitaryTransitionGuide = React.lazy(() => import('./views/MilitaryTransitionGuide'));
+const CoursePlanner = React.lazy(() => import('./views/CoursePlanner'));
 
 // Fallback loading spinner or placeholder
 const LoadingFallback = () => <div>Loading...</div>;
@@ -20,6 +21,7 @@ function App() {
           <Route path="marketing" element={<MarketingPage />} />
           <Route path="transition" element={<MilitaryTransitionGuide />} />
           <Route path="technical" element={<TechnicalTransitionGuide />} />
+          <Route path="planner" element={<CoursePlanner />} />
         </Routes>
       </Suspense>
     </div>
