@@ -19,7 +19,12 @@ services:
       dockerfile: aberaTech.Server/Dockerfile
       target: clientdev
     ports:
-      - '3000:3000'
+      # Bound to the loopback interface deliberately. A published port defaults
+      # to 0.0.0.0, which puts the dev server on every interface this machine
+      # has; the vite advisories that keep appearing are precisely "any website
+      # can reach the dev server" and "server.fs.deny can be bypassed for files
+      # under the project root". There is no reason for it to leave the host.
+      - '127.0.0.1:3000:3000'
     volumes:
       # Edits on the host reload in the container.
       - ./aberatech.client:/client
