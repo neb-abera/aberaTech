@@ -110,7 +110,12 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
           />
 
           <Box>
-            <Button type="submit" variant="contained" disabled={busy || !name.trim() || !phone.trim()}>
+            {/* Disabled only while a request is in flight. Not disabled on an
+                empty form: the theme renders a disabled label at 30% white on a
+                12% white ground, which is unreadable, and a greyed button never
+                tells anybody what it wants. The fields are `required`, so the
+                browser explains what is missing instead. */}
+            <Button type="submit" variant="contained" disabled={busy}>
               {busy ? 'Joining…' : 'Join the queue'}
             </Button>
           </Box>
