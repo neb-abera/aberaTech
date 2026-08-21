@@ -3,7 +3,7 @@ import rawCatalog from '../../data/catalog.json';
 import rawTracks from '../../data/tracks.json';
 import { CatalogData } from '../../core/catalog';
 import { Tracks } from '../../core/tracks';
-import type { RawCatalog, RawTracks } from '../../core/types';
+import type { RawCatalog, RawTracks, Track } from '../../core/types';
 import { PlannerModel } from '../PlannerModel';
 
 const data = new CatalogData(rawCatalog as unknown as RawCatalog);
@@ -44,12 +44,80 @@ describe('selection', () => {
   test('pulledBy names the course that forced an addition', () => {
     expect(rf().pulledBy('EN.525.627').length).toBeGreaterThan(0);
   });
-  test('choosing a focus area clears the track, because they are alternatives', () => {
+  /**
+   * This used to assert the opposite: that ticking an area cleared the track,
+   * "because they are alternatives". They are not. Picking a curated path and
+   * then adding a whole focus area on top of it is the ordinary thing to want,
+   * and the old rule silently threw the path away.
+   */
+  test('choosing a focus area keeps the track, because they layer', () => {
     const m = make();
     m.selectTrack('sp-rf');
     m.toggleArea('area', 'Signal Processing');
-    expect(m.track).toBeNull();
+    expect(m.track).toBe('sp-rf');
     expect(m.areas.has('Signal Processing')).toBe(true);
+    const chosen = m.chosen();
+    const track = trackOf(m, 'sp-rf');
+    for (const c of track.courses) expect(chosen.has(c), `${c} fell out of the track`).toBe(true);
+  });
+
+  test('ticking an area changes the selection and leaves the board alone', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    const before = m.plan.courses();
+    m.toggleArea('area', 'AI and Autonomous Systems');
+    // The old behaviour pruned here, which only ever removed: the board went
+    // from 13 courses to 5 and nothing arrived.
+    expect(m.plan.courses()).toEqual(before);
+  });
+
+  test('adding the selection keeps what is already placed', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    const before = m.plan.courses();
+    m.toggleArea('area', 'AI and Autonomous Systems');
+    const added = m.addSelectionToPlan();
+    expect(added.length).toBeGreaterThan(0);
+    const after = new Set(m.plan.courses());
+    for (const c of before) expect(after.has(c), `${c} was dropped`).toBe(true);
+    for (const c of added) expect(after.has(c), `${c} was not added`).toBe(true);
+    expect(m.plan.violations()).toEqual([]);
+  });
+
+  test('adding twice is a no-op the second time', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.addSelectionToPlan();
+    expect(m.pendingFromSelection()).toEqual([]);
+    expect(m.addSelectionToPlan()).toEqual([]);
+  });
+
+  test('replacing builds the board from the selection alone', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.replacePlanWithSelection();
+    const on = new Set(m.plan.courses());
+    for (const c of m.selected()) expect(on.has(c), `${c} is missing`).toBe(true);
+    expect(m.plan.violations()).toEqual([]);
+  });
+
+  test('a track laid out beside an area still runs its stages forwards', () => {
+    const m = make();
+    m.selectTrack('collector-full');
+    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.replacePlanWithSelection();
+    const t = trackOf(m, 'collector-full');
+    let highest = -1;
+    for (const term of m.plan.terms) {
+      for (const code of term) {
+        const i = t.stages.findIndex((st) => st.courses.includes(code));
+        if (i < 0) continue;
+        expect(i, `${m.title(code)} runs before an earlier stage`).toBeGreaterThanOrEqual(highest);
+        highest = Math.max(highest, i);
+      }
+    }
   });
 });
 
@@ -146,6 +214,13 @@ describe('the graduation clock on the real catalog', () => {
     expect(m.audit().excluded.some((e) => e.code === 'EN.525.201')).toBe(true);
   });
 });
+
+/** A track by id, or a failure. Keeps assertions free of optionals. */
+function trackOf(m: PlannerModel, id: string): Track {
+  const t = m.tracks.get(id);
+  if (!t) throw new Error(`no track ${id}`);
+  return t;
+}
 
 describe('a track keeps its curated order', () => {
   const stageIndex = (m: PlannerModel, code: string) => {

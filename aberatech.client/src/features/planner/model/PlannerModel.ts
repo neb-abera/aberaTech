@@ -10,7 +10,7 @@ import { Plan } from '../core/plan';
 import { closure, missingFor, unmetGroups } from '../core/prereq';
 import { degreeAudit } from '../core/rules';
 import type { DegreeAudit } from '../core/rules';
-import { Tracks } from '../core/tracks';
+import { expandInOrder, placeInOrder, Tracks } from '../core/tracks';
 import type { Catalog, Course } from '../core/types';
 
 /** Stable key for the background sets, so the derived catalog is cached. */
@@ -125,8 +125,14 @@ export class PlannerModel {
   /** What the reader ticked. A track, when one is selected, otherwise the areas. */
   chosen(): Set<string> {
     const t = this.track ? this.tracks.get(this.track) : undefined;
-    if (t) return new Set(t.courses.filter((c) => this.courses[c]));
-    return this.data.select([...this.areas], [...this.conc]);
+    const out = t ? new Set(t.courses.filter((c) => this.courses[c])) : new Set<string>();
+    // A track and a focus area layer rather than replace. Picking a curated path
+    // and then adding a whole area on top of it is a real thing to want, and an
+    // earlier version threw the path away the moment an area was ticked.
+    for (const c of this.data.select([...this.areas], [...this.conc])) {
+      if (this.courses[c]) out.add(c);
+    }
+    return out;
   }
 
   /**
@@ -147,12 +153,46 @@ export class PlannerModel {
   }
 
   /** Turn a focus area or transcript concentration on or off. */
+  /**
+   * Turn a focus area or transcript concentration on or off.
+   *
+   * This changes what is *selected*, and deliberately does not touch the board.
+   * It used to prune the plan down to the new selection, which only ever removed
+   * courses: ticking an area emptied most of the plan and added nothing. Adding
+   * is now an explicit act, so nothing you have arranged disappears behind a
+   * checkbox. See addSelectionToPlan and replacePlanWithSelection.
+   */
   toggleArea(kind: 'area' | 'conc', name: string): void {
     const set = kind === 'area' ? this.areas : this.conc;
-    this.track = null; // areas and tracks are alternatives, not layers
     if (set.has(name)) set.delete(name);
     else set.add(name);
-    this.pruneToSelection();
+  }
+
+  /** Selected courses that are not on the board yet. What "Add these" would add. */
+  pendingFromSelection(): string[] {
+    const have = new Set(this.plan.courses());
+    return [...this.selected()].filter((c) => !have.has(c)).sort();
+  }
+
+  /**
+   * Put the selection on the board, keeping what is already there.
+   *
+   * The union is rescheduled rather than appended, so the result is a legal plan
+   * rather than the old one with courses bolted after it. Returns what arrived.
+   */
+  addSelectionToPlan(): string[] {
+    const added = this.pendingFromSelection();
+    if (!added.length) return [];
+    this.plan = this.scheduleFor([...this.plan.courses(), ...this.selected()]);
+    this.lastAdded = added;
+    return added;
+  }
+
+  /** Clear the board and build it from the selection alone. */
+  replacePlanWithSelection(): void {
+    this.degreePicks.clear();
+    this.rescheduleAll();
+    this.lastAdded = [];
   }
 
   /** Record that the reader does or does not already hold a background item. */
@@ -240,13 +280,26 @@ export class PlannerModel {
   }
 
   rescheduleAll(): void {
+    this.plan = this.scheduleFor(this.selected());
+  }
+
+  /**
+   * Schedule a set of courses.
+   *
+   * A track is laid out in its curated order, because that order is the
+   * pedagogy: the collector track walks the signal chain from the aperture in.
+   * Courses a focus area adds on top of a track follow it, by prerequisite
+   * depth, so layering an area on a path does not shuffle the path. With no
+   * track there is no curated order to keep, so depth alone decides.
+   */
+  private scheduleFor(codes: Iterable<string>): Plan {
+    const want = new Set([...codes].filter((c) => this.courses[c]));
     const t = this.track ? this.tracks.get(this.track) : undefined;
-    // A track is scheduled in its curated order, because that order is the
-    // pedagogy: the collector track walks the signal chain from the aperture in.
-    // Anything else is scheduled by prerequisite depth.
-    this.plan = t
-      ? this.tracks.toPlan(this.courses, t.id, this.perTerm)
-      : Plan.autoSchedule(this.courses, this.selected(), this.perTerm);
+    if (!t) return Plan.autoSchedule(this.courses, want, this.perTerm);
+    const curated = t.courses.filter((c) => want.has(c));
+    const onCurated = new Set(curated);
+    const rest = [...want].filter((c) => !onCurated.has(c));
+    return placeInOrder(this.courses, expandInOrder(this.courses, [...curated, ...rest]), this.perTerm);
   }
 
   clearPlan(): void {

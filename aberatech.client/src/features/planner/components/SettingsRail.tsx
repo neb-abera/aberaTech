@@ -14,6 +14,7 @@ import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { areaColor } from '../core/areaColors';
+import { plural } from '../core/format';
 import { holdsBackground, isComposite, missingParts } from '../core/background';
 import { MAX_PER_TERM } from '../model/PlannerModel';
 import type { PlannerModel } from '../model/PlannerModel';
@@ -41,7 +42,10 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
         />
       </Section>
 
-      <Section title="Focus areas" hint="Turning one on replaces any track you had selected.">
+      <Section
+        title="Focus areas"
+        hint="Ticking one selects it. Nothing moves on the board until you say so, and a track you already picked is kept."
+      >
         {Object.keys(model.data.areas).map((name) => (
           <AreaToggle
             key={name}
@@ -73,6 +77,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
             }}
           />
         ))}
+        <SelectionActions model={model} update={update} />
       </Section>
 
       <Section
@@ -317,5 +322,62 @@ function AreaToggle({
         </Stack>
       }
     />
+  );
+}
+
+/**
+ * What to do with whatever is ticked above.
+ *
+ * Two buttons rather than one, because "put these on the board" and "start from
+ * these" are different intentions and guessing wrong throws away a plan the
+ * reader arranged by hand. Ticking a box does neither on its own.
+ */
+function SelectionActions({ model, update }: { model: PlannerModel; update: SettingsRailProps['update'] }) {
+  const pending = model.pendingFromSelection();
+  const selected = model.selected().size;
+  const onBoard = model.plan.courses().length;
+
+  if (!selected) {
+    return (
+      <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: 'text.disabled' }}>
+        Tick a focus area or a concentration to choose courses in bulk.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box sx={{ mt: 1.5 }}>
+      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+        {selected} {plural(selected, 'course')} selected, including prerequisites.{' '}
+        {pending.length ? `${pending.length} not on the board yet.` : 'All of them are already on the board.'}
+      </Typography>
+      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+        <Button
+          size="small"
+          variant="contained"
+          disabled={!pending.length}
+          onClick={() => {
+            update((m) => {
+              m.addSelectionToPlan();
+            });
+          }}
+        >
+          {pending.length ? `Add ${pending.length} to the plan` : 'Nothing to add'}
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          disabled={!onBoard && !pending.length}
+          onClick={() => {
+            update((m) => {
+              m.replacePlanWithSelection();
+            });
+          }}
+        >
+          Replace the plan with these
+        </Button>
+      </Stack>
+    </Box>
   );
 }
