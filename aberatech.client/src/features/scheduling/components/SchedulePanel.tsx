@@ -30,15 +30,23 @@ export default function SchedulePanel() {
 
   return (
     <Stack spacing={3}>
-      {state.mode === 'queue' && state.queue ? (
+      {state.mode === 'unavailable' ? (
+        <Alert severity="info">
+          Online booking is still being set up. Email me and we will find a time the old fashioned way.
+        </Alert>
+      ) : state.mode === 'queue' && state.queue ? (
         <QueuePanel queue={state.queue} place={place} onJoin={join} onLeave={leave} />
       ) : (
         <SlotList slots={state.slots} />
       )}
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-        Times are shown in your own time zone ({viewerZone()}).
-      </Typography>
+      {/* Only where there are times to qualify. Promising a time zone on a
+          page showing no times reads as boilerplate. */}
+      {state.mode === 'unavailable' ? null : (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+          Times are shown in your own time zone ({viewerZone()}).
+        </Typography>
+      )}
     </Stack>
   );
 }

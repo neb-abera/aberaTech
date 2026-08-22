@@ -46,6 +46,30 @@ public static class SchedulingEndpoints
     /// </summary>
     public const string PublicWritePolicy = "scheduling-public-write";
 
+    /// <summary>
+    /// The state endpoint alone, for a deployment with no database configured.
+    /// </summary>
+    /// <remarks>
+    /// Without this the route does not exist, so the request falls through to
+    /// the SPA fallback and the page receives index.html where it expected
+    /// JSON — which surfaces to a visitor as a parse error rather than as an
+    /// explanation. Mapping the endpoint and answering "unavailable" lets the
+    /// page say something true and offer another way to get in touch.
+    /// </remarks>
+    public static IEndpointRouteBuilder MapSchedulingUnavailable(
+        this IEndpointRouteBuilder routes,
+        SchedulingOptions options)
+    {
+        routes.MapGet("/api/scheduling/state", (string? zone) => Results.Ok(new ScheduleState(
+            "unavailable",
+            options.HostName,
+            ResolveZone(zone, options).Id,
+            [],
+            null)));
+
+        return routes;
+    }
+
     public static IEndpointRouteBuilder MapSchedulingEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/scheduling").WithTags("Scheduling");
