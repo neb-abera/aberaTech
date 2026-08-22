@@ -15,7 +15,9 @@ public sealed record ScheduleState(
     string HostName,
     string ViewerZoneId,
     IReadOnlyList<SlotView> Slots,
-    QueueView? Queue);
+    QueueView? Queue,
+    int Days = 0,
+    bool MoreDays = false);
 
 public sealed record SlotView(string StartsAt, string EndsAt, int Minutes);
 
@@ -104,9 +106,16 @@ public static class SchedulingEndpoints
         SchedulingOptions options,
         IClock clock,
         CancellationToken cancellationToken,
-        string? zone = null)
+        string? zone = null,
+        int? days = null)
     {
         var viewerZone = ResolveZone(zone, options);
+
+        // A three week horizon at quarter hour granularity is roughly five
+        // hundred slots and seventy kilobytes, which is a slow first paint on a
+        // phone and far more than anybody scrolls. Serve a week by default and
+        // let the page ask for more.
+        var window = Math.Clamp(days ?? options.DefaultWindowDays, 1, options.HorizonDays);
         var now = clock.GetCurrentInstant();
 
         var session = await database.QueueSessions
@@ -144,9 +153,9 @@ public static class SchedulingEndpoints
         var slots = SlotPlanner.Plan(
             rules.Select(rule => rule.ToDomain()),
             today,
-            today.PlusDays(options.HorizonDays),
+            today.PlusDays(window),
             Duration.FromMinutes(options.DefaultAppointmentMinutes),
-            busy.Select(window => new Interval(window.StartsAt, window.EndsAt)).ToList(),
+            busy.Select(period => new Interval(period.StartsAt, period.EndsAt)).ToList(),
             now + Duration.FromMinutes(options.BookingLeadMinutes));
 
         return Results.Ok(new ScheduleState(
@@ -159,7 +168,9 @@ public static class SchedulingEndpoints
                     Format(slot.End),
                     (int)slot.Length.TotalMinutes))
                 .ToList(),
-            null));
+            null,
+            window,
+            window < options.HorizonDays));
     }
 
     private static async Task<IResult> JoinQueueAsync(
