@@ -96,6 +96,10 @@ public sealed class OutboxDispatcher(
 
         var overdue = await database.Outbox
             .Where(message => message.State == DeliveryState.Sent && message.SentAt != null && message.SentAt <= cutoff)
+            // Oldest first, and ordered explicitly: a Take without an OrderBy
+            // leaves it to the planner which rows come back, so a message could
+            // in principle sit unreconciled while newer ones are picked instead.
+            .OrderBy(message => message.SentAt)
             .Take(BatchSize)
             .ToListAsync(cancellationToken);
 

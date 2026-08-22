@@ -2,6 +2,9 @@ using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using NodaTime.Text;
+using Npgsql;
+using aberaTech.Scheduling.Outbox;
 
 namespace aberaTech.Scheduling.Api;
 
@@ -37,6 +40,10 @@ public sealed record MyPlace(
     int? MinutesAway);
 
 public sealed record JoinRequest(string? Name, string? Phone, string? ZoneId);
+
+public sealed record BookRequest(string? StartsAt, string? Name, string? Phone, string? ZoneId);
+
+public sealed record BookingConfirmation(Guid Id, string StartsAt, string EndsAt);
 
 public static class SchedulingEndpoints
 {
@@ -79,6 +86,10 @@ public static class SchedulingEndpoints
 
         group
             .MapPost("/queue", JoinQueueAsync)
+            .RequireRateLimiting(PublicWritePolicy);
+
+        group
+            .MapPost("/book", BookSlotAsync)
             .RequireRateLimiting(PublicWritePolicy);
 
         group
@@ -289,6 +300,137 @@ public static class SchedulingEndpoints
 
         return Results.NoContent();
     }
+
+
+    /// <summary>Books one slot.</summary>
+    /// <remarks>
+    /// The availability check here is a courtesy, not the guarantee. Between
+    /// reading the free slots and inserting a row another visitor can book the
+    /// same time, and no amount of checking first closes that window. The
+    /// guarantee is the exclusion constraint in the database, which is why the
+    /// insert is wrapped rather than the read: 23P01 comes back as a plain "that
+    /// time was just taken", which is the truth.
+    /// </remarks>
+    private static async Task<IResult> BookSlotAsync(
+        BookRequest request,
+        SchedulingDbContext database,
+        SchedulingOptions options,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (!PhoneNumber.TryParse(request.Phone, out var phone))
+        {
+            return Results.BadRequest(new { error = "Enter a US mobile number." });
+        }
+
+        var name = (request.Name ?? string.Empty).Trim();
+        if (name.Length is 0 or > 120)
+        {
+            return Results.BadRequest(new { error = "Enter your name." });
+        }
+
+        if (!InstantPattern.ExtendedIso.Parse(request.StartsAt ?? string.Empty).TryGetValue(default, out var startsAt))
+        {
+            return Results.BadRequest(new { error = "That is not a valid time." });
+        }
+
+        var now = clock.GetCurrentInstant();
+        var zone = ResolveZone(request.ZoneId, options);
+        var length = Duration.FromMinutes(options.DefaultAppointmentMinutes);
+        var endsAt = startsAt + length;
+
+        // The slot must be one we actually offered. Without this the endpoint
+        // would accept any instant at all, including outside working hours and
+        // in the past, simply because nothing overlapped it.
+        var rules = await database.AvailabilityRules.Where(rule => rule.Active).ToListAsync(cancellationToken);
+        var today = now.InZone(options.HostZone).Date;
+        var busy = await database.Appointments
+            .Where(appointment => !appointment.Cancelled && appointment.EndsAt >= now)
+            .Select(appointment => new { appointment.StartsAt, appointment.EndsAt })
+            .ToListAsync(cancellationToken);
+
+        var offered = SlotPlanner.Plan(
+            rules.Select(rule => rule.ToDomain()),
+            today,
+            today.PlusDays(options.HorizonDays),
+            length,
+            busy.Select(window => new Interval(window.StartsAt, window.EndsAt)).ToList(),
+            now + Duration.FromMinutes(options.BookingLeadMinutes));
+
+        if (!offered.Any(slot => slot.Start == startsAt))
+        {
+            return Results.Conflict(new { error = "That time is no longer available." });
+        }
+
+        var appointment = new Appointment
+        {
+            Id = Guid.NewGuid(),
+            StartsAt = startsAt,
+            EndsAt = endsAt,
+            BookedZoneId = zone.Id,
+            DisplayName = name,
+            PhoneE164 = phone.Value.E164,
+            CreatedAt = now,
+            Cancelled = false
+        };
+
+        database.Appointments.Add(appointment);
+
+        // Confirmation now, reminder later. The reminder is not a scheduled job:
+        // it is an ordinary outbox row whose NextAttemptAt is in the future, so
+        // it inherits the same retry, receipt and dead letter handling as
+        // everything else rather than needing a second delivery path.
+        database.Outbox.Add(NewMessage(appointment, NotificationKind.Booked, options, zone, now, now));
+        database.Outbox.Add(NewMessage(
+            appointment,
+            NotificationKind.Reminder,
+            options,
+            zone,
+            now,
+            startsAt - Duration.FromMinutes(options.ReminderLeadMinutes)));
+
+        try
+        {
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsOverlap(exception))
+        {
+            // Somebody else committed the same time between the read above and
+            // this insert. The database caught it; nothing is double booked.
+            return Results.Conflict(new { error = "That time was just taken. Please pick another." });
+        }
+
+        return Results.Ok(new BookingConfirmation(appointment.Id, Format(startsAt), Format(endsAt)));
+    }
+
+    private static OutboxMessage NewMessage(
+        Appointment appointment,
+        NotificationKind kind,
+        SchedulingOptions options,
+        DateTimeZone zone,
+        Instant now,
+        Instant dueAt) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            AppointmentId = appointment.Id,
+            Kind = kind,
+            ToPhoneE164 = appointment.PhoneE164,
+            Body = MessageComposer.Compose(kind, options.HostName, appointment.StartsAt, zone),
+            State = DeliveryState.Pending,
+            Attempts = 0,
+            CreatedAt = now,
+            NextAttemptAt = dueAt,
+            IdempotencyKey = $"{appointment.Id}:{kind}"
+        };
+
+    /// <summary>Whether this failure is the overlap constraint rather than anything else.</summary>
+    /// <remarks>
+    /// 23P01 is exclusion_violation. Matched on the SQLSTATE rather than the
+    /// message text, which is localised and rewordable between releases.
+    /// </remarks>
+    private static bool IsOverlap(DbUpdateException exception) =>
+        exception.InnerException is PostgresException { SqlState: "23P01" };
 
     /// <summary>
     /// Resolves a browser-supplied zone, falling back to the host's.

@@ -32,6 +32,9 @@ public sealed class SchedulingOptions
     /// <summary>How many days of availability the booking page shows at once.</summary>
     public int HorizonDays { get; set; } = 21;
 
+    /// <summary>How long before an appointment the reminder goes out.</summary>
+    public int ReminderLeadMinutes { get; set; } = 60;
+
     public DateTimeZone HostZone =>
         DateTimeZoneProviders.Tzdb.GetZoneOrNull(HostZoneId)
         ?? throw new InvalidOperationException($"Scheduling:HostZoneId '{HostZoneId}' is not an IANA zone id.");

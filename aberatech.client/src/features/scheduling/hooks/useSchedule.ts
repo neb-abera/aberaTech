@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MyPlace, ScheduleState } from '../core/types';
+import type { BookingConfirmation, MyPlace, ScheduleState } from '../core/types';
 import { viewerZone } from '../core/format';
 
 /**
@@ -29,12 +29,15 @@ interface Schedule {
   loading: boolean;
   join: (name: string, phone: string) => Promise<string | null>;
   leave: () => Promise<void>;
+  book: (startsAt: string, name: string, phone: string) => Promise<{ error: string | null }>;
+  booking: BookingConfirmation | null;
 }
 
 export function useSchedule(): Schedule {
   const [state, setState] = useState<ScheduleState | null>(null);
   const [place, setPlace] = useState<MyPlace | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(true);
   const entryId = useRef<string | null>(localStorage.getItem(StorageKey));
 
@@ -114,5 +117,32 @@ export function useSchedule(): Schedule {
     await refresh();
   }, [refresh]);
 
-  return { state, place, error, loading, join, leave };
+  const book = useCallback(
+    async (startsAt: string, name: string, phone: string) => {
+      const response = await fetch('/api/scheduling/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone() })
+      });
+
+      if (response.status === 429) {
+        return { error: 'Too many attempts. Please wait a minute and try again.' };
+      }
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        // A 409 here is the database refusing a double booking, which is a
+        // normal outcome of two people picking the same time, not a fault.
+        await refresh();
+        return { error: body?.error ?? 'Could not book that time.' };
+      }
+
+      setBooking((await response.json()) as BookingConfirmation);
+      await refresh();
+      return { error: null };
+    },
+    [refresh]
+  );
+
+  return { state, place, error, loading, join, leave, book, booking };
 }

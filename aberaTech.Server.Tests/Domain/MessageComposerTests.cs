@@ -38,6 +38,8 @@ public class MessageComposerTests
     [InlineData(NotificationKind.TimeChanged)]
     [InlineData(NotificationKind.Imminent)]
     [InlineData(NotificationKind.YourTurn)]
+    [InlineData(NotificationKind.Booked)]
+    [InlineData(NotificationKind.Reminder)]
     public void Every_message_fits_in_one_billable_segment(NotificationKind kind)
     {
         // A body that spills past 160 characters silently doubles both the cost

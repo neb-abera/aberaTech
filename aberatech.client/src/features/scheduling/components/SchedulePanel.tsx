@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import QueuePanel from './QueuePanel';
 import SlotList from './SlotList';
 import { useSchedule } from '../hooks/useSchedule';
-import { viewerZone } from '../core/format';
+import { formatDay, formatTime, viewerZone } from '../core/format';
 
 /**
  * One page that decides for itself what it is.
@@ -18,7 +18,7 @@ import { viewerZone } from '../core/format';
  * otherwise the slots.
  */
 export default function SchedulePanel() {
-  const { state, place, error, loading, join, leave } = useSchedule();
+  const { state, place, error, loading, join, leave, book, booking } = useSchedule();
 
   if (loading) {
     return <CircularProgress size={28} aria-label="Loading the schedule" />;
@@ -37,7 +37,15 @@ export default function SchedulePanel() {
       ) : state.mode === 'queue' && state.queue ? (
         <QueuePanel queue={state.queue} place={place} onJoin={join} onLeave={leave} />
       ) : (
-        <SlotList slots={state.slots} />
+        <>
+          {booking ? (
+            <Alert severity="success">
+              Booked for {formatDay(booking.startsAt)} at {formatTime(booking.startsAt)}. A confirmation is on its way
+              to your phone.
+            </Alert>
+          ) : null}
+          <SlotList slots={state.slots} onBook={book} />
+        </>
       )}
 
       {/* Only where there are times to qualify. Promising a time zone on a
