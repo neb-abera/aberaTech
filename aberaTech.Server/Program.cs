@@ -5,6 +5,7 @@ using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
+using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -21,6 +22,9 @@ var schedulingOptions = builder.Configuration.GetSection(SchedulingOptions.Secti
                         ?? new SchedulingOptions();
 builder.Services.AddSingleton(schedulingOptions);
 
+var twilioOptions = builder.Configuration.GetSection(TwilioOptions.Section).Get<TwilioOptions>() ?? new TwilioOptions();
+builder.Services.AddSingleton(twilioOptions);
+
 // One clock, injected everywhere, so that "now" is a dependency rather than an
 // ambient fact. It is what lets the domain tests assert behaviour at a daylight
 // saving transition without waiting for March.
@@ -35,10 +39,20 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
     builder.Services.AddScoped<QueueNotifier>();
 
-    // Swapped for a real provider once SMS is configured; until then the
-    // dispatcher runs, retries and dead letters against a sender that only
-    // writes to the log, so the whole path is exercisable without credentials.
-    builder.Services.AddScoped<IMessageSender, LoggingMessageSender>();
+    if (twilioOptions.IsConfigured)
+    {
+        builder.Services.AddHttpClient<IMessageSender, TwilioMessageSender>(client =>
+            // Bounded so a hung provider cannot pin a dispatcher slot: the tick
+            // that follows will pick the message up again anyway.
+            client.Timeout = TimeSpan.FromSeconds(15));
+    }
+    else
+    {
+        // No credentials, so the dispatcher still runs, retries and dead letters
+        // against a sender that only writes to the log. The whole path stays
+        // exercisable without an SMS account or A2P registration.
+        builder.Services.AddScoped<IMessageSender, LoggingMessageSender>();
+    }
     builder.Services.AddHostedService<OutboxDispatcher>();
 }
 
@@ -97,6 +111,11 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     }
 
     app.MapSchedulingEndpoints();
+
+    if (twilioOptions.IsConfigured)
+    {
+        app.MapSmsReceipts();
+    }
 }
 else
 {
