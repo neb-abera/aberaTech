@@ -1,6 +1,6 @@
 /** The shapes the scheduling API returns. Instants are always ISO-8601 UTC. */
 
-export type ScheduleMode = 'slots' | 'queue';
+export type ScheduleMode = 'slots' | 'queue' | 'unavailable';
 
 export interface SlotView {
   startsAt: string;

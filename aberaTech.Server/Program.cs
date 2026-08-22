@@ -98,6 +98,12 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
     app.MapSchedulingEndpoints();
 }
+else
+{
+    // Deployed without a database yet. The tab is visible either way, so it has
+    // to explain itself rather than break.
+    app.MapSchedulingUnavailable(schedulingOptions);
+}
 
 app.MapFallbackToFile("index.html");
 
