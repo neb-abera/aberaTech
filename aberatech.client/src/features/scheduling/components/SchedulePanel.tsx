@@ -1,4 +1,6 @@
 import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -18,7 +20,7 @@ import { formatDay, formatTime, viewerZone } from '../core/format';
  * otherwise the slots.
  */
 export default function SchedulePanel() {
-  const { state, place, error, loading, join, leave, book, booking } = useSchedule();
+  const { state, place, error, loading, join, leave, book, booking, showMoreDays } = useSchedule();
 
   if (loading) {
     return <CircularProgress size={28} aria-label="Loading the schedule" />;
@@ -45,6 +47,13 @@ export default function SchedulePanel() {
             </Alert>
           ) : null}
           <SlotList slots={state.slots} onBook={book} />
+          {state.moreDays ? (
+            <Box>
+              <Button variant="text" onClick={showMoreDays}>
+                Show more days
+              </Button>
+            </Box>
+          ) : null}
         </>
       )}
 

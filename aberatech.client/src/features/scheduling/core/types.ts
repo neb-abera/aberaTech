@@ -20,6 +20,8 @@ export interface ScheduleState {
   viewerZoneId: string;
   slots: SlotView[];
   queue: QueueView | null;
+  days: number;
+  moreDays: boolean;
 }
 
 export interface MyPlace {
