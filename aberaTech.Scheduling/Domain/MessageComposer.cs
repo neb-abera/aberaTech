@@ -41,6 +41,10 @@ public static class MessageComposer
                 $"You're up soon with {hostName}, around {at}. Please make your way over.",
             NotificationKind.YourTurn =>
                 $"You're up now with {hostName}.",
+            NotificationKind.Booked =>
+                $"Booked with {hostName} for {at}. Reply to this thread if you need to move it.",
+            NotificationKind.Reminder =>
+                $"Reminder: you're with {hostName} at {at}.",
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown notification kind.")
         };
 

@@ -30,3 +30,9 @@ export interface MyPlace {
   projectedStart: string | null;
   minutesAway: number | null;
 }
+
+export interface BookingConfirmation {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+}

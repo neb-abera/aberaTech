@@ -14,7 +14,13 @@ public enum NotificationKind
     Imminent = 2,
 
     /// <summary>They are at the front and the host is ready.</summary>
-    YourTurn = 3
+    YourTurn = 3,
+
+    /// <summary>A booked appointment is confirmed.</summary>
+    Booked = 4,
+
+    /// <summary>A booked appointment is coming up.</summary>
+    Reminder = 5
 }
 
 /// <summary>

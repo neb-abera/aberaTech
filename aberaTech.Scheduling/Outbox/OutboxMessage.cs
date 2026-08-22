@@ -21,6 +21,12 @@ public class OutboxMessage
 
     public Guid? QueueEntryId { get; set; }
 
+    /// <summary>
+    /// Set for messages about a booked appointment, as QueueEntryId is for
+    /// messages about a place in the queue. Exactly one of the two is set.
+    /// </summary>
+    public Guid? AppointmentId { get; set; }
+
     public NotificationKind Kind { get; set; }
 
     public string ToPhoneE164 { get; set; } = string.Empty;
