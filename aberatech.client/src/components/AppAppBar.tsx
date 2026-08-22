@@ -83,6 +83,20 @@ export default function AppAppBar()
                   Schedule time with me{' '}
                 </Link>
               </Button>
+              <Button variant="text" color="info" size="small">
+                {/* An anchor rather than a router Link: Facewoof is served
+                    from its own origin, so a client-side route would look for
+                    a page that does not exist in this app. */}
+                <a
+                  href="https://facewoof.abera.tech"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{color: 'inherit', textDecoration: 'inherit'}}
+                >
+                  {' '}
+                  Facewoof{' '}
+                </a>
+              </Button>
             </Box>
           </Box>
           <Box
@@ -149,6 +163,17 @@ export default function AppAppBar()
                   <Link to="/schedule" style={{color: 'inherit', textDecoration: 'inherit'}}>
                     Schedule time with me
                   </Link>
+                </MenuItem>
+                <MenuItem>
+                  {' '}
+                  <a
+                    href="https://facewoof.abera.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{color: 'inherit', textDecoration: 'inherit'}}
+                  >
+                    Facewoof
+                  </a>
                 </MenuItem>
                 <Divider sx={{my: 3}}/>
               </Box>
