@@ -5,6 +5,7 @@ using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
+using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,18 @@ builder.Services.AddSingleton(schedulingOptions);
 
 var twilioOptions = builder.Configuration.GetSection(TwilioOptions.Section).Get<TwilioOptions>() ?? new TwilioOptions();
 builder.Services.AddSingleton(twilioOptions);
+
+var adminOptions = builder.Configuration.GetSection(AdminOptions.Section).Get<AdminOptions>() ?? new AdminOptions();
+builder.Services.AddSingleton(adminOptions);
+
+// Without Google credentials and an allowlist there is no admin surface at all:
+// the endpoints are never mapped. Failing closed rather than falling back to
+// something weaker means a half-finished configuration cannot quietly leave the
+// queue open to whoever finds it.
+if (adminOptions.IsConfigured)
+{
+    builder.Services.AddSchedulingAdminAuth(adminOptions);
+}
 
 // One clock, injected everywhere, so that "now" is a dependency rather than an
 // ambient fact. It is what lets the domain tests assert behaviour at a daylight
@@ -93,6 +106,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 
+if (adminOptions.IsConfigured)
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
+
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
     // Migrate on start. Reasonable here because this deploys as a single
@@ -115,6 +134,16 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     if (twilioOptions.IsConfigured)
     {
         app.MapSmsReceipts();
+    }
+
+    if (adminOptions.IsConfigured)
+    {
+        app.MapAdminAuthEndpoints(adminOptions);
+        app.MapAdminEndpoints();
+    }
+    else
+    {
+        app.MapAdminUnavailable();
     }
 }
 else
