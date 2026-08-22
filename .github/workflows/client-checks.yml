@@ -1,9 +1,13 @@
-# Gate for the React client.
+# The gate for the whole repository: the client, its style, and the scheduling
+# feature on the server.
 #
-# Both jobs build a stage of the same Dockerfile a developer builds locally with
-# `make check`, so a green run here means the code passed on the node the server
-# actually uses, and means the same thing it meant on the laptop. Nothing is
-# installed on the runner but Docker.
+# Each job builds a stage of the same Dockerfile a developer builds locally with
+# `make check`, so a green run here means the code passed on the same node and
+# the same SDK it passed on at the laptop. Nothing is installed on the runner
+# but Docker.
+#
+# Three jobs rather than three steps in one, so a red X names which part of the
+# repository broke without anybody opening the log.
 name: Checks
 
 on:
