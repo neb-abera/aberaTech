@@ -11,8 +11,11 @@
 name: Checks
 
 on:
+  # Every pull request, whatever it targets. Filtering on master meant a pull
+  # request stacked on another feature branch got no checks at all, so the one
+  # kind of change most likely to go wrong — the one built on top of unmerged
+  # work — was the one nothing verified.
   pull_request:
-    branches: [master]
   push:
     branches: [master]
 
