@@ -1,6 +1,5 @@
 import React, { Suspense, useState } from 'react';
 import AppAppBar from '../components/AppAppBar';
-import Hero from '../components/Hero';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -20,6 +19,7 @@ import MachineLearningPathwayImage from '../assets/machine_learning_pathway.png'
 import Dialog from '@mui/material/Dialog';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
+import Footer from '../components/Footer';
 
 // Fallback loading spinner or placeholder
 const LoadingFallback = () => <div>Loading...</div>;
@@ -40,7 +40,6 @@ export default function TechnicalTransitionGuide(props: { disableCustomTheme?: b
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <AppAppBar />
-      <Hero />
       <Divider />
       <Container
         sx={{
@@ -1718,6 +1717,7 @@ export default function TechnicalTransitionGuide(props: { disableCustomTheme?: b
           </AccordionDetails>
         </Accordion>
       </Container>
+      <Footer />
     </AppTheme>
   );
 }
