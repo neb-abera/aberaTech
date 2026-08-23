@@ -195,6 +195,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     {
         app.MapAdminAuthEndpoints(adminOptions);
         app.MapAdminEndpoints();
+        app.MapAvailabilityEndpoints();
         app.MapCalendarAdminEndpoints();
     }
 }
