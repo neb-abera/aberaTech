@@ -109,3 +109,30 @@ public class QueueEntryRecord
 
     public NotificationState ToNotificationState() => new(LastAnnouncedStart, ImminentSent, TurnSent);
 }
+
+/// <summary>
+/// The host's stored Google authorisation, so free/busy can be read without him
+/// being present.
+/// </summary>
+/// <remarks>
+/// One row. A refresh token is a long-lived key to somebody's calendar, so it is
+/// stored encrypted rather than in plain text: the database is encrypted at rest
+/// by the platform, but that protects against a stolen disk, not against
+/// anything that can run a SELECT. Encrypting the column means a leaked backup
+/// or an accidental dump does not hand over the calendar with it.
+/// </remarks>
+public class HostCalendarCredential
+{
+    public Guid Id { get; set; }
+
+    /// <summary>Protected with ASP.NET Data Protection, never the raw token.</summary>
+    public string ProtectedRefreshToken { get; set; } = string.Empty;
+
+    /// <summary>Which calendar to read. "primary" unless the host says otherwise.</summary>
+    public string CalendarId { get; set; } = "primary";
+
+    /// <summary>The account that granted access, so the page can say whose calendar this is.</summary>
+    public string ConnectedEmail { get; set; } = string.Empty;
+
+    public Instant ConnectedAt { get; set; }
+}

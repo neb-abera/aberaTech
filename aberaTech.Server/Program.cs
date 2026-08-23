@@ -6,6 +6,8 @@ using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
 using aberaTech.Scheduling.Admin;
+using aberaTech.Scheduling.Calendar;
+using Microsoft.AspNetCore.DataProtection;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +53,46 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         options.UseNpgsql(connectionString, npgsql => npgsql.UseNodaTime()));
 
     builder.Services.AddScoped<QueueNotifier>();
+
+    // Busy time comes from two places. Appointments booked here are local and
+    // always available; the host's Google calendar is remote and may not be.
+    // The composite tolerates the second failing, so a slow or unreachable
+    // Google costs accuracy rather than availability.
+    var calendarOptions = builder.Configuration.GetSection(GoogleCalendarOptions.Section)
+                              .Get<GoogleCalendarOptions>() ?? new GoogleCalendarOptions();
+    builder.Services.AddSingleton(calendarOptions);
+
+    builder.Services.AddScoped<DatabaseBusySource>();
+
+    if (adminOptions.IsConfigured)
+    {
+        // Keys in the database, so the encrypted refresh token survives a
+        // restart. Without this the container regenerates its key ring on every
+        // deploy and the stored token becomes permanently unreadable.
+        builder.Services
+            .AddDataProtection()
+            .PersistKeysToDbContext<SchedulingDbContext>();
+
+        builder.Services.AddHttpClient<GoogleAccessTokens>(client =>
+            client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
+
+        builder.Services.AddHttpClient<GoogleCalendarBusySource>(client =>
+            client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
+    }
+
+    builder.Services.AddScoped<IBusySource>(services =>
+    {
+        var sources = new List<IBusySource> { services.GetRequiredService<DatabaseBusySource>() };
+
+        if (adminOptions.IsConfigured)
+        {
+            sources.Add(services.GetRequiredService<GoogleCalendarBusySource>());
+        }
+
+        return new CompositeBusySource(
+            sources,
+            services.GetRequiredService<ILogger<CompositeBusySource>>());
+    });
 
     if (twilioOptions.IsConfigured)
     {
@@ -140,6 +182,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     {
         app.MapAdminAuthEndpoints(adminOptions);
         app.MapAdminEndpoints();
+        app.MapCalendarAdminEndpoints();
     }
     else
     {

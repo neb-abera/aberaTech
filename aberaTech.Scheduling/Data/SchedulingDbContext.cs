@@ -1,10 +1,26 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using aberaTech.Scheduling.Outbox;
 
 namespace aberaTech.Scheduling.Data;
 
-public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) : DbContext(options)
+public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
+    : DbContext(options), IDataProtectionKeyContext
 {
+    /// <summary>
+    /// Data protection keys, kept in the database rather than on the container's
+    /// filesystem.
+    /// </summary>
+    /// <remarks>
+    /// A container app revision has no durable disk, so the default key ring is
+    /// regenerated on every restart — and anything encrypted with the old keys,
+    /// which here means the host's Google refresh token, becomes permanently
+    /// unreadable. Persisting the keys alongside the data they protect is what
+    /// makes "connect your calendar once" true rather than "reconnect after
+    /// every deploy".
+    /// </remarks>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<AvailabilityRuleRecord> AvailabilityRules => Set<AvailabilityRuleRecord>();
 
     public DbSet<Appointment> Appointments => Set<Appointment>();
@@ -14,6 +30,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) 
     public DbSet<QueueEntryRecord> QueueEntries => Set<QueueEntryRecord>();
 
     public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();
+
+    public DbSet<HostCalendarCredential> HostCalendarCredentials => Set<HostCalendarCredential>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -64,6 +82,18 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) 
             // The dispatcher and the queue view both filter on state within a
             // session, and a busy afternoon reads this far more than it writes.
             entity.HasIndex(record => new { record.SessionId, record.State });
+        });
+
+        builder.Entity<HostCalendarCredential>(entity =>
+        {
+            entity.HasKey(credential => credential.Id);
+            entity.Property(credential => credential.CalendarId).HasMaxLength(320).IsRequired();
+            entity.Property(credential => credential.ConnectedEmail).HasMaxLength(320).IsRequired();
+
+            // No length cap on the protected token: the ciphertext is longer
+            // than the token and grows if the protection payload format ever
+            // changes, and a truncating column would corrupt it silently.
+            entity.Property(credential => credential.ProtectedRefreshToken).IsRequired();
         });
 
         builder.Entity<OutboxMessage>(entity =>
