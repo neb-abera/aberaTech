@@ -25,7 +25,7 @@ export const guides: Entry[] = [
     blurb: 'What to do and when, from eighteen months before ETS to long after it.'
   },
   {
-    title: 'Everything I learned transitioning from the Army to Software Development',
+    title: 'Transitioning to Software Development',
     navLabel: 'Learning Software Development',
     to: '/technical',
     blurb: 'The path from no background to working software.'
