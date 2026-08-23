@@ -12,6 +12,7 @@ using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +50,20 @@ var connectionString = builder.Configuration.GetConnectionString("Scheduling");
 
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
-    builder.Services.AddDbContext<SchedulingDbContext>(options =>
-        options.UseNpgsql(connectionString, npgsql => npgsql.UseNodaTime()));
+    var databaseOptions = builder.Configuration.GetSection(DatabaseOptions.Section).Get<DatabaseOptions>()
+                          ?? new DatabaseOptions();
+    builder.Services.AddSingleton(databaseOptions);
+
+    // One data source for the process. It owns the connection pool and, with
+    // Entra auth, the token refresh — so the token is fetched on a timer for the
+    // whole application rather than per connection.
+    builder.Services.AddSingleton(services => SchedulingDataSource.Build(
+        connectionString,
+        databaseOptions,
+        services.GetRequiredService<ILoggerFactory>()));
+
+    builder.Services.AddDbContext<SchedulingDbContext>((services, options) =>
+        options.UseNpgsql(services.GetRequiredService<NpgsqlDataSource>(), npgsql => npgsql.UseNodaTime()));
 
     builder.Services.AddScoped<QueueNotifier>();
 
