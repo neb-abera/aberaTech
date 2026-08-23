@@ -81,9 +81,34 @@ and slots come from rules alone.
 | `Twilio:StatusCallbackUrl` | Must be the exact public URL — it is what the signature covers |
 | `Admin:GoogleClientId`, `GoogleClientSecret` | OAuth client |
 | `Admin:AllowedEmails` | Who may run the queue. **Empty means nobody** |
+| `GoogleCalendar:AvailabilityCalendarId` | Read open hours from this calendar's events instead of the rules here |
 
 Secrets belong in container app secrets, never `appsettings.json`. The Twilio
 auth token in particular is the key that signs delivery receipts.
+
+### Keeping your hours in Google
+
+Google does not expose the availability behind an appointment schedule. The
+Calendar API has eight resources — Acl, CalendarList, Calendars, Channels,
+Colors, Events, Freebusy and Settings — and none of them describes a booking
+page's hours or a user's working hours. There is nothing to read, for anybody.
+
+What can be read is events. So set `GoogleCalendar:AvailabilityCalendarId` to a
+calendar whose events *are* the open windows: make a calendar, put a recurring
+block on it, and move or delete occurrences in Google as normal. The site
+follows it, and the hours live in one place.
+
+Use a **separate** calendar from the one free/busy is read from. One says "I am
+open then" and the other says "I am busy then"; on a single calendar every open
+block would also be a busy block and cancel itself out.
+
+Two things are deliberately ignored. All-day entries, because an all-day "Open"
+would claim midnight to midnight and offer the whole night. And occurrences
+Google reports as cancelled, because treating one as open resurrects a block
+that was deleted.
+
+Leave the setting empty and availability comes from the rules in this database
+instead, which needs no Google account at all.
 
 ### Connecting to Postgres without a password
 

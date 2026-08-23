@@ -16,6 +16,18 @@ public sealed class GoogleCalendarOptions
     /// </remarks>
     public int CacheSeconds { get; set; } = 60;
 
+    /// <summary>
+    /// The calendar whose events declare when the host is open, or empty to use
+    /// the availability rules stored here instead.
+    /// </summary>
+    /// <remarks>
+    /// A separate calendar from the one free/busy is read from, and deliberately
+    /// so: one says "I am open then", the other says "I am busy then", and
+    /// putting both on one calendar would make every open block also a busy
+    /// block and cancel itself out.
+    /// </remarks>
+    public string AvailabilityCalendarId { get; set; } = string.Empty;
+
     /// <summary>Give up rather than make somebody wait on a slow calendar.</summary>
     /// <remarks>
     /// A timeout here is not an error path, it is the normal degradation: the

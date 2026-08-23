@@ -53,23 +53,53 @@ public static class SlotPlanner
         }
 
         var ruleList = rules as IReadOnlyList<AvailabilityRule> ?? rules.ToList();
-        var slots = new List<Slot>();
+        var windows = new List<Interval>();
 
         for (var date = from; date <= to; date = date.PlusDays(1))
         {
             foreach (var rule in ruleList)
             {
-                if (rule.Materialise(date) is not { } window)
+                if (rule.Materialise(date) is { } window)
                 {
-                    continue;
+                    windows.Add(window);
                 }
-
-                slots.AddRange(Divide(window, slotLength));
             }
         }
 
-        // Sorting before filtering keeps the result stable when two rules in
-        // different zones produce interleaved windows for the same day.
+        return PlanFromWindows(windows, slotLength, busy, notBefore);
+    }
+
+    /// <summary>
+    /// The same planning, from windows somebody else worked out.
+    /// </summary>
+    /// <remarks>
+    /// Split from the rule-based entry point because open time can come from two
+    /// places now: rules stored here, or events on a calendar the host keeps
+    /// elsewhere. Both end up as plain intervals, and everything after that —
+    /// dividing, the lead time, subtracting what is already booked — is the same
+    /// work and should not be written twice.
+    /// </remarks>
+    public static IReadOnlyList<Slot> PlanFromWindows(
+        IEnumerable<Interval> windows,
+        Duration slotLength,
+        IReadOnlyCollection<Interval> busy,
+        Instant notBefore)
+    {
+        if (slotLength <= Duration.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(slotLength), "A slot must have positive length.");
+        }
+
+        var slots = new List<Slot>();
+
+        // Coalesced first, so two overlapping open periods — an "office hours"
+        // event and a longer "available" one covering it — produce one run of
+        // slots rather than two interleaved sets with duplicate start times.
+        foreach (var window in Calendar.BusyMerge.Coalesce(windows))
+        {
+            slots.AddRange(Divide(window, slotLength));
+        }
+
         slots.Sort((left, right) => left.Start.CompareTo(right.Start));
 
         return slots

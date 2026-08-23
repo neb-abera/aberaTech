@@ -76,6 +76,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     builder.Services.AddSingleton(calendarOptions);
 
     builder.Services.AddScoped<DatabaseBusySource>();
+    builder.Services.AddScoped<RuleAvailabilitySource>();
 
     if (adminOptions.IsConfigured)
     {
@@ -91,7 +92,18 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
         builder.Services.AddHttpClient<GoogleCalendarBusySource>(client =>
             client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
+
+        builder.Services.AddHttpClient<GoogleEventsAvailabilitySource>(client =>
+            client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
     }
+
+    // Open time comes from a Google calendar when one is named, and from the
+    // rules in this database otherwise. Naming a calendar is what switches it,
+    // so there is no separate flag to get out of step with the calendar id.
+    builder.Services.AddScoped<IAvailabilitySource>(services =>
+        adminOptions.IsConfigured && !string.IsNullOrWhiteSpace(calendarOptions.AvailabilityCalendarId)
+            ? services.GetRequiredService<GoogleEventsAvailabilitySource>()
+            : services.GetRequiredService<RuleAvailabilitySource>());
 
     builder.Services.AddScoped<IBusySource>(services =>
     {

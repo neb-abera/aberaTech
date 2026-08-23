@@ -123,6 +123,7 @@ public static class SchedulingEndpoints
         SchedulingDbContext database,
         SchedulingOptions options,
         IBusySource busySource,
+        IAvailabilitySource availabilitySource,
         IClock clock,
         CancellationToken cancellationToken,
         string? zone = null,
@@ -166,19 +167,15 @@ public static class SchedulingEndpoints
                     wouldStart < session.ClosesAt)));
         }
 
-        var rules = await database.AvailabilityRules
-            .Where(rule => rule.Active)
-            .ToListAsync(cancellationToken);
-
         var today = now.InZone(options.HostZone).Date;
+        var lastDay = today.PlusDays(options.HorizonDays);
 
-        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
+        var horizon = new Interval(now, lastDay.PlusDays(1).AtMidnight().InUtc().ToInstant());
         var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
+        var open = await availabilitySource.GetOpenWindowsAsync(today, lastDay, cancellationToken);
 
-        var all = SlotPlanner.Plan(
-            rules.Select(rule => rule.ToDomain()),
-            today,
-            today.PlusDays(options.HorizonDays),
+        var all = SlotPlanner.PlanFromWindows(
+            open,
             Duration.FromMinutes(options.DefaultAppointmentMinutes),
             busy,
             now + Duration.FromMinutes(options.BookingLeadMinutes));
@@ -430,6 +427,7 @@ public static class SchedulingEndpoints
         SchedulingDbContext database,
         SchedulingOptions options,
         IBusySource busySource,
+        IAvailabilitySource availabilitySource,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -457,15 +455,14 @@ public static class SchedulingEndpoints
         // The slot must be one we actually offered. Without this the endpoint
         // would accept any instant at all, including outside working hours and
         // in the past, simply because nothing overlapped it.
-        var rules = await database.AvailabilityRules.Where(rule => rule.Active).ToListAsync(cancellationToken);
         var today = now.InZone(options.HostZone).Date;
-        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
+        var lastDay = today.PlusDays(options.HorizonDays);
+        var horizon = new Interval(now, lastDay.PlusDays(1).AtMidnight().InUtc().ToInstant());
         var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
+        var open = await availabilitySource.GetOpenWindowsAsync(today, lastDay, cancellationToken);
 
-        var offered = SlotPlanner.Plan(
-            rules.Select(rule => rule.ToDomain()),
-            today,
-            today.PlusDays(options.HorizonDays),
+        var offered = SlotPlanner.PlanFromWindows(
+            open,
             length,
             busy,
             now + Duration.FromMinutes(options.BookingLeadMinutes));
