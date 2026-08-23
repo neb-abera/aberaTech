@@ -1,0 +1,158 @@
+import * as React from 'react';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Divider from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { useAdminQueue } from '../hooks/useAdminQueue';
+import { formatTime } from '../core/format';
+
+/**
+ * The host's side of the queue: open it, work down the line, close it.
+ *
+ * This is the only screen in the feature that shows names and numbers, and it
+ * is behind a Google sign-in restricted to one address.
+ */
+export default function AdminPanel() {
+  const { configured, signedIn, email, queue, error, loading, openSession, closeSession, advance } = useAdminQueue();
+  const [name, setName] = React.useState('');
+  const [openError, setOpenError] = React.useState<string | null>(null);
+
+  if (loading) {
+    return <CircularProgress size={28} aria-label="Loading" />;
+  }
+
+  if (!configured) {
+    return (
+      <Alert severity="info">
+        Queue administration is not set up on this deployment yet. It needs Google credentials and an allowed address.
+      </Alert>
+    );
+  }
+
+  if (!signedIn) {
+    return (
+      <Stack spacing={2} sx={{ maxWidth: 420 }}>
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          Sign in to run the queue.
+        </Typography>
+        <Box>
+          <Button variant="contained" href="/api/scheduling/admin/sign-in?returnUrl=/schedule/admin">
+            Sign in with Google
+          </Button>
+        </Box>
+      </Stack>
+    );
+  }
+
+  const waiting = queue?.entries.filter((entry) => entry.state === 'Waiting') ?? [];
+  const serving = queue?.entries.find((entry) => entry.state === 'Serving');
+
+  return (
+    <Stack spacing={3}>
+      {error ? <Alert severity="error">{error}</Alert> : null}
+
+      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+        Signed in as {email}
+      </Typography>
+
+      {queue?.open ? (
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
+                  {queue.name}
+                </Typography>
+                <Chip color="success" size="small" label="Open" />
+                <Button size="small" color="inherit" variant="outlined" onClick={() => void closeSession()}>
+                  Close the queue
+                </Button>
+              </Box>
+
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {waiting.length} waiting{serving ? `, with ${serving.displayName} now` : ''}.
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card variant="outlined">
+          <CardContent>
+            <Stack
+              spacing={2}
+              component="form"
+              onSubmit={async (event: React.FormEvent) => {
+                event.preventDefault();
+                setOpenError(await openSession(name.trim()));
+              }}
+            >
+              <Typography variant="h6" component="p">
+                No queue is open
+              </Typography>
+              {openError ? <Alert severity="error">{openError}</Alert> : null}
+              <TextField
+                label="What is this session?"
+                placeholder="November initial counselling"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                size="small"
+                slotProps={{ htmlInput: { maxLength: 120 } }}
+              />
+              <Box>
+                <Button type="submit" variant="contained">
+                  Open the queue
+                </Button>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {queue && queue.entries.length > 0 ? (
+        <Card variant="outlined">
+          <CardContent>
+            <Stack divider={<Divider />} spacing={1.5}>
+              {queue.entries.map((entry) => (
+                <Box key={entry.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', pt: 1 }}>
+                  <Chip size="small" label={entry.position} />
+                  <Box sx={{ flexGrow: 1, minWidth: 180 }}>
+                    <Typography variant="body1">{entry.displayName}</Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {entry.phoneE164}
+                      {entry.projectedStart ? ` · ${formatTime(entry.projectedStart)}` : ''}
+                    </Typography>
+                  </Box>
+
+                  {entry.state === 'Waiting' ? (
+                    <>
+                      <Button size="small" variant="contained" onClick={() => void advance(entry.id, 'start')}>
+                        Start
+                      </Button>
+                      <Button size="small" color="inherit" onClick={() => void advance(entry.id, 'no-show')}>
+                        No show
+                      </Button>
+                    </>
+                  ) : entry.state === 'Serving' ? (
+                    <Button size="small" variant="contained" onClick={() => void advance(entry.id, 'done')}>
+                      Done
+                    </Button>
+                  ) : (
+                    <Chip size="small" variant="outlined" label={entry.state} />
+                  )}
+                </Box>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : null}
+    </Stack>
+  );
+}
