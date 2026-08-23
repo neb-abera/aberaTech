@@ -48,6 +48,13 @@ public sealed class QueueNotifier(SchedulingDbContext database, IClock clock, Sc
                 continue;
             }
 
+            // Somebody who declined texts still holds their place and still sees
+            // it move on the page; they simply are not messaged about it.
+            if (!record.SmsConsent || string.IsNullOrEmpty(record.PhoneE164))
+            {
+                continue;
+            }
+
             var due = NotificationPolicy.Decide(
                 record.ToNotificationState(),
                 projected.ProjectedStart,
