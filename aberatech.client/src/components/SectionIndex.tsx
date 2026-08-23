@@ -35,16 +35,30 @@ export default function SectionIndex({ title, entries, ...props }: Props) {
               {...(entry.external
                 ? { component: 'a', href: entry.to, target: '_blank', rel: 'noopener noreferrer' }
                 : { component: Link, to: entry.to })}
-              sx={{ height: '100%', p: 2.5, alignItems: 'flex-start', justifyContent: 'flex-start' }}
+              sx={{
+                // '&&' because CardActionArea's own styleOverride sets
+                // display:block and lands after sx in the stylesheet.
+                '&&': {
+                  height: '100%',
+                  p: 2.5,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
+                  justifyContent: 'flex-start'
+                }
+              }}
             >
-              <Stack spacing={1}>
+              {/* The card fills its grid cell and the path caption is pushed to
+                  the foot of it, so a title that wraps to two lines does not
+                  drag its card's caption 70px below the others in the row. */}
+              <Stack spacing={1} sx={{ flexGrow: 1, width: '100%' }}>
                 <Stack direction="row" spacing={0.75} alignItems="center">
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                     {entry.title}
                   </Typography>
                   {entry.external && <OpenInNewIcon sx={{ fontSize: 15, color: 'text.disabled' }} />}
                 </Stack>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', flexGrow: 1 }}>
                   {entry.blurb}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
