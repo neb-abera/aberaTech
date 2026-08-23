@@ -18,14 +18,29 @@ public sealed record AdminEntry(
     string DisplayName,
     string PhoneE164,
     string State,
-    string? ProjectedStart);
+    string? ProjectedStart,
+    int ExpectedMinutes);
 
 public sealed record AdminQueue(Guid? SessionId, string? Name, bool Open, IReadOnlyList<AdminEntry> Entries);
 
 public sealed record OpenSessionRequest(string? Name, int? DefaultMinutes, int? HoursOpen);
 
+public sealed record DurationRequest(int? Minutes);
+
 public static class AdminEndpoints
 {
+    /// <summary>
+    /// The shortest and longest a conversation may be booked for.
+    /// </summary>
+    /// <remarks>
+    /// Bounds rather than free text, because the value feeds projections for
+    /// everybody behind: a mistyped 500 would push the rest of the afternoon
+    /// past closing and tell them all they will not be seen.
+    /// </remarks>
+    private const int MinimumMinutes = 5;
+
+    private const int MaximumMinutes = 120;
+
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes
@@ -42,6 +57,8 @@ public static class AdminEndpoints
             AdvanceAsync(entryId, QueueEntryState.Done, db, n, c, t));
         group.MapPost("/queue/{entryId:guid}/no-show", (Guid entryId, SchedulingDbContext db, QueueNotifier n, IClock c, CancellationToken t) =>
             AdvanceAsync(entryId, QueueEntryState.NoShow, db, n, c, t));
+
+        group.MapPost("/queue/{entryId:guid}/duration", SetDurationAsync);
 
         return routes;
     }
@@ -75,7 +92,8 @@ public static class AdminEndpoints
                 entry.State.ToString(),
                 projection.TryGetValue(entry.Id, out var projected)
                     ? projected.ProjectedStart.ToString("uuuu-MM-ddTHH:mm:ss'Z'", null)
-                    : null))
+                    : null,
+                (int)entry.Expected.TotalMinutes))
             .ToList();
 
         return Results.Ok(new AdminQueue(session.Id, session.Name, session.Open, entries));
@@ -111,7 +129,7 @@ public static class AdminEndpoints
             OpensAt = now,
             ClosesAt = now + Duration.FromHours(Math.Clamp(request.HoursOpen ?? 8, 1, 24)),
             DefaultDuration = Duration.FromMinutes(
-                Math.Clamp(request.DefaultMinutes ?? options.DefaultAppointmentMinutes, 5, 120)),
+                Math.Clamp(request.DefaultMinutes ?? options.DefaultAppointmentMinutes, MinimumMinutes, MaximumMinutes)),
             Open = true
         };
 
@@ -133,6 +151,52 @@ public static class AdminEndpoints
         }
 
         session.Open = false;
+        await database.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Changes how long one person is expected to need.
+    /// </summary>
+    /// <remarks>
+    /// The estimate every queue tool gets wrong by assuming one number fits
+    /// everybody. A first counselling session and a two minute signature are not
+    /// the same conversation, and treating them as fifteen minutes each makes
+    /// every projection behind them wrong in the same direction.
+    ///
+    /// Changing it moves everybody behind, so this reconciles notifications like
+    /// any other change to the line: somebody whose turn slips by more than the
+    /// tolerance is told, and somebody whose turn barely moves is not.
+    /// </remarks>
+    private static async Task<IResult> SetDurationAsync(
+        Guid entryId,
+        DurationRequest request,
+        SchedulingDbContext database,
+        QueueNotifier notifier,
+        CancellationToken cancellationToken)
+    {
+        if (request.Minutes is not { } minutes || minutes is < MinimumMinutes or > MaximumMinutes)
+        {
+            return Results.BadRequest(new
+            {
+                error = $"Give a length between {MinimumMinutes} and {MaximumMinutes} minutes."
+            });
+        }
+
+        var entry = await database.QueueEntries
+            .Include(record => record.Session)
+            .ThenInclude(session => session!.Entries)
+            .FirstOrDefaultAsync(record => record.Id == entryId, cancellationToken);
+
+        if (entry?.Session is null)
+        {
+            return Results.NotFound();
+        }
+
+        entry.Expected = Duration.FromMinutes(minutes);
+
+        notifier.Reconcile(entry.Session);
         await database.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();

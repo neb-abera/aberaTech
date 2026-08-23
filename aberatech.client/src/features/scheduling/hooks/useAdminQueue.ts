@@ -7,6 +7,7 @@ export interface AdminEntry {
   phoneE164: string;
   state: string;
   projectedStart: string | null;
+  expectedMinutes: number;
 }
 
 export interface AdminQueue {
@@ -34,6 +35,7 @@ interface Admin {
   openSession: (name: string) => Promise<string | null>;
   closeSession: () => Promise<void>;
   advance: (entryId: string, action: 'start' | 'done' | 'no-show') => Promise<void>;
+  setDuration: (entryId: string, minutes: number) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -128,6 +130,18 @@ export function useAdminQueue(): Admin {
     [refresh]
   );
 
+  const setDuration = useCallback(
+    async (entryId: string, minutes: number) => {
+      await fetch(`/api/scheduling/admin/queue/${entryId}/duration`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes })
+      });
+      await refresh();
+    },
+    [refresh]
+  );
+
   const disconnectCalendar = useCallback(async () => {
     await fetch('/api/scheduling/admin/calendar/disconnect', { method: 'POST' });
     await refresh();
@@ -145,6 +159,7 @@ export function useAdminQueue(): Admin {
     openSession,
     closeSession,
     advance,
+    setDuration,
     refresh
   };
 }
