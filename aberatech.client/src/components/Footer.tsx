@@ -9,6 +9,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import { Link as RouterLink } from 'react-router';
+import { guides, projects } from '../site/sections';
 
 /**
  * The site footer. It carries the identity on every page, which is why the
@@ -18,13 +19,6 @@ import { Link as RouterLink } from 'react-router';
  * form that went nowhere, a copyright line crediting Sitemark, and social links
  * pointing at Material UI's own accounts rather than mine.
  */
-const pages = [
-  { label: 'Home', to: '/' },
-  { label: 'Military Transition Guide', to: '/transition' },
-  { label: 'Learning Software Development', to: '/technical' },
-  { label: 'Learning RF and Signal Processing', to: '/planner' },
-  { label: 'Schedule time with me', to: '/schedule' }
-];
 
 const socials = [
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/neb-abera/', Icon: LinkedInIcon },
@@ -60,29 +54,55 @@ export default function Footer() {
           </Stack>
         </Stack>
 
-        <Stack spacing={0.75} component="nav" aria-label="Footer">
-          {pages.map(({ label, to }) => (
-            <Link
-              key={to}
-              component={RouterLink}
-              to={to}
-              variant="body2"
-              underline="hover"
-              sx={{ color: 'text.secondary' }}
-            >
-              {label}
-            </Link>
-          ))}
-          <Link
-            href="https://facewoof.abera.tech"
-            target="_blank"
-            rel="noopener"
-            variant="body2"
-            underline="hover"
-            sx={{ color: 'text.secondary' }}
-          >
-            Facewoof
-          </Link>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 2, sm: 5 }} component="nav" aria-label="Footer">
+          <Stack spacing={0.75}>
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              Guides
+            </Typography>
+            {guides.map((entry) => (
+              <Link
+                key={entry.to}
+                component={RouterLink}
+                to={entry.to}
+                variant="body2"
+                underline="hover"
+                sx={{ color: 'text.secondary' }}
+              >
+                {entry.title}
+              </Link>
+            ))}
+          </Stack>
+          <Stack spacing={0.75}>
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              Projects
+            </Typography>
+            {projects.map((entry) =>
+              entry.external ? (
+                <Link
+                  key={entry.to}
+                  href={entry.to}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="body2"
+                  underline="hover"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  {entry.title}
+                </Link>
+              ) : (
+                <Link
+                  key={entry.to}
+                  component={RouterLink}
+                  to={entry.to}
+                  variant="body2"
+                  underline="hover"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  {entry.title}
+                </Link>
+              )
+            )}
+          </Stack>
         </Stack>
       </Box>
       <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mt: 4 }}>

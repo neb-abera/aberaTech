@@ -8,12 +8,14 @@ import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import ColorModeIconDropdown from '../theme/ColorModeIconDropdown';
 import {Link} from 'react-router';
+import {guides, primaryAction, projects} from '../site/sections';
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
   display        : 'flex',
@@ -57,35 +59,17 @@ export default function AppAppBar()
                 icon takes the theme's own text colour instead, so it follows
                 whichever scheme is showing. */}
             <FingerprintIcon sx={{ color: 'text.primary' }} />
+            {/* Three items, and it stays three however many projects there are.
+                Everything else is reachable from /guides and /projects. */}
             <Box sx={{display: {xs: 'none', md: 'flex'}}}>
               <Button variant="text" color="info" size="small" component={Link} to="/">
                 Home
               </Button>
-              <Button variant="text" color="info" size="small" component={Link} to="/transition">
-                Military Transition Guide
+              <Button variant="text" color="info" size="small" component={Link} to="/guides">
+                Guides
               </Button>
-              <Button variant="text" color="info" size="small" component={Link} to="/technical">
-                Learning Software Development
-              </Button>
-              <Button variant="text" color="info" size="small" component={Link} to="/planner">
-                Learning RF and Signal Processing
-              </Button>
-              <Button variant="text" color="info" size="small" component={Link} to="/schedule">
-                Schedule time with me
-              </Button>
-              {/* An anchor rather than a router Link: Facewoof is served from its
-                  own origin, so a client-side route would look for a page that
-                  does not exist in this app. */}
-              <Button
-                variant="text"
-                color="info"
-                size="small"
-                component="a"
-                href="https://facewoof.abera.tech"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Facewoof
+              <Button variant="text" color="info" size="small" component={Link} to="/projects">
+                Projects
               </Button>
             </Box>
           </Box>
@@ -96,6 +80,12 @@ export default function AppAppBar()
               alignItems: 'center'
             }}
           >
+            {/* Booking is something to do rather than somewhere to browse, so it
+                is a button beside the theme control and not a fourth tab. It is
+                still listed on /projects, because it is also a project. */}
+            <Button variant="contained" color="primary" size="small" component={Link} to={primaryAction.to}>
+              {primaryAction.title}
+            </Button>
             <ColorModeIconDropdown/>
           </Box>
           <Box sx={{display: {xs: 'flex', md: 'none'}, gap: 1}}>
@@ -125,29 +115,52 @@ export default function AppAppBar()
                   </IconButton>
                 </Box>
                 {/*nebdebug todo: links broken*/}
-                <MenuItem component={Link} to="/">
-                    Home
-                  </MenuItem>
-                <MenuItem component={Link} to="/transition">
-                    Military Transition Guide
-                  </MenuItem>
-                <MenuItem component={Link} to="/technical">
-                    Technical Transition Guide
-                  </MenuItem>
-                <MenuItem component={Link} to="/planner">
-                    Learning RF and Signal Processing
-                  </MenuItem>
-                <MenuItem component={Link} to="/schedule">
-                    Schedule time with me
-                  </MenuItem>
-                <MenuItem
-                  component="a"
-                  href="https://facewoof.abera.tech"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {/* The action first, and as a button, because on a phone this
+                    drawer is the whole navigation and booking is the thing most
+                    likely to be wanted. */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  component={Link}
+                  to={primaryAction.to}
+                  sx={{mb: 1.5}}
                 >
-                  Facewoof
+                  {primaryAction.title}
+                </Button>
+                <MenuItem component={Link} to="/">
+                  Home
                 </MenuItem>
+                <Divider sx={{my: 1}}/>
+                <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
+                  Guides
+                </Typography>
+                {guides.map((entry) => (
+                  <MenuItem key={entry.to} component={Link} to={entry.to}>
+                    {entry.title}
+                  </MenuItem>
+                ))}
+                <Divider sx={{my: 1}}/>
+                <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
+                  Projects
+                </Typography>
+                {projects.map((entry) =>
+                  entry.external ? (
+                    <MenuItem
+                      key={entry.to}
+                      component="a"
+                      href={entry.to}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {entry.title}
+                    </MenuItem>
+                  ) : (
+                    <MenuItem key={entry.to} component={Link} to={entry.to}>
+                      {entry.title}
+                    </MenuItem>
+                  )
+                )}
                 <Divider sx={{my: 3}}/>
               </Box>
             </Drawer>
