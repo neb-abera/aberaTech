@@ -34,7 +34,13 @@ public sealed record QueueEntry(
     Instant? StartedAt = null);
 
 /// <summary>What the queue currently expects to happen, and when.</summary>
-public sealed record ProjectedEntry(Guid Id, int Position, Instant ProjectedStart)
+/// <param name="BeyondClose">
+/// True when this person is not expected to be reached before the host stops.
+/// Surfaced rather than hidden: somebody waiting in a corridor deserves to be
+/// told they are not going to be seen, and telling them is the entire
+/// difference between a queue and a trap.
+/// </param>
+public sealed record ProjectedEntry(Guid Id, int Position, Instant ProjectedStart, bool BeyondClose = false)
 {
     public Duration WaitFrom(Instant now) => ProjectedStart <= now ? Duration.Zero : ProjectedStart - now;
 }
@@ -67,7 +73,20 @@ public static class QueueProjection
     /// The current instant. Also the floor for every projection: a queue that
     /// is running late must not claim somebody was seen in the past.
     /// </param>
-    public static IReadOnlyList<ProjectedEntry> Project(IEnumerable<QueueEntry> entries, Instant now)
+    /// <param name="busy">
+    /// Periods the host is already committed elsewhere. The line does not run
+    /// through them: a queue that projects somebody into a meeting already on
+    /// the calendar will text them to arrive during it.
+    /// </param>
+    /// <param name="closesAt">
+    /// When the host stops. Entries projected past it are flagged rather than
+    /// dropped, because they are still in the queue and still need an answer.
+    /// </param>
+    public static IReadOnlyList<ProjectedEntry> Project(
+        IEnumerable<QueueEntry> entries,
+        Instant now,
+        IReadOnlyList<Interval>? busy = null,
+        Instant? closesAt = null)
     {
         var ordered = entries
             .Where(entry => entry.State is QueueEntryState.Waiting or QueueEntryState.Serving)
@@ -75,6 +94,12 @@ public static class QueueProjection
             .ToList();
 
         var projections = new List<ProjectedEntry>(ordered.Count);
+
+        // Coalesced once rather than per entry: overlapping blocks would
+        // otherwise make the skip below depend on which fragment it met first.
+        var blocked = busy is null or { Count: 0 }
+            ? []
+            : Calendar.BusyMerge.Coalesce(busy);
 
         // The front of the line anchors everything behind it. If somebody is
         // already being seen, the next person waits out the remainder of their
@@ -96,10 +121,47 @@ public static class QueueProjection
                 continue;
             }
 
-            projections.Add(new ProjectedEntry(entry.Id, entry.Position, cursor));
-            cursor += entry.Expected;
+            var start = SkipBusy(cursor, entry.Expected, blocked);
+
+            projections.Add(new ProjectedEntry(
+                entry.Id,
+                entry.Position,
+                start,
+                closesAt is { } close && start >= close));
+
+            cursor = start + entry.Expected;
         }
 
         return projections;
+    }
+
+    /// <summary>
+    /// Moves a start time forward until the whole appointment fits in free time.
+    /// </summary>
+    /// <remarks>
+    /// Repeated rather than done once, because clearing one commitment can land
+    /// on the next: a fifteen minute conversation pushed past a meeting that
+    /// ends at two may still collide with another starting at ten past.
+    /// </remarks>
+    private static Instant SkipBusy(Instant from, Duration length, IReadOnlyList<Interval> busy)
+    {
+        var start = from;
+        var moved = true;
+
+        while (moved)
+        {
+            moved = false;
+
+            foreach (var block in busy)
+            {
+                if (start < block.End && block.Start < start + length)
+                {
+                    start = block.End;
+                    moved = true;
+                }
+            }
+        }
+
+        return start;
     }
 }
