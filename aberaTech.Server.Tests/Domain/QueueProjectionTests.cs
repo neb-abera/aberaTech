@@ -178,4 +178,151 @@ public class QueueProjectionTests
 
         Assert.Equal(Duration.Zero, projection.Single().WaitFrom(Now + Duration.FromHours(1)));
     }
+
+    // ---------------------------------------------------------------- bounds
+
+    private static Interval Busy(int fromMinutes, int toMinutes) =>
+        new(Now + Duration.FromMinutes(fromMinutes), Now + Duration.FromMinutes(toMinutes));
+
+    [Fact]
+    public void The_line_does_not_run_through_a_meeting_already_on_the_calendar()
+    {
+        // The defect this fixes: the queue would happily project somebody into
+        // an existing commitment and text them to arrive during it.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now,
+            [Busy(0, 30)]);
+
+        Assert.Equal(Now + Duration.FromMinutes(30), projection.Single().ProjectedStart);
+    }
+
+    [Fact]
+    public void An_appointment_that_merely_overlaps_a_meeting_is_pushed_past_it()
+    {
+        // Starting at +25 is free, but a twenty minute conversation would run
+        // into a meeting beginning at +30. Fitting the whole appointment, not
+        // just its first instant, is the point.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now + Duration.FromMinutes(25),
+            [Busy(30, 60)]);
+
+        Assert.Equal(Now + Duration.FromMinutes(60), projection.Single().ProjectedStart);
+    }
+
+    [Fact]
+    public void Clearing_one_meeting_onto_another_keeps_moving()
+    {
+        // Back to back commitments: escaping the first lands inside the second,
+        // so a single pass would leave the answer wrong.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now,
+            [Busy(0, 30), Busy(30, 90)]);
+
+        Assert.Equal(Now + Duration.FromMinutes(90), projection.Single().ProjectedStart);
+    }
+
+    [Fact]
+    public void Everyone_behind_moves_with_the_person_pushed_past_a_meeting()
+    {
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20), Waiting(2, 20)],
+            Now,
+            [Busy(0, 30)]);
+
+        Assert.Equal(Now + Duration.FromMinutes(30), projection[0].ProjectedStart);
+        Assert.Equal(Now + Duration.FromMinutes(50), projection[1].ProjectedStart);
+    }
+
+    [Fact]
+    public void Free_time_between_meetings_is_used_rather_than_skipped()
+    {
+        // A gap big enough for the appointment should be filled, not stepped
+        // over: leaving it empty would push the whole queue later for nothing.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now,
+            [Busy(-60, 0), Busy(30, 90)]);
+
+        Assert.Equal(Now, projection.Single().ProjectedStart);
+    }
+
+    [Fact]
+    public void Overlapping_busy_blocks_do_not_change_the_answer()
+    {
+        var scattered = QueueProjection.Project([Waiting(1, 20)], Now, [Busy(0, 30), Busy(10, 20), Busy(5, 25)]);
+        var tidy = QueueProjection.Project([Waiting(1, 20)], Now, [Busy(0, 30)]);
+
+        Assert.Equal(tidy.Single().ProjectedStart, scattered.Single().ProjectedStart);
+    }
+
+    [Fact]
+    public void Somebody_who_will_not_be_reached_before_closing_is_flagged_not_hidden()
+    {
+        // Still in the queue, still owed an answer. Dropping them from the
+        // projection would leave them staring at a page that says nothing.
+        //
+        // "Reached" means started, not finished. Somebody who begins at ten to
+        // five is seen, even if the conversation runs past five; somebody who
+        // would not begin until after five is not. Whether the host overruns is
+        // a different question from whether they get their turn.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20), Waiting(2, 20)],
+            Now,
+            busy: null,
+            closesAt: Now + Duration.FromMinutes(20));
+
+        Assert.False(projection[0].BeyondClose);
+        Assert.True(projection[1].BeyondClose);
+        Assert.Equal(2, projection.Count);
+    }
+
+    [Fact]
+    public void An_appointment_that_starts_before_closing_but_runs_past_it_is_not_flagged()
+    {
+        // The other half of that rule, asserted so it cannot drift: starting at
+        // ten past a close of fifteen means being seen, not being turned away.
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now + Duration.FromMinutes(10),
+            busy: null,
+            closesAt: Now + Duration.FromMinutes(15));
+
+        Assert.False(projection.Single().BeyondClose);
+    }
+
+    [Fact]
+    public void Nobody_is_flagged_when_the_queue_has_no_closing_time()
+    {
+        var projection = QueueProjection.Project([Waiting(1, 20), Waiting(2, 20)], Now);
+
+        Assert.All(projection, entry => Assert.False(entry.BeyondClose));
+    }
+
+    [Fact]
+    public void Starting_exactly_at_closing_time_counts_as_beyond_it()
+    {
+        var projection = QueueProjection.Project(
+            [Waiting(1, 20)],
+            Now,
+            busy: null,
+            closesAt: Now);
+
+        Assert.True(projection.Single().BeyondClose);
+    }
+
+    [Fact]
+    public void No_busy_time_behaves_exactly_as_before()
+    {
+        var entries = new[] { Waiting(1, 15), Waiting(2, 30) };
+
+        var without = QueueProjection.Project(entries, Now);
+        var withEmpty = QueueProjection.Project(entries, Now, []);
+
+        Assert.Equal(
+            without.Select(entry => entry.ProjectedStart),
+            withEmpty.Select(entry => entry.ProjectedStart));
+    }
 }

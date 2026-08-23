@@ -57,10 +57,17 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
               {place.projectedStart ? ` — around ${formatTime(place.projectedStart)}` : ''}
             </Typography>
 
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              This updates on its own. I will text you if the estimate moves by more than ten minutes, and again when
-              you are up.
-            </Typography>
+            {place.beyondClose ? (
+              <Alert severity="warning">
+                On current estimates you will not be reached before I stop today. You are still in the queue in case
+                things move, but it may be worth booking a time instead.
+              </Alert>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                This updates on its own. I will text you if the estimate moves by more than ten minutes, and again when
+                you are up.
+              </Typography>
+            )}
 
             <Box>
               <Button variant="outlined" color="inherit" size="small" onClick={() => void onLeave()}>
@@ -86,9 +93,23 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
                 ? 'Nobody is waiting. You would be first.'
                 : `${queue.waiting} waiting${queue.nextStartsAt ? `, next at ${formatTime(queue.nextStartsAt)}` : ''}.`}
             </Typography>
+
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Open until {formatTime(queue.closesAt)}
+              {queue.estimatedStartIfYouJoin && queue.acceptingJoins
+                ? `. Join now and you would be seen around ${formatTime(queue.estimatedStartIfYouJoin)}.`
+                : '.'}
+            </Typography>
           </Box>
 
           {error ? <Alert severity="error">{error}</Alert> : null}
+
+          {queue.acceptingJoins ? null : (
+            <Alert severity="warning">
+              The queue is full for today — anyone joining now would not be reached before it closes. Book a time
+              instead and I will text you a confirmation.
+            </Alert>
+          )}
 
           <TextField
             label="Your name"
@@ -115,7 +136,7 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
                 12% white ground, which is unreadable, and a greyed button never
                 tells anybody what it wants. The fields are `required`, so the
                 browser explains what is missing instead. */}
-            <Button type="submit" variant="contained" disabled={busy}>
+            <Button type="submit" variant="contained" disabled={busy || !queue.acceptingJoins}>
               {busy ? 'Joining…' : 'Join the queue'}
             </Button>
           </Box>

@@ -17,8 +17,18 @@ public sealed record ScheduleState(
     string ViewerZoneId,
     IReadOnlyList<SlotView> Slots,
     QueueView? Queue,
-    int Days = 0,
-    bool MoreDays = false);
+    /// <summary>
+    /// Every day in the horizon with something free, as yyyy-MM-dd in the
+    /// viewer's own zone.
+    /// </summary>
+    /// <remarks>
+    /// Dates rather than slots, because a month grid needs to know which days
+    /// are worth offering and nothing more. Sending the times for all of them
+    /// was the old design: five hundred entries to render a calendar that shows
+    /// thirty.
+    /// </remarks>
+    IReadOnlyList<string>? AvailableDates = null,
+    string? SelectedDate = null);
 
 public sealed record SlotView(string StartsAt, string EndsAt, int Minutes);
 
@@ -31,7 +41,13 @@ public sealed record SlotView(string StartsAt, string EndsAt, int Minutes);
 /// else's business — so the public projection never carries a name, a phone
 /// number or anything else that identifies who is in front of you.
 /// </remarks>
-public sealed record QueueView(string Name, int Waiting, string? NextStartsAt);
+public sealed record QueueView(
+    string Name,
+    int Waiting,
+    string? NextStartsAt,
+    string ClosesAt,
+    string? EstimatedStartIfYouJoin,
+    bool AcceptingJoins);
 
 /// <summary>What one visitor can see about their own place in the line.</summary>
 public sealed record MyPlace(
@@ -40,7 +56,8 @@ public sealed record MyPlace(
     int Ahead,
     string State,
     string? ProjectedStart,
-    int? MinutesAway);
+    int? MinutesAway,
+    bool BeyondClose = false);
 
 public sealed record JoinRequest(string? Name, string? Phone, string? ZoneId);
 
@@ -109,15 +126,10 @@ public static class SchedulingEndpoints
         IClock clock,
         CancellationToken cancellationToken,
         string? zone = null,
-        int? days = null)
+        string? date = null)
     {
         var viewerZone = ResolveZone(zone, options);
 
-        // A three week horizon at quarter hour granularity is roughly five
-        // hundred slots and seventy kilobytes, which is a slow first paint on a
-        // phone and far more than anybody scrolls. Serve a week by default and
-        // let the page ask for more.
-        var window = Math.Clamp(days ?? options.DefaultWindowDays, 1, options.HorizonDays);
         var now = clock.GetCurrentInstant();
 
         var session = await database.QueueSessions
@@ -126,9 +138,19 @@ public static class SchedulingEndpoints
 
         if (session is not null)
         {
+            var queueBusy = await busySource.GetBusyAsync(new Interval(now, session.ClosesAt), cancellationToken);
+
             var projection = QueueProjection.Project(
                 session.Entries.Select(entry => entry.ToDomain()),
-                now);
+                now,
+                queueBusy,
+                session.ClosesAt);
+
+            // What somebody joining right now would be told, worked out before
+            // they commit rather than after. A queue that only reveals a
+            // hopeless wait once you are standing in it is the thing worth
+            // avoiding.
+            var wouldStart = ProjectedStartForNewcomer(session, projection, queueBusy, now);
 
             return Results.Ok(new ScheduleState(
                 "queue",
@@ -138,7 +160,10 @@ public static class SchedulingEndpoints
                 new QueueView(
                     session.Name,
                     projection.Count,
-                    projection.Count > 0 ? Format(projection[0].ProjectedStart) : null)));
+                    projection.Count > 0 ? Format(projection[0].ProjectedStart) : null,
+                    Format(session.ClosesAt),
+                    Format(wouldStart),
+                    wouldStart < session.ClosesAt)));
         }
 
         var rules = await database.AvailabilityRules
@@ -147,30 +172,82 @@ public static class SchedulingEndpoints
 
         var today = now.InZone(options.HostZone).Date;
 
-        var horizon = new Interval(now, today.PlusDays(window + 1).AtMidnight().InUtc().ToInstant());
+        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
         var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
 
-        var slots = SlotPlanner.Plan(
+        var all = SlotPlanner.Plan(
             rules.Select(rule => rule.ToDomain()),
             today,
-            today.PlusDays(window),
+            today.PlusDays(options.HorizonDays),
             Duration.FromMinutes(options.DefaultAppointmentMinutes),
             busy,
             now + Duration.FromMinutes(options.BookingLeadMinutes));
+
+        // Grouped in the viewer's zone, not the host's. An evening slot in
+        // Washington belongs to the next day for somebody reading in Berlin,
+        // and filing it under the host's day would put it under a heading that
+        // is wrong for the person choosing.
+        var byDay = all
+            .GroupBy(slot => slot.Start.InZone(viewerZone).Date)
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        var availableDates = byDay.Select(group => group.Key.ToString("uuuu-MM-dd", null)).ToList();
+
+        // The requested day if it has anything, otherwise the first that does,
+        // so the page always opens on a day worth looking at rather than on an
+        // empty today.
+        var selected = date is not null && availableDates.Contains(date)
+            ? date
+            : availableDates.FirstOrDefault();
+
+        var chosen = byDay.FirstOrDefault(group => group.Key.ToString("uuuu-MM-dd", null) == selected);
 
         return Results.Ok(new ScheduleState(
             "slots",
             options.HostName,
             viewerZone.Id,
-            slots
-                .Select(slot => new SlotView(
-                    Format(slot.Start),
-                    Format(slot.End),
-                    (int)slot.Length.TotalMinutes))
-                .ToList(),
+            chosen is null
+                ? []
+                : chosen
+                    .Select(slot => new SlotView(
+                        Format(slot.Start),
+                        Format(slot.End),
+                        (int)slot.Length.TotalMinutes))
+                    .ToList(),
             null,
-            window,
-            window < options.HorizonDays));
+            availableDates,
+            selected));
+    }
+
+    /// <summary>
+    /// When one more person joining the back of the line would be seen.
+    /// </summary>
+    /// <remarks>
+    /// The same arithmetic the projection does, applied to a hypothetical entry:
+    /// everybody currently waiting, then this one. Computed rather than
+    /// approximated as "last projected start plus a duration", because the line
+    /// has to step over the host's existing commitments and the last person's
+    /// slot may already have been pushed past one.
+    /// </remarks>
+    private static Instant ProjectedStartForNewcomer(
+        QueueSession session,
+        IReadOnlyList<ProjectedEntry> projection,
+        IReadOnlyList<Interval> busy,
+        Instant now)
+    {
+        var hypothetical = session.Entries
+            .Select(entry => entry.ToDomain())
+            .Append(new QueueEntry(
+                Guid.Empty,
+                int.MaxValue,
+                session.DefaultDuration,
+                QueueEntryState.Waiting))
+            .ToList();
+
+        var withNewcomer = QueueProjection.Project(hypothetical, now, busy, session.ClosesAt);
+
+        return withNewcomer.Last().ProjectedStart;
     }
 
     private static async Task<IResult> JoinQueueAsync(
@@ -178,6 +255,7 @@ public static class SchedulingEndpoints
         SchedulingDbContext database,
         QueueNotifier notifier,
         SchedulingOptions options,
+        IBusySource busySource,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -207,6 +285,11 @@ public static class SchedulingEndpoints
 
         var now = clock.GetCurrentInstant();
 
+        if (now >= session.ClosesAt)
+        {
+            return Results.Conflict(new { error = "The queue has closed for today." });
+        }
+
         // Rejoining is idempotent: pressing join twice, or reopening the link on
         // a second device, should find the same place in the line rather than
         // taking a second one.
@@ -231,6 +314,20 @@ public static class SchedulingEndpoints
             JoinedAt = now
         };
 
+        // Refuse rather than take somebody's number and never call it. Checked
+        // against the same projection the page showed, so the answer they were
+        // given and the answer they get are the same one.
+        var busy = await busySource.GetBusyAsync(new Interval(now, session.ClosesAt), cancellationToken);
+        var projection = QueueProjection.Project(session.Entries.Select(record => record.ToDomain()), now, busy, session.ClosesAt);
+
+        if (ProjectedStartForNewcomer(session, projection, busy, now) >= session.ClosesAt)
+        {
+            return Results.Conflict(new
+            {
+                error = "The queue is full for today — you would not be reached before it closes."
+            });
+        }
+
         session.Entries.Add(entry);
         database.QueueEntries.Add(entry);
 
@@ -246,6 +343,7 @@ public static class SchedulingEndpoints
     private static async Task<IResult> GetMyPlaceAsync(
         Guid entryId,
         SchedulingDbContext database,
+        IBusySource busySource,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -260,9 +358,13 @@ public static class SchedulingEndpoints
         }
 
         var now = clock.GetCurrentInstant();
+        var busy = await busySource.GetBusyAsync(new Interval(now, entry.Session.ClosesAt), cancellationToken);
+
         var projection = QueueProjection.Project(
             entry.Session.Entries.Select(record => record.ToDomain()),
-            now);
+            now,
+            busy,
+            entry.Session.ClosesAt);
 
         var mine = projection.FirstOrDefault(item => item.Id == entryId);
 
@@ -279,7 +381,8 @@ public static class SchedulingEndpoints
             ahead,
             entry.State.ToString(),
             Format(mine.ProjectedStart),
-            (int)mine.WaitFrom(now).TotalMinutes));
+            (int)mine.WaitFrom(now).TotalMinutes,
+            mine.BeyondClose));
     }
 
     private static async Task<IResult> LeaveQueueAsync(

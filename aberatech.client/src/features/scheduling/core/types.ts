@@ -12,6 +12,9 @@ export interface QueueView {
   name: string;
   waiting: number;
   nextStartsAt: string | null;
+  closesAt: string;
+  estimatedStartIfYouJoin: string | null;
+  acceptingJoins: boolean;
 }
 
 export interface ScheduleState {
@@ -20,8 +23,8 @@ export interface ScheduleState {
   viewerZoneId: string;
   slots: SlotView[];
   queue: QueueView | null;
-  days: number;
-  moreDays: boolean;
+  availableDates: string[] | null;
+  selectedDate: string | null;
 }
 
 export interface MyPlace {
@@ -31,6 +34,7 @@ export interface MyPlace {
   state: string;
   projectedStart: string | null;
   minutesAway: number | null;
+  beyondClose: boolean;
 }
 
 export interface BookingConfirmation {
