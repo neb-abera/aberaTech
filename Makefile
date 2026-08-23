@@ -9,11 +9,14 @@ DOCKER     ?= docker
 DOCKERFILE := aberaTech.Server/Dockerfile
 
 .DEFAULT_GOAL := help
-.PHONY: help dev db test test-watch servertest lint fmt check image run clean
+.PHONY: help up dev db test test-watch servertest lint fmt check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
 		| awk -F':.*?## ' '{printf "  \033[36m%-11s\033[0m %s\n", $$1, $$2}'
+
+up: ## The whole site and its database on http://localhost:8080
+	$(COMPOSE) up --build app
 
 dev: ## Hot reloading dev server on http://localhost:3000
 	$(COMPOSE) up --build dev
