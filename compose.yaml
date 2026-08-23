@@ -1,6 +1,7 @@
 # Every way of working on the client runs in a container, so nothing but Docker
 # needs to be installed on the machine.
 #
+#   make up      the whole site and its database on http://localhost:8080
 #   make dev     hot reloading dev server on http://localhost:3000
 #   make test    client unit tests against the working tree
 #   make servertest  scheduling unit tests against the working tree
@@ -104,6 +105,27 @@ services:
       - .:/src
     working_dir: /src
     command: ['dotnet', 'test', 'aberaTech.Server.Tests/aberaTech.Server.Tests.csproj', '--nologo']
+
+  # The whole site as it is deployed — .NET server, built client, database —
+  # for trying a change the way a visitor meets it rather than through the vite
+  # dev server, which serves the client alone and has no API behind it.
+  app:
+    build:
+      context: .
+      dockerfile: aberaTech.Server/Dockerfile
+      args:
+        IN_DOCKER: 'true'
+    ports:
+      - '127.0.0.1:8080:8080'
+    environment:
+      # Development so the availability rules seed themselves and a fresh
+      # database produces a page with slots on it rather than an empty state
+      # that looks like a bug.
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Scheduling: 'Host=db;Port=5432;Database=scheduling;Username=scheduling;Password=scheduling'
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   scheduling-db:
