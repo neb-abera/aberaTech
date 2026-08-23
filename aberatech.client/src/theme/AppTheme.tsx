@@ -29,6 +29,10 @@ export default function AppTheme(props: AppThemeProps) {
             cssVarPrefix: 'template'
           },
           colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
+          // Dark unless somebody chooses otherwise. Without this the provider
+          // follows the operating system, so half of all first visits would
+          // arrive light — and the site is designed dark first.
+          defaultColorScheme: 'dark',
           typography,
           shadows,
           shape,

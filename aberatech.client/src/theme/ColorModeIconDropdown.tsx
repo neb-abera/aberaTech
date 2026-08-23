@@ -6,9 +6,24 @@ import IconButton, { IconButtonOwnProps } from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useColorScheme } from '@mui/material/styles';
+import { useAccount } from '../hooks/useAccount';
+import { availableModes, correctedMode } from './colorMode';
 
 export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   const { mode, systemMode, setMode } = useColorScheme();
+
+  // "System" is offered to signed-in accounts only. For everybody else the
+  // choice is the plain one — dark, or light — and following the operating
+  // system is a preference the site does not need to expose to a visitor who
+  // has no way to store anything else about themselves.
+  const { signedIn } = useAccount();
+
+  React.useEffect(() => {
+    const corrected = correctedMode(mode, signedIn);
+    if (corrected) {
+      setMode(corrected);
+    }
+  }, [signedIn, mode, setMode]);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -74,9 +89,11 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem selected={mode === 'system'} onClick={handleMode('system')}>
-          System
-        </MenuItem>
+        {availableModes(signedIn).includes('system') ? (
+          <MenuItem selected={mode === 'system'} onClick={handleMode('system')}>
+            System
+          </MenuItem>
+        ) : null}
         <MenuItem selected={mode === 'light'} onClick={handleMode('light')}>
           Light
         </MenuItem>

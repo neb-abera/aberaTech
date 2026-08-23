@@ -52,7 +52,11 @@ export default function AppAppBar()
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
           <Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
-            <FingerprintIcon/>
+            {/* The app bar inherits primary.contrastText, which is near white
+                in both schemes — invisible against a light background. The
+                icon takes the theme's own text colour instead, so it follows
+                whichever scheme is showing. */}
+            <FingerprintIcon sx={{ color: 'text.primary' }} />
             <Box sx={{display: {xs: 'none', md: 'flex'}}}>
               <Button variant="text" color="info" size="small">
                 <Link to="/" style={{color: 'inherit', textDecoration: 'inherit'}}>
