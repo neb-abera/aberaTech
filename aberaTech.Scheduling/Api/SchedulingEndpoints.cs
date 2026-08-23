@@ -136,13 +136,18 @@ public static class SchedulingEndpoints
 
         var now = clock.GetCurrentInstant();
 
+        // Past its closing time counts as closed, whatever the flag says. The
+        // flag records an intention; the clock records what happened. Leaving a
+        // session "open" a day after it ended is the normal case rather than an
+        // odd one — closing it is a thing a person has to remember at the end of
+        // a long afternoon.
         var session = await database.QueueSessions
             .Include(candidate => candidate.Entries)
-            .FirstOrDefaultAsync(candidate => candidate.Open, cancellationToken);
+            .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
 
         if (session is not null)
         {
-            var queueBusy = await busySource.GetBusyAsync(new Interval(now, session.ClosesAt), cancellationToken);
+            var queueBusy = await busySource.GetBusyAsync(FromNowUntil(now, session.ClosesAt), cancellationToken);
 
             var projection = QueueProjection.Project(
                 session.Entries.Select(entry => entry.ToDomain()),
@@ -278,20 +283,15 @@ public static class SchedulingEndpoints
             return Results.BadRequest(new { error = "Enter your name." });
         }
 
+        var now = clock.GetCurrentInstant();
+
         var session = await database.QueueSessions
             .Include(candidate => candidate.Entries)
-            .FirstOrDefaultAsync(candidate => candidate.Open, cancellationToken);
+            .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
 
         if (session is null)
         {
             return Results.Conflict(new { error = "The queue is not open right now." });
-        }
-
-        var now = clock.GetCurrentInstant();
-
-        if (now >= session.ClosesAt)
-        {
-            return Results.Conflict(new { error = "The queue has closed for today." });
         }
 
         // Rejoining is idempotent: pressing join twice, or reopening the link on
@@ -321,7 +321,7 @@ public static class SchedulingEndpoints
         // Refuse rather than take somebody's number and never call it. Checked
         // against the same projection the page showed, so the answer they were
         // given and the answer they get are the same one.
-        var busy = await busySource.GetBusyAsync(new Interval(now, session.ClosesAt), cancellationToken);
+        var busy = await busySource.GetBusyAsync(FromNowUntil(now, session.ClosesAt), cancellationToken);
         var projection = QueueProjection.Project(session.Entries.Select(record => record.ToDomain()), now, busy, session.ClosesAt);
 
         if (ProjectedStartForNewcomer(session, projection, busy, now) >= session.ClosesAt)
@@ -362,7 +362,7 @@ public static class SchedulingEndpoints
         }
 
         var now = clock.GetCurrentInstant();
-        var busy = await busySource.GetBusyAsync(new Interval(now, entry.Session.ClosesAt), cancellationToken);
+        var busy = await busySource.GetBusyAsync(FromNowUntil(now, entry.Session.ClosesAt), cancellationToken);
 
         var projection = QueueProjection.Project(
             entry.Session.Entries.Select(record => record.ToDomain()),
@@ -647,6 +647,23 @@ public static class SchedulingEndpoints
     /// </remarks>
     private static bool IsOverlap(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: "23P01" };
+
+    /// <summary>
+    /// An interval from now to <paramref name="end"/>, never backwards.
+    /// </summary>
+    /// <remarks>
+    /// NodaTime refuses an interval that ends before it starts, and rightly so.
+    /// But the end here comes from stored data — a session's closing time — and
+    /// stored data goes stale: a session left open overnight has a closing time
+    /// in the past, and constructing the interval threw, which took the whole
+    /// scheduling page down with a 500 rather than degrading.
+    ///
+    /// The queries above should already have excluded such a session. This is
+    /// the second line, because a page that shows nothing is a bad afternoon and
+    /// a page that returns 500 is a broken site.
+    /// </remarks>
+    internal static Interval FromNowUntil(Instant now, Instant end) =>
+        new(now, end < now ? now : end);
 
     /// <summary>
     /// Resolves a browser-supplied zone, falling back to the host's.
