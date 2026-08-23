@@ -90,7 +90,13 @@ FROM clienttools AS clientlint
 COPY . .
 RUN npx eslint . && npx prettier --check .
 
-# .NET build stage
+# .NET build stage.
+#
+# Project files are copied before source so that editing a .cs file does not
+# invalidate the restore layer. Both projects are copied at their real paths
+# rather than flattened into /src: the server references aberaTech.Scheduling by
+# relative path, and a flattened layout silently resolves that reference to
+# nothing.
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
@@ -98,19 +104,36 @@ ENV IN_DOCKER=$IN_DOCKER
 
 WORKDIR /src
 
-# Restore .NET dependencies
-COPY ["aberaTech.Server/aberaTech.Server.csproj", "./"]
-RUN dotnet restore "./aberaTech.Server.csproj"
+COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/"]
+COPY ["aberaTech.Scheduling/aberaTech.Scheduling.csproj", "aberaTech.Scheduling/"]
+RUN dotnet restore "aberaTech.Server/aberaTech.Server.csproj" -p:SkipClientProject=true
 
-# Copy and build .NET source code
 COPY aberaTech.Server ./aberaTech.Server
-WORKDIR /src/aberaTech.Server
-RUN dotnet build "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY aberaTech.Scheduling ./aberaTech.Scheduling
+RUN dotnet build "aberaTech.Server/aberaTech.Server.csproj" \
+    -c $BUILD_CONFIGURATION -o /app/build -p:SkipClientProject=true --no-restore
+
+# The scheduling unit tests. A leaf, like clienttest: the production image never
+# pays for it.
+#
+# They cover the daylight saving arithmetic, the queue projection and the
+# delivery retry schedule — the three things that are wrong in every scheduling
+# tool that has ever sent somebody to the wrong meeting at the wrong time.
+#
+#   docker build --target servertest -f aberaTech.Server/Dockerfile .
+#   make servertest
+FROM build AS servertest
+ARG BUILD_CONFIGURATION=Release
+COPY ["aberaTech.Server.Tests/aberaTech.Server.Tests.csproj", "aberaTech.Server.Tests/"]
+RUN dotnet restore "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj"
+COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
+RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore
 
 # Publish .NET server
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./aberaTech.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "aberaTech.Server/aberaTech.Server.csproj" \
+    -c $BUILD_CONFIGURATION -o /app/publish -p:SkipClientProject=true /p:UseAppHost=false
 
 # Final production-ready stage
 FROM base AS final

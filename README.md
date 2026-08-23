@@ -10,6 +10,9 @@ set up, and no version of them to keep in step with the server.
 
 ```
 make            # list every target
+make up         # the whole site and its database on http://localhost:8080
+make queue-open # switch /schedule into queue mode
+make queue-close# switch it back to showing bookable slots
 make dev        # hot reloading dev server on http://localhost:3000
 make test       # unit tests, against your working tree
 make lint       # eslint and prettier, against your working tree
