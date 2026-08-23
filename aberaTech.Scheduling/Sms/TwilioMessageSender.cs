@@ -58,15 +58,22 @@ public sealed class TwilioMessageSender(
 
         if (!response.IsSuccessStatusCode)
         {
-            // The status code and Twilio's error code, never the number. A failed
-            // send is exactly when somebody is tempted to log the recipient to
-            // help debugging, and exactly when it should not be in the log.
-            logger.LogWarning(
-                "Twilio rejected message {MessageId} with {StatusCode}.",
-                message.Id,
-                (int)response.StatusCode);
+            var errorCode = TwilioFailure.ReadErrorCode(body);
+            var (kind, reason) = TwilioFailure.Classify(errorCode, (int)response.StatusCode);
 
-            return SendResult.Rejected($"Twilio returned {(int)response.StatusCode}: {Summarise(body)}");
+            // The status and Twilio's error code, never the number. A failed send
+            // is exactly when somebody is tempted to log the recipient to help
+            // debugging, and exactly when it should not be in the log.
+            logger.LogWarning(
+                "Twilio rejected message {MessageId}: {StatusCode}, code {ErrorCode}, {Kind}.",
+                message.Id,
+                (int)response.StatusCode,
+                errorCode,
+                kind);
+
+            return kind == FailureKind.Permanent
+                ? SendResult.RejectedPermanently(reason)
+                : SendResult.Rejected(reason);
         }
 
         var sid = ReadSid(body);

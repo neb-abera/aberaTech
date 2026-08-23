@@ -78,7 +78,9 @@ and slots come from rules alone.
 | `Scheduling:HostName`, `HostZoneId` | Whose queue, and the zone rules are written in |
 | `Scheduling:DefaultWindowDays`, `HorizonDays` | Days sent up front, and the furthest anybody may book |
 | `Twilio:AccountSid`, `AuthToken`, `FromNumber` | Sending |
-| `Twilio:StatusCallbackUrl` | Must be the exact public URL — it is what the signature covers |
+| `Twilio:StatusCallbackUrl` | Must be the exact public URL — it is what the signature covers, and is **required** |
+| `Scheduling:HostPhoneE164` | Where to text the host about bookings and cancellations. Empty means they are not told |
+| `Scheduling:EarlyReminderLeadMinutes` | How far ahead the first reminder goes out. A day by default |
 | `Admin:GoogleClientId`, `GoogleClientSecret` | OAuth client |
 | `Admin:AllowedEmails` | Who may run the queue. **Empty means nobody** |
 
@@ -105,6 +107,27 @@ Three things have to be true, and none of them are in this repository:
 Off by default, so a developer machine with a plain connection string keeps
 working unchanged. When it is on and no identity is available the application
 fails immediately with a credential error rather than falling back to anything.
+
+### What gets sent, and to whom
+
+| Event | Visitor | Host |
+|---|---|---|
+| Books a time | Confirmation, with the opt-out | New booking |
+| A day before | Reminder, if it is more than a day away | — |
+| An hour before | Reminder | — |
+| Cancels, either side | Cancellation | Cancelled |
+| Joins a queue | Place and estimate, with the opt-out | — |
+| Estimate moves past the tolerance | New estimate | — |
+| Nearly their turn, and their turn | One each | — |
+
+Reminders are ordinary outbox rows with a due time in the future, so they
+inherit the same retries, receipts and dead lettering as everything else and
+need no scheduler. Cancelling deletes the ones that have not gone yet: a
+reminder for an appointment that is not happening is worse than no reminder.
+
+Only the first message in a thread carries "Reply STOP". Repeating it on every
+reminder spends characters that push a message into a second segment, which
+doubles both its cost and its consumption of the daily carrier cap.
 
 ### Sending real SMS
 
