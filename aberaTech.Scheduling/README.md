@@ -74,6 +74,7 @@ and slots come from rules alone.
 | Setting | Purpose |
 |---|---|
 | `ConnectionStrings:Scheduling` | Postgres. Migrations run at start |
+| `Database:UseEntraAuth` | Authenticate as the container's managed identity instead of with a password |
 | `Scheduling:HostName`, `HostZoneId` | Whose queue, and the zone rules are written in |
 | `Scheduling:DefaultWindowDays`, `HorizonDays` | Days sent up front, and the furthest anybody may book |
 | `Twilio:AccountSid`, `AuthToken`, `FromNumber` | Sending |
@@ -83,6 +84,27 @@ and slots come from rules alone.
 
 Secrets belong in container app secrets, never `appsettings.json`. The Twilio
 auth token in particular is the key that signs delivery receipts.
+
+### Connecting to Postgres without a password
+
+With `Database:UseEntraAuth` the connection string carries a `Username` and no
+`Password`, and Npgsql asks Azure for a short-lived token instead — refreshed on
+a timer for the whole process. There is then no password anywhere: not in a
+container app secret, not in a deploy command, not in anybody's shell history,
+and nothing to rotate.
+
+Three things have to be true, and none of them are in this repository:
+
+1. Entra authentication enabled on the server. Additive — password
+   authentication keeps working, so anything else on the same server is
+   unaffected.
+2. An Entra administrator set on the server, so somebody can create the role.
+3. A Postgres role for the container app's managed identity, created by that
+   administrator, and granted rights on the `scheduling` database.
+
+Off by default, so a developer machine with a plain connection string keeps
+working unchanged. When it is on and no identity is available the application
+fails immediately with a credential error rather than falling back to anything.
 
 ### Sending real SMS
 
