@@ -59,9 +59,9 @@ public sealed record MyPlace(
     int? MinutesAway,
     bool BeyondClose = false);
 
-public sealed record JoinRequest(string? Name, string? Phone, string? ZoneId);
+public sealed record JoinRequest(string? Name, string? Phone, string? ZoneId, bool SmsConsent = false);
 
-public sealed record BookRequest(string? StartsAt, string? Name, string? Phone, string? ZoneId);
+public sealed record BookRequest(string? StartsAt, string? Name, string? Phone, string? ZoneId, bool SmsConsent = false);
 
 public sealed record BookingConfirmation(Guid Id, string StartsAt, string EndsAt);
 
@@ -268,13 +268,15 @@ public static class SchedulingEndpoints
         IClock clock,
         CancellationToken cancellationToken)
     {
-        if (!PhoneNumber.TryParse(request.Phone, out var phone))
+        PhoneNumber? phone = null;
+
+        if (request.SmsConsent && !PhoneNumber.TryParse(request.Phone, out phone))
         {
             // Deliberately unspecific about why. The distinction between "not a
             // number" and "not a US number" is useful to somebody probing for a
             // way to reach an international destination and useless to a soldier
             // who mistyped.
-            return Results.BadRequest(new { error = "Enter a US mobile number." });
+            return Results.BadRequest(new { error = "Enter a US mobile number, or untick text updates." });
         }
 
         var name = (request.Name ?? string.Empty).Trim();
@@ -297,8 +299,12 @@ public static class SchedulingEndpoints
         // Rejoining is idempotent: pressing join twice, or reopening the link on
         // a second device, should find the same place in the line rather than
         // taking a second one.
-        var existing = session.Entries.FirstOrDefault(entry =>
-            entry.PhoneE164 == phone.Value.E164 && entry.State == QueueEntryState.Waiting);
+        // Only meaningful when there is a number to match on. Without one the
+        // place in the queue is remembered by the browser instead.
+        var existing = phone is null
+            ? null
+            : session.Entries.FirstOrDefault(entry =>
+                entry.PhoneE164 == phone.Value.E164 && entry.State == QueueEntryState.Waiting);
 
         if (existing is not null)
         {
@@ -311,7 +317,8 @@ public static class SchedulingEndpoints
             SessionId = session.Id,
             Position = session.Entries.Count == 0 ? 1 : session.Entries.Max(item => item.Position) + 1,
             DisplayName = name,
-            PhoneE164 = phone.Value.E164,
+            PhoneE164 = phone?.E164 ?? string.Empty,
+            SmsConsent = request.SmsConsent,
             ZoneId = ResolveZone(request.ZoneId, options).Id,
             Expected = session.DefaultDuration,
             State = QueueEntryState.Waiting,
@@ -437,9 +444,14 @@ public static class SchedulingEndpoints
         IClock clock,
         CancellationToken cancellationToken)
     {
-        if (!PhoneNumber.TryParse(request.Phone, out var phone))
+        // A number is required only to text them. Somebody who declines is not
+        // asked for one, because there would be nothing to do with it and the
+        // cleanest way to protect a phone number is not to hold it.
+        PhoneNumber? phone = null;
+
+        if (request.SmsConsent && !PhoneNumber.TryParse(request.Phone, out phone))
         {
-            return Results.BadRequest(new { error = "Enter a US mobile number." });
+            return Results.BadRequest(new { error = "Enter a US mobile number, or untick text updates." });
         }
 
         var name = (request.Name ?? string.Empty).Trim();
@@ -486,7 +498,8 @@ public static class SchedulingEndpoints
             EndsAt = endsAt,
             BookedZoneId = zone.Id,
             DisplayName = name,
-            PhoneE164 = phone.Value.E164,
+            PhoneE164 = phone?.E164 ?? string.Empty,
+            SmsConsent = request.SmsConsent,
             CreatedAt = now,
             Cancelled = false
         };
@@ -497,7 +510,14 @@ public static class SchedulingEndpoints
         // it is an ordinary outbox row whose NextAttemptAt is in the future, so
         // it inherits the same retry, receipt and dead letter handling as
         // everything else rather than needing a second delivery path.
-        database.Outbox.Add(NewMessage(appointment, NotificationKind.Booked, options, zone, now, now));
+        // Nothing is queued for somebody who did not ask to be texted. Not
+        // queued and suppressed later, but never written: an outbox row is a
+        // standing intention to message somebody, and there is no such
+        // intention here.
+        if (request.SmsConsent)
+        {
+            database.Outbox.Add(NewMessage(appointment, NotificationKind.Booked, options, zone, now, now));
+        }
 
         // Two reminders, at the two moments they are useful for different
         // things: a day out is the last point at which somebody can rearrange
@@ -507,13 +527,16 @@ public static class SchedulingEndpoints
         // Skipped when the appointment is nearer than the lead time. A "tomorrow"
         // reminder for something in two hours is noise, and one whose due time
         // has already passed would go out immediately, which is worse.
-        AddReminderIfUseful(
-            database, appointment, NotificationKind.ReminderDayBefore, options, zone, now,
-            startsAt - Duration.FromMinutes(options.EarlyReminderLeadMinutes));
+        if (request.SmsConsent)
+        {
+            AddReminderIfUseful(
+                database, appointment, NotificationKind.ReminderDayBefore, options, zone, now,
+                startsAt - Duration.FromMinutes(options.EarlyReminderLeadMinutes));
 
-        AddReminderIfUseful(
-            database, appointment, NotificationKind.Reminder, options, zone, now,
-            startsAt - Duration.FromMinutes(options.ReminderLeadMinutes));
+            AddReminderIfUseful(
+                database, appointment, NotificationKind.Reminder, options, zone, now,
+                startsAt - Duration.FromMinutes(options.ReminderLeadMinutes));
+        }
 
         if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
         {
@@ -586,7 +609,11 @@ public static class SchedulingEndpoints
         database.Outbox.RemoveRange(pending);
 
         var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(appointment.BookedZoneId) ?? options.HostZone;
-        database.Outbox.Add(NewMessage(appointment, NotificationKind.Cancelled, options, zone, now, now));
+
+        if (appointment.SmsConsent && !string.IsNullOrEmpty(appointment.PhoneE164))
+        {
+            database.Outbox.Add(NewMessage(appointment, NotificationKind.Cancelled, options, zone, now, now));
+        }
 
         if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
         {

@@ -11,6 +11,8 @@ const MilitaryTransitionGuide = React.lazy(() => import('./views/MilitaryTransit
 const CoursePlanner = React.lazy(() => import('./views/CoursePlanner'));
 const ScheduleTime = React.lazy(() => import('./views/ScheduleTime'));
 const ScheduleAdmin = React.lazy(() => import('./views/ScheduleAdmin'));
+const SmsTerms = React.lazy(() => import('./views/SmsTerms'));
+const SmsPrivacy = React.lazy(() => import('./views/SmsPrivacy'));
 const Guides = React.lazy(() => import('./views/Guides'));
 const Projects = React.lazy(() => import('./views/Projects'));
 
@@ -32,6 +34,8 @@ function App() {
           <Route path="planner" element={<CoursePlanner />} />
           <Route path="schedule" element={<ScheduleTime />} />
           <Route path="schedule/admin" element={<ScheduleAdmin />} />
+          <Route path="sms-terms" element={<SmsTerms />} />
+          <Route path="sms-privacy" element={<SmsPrivacy />} />
         </Routes>
       </Suspense>
     </div>
