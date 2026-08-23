@@ -9,7 +9,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import { Link as RouterLink } from 'react-router';
-import { guides, projects } from '../site/sections';
+import { guides, label, projects } from '../site/sections';
 
 /**
  * The site footer. It carries the identity on every page, which is why the
@@ -68,7 +68,7 @@ export default function Footer() {
                 underline="hover"
                 sx={{ color: 'text.secondary' }}
               >
-                {entry.title}
+                {label(entry)}
               </Link>
             ))}
           </Stack>
@@ -87,7 +87,7 @@ export default function Footer() {
                   underline="hover"
                   sx={{ color: 'text.secondary' }}
                 >
-                  {entry.title}
+                  {label(entry)}
                 </Link>
               ) : (
                 <Link
@@ -98,7 +98,7 @@ export default function Footer() {
                   underline="hover"
                   sx={{ color: 'text.secondary' }}
                 >
-                  {entry.title}
+                  {label(entry)}
                 </Link>
               )
             )}

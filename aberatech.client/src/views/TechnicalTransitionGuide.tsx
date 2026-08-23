@@ -15,6 +15,7 @@ import Dialog from '@mui/material/Dialog';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import PageShell from '../components/PageShell';
+import { guides } from '../site/sections';
 
 // Fallback loading spinner or placeholder
 const LoadingFallback = () => <div>Loading...</div>;
@@ -32,11 +33,7 @@ export default function TechnicalTransitionGuide(props: { disableCustomTheme?: b
   const handleClose = () => setOpen(false);
 
   return (
-    <PageShell
-      {...props}
-      title="Everything I learned transitioning from the Army to Software Development"
-      intro="The path from no background to working software, and the parts worth skipping."
-    >
+    <PageShell {...props} title={guides[1].title} intro={guides[1].blurb}>
       <Box
         sx={(theme) => ({
           p: 2,

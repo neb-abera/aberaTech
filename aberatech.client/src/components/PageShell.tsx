@@ -41,7 +41,11 @@ export default function PageShell({ title, intro, note, maxWidth = 'lg', childre
             sx={{
               alignItems: 'center',
               textAlign: 'center',
-              pt: { xs: 14, sm: 18 },
+              // Home constrains its heading to a 70% column. At full container
+              // width the same font reads as a different treatment entirely.
+              width: { xs: '100%', sm: '70%' },
+              mx: 'auto',
+              pt: { xs: 14, sm: 20 },
               pb: { xs: 5, sm: 7 }
             }}
           >
@@ -55,8 +59,7 @@ export default function PageShell({ title, intro, note, maxWidth = 'lg', childre
               sx={{
                 fontWeight: 600,
                 fontSize: 'clamp(2.25rem, 7vw, 3.5rem)',
-                letterSpacing: '-0.5px',
-                lineHeight: 1.15
+                letterSpacing: '-0.5px'
               }}
             >
               {title}
