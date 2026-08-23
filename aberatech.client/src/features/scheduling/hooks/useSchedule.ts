@@ -31,6 +31,7 @@ interface Schedule {
   leave: () => Promise<void>;
   book: (startsAt: string, name: string, phone: string) => Promise<{ error: string | null }>;
   booking: BookingConfirmation | null;
+  showMoreDays: () => void;
 }
 
 export function useSchedule(): Schedule {
@@ -41,33 +42,43 @@ export function useSchedule(): Schedule {
   const [loading, setLoading] = useState(true);
   const entryId = useRef<string | null>(localStorage.getItem(StorageKey));
 
-  const refresh = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const response = await fetch(`/api/scheduling/state?zone=${encodeURIComponent(viewerZone())}`, { signal });
-      if (!response.ok) throw new Error(`The schedule is unavailable (${response.status}).`);
-      setState((await response.json()) as ScheduleState);
-      setError(null);
+  // How many days of availability to ask for. Starts at the server's default
+  // and widens only when somebody asks, so the first paint stays small.
+  const [days, setDays] = useState<number | null>(null);
 
-      if (entryId.current) {
-        const mine = await fetch(`/api/scheduling/queue/${entryId.current}`, { signal });
-        if (mine.ok) {
-          setPlace((await mine.json()) as MyPlace);
-        } else if (mine.status === 404) {
-          // The session was cleared or the entry removed. Forget it rather than
-          // showing a place in a queue that no longer exists.
-          localStorage.removeItem(StorageKey);
-          entryId.current = null;
-          setPlace(null);
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const query = new URLSearchParams({ zone: viewerZone() });
+        if (days !== null) query.set('days', String(days));
+
+        const response = await fetch(`/api/scheduling/state?${query}`, { signal });
+        if (!response.ok) throw new Error(`The schedule is unavailable (${response.status}).`);
+        setState((await response.json()) as ScheduleState);
+        setError(null);
+
+        if (entryId.current) {
+          const mine = await fetch(`/api/scheduling/queue/${entryId.current}`, { signal });
+          if (mine.ok) {
+            setPlace((await mine.json()) as MyPlace);
+          } else if (mine.status === 404) {
+            // The session was cleared or the entry removed. Forget it rather than
+            // showing a place in a queue that no longer exists.
+            localStorage.removeItem(StorageKey);
+            entryId.current = null;
+            setPlace(null);
+          }
         }
+      } catch (caught) {
+        if ((caught as Error).name !== 'AbortError') {
+          setError((caught as Error).message);
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (caught) {
-      if ((caught as Error).name !== 'AbortError') {
-        setError((caught as Error).message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [days]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -144,5 +155,7 @@ export function useSchedule(): Schedule {
     [refresh]
   );
 
-  return { state, place, error, loading, join, leave, book, booking };
+  const showMoreDays = useCallback(() => setDays((current) => (current ?? 7) + 7), []);
+
+  return { state, place, error, loading, join, leave, book, booking, showMoreDays };
 }
