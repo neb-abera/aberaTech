@@ -10,7 +10,6 @@ import type { Entry } from '../site/sections';
 
 interface Props {
   title: string;
-  intro: string;
   entries: Entry[];
   disableCustomTheme?: boolean;
 }
@@ -20,9 +19,9 @@ interface Props {
  * contents. A card is a single CardActionArea, so the whole card is the link
  * rather than the words inside it.
  */
-export default function SectionIndex({ title, intro, entries, ...props }: Props) {
+export default function SectionIndex({ title, entries, ...props }: Props) {
   return (
-    <PageShell {...props} title={title} intro={intro}>
+    <PageShell {...props} title={title}>
       <Box
         sx={{
           display: 'grid',

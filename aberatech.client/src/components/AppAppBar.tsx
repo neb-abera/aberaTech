@@ -15,7 +15,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import ColorModeIconDropdown from '../theme/ColorModeIconDropdown';
 import {Link} from 'react-router';
-import {guides, primaryAction, projects} from '../site/sections';
+import { guides, label, primaryAction, projects } from '../site/sections';
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
   display        : 'flex',
@@ -163,7 +163,7 @@ export default function AppAppBar()
                 </Typography>
                 {guides.map((entry) => (
                   <MenuItem key={entry.to} component={Link} to={entry.to}>
-                    {entry.title}
+                    {label(entry)}
                   </MenuItem>
                 ))}
                 <Divider sx={{my: 1}}/>
@@ -179,11 +179,11 @@ export default function AppAppBar()
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {entry.title}
+                      {label(entry)}
                     </MenuItem>
                   ) : (
                     <MenuItem key={entry.to} component={Link} to={entry.to}>
-                      {entry.title}
+                      {label(entry)}
                     </MenuItem>
                   )
                 )}

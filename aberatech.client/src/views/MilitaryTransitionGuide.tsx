@@ -7,6 +7,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Link } from 'react-router';
 import PageShell from '../components/PageShell';
+import { guides } from '../site/sections';
 
 // Lazy-loaded components
 const ZeroToThirtyDaysPostETS = React.lazy(() => import('../components/ZeroToThirtyDays'));
@@ -32,11 +33,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
     setExpanded(isExpanded ? panel : false);
   };
   return (
-    <PageShell
-      {...props}
-      title="The Military Transition Guide I Wish I Had"
-      intro="What to do and when, from eighteen months before ETS to long after it."
-    >
+    <PageShell {...props} title={guides[0].title} intro={guides[0].blurb}>
       <Box
         sx={(theme) => ({
           p: 2,
