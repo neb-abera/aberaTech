@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router';
 import React, { Suspense } from 'react';
 import './App.css';
+import ScrollToTop from './components/ScrollToTop';
 import TechnicalTransitionGuide from './views/TechnicalTransitionGuide.tsx';
 
 // Lazy loading the pages
@@ -17,6 +18,7 @@ const LoadingFallback = () => <div>Loading...</div>;
 function App() {
   return (
     <div>
+      <ScrollToTop />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route index element={<Home />} />

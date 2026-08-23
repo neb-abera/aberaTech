@@ -1,207 +1,93 @@
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import FacebookIcon from '@mui/icons-material/GitHub';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import TwitterIcon from '@mui/icons-material/X';
-import SitemarkIcon from './SitemarkIcon';
+import { Link as RouterLink } from 'react-router';
 
-function Copyright() {
-  return (
-    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-      {'Copyright © '}
-      <Link color="text.secondary" href="https://mui.com/">
-        Sitemark
-      </Link>
-      &nbsp;
-      {new Date().getFullYear()}
-    </Typography>
-  );
-}
+/**
+ * The site footer. It carries the identity on every page, which is why the
+ * pages themselves no longer open with a full height introduction.
+ *
+ * This replaced the Material UI template footer, which shipped with a newsletter
+ * form that went nowhere, a copyright line crediting Sitemark, and social links
+ * pointing at Material UI's own accounts rather than mine.
+ */
+const pages = [
+  { label: 'Home', to: '/' },
+  { label: 'Military Transition Guide', to: '/transition' },
+  { label: 'Learning Software Development', to: '/technical' },
+  { label: 'Learning RF and Signal Processing', to: '/planner' },
+  { label: 'Schedule time with me', to: '/schedule' }
+];
+
+const socials = [
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/neb-abera/', Icon: LinkedInIcon },
+  { label: 'GitHub', href: 'https://github.com/neb-abera', Icon: GitHubIcon },
+  { label: 'Instagram', href: 'https://www.instagram.com/neb_abera', Icon: InstagramIcon }
+];
 
 export default function Footer() {
   return (
-    <Container
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: { xs: 4, sm: 8 },
-        py: { xs: 8, sm: 10 },
-        textAlign: { sm: 'center', md: 'left' }
-      }}
-    >
+    <Container component="footer" maxWidth="lg" sx={{ py: { xs: 5, sm: 7 } }}>
+      <Divider sx={{ mb: { xs: 3, sm: 4 } }} />
       <Box
         sx={{
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
-          width: '100%',
-          justifyContent: 'space-between'
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            minWidth: { xs: '100%', sm: '60%' }
-          }}
-        >
-          <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
-            <SitemarkIcon />
-            <Typography variant="body2" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
-              Join the newsletter
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Subscribe for weekly updates. No spams ever!
-            </Typography>
-            <InputLabel htmlFor="email-newsletter">Email</InputLabel>
-            <Stack direction="row" spacing={1} useFlexGap>
-              <TextField
-                id="email-newsletter"
-                hiddenLabel
-                size="small"
-                variant="outlined"
-                fullWidth
-                aria-label="Enter your email address"
-                placeholder="Your email address"
-                slotProps={{
-                  htmlInput: {
-                    autoComplete: 'off',
-                    'aria-label': 'Enter your email address'
-                  }
-                }}
-                sx={{ width: '250px' }}
-              />
-              <Button variant="contained" color="primary" size="small" sx={{ flexShrink: 0 }}>
-                Subscribe
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'flex' },
-            flexDirection: 'column',
-            gap: 1
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            Product
-          </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
-            Features
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Testimonials
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Highlights
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Pricing
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            FAQs
-          </Link>
-        </Box>
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'flex' },
-            flexDirection: 'column',
-            gap: 1
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            Company
-          </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
-            About us
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Careers
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Press
-          </Link>
-        </Box>
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'flex' },
-            flexDirection: 'column',
-            gap: 1
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            Legal
-          </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
-            Terms
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Privacy
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Contact
-          </Link>
-        </Box>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
           justifyContent: 'space-between',
-          pt: { xs: 4, sm: 8 },
-          width: '100%',
-          borderTop: '1px solid',
-          borderColor: 'divider'
+          gap: 3
         }}
       >
-        <div>
-          <Link color="text.secondary" variant="body2" href="#">
-            Privacy Policy
+        <Stack spacing={1} sx={{ maxWidth: 340 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            Neb Abera
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Senior Computer Scientist at MITRE, specializing in secure embedded systems.
+          </Typography>
+          <Stack direction="row" spacing={0.5} sx={{ ml: -1, mt: 0.5 }}>
+            {socials.map(({ label, href, Icon }) => (
+              <IconButton key={label} size="small" href={href} target="_blank" rel="noopener" aria-label={label}>
+                <Icon fontSize="small" />
+              </IconButton>
+            ))}
+          </Stack>
+        </Stack>
+
+        <Stack spacing={0.75} component="nav" aria-label="Footer">
+          {pages.map(({ label, to }) => (
+            <Link
+              key={to}
+              component={RouterLink}
+              to={to}
+              variant="body2"
+              underline="hover"
+              sx={{ color: 'text.secondary' }}
+            >
+              {label}
+            </Link>
+          ))}
+          <Link
+            href="https://facewoof.abera.tech"
+            target="_blank"
+            rel="noopener"
+            variant="body2"
+            underline="hover"
+            sx={{ color: 'text.secondary' }}
+          >
+            Facewoof
           </Link>
-          <Typography sx={{ display: 'inline', mx: 0.5, opacity: 0.5 }}>&nbsp;•&nbsp;</Typography>
-          <Link color="text.secondary" variant="body2" href="#">
-            Terms of Service
-          </Link>
-          <Copyright />
-        </div>
-        <Stack direction="row" spacing={1} useFlexGap sx={{ justifyContent: 'left', color: 'text.secondary' }}>
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://github.com/mui"
-            aria-label="GitHub"
-            sx={{ alignSelf: 'center' }}
-          >
-            <FacebookIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://x.com/MaterialUI"
-            aria-label="X"
-            sx={{ alignSelf: 'center' }}
-          >
-            <TwitterIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://www.linkedin.com/company/mui/"
-            aria-label="LinkedIn"
-            sx={{ alignSelf: 'center' }}
-          >
-            <LinkedInIcon />
-          </IconButton>
         </Stack>
       </Box>
+      <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mt: 4 }}>
+        © {new Date().getFullYear()} Neb Abera
+      </Typography>
     </Container>
   );
 }
