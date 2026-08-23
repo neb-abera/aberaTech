@@ -77,6 +77,12 @@ export default function AppAppBar()
                   Learning RF and Signal Processing{' '}
                 </Link>
               </Button>
+              <Button variant="text" color="info" size="small">
+                <Link to="/schedule" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  {' '}
+                  Schedule time with me{' '}
+                </Link>
+              </Button>
             </Box>
           </Box>
           <Box
@@ -136,6 +142,12 @@ export default function AppAppBar()
                   {' '}
                   <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
                     Learning RF and Signal Processing
+                  </Link>
+                </MenuItem>
+                <MenuItem>
+                  {' '}
+                  <Link to="/schedule" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                    Schedule time with me
                   </Link>
                 </MenuItem>
                 <Divider sx={{my: 3}}/>
