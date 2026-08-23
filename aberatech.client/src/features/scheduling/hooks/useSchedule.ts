@@ -31,7 +31,7 @@ interface Schedule {
   leave: () => Promise<void>;
   book: (startsAt: string, name: string, phone: string) => Promise<{ error: string | null }>;
   booking: BookingConfirmation | null;
-  showMoreDays: () => void;
+  selectDate: (date: string) => void;
 }
 
 export function useSchedule(): Schedule {
@@ -42,15 +42,15 @@ export function useSchedule(): Schedule {
   const [loading, setLoading] = useState(true);
   const entryId = useRef<string | null>(localStorage.getItem(StorageKey));
 
-  // How many days of availability to ask for. Starts at the server's default
-  // and widens only when somebody asks, so the first paint stays small.
-  const [days, setDays] = useState<number | null>(null);
+  // Which day's times to fetch. Null lets the server pick the first day with
+  // anything free, so the page opens on a day worth looking at.
+  const [date, setDate] = useState<string | null>(null);
 
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       try {
         const query = new URLSearchParams({ zone: viewerZone() });
-        if (days !== null) query.set('days', String(days));
+        if (date !== null) query.set('date', date);
 
         const response = await fetch(`/api/scheduling/state?${query}`, { signal });
         if (!response.ok) throw new Error(`The schedule is unavailable (${response.status}).`);
@@ -77,7 +77,7 @@ export function useSchedule(): Schedule {
         setLoading(false);
       }
     },
-    [days]
+    [date]
   );
 
   useEffect(() => {
@@ -155,7 +155,7 @@ export function useSchedule(): Schedule {
     [refresh]
   );
 
-  const showMoreDays = useCallback(() => setDays((current) => (current ?? 7) + 7), []);
+  const selectDate = useCallback((next: string) => setDate(next), []);
 
-  return { state, place, error, loading, join, leave, book, booking, showMoreDays };
+  return { state, place, error, loading, join, leave, book, booking, selectDate };
 }
