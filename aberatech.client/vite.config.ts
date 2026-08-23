@@ -56,7 +56,13 @@ if (!isDocker) {
 
 // Export the Vite configuration
 export default {
-  base: './',
+  // Absolute, not './'. The server hands index.html back for every unmatched
+  // path, so a relative asset reference is resolved against whatever URL the
+  // visitor happened to arrive on: from /schedule it points at /assets and
+  // works, and from /schedule/admin it points at /schedule/assets and 404s,
+  // leaving a blank page. Every route below the first level would break the
+  // same way.
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
