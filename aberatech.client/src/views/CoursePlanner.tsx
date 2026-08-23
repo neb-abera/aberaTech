@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import AppAppBar from '../components/AppAppBar';
 import AppTheme from '../theme/AppTheme';
 import PlannerBoard from '../features/planner/components/PlannerBoard';
+import Footer from '../components/Footer';
 
 export default function CoursePlanner(props: { disableCustomTheme?: boolean }) {
   return (
@@ -41,6 +42,7 @@ export default function CoursePlanner(props: { disableCustomTheme?: boolean }) {
         <Divider sx={{ mb: 3 }} />
         <PlannerBoard />
       </Container>
+      <Footer />
     </AppTheme>
   );
 }

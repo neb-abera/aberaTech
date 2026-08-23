@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import AppAppBar from '../components/AppAppBar';
 import AppTheme from '../theme/AppTheme';
 import SchedulePanel from '../features/scheduling/components/SchedulePanel';
+import Footer from '../components/Footer';
 
 export default function ScheduleTime(props: { disableCustomTheme?: boolean }) {
   return (
@@ -25,6 +26,7 @@ export default function ScheduleTime(props: { disableCustomTheme?: boolean }) {
         <Divider sx={{ mb: 3 }} />
         <SchedulePanel />
       </Container>
+      <Footer />
     </AppTheme>
   );
 }

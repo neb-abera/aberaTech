@@ -1,6 +1,5 @@
 import React, { Suspense, useState } from 'react';
 import AppAppBar from '../components/AppAppBar';
-import Hero from '../components/Hero';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,6 +11,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Link } from 'react-router';
+import Footer from '../components/Footer';
 
 // Lazy-loaded components
 const ZeroToThirtyDaysPostETS = React.lazy(() => import('../components/ZeroToThirtyDays'));
@@ -40,7 +40,6 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <AppAppBar />
-      <Hero />
       <Divider />
       <Container
         sx={{
@@ -220,6 +219,7 @@ export default function MilitaryTransitionGuide(props: { disableCustomTheme?: bo
           </AccordionDetails>
         </Accordion>
       </Container>
+      <Footer />
     </AppTheme>
   );
 }
