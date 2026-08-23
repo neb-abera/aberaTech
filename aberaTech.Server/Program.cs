@@ -184,16 +184,22 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         app.MapAdminEndpoints();
         app.MapCalendarAdminEndpoints();
     }
-    else
-    {
-        app.MapAdminUnavailable();
-    }
 }
 else
 {
     // Deployed without a database yet. The tab is visible either way, so it has
     // to explain itself rather than break.
     app.MapSchedulingUnavailable(schedulingOptions);
+}
+
+// Running the queue needs a database *and* credentials, so the "not configured"
+// answer has to cover a missing either. Kept out of the branches above because
+// nesting it under the database check was exactly the bug: with no connection
+// string the route was never mapped at all, the request fell through to the SPA
+// fallback, and the admin page got index.html where it expected JSON.
+if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
+{
+    app.MapAdminUnavailable();
 }
 
 app.MapFallbackToFile("index.html");
