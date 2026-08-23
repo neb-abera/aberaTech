@@ -27,9 +27,9 @@ interface Schedule {
   place: MyPlace | null;
   error: string | null;
   loading: boolean;
-  join: (name: string, phone: string) => Promise<string | null>;
+  join: (name: string, phone: string, smsConsent: boolean) => Promise<string | null>;
   leave: () => Promise<void>;
-  book: (startsAt: string, name: string, phone: string) => Promise<{ error: string | null }>;
+  book: (startsAt: string, name: string, phone: string, smsConsent: boolean) => Promise<{ error: string | null }>;
   booking: BookingConfirmation | null;
   selectDate: (date: string) => void;
 }
@@ -93,11 +93,11 @@ export function useSchedule(): Schedule {
   }, [refresh]);
 
   const join = useCallback(
-    async (name: string, phone: string) => {
+    async (name: string, phone: string, smsConsent: boolean) => {
       const response = await fetch('/api/scheduling/queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, zoneId: viewerZone() })
+        body: JSON.stringify({ name, phone, zoneId: viewerZone(), smsConsent })
       });
 
       if (response.status === 429) {
@@ -129,11 +129,11 @@ export function useSchedule(): Schedule {
   }, [refresh]);
 
   const book = useCallback(
-    async (startsAt: string, name: string, phone: string) => {
+    async (startsAt: string, name: string, phone: string, smsConsent: boolean) => {
       const response = await fetch('/api/scheduling/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone() })
+        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone(), smsConsent })
       });
 
       if (response.status === 429) {

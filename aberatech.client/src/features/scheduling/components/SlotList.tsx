@@ -15,13 +15,14 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { SlotView } from '../core/types';
 import { formatTime } from '../core/format';
 import { addMonths, longDayLabel, monthGrid, monthLabel, monthOf } from '../core/month';
+import SmsConsent from './SmsConsent';
 
 interface Props {
   availableDates: string[];
   selectedDate: string | null;
   slots: SlotView[];
   onSelectDate: (date: string) => void;
-  onBook: (startsAt: string, name: string, phone: string) => Promise<{ error: string | null }>;
+  onBook: (startsAt: string, name: string, phone: string, smsConsent: boolean) => Promise<{ error: string | null }>;
 }
 
 const WeekdayInitials = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -44,6 +45,7 @@ export default function SlotList({ availableDates, selectedDate, slots, onSelect
   const [chosen, setChosen] = React.useState<SlotView | null>(null);
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
+  const [smsConsent, setSmsConsent] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -68,7 +70,7 @@ export default function SlotList({ availableDates, selectedDate, slots, onSelect
     if (!chosen) return;
 
     setBusy(true);
-    const result = await onBook(chosen.startsAt, name.trim(), phone.trim());
+    const result = await onBook(chosen.startsAt, name.trim(), phone.trim(), smsConsent);
     setBusy(false);
 
     if (result.error) {
@@ -182,16 +184,23 @@ export default function SlotList({ availableDates, selectedDate, slots, onSelect
                 autoFocus
                 slotProps={{ htmlInput: { maxLength: 120 } }}
               />
-              <TextField
-                label="Mobile number"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                required
-                size="small"
-                type="tel"
-                helperText="US numbers only. Used for your confirmation and reminder, nothing else."
-                slotProps={{ htmlInput: { maxLength: 32 } }}
-              />
+              <SmsConsent checked={smsConsent} onChange={setSmsConsent} />
+
+              {/* Only asked for when it will be used. Collecting a number from
+                  somebody who declined texts would be holding data with no
+                  purpose. */}
+              {smsConsent ? (
+                <TextField
+                  label="Mobile number"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  required
+                  size="small"
+                  type="tel"
+                  helperText="US numbers only."
+                  slotProps={{ htmlInput: { maxLength: 32 } }}
+                />
+              ) : null}
             </Stack>
           </DialogContent>
           <DialogActions>

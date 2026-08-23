@@ -10,11 +10,12 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { MyPlace, QueueView } from '../core/types';
 import { describeWait, formatTime } from '../core/format';
+import SmsConsent from './SmsConsent';
 
 interface Props {
   queue: QueueView;
   place: MyPlace | null;
-  onJoin: (name: string, phone: string) => Promise<string | null>;
+  onJoin: (name: string, phone: string, smsConsent: boolean) => Promise<string | null>;
   onLeave: () => Promise<void>;
 }
 
@@ -28,13 +29,14 @@ interface Props {
 export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
+  const [smsConsent, setSmsConsent] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setBusy(true);
-    setError(await onJoin(name.trim(), phone.trim()));
+    setError(await onJoin(name.trim(), phone.trim(), smsConsent));
     setBusy(false);
   };
 
@@ -119,16 +121,24 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
             size="small"
             slotProps={{ htmlInput: { maxLength: 120 } }}
           />
-          <TextField
-            label="Mobile number"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            required
-            size="small"
-            type="tel"
-            helperText="US numbers only. Used for queue updates and nothing else."
-            slotProps={{ htmlInput: { maxLength: 32 } }}
-          />
+          <SmsConsent checked={smsConsent} onChange={setSmsConsent} />
+
+          {smsConsent ? (
+            <TextField
+              label="Mobile number"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              required
+              size="small"
+              type="tel"
+              helperText="US numbers only."
+              slotProps={{ htmlInput: { maxLength: 32 } }}
+            />
+          ) : (
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              Without texts you will need to keep this page open to see your place move.
+            </Typography>
+          )}
 
           <Box>
             {/* Disabled only while a request is in flight. Not disabled on an

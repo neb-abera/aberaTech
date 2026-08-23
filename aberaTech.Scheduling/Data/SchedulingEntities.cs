@@ -39,7 +39,21 @@ public class Appointment
 
     public string DisplayName { get; set; } = string.Empty;
 
+    /// <summary>Empty when they declined texts, since there is then nothing to use it for.</summary>
     public string PhoneE164 { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether they actively agreed to be texted about this appointment.
+    /// </summary>
+    /// <remarks>
+    /// Recorded per booking rather than per person, because consent is given in
+    /// a particular context for a particular purpose, and someone who agreed to
+    /// a reminder in March has not thereby agreed to anything in November.
+    ///
+    /// The carrier rules require the box to be unticked until the visitor ticks
+    /// it, so the default here is false and stays false unless they said yes.
+    /// </remarks>
+    public bool SmsConsent { get; set; }
 
     public Instant CreatedAt { get; set; }
 
@@ -84,6 +98,9 @@ public class QueueEntryRecord
     /// the host's zone or, worse, the server's UTC.
     /// </summary>
     public string ZoneId { get; set; } = string.Empty;
+
+    /// <summary>Whether they actively agreed to be texted about this queue place.</summary>
+    public bool SmsConsent { get; set; }
 
     public Duration Expected { get; set; }
 
