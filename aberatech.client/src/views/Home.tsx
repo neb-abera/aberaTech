@@ -2,6 +2,7 @@ import AppAppBar from '../components/AppAppBar';
 import Hero from '../components/Hero';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppTheme from '../theme/AppTheme';
+import Footer from '../components/Footer';
 
 export default function Home(props: { disableCustomTheme?: boolean }) {
   return (
@@ -9,6 +10,7 @@ export default function Home(props: { disableCustomTheme?: boolean }) {
       <CssBaseline enableColorScheme />
       <AppAppBar />
       <Hero />
+      <Footer />
     </AppTheme>
   );
 }
