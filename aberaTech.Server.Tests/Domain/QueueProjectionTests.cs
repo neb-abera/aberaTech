@@ -325,4 +325,53 @@ public class QueueProjectionTests
             without.Select(entry => entry.ProjectedStart),
             withEmpty.Select(entry => entry.ProjectedStart));
     }
+
+    [Fact]
+    public void Lengthening_one_appointment_moves_everyone_behind_by_the_difference()
+    {
+        // The reason a per-person length exists at all. A first counselling
+        // session and a two minute signature are not the same conversation, and
+        // charging everybody the same fifteen minutes makes every projection
+        // behind them wrong in the same direction.
+        var first = Waiting(1, 15);
+        var second = Waiting(2, 15);
+        var third = Waiting(3, 15);
+
+        var before = QueueProjection.Project([first, second, third], Now);
+        var after = QueueProjection.Project([first with { Expected = Duration.FromMinutes(60) }, second, third], Now);
+
+        Assert.Equal(Duration.FromMinutes(45), after[1].ProjectedStart - before[1].ProjectedStart);
+        Assert.Equal(Duration.FromMinutes(45), after[2].ProjectedStart - before[2].ProjectedStart);
+
+        // And the person whose length changed is unaffected: they are already at
+        // the front, and how long they need does not change when they start.
+        Assert.Equal(before[0].ProjectedStart, after[0].ProjectedStart);
+    }
+
+    [Fact]
+    public void Shortening_an_appointment_pulls_the_queue_forward()
+    {
+        var first = Waiting(1, 60);
+        var second = Waiting(2, 15);
+
+        var before = QueueProjection.Project([first, second], Now);
+        var after = QueueProjection.Project([first with { Expected = Duration.FromMinutes(5) }, second], Now);
+
+        Assert.Equal(Duration.FromMinutes(55), before[1].ProjectedStart - after[1].ProjectedStart);
+    }
+
+    [Fact]
+    public void A_long_appointment_can_push_the_queue_past_closing()
+    {
+        // Worth asserting together: a length change is also a capacity change,
+        // so the same edit that moves somebody can also mean they will not be
+        // reached at all.
+        var closesAt = Now + Duration.FromMinutes(30);
+
+        var shortFirst = QueueProjection.Project([Waiting(1, 15), Waiting(2, 15)], Now, null, closesAt);
+        var longFirst = QueueProjection.Project([Waiting(1, 45), Waiting(2, 15)], Now, null, closesAt);
+
+        Assert.False(shortFirst[1].BeyondClose);
+        Assert.True(longFirst[1].BeyondClose);
+    }
 }
