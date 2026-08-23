@@ -10,6 +10,7 @@ import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import MenuItem from '@mui/material/MenuItem';
 import { useAdminQueue } from '../hooks/useAdminQueue';
 import { formatTime } from '../core/format';
 
@@ -31,7 +32,8 @@ export default function AdminPanel() {
     loading,
     openSession,
     closeSession,
-    advance
+    advance,
+    setDuration
   } = useAdminQueue();
   const [name, setName] = React.useState('');
   const [openError, setOpenError] = React.useState<string | null>(null);
@@ -190,6 +192,26 @@ export default function AdminPanel() {
                       {entry.projectedStart ? ` · ${formatTime(entry.projectedStart)}` : ''}
                     </Typography>
                   </Box>
+
+                  {entry.state === 'Waiting' || entry.state === 'Serving' ? (
+                    <TextField
+                      select
+                      size="small"
+                      label="Needs"
+                      value={entry.expectedMinutes}
+                      onChange={(event) => void setDuration(entry.id, Number(event.target.value))}
+                      sx={{ width: 104 }}
+                    >
+                      {/* Bounded to the same range the server accepts. A queue
+                          estimate feeds everybody behind, so this is a choice
+                          from sensible lengths rather than a free number. */}
+                      {[5, 10, 15, 20, 30, 45, 60, 90, 120].map((minutes) => (
+                        <MenuItem key={minutes} value={minutes}>
+                          {minutes} min
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  ) : null}
 
                   {entry.state === 'Waiting' ? (
                     <>
