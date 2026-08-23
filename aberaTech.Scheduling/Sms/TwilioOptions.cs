@@ -29,8 +29,29 @@ public sealed class TwilioOptions
     /// </remarks>
     public string StatusCallbackUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Whether SMS can be sent *and* confirmed.
+    /// </summary>
+    /// <remarks>
+    /// The callback URL is required, not optional. Without it Twilio sends no
+    /// delivery receipts, so every message would sit in Sent until its receipt
+    /// window closed, be retried five times and dead letter — a working sender
+    /// that reports total failure. Treating a half-configured provider as not
+    /// configured falls back to the logging sender instead, which is wrong in a
+    /// way somebody notices immediately rather than wrong in a way that looks
+    /// like the carrier is broken.
+    /// </remarks>
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(AccountSid)
         && !string.IsNullOrWhiteSpace(AuthToken)
-        && !string.IsNullOrWhiteSpace(FromNumber);
+        && !string.IsNullOrWhiteSpace(FromNumber)
+        && !string.IsNullOrWhiteSpace(StatusCallbackUrl);
+
+    /// <summary>Something was filled in, but not enough of it.</summary>
+    public bool IsPartiallyConfigured =>
+        !IsConfigured
+        && (!string.IsNullOrWhiteSpace(AccountSid)
+            || !string.IsNullOrWhiteSpace(AuthToken)
+            || !string.IsNullOrWhiteSpace(FromNumber)
+            || !string.IsNullOrWhiteSpace(StatusCallbackUrl));
 }
