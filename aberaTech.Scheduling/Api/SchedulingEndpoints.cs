@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
 using Npgsql;
+using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Outbox;
 
 namespace aberaTech.Scheduling.Api;
@@ -104,6 +105,7 @@ public static class SchedulingEndpoints
     private static async Task<IResult> GetStateAsync(
         SchedulingDbContext database,
         SchedulingOptions options,
+        IBusySource busySource,
         IClock clock,
         CancellationToken cancellationToken,
         string? zone = null,
@@ -145,17 +147,15 @@ public static class SchedulingEndpoints
 
         var today = now.InZone(options.HostZone).Date;
 
-        var busy = await database.Appointments
-            .Where(appointment => !appointment.Cancelled && appointment.EndsAt >= now)
-            .Select(appointment => new { appointment.StartsAt, appointment.EndsAt })
-            .ToListAsync(cancellationToken);
+        var horizon = new Interval(now, today.PlusDays(window + 1).AtMidnight().InUtc().ToInstant());
+        var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
 
         var slots = SlotPlanner.Plan(
             rules.Select(rule => rule.ToDomain()),
             today,
             today.PlusDays(window),
             Duration.FromMinutes(options.DefaultAppointmentMinutes),
-            busy.Select(period => new Interval(period.StartsAt, period.EndsAt)).ToList(),
+            busy,
             now + Duration.FromMinutes(options.BookingLeadMinutes));
 
         return Results.Ok(new ScheduleState(
@@ -326,6 +326,7 @@ public static class SchedulingEndpoints
         BookRequest request,
         SchedulingDbContext database,
         SchedulingOptions options,
+        IBusySource busySource,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -355,17 +356,15 @@ public static class SchedulingEndpoints
         // in the past, simply because nothing overlapped it.
         var rules = await database.AvailabilityRules.Where(rule => rule.Active).ToListAsync(cancellationToken);
         var today = now.InZone(options.HostZone).Date;
-        var busy = await database.Appointments
-            .Where(appointment => !appointment.Cancelled && appointment.EndsAt >= now)
-            .Select(appointment => new { appointment.StartsAt, appointment.EndsAt })
-            .ToListAsync(cancellationToken);
+        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
+        var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
 
         var offered = SlotPlanner.Plan(
             rules.Select(rule => rule.ToDomain()),
             today,
             today.PlusDays(options.HorizonDays),
             length,
-            busy.Select(window => new Interval(window.StartsAt, window.EndsAt)).ToList(),
+            busy,
             now + Duration.FromMinutes(options.BookingLeadMinutes));
 
         if (!offered.Any(slot => slot.Start == startsAt))

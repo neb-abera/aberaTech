@@ -20,7 +20,19 @@ import { formatTime } from '../core/format';
  * is behind a Google sign-in restricted to one address.
  */
 export default function AdminPanel() {
-  const { configured, signedIn, email, queue, error, loading, openSession, closeSession, advance } = useAdminQueue();
+  const {
+    configured,
+    calendar,
+    disconnectCalendar,
+    signedIn,
+    email,
+    queue,
+    error,
+    loading,
+    openSession,
+    closeSession,
+    advance
+  } = useAdminQueue();
   const [name, setName] = React.useState('');
   const [openError, setOpenError] = React.useState<string | null>(null);
 
@@ -61,6 +73,54 @@ export default function AdminPanel() {
       <Typography variant="caption" sx={{ color: 'text.disabled' }}>
         Signed in as {email}
       </Typography>
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Google calendar
+            </Typography>
+
+            {calendar?.connected ? (
+              <>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Reading free/busy from {calendar.email}. Times you are busy there are not offered here.
+                </Typography>
+                <Box>
+                  <Button size="small" variant="outlined" color="inherit" onClick={() => void disconnectCalendar()}>
+                    Disconnect
+                  </Button>
+                </Box>
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  Disconnecting removes the stored token from this site. It does not withdraw the grant at Google — do
+                  that from your{' '}
+                  <a
+                    href="https://myaccount.google.com/permissions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'inherit' }}
+                  >
+                    account permissions
+                  </a>
+                  .
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Not connected. Slots are offered from your availability rules alone, so anything already in your
+                  calendar can still be booked over.
+                </Typography>
+                <Box>
+                  <Button size="small" variant="contained" href="/api/scheduling/admin/calendar/connect">
+                    Connect Google calendar
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
 
       {queue?.open ? (
         <Card variant="outlined">
