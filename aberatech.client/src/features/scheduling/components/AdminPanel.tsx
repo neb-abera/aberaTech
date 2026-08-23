@@ -12,6 +12,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import MenuItem from '@mui/material/MenuItem';
 import { useAdminQueue } from '../hooks/useAdminQueue';
+import AvailabilityEditor from './AvailabilityEditor';
 import { formatTime } from '../core/format';
 
 /**
@@ -75,6 +76,8 @@ export default function AdminPanel() {
       <Typography variant="caption" sx={{ color: 'text.disabled' }}>
         Signed in as {email}
       </Typography>
+
+      <AvailabilityEditor enabled={signedIn} />
 
       <Card variant="outlined">
         <CardContent>
