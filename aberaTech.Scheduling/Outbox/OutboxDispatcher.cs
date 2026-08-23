@@ -174,6 +174,23 @@ public sealed class OutboxDispatcher(
                 message.NextAttemptAt = null;
                 message.LastError = null;
             }
+            else if (result.Permanent)
+            {
+                // No further attempts. Waiting cannot make an opted-out number
+                // or a landline deliverable, and four more tries would spend the
+                // daily allowance, delay the messages that could have gone, and
+                // bury the real reason under identical failures.
+                message.State = DeliveryState.DeadLettered;
+                message.NextAttemptAt = null;
+                message.SentAt = null;
+                message.LastError = result.Error;
+
+                logger.LogError(
+                    "Message {MessageId} of kind {Kind} will not be retried: {Error}",
+                    message.Id,
+                    message.Kind,
+                    result.Error);
+            }
             else
             {
                 Fail(message, result.Error ?? "The provider rejected the message.", now);

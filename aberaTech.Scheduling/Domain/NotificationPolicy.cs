@@ -19,8 +19,20 @@ public enum NotificationKind
     /// <summary>A booked appointment is confirmed.</summary>
     Booked = 4,
 
-    /// <summary>A booked appointment is coming up.</summary>
-    Reminder = 5
+    /// <summary>A booked appointment is coming up tomorrow.</summary>
+    ReminderDayBefore = 5,
+
+    /// <summary>A booked appointment is coming up shortly.</summary>
+    Reminder = 6,
+
+    /// <summary>Their appointment was cancelled.</summary>
+    Cancelled = 7,
+
+    /// <summary>Somebody booked. Sent to the host, not the visitor.</summary>
+    HostBooked = 8,
+
+    /// <summary>Somebody cancelled. Sent to the host.</summary>
+    HostCancelled = 9
 }
 
 /// <summary>

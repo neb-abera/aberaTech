@@ -39,7 +39,11 @@ public class MessageComposerTests
     [InlineData(NotificationKind.Imminent)]
     [InlineData(NotificationKind.YourTurn)]
     [InlineData(NotificationKind.Booked)]
+    [InlineData(NotificationKind.ReminderDayBefore)]
     [InlineData(NotificationKind.Reminder)]
+    [InlineData(NotificationKind.Cancelled)]
+    [InlineData(NotificationKind.HostBooked)]
+    [InlineData(NotificationKind.HostCancelled)]
     public void Every_message_fits_in_one_billable_segment(NotificationKind kind)
     {
         // A body that spills past 160 characters silently doubles both the cost
@@ -51,13 +55,68 @@ public class MessageComposerTests
             $"{kind} is {message.Length} characters: {message}");
     }
 
+    /// <summary>The kinds that go to a visitor rather than to the host.</summary>
+    private static readonly NotificationKind[] ToVisitor =
+    [
+        NotificationKind.Joined,
+        NotificationKind.TimeChanged,
+        NotificationKind.Imminent,
+        NotificationKind.YourTurn,
+        NotificationKind.Booked,
+        NotificationKind.ReminderDayBefore,
+        NotificationKind.Reminder,
+        NotificationKind.Cancelled
+    ];
+
+    private static readonly NotificationKind[] ToHost =
+    [
+        NotificationKind.HostBooked,
+        NotificationKind.HostCancelled
+    ];
+
     [Fact]
-    public void Every_message_names_the_host_so_it_is_not_read_as_spam()
+    public void Every_message_to_a_visitor_names_the_host_so_it_is_not_read_as_spam()
     {
-        foreach (var kind in Enum.GetValues<NotificationKind>())
+        // A text from an unknown number about an appointment is indistinguishable
+        // from spam unless it says who it is from.
+        foreach (var kind in ToVisitor)
         {
             var message = MessageComposer.Compose(kind, "Neb", Start, Zone("America/Chicago"));
             Assert.Contains("Neb", message);
+        }
+    }
+
+    [Fact]
+    public void Messages_to_the_host_do_not_need_to_name_the_host()
+    {
+        // The reason for the rule above does not apply here: the recipient is
+        // the host, who does not need telling who they are. They still carry a
+        // time, which is the whole content.
+        foreach (var kind in ToHost)
+        {
+            var message = MessageComposer.Compose(kind, "Neb", Start, Zone("America/Chicago"));
+            Assert.Contains("2:40", message);
+        }
+    }
+
+    [Fact]
+    public void Every_kind_is_covered_by_one_of_those_two_lists()
+    {
+        // So a kind added later cannot quietly escape both checks.
+        var covered = ToVisitor.Concat(ToHost).ToHashSet();
+
+        Assert.Equal(Enum.GetValues<NotificationKind>().ToHashSet(), covered);
+    }
+
+    [Fact]
+    public void The_first_message_a_visitor_gets_carries_the_opt_out()
+    {
+        // Convention, and what keeps a sending number in good standing. Only the
+        // first message in a thread needs it; repeating it on every reminder
+        // wastes characters that push a message into a second segment.
+        foreach (var kind in new[] { NotificationKind.Booked, NotificationKind.Joined })
+        {
+            Assert.Contains("STOP", MessageComposer.Compose(kind, "Neb", Start, Zone("America/Chicago")));
         }
     }
 

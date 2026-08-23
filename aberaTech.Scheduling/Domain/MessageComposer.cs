@@ -34,17 +34,28 @@ public static class MessageComposer
         var body = kind switch
         {
             NotificationKind.Joined =>
-                $"You're in the queue for {hostName}. Estimated start {at}. We'll text you if that moves.",
+                $"You're in the queue for {hostName}, around {at}. Reply STOP to opt out.",
             NotificationKind.TimeChanged =>
                 $"Your estimated start with {hostName} moved to {at}.",
             NotificationKind.Imminent =>
                 $"You're up soon with {hostName}, around {at}. Please make your way over.",
             NotificationKind.YourTurn =>
                 $"You're up now with {hostName}.",
+            // The first message a visitor receives carries the opt-out, which is
+            // both the convention and what keeps a sending number in good
+            // standing. Later messages in the same thread do not repeat it.
             NotificationKind.Booked =>
-                $"Booked with {hostName} for {at}. Reply to this thread if you need to move it.",
+                $"Booked with {hostName} for {at}. Reply STOP to opt out.",
+            NotificationKind.ReminderDayBefore =>
+                $"Tomorrow: you're with {hostName} at {at}.",
             NotificationKind.Reminder =>
                 $"Reminder: you're with {hostName} at {at}.",
+            NotificationKind.Cancelled =>
+                $"Your {at} with {hostName} has been cancelled.",
+            NotificationKind.HostBooked =>
+                $"New booking: {at}.",
+            NotificationKind.HostCancelled =>
+                $"Cancelled: {at}.",
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown notification kind.")
         };
 
