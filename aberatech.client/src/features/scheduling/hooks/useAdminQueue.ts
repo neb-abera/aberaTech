@@ -16,8 +16,16 @@ export interface AdminQueue {
   entries: AdminEntry[];
 }
 
+export interface CalendarStatus {
+  connected: boolean;
+  email: string | null;
+  calendarId: string | null;
+}
+
 interface Admin {
   configured: boolean;
+  calendar: CalendarStatus | null;
+  disconnectCalendar: () => Promise<void>;
   signedIn: boolean;
   email: string | null;
   queue: AdminQueue | null;
@@ -37,6 +45,7 @@ export function useAdminQueue(): Admin {
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [queue, setQueue] = useState<AdminQueue | null>(null);
+  const [calendar, setCalendar] = useState<CalendarStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +69,19 @@ export function useAdminQueue(): Admin {
         return;
       }
 
-      const response = await fetch('/api/scheduling/admin/queue');
-      if (!response.ok) throw new Error(`Could not read the queue (${response.status}).`);
+      const [queueResponse, calendarResponse] = await Promise.all([
+        fetch('/api/scheduling/admin/queue'),
+        fetch('/api/scheduling/admin/calendar')
+      ]);
 
-      setQueue((await response.json()) as AdminQueue);
+      if (!queueResponse.ok) throw new Error(`Could not read the queue (${queueResponse.status}).`);
+
+      setQueue((await queueResponse.json()) as AdminQueue);
+
+      if (calendarResponse.ok) {
+        setCalendar((await calendarResponse.json()) as CalendarStatus);
+      }
+
       setError(null);
     } catch (caught) {
       setError((caught as Error).message);
@@ -110,5 +128,23 @@ export function useAdminQueue(): Admin {
     [refresh]
   );
 
-  return { configured, signedIn, email, queue, error, loading, openSession, closeSession, advance, refresh };
+  const disconnectCalendar = useCallback(async () => {
+    await fetch('/api/scheduling/admin/calendar/disconnect', { method: 'POST' });
+    await refresh();
+  }, [refresh]);
+
+  return {
+    configured,
+    calendar,
+    disconnectCalendar,
+    signedIn,
+    email,
+    queue,
+    error,
+    loading,
+    openSession,
+    closeSession,
+    advance,
+    refresh
+  };
 }

@@ -29,6 +29,14 @@
     Microsoft.NET.Sdk.Web supplies these implicitly; a plain library SDK does
     not, so they are declared rather than repeated at the top of every file.
   -->
+  <!-- The test project sees internals. Parsing a Google response and similar
+       seams are worth asserting directly, but they are not API anybody outside
+       this library should call, so they stay internal rather than being made
+       public to suit the tests. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="aberaTech.Server.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Microsoft.AspNetCore.Builder" />
     <Using Include="Microsoft.AspNetCore.Http" />
@@ -41,6 +49,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="NodaTime" Version="3.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.4" />
