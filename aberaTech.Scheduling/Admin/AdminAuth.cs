@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using aberaTech.Scheduling.Calendar;
+using aberaTech.Scheduling.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using NodaTime;
 
 namespace aberaTech.Scheduling.Admin;
 
@@ -63,7 +66,28 @@ public static class AdminAuth
             {
                 google.ClientId = options.GoogleClientId;
                 google.ClientSecret = options.GoogleClientSecret;
+
+                // Not in the cookie. A refresh token in a cookie travels to the
+                // browser on every request for the life of the session; it is
+                // captured server side below and stored encrypted instead.
                 google.SaveTokens = false;
+
+                google.Events.OnCreatingTicket = async context =>
+                {
+                    // The only moment a refresh token exists. Google returns it
+                    // once, in this response, and never again — so if it is not
+                    // taken here it is gone until the host re-consents.
+                    var services = context.HttpContext.RequestServices;
+
+                    await CalendarAdminEndpoints.CaptureRefreshTokenAsync(
+                        services.GetRequiredService<SchedulingDbContext>(),
+                        services.GetRequiredService<GoogleAccessTokens>(),
+                        services.GetRequiredService<IClock>(),
+                        context.Principal ?? new ClaimsPrincipal(),
+                        context.RefreshToken,
+                        CalendarAdminEndpoints.ReadScopes(context.TokenResponse.Response!.RootElement),
+                        context.HttpContext.RequestAborted);
+                };
 
                 // The address is the whole basis of the allowlist, so it has to
                 // be on the principal. The Google handler maps it to
