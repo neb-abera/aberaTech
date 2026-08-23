@@ -113,6 +113,10 @@ public static class SchedulingEndpoints
             .RequireRateLimiting(PublicWritePolicy);
 
         group
+            .MapDelete("/book/{appointmentId:guid}", CancelBookingAsync)
+            .RequireRateLimiting(PublicWritePolicy);
+
+        group
             .MapDelete("/queue/{entryId:guid}", LeaveQueueAsync)
             .RequireRateLimiting(PublicWritePolicy);
 
@@ -494,13 +498,30 @@ public static class SchedulingEndpoints
         // it inherits the same retry, receipt and dead letter handling as
         // everything else rather than needing a second delivery path.
         database.Outbox.Add(NewMessage(appointment, NotificationKind.Booked, options, zone, now, now));
-        database.Outbox.Add(NewMessage(
-            appointment,
-            NotificationKind.Reminder,
-            options,
-            zone,
-            now,
-            startsAt - Duration.FromMinutes(options.ReminderLeadMinutes)));
+
+        // Two reminders, at the two moments they are useful for different
+        // things: a day out is the last point at which somebody can rearrange
+        // their day, and an hour out tells them to set off. Both are ordinary
+        // outbox rows with a future NextAttemptAt, so neither needs a scheduler.
+        //
+        // Skipped when the appointment is nearer than the lead time. A "tomorrow"
+        // reminder for something in two hours is noise, and one whose due time
+        // has already passed would go out immediately, which is worse.
+        AddReminderIfUseful(
+            database, appointment, NotificationKind.ReminderDayBefore, options, zone, now,
+            startsAt - Duration.FromMinutes(options.EarlyReminderLeadMinutes));
+
+        AddReminderIfUseful(
+            database, appointment, NotificationKind.Reminder, options, zone, now,
+            startsAt - Duration.FromMinutes(options.ReminderLeadMinutes));
+
+        if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
+        {
+            var forHost = NewMessage(appointment, NotificationKind.HostBooked, options, options.HostZone, now, now);
+            forHost.ToPhoneE164 = hostPhone.Value.E164;
+            forHost.IdempotencyKey = $"{appointment.Id}:{NotificationKind.HostBooked}";
+            database.Outbox.Add(forHost);
+        }
 
         try
         {
@@ -514,6 +535,88 @@ public static class SchedulingEndpoints
         }
 
         return Results.Ok(new BookingConfirmation(appointment.Id, Format(startsAt), Format(endsAt)));
+    }
+
+    /// <summary>
+    /// Cancels a booking, tells the host, and stops the reminders.
+    /// </summary>
+    /// <remarks>
+    /// Making cancellation easy is the point rather than a courtesy. Somebody
+    /// who cannot cancel does not attend anyway; they simply do not say so, and
+    /// the time is lost instead of being freed for somebody else.
+    ///
+    /// The appointment id is the capability to cancel it. It is a v4 GUID, held
+    /// by whoever made the booking, and it is the only thing needed — no
+    /// account, no sign-in, no second identifier to lose.
+    ///
+    /// Pending reminders are removed rather than left to fire. A reminder for an
+    /// appointment that is not happening is worse than no reminder at all.
+    /// </remarks>
+    private static async Task<IResult> CancelBookingAsync(
+        Guid appointmentId,
+        SchedulingDbContext database,
+        SchedulingOptions options,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        var appointment = await database.Appointments
+            .FirstOrDefaultAsync(candidate => candidate.Id == appointmentId, cancellationToken);
+
+        if (appointment is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (appointment.Cancelled)
+        {
+            // Already done. Saying so plainly rather than erroring, because the
+            // usual cause is somebody pressing the link twice.
+            return Results.NoContent();
+        }
+
+        var now = clock.GetCurrentInstant();
+        appointment.Cancelled = true;
+
+        // Anything still waiting to go out about this appointment is now wrong.
+        var pending = await database.Outbox
+            .Where(message => message.AppointmentId == appointmentId
+                              && (message.State == DeliveryState.Pending || message.State == DeliveryState.Failed))
+            .ToListAsync(cancellationToken);
+
+        database.Outbox.RemoveRange(pending);
+
+        var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(appointment.BookedZoneId) ?? options.HostZone;
+        database.Outbox.Add(NewMessage(appointment, NotificationKind.Cancelled, options, zone, now, now));
+
+        if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
+        {
+            var forHost = NewMessage(appointment, NotificationKind.HostCancelled, options, options.HostZone, now, now);
+            forHost.ToPhoneE164 = hostPhone.Value.E164;
+            forHost.IdempotencyKey = $"{appointment.Id}:{NotificationKind.HostCancelled}";
+            database.Outbox.Add(forHost);
+        }
+
+        await database.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>Queues a reminder only if it would land before the appointment.</summary>
+    private static void AddReminderIfUseful(
+        SchedulingDbContext database,
+        Appointment appointment,
+        NotificationKind kind,
+        SchedulingOptions options,
+        DateTimeZone zone,
+        Instant now,
+        Instant dueAt)
+    {
+        if (dueAt <= now)
+        {
+            return;
+        }
+
+        database.Outbox.Add(NewMessage(appointment, kind, options, zone, now, dueAt));
     }
 
     private static OutboxMessage NewMessage(

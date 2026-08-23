@@ -13,11 +13,16 @@ namespace aberaTech.Scheduling.Outbox;
 /// real carrier, where acceptance and delivery are separate events minutes
 /// apart. True only for a sender that is itself the final destination.
 /// </param>
+/// <param name="Permanent">
+/// Whether retrying is pointless. An opted-out number or a landline does not
+/// become deliverable by waiting.
+/// </param>
 public readonly record struct SendResult(
     bool Accepted,
     string? ProviderMessageId,
     string? Error,
-    bool DeliveryConfirmed = false)
+    bool DeliveryConfirmed = false,
+    bool Permanent = false)
 {
     /// <summary>Accepted by a provider. Delivery is not yet known.</summary>
     public static SendResult Ok(string providerMessageId) => new(true, providerMessageId, null);
@@ -33,6 +38,9 @@ public readonly record struct SendResult(
     public static SendResult Confirmed(string providerMessageId) => new(true, providerMessageId, null, true);
 
     public static SendResult Rejected(string error) => new(false, null, error);
+
+    /// <summary>Refused for a reason that will not change. Do not retry.</summary>
+    public static SendResult RejectedPermanently(string error) => new(false, null, error, false, true);
 }
 
 /// <summary>
