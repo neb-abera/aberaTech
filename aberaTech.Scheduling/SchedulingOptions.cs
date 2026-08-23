@@ -29,8 +29,11 @@ public sealed class SchedulingOptions
     /// </summary>
     public int BookingLeadMinutes { get; set; } = 30;
 
-    /// <summary>How many days of availability the booking page shows at once.</summary>
+    /// <summary>The furthest ahead anybody may book.</summary>
     public int HorizonDays { get; set; } = 21;
+
+    /// <summary>How many days the page asks for on first load.</summary>
+    public int DefaultWindowDays { get; set; } = 7;
 
     /// <summary>How long before an appointment the reminder goes out.</summary>
     public int ReminderLeadMinutes { get; set; } = 60;
