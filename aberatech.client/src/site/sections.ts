@@ -28,7 +28,7 @@ export const guides: Entry[] = [
     title: 'Transitioning to Software Development',
     navLabel: 'Learning Software Development',
     to: '/technical',
-    blurb: 'The path from no background to working software.'
+    blurb: 'The path from no background to working in software development.'
   }
 ];
 
