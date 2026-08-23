@@ -49,7 +49,7 @@ export default function Footer() {
             Neb Abera
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Electrical engineer working in signal processing and RF, with .NET and React on the side.
+            Senior Computer Scientist at MITRE, specializing in secure embedded systems.
           </Typography>
           <Stack direction="row" spacing={0.5} sx={{ ml: -1, mt: 0.5 }}>
             {socials.map(({ label, href, Icon }) => (
