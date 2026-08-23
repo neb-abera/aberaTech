@@ -58,48 +58,34 @@ export default function AppAppBar()
                 whichever scheme is showing. */}
             <FingerprintIcon sx={{ color: 'text.primary' }} />
             <Box sx={{display: {xs: 'none', md: 'flex'}}}>
-              <Button variant="text" color="info" size="small">
-                <Link to="/" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                  Home
-                </Link>
+              <Button variant="text" color="info" size="small" component={Link} to="/">
+                Home
               </Button>
-              <Button variant="text" color="info" size="small">
-                <Link to="/transition" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                  {' '}
-                  Military Transition Guide{' '}
-                </Link>
+              <Button variant="text" color="info" size="small" component={Link} to="/transition">
+                Military Transition Guide
               </Button>
-              <Button variant="text" color="info" size="small">
-                <Link to="/technical" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                  {' '}
-                  Learning Software Development{' '}
-                </Link>
+              <Button variant="text" color="info" size="small" component={Link} to="/technical">
+                Learning Software Development
               </Button>
-              <Button variant="text" color="info" size="small">
-                <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                  {' '}
-                  Learning RF and Signal Processing{' '}
-                </Link>
+              <Button variant="text" color="info" size="small" component={Link} to="/planner">
+                Learning RF and Signal Processing
               </Button>
-              <Button variant="text" color="info" size="small">
-                <Link to="/schedule" style={{color: 'inherit', textDecoration: 'inherit'}}>
-                  {' '}
-                  Schedule time with me{' '}
-                </Link>
+              <Button variant="text" color="info" size="small" component={Link} to="/schedule">
+                Schedule time with me
               </Button>
-              <Button variant="text" color="info" size="small">
-                {/* An anchor rather than a router Link: Facewoof is served
-                    from its own origin, so a client-side route would look for
-                    a page that does not exist in this app. */}
-                <a
-                  href="https://facewoof.abera.tech"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{color: 'inherit', textDecoration: 'inherit'}}
-                >
-                  {' '}
-                  Facewoof{' '}
-                </a>
+              {/* An anchor rather than a router Link: Facewoof is served from its
+                  own origin, so a client-side route would look for a page that
+                  does not exist in this app. */}
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                component="a"
+                href="https://facewoof.abera.tech"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Facewoof
               </Button>
             </Box>
           </Box>
@@ -139,45 +125,28 @@ export default function AppAppBar()
                   </IconButton>
                 </Box>
                 {/*nebdebug todo: links broken*/}
-                <MenuItem>
-                  <Link to="/" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                <MenuItem component={Link} to="/">
                     Home
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  {' '}
-                  <Link to="/transition" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  </MenuItem>
+                <MenuItem component={Link} to="/transition">
                     Military Transition Guide
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  {' '}
-                  <Link to="/technical" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  </MenuItem>
+                <MenuItem component={Link} to="/technical">
                     Technical Transition Guide
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  {' '}
-                  <Link to="/planner" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  </MenuItem>
+                <MenuItem component={Link} to="/planner">
                     Learning RF and Signal Processing
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  {' '}
-                  <Link to="/schedule" style={{color: 'inherit', textDecoration: 'inherit'}}>
+                  </MenuItem>
+                <MenuItem component={Link} to="/schedule">
                     Schedule time with me
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  {' '}
-                  <a
-                    href="https://facewoof.abera.tech"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{color: 'inherit', textDecoration: 'inherit'}}
-                  >
-                    Facewoof
-                  </a>
+                  </MenuItem>
+                <MenuItem
+                  component="a"
+                  href="https://facewoof.abera.tech"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Facewoof
                 </MenuItem>
                 <Divider sx={{my: 3}}/>
               </Box>
