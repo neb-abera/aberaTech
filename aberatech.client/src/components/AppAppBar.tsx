@@ -83,7 +83,23 @@ export default function AppAppBar()
             {/* Booking is something to do rather than somewhere to browse, so it
                 is a button beside the theme control and not a fourth tab. It is
                 still listed on /projects, because it is also a project. */}
-            <Button variant="contained" color="primary" size="small" component={Link} to={primaryAction.to}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              component={Link}
+              to={primaryAction.to}
+              sx={{
+                '&&': {
+                  bgcolor: 'primary.main',
+                backgroundImage: 'none',
+                color: 'primary.contrastText',
+                borderColor: 'primary.main',
+                boxShadow: 'none',
+                  '&:hover': { bgcolor: 'primary.dark', backgroundImage: 'none', boxShadow: 'none' }
+                }
+              }}
+            >
               {primaryAction.title}
             </Button>
             <ColorModeIconDropdown/>
@@ -124,7 +140,17 @@ export default function AppAppBar()
                   fullWidth
                   component={Link}
                   to={primaryAction.to}
-                  sx={{mb: 1.5}}
+                  sx={{
+                    mb: 1.5,
+                    '&&': {
+                      bgcolor: 'primary.main',
+                    backgroundImage: 'none',
+                    color: 'primary.contrastText',
+                    borderColor: 'primary.main',
+                    boxShadow: 'none',
+                      '&:hover': { bgcolor: 'primary.dark', backgroundImage: 'none', boxShadow: 'none' }
+                    }
+                  }}
                 >
                   {primaryAction.title}
                 </Button>

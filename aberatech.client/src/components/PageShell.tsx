@@ -45,11 +45,24 @@ export default function PageShell({ title, intro, note, maxWidth = 'lg', childre
               pb: { xs: 5, sm: 7 }
             }}
           >
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 600 }}>
+            {/* The home page's h1, so a page title carries the same weight there
+                and here. Clamped from 2.25rem rather than the home page's 3rem:
+                page titles are far longer than "Neb Abera" and wrapped to three
+                lines on a phone at the larger minimum. */}
+            <Typography
+              variant="h1"
+              component="h1"
+              sx={{
+                fontWeight: 600,
+                fontSize: 'clamp(2.25rem, 7vw, 3.5rem)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.15
+              }}
+            >
               {title}
             </Typography>
             {intro && (
-              <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 680 }}>
+              <Typography variant="body1" sx={{ color: 'text.primary', maxWidth: 680 }}>
                 {intro}
               </Typography>
             )}
