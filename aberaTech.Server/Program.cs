@@ -120,6 +120,18 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         // against a sender that only writes to the log. The whole path stays
         // exercisable without an SMS account or A2P registration.
         builder.Services.AddScoped<IMessageSender, LoggingMessageSender>();
+
+        if (twilioOptions.IsPartiallyConfigured)
+        {
+            // Loud, because the symptom otherwise looks like the carrier is at
+            // fault: messages send and then every one of them dead letters.
+            builder.Services.AddSingleton<IHostedService>(services =>
+                new StartupWarning(
+                    services.GetRequiredService<ILoggerFactory>().CreateLogger("Sms"),
+                    "Twilio is partly configured, so no SMS will be sent. All four of "
+                    + "Twilio:AccountSid, AuthToken, FromNumber and StatusCallbackUrl are required; "
+                    + "the callback URL is what delivery receipts arrive on."));
+        }
     }
     builder.Services.AddHostedService<OutboxDispatcher>();
 }
