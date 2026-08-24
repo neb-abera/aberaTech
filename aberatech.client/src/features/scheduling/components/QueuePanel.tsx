@@ -16,6 +16,7 @@ interface Props {
   queue: QueueView;
   place: MyPlace | null;
   onJoin: (name: string, phone: string, smsConsent: boolean) => Promise<string | null>;
+  consentDisclosure: string;
   onLeave: () => Promise<void>;
 }
 
@@ -26,7 +27,7 @@ interface Props {
  * people in this queue are being seen for counselling, and who is in line ahead
  * of you is not something the person behind you is entitled to know.
  */
-export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
+export default function QueuePanel({ queue, place, onJoin, onLeave, consentDisclosure }: Props) {
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [smsConsent, setSmsConsent] = React.useState(false);
@@ -121,7 +122,7 @@ export default function QueuePanel({ queue, place, onJoin, onLeave }: Props) {
             size="small"
             slotProps={{ htmlInput: { maxLength: 120 } }}
           />
-          <SmsConsent checked={smsConsent} onChange={setSmsConsent} />
+          <SmsConsent checked={smsConsent} onChange={setSmsConsent} disclosure={consentDisclosure} />
 
           {smsConsent ? (
             <TextField

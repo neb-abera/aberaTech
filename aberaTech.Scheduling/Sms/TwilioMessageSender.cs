@@ -71,6 +71,11 @@ public sealed class TwilioMessageSender(
                 errorCode,
                 kind);
 
+            if (TwilioFailure.IsOptOut(errorCode))
+            {
+                return SendResult.RejectedAsOptedOut(reason);
+            }
+
             return kind == FailureKind.Permanent
                 ? SendResult.RejectedPermanently(reason)
                 : SendResult.Rejected(reason);

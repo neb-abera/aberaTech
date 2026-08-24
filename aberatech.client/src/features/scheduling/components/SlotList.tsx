@@ -23,6 +23,7 @@ interface Props {
   slots: SlotView[];
   onSelectDate: (date: string) => void;
   onBook: (startsAt: string, name: string, phone: string, smsConsent: boolean) => Promise<{ error: string | null }>;
+  consentDisclosure: string;
 }
 
 const WeekdayInitials = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -37,7 +38,14 @@ const WeekdayInitials = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
  * wrong unit. A month knows which days are worth offering; only the chosen day
  * needs its times.
  */
-export default function SlotList({ availableDates, selectedDate, slots, onSelectDate, onBook }: Props) {
+export default function SlotList({
+  availableDates,
+  selectedDate,
+  slots,
+  onSelectDate,
+  onBook,
+  consentDisclosure
+}: Props) {
   const firstAvailable = availableDates[0] ?? null;
   const anchor = selectedDate ?? firstAvailable;
 
@@ -184,7 +192,7 @@ export default function SlotList({ availableDates, selectedDate, slots, onSelect
                 autoFocus
                 slotProps={{ htmlInput: { maxLength: 120 } }}
               />
-              <SmsConsent checked={smsConsent} onChange={setSmsConsent} />
+              <SmsConsent checked={smsConsent} onChange={setSmsConsent} disclosure={consentDisclosure} />
 
               {/* Only asked for when it will be used. Collecting a number from
                   somebody who declined texts would be holding data with no

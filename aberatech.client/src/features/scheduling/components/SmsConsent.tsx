@@ -7,6 +7,14 @@ import Typography from '@mui/material/Typography';
 interface Props {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /**
+   * The wording to show, sent by the server.
+   *
+   * Not written here, because the server stores a copy of exactly this text
+   * alongside each consent. Two copies of the disclosure would drift, and the
+   * stored evidence would then describe something nobody was actually shown.
+   */
+  disclosure: string;
 }
 
 /**
@@ -22,7 +30,7 @@ interface Props {
  * rule most often broken and the most common reason a registration is refused —
  * a pre-ticked box is not consent, it is an assumption with a tick next to it.
  */
-export default function SmsConsent({ checked, onChange }: Props) {
+export default function SmsConsent({ checked, onChange, disclosure }: Props) {
   return (
     <Box>
       <FormControlLabel
@@ -30,18 +38,21 @@ export default function SmsConsent({ checked, onChange }: Props) {
         label={<Typography variant="body2">Yes, text me about this appointment</Typography>}
       />
 
+      {/* The server's wording, rendered as sent. It stores a copy of exactly
+          this text alongside each consent, so a second copy written here would
+          drift and the stored evidence would describe something nobody saw. */}
       <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5, lineHeight: 1.6 }}>
-        You will get a confirmation, a reminder the day before, a reminder about an hour before, and a message if it is
-        cancelled. Message frequency varies. Message and data rates may apply. Reply HELP for help, STOP to stop. See
-        the{' '}
+        {disclosure}
+      </Typography>
+
+      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
         <Link href="/sms-terms" target="_blank" rel="noopener">
-          text message terms
-        </Link>{' '}
-        and{' '}
-        <Link href="/sms-privacy" target="_blank" rel="noopener">
-          privacy policy
+          Text message terms
         </Link>
-        . Your number is used only for this and is never shared for marketing.
+        {' · '}
+        <Link href="/sms-privacy" target="_blank" rel="noopener">
+          Privacy policy
+        </Link>
       </Typography>
     </Box>
   );
