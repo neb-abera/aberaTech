@@ -305,7 +305,7 @@ function AreaToggle({
       sx={{ display: 'flex', ml: 0, mr: 0 }}
       control={<Checkbox size="small" checked={checked} onChange={onChange} />}
       label={
-        <Stack component="span" direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
+        <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center', width: '100%' }}>
           <Box
             component="span"
             sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: colour, flexShrink: 0 }}
