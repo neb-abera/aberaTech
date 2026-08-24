@@ -1,7 +1,7 @@
 /** The four degree rules, with what you have against what the regulations require. */
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutline from '@mui/icons-material/CheckCircleOutlineOutlined';
 import RadioButtonUnchecked from '@mui/icons-material/RadioButtonUnchecked';
 import type { RuleRow } from '../core/rules';
 
