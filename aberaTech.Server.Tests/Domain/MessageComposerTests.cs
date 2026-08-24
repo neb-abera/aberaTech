@@ -48,7 +48,8 @@ public class MessageComposerTests
     {
         // A body that spills past 160 characters silently doubles both the cost
         // and the consumption of the daily carrier cap.
-        var message = MessageComposer.Compose(kind, "Neb Abera", Start, Zone("America/Chicago"));
+        // Measured with the brand prefix, since that is what actually goes out.
+        var message = MessageComposer.Compose(kind, "Neb Abera", Start, Zone("America/Chicago"), "aberaTech");
 
         Assert.True(
             message.Length <= MessageComposer.SingleSegment,
@@ -83,6 +84,31 @@ public class MessageComposerTests
         {
             var message = MessageComposer.Compose(kind, "Neb", Start, Zone("America/Chicago"));
             Assert.Contains("Neb", message);
+        }
+    }
+
+    [Fact]
+    public void Every_message_to_a_visitor_carries_the_registered_brand()
+    {
+        // Carriers require the brand the campaign was registered under to appear
+        // in the message. Registering one name and sending another is how
+        // traffic gets flagged.
+        foreach (var kind in ToVisitor)
+        {
+            var message = MessageComposer.Compose(kind, "Neb Abera", Start, Zone("America/Chicago"), "aberaTech");
+            Assert.StartsWith("aberaTech: ", message);
+        }
+    }
+
+    [Fact]
+    public void Messages_to_the_host_are_not_prefixed_with_the_brand()
+    {
+        // He does not need telling which brand is texting him about his own
+        // calendar, and the characters are better spent elsewhere.
+        foreach (var kind in ToHost)
+        {
+            var message = MessageComposer.Compose(kind, "Neb Abera", Start, Zone("America/Chicago"), "aberaTech");
+            Assert.DoesNotContain("aberaTech", message);
         }
     }
 

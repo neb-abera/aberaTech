@@ -87,7 +87,7 @@ public sealed class QueueNotifier(SchedulingDbContext database, IClock clock, Sc
             QueueEntryId = record.Id,
             Kind = kind,
             ToPhoneE164 = record.PhoneE164,
-            Body = MessageComposer.Compose(kind, options.HostName, projectedStart, zone),
+            Body = MessageComposer.Compose(kind, options.HostName, projectedStart, zone, options.BrandName),
             State = DeliveryState.Pending,
             Attempts = 0,
             CreatedAt = now,
