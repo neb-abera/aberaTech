@@ -62,7 +62,7 @@ export default function AvailabilityEditor({ enabled }: { enabled: boolean }) {
                 <Switch
                   checked={day.active}
                   onChange={(event) => update(day.day, { active: event.target.checked })}
-                  inputProps={{ 'aria-label': DayNames[day.day] }}
+                  slotProps={{ input: { 'aria-label': DayNames[day.day] } }}
                 />
                 <Typography variant="body2" sx={{ width: 96 }}>
                   {DayNames[day.day]}

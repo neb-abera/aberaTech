@@ -46,7 +46,7 @@ interface ChipProps {
 const Chip = styled(MuiChip)<ChipProps>(({ theme }) => ({
   variants: [
     {
-      props: ({ selected }) => selected,
+      props: ({ selected }) => selected === true,
       style: {
         background: 'linear-gradient(to bottom right, hsl(210, 98%, 48%), hsl(210, 98%, 35%))',
         color: 'hsl(0, 0%, 100%)',
