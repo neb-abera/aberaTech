@@ -94,7 +94,7 @@ export function TrackBanner({ model }: { model: PlannerModel }) {
   if (!t) return null;
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack direction="row" spacing={1} alignItems="baseline" sx={{ flexWrap: 'wrap' }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline', flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           {t.name}
         </Typography>

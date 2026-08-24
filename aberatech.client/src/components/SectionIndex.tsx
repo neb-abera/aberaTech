@@ -52,7 +52,7 @@ export default function SectionIndex({ title, entries, ...props }: Props) {
                   the foot of it, so a title that wraps to two lines does not
                   drag its card's caption 70px below the others in the row. */}
               <Stack spacing={1} sx={{ flexGrow: 1, width: '100%' }}>
-                <Stack direction="row" spacing={0.75} alignItems="center">
+                <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                     {entry.title}
                   </Typography>
