@@ -2,7 +2,7 @@
 # server. Declared before the first FROM deliberately: only a global build
 # argument may be used in a FROM instruction, and an ARG written after the first
 # FROM belongs to that stage alone and expands to nothing here.
-ARG NODE_IMAGE=node:22
+ARG NODE_IMAGE=node:24
 
 # Base stage for .NET runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base

@@ -61,9 +61,7 @@ export default function CoursePool() {
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
-        alignItems={{ sm: 'center' }}
-        justifyContent="space-between"
-        sx={{ mb: 1.25 }}
+        sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 1.25 }}
       >
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           Not yet placed
@@ -71,7 +69,7 @@ export default function CoursePool() {
             {codes.length} of {model.selected().size} selected
           </Typography>
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <TextField
             size="small"
             label="Filter"
