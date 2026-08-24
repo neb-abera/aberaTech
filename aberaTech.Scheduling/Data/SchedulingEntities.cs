@@ -55,6 +55,23 @@ public class Appointment
     /// </remarks>
     public bool SmsConsent { get; set; }
 
+    /// <summary>When they ticked the box, or null if they did not.</summary>
+    /// <remarks>
+    /// Consent is a thing that happened at a moment, and "did they agree" is a
+    /// weaker record than "they agreed at this time, having been shown this".
+    /// </remarks>
+    public Instant? ConsentedAt { get; set; }
+
+    /// <summary>
+    /// The server's own copy of the wording shown when they agreed.
+    /// </summary>
+    /// <remarks>
+    /// Stored per row rather than as a version number pointing at text held
+    /// elsewhere, because the point of the record is to survive the text being
+    /// changed later.
+    /// </remarks>
+    public string? ConsentDisclosure { get; set; }
+
     public Instant CreatedAt { get; set; }
 
     public bool Cancelled { get; set; }
@@ -101,6 +118,24 @@ public class QueueEntryRecord
 
     /// <summary>Whether they actively agreed to be texted about this queue place.</summary>
     public bool SmsConsent { get; set; }
+
+    /// <summary>When they ticked the box, or null if they did not.</summary>
+    /// <remarks>
+    /// Consent is a thing that happened at a moment, and "did they agree" is a
+    /// weaker record than "they agreed at this time, having been shown this".
+    /// </remarks>
+    public Instant? ConsentedAt { get; set; }
+
+    /// <summary>
+    /// The server's own copy of the wording shown when they agreed.
+    /// </summary>
+    /// <remarks>
+    /// Stored per row rather than as a version number pointing at text held
+    /// elsewhere, because the point of the record is to survive the text being
+    /// changed later.
+    /// </remarks>
+    public string? ConsentDisclosure { get; set; }
+
 
     public Duration Expected { get; set; }
 
@@ -152,4 +187,29 @@ public class HostCalendarCredential
     public string ConnectedEmail { get; set; } = string.Empty;
 
     public Instant ConnectedAt { get; set; }
+}
+
+/// <summary>
+/// A number that has asked not to be messaged.
+/// </summary>
+/// <remarks>
+/// The carrier stops delivery the moment somebody replies STOP, so this is not
+/// what protects them. What it does is stop this application from queueing
+/// messages that cannot arrive: without it, every future booking would produce
+/// rows that fail, dead letter, and spend a daily allowance the deliverable
+/// messages have to come out of.
+///
+/// It also means the suppression survives here rather than living only inside
+/// the provider, which is what "honour opt-outs" is actually asking for.
+/// </remarks>
+public class SmsOptOut
+{
+    public Guid Id { get; set; }
+
+    public string PhoneE164 { get; set; } = string.Empty;
+
+    public Instant OptedOutAt { get; set; }
+
+    /// <summary>How it was learned, for when somebody asks why they stopped hearing from us.</summary>
+    public string Reason { get; set; } = string.Empty;
 }

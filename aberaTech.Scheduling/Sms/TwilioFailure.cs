@@ -52,6 +52,12 @@ public static class TwilioFailure
     };
 
     /// <summary>Classifies a failure from the provider's error code, if there is one.</summary>
+    /// <summary>The codes that mean the recipient asked not to be messaged.</summary>
+    private static readonly HashSet<int> OptOuts = [21610];
+
+    /// <summary>Whether this failure is somebody having opted out.</summary>
+    public static bool IsOptOut(int? errorCode) => errorCode is { } code && OptOuts.Contains(code);
+
     public static (FailureKind Kind, string Reason) Classify(int? errorCode, int? httpStatus)
     {
         if (errorCode is { } code && Permanent.TryGetValue(code, out var reason))

@@ -25,6 +25,7 @@ export interface ScheduleState {
   queue: QueueView | null;
   availableDates: string[] | null;
   selectedDate: string | null;
+  consentDisclosure: string;
 }
 
 export interface MyPlace {
