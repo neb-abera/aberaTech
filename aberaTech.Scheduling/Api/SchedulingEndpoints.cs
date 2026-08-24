@@ -6,6 +6,7 @@ using NodaTime.Text;
 using Npgsql;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Outbox;
+using aberaTech.Scheduling.Sms;
 
 namespace aberaTech.Scheduling.Api;
 
@@ -28,7 +29,9 @@ public sealed record ScheduleState(
     /// thirty.
     /// </remarks>
     IReadOnlyList<string>? AvailableDates = null,
-    string? SelectedDate = null);
+    string? SelectedDate = null,
+    /// <summary>The wording to show beside the opt-in box.</summary>
+    string ConsentDisclosure = Sms.ConsentDisclosure.Current);
 
 public sealed record SlotView(string StartsAt, string EndsAt, int Minutes);
 
@@ -287,6 +290,12 @@ public static class SchedulingEndpoints
 
         var now = clock.GetCurrentInstant();
 
+        if (phone is { } wanted && await IsSuppressedAsync(database, wanted.E164, cancellationToken))
+        {
+            phone = null;
+            request = request with { SmsConsent = false };
+        }
+
         var session = await database.QueueSessions
             .Include(candidate => candidate.Entries)
             .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
@@ -319,6 +328,8 @@ public static class SchedulingEndpoints
             DisplayName = name,
             PhoneE164 = phone?.E164 ?? string.Empty,
             SmsConsent = request.SmsConsent,
+            ConsentedAt = request.SmsConsent ? now : null,
+            ConsentDisclosure = request.SmsConsent ? Sms.ConsentDisclosure.Current : null,
             ZoneId = ResolveZone(request.ZoneId, options).Id,
             Expected = session.DefaultDuration,
             State = QueueEntryState.Waiting,
@@ -460,6 +471,16 @@ public static class SchedulingEndpoints
             return Results.BadRequest(new { error = "Enter your name." });
         }
 
+        // Somebody who replied STOP has told the carrier not to deliver to them.
+        // Taking the booking but not the number keeps the appointment while
+        // honouring that, rather than refusing them a time over a texting
+        // preference.
+        if (phone is { } wanted && await IsSuppressedAsync(database, wanted.E164, cancellationToken))
+        {
+            phone = null;
+            request = request with { SmsConsent = false };
+        }
+
         if (!InstantPattern.ExtendedIso.Parse(request.StartsAt ?? string.Empty).TryGetValue(default, out var startsAt))
         {
             return Results.BadRequest(new { error = "That is not a valid time." });
@@ -500,6 +521,8 @@ public static class SchedulingEndpoints
             DisplayName = name,
             PhoneE164 = phone?.E164 ?? string.Empty,
             SmsConsent = request.SmsConsent,
+            ConsentedAt = request.SmsConsent ? now : null,
+            ConsentDisclosure = request.SmsConsent ? Sms.ConsentDisclosure.Current : null,
             CreatedAt = now,
             Cancelled = false
         };
@@ -674,6 +697,13 @@ public static class SchedulingEndpoints
     /// </remarks>
     private static bool IsOverlap(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: "23P01" };
+
+    /// <summary>Whether this number has asked not to be messaged.</summary>
+    private static Task<bool> IsSuppressedAsync(
+        SchedulingDbContext database,
+        string phoneE164,
+        CancellationToken cancellationToken) =>
+        database.SmsOptOuts.AnyAsync(optOut => optOut.PhoneE164 == phoneE164, cancellationToken);
 
     /// <summary>
     /// An interval from now to <paramref name="end"/>, never backwards.
