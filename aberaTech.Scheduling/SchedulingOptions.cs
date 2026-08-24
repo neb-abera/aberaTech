@@ -9,8 +9,20 @@ public sealed class SchedulingOptions
 {
     public const string Section = "Scheduling";
 
-    /// <summary>The name messages are signed with, so they do not read as spam.</summary>
-    public string HostName { get; set; } = "Neb";
+    /// <summary>The person whose time is being booked, used in the body of a message.</summary>
+    public string HostName { get; set; } = "Neb Abera";
+
+    /// <summary>
+    /// The registered brand, prefixed to every message sent to a visitor.
+    /// </summary>
+    /// <remarks>
+    /// Carriers require the brand name to appear in the message itself, and it
+    /// has to be the name the 10DLC campaign was registered under rather than
+    /// whatever reads most naturally. Kept separate from HostName because they
+    /// are different things: somebody books time with a person, and the brand is
+    /// who the carrier thinks is sending.
+    /// </remarks>
+    public string BrandName { get; set; } = "aberaTech";
 
     /// <summary>
     /// The host's own zone. Used to interpret availability rules and as the
