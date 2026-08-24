@@ -68,4 +68,23 @@ public class CompliancePagesTests
         Assert.DoesNotContain("gmail", CompliancePages.Privacy, System.StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("gmail", CompliancePages.Terms, System.StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void The_terms_promise_only_the_optout_keywords_the_provider_honours()
+    {
+        // Twilio's default opt-out set. The app never parses inbound texts —
+        // Twilio intercepts these at the carrier level — so a keyword listed
+        // here that Twilio does not honour is a promise nobody keeps, and a
+        // page that conflicts with actual behaviour is a vetting rejection
+        // cause ("conflicting information").
+        foreach (var keyword in new[] { "STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT", "START" })
+        {
+            Assert.Contains(keyword, CompliancePages.Terms);
+        }
+
+        // Not honoured unless custom keywords are configured on the messaging
+        // service. If that ever happens, configure first, then relist.
+        Assert.DoesNotContain("REVOKE", CompliancePages.Terms);
+        Assert.DoesNotContain("OPT OUT", CompliancePages.Terms);
+    }
 }
