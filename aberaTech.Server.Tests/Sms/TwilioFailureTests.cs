@@ -38,6 +38,26 @@ public class TwilioFailureTests
     }
 
     [Fact]
+    public void An_opt_out_is_recognised_as_one_rather_than_a_generic_failure()
+    {
+        // The distinction matters: a permanent failure stops this message, and
+        // an opt-out has to stop every future one to that number as well.
+        Assert.True(TwilioFailure.IsOptOut(21610));
+    }
+
+    [Theory]
+    [InlineData(21211)] // invalid number
+    [InlineData(30006)] // landline
+    [InlineData(429)]
+    [InlineData(null)]
+    public void Other_failures_are_not_treated_as_opt_outs(int? code)
+    {
+        // Suppressing a number because a handset was switched off would silently
+        // stop somebody hearing from us with no way for them to know why.
+        Assert.False(TwilioFailure.IsOptOut(code));
+    }
+
+    [Fact]
     public void Rate_limiting_is_worth_another_go()
     {
         var (kind, _) = TwilioFailure.Classify(null, 429);

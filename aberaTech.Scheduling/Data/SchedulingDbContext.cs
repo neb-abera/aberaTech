@@ -33,6 +33,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<HostCalendarCredential> HostCalendarCredentials => Set<HostCalendarCredential>();
 
+    public DbSet<SmsOptOut> SmsOptOuts => Set<SmsOptOut>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -82,6 +84,17 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // The dispatcher and the queue view both filter on state within a
             // session, and a busy afternoon reads this far more than it writes.
             entity.HasIndex(record => new { record.SessionId, record.State });
+        });
+
+        builder.Entity<SmsOptOut>(entity =>
+        {
+            entity.HasKey(optOut => optOut.Id);
+            entity.Property(optOut => optOut.PhoneE164).HasMaxLength(16).IsRequired();
+            entity.Property(optOut => optOut.Reason).HasMaxLength(200).IsRequired();
+
+            // One row per number. Recording the same opt-out twice would make
+            // "is this number suppressed" a question about row counts.
+            entity.HasIndex(optOut => optOut.PhoneE164).IsUnique();
         });
 
         builder.Entity<HostCalendarCredential>(entity =>
