@@ -107,6 +107,17 @@ export default function Footer() {
       </Box>
       <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mt: 4 }}>
         © {new Date().getFullYear()} Neb Abera
+        {' · '}
+        {/* Plain hrefs, not router links: these pages are rendered by the
+            server (CompliancePages.cs) so campaign vetting sees real HTML,
+            and a router link would swallow them into the SPA's empty shell. */}
+        <Link href="/sms-privacy" underline="hover" sx={{ color: 'text.disabled' }}>
+          Privacy
+        </Link>
+        {' · '}
+        <Link href="/sms-terms" underline="hover" sx={{ color: 'text.disabled' }}>
+          Text message terms
+        </Link>
       </Typography>
     </Container>
   );
