@@ -96,7 +96,7 @@ public static class CompliancePages
 
         <h2>Help</h2>
         <p>Reply <strong>HELP</strong> to any message, or email
-        <a href="mailto:nebyouabera@gmail.com">nebyouabera@gmail.com</a>.</p>
+        <a href="mailto:support@alias.abera.tech">support@alias.abera.tech</a>.</p>
 
         <h2>Carriers</h2>
         <p>Mobile carriers are not liable for delayed or undelivered messages.</p>
@@ -155,7 +155,7 @@ public static class CompliancePages
 
         <h2>Stopping messages, and removing your number</h2>
         <p>Reply <strong>STOP</strong> to any message to stop all of them. To have your number removed entirely, email
-        <a href="mailto:nebyouabera@gmail.com">nebyouabera@gmail.com</a>.</p>
+        <a href="mailto:support@alias.abera.tech">support@alias.abera.tech</a>.</p>
 
         <footer>
         See the <a href="/sms-terms">text message terms</a> for what gets sent and how often, or return to

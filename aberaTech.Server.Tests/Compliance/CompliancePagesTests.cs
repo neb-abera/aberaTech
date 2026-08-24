@@ -57,4 +57,15 @@ public class CompliancePagesTests
         Assert.Contains("/sms-privacy", CompliancePages.Terms);
         Assert.Contains("/sms-terms", CompliancePages.Privacy);
     }
+
+    [Fact]
+    public void The_contact_address_is_the_support_alias_never_a_personal_one()
+    {
+        // These pages are public and get scraped. The alias can be rotated or
+        // disabled if it starts drawing spam; a personal address cannot.
+        Assert.Contains("support@alias.abera.tech", CompliancePages.Privacy);
+        Assert.Contains("support@alias.abera.tech", CompliancePages.Terms);
+        Assert.DoesNotContain("gmail", CompliancePages.Privacy, System.StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("gmail", CompliancePages.Terms, System.StringComparison.OrdinalIgnoreCase);
+    }
 }
