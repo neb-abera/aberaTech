@@ -11,6 +11,13 @@ on:
       - master
   # So a redeploy or a rollback does not require an empty commit.
   workflow_dispatch:
+
+# The token gets exactly what the job uses: the checkout reads the repository,
+# and nothing else — Azure and the registry authenticate with their own
+# secrets. Without this block the workflow ran on the repository default,
+# which is broader.
+permissions:
+  contents: read
 env:
   CONTAINER_APP_CONTAINER_NAME: aberatechserver
   CONTAINER_APP_NAME: aberatechserver-app-202412211749
