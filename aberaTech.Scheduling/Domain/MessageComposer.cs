@@ -27,7 +27,17 @@ public static class MessageComposer
     /// </summary>
     public const int SingleSegment = 160;
 
-    public static string Compose(NotificationKind kind, string hostName, Instant projectedStart, DateTimeZone zone)
+    /// <param name="brandName">
+    /// Prefixed to messages sent to a visitor. Carriers require the registered
+    /// brand to appear in the message, and a text from an unknown number is
+    /// indistinguishable from spam without it.
+    /// </param>
+    public static string Compose(
+        NotificationKind kind,
+        string hostName,
+        Instant projectedStart,
+        DateTimeZone zone,
+        string? brandName = null)
     {
         var at = TimePattern.Format(projectedStart.InZone(zone));
 
@@ -59,6 +69,10 @@ public static class MessageComposer
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown notification kind.")
         };
 
-        return body;
+        // The host does not need telling which brand is texting him about his own
+        // calendar, and the characters are better spent elsewhere.
+        var toHost = kind is NotificationKind.HostBooked or NotificationKind.HostCancelled;
+
+        return string.IsNullOrWhiteSpace(brandName) || toHost ? body : $"{brandName}: {body}";
     }
 }
