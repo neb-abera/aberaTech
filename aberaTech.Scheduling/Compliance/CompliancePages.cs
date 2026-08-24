@@ -89,8 +89,8 @@ public static class CompliancePages
         plan with your mobile carrier.</p>
 
         <h2>Stopping messages</h2>
-        <p>Reply <strong>STOP</strong> to any message to stop all of them. You may also reply QUIT, END, CANCEL, REVOKE,
-        OPT OUT or UNSUBSCRIBE. You will get one confirmation and then nothing further. Reply <strong>START</strong> to
+        <p>Reply <strong>STOP</strong> to any message to stop all of them. You may also reply STOPALL, UNSUBSCRIBE,
+        CANCEL, END or QUIT. You will get one confirmation and then nothing further. Reply <strong>START</strong> to
         begin again.</p>
         <p>Stopping texts does not cancel your appointment. It only stops the messages.</p>
 
