@@ -7,6 +7,7 @@ using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
 using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Calendar;
+using aberaTech.Scheduling.Compliance;
 using Microsoft.AspNetCore.DataProtection;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
@@ -227,6 +228,12 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
 {
     app.MapAdminUnavailable();
 }
+
+// Before the SPA fallback, so a plain fetch of these two gets real HTML rather
+// than an empty shell. Mapped unconditionally: they must answer on any
+// deployment, including one with no database and no messaging configured, since
+// a carrier reviewing the campaign will fetch them whatever else is switched on.
+app.MapCompliancePages();
 
 app.MapFallbackToFile("index.html");
 

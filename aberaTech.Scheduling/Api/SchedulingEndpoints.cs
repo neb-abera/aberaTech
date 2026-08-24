@@ -659,7 +659,7 @@ public static class SchedulingEndpoints
             AppointmentId = appointment.Id,
             Kind = kind,
             ToPhoneE164 = appointment.PhoneE164,
-            Body = MessageComposer.Compose(kind, options.HostName, appointment.StartsAt, zone),
+            Body = MessageComposer.Compose(kind, options.HostName, appointment.StartsAt, zone, options.BrandName),
             State = DeliveryState.Pending,
             Attempts = 0,
             CreatedAt = now,
