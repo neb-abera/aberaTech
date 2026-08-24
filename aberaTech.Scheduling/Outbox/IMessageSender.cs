@@ -22,7 +22,9 @@ public readonly record struct SendResult(
     string? ProviderMessageId,
     string? Error,
     bool DeliveryConfirmed = false,
-    bool Permanent = false)
+    bool Permanent = false,
+    /// <summary>The recipient asked not to be messaged, rather than being unreachable.</summary>
+    bool OptedOut = false)
 {
     /// <summary>Accepted by a provider. Delivery is not yet known.</summary>
     public static SendResult Ok(string providerMessageId) => new(true, providerMessageId, null);
@@ -41,6 +43,9 @@ public readonly record struct SendResult(
 
     /// <summary>Refused for a reason that will not change. Do not retry.</summary>
     public static SendResult RejectedPermanently(string error) => new(false, null, error, false, true);
+
+    /// <summary>Refused because the recipient opted out. Never message them again.</summary>
+    public static SendResult RejectedAsOptedOut(string error) => new(false, null, error, false, true, true);
 }
 
 /// <summary>

@@ -176,6 +176,15 @@ public sealed class OutboxDispatcher(
             }
             else if (result.Permanent)
             {
+                // An opt-out is worth remembering rather than rediscovering.
+                // Without this every future booking queues messages for a number
+                // the carrier will refuse, each failing and dead lettering, and
+                // each spending part of a daily allowance.
+                if (result.OptedOut)
+                {
+                    await RecordOptOutAsync(database, message.ToPhoneE164, result.Error, now, cancellationToken);
+                }
+
                 // No further attempts. Waiting cannot make an opted-out number
                 // or a landline deliverable, and four more tries would spend the
                 // daily allowance, delay the messages that could have gone, and
@@ -203,6 +212,28 @@ public sealed class OutboxDispatcher(
         }
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    /// <summary>Remembers that a number asked not to be messaged.</summary>
+    private static async Task RecordOptOutAsync(
+        SchedulingDbContext database,
+        string phoneE164,
+        string? reason,
+        Instant now,
+        CancellationToken cancellationToken)
+    {
+        if (await database.SmsOptOuts.AnyAsync(optOut => optOut.PhoneE164 == phoneE164, cancellationToken))
+        {
+            return;
+        }
+
+        database.SmsOptOuts.Add(new SmsOptOut
+        {
+            Id = Guid.NewGuid(),
+            PhoneE164 = phoneE164,
+            OptedOutAt = now,
+            Reason = reason ?? "The provider reported an opt-out."
+        });
     }
 
     /// <summary>
