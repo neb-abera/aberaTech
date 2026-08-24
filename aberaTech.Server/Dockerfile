@@ -5,7 +5,7 @@
 ARG NODE_IMAGE=node:24
 
 # Base stage for .NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
@@ -97,7 +97,7 @@ RUN npx eslint . && npx prettier --check .
 # rather than flattened into /src: the server references aberaTech.Scheduling by
 # relative path, and a flattened layout silently resolves that reference to
 # nothing.
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
