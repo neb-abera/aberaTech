@@ -49,7 +49,11 @@ public static class CompliancePages
         </style>
         """;
 
-    private const string Terms = $"""
+    // Internal rather than private so the tests can pin the phrases campaign
+    // vetting greps for. Twilio error 30908 requires the *privacy policy* — not
+    // just the terms — to carry the non-sharing statement, message frequency
+    // and "message and data rates may apply".
+    internal const string Terms = $"""
         <!doctype html>
         <html lang="en">
         <head>
@@ -85,14 +89,14 @@ public static class CompliancePages
         plan with your mobile carrier.</p>
 
         <h2>Stopping messages</h2>
-        <p>Reply <strong>STOP</strong> to any message to stop all of them. You may also reply QUIT, END, CANCEL, REVOKE,
-        OPT OUT or UNSUBSCRIBE. You will get one confirmation and then nothing further. Reply <strong>START</strong> to
+        <p>Reply <strong>STOP</strong> to any message to stop all of them. You may also reply STOPALL, UNSUBSCRIBE,
+        CANCEL, END or QUIT. You will get one confirmation and then nothing further. Reply <strong>START</strong> to
         begin again.</p>
         <p>Stopping texts does not cancel your appointment. It only stops the messages.</p>
 
         <h2>Help</h2>
         <p>Reply <strong>HELP</strong> to any message, or email
-        <a href="mailto:nebyouabera@gmail.com">nebyouabera@gmail.com</a>.</p>
+        <a href="mailto:support@alias.abera.tech">support@alias.abera.tech</a>.</p>
 
         <h2>Carriers</h2>
         <p>Mobile carriers are not liable for delayed or undelivered messages.</p>
@@ -105,7 +109,7 @@ public static class CompliancePages
         </html>
         """;
 
-    private const string Privacy = $"""
+    internal const string Privacy = $"""
         <!doctype html>
         <html lang="en">
         <head>
@@ -131,9 +135,15 @@ public static class CompliancePages
         sites.</p>
 
         <h2>Who it is shared with</h2>
-        <p>Only the messaging provider that carries the text, and only so that it can be delivered. Mobile information is
-        not shared with third parties or affiliates for marketing or promotional purposes. Opt-in data and consent are
-        never shared with anyone.</p>
+        <p>Only the messaging provider that carries the text, and only so that it can be delivered. Your mobile phone
+        number and messaging consent data are not shared, sold, or provided to third parties or affiliates for marketing
+        or promotional purposes. Text messaging originator opt-in data and consent are never shared with anyone.</p>
+
+        <h2>The messages themselves</h2>
+        <p>Texts are sent only if you tick the box asking for them when you book or join the queue, and they are only
+        about that appointment: a confirmation, reminders, and queue updates. Message frequency varies with what you
+        book — a single appointment is usually four messages. Message and data rates may apply, depending on your plan
+        with your mobile carrier. Reply <strong>HELP</strong> to any message for help.</p>
 
         <h2>Where it is kept</h2>
         <p>In a database in Microsoft Azure, encrypted at rest, reachable only by this site. Phone numbers are
@@ -145,7 +155,7 @@ public static class CompliancePages
 
         <h2>Stopping messages, and removing your number</h2>
         <p>Reply <strong>STOP</strong> to any message to stop all of them. To have your number removed entirely, email
-        <a href="mailto:nebyouabera@gmail.com">nebyouabera@gmail.com</a>.</p>
+        <a href="mailto:support@alias.abera.tech">support@alias.abera.tech</a>.</p>
 
         <footer>
         See the <a href="/sms-terms">text message terms</a> for what gets sent and how often, or return to
