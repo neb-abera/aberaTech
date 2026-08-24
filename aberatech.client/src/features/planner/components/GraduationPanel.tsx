@@ -11,8 +11,8 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutline from '@mui/icons-material/CheckCircleOutlineOutlined';
+import ErrorOutline from '@mui/icons-material/ErrorOutlineOutlined';
 import WarningAmber from '@mui/icons-material/WarningAmber';
 import type { Calendar } from '../core/calendar';
 import type { DegreeAudit } from '../core/rules';
@@ -81,7 +81,7 @@ export default function GraduationPanel({ audit, calendar, model }: GraduationPa
         borderColor: late ? 'error.main' : ready ? 'success.main' : 'divider'
       }}
     >
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         {ready ? (
           <CheckCircleOutline color="success" fontSize="small" />
         ) : late ? (
@@ -242,7 +242,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function Line({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ py: 0.4 }}>
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', py: 0.4 }}>
       <Box sx={{ mt: '2px' }}>{icon}</Box>
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {children}

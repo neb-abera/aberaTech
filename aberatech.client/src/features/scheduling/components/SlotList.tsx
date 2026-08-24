@@ -99,7 +99,7 @@ export default function SlotList({
 
   return (
     <>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ alignItems: 'flex-start' }}>
         <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
