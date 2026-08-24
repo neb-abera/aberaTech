@@ -35,7 +35,13 @@ export default function SchedulePanel() {
           Online booking is still being set up. Email me and we will find a time the old fashioned way.
         </Alert>
       ) : state.mode === 'queue' && state.queue ? (
-        <QueuePanel queue={state.queue} place={place} onJoin={join} onLeave={leave} />
+        <QueuePanel
+          queue={state.queue}
+          place={place}
+          onJoin={join}
+          onLeave={leave}
+          consentDisclosure={state.consentDisclosure}
+        />
       ) : (
         <>
           {booking ? (
@@ -50,6 +56,7 @@ export default function SchedulePanel() {
             slots={state.slots}
             onSelectDate={selectDate}
             onBook={book}
+            consentDisclosure={state.consentDisclosure}
           />
         </>
       )}
