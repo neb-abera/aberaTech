@@ -40,7 +40,7 @@ export default function CourseCard({ code, pinned, onClose }: CourseCardProps) {
 
   return (
     <Box sx={{ p: 2, maxWidth: 380, maxHeight: '70vh', overflowY: 'auto' }}>
-      <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 0.5 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', mb: 0.5 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, flexGrow: 1, lineHeight: 1.3 }}>
           {course.title}
         </Typography>
