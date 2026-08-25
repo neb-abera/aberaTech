@@ -39,13 +39,23 @@ jobs:
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Step 3: Log in to Azure Container Registry (ACR)
-      - name: Log in to Azure Container Registry (ACR)
-        uses: docker/login-action@v3
+      # Step 3: Log in to Azure, then to the registry with an Entra token.
+      #
+      # The registry's admin username and password are gone from this pipeline:
+      # the same OIDC exchange the deploy job uses grants this job an identity,
+      # and that identity holds AcrPush on the registry — a scoped, auditable
+      # right, where the admin account was full push/pull for anyone holding a
+      # password that never rotated. The token az acr login issues lives three
+      # hours; this job needs it for minutes.
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          registry: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.aberaTechServer20241221175455_USERNAME_6123 }}
-          password: ${{ secrets.aberaTechServer20241221175455_PASSWORD_6123 }}
+          client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry (ACR)
+        run: az acr login --name ${CONTAINER_REGISTRY_LOGIN_SERVER%%.*}
 
       # Step 4: Build and push Docker image to ACR
       - name: Build and Push Docker Image
@@ -81,12 +91,9 @@ jobs:
             # Enable dynamic installation for Azure CLI extensions
             az config set extension.use_dynamic_install=yes_without_prompt
 
-            # Integrate ACR credentials with the Container App
-            az containerapp registry set --name ${{ env.CONTAINER_APP_NAME }} \
-              --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
-              --server ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }} \
-              --username ${{ secrets.aberaTechServer20241221175455_USERNAME_6123 }} \
-              --password ${{ secrets.aberaTechServer20241221175455_PASSWORD_6123 }}
+            # The app pulls with its own system-assigned managed identity
+            # (AcrPull on the registry), configured once on the container app
+            # rather than re-written with registry passwords on every deploy.
 
             # Update the Container App with the new Docker image
             az containerapp update --name ${{ env.CONTAINER_APP_NAME }} \
