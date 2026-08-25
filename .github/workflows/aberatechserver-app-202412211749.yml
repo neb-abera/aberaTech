@@ -13,11 +13,13 @@ on:
   workflow_dispatch:
 
 # The token gets exactly what the job uses: the checkout reads the repository,
-# and nothing else — Azure and the registry authenticate with their own
-# secrets. Without this block the workflow ran on the repository default,
+# and id-token is what azure/login exchanges for Azure credentials through the
+# app registration's federated credential — no client secret is stored
+# anywhere. Without this block the workflow ran on the repository default,
 # which is broader.
 permissions:
   contents: read
+  id-token: write
 env:
   CONTAINER_APP_CONTAINER_NAME: aberatechserver
   CONTAINER_APP_NAME: aberatechserver-app-202412211749
@@ -59,15 +61,17 @@ jobs:
     steps:
       # Step 5: Azure CLI Login with Federated Credentials
       - name: Azure Login
+        # OIDC federation, like the Facewoof deploy: GitHub mints a short-lived
+        # token attesting to this repository and branch, and the app
+        # registration's federated credential accepts exactly that subject.
+        # Nothing here is a secret — the client secret this replaced was a
+        # two-year credential that anyone who could read it could use from
+        # anywhere.
         uses: azure/login@v2
         with:
-          creds: >
-            {
-              "clientId": "${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}"
-            }
+          client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
 
       # Step 6: Deploy the Container App with ACR Credentials
       - name: Deploy to Azure Container App
