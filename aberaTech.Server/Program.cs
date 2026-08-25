@@ -9,6 +9,7 @@ using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Compliance;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -161,6 +162,60 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+// Container Apps ingress terminates TLS and forwards over HTTP. Without this,
+// every request appears to come from the ingress over plain HTTP: the rate
+// limiter above partitions everyone into one shared bucket — so five booking
+// attempts a minute was the budget for the whole internet, and one hostile
+// caller could spend it — and HTTPS-dependent behaviour never engages. The
+// known-proxy allowlists are cleared because the ingress has no fixed address;
+// nothing reaches this container except through it, and ForwardedLimit stays
+// at its default of one hop, so a spoofed X-Forwarded-For prepended by a
+// caller is ignored in favour of the address the ingress itself appended.
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+// Clear(), not an empty initializer: the defaults trust only loopback, an
+// empty collection initializer leaves those defaults in place, and a list
+// with entries in it means "trust only these" — cleared lists are how the
+// middleware is told the one hop in front of it has no fixed address.
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedOptions);
+
+// Browser hardening headers on every response, static files included.
+//
+// The CSP names exactly what the client actually loads: MUI injects its styles
+// as inline <style> elements, the guides embed Google Docs and YouTube players
+// in iframes, and a handful of partner logos load from their own hosts.
+// Everything else — scripts above all — is same-origin only.
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; "
+        + "script-src 'self'; "
+        + "style-src 'self' 'unsafe-inline'; "
+        + "img-src 'self' data: https://www.va.gov https://www.lduhtrp.net "
+        + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com; "
+        + "font-src 'self' data:; "
+        + "connect-src 'self'; "
+        + "frame-src https://docs.google.com https://drive.google.com "
+        + "https://www.youtube.com https://www.youtube-nocookie.com; "
+        + "object-src 'none'; base-uri 'self'; form-action 'self'; "
+        + "frame-ancestors 'self'; upgrade-insecure-requests";
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+
+    if (context.Request.IsHttps)
+    {
+        headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+    }
+
+    await next();
+});
 
 app.UseDefaultFiles(); // Serves 'index.html' automatically for root requests.
 app.UseStaticFiles(); // Serves files from wwwroot.
