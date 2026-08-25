@@ -157,5 +157,9 @@ RUN echo "Contents of /app/wwwroot (to verify final static files):" && \
     echo "Contents of /app/wwwroot/assets (if assets exist):" && \
     ls -l /app/wwwroot/assets || echo "No assets folder found in /app/wwwroot"
 
+# Drop privileges. The aspnet image ships an app user (APP_UID) for exactly
+# this; port 8080 needs no root to bind.
+USER $APP_UID
+
 # Set the entry point for the .NET backend
 ENTRYPOINT ["dotnet", "aberaTech.Server.dll"]
