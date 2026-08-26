@@ -37,6 +37,7 @@ export default function AdminPanel() {
     setDuration
   } = useAdminQueue();
   const [name, setName] = React.useState('');
+  const [hoursOpen, setHoursOpen] = React.useState(8);
   const [openError, setOpenError] = React.useState<string | null>(null);
 
   if (loading) {
@@ -143,6 +144,7 @@ export default function AdminPanel() {
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {waiting.length} waiting{serving ? `, with ${serving.displayName} now` : ''}.
+                {queue.closesAt ? ` Open until ${formatTime(queue.closesAt)}, then it closes itself.` : ''}
               </Typography>
             </Stack>
           </CardContent>
@@ -155,11 +157,15 @@ export default function AdminPanel() {
               component="form"
               onSubmit={async (event: React.FormEvent) => {
                 event.preventDefault();
-                setOpenError(await openSession(name.trim()));
+                setOpenError(await openSession(name.trim(), hoursOpen));
               }}
             >
               <Typography variant="h6" component="p">
                 No queue is open
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Opening puts the queue on the public booking page immediately — there is nothing further to save. It
+                stops taking names on its own after the time you pick, or when you close it.
               </Typography>
               {openError ? <Alert severity="error">{openError}</Alert> : null}
               <TextField
@@ -171,6 +177,22 @@ export default function AdminPanel() {
                 size="small"
                 slotProps={{ htmlInput: { maxLength: 120 } }}
               />
+              <TextField
+                select
+                size="small"
+                label="Open for"
+                value={hoursOpen}
+                onChange={(event) => setHoursOpen(Number(event.target.value))}
+                sx={{ width: 128 }}
+              >
+                {/* The same 1–24 range the server clamps to, so what is picked
+                    here is what actually happens. */}
+                {[1, 2, 3, 4, 6, 8, 12, 24].map((hours) => (
+                  <MenuItem key={hours} value={hours}>
+                    {hours === 1 ? '1 hour' : `${hours} hours`}
+                  </MenuItem>
+                ))}
+              </TextField>
               <Box>
                 <Button type="submit" variant="contained">
                   Open the queue
