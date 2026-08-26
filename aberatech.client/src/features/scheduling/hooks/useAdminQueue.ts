@@ -14,6 +14,7 @@ export interface AdminQueue {
   sessionId: string | null;
   name: string | null;
   open: boolean;
+  closesAt: string | null;
   entries: AdminEntry[];
 }
 
@@ -32,7 +33,7 @@ interface Admin {
   queue: AdminQueue | null;
   error: string | null;
   loading: boolean;
-  openSession: (name: string) => Promise<string | null>;
+  openSession: (name: string, hoursOpen: number) => Promise<string | null>;
   closeSession: () => Promise<void>;
   advance: (entryId: string, action: 'start' | 'done' | 'no-show') => Promise<void>;
   setDuration: (entryId: string, minutes: number) => Promise<void>;
@@ -99,11 +100,11 @@ export function useAdminQueue(): Admin {
   }, [refresh]);
 
   const openSession = useCallback(
-    async (name: string) => {
+    async (name: string, hoursOpen: number) => {
       const response = await fetch('/api/scheduling/admin/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, hoursOpen })
       });
 
       if (!response.ok) {

@@ -21,7 +21,12 @@ public sealed record AdminEntry(
     string? ProjectedStart,
     int ExpectedMinutes);
 
-public sealed record AdminQueue(Guid? SessionId, string? Name, bool Open, IReadOnlyList<AdminEntry> Entries);
+public sealed record AdminQueue(
+    Guid? SessionId,
+    string? Name,
+    bool Open,
+    string? ClosesAt,
+    IReadOnlyList<AdminEntry> Entries);
 
 public sealed record OpenSessionRequest(string? Name, int? DefaultMinutes, int? HoursOpen);
 
@@ -40,6 +45,17 @@ public static class AdminEndpoints
     private const int MinimumMinutes = 5;
 
     private const int MaximumMinutes = 120;
+
+    /// <summary>
+    /// How long a new session stays open, from what the host asked for.
+    /// </summary>
+    /// <remarks>
+    /// Bounded for the same reason durations are: the value decides when the
+    /// public page stops taking names, and a mistyped 100 would leave a queue
+    /// silently accepting joiners for four days.
+    /// </remarks>
+    internal static Duration OpenFor(int? hoursOpen) =>
+        Duration.FromHours(Math.Clamp(hoursOpen ?? 8, 1, 24));
 
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder routes)
     {
@@ -75,7 +91,7 @@ public static class AdminEndpoints
 
         if (session is null)
         {
-            return Results.Ok(new AdminQueue(null, null, false, []));
+            return Results.Ok(new AdminQueue(null, null, false, null, []));
         }
 
         var projection = QueueProjection
@@ -96,7 +112,12 @@ public static class AdminEndpoints
                 (int)entry.Expected.TotalMinutes))
             .ToList();
 
-        return Results.Ok(new AdminQueue(session.Id, session.Name, session.Open, entries));
+        return Results.Ok(new AdminQueue(
+            session.Id,
+            session.Name,
+            session.Open,
+            session.ClosesAt.ToString("uuuu-MM-ddTHH:mm:ss'Z'", null),
+            entries));
     }
 
     private static async Task<IResult> OpenSessionAsync(
@@ -127,7 +148,7 @@ public static class AdminEndpoints
             Id = Guid.NewGuid(),
             Name = name,
             OpensAt = now,
-            ClosesAt = now + Duration.FromHours(Math.Clamp(request.HoursOpen ?? 8, 1, 24)),
+            ClosesAt = now + OpenFor(request.HoursOpen),
             DefaultDuration = Duration.FromMinutes(
                 Math.Clamp(request.DefaultMinutes ?? options.DefaultAppointmentMinutes, MinimumMinutes, MaximumMinutes)),
             Open = true
