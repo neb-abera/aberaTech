@@ -1,4 +1,5 @@
 import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -10,6 +11,8 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useAvailability } from '../hooks/useAvailability';
 import type { AvailabilityDay } from '../hooks/useAvailability';
+import { viewerZone } from '../core/format';
+import { zoneOptions } from '../core/timezones';
 
 const DayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -47,14 +50,35 @@ export default function AvailabilityEditor({ enabled }: { enabled: boolean }) {
           {error ? <Alert severity="error">{error}</Alert> : null}
           {saved ? <Alert severity="success">Saved.</Alert> : null}
 
-          <TextField
-            label="Time zone"
-            value={week.zoneId}
-            onChange={(event) => setWeek({ ...week, zoneId: event.target.value })}
-            size="small"
-            helperText="An IANA name, such as America/New_York, or Etc/GMT-3 for a fixed +3 offset."
-            sx={{ maxWidth: 420 }}
-          />
+          <Box>
+            {/* The list comes from the browser's own tzdb, so picking is the
+                only interaction: typing a zone freehand was how a typo became
+                a saved zone the server then refused. */}
+            <Autocomplete
+              options={zoneOptions(week.zoneId)}
+              value={week.zoneId}
+              onChange={(_, value) => (value ? setWeek({ ...week, zoneId: value }) : undefined)}
+              autoHighlight
+              disableClearable
+              size="small"
+              sx={{ maxWidth: 420 }}
+              renderInput={(params) => (
+                <TextField {...params} label="Time zone" helperText="The hours below are read in this zone." />
+              )}
+            />
+            {week.zoneId !== viewerZone() ? (
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                Your browser is in {viewerZone()}.{' '}
+                <Button
+                  size="small"
+                  sx={{ minWidth: 0, p: 0, verticalAlign: 'baseline', textTransform: 'none' }}
+                  onClick={() => setWeek({ ...week, zoneId: viewerZone() })}
+                >
+                  Use it
+                </Button>
+              </Typography>
+            ) : null}
+          </Box>
 
           <Stack spacing={1}>
             {week.days.map((day) => (
