@@ -244,8 +244,16 @@
    "Calculus based Physics I and II"
   ],
   [
+   "bg_circ",
+   "Linear and Nonlinear Circuits"
+  ],
+  [
    "bg_ugem",
    "Undergraduate Electromagnetics"
+  ],
+  [
+   "bg_sig",
+   "Signals and Systems"
   ],
   [
    "bg_dig",
@@ -553,7 +561,9 @@
    "areas": [
     "Optics and Photonics"
    ],
-   "bg": [],
+   "bg": [
+    "bg_sig"
+   ],
    "code": "EN.525.613",
    "credits": 3.0,
    "desc": "In this course, the study of optics is presented from a perspective that uses the electrical engineer\u2019s background in Fourier analysis and linear systems theory. Topics include scalar diffraction theory, Fourier transforming and imaging properties of lenses, spatial frequency analysis of optical systems, spatial filtering and information processing, and holography. The class discusses applications of these concepts in nondestructive evaluation of materials and structures, remote sensing, and medical imaging.",
@@ -573,7 +583,8 @@
     "Systems and Controls"
    ],
    "bg": [
-    "bg_calc"
+    "bg_calc",
+    "bg_sig"
    ],
    "code": "EN.525.614",
    "credits": 3.0,
@@ -610,7 +621,8 @@
     "Communications and Networking"
    ],
    "bg": [
-    "bg_matlab"
+    "bg_matlab",
+    "bg_sig"
    ],
    "code": "EN.525.616",
    "credits": 3.0,
@@ -771,6 +783,7 @@
     "Electronics and the Solid State"
    ],
    "bg": [
+    "bg_circ",
     "bg_ugem"
    ],
    "code": "EN.525.624",
@@ -829,7 +842,8 @@
     "Signal Processing"
    ],
    "bg": [
-    "bg_matlab"
+    "bg_matlab",
+    "bg_sig"
    ],
    "code": "EN.525.627",
    "credits": 3.0,
@@ -929,6 +943,7 @@
     "Computer Engineering"
    ],
    "bg": [
+    "bg_circ",
     "bg_dig",
     "bg_ugem"
    ],
@@ -1360,7 +1375,8 @@
    "gradeable": true,
    "groups": [
     [
-     "EN.525.201"
+     "EN.525.201",
+     "bg_circ"
     ]
    ],
    "level": 6,
@@ -1454,7 +1470,8 @@
    "gradeable": true,
    "groups": [
     [
-     "EN.525.202"
+     "EN.525.202",
+     "bg_sig"
     ]
    ],
    "level": 6,
@@ -2230,7 +2247,8 @@
    "bg": [
     "bg_calc",
     "bg_la",
-    "bg_matlab"
+    "bg_matlab",
+    "bg_sig"
    ],
    "code": "EN.525.762",
    "credits": 3.0,
@@ -2526,10 +2544,12 @@
      "EN.525.616"
     ],
     [
-     "EN.525.201"
+     "EN.525.201",
+     "bg_circ"
     ],
     [
-     "EN.525.202"
+     "EN.525.202",
+     "bg_sig"
     ]
    ],
    "level": 7,
@@ -2638,10 +2658,12 @@
      "EN.525.640"
     ],
     [
-     "EN.525.201"
+     "EN.525.201",
+     "bg_circ"
     ],
     [
-     "EN.525.202"
+     "EN.525.202",
+     "bg_sig"
     ]
    ],
    "level": 7,

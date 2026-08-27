@@ -5,7 +5,7 @@
 import { Calendar } from '../core/calendar';
 import { CatalogData } from '../core/catalog';
 import type { Gate } from '../core/catalog';
-import { isPrep, withBackground } from '../core/background';
+import { ADMISSION, holdsBackground, isPrep, PREP_SOURCE, prepId, withBackground } from '../core/background';
 import { Plan } from '../core/plan';
 import { closure, missingFor, unmetGroups } from '../core/prereq';
 import { degreeAudit } from '../core/rules';
@@ -132,6 +132,17 @@ export class PlannerModel {
     for (const c of this.data.select([...this.areas], [...this.conc])) {
       if (this.courses[c]) out.add(c);
     }
+    // The admission prerequisites travel with every plan. One the reader has
+    // not ticked, and is not covering with the JHU course that teaches it, is
+    // planned as preparation; admission is provisional until they are done.
+    if (out.size) {
+      for (const id of ADMISSION) {
+        if (holdsBackground(id, this.background)) continue;
+        const jhu = PREP_SOURCE[id]?.jhu;
+        if (jhu && out.has(jhu)) continue;
+        if (this.courses[prepId(id)]) out.add(prepId(id));
+      }
+    }
     return out;
   }
 
@@ -146,7 +157,9 @@ export class PlannerModel {
     if (t) {
       this.areas.clear();
       this.conc.clear();
-      this.plan = this.tracks.toPlan(this.courses, t.id, this.perTerm);
+      // Through scheduleFor rather than tracks.toPlan, so the admission
+      // preparation and the track's own background land on the board too.
+      this.rescheduleAll();
     } else {
       this.plan = this.plan.withTerms([[]]);
     }
@@ -296,10 +309,17 @@ export class PlannerModel {
     const want = new Set([...codes].filter((c) => this.courses[c]));
     const t = this.track ? this.tracks.get(this.track) : undefined;
     if (!t) return Plan.autoSchedule(this.courses, want, this.perTerm);
+    // Preparation no course in the plan asks for - the admission prerequisites
+    // - comes first, because admission comes first. Preparation a course does
+    // need is left to expandInOrder, which puts it immediately ahead of the
+    // course that asked.
+    const needed = new Set([...want].flatMap((c) => this.courses[c]?.groups.flat() ?? []));
+    const front = [...want].filter((c) => isPrep(c) && !needed.has(c)).sort();
+    const onFront = new Set(front);
     const curated = t.courses.filter((c) => want.has(c));
     const onCurated = new Set(curated);
-    const rest = [...want].filter((c) => !onCurated.has(c));
-    return placeInOrder(this.courses, expandInOrder(this.courses, [...curated, ...rest]), this.perTerm);
+    const rest = [...want].filter((c) => !onCurated.has(c) && !onFront.has(c));
+    return placeInOrder(this.courses, expandInOrder(this.courses, [...front, ...curated, ...rest]), this.perTerm);
   }
 
   clearPlan(): void {

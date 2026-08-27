@@ -1,4 +1,5 @@
 /** Prerequisite logic. Pure functions over plain data, no DOM, no globals. */
+import { PREP_PREFIX } from './background';
 import type { Catalog, Placement } from './types';
 
 export function groupsOf(cat: Catalog, code: string): string[][] {
@@ -38,7 +39,10 @@ export function closureCost(
   if (cached !== undefined) return cached;
   if (seen.has(code)) return 0;
   seen.add(code);
-  let n = 1;
+  // A preparation placeholder is free: in an OR between a placeholder and the
+  // real course that teaches the same material, the placeholder wins unless
+  // the real course is already in the set.
+  let n = code.startsWith(PREP_PREFIX) ? 0 : 1;
   for (const g of groupsOf(cat, code)) {
     const opts = g.filter((m) => cat[m]);
     if (opts.length) n += Math.min(...opts.map((m) => closureCost(cat, m, new Set(seen), memo)));

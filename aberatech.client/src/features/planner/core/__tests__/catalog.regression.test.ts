@@ -4,7 +4,7 @@
  */
 import { describe, expect, test } from 'vitest';
 import rawCatalog from '../../data/catalog.json';
-import { COMPOSITE, prepId, withBackground } from '../background';
+import { ADMISSION, COMPOSITE, PREP_SOURCE, prepId, withBackground } from '../background';
 import { CatalogData } from '../catalog';
 import { Plan } from '../plan';
 import { closure } from '../prereq';
@@ -56,7 +56,18 @@ describe('prerequisite readings that were wrong before', () => {
     ['EN.525.774', [['EN.525.623', 'EN.525.620']], 'either microwave circuits or transmission systems'],
     ['EN.525.707', [['EN.625.609'], ['EN.525.614'], ['EN.525.616']], 'three separate requirements'],
     ['EN.525.623', [], 'its prerequisite line is an exclusion, not a prerequisite'],
-    ['EN.525.783', [['EN.525.616'], ['EN.525.201'], ['EN.525.202']], 'one requirement plus two assumed bridge courses']
+    [
+      'EN.525.783',
+      [['EN.525.616'], ['EN.525.201', 'bg_circ'], ['EN.525.202', 'bg_sig']],
+      'one requirement plus two assumed bridge courses, each satisfiable by the background it teaches'
+    ],
+    [
+      'EN.525.789',
+      [['EN.525.616'], ['EN.525.640'], ['EN.525.201', 'bg_circ'], ['EN.525.202', 'bg_sig']],
+      'the same assumed bridge courses as 525.783'
+    ],
+    ['EN.525.664', [['EN.525.201', 'bg_circ']], '"or equivalent course in AC Circuit Theory" is a real choice'],
+    ['EN.525.674', [['EN.525.202', 'bg_sig']], '"EN.525.202 (Signals and Systems), or equivalent" is a real choice']
   ];
   for (const [code, expected, why] of cases) {
     test(`${code} ${data.title(code)}: ${why}`, () => {
@@ -140,7 +151,11 @@ describe('a degree stated as a prerequisite', () => {
 
   test('opting in turns the degree into the coursework that stands for it', () => {
     const cat = withBackground(C, data.background, held, new Set(['bg_ee']));
-    const parts = COMPOSITE.bg_ee.map((p) => [prepId(p)]);
+    // A part the catalog can teach offers the JHU course as the alternative.
+    const parts = COMPOSITE.bg_ee.map((p) => {
+      const jhu = PREP_SOURCE[p]?.jhu;
+      return jhu && C[jhu] ? [prepId(p), jhu] : [prepId(p)];
+    });
     expect(cat['EN.525.771'].groups).toEqual(parts);
     expect(closure(cat, ['EN.525.771']).has(prepId('bg_ugem'))).toBe(true);
   });
@@ -150,5 +165,38 @@ describe('a degree stated as a prerequisite', () => {
     expect(g.composite).toBe(true);
     expect(g.label).toBe(data.backgroundLabel('bg_ee'));
     expect(g.missing.length).toBe(COMPOSITE.bg_ee.length);
+  });
+});
+
+/**
+ * The programme's admission prerequisites, from the ECE master's degree
+ * requirements page. Circuits and signals and systems were missing from the
+ * catalog entirely, so no plan ever showed them.
+ */
+describe('the admission prerequisites', () => {
+  test('all five subjects are background items with a source', () => {
+    const known = new Set(data.background.map(([k]) => k));
+    for (const id of ADMISSION) {
+      expect(known.has(id), `${id} has no label`).toBe(true);
+      expect(PREP_SOURCE[id], `${id} has no source`).toBeDefined();
+    }
+  });
+  test('the bridge courses stand behind circuits and signals and systems', () => {
+    expect(PREP_SOURCE.bg_circ.jhu).toBe('EN.525.201');
+    expect(PREP_SOURCE.bg_sig.jhu).toBe('EN.525.202');
+  });
+  test('an EE degree supplies circuits and signals and systems', () => {
+    expect(COMPOSITE.bg_ee).toContain('bg_circ');
+    expect(COMPOSITE.bg_ee).toContain('bg_sig');
+  });
+  test('the signal processing foundation assumes signals and systems', () => {
+    for (const code of ['EN.525.613', 'EN.525.614', 'EN.525.616', 'EN.525.627']) {
+      expect(C[code].bg, `${code} should assume signals and systems`).toContain('bg_sig');
+    }
+  });
+  test('the circuit design courses assume circuit theory', () => {
+    for (const code of ['EN.525.624', 'EN.525.634']) {
+      expect(C[code].bg, `${code} should assume circuit theory`).toContain('bg_circ');
+    }
   });
 });
