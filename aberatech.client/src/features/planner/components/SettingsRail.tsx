@@ -15,7 +15,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { areaColor } from '../core/areaColors';
 import { plural } from '../core/format';
-import { holdsBackground, isComposite, missingParts } from '../core/background';
+import { ADMISSION, holdsBackground, isComposite, missingParts } from '../core/background';
 import { MAX_PER_TERM } from '../model/PlannerModel';
 import type { PlannerModel } from '../model/PlannerModel';
 import TrackPicker from './TrackPicker';
@@ -79,7 +79,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
 
       <Section
         title="Background you already have"
-        hint="An unticked subject becomes a preparation course, scheduled like any other prerequisite. A whole degree is not scheduled; it ticks itself once its parts are ticked."
+        hint="An unticked subject becomes a preparation course, scheduled like any other prerequisite. An unticked admission prerequisite stays on every plan, because admission is provisional until it is done. A whole degree is not scheduled; it ticks itself once its parts are ticked."
       >
         {model.data.background.map(([id, label]) => {
           const composite = isComposite(id);
@@ -109,6 +109,11 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
                   <Typography component="span" variant="body2">
                     {label}
                   </Typography>
+                  {ADMISSION.includes(id) && !satisfied && (
+                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                      Admission prerequisite
+                    </Typography>
+                  )}
                   {composite && parts.length > 0 && (
                     <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
                       {parts.length} of its parts still unticked
@@ -147,8 +152,8 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
               });
             }}
           >
-            <MenuItem value={3}>Three, including summer</MenuItem>
             <MenuItem value={2}>Two, spring and fall</MenuItem>
+            <MenuItem value={3}>Three, including summer</MenuItem>
           </TextField>
           <TextField
             select
