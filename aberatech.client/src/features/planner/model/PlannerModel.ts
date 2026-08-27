@@ -64,7 +64,7 @@ export class PlannerModel {
    */
   expandedBackground = new Set<string>();
   perTerm = 2;
-  termsPerYear = 3;
+  termsPerYear = 2;
   startTerm = 'Spring';
   startYear = 2027;
   autoPrereq = true;

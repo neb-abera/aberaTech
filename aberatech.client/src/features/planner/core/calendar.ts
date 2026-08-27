@@ -25,7 +25,7 @@ export class Calendar {
   readonly offset: number;
   readonly startYear: number;
 
-  constructor({ startTerm = 'Spring', startYear = 2027, termsPerYear = 3 }: CalendarOptions = {}) {
+  constructor({ startTerm = 'Spring', startYear = 2027, termsPerYear = 2 }: CalendarOptions = {}) {
     this.termsPerYear = termsPerYear === 2 ? 2 : 3;
     this.cycle = this.termsPerYear === 2 ? CYCLE_2 : CYCLE_3;
     const i = this.cycle.indexOf(startTerm);
