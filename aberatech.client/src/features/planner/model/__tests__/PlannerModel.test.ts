@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import rawCatalog from '../../data/catalog.json';
 import rawTracks from '../../data/tracks.json';
+import { ADMISSION, holdsBackground, PREP_SOURCE, prepId } from '../../core/background';
 import { CatalogData } from '../../core/catalog';
 import { Tracks } from '../../core/tracks';
 import type { RawCatalog, RawTracks, Track } from '../../core/types';
@@ -352,6 +353,72 @@ describe('why a term will or will not take a course', () => {
       const probe = planned();
       expect(probe.placeCourse(code, i).ok, `term ${i} was offered but refused the course`).toBe(true);
     }
+  });
+});
+
+/**
+ * The five admission prerequisites: mathematics through vector calculus and
+ * differential equations, calculus-based physics, linear and non-linear
+ * circuits, electromagnetics, and signals and systems. Missing ones do not bar
+ * enrolment - admission is provisional until they are complete - so every plan
+ * carries the ones the reader neither holds nor covers with a bridge course.
+ */
+describe('admission prerequisites', () => {
+  const covered = (m: PlannerModel, id: string) => {
+    if (holdsBackground(id, m.background)) return true;
+    const have = new Set(m.plan.courses());
+    const jhu = PREP_SOURCE[id]?.jhu;
+    return have.has(prepId(id)) || (!!jhu && have.has(jhu));
+  };
+
+  for (const t of tracks.all()) {
+    test(`${t.name}: every admission prerequisite is held or on the board`, () => {
+      const m = make();
+      m.selectTrack(t.id);
+      for (const id of ADMISSION) expect(covered(m, id), `${id} is not covered`).toBe(true);
+    });
+  }
+
+  test('a plan carrying the bridge course is not also handed its preparation', () => {
+    const m = make();
+    m.selectTrack('sme'); // its foundation stage schedules both bridge courses
+    const have = m.plan.courses();
+    expect(have).toContain('EN.525.201');
+    expect(have).not.toContain(prepId('bg_circ'));
+    expect(have).toContain('EN.525.202');
+    expect(have).not.toContain(prepId('bg_sig'));
+  });
+
+  test('a degree track without the bridge courses schedules the preparation instead', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    const have = m.plan.courses();
+    expect(have).toContain(prepId('bg_sig'));
+    expect(have).toContain(prepId('bg_circ'));
+  });
+
+  test('preparation the coursework needs sits before the course that needs it', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    const p = m.plan.placement();
+    expect(p.get(prepId('bg_sig'))).toBeLessThan(p.get('EN.525.614') ?? 0);
+  });
+
+  test('ticking every admission item takes all of its preparation off the board', () => {
+    const m = make();
+    for (const id of ADMISSION) m.background.add(id);
+    m.selectTrack('sp-rf');
+    for (const id of ADMISSION) {
+      expect(m.plan.courses(), `${id} preparation should be gone`).not.toContain(prepId(id));
+    }
+  });
+
+  test('the preparation does not displace the degree: a track still audits clean', () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    const a = m.audit();
+    expect(a.rules.filter((r) => !r.met)).toEqual([]);
+    expect(a.counted).toHaveLength(10);
   });
 });
 
