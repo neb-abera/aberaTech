@@ -2,7 +2,7 @@
   "sp-core": {
     "name": "Signal processing core",
     "kind": "degree",
-    "length": "10 courses, about 3.3 years at two a term",
+    "length": "10 courses, about 4.5 years at two a term",
     "goal": "The statistical signal processing sequence on its own: detection, estimation and the mathematics under them.",
     "tradeoff": "No RF content. You will know the algorithms without knowing the hardware they run on.",
     "stages": [
@@ -14,7 +14,7 @@
   "sp-rf": {
     "name": "Signal processing and RF, balanced",
     "kind": "degree",
-    "length": "10 courses, about 3.3 years at two a term",
+    "length": "10 courses, about 5 years at two a term",
     "goal": "Covers signal processing and RF together rather than either one in depth.",
     "tradeoff": "Less depth than either single-subject track. Adaptive filtering and multirate do not fit.",
     "stages": [
@@ -27,7 +27,7 @@
   "collector-10": {
     "name": "Receiver systems, in ten",
     "kind": "degree",
-    "length": "10 courses, about 3.3 years at two a term",
+    "length": "10 courses, about 5 years at two a term",
     "goal": "A receiver end to end inside ten courses: fields, front end, programmable logic and software radio.",
     "tradeoff": "Ten courses leaves no room for an antenna course, so the aperture is the part that gives. Take the full receiver track to design that too.",
     "stages": [
@@ -40,7 +40,7 @@
   "sme": {
     "name": "Statistical signal processing, in depth",
     "kind": "mastery",
-    "length": "24 courses, about 8 years at two a term",
+    "length": "24 courses, about 7.5 years at two a term",
     "goal": "Depth in statistical signal processing, with enough RF and systems work to follow a receiver end to end.",
     "tradeoff": "Light on hardware. You will understand a receiver as a system without having built one.",
     "stages": [
@@ -55,7 +55,7 @@
   "collector-full": {
     "name": "Build your own receiver",
     "kind": "mastery",
-    "length": "32 courses, about 11 years at two a term",
+    "length": "32 courses, about 10.5 years at two a term",
     "goal": "Every stage of the signal chain, antenna to processed output, with the bench work to build and test each one. Ordered as the signal travels.",
     "tradeoff": "Much longer than the others. Covers design, build and test of the whole receiver rather than one layer of it.",
     "stages": [
