@@ -152,8 +152,8 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
               });
             }}
           >
-            <MenuItem value={3}>Three, including summer</MenuItem>
             <MenuItem value={2}>Two, spring and fall</MenuItem>
+            <MenuItem value={3}>Three, including summer</MenuItem>
           </TextField>
           <TextField
             select
