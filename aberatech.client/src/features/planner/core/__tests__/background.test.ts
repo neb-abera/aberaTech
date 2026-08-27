@@ -96,7 +96,9 @@ describe('a composite background item', () => {
     ['bg_la', 'Linear Algebra and Matrix Theory'],
     ['bg_cx', 'Complex Variables'],
     ['bg_phys', 'Calculus based Physics I and II'],
+    ['bg_circ', 'Linear and Nonlinear Circuits'],
     ['bg_ugem', 'Undergraduate Electromagnetics'],
+    ['bg_sig', 'Signals and Systems'],
     ['bg_dig', 'Digital Logic and State Machines'],
     ['bg_ee', 'A full undergraduate EE degree']
   ];
