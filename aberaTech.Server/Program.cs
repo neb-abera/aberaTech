@@ -93,6 +93,17 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
         builder.Services.AddHttpClient<GoogleCalendarBusySource>(client =>
             client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
+
+        builder.Services.AddHttpClient<GoogleCalendarInvites>(client =>
+            client.Timeout = TimeSpan.FromSeconds(calendarOptions.TimeoutSeconds));
+        builder.Services.AddScoped<ICalendarInvites>(services =>
+            services.GetRequiredService<GoogleCalendarInvites>());
+    }
+    else
+    {
+        // Same shape as the logging SMS sender: booking with an email works in
+        // development without a Google project, it just sends no invite.
+        builder.Services.AddScoped<ICalendarInvites, NoCalendarInvites>();
     }
 
     builder.Services.AddScoped<IBusySource>(services =>
