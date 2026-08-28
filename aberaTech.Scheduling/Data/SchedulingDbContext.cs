@@ -51,6 +51,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(appointment => appointment.DisplayName).HasMaxLength(120).IsRequired();
             entity.Property(appointment => appointment.PhoneE164).HasMaxLength(16).IsRequired();
             entity.Property(appointment => appointment.BookedZoneId).HasMaxLength(64).IsRequired();
+            entity.Property(appointment => appointment.Email).HasMaxLength(254);
+            entity.Property(appointment => appointment.GoogleEventId).HasMaxLength(1024);
 
             // Reading the agenda is always "what is on between these two
             // instants", so the index matches the query rather than the key.
@@ -102,6 +104,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasKey(credential => credential.Id);
             entity.Property(credential => credential.CalendarId).HasMaxLength(320).IsRequired();
             entity.Property(credential => credential.ConnectedEmail).HasMaxLength(320).IsRequired();
+            entity.Property(credential => credential.GrantedScopes).HasMaxLength(2048).IsRequired();
 
             // No length cap on the protected token: the ciphertext is longer
             // than the token and grows if the protection payload format ever

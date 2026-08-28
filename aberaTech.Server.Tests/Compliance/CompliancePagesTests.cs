@@ -87,4 +87,16 @@ public class CompliancePagesTests
         Assert.DoesNotContain("REVOKE", CompliancePages.Terms);
         Assert.DoesNotContain("OPT OUT", CompliancePages.Terms);
     }
+
+    [Fact]
+    public void The_privacy_policy_discloses_the_calendar_invite_email()
+    {
+        // The booking form now collects an optional email for the calendar
+        // invite. A policy that says "nothing else" while the form asks for
+        // more is exactly the conflict vetting rejects, so the disclosure
+        // must keep pace with the form.
+        Assert.Contains("calendar invite", CompliancePages.Privacy);
+        Assert.Contains("email address", CompliancePages.Privacy);
+        Assert.Contains("Google Calendar", CompliancePages.Privacy);
+    }
 }
