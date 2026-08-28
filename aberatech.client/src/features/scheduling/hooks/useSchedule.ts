@@ -29,7 +29,13 @@ interface Schedule {
   loading: boolean;
   join: (name: string, phone: string, smsConsent: boolean) => Promise<string | null>;
   leave: () => Promise<void>;
-  book: (startsAt: string, name: string, phone: string, smsConsent: boolean) => Promise<{ error: string | null }>;
+  book: (
+    startsAt: string,
+    name: string,
+    phone: string,
+    smsConsent: boolean,
+    email: string
+  ) => Promise<{ error: string | null }>;
   booking: BookingConfirmation | null;
   selectDate: (date: string) => void;
 }
@@ -129,11 +135,11 @@ export function useSchedule(): Schedule {
   }, [refresh]);
 
   const book = useCallback(
-    async (startsAt: string, name: string, phone: string, smsConsent: boolean) => {
+    async (startsAt: string, name: string, phone: string, smsConsent: boolean, email: string) => {
       const response = await fetch('/api/scheduling/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone(), smsConsent })
+        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone(), smsConsent, email })
       });
 
       if (response.status === 429) {

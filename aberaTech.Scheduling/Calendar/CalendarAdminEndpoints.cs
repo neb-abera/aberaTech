@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Data;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -19,7 +19,14 @@ namespace aberaTech.Scheduling.Calendar;
 /// </remarks>
 public static class CalendarAdminEndpoints
 {
-    private const string ReadOnlyScope = "https://www.googleapis.com/auth/calendar.readonly";
+    internal const string ReadOnlyScope = "https://www.googleapis.com/auth/calendar.readonly";
+
+    /// <summary>
+    /// Lets the site create and cancel the calendar events that carry a
+    /// visitor's invitation. Free/busy needs only read access, so a grant
+    /// without this scope still hides busy time; it just cannot send invites.
+    /// </summary>
+    internal const string EventsScope = "https://www.googleapis.com/auth/calendar.events";
 
     public static IEndpointRouteBuilder MapCalendarAdminEndpoints(this IEndpointRouteBuilder routes)
     {
@@ -32,24 +39,38 @@ public static class CalendarAdminEndpoints
 
         // The consent round trip. A GET because it is a redirect the browser
         // follows, not an API call.
-        group.MapGet("/connect", (HttpContext context) =>
-        {
-            var properties = new AuthenticationProperties { RedirectUri = "/schedule/admin" };
-
-            // Offline access is what yields a refresh token; without it the
-            // grant dies with the browser session and free/busy stops working
-            // the moment the host closes the tab. The consent prompt is forced
-            // because Google returns a refresh token only on the first consent,
-            // so a reconnect after a revoke would otherwise come back without
-            // one and appear to succeed while being useless.
-            properties.SetParameter("access_type", "offline");
-            properties.SetParameter("prompt", "consent");
-
-            return Results.Challenge(properties, ["Google"]);
-        });
+        group.MapGet("/connect", () => Results.Challenge(ConnectProperties(), ["Google"]));
 
         return routes;
     }
+
+    /// <summary>
+    /// The challenge that connects a calendar, as opposed to a plain sign-in.
+    /// </summary>
+    /// <remarks>
+    /// The calendar scopes are requested here and only here. The sign-in
+    /// handler's own scope list stays at "email", because signing in to the
+    /// admin page should never quietly ask for somebody's calendar.
+    ///
+    /// Overriding the scope on the challenge replaces the handler's list rather
+    /// than adding to it, so openid and email are repeated: without them Google
+    /// returns no address, the allowlist has nothing to check, and the connect
+    /// succeeds as an authorisation while failing as a sign-in.
+    ///
+    /// Offline access is what yields a refresh token; without it the grant dies
+    /// with the browser session and free/busy stops working the moment the host
+    /// closes the tab. The consent prompt is forced because Google returns a
+    /// refresh token only on the first consent, so a reconnect after a revoke
+    /// would otherwise come back without one and appear to succeed while being
+    /// useless.
+    /// </remarks>
+    internal static GoogleChallengeProperties ConnectProperties() => new()
+    {
+        RedirectUri = "/schedule/admin",
+        AccessType = "offline",
+        Prompt = "consent",
+        Scope = ["openid", "email", ReadOnlyScope, EventsScope]
+    };
 
     private static async Task<IResult> StatusAsync(
         SchedulingDbContext database,
@@ -61,7 +82,11 @@ public static class CalendarAdminEndpoints
         {
             connected = credential is not null,
             email = credential?.ConnectedEmail,
-            calendarId = credential?.CalendarId
+            calendarId = credential?.CalendarId,
+            // False for a credential stored before the events scope was
+            // requested. The remedy is shown by the admin page: disconnect and
+            // connect again, which asks for the fuller grant.
+            invitesEnabled = credential?.GrantedScopes.Contains(EventsScope, StringComparison.Ordinal) ?? false
         });
     }
 
@@ -117,7 +142,8 @@ public static class CalendarAdminEndpoints
             ProtectedRefreshToken = tokens.Protect(refreshToken),
             CalendarId = "primary",
             ConnectedEmail = user.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
-            ConnectedAt = clock.GetCurrentInstant()
+            ConnectedAt = clock.GetCurrentInstant(),
+            GrantedScopes = grantedScopes
         });
 
         await database.SaveChangesAsync(cancellationToken);
