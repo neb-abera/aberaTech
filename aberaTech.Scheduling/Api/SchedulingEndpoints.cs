@@ -64,7 +64,13 @@ public sealed record MyPlace(
 
 public sealed record JoinRequest(string? Name, string? Phone, string? ZoneId, bool SmsConsent = false);
 
-public sealed record BookRequest(string? StartsAt, string? Name, string? Phone, string? ZoneId, bool SmsConsent = false);
+public sealed record BookRequest(
+    string? StartsAt,
+    string? Name,
+    string? Phone,
+    string? ZoneId,
+    bool SmsConsent = false,
+    string? Email = null);
 
 public sealed record BookingConfirmation(Guid Id, string StartsAt, string EndsAt);
 
@@ -452,6 +458,7 @@ public static class SchedulingEndpoints
         SchedulingDbContext database,
         SchedulingOptions options,
         IBusySource busySource,
+        ICalendarInvites invites,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -463,6 +470,16 @@ public static class SchedulingEndpoints
         if (request.SmsConsent && !PhoneNumber.TryParse(request.Phone, out phone))
         {
             return Results.BadRequest(new { error = "Enter a US mobile number, or untick text updates." });
+        }
+
+        // Same footing as the number: entering an address is asking for the
+        // invite, leaving the field blank is declining it, and a blank is
+        // never an error.
+        EmailAddress? email = null;
+
+        if (!string.IsNullOrWhiteSpace(request.Email) && !EmailAddress.TryParse(request.Email, out email))
+        {
+            return Results.BadRequest(new { error = "That email address does not look right. Clear it, or fix it." });
         }
 
         var name = (request.Name ?? string.Empty).Trim();
@@ -520,6 +537,7 @@ public static class SchedulingEndpoints
             BookedZoneId = zone.Id,
             DisplayName = name,
             PhoneE164 = phone?.E164 ?? string.Empty,
+            Email = email?.Value,
             SmsConsent = request.SmsConsent,
             ConsentedAt = request.SmsConsent ? now : null,
             ConsentDisclosure = request.SmsConsent ? Sms.ConsentDisclosure.Current : null,
@@ -580,6 +598,17 @@ public static class SchedulingEndpoints
             return Results.Conflict(new { error = "That time was just taken. Please pick another." });
         }
 
+        // Only after the booking is committed. An invite for a booking that
+        // then failed to save would announce an appointment that does not
+        // exist, so the order is booking first, courtesy second — and a failed
+        // courtesy leaves the booking standing.
+        if (email is not null
+            && await invites.CreateEventAsync(appointment, cancellationToken) is { } eventId)
+        {
+            appointment.GoogleEventId = eventId;
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
         return Results.Ok(new BookingConfirmation(appointment.Id, Format(startsAt), Format(endsAt)));
     }
 
@@ -602,6 +631,7 @@ public static class SchedulingEndpoints
         Guid appointmentId,
         SchedulingDbContext database,
         SchedulingOptions options,
+        ICalendarInvites invites,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -647,6 +677,15 @@ public static class SchedulingEndpoints
         }
 
         await database.SaveChangesAsync(cancellationToken);
+
+        // After the cancellation is committed, for the same reason the invite
+        // followed the booking: Google being down should never block the
+        // cancel, and the event still tells the truth better stale than the
+        // appointment does.
+        if (appointment.GoogleEventId is { } eventId)
+        {
+            await invites.DeleteEventAsync(eventId, cancellationToken);
+        }
 
         return Results.NoContent();
     }

@@ -22,7 +22,13 @@ interface Props {
   selectedDate: string | null;
   slots: SlotView[];
   onSelectDate: (date: string) => void;
-  onBook: (startsAt: string, name: string, phone: string, smsConsent: boolean) => Promise<{ error: string | null }>;
+  onBook: (
+    startsAt: string,
+    name: string,
+    phone: string,
+    smsConsent: boolean,
+    email: string
+  ) => Promise<{ error: string | null }>;
   consentDisclosure: string;
 }
 
@@ -54,6 +60,7 @@ export default function SlotList({
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [smsConsent, setSmsConsent] = React.useState(false);
+  const [email, setEmail] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -78,7 +85,7 @@ export default function SlotList({
     if (!chosen) return;
 
     setBusy(true);
-    const result = await onBook(chosen.startsAt, name.trim(), phone.trim(), smsConsent);
+    const result = await onBook(chosen.startsAt, name.trim(), phone.trim(), smsConsent, email.trim());
     setBusy(false);
 
     if (result.error) {
@@ -209,6 +216,19 @@ export default function SlotList({
                   slotProps={{ htmlInput: { maxLength: 32 } }}
                 />
               ) : null}
+
+              {/* Entering an address is the ask; leaving it blank declines.
+                  Same principle as the number: no checkbox to say yes and a
+                  field to say it again. */}
+              <TextField
+                label="Email (optional)"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                size="small"
+                type="email"
+                helperText="For a Google Calendar invite to this time. Nothing else is sent to it."
+                slotProps={{ htmlInput: { maxLength: 254 } }}
+              />
             </Stack>
           </DialogContent>
           <DialogActions>
