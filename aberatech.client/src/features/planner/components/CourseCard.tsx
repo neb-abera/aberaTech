@@ -164,7 +164,7 @@ export default function CourseCard({ code, pinned, onClose }: CourseCardProps) {
               variant="contained"
               onClick={() => {
                 ctx.update((m) => {
-                  m.placeAtEnd(code);
+                  m.autoPlace(code);
                 });
               }}
             >
