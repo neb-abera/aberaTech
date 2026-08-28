@@ -123,6 +123,16 @@ services:
       # that looks like a bug.
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Scheduling: 'Host=db;Port=5432;Database=scheduling;Username=scheduling;Password=scheduling'
+      # Reminder leads, overridable so a reminder can be watched firing in
+      # minutes rather than an hour:
+      #
+      #   REMINDER_LEAD_MINUTES=2 BOOKING_LEAD_MINUTES=1 make up
+      #
+      # then book the first slot offered and watch `docker compose logs -f app`
+      # for the send two minutes before it starts. Defaults match production.
+      Scheduling__ReminderLeadMinutes: '${REMINDER_LEAD_MINUTES:-60}'
+      Scheduling__EarlyReminderLeadMinutes: '${EARLY_REMINDER_LEAD_MINUTES:-1440}'
+      Scheduling__BookingLeadMinutes: '${BOOKING_LEAD_MINUTES:-30}'
     depends_on:
       db:
         condition: service_healthy
