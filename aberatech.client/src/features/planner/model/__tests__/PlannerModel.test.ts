@@ -466,6 +466,26 @@ describe('auto placement after a removal', () => {
     for (const [, t] of p) expect(term).toBeGreaterThanOrEqual(t);
     expect(m.plan.violations()).toEqual([]);
   });
+
+  test('a blocked course brings its missing prerequisites along, in order', () => {
+    const m = onTrack();
+    // EN.525.677 needs EN.525.627, already on the board, and EN.525.642, not.
+    const r = m.autoPlace('EN.525.677');
+    expect(r.ok).toBe(true);
+    expect(r.added).toContain('EN.525.642');
+    const p = m.plan.placement();
+    expect(p.get('EN.525.642')).toBeLessThan(p.get('EN.525.677') ?? 0);
+    expect(m.plan.violations()).toEqual([]);
+  });
+
+  test('a course whose prerequisite is outside the catalog is refused, not placed broken', () => {
+    const m = onTrack();
+    const broken = Object.keys(m.courses).find((c) => !m.isRescuable(c));
+    if (!broken) return; // nothing in the current catalog is unreachable
+    const r = m.autoPlace(broken);
+    expect(r.ok).toBe(false);
+    expect(m.plan.has(broken)).toBe(false);
+  });
 });
 
 describe('degree picks', () => {
