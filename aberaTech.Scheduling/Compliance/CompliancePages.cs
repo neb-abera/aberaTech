@@ -131,13 +131,16 @@ public static class CompliancePages
 
         <h2>What is collected</h2>
         <p>The name you type, the time you booked, the time zone your browser reports, and, only if you ask for text
-        updates, your mobile number. Nothing else. There is no account, no password, and no tracking of you across other
-        sites.</p>
+        updates, your mobile number. If you ask for a calendar invite when booking, the email address you enter, which
+        is used to send that invitation and for nothing else. Nothing else. There is no account, no password, and no
+        tracking of you across other sites.</p>
 
         <h2>Who it is shared with</h2>
         <p>Only the messaging provider that carries the text, and only so that it can be delivered. Your mobile phone
         number and messaging consent data are not shared, sold, or provided to third parties or affiliates for marketing
         or promotional purposes. Text messaging originator opt-in data and consent are never shared with anyone.</p>
+        <p>If you ask for a calendar invite, your email address goes to Google Calendar, and only so the invitation can
+        be delivered. It is not used for marketing and not shared with anyone else.</p>
 
         <h2>The messages themselves</h2>
         <p>Texts are sent only if you tick the box asking for them when you book or join the queue, and they are only

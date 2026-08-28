@@ -43,6 +43,20 @@ public class Appointment
     public string PhoneE164 { get; set; } = string.Empty;
 
     /// <summary>
+    /// Null unless they asked for a calendar invite. Entering an address is the
+    /// ask; there is no separate checkbox, because an optional field left blank
+    /// already says no.
+    /// </summary>
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// The Google Calendar event carrying the invite, so cancelling the booking
+    /// can cancel the invitation too. Null when no invite was sent — no email
+    /// given, no calendar connected, or the grant lacks the events scope.
+    /// </summary>
+    public string? GoogleEventId { get; set; }
+
+    /// <summary>
     /// Whether they actively agreed to be texted about this appointment.
     /// </summary>
     /// <remarks>
@@ -182,6 +196,15 @@ public class HostCalendarCredential
 
     /// <summary>Which calendar to read. "primary" unless the host says otherwise.</summary>
     public string CalendarId { get; set; } = "primary";
+
+    /// <summary>
+    /// The scopes Google actually granted, space separated as Google returns
+    /// them. What the grant can do is a property of the grant, not of whatever
+    /// the code happens to request today: a credential stored before the events
+    /// scope was asked for can read free/busy but cannot send invites, and the
+    /// only honest way to know is to have kept the answer.
+    /// </summary>
+    public string GrantedScopes { get; set; } = string.Empty;
 
     /// <summary>The account that granted access, so the page can say whose calendar this is.</summary>
     public string ConnectedEmail { get; set; } = string.Empty;
