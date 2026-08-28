@@ -408,9 +408,25 @@ export class PlannerModel {
     return { ok: r.ok, added: r.added, reason: r.reason };
   }
 
-  /** Place a course in the last term of the plan, prerequisites and all. */
-  placeAtEnd(code: string): { ok: boolean; added: string[]; reason?: string } {
-    return this.placeCourse(code, Math.max(this.plan.terms.length - 1, 0));
+  /**
+   * Place a course where it belongs in the sequence, prerequisites and all.
+   *
+   * This used to mean the last term, unconditionally, which read as nonsense
+   * for anything the sequence constrains: preparation re-added after a removal
+   * landed after the coursework it exists to precede. Preparation goes into
+   * the earliest term that has room. Anything else goes as late as its placed
+   * dependents allow, which for a course nothing depends on is still the end.
+   * A course whose prerequisites are not on the board yet keeps the old path,
+   * so the automatic inserter can bring them along.
+   */
+  autoPlace(code: string): { ok: boolean; added: string[]; reason?: string } {
+    const last = Math.max(this.plan.terms.length - 1, 0);
+    const legal = [...this.plan.legalTermsFor(code)].sort((a, b) => a - b);
+    if (!legal.length) return this.placeCourse(code, last);
+    const room = legal.filter((t) => (this.plan.terms[t]?.length ?? 0) < this.perTerm);
+    const pick = room.length ? room : legal;
+    const target = isPrep(code) ? pick[0] : Math.min(last, pick[pick.length - 1]);
+    return this.placeCourse(code, target);
   }
 
   removeCourse(code: string): void {
