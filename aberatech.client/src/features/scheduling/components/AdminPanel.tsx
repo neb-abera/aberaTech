@@ -14,6 +14,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { useAdminQueue } from '../hooks/useAdminQueue';
 import AvailabilityEditor from './AvailabilityEditor';
 import { formatTime } from '../core/format';
+import { kindLabel, stateChip, type AdminMessage } from '../core/messages';
 
 /**
  * The host's side of the queue: open it, work down the line, close it.
@@ -29,6 +30,7 @@ export default function AdminPanel() {
     signedIn,
     email,
     queue,
+    messages,
     error,
     loading,
     openSession,
@@ -260,6 +262,75 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Messages
+            </Typography>
+
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Every text this site has decided to send: confirmations and reminders waiting for their moment, then what
+              actually happened to each. A reminder listed here will go out even if this page is closed.
+            </Typography>
+
+            {messages && (messages.upcoming.length > 0 || messages.recent.length > 0) ? (
+              <Stack divider={<Divider />} spacing={1.5}>
+                {messages.upcoming.map((message) => (
+                  <MessageRow key={message.id} message={message} />
+                ))}
+                {messages.recent.map((message) => (
+                  <MessageRow key={message.id} message={message} />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                Nothing yet. Rows appear when somebody books or joins the queue.
+              </Typography>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
     </Stack>
+  );
+}
+
+/**
+ * One outbound message: what it is, who it is for, and where it stands.
+ *
+ * Queued rows show when they are due; settled rows show when they went. The
+ * only state allowed to shout is a dead letter, because a reminder that will
+ * never arrive is the one thing on this page that needs a human.
+ */
+function MessageRow({ message }: { message: AdminMessage }) {
+  const chip = stateChip(message.state);
+  const isQueued = message.state === 'Pending' || message.state === 'Failed';
+  const when = isQueued
+    ? message.dueAt
+      ? `due ${formatTime(message.dueAt)}`
+      : 'due now'
+    : message.sentAt
+      ? formatTime(message.sentAt)
+      : '';
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', pt: 1 }}>
+      <Box sx={{ flexGrow: 1, minWidth: 180 }}>
+        <Typography variant="body2">
+          {kindLabel(message.kind)} · {message.to}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {when}
+          {message.attempts > 1 ? ` · attempt ${message.attempts}` : ''}
+        </Typography>
+        {message.lastError ? (
+          <Typography variant="caption" sx={{ color: 'error.main', display: 'block' }}>
+            {message.lastError}
+          </Typography>
+        ) : null}
+      </Box>
+      <Chip size="small" color={chip.color} variant={isQueued ? 'outlined' : 'filled'} label={chip.label} />
+    </Box>
   );
 }

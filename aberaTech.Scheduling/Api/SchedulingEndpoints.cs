@@ -560,23 +560,20 @@ public static class SchedulingEndpoints
             database.Outbox.Add(NewMessage(appointment, NotificationKind.Booked, options, zone, now, now));
         }
 
-        // Two reminders, at the two moments they are useful for different
-        // things: a day out is the last point at which somebody can rearrange
-        // their day, and an hour out tells them to set off. Both are ordinary
-        // outbox rows with a future NextAttemptAt, so neither needs a scheduler.
-        //
-        // Skipped when the appointment is nearer than the lead time. A "tomorrow"
-        // reminder for something in two hours is noise, and one whose due time
-        // has already passed would go out immediately, which is worse.
+        // Which reminders, and when, is ReminderPlanner's decision, pinned by
+        // its own tests. Each is an ordinary outbox row with a future
+        // NextAttemptAt, so it needs no scheduler and inherits the same retry,
+        // receipt and dead letter handling as everything else.
         if (request.SmsConsent)
         {
-            AddReminderIfUseful(
-                database, appointment, NotificationKind.ReminderDayBefore, options, zone, now,
-                startsAt - Duration.FromMinutes(options.EarlyReminderLeadMinutes));
-
-            AddReminderIfUseful(
-                database, appointment, NotificationKind.Reminder, options, zone, now,
-                startsAt - Duration.FromMinutes(options.ReminderLeadMinutes));
+            foreach (var reminder in ReminderPlanner.Plan(
+                         now,
+                         startsAt,
+                         Duration.FromMinutes(options.EarlyReminderLeadMinutes),
+                         Duration.FromMinutes(options.ReminderLeadMinutes)))
+            {
+                database.Outbox.Add(NewMessage(appointment, reminder.Kind, options, zone, now, reminder.DueAt));
+            }
         }
 
         if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
@@ -688,24 +685,6 @@ public static class SchedulingEndpoints
         }
 
         return Results.NoContent();
-    }
-
-    /// <summary>Queues a reminder only if it would land before the appointment.</summary>
-    private static void AddReminderIfUseful(
-        SchedulingDbContext database,
-        Appointment appointment,
-        NotificationKind kind,
-        SchedulingOptions options,
-        DateTimeZone zone,
-        Instant now,
-        Instant dueAt)
-    {
-        if (dueAt <= now)
-        {
-            return;
-        }
-
-        database.Outbox.Add(NewMessage(appointment, kind, options, zone, now, dueAt));
     }
 
     private static OutboxMessage NewMessage(
