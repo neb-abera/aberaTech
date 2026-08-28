@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { AdminMessages } from '../core/messages';
 
 export interface AdminEntry {
   id: string;
@@ -31,6 +32,7 @@ interface Admin {
   signedIn: boolean;
   email: string | null;
   queue: AdminQueue | null;
+  messages: AdminMessages | null;
   error: string | null;
   loading: boolean;
   openSession: (name: string, hoursOpen: number) => Promise<string | null>;
@@ -48,6 +50,7 @@ export function useAdminQueue(): Admin {
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [queue, setQueue] = useState<AdminQueue | null>(null);
+  const [messages, setMessages] = useState<AdminMessages | null>(null);
   const [calendar, setCalendar] = useState<CalendarStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,9 +75,10 @@ export function useAdminQueue(): Admin {
         return;
       }
 
-      const [queueResponse, calendarResponse] = await Promise.all([
+      const [queueResponse, calendarResponse, messagesResponse] = await Promise.all([
         fetch('/api/scheduling/admin/queue'),
-        fetch('/api/scheduling/admin/calendar')
+        fetch('/api/scheduling/admin/calendar'),
+        fetch('/api/scheduling/admin/messages')
       ]);
 
       if (!queueResponse.ok) throw new Error(`Could not read the queue (${queueResponse.status}).`);
@@ -83,6 +87,10 @@ export function useAdminQueue(): Admin {
 
       if (calendarResponse.ok) {
         setCalendar((await calendarResponse.json()) as CalendarStatus);
+      }
+
+      if (messagesResponse.ok) {
+        setMessages((await messagesResponse.json()) as AdminMessages);
       }
 
       setError(null);
@@ -155,6 +163,7 @@ export function useAdminQueue(): Admin {
     signedIn,
     email,
     queue,
+    messages,
     error,
     loading,
     openSession,
