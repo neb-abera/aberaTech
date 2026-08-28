@@ -411,22 +411,22 @@ export class PlannerModel {
   /**
    * Place a course where it belongs in the sequence, prerequisites and all.
    *
-   * This used to mean the last term, unconditionally, which read as nonsense
-   * for anything the sequence constrains: preparation re-added after a removal
-   * landed after the coursework it exists to precede. Preparation goes into
-   * the earliest term that has room. Anything else goes as late as its placed
-   * dependents allow, which for a course nothing depends on is still the end.
-   * A course whose prerequisites are not on the board yet keeps the old path,
-   * so the automatic inserter can bring them along.
+   * The same engine as addSelectionToPlan, for one course: the board plus the
+   * newcomer and its prerequisite closure, rescheduled. An earlier version
+   * picked a term itself, with its own rules for preparation and dependents,
+   * which was a second placement policy to keep correct; the scheduler already
+   * knows where everything goes.
    */
   autoPlace(code: string): { ok: boolean; added: string[]; reason?: string } {
-    const last = Math.max(this.plan.terms.length - 1, 0);
-    const legal = [...this.plan.legalTermsFor(code)].sort((a, b) => a - b);
-    if (!legal.length) return this.placeCourse(code, last);
-    const room = legal.filter((t) => (this.plan.terms[t]?.length ?? 0) < this.perTerm);
-    const pick = room.length ? room : legal;
-    const target = isPrep(code) ? pick[0] : Math.min(last, pick[pick.length - 1]);
-    return this.placeCourse(code, target);
+    if (!this.courses[code]) return { ok: false, added: [], reason: `${code} is not in the catalog` };
+    if (!this.isRescuable(code)) {
+      return { ok: false, added: [], reason: `${code} requires a course that is not in the catalog` };
+    }
+    const before = new Set(this.plan.courses());
+    this.plan = this.scheduleFor(closure(this.courses, [...before, code]));
+    this.lastAdded = this.plan.courses().filter((c) => c !== code && !before.has(c));
+    this.focus = null;
+    return { ok: true, added: this.lastAdded };
   }
 
   removeCourse(code: string): void {
