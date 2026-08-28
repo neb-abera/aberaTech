@@ -422,6 +422,52 @@ describe('admission prerequisites', () => {
   });
 });
 
+/**
+ * Removing a course and adding it back from the pool used to drop it in the
+ * last term unconditionally, which put preparation after the coursework it
+ * exists to precede. Placement is validated against the sequence instead.
+ */
+describe('auto placement after a removal', () => {
+  const onTrack = () => {
+    const m = make();
+    m.selectTrack('sp-rf');
+    return m;
+  };
+
+  test('preparation re-added after a removal goes back to the front, not the end', () => {
+    const m = onTrack();
+    const prep = prepId('bg_de');
+    m.removeCourse(prep);
+    const r = m.autoPlace(prep);
+    expect(r.ok).toBe(true);
+    const p = m.plan.placement();
+    expect(p.get(prep)).toBeLessThan(p.get('EN.525.614') ?? 0);
+    expect(m.plan.violations()).toEqual([]);
+  });
+
+  test('a re-added course lands inside the window its dependents leave open', () => {
+    const m = onTrack();
+    m.removeCourse('EN.525.614'); // EN.525.728 and EN.525.744 both require it
+    const r = m.autoPlace('EN.525.614');
+    expect(r.ok).toBe(true);
+    const p = m.plan.placement();
+    expect(p.get('EN.525.614')).toBeLessThan(p.get('EN.525.728') ?? 0);
+    expect(p.get('EN.525.614')).toBeLessThan(p.get('EN.525.744') ?? 0);
+    expect(m.plan.violations()).toEqual([]);
+  });
+
+  test('a course nothing depends on still goes to the end', () => {
+    const m = onTrack();
+    m.removeCourse('EN.525.751');
+    const r = m.autoPlace('EN.525.751');
+    expect(r.ok).toBe(true);
+    const p = m.plan.placement();
+    const term = p.get('EN.525.751') ?? -1;
+    for (const [, t] of p) expect(term).toBeGreaterThanOrEqual(t);
+    expect(m.plan.violations()).toEqual([]);
+  });
+});
+
 describe('degree picks', () => {
   test('the first manual pick materialises the automatic ten so editing starts from something real', () => {
     const m = rf();
