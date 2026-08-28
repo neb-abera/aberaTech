@@ -58,7 +58,7 @@ export default function NeedBar() {
           variant="contained"
           onClick={() => {
             ctx.update((m) => {
-              m.placeAtEnd(code);
+              m.autoPlace(code);
             });
           }}
         >
