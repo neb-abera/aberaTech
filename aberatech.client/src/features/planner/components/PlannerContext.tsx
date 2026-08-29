@@ -2,14 +2,14 @@
  * The shared handles every course chip needs, so they do not have to be threaded
  * through the board, the term list and the pool one prop at a time.
  */
-import { createContext, useContext } from 'react';
-import type { PlannerModel } from '../model/PlannerModel';
+import { createContext, useContext } from "react";
+import type { PlannerModel } from "../model/PlannerModel";
 
 export interface PlannerContextValue {
   model: PlannerModel;
   update: (fn: (model: PlannerModel) => void) => void;
   /** Light or dark, read once at the top so chips do not each ask the theme. */
-  mode: 'light' | 'dark';
+  mode: "light" | "dark";
   /** Course being dragged, or null. */
   drag: string | null;
   setDrag: (code: string | null) => void;
@@ -35,6 +35,7 @@ export const PlannerProvider = PlannerContext.Provider;
 
 export function usePlannerContext(): PlannerContextValue {
   const v = useContext(PlannerContext);
-  if (!v) throw new Error('usePlannerContext must be used inside a PlannerProvider');
+  if (!v)
+    throw new Error("usePlannerContext must be used inside a PlannerProvider");
   return v;
 }

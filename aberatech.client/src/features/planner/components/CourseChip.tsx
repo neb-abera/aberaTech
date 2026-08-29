@@ -6,21 +6,22 @@
  * matters (blocked, applied to the degree, pulled in automatically, breaking a
  * rule) is spelled out in words and in the border, not in hue alone.
  */
-import { useState } from 'react';
-import type { DragEvent, MouseEvent } from 'react';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import { alpha } from '@mui/material/styles';
-import CloseRounded from '@mui/icons-material/CloseRounded';
-import MoreVert from '@mui/icons-material/MoreVert';
-import { courseColor } from '../core/areaColors';
-import { shortCode } from '../core/format';
-import type { PlannerModel } from '../model/PlannerModel';
-import { usePlannerContext } from './PlannerContext';
+
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import MoreVert from "@mui/icons-material/MoreVert";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import { alpha } from "@mui/material/styles";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import type { DragEvent, MouseEvent } from "react";
+import { useState } from "react";
+import { courseColor } from "../core/areaColors";
+import { shortCode } from "../core/format";
+import type { PlannerModel } from "../model/PlannerModel";
+import { usePlannerContext } from "./PlannerContext";
 
 export interface CourseChipProps {
   code: string;
@@ -32,7 +33,12 @@ export interface CourseChipProps {
   readOnly?: boolean;
 }
 
-export default function CourseChip({ code, inPool = false, blocked = false, readOnly = false }: CourseChipProps) {
+export default function CourseChip({
+  code,
+  inPool = false,
+  blocked = false,
+  readOnly = false,
+}: CourseChipProps) {
   const ctx = usePlannerContext();
   const { model } = ctx;
   const course = model.get(code);
@@ -49,7 +55,13 @@ export default function CourseChip({ code, inPool = false, blocked = false, read
   const isFocus = model.focus === code;
   const colour = courseColor(course.areas, model.areas, ctx.mode);
 
-  const borderColour = isBroken ? 'error.main' : isFocus ? 'primary.main' : isNeeded ? 'success.main' : 'divider';
+  const borderColour = isBroken
+    ? "error.main"
+    : isFocus
+      ? "primary.main"
+      : isNeeded
+        ? "success.main"
+        : "divider";
 
   const openMenu = (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -72,8 +84,8 @@ export default function CourseChip({ code, inPool = false, blocked = false, read
         draggable={canDrag}
         data-code={code}
         onDragStart={(e: DragEvent<HTMLSpanElement>) => {
-          e.dataTransfer.setData('text/plain', code);
-          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData("text/plain", code);
+          e.dataTransfer.effectAllowed = "move";
           ctx.setDrag(code);
         }}
         onDragEnd={() => {
@@ -87,27 +99,27 @@ export default function CourseChip({ code, inPool = false, blocked = false, read
           ctx.pinDetail(code, e.currentTarget);
         }}
         sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
+          display: "inline-flex",
+          alignItems: "center",
           gap: 0.75,
           // A long title must shrink rather than push the buttons off the chip.
           // Without minWidth the nowrap text would overflow and, on a phone,
           // cover the very controls it sits beside.
-          maxWidth: '100%',
+          maxWidth: "100%",
           minWidth: 0,
-          overflow: 'hidden',
+          overflow: "hidden",
           px: 1,
           py: 0.5,
           borderRadius: 1.5,
-          border: '1px solid',
+          border: "1px solid",
           borderColor: borderColour,
           borderWidth: isBroken || isFocus || isNeeded ? 2 : 1,
-          borderStyle: blocked ? 'dashed' : 'solid',
-          backgroundColor: alpha(colour, ctx.mode === 'dark' ? 0.16 : 0.09),
-          cursor: canDrag ? 'grab' : 'pointer',
+          borderStyle: blocked ? "dashed" : "solid",
+          backgroundColor: alpha(colour, ctx.mode === "dark" ? 0.16 : 0.09),
+          cursor: canDrag ? "grab" : "pointer",
           opacity: blocked && !rescuable ? 0.62 : 1,
-          userSelect: 'none',
-          '&:hover': { boxShadow: 1 }
+          userSelect: "none",
+          "&:hover": { boxShadow: 1 },
         }}
       >
         <Box
@@ -115,37 +127,42 @@ export default function CourseChip({ code, inPool = false, blocked = false, read
           aria-hidden
           sx={{
             width: 4,
-            alignSelf: 'stretch',
+            alignSelf: "stretch",
             minHeight: 18,
             borderRadius: 2,
             backgroundColor: colour,
-            flexShrink: 0
+            flexShrink: 0,
           }}
         />
         <Typography
           component="span"
           variant="caption"
-          sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}
+          sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
         >
-          {course.prep ? 'prep' : shortCode(course.code)}
+          {course.prep ? "prep" : shortCode(course.code)}
         </Typography>
         <Typography
           component="span"
           variant="body2"
           sx={{
-            color: 'text.primary',
+            color: "text.primary",
             fontWeight: 500,
             minWidth: 0,
             flexShrink: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {course.title}
         </Typography>
         {isApplied && <Badge label="deg" title="Applied to the degree" />}
-        {isAuto && <Badge label="req" title="Added because something you chose requires it" />}
+        {isAuto && (
+          <Badge
+            label="req"
+            title="Added because something you chose requires it"
+          />
+        )}
         {course.level >= 7 && <Badge label="700" title="A 700 level course" />}
         {!readOnly && (
           <Tooltip title="Move to a term">
@@ -188,9 +205,12 @@ export default function CourseChip({ code, inPool = false, blocked = false, read
       >
         {terms.map((_, i) => {
           // Computed only while the menu is open: each call walks the placement.
-          const { enabled, note } = menuAnchor ? describe(model, code, i) : { enabled: false, note: '' };
+          const { enabled, note } = menuAnchor
+            ? describe(model, code, i)
+            : { enabled: false, note: "" };
           return (
             <MenuItem
+              // biome-ignore lint/suspicious/noArrayIndexKey: terms are positional - the index is the term's identity
               key={i}
               disabled={!enabled}
               onClick={() => {
@@ -228,13 +248,13 @@ function Badge({ label, title }: { label: string; title: string }) {
           px: 0.5,
           borderRadius: 0.75,
           fontSize: 10,
-          lineHeight: '15px',
+          lineHeight: "15px",
           fontWeight: 700,
           letterSpacing: 0.3,
           flexShrink: 0,
-          color: 'text.secondary',
-          border: '1px solid',
-          borderColor: 'divider'
+          color: "text.secondary",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
         {label}
@@ -244,21 +264,37 @@ function Badge({ label, title }: { label: string; title: string }) {
 }
 
 /** One menu row: whether the move is offered, and the plain reason when it is not. */
-function describe(model: PlannerModel, code: string, term: number): { enabled: boolean; note: string } {
+function describe(
+  model: PlannerModel,
+  code: string,
+  term: number,
+): { enabled: boolean; note: string } {
   const { kind, courses } = model.placementNote(code, term);
-  const names = courses.map((c) => model.title(c)).join(', ');
+  const names = courses.map((c) => model.title(c)).join(", ");
   switch (kind) {
-    case 'ok':
-      return { enabled: true, note: '' };
-    case 'needs':
+    case "ok":
+      return { enabled: true, note: "" };
+    case "needs":
       return { enabled: true, note: ` · adds ${names} first` };
-    case 'needsOff':
-      return { enabled: false, note: ` · needs ${names}, and automatic insertion is off` };
-    case 'order':
-      return { enabled: false, note: ` · ${names} sits later; move that up first` };
-    case 'unreachable':
-      return { enabled: false, note: ' · a prerequisite is not in this catalog' };
-    case 'strand':
-      return { enabled: false, note: ' · would strand a course that depends on it' };
+    case "needsOff":
+      return {
+        enabled: false,
+        note: ` · needs ${names}, and automatic insertion is off`,
+      };
+    case "order":
+      return {
+        enabled: false,
+        note: ` · ${names} sits later; move that up first`,
+      };
+    case "unreachable":
+      return {
+        enabled: false,
+        note: " · a prerequisite is not in this catalog",
+      };
+    case "strand":
+      return {
+        enabled: false,
+        note: " · would strand a course that depends on it",
+      };
   }
 }

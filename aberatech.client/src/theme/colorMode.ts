@@ -1,6 +1,6 @@
 /** Which colour-scheme choices a visitor is offered, and what to do about stale ones. */
 
-export type ColorModeChoice = 'system' | 'light' | 'dark';
+export type ColorModeChoice = "system" | "light" | "dark";
 
 /**
  * The choices to show.
@@ -11,7 +11,7 @@ export type ColorModeChoice = 'system' | 'light' | 'dark';
  * else gets. Dark is the default either way.
  */
 export function availableModes(signedIn: boolean): ColorModeChoice[] {
-  return signedIn ? ['system', 'light', 'dark'] : ['light', 'dark'];
+  return signedIn ? ["system", "light", "dark"] : ["light", "dark"];
 }
 
 /**
@@ -22,7 +22,12 @@ export function availableModes(signedIn: boolean): ColorModeChoice[] {
  * out. Their stored preference is now a setting they can neither see nor
  * change, and leaving them on it means a menu whose entries all look unselected.
  */
-export function correctedMode(current: string | undefined, signedIn: boolean): ColorModeChoice | null {
+export function correctedMode(
+  current: string | undefined,
+  signedIn: boolean,
+): ColorModeChoice | null {
   if (!current) return null;
-  return availableModes(signedIn).includes(current as ColorModeChoice) ? null : 'dark';
+  return availableModes(signedIn).includes(current as ColorModeChoice)
+    ? null
+    : "dark";
 }
