@@ -52,6 +52,7 @@ export default function PlannerBoard() {
   // theme.palette.mode, which stays on the default scheme.
   const mode: 'light' | 'dark' = (systemMode ?? schemeMode) === 'dark' ? 'dark' : 'light';
   const wide = useMediaQuery(theme.breakpoints.up('md'));
+  const [railOpen, setRailOpen] = useState(false);
   const [drag, setDrag] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,22 +75,28 @@ export default function PlannerBoard() {
 
   const hoverDetail = useCallback(
     (code: string, anchor: HTMLElement) => {
+      // On a narrow screen the card is a modal sheet, and a touch tap emulates
+      // mouseenter. Opening on hover would let the sheet's backdrop steal the
+      // pointer, fire mouseleave, close, and start over — so only a deliberate
+      // tap opens it there.
+      if (!wide) return;
       clearTimer();
       timer.current = setTimeout(() => {
         setDetail((cur) => (cur?.pinned ? cur : { code, anchor, pinned: false }));
       }, HOVER_OPEN_MS);
     },
-    [clearTimer]
+    [clearTimer, wide]
   );
 
   const releaseDetail = useCallback(() => {
+    if (!wide) return;
     clearTimer();
     // A grace period, so the pointer can travel onto the card to follow a link
     // or scroll it. The card itself cancels this while the pointer is over it.
     timer.current = setTimeout(() => {
       setDetail((cur) => (cur?.pinned ? cur : null));
     }, HOVER_CLOSE_MS);
-  }, [clearTimer]);
+  }, [clearTimer, wide]);
 
   const pinDetail = useCallback(
     (code: string, anchor: HTMLElement) => {
@@ -173,12 +180,22 @@ export default function PlannerBoard() {
           // stuck below the app bar so it is one tap away however far down the
           // page the reader has scrolled. The details scroll within the pane,
           // like the wide layout's sticky column.
+          //
+          // While open the pane is fixed to the viewport rather than sticky:
+          // sticky travel ends at the parent's bottom edge, so a pane opened
+          // near the bottom of the page would be shoved up and off the screen.
           <Accordion
             variant="outlined"
             disableGutters
+            expanded={railOpen}
+            onChange={(_, open) => {
+              setRailOpen(open);
+            }}
             sx={{
-              position: 'sticky',
+              position: railOpen ? 'fixed' : 'sticky',
               top: 'calc(var(--template-frame-height, 0px) + 96px)',
+              left: railOpen ? 16 : 'auto',
+              right: railOpen ? 16 : 'auto',
               zIndex: (t) => t.zIndex.appBar - 1,
               bgcolor: 'background.default',
               // Floating over the board as it scrolls, the pane needs a shadow
