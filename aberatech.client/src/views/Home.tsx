@@ -1,8 +1,8 @@
-import AppAppBar from '../components/AppAppBar';
-import Hero from '../components/Hero';
-import CssBaseline from '@mui/material/CssBaseline';
-import AppTheme from '../theme/AppTheme';
-import Footer from '../components/Footer';
+import CssBaseline from "@mui/material/CssBaseline";
+import AppAppBar from "../components/AppAppBar";
+import Footer from "../components/Footer";
+import Hero from "../components/Hero";
+import AppTheme from "../theme/AppTheme";
 
 export default function Home(props: { disableCustomTheme?: boolean }) {
   return (

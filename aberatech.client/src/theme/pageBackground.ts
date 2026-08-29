@@ -1,4 +1,4 @@
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme } from "@mui/material/styles";
 
 /**
  * The blue wash at the top of every page.
@@ -8,10 +8,12 @@ import type { SxProps, Theme } from '@mui/material/styles';
  * literally the same gradient rather than two that drift apart.
  */
 export const pageBackground: SxProps<Theme> = (theme) => ({
-  width: '100%',
-  backgroundRepeat: 'no-repeat',
-  backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 90%), transparent)',
-  ...theme.applyStyles('dark', {
-    backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 16%), transparent)'
-  })
+  width: "100%",
+  backgroundRepeat: "no-repeat",
+  backgroundImage:
+    "radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 90%), transparent)",
+  ...theme.applyStyles("dark", {
+    backgroundImage:
+      "radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 16%), transparent)",
+  }),
 });

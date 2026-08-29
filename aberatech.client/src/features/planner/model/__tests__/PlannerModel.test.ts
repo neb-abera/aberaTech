@@ -1,11 +1,16 @@
-import { describe, expect, test } from 'vitest';
-import rawCatalog from '../../data/catalog.json';
-import rawTracks from '../../data/tracks.json';
-import { ADMISSION, holdsBackground, PREP_SOURCE, prepId } from '../../core/background';
-import { CatalogData } from '../../core/catalog';
-import { Tracks } from '../../core/tracks';
-import type { RawCatalog, RawTracks, Track } from '../../core/types';
-import { PlannerModel } from '../PlannerModel';
+import { describe, expect, test } from "vitest";
+import {
+  ADMISSION,
+  holdsBackground,
+  PREP_SOURCE,
+  prepId,
+} from "../../core/background";
+import { CatalogData } from "../../core/catalog";
+import { Tracks } from "../../core/tracks";
+import type { RawCatalog, RawTracks, Track } from "../../core/types";
+import rawCatalog from "../../data/catalog.json";
+import rawTracks from "../../data/tracks.json";
+import { PlannerModel } from "../PlannerModel";
 
 const data = new CatalogData(rawCatalog as unknown as RawCatalog);
 const tracks = new Tracks(rawTracks as unknown as RawTracks);
@@ -14,20 +19,20 @@ const make = () => new PlannerModel(data, tracks);
 /** A model browsing one focus area, scheduled. */
 function rf(perTerm = 2) {
   const m = make();
-  m.areas = new Set(['RF and Microwave Engineering']);
+  m.areas = new Set(["RF and Microwave Engineering"]);
   m.perTerm = perTerm;
   m.rescheduleAll();
   return m;
 }
 
-describe('selection', () => {
-  test('RF and Microwave alone pulls in its cross group prerequisites', () => {
+describe("selection", () => {
+  test("RF and Microwave alone pulls in its cross group prerequisites", () => {
     const auto = [...rf().autoAdded()].map((c) => data.title(c));
-    expect(auto).toContain('Digital Signal Processing');
-    expect(auto).toContain('Probability & Stochastic Processes for Engineers');
-    expect(auto).toContain('Communication Systems Engineering');
+    expect(auto).toContain("Digital Signal Processing");
+    expect(auto).toContain("Probability & Stochastic Processes for Engineers");
+    expect(auto).toContain("Communication Systems Engineering");
   });
-  test('scheduling leaves nothing unplaced for any single group', () => {
+  test("scheduling leaves nothing unplaced for any single group", () => {
     for (const name of Object.keys(data.areas)) {
       const m = make();
       m.areas = new Set([name]);
@@ -35,15 +40,15 @@ describe('selection', () => {
       expect(m.unplaced(), `${name} left courses unplaced`).toEqual([]);
     }
   });
-  test('turning automatic prerequisites off shrinks the selection to the raw choice', () => {
+  test("turning automatic prerequisites off shrinks the selection to the raw choice", () => {
     const m = rf();
     const withAuto = m.selected().size;
     m.autoPrereq = false;
     expect(m.selected().size).toBeLessThan(withAuto);
     expect(m.autoAdded().size).toBe(0);
   });
-  test('pulledBy names the course that forced an addition', () => {
-    expect(rf().pulledBy('EN.525.627').length).toBeGreaterThan(0);
+  test("pulledBy names the course that forced an addition", () => {
+    expect(rf().pulledBy("EN.525.627").length).toBeGreaterThan(0);
   });
   /**
    * This used to assert the opposite: that ticking an area cleared the track,
@@ -51,78 +56,84 @@ describe('selection', () => {
    * then adding a whole focus area on top of it is the ordinary thing to want,
    * and the old rule silently threw the path away.
    */
-  test('choosing a focus area keeps the track, because they layer', () => {
+  test("choosing a focus area keeps the track, because they layer", () => {
     const m = make();
-    m.selectTrack('sp-rf');
-    m.toggleArea('area', 'Signal Processing');
-    expect(m.track).toBe('sp-rf');
-    expect(m.areas.has('Signal Processing')).toBe(true);
+    m.selectTrack("sp-rf");
+    m.toggleArea("area", "Signal Processing");
+    expect(m.track).toBe("sp-rf");
+    expect(m.areas.has("Signal Processing")).toBe(true);
     const chosen = m.chosen();
-    const track = trackOf(m, 'sp-rf');
-    for (const c of track.courses) expect(chosen.has(c), `${c} fell out of the track`).toBe(true);
+    const track = trackOf(m, "sp-rf");
+    for (const c of track.courses)
+      expect(chosen.has(c), `${c} fell out of the track`).toBe(true);
   });
 
-  test('ticking an area changes the selection and leaves the board alone', () => {
+  test("ticking an area changes the selection and leaves the board alone", () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     const before = m.plan.courses();
-    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.toggleArea("area", "AI and Autonomous Systems");
     // The old behaviour pruned here, which only ever removed: the board went
     // from 13 courses to 5 and nothing arrived.
     expect(m.plan.courses()).toEqual(before);
   });
 
-  test('adding the selection keeps what is already placed', () => {
+  test("adding the selection keeps what is already placed", () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     const before = m.plan.courses();
-    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.toggleArea("area", "AI and Autonomous Systems");
     const added = m.addSelectionToPlan();
     expect(added.length).toBeGreaterThan(0);
     const after = new Set(m.plan.courses());
     for (const c of before) expect(after.has(c), `${c} was dropped`).toBe(true);
-    for (const c of added) expect(after.has(c), `${c} was not added`).toBe(true);
+    for (const c of added)
+      expect(after.has(c), `${c} was not added`).toBe(true);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('adding twice is a no-op the second time', () => {
+  test("adding twice is a no-op the second time", () => {
     const m = make();
-    m.selectTrack('sp-rf');
-    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.selectTrack("sp-rf");
+    m.toggleArea("area", "AI and Autonomous Systems");
     m.addSelectionToPlan();
     expect(m.pendingFromSelection()).toEqual([]);
     expect(m.addSelectionToPlan()).toEqual([]);
   });
 
-  test('replacing builds the board from the selection alone', () => {
+  test("replacing builds the board from the selection alone", () => {
     const m = make();
-    m.selectTrack('sp-rf');
-    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.selectTrack("sp-rf");
+    m.toggleArea("area", "AI and Autonomous Systems");
     m.replacePlanWithSelection();
     const on = new Set(m.plan.courses());
-    for (const c of m.selected()) expect(on.has(c), `${c} is missing`).toBe(true);
+    for (const c of m.selected())
+      expect(on.has(c), `${c} is missing`).toBe(true);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('a track laid out beside an area still runs its stages forwards', () => {
+  test("a track laid out beside an area still runs its stages forwards", () => {
     const m = make();
-    m.selectTrack('collector-full');
-    m.toggleArea('area', 'AI and Autonomous Systems');
+    m.selectTrack("collector-full");
+    m.toggleArea("area", "AI and Autonomous Systems");
     m.replacePlanWithSelection();
-    const t = trackOf(m, 'collector-full');
+    const t = trackOf(m, "collector-full");
     let highest = -1;
     for (const term of m.plan.terms) {
       for (const code of term) {
         const i = t.stages.findIndex((st) => st.courses.includes(code));
         if (i < 0) continue;
-        expect(i, `${m.title(code)} runs before an earlier stage`).toBeGreaterThanOrEqual(highest);
+        expect(
+          i,
+          `${m.title(code)} runs before an earlier stage`,
+        ).toBeGreaterThanOrEqual(highest);
         highest = Math.max(highest, i);
       }
     }
   });
 });
 
-describe('preparation courses on the real catalog', () => {
+describe("preparation courses on the real catalog", () => {
   const bare = (perTerm = 2) => {
     const m = rf(perTerm);
     m.background = new Set();
@@ -131,45 +142,45 @@ describe('preparation courses on the real catalog', () => {
     return m;
   };
 
-  test('an unticked background item becomes a schedulable course', () => {
+  test("an unticked background item becomes a schedulable course", () => {
     const m = bare();
     expect(m.preparation().length).toBeGreaterThan(0);
     expect(m.preparation().every((c) => m.get(c)?.prep)).toBe(true);
   });
-  test('it lands before the course that assumes it', () => {
+  test("it lands before the course that assumes it", () => {
     expect(bare().plan.violations()).toEqual([]);
   });
-  test('ticking everything removes the preparation courses entirely', () => {
+  test("ticking everything removes the preparation courses entirely", () => {
     const m = bare();
     m.background = new Set(data.background.map(([k]) => k));
     m.rebase();
     m.rescheduleAll();
     expect(m.preparation()).toEqual([]);
   });
-  test('preparation never counts toward the ten', () => {
+  test("preparation never counts toward the ten", () => {
     const m = bare();
     expect(m.audit().counted.some((c) => m.get(c)?.prep)).toBe(false);
   });
-  test('differential equations and linear algebra are not ticked by default', () => {
+  test("differential equations and linear algebra are not ticked by default", () => {
     const m = make();
-    expect(m.background.has('bg_de')).toBe(false);
-    expect(m.background.has('bg_la')).toBe(false);
+    expect(m.background.has("bg_de")).toBe(false);
+    expect(m.background.has("bg_la")).toBe(false);
   });
-  test('setBackground reschedules so the plan never references a vanished course', () => {
+  test("setBackground reschedules so the plan never references a vanished course", () => {
     const m = bare();
-    m.setBackground('bg_de', true);
+    m.setBackground("bg_de", true);
     expect(m.plan.courses().every((c) => m.get(c))).toBe(true);
   });
 });
 
-describe('courses per term', () => {
-  test('more than four a term is allowed', () => {
+describe("courses per term", () => {
+  test("more than four a term is allowed", () => {
     const m = rf();
     m.setPerTerm(6);
     expect(m.plan.terms.some((t) => t.length > 4)).toBe(true);
     expect(m.plan.violations()).toEqual([]);
   });
-  test('it is clamped to something a human could actually sit', () => {
+  test("it is clamped to something a human could actually sit", () => {
     const m = rf();
     m.setPerTerm(99);
     expect(m.perTerm).toBe(8);
@@ -178,15 +189,15 @@ describe('courses per term', () => {
   });
 });
 
-describe('the graduation clock on the real catalog', () => {
-  test('a two course per term RF plan reports a graduation term and a deadline', () => {
+describe("the graduation clock on the real catalog", () => {
+  test("a two course per term RF plan reports a graduation term and a deadline", () => {
     const a = rf().audit();
     expect(a.counted).toHaveLength(10);
     expect(a.clock.graduationLabel).toBeTruthy();
     expect(a.clock.deadline).toBeInstanceOf(Date);
     expect(a.clock.onTime).toBe(true);
   });
-  test('taking the whole catalog does not itself blow the clock, because only ten are applied', () => {
+  test("taking the whole catalog does not itself blow the clock, because only ten are applied", () => {
     const m = make();
     m.areas = new Set(Object.keys(data.areas));
     m.perTerm = 1;
@@ -196,7 +207,7 @@ describe('the graduation clock on the real catalog', () => {
     expect(a.clock.onTime).toBe(true);
     expect(m.plan.courses().length).toBeGreaterThan(100);
   });
-  test('the clock spans the courses you APPLY, so a late pick can break it', () => {
+  test("the clock spans the courses you APPLY, so a late pick can break it", () => {
     const m = make();
     m.areas = new Set(Object.keys(data.areas));
     m.perTerm = 1;
@@ -208,11 +219,11 @@ describe('the graduation clock on the real catalog', () => {
     expect(a.clock.onTime).toBe(false);
     expect(a.levers.length).toBeGreaterThan(0);
   });
-  test('the bridge course does not start the clock', () => {
+  test("the bridge course does not start the clock", () => {
     const m = make();
-    m.areas = new Set(['Bridge and other courses']);
+    m.areas = new Set(["Bridge and other courses"]);
     m.rescheduleAll();
-    expect(m.audit().excluded.some((e) => e.code === 'EN.525.201')).toBe(true);
+    expect(m.audit().excluded.some((e) => e.code === "EN.525.201")).toBe(true);
   });
 });
 
@@ -223,37 +234,40 @@ function trackOf(m: PlannerModel, id: string): Track {
   return t;
 }
 
-describe('a track keeps its curated order', () => {
+describe("a track keeps its curated order", () => {
   const stageIndex = (m: PlannerModel, code: string) => {
     const t = m.track ? m.tracks.get(m.track) : undefined;
     return t ? t.stages.findIndex((s) => s.courses.includes(code)) : -1;
   };
 
-  test('stages never run backwards, even with preparation courses inserted', () => {
+  test("stages never run backwards, even with preparation courses inserted", () => {
     const m = make();
     m.background = new Set();
-    m.selectTrack('collector-full');
+    m.selectTrack("collector-full");
     let highest = -1;
     for (const term of m.plan.terms) {
       for (const code of term) {
         const i = stageIndex(m, code);
         if (i < 0) continue; // a preparation course belongs to no stage
-        expect(i, `${m.title(code)} runs before an earlier stage`).toBeGreaterThanOrEqual(highest);
+        expect(
+          i,
+          `${m.title(code)} runs before an earlier stage`,
+        ).toBeGreaterThanOrEqual(highest);
         highest = Math.max(highest, i);
       }
     }
   });
 
-  test('unticked background still schedules legally inside a track', () => {
+  test("unticked background still schedules legally inside a track", () => {
     const m = make();
     m.background = new Set();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     expect(m.plan.violations()).toEqual([]);
     expect(m.preparation().length).toBeGreaterThan(0);
     expect(m.unplaced()).toEqual([]);
   });
 
-  test('every track schedules with nothing left over once preparation is in play', () => {
+  test("every track schedules with nothing left over once preparation is in play", () => {
     for (const t of tracks.all()) {
       const m = make();
       m.background = new Set();
@@ -264,29 +278,29 @@ describe('a track keeps its curated order', () => {
   });
 });
 
-describe('placing a course', () => {
-  test('a blocked course is placed together with its prerequisites', () => {
+describe("placing a course", () => {
+  test("a blocked course is placed together with its prerequisites", () => {
     const m = make();
     m.selectTrack(null);
-    m.areas = new Set(['Signal Processing']);
+    m.areas = new Set(["Signal Processing"]);
     m.clearPlan();
-    const target = 'EN.525.728';
+    const target = "EN.525.728";
     const r = m.placeCourse(target, 0);
     expect(r.ok).toBe(true);
     expect(r.added.length).toBeGreaterThan(0);
     expect(m.plan.violations()).toEqual([]);
   });
-  test('with automatic placement off, a blocked course is refused', () => {
+  test("with automatic placement off, a blocked course is refused", () => {
     const m = make();
     m.clearPlan();
     m.autoOnDrop = false;
-    expect(m.placeCourse('EN.525.728', 0).ok).toBe(false);
+    expect(m.placeCourse("EN.525.728", 0).ok).toBe(false);
   });
-  test('a course whose prerequisite is outside the catalog is never rescuable', () => {
+  test("a course whose prerequisite is outside the catalog is never rescuable", () => {
     const m = make();
-    expect(m.isRescuable('EN.525.622')).toBe(true);
+    expect(m.isRescuable("EN.525.622")).toBe(true);
   });
-  test('removing a course clears the focus that pointed at it', () => {
+  test("removing a course clears the focus that pointed at it", () => {
     const m = rf();
     const code = m.plan.courses()[0];
     m.focus = code;
@@ -296,62 +310,65 @@ describe('placing a course', () => {
   });
 });
 
-describe('why a term will or will not take a course', () => {
+describe("why a term will or will not take a course", () => {
   /** A track plan, so the ordering cases are real ones. */
   const planned = () => {
     const m = make();
     m.background = new Set(data.background.map(([k]) => k));
     m.rebase();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     return m;
   };
 
-  test('a term the course already sits in is legal', () => {
+  test("a term the course already sits in is legal", () => {
     const m = planned();
     const code = m.plan.terms[0][0];
-    expect(m.placementNote(code, 0).kind).toBe('ok');
+    expect(m.placementNote(code, 0).kind).toBe("ok");
   });
 
-  test('moving a foundation course past its dependents is a stranding, not a missing prerequisite', () => {
+  test("moving a foundation course past its dependents is a stranding, not a missing prerequisite", () => {
     const m = planned();
-    const note = m.placementNote('EN.525.614', m.plan.terms.length - 1);
-    expect(note.kind).toBe('strand');
-    expect(m.acceptsDrop('EN.525.614', m.plan.terms.length - 1)).toBe(false);
+    const note = m.placementNote("EN.525.614", m.plan.terms.length - 1);
+    expect(note.kind).toBe("strand");
+    expect(m.acceptsDrop("EN.525.614", m.plan.terms.length - 1)).toBe(false);
   });
 
-  test('moving a late course ahead of a prerequisite that is present names that prerequisite', () => {
+  test("moving a late course ahead of a prerequisite that is present names that prerequisite", () => {
     const m = planned();
-    const note = m.placementNote('EN.525.738', 0);
-    expect(note.kind).toBe('order');
-    expect(note.courses).toContain('EN.525.618');
+    const note = m.placementNote("EN.525.738", 0);
+    expect(note.kind).toBe("order");
+    expect(note.courses).toContain("EN.525.618");
     // Nothing can be inserted to fix it, so the drop is refused rather than ignored.
-    expect(m.acceptsDrop('EN.525.738', 0)).toBe(false);
+    expect(m.acceptsDrop("EN.525.738", 0)).toBe(false);
   });
 
-  test('an unplaced course whose prerequisites are absent can be rescued', () => {
+  test("an unplaced course whose prerequisites are absent can be rescued", () => {
     const m = planned();
     m.clearPlan();
-    const note = m.placementNote('EN.525.728', 0);
-    expect(note.kind).toBe('needs');
+    const note = m.placementNote("EN.525.728", 0);
+    expect(note.kind).toBe("needs");
     expect(note.courses.length).toBeGreaterThan(0);
-    expect(m.acceptsDrop('EN.525.728', 0)).toBe(true);
+    expect(m.acceptsDrop("EN.525.728", 0)).toBe(true);
   });
 
-  test('with automatic insertion off the same case is refused, and says why', () => {
+  test("with automatic insertion off the same case is refused, and says why", () => {
     const m = planned();
     m.clearPlan();
     m.autoOnDrop = false;
-    expect(m.placementNote('EN.525.728', 0).kind).toBe('needsOff');
-    expect(m.acceptsDrop('EN.525.728', 0)).toBe(false);
+    expect(m.placementNote("EN.525.728", 0).kind).toBe("needsOff");
+    expect(m.acceptsDrop("EN.525.728", 0)).toBe(false);
   });
 
-  test('every term a drop is accepted for actually accepts the course', () => {
+  test("every term a drop is accepted for actually accepts the course", () => {
     const m = planned();
-    const code = 'EN.525.744';
+    const code = "EN.525.744";
     for (let i = 0; i < m.plan.terms.length; i++) {
       if (!m.acceptsDrop(code, i)) continue;
       const probe = planned();
-      expect(probe.placeCourse(code, i).ok, `term ${i} was offered but refused the course`).toBe(true);
+      expect(
+        probe.placeCourse(code, i).ok,
+        `term ${i} was offered but refused the course`,
+      ).toBe(true);
     }
   });
 });
@@ -363,7 +380,7 @@ describe('why a term will or will not take a course', () => {
  * enrolment - admission is provisional until they are complete - so every plan
  * carries the ones the reader neither holds nor covers with a bridge course.
  */
-describe('admission prerequisites', () => {
+describe("admission prerequisites", () => {
   const covered = (m: PlannerModel, id: string) => {
     if (holdsBackground(id, m.background)) return true;
     const have = new Set(m.plan.courses());
@@ -375,47 +392,51 @@ describe('admission prerequisites', () => {
     test(`${t.name}: every admission prerequisite is held or on the board`, () => {
       const m = make();
       m.selectTrack(t.id);
-      for (const id of ADMISSION) expect(covered(m, id), `${id} is not covered`).toBe(true);
+      for (const id of ADMISSION)
+        expect(covered(m, id), `${id} is not covered`).toBe(true);
     });
   }
 
-  test('a plan carrying the bridge course is not also handed its preparation', () => {
+  test("a plan carrying the bridge course is not also handed its preparation", () => {
     const m = make();
-    m.selectTrack('sme'); // its foundation stage schedules both bridge courses
+    m.selectTrack("sme"); // its foundation stage schedules both bridge courses
     const have = m.plan.courses();
-    expect(have).toContain('EN.525.201');
-    expect(have).not.toContain(prepId('bg_circ'));
-    expect(have).toContain('EN.525.202');
-    expect(have).not.toContain(prepId('bg_sig'));
+    expect(have).toContain("EN.525.201");
+    expect(have).not.toContain(prepId("bg_circ"));
+    expect(have).toContain("EN.525.202");
+    expect(have).not.toContain(prepId("bg_sig"));
   });
 
-  test('a degree track without the bridge courses schedules the preparation instead', () => {
+  test("a degree track without the bridge courses schedules the preparation instead", () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     const have = m.plan.courses();
-    expect(have).toContain(prepId('bg_sig'));
-    expect(have).toContain(prepId('bg_circ'));
+    expect(have).toContain(prepId("bg_sig"));
+    expect(have).toContain(prepId("bg_circ"));
   });
 
-  test('preparation the coursework needs sits before the course that needs it', () => {
+  test("preparation the coursework needs sits before the course that needs it", () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     const p = m.plan.placement();
-    expect(p.get(prepId('bg_sig'))).toBeLessThan(p.get('EN.525.614') ?? 0);
+    expect(p.get(prepId("bg_sig"))).toBeLessThan(p.get("EN.525.614") ?? 0);
   });
 
-  test('ticking every admission item takes all of its preparation off the board', () => {
+  test("ticking every admission item takes all of its preparation off the board", () => {
     const m = make();
     for (const id of ADMISSION) m.background.add(id);
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     for (const id of ADMISSION) {
-      expect(m.plan.courses(), `${id} preparation should be gone`).not.toContain(prepId(id));
+      expect(
+        m.plan.courses(),
+        `${id} preparation should be gone`,
+      ).not.toContain(prepId(id));
     }
   });
 
-  test('the preparation does not displace the degree: a track still audits clean', () => {
+  test("the preparation does not displace the degree: a track still audits clean", () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     const a = m.audit();
     expect(a.rules.filter((r) => !r.met)).toEqual([]);
     expect(a.counted).toHaveLength(10);
@@ -427,58 +448,58 @@ describe('admission prerequisites', () => {
  * last term unconditionally, which put preparation after the coursework it
  * exists to precede. Placement is validated against the sequence instead.
  */
-describe('auto placement after a removal', () => {
+describe("auto placement after a removal", () => {
   const onTrack = () => {
     const m = make();
-    m.selectTrack('sp-rf');
+    m.selectTrack("sp-rf");
     return m;
   };
 
-  test('preparation re-added after a removal goes back to the front, not the end', () => {
+  test("preparation re-added after a removal goes back to the front, not the end", () => {
     const m = onTrack();
-    const prep = prepId('bg_de');
+    const prep = prepId("bg_de");
     m.removeCourse(prep);
     const r = m.autoPlace(prep);
     expect(r.ok).toBe(true);
     const p = m.plan.placement();
-    expect(p.get(prep)).toBeLessThan(p.get('EN.525.614') ?? 0);
+    expect(p.get(prep)).toBeLessThan(p.get("EN.525.614") ?? 0);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('a re-added course lands inside the window its dependents leave open', () => {
+  test("a re-added course lands inside the window its dependents leave open", () => {
     const m = onTrack();
-    m.removeCourse('EN.525.614'); // EN.525.728 and EN.525.744 both require it
-    const r = m.autoPlace('EN.525.614');
+    m.removeCourse("EN.525.614"); // EN.525.728 and EN.525.744 both require it
+    const r = m.autoPlace("EN.525.614");
     expect(r.ok).toBe(true);
     const p = m.plan.placement();
-    expect(p.get('EN.525.614')).toBeLessThan(p.get('EN.525.728') ?? 0);
-    expect(p.get('EN.525.614')).toBeLessThan(p.get('EN.525.744') ?? 0);
+    expect(p.get("EN.525.614")).toBeLessThan(p.get("EN.525.728") ?? 0);
+    expect(p.get("EN.525.614")).toBeLessThan(p.get("EN.525.744") ?? 0);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('a course nothing depends on still goes to the end', () => {
+  test("a course nothing depends on still goes to the end", () => {
     const m = onTrack();
-    m.removeCourse('EN.525.751');
-    const r = m.autoPlace('EN.525.751');
+    m.removeCourse("EN.525.751");
+    const r = m.autoPlace("EN.525.751");
     expect(r.ok).toBe(true);
     const p = m.plan.placement();
-    const term = p.get('EN.525.751') ?? -1;
+    const term = p.get("EN.525.751") ?? -1;
     for (const [, t] of p) expect(term).toBeGreaterThanOrEqual(t);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('a blocked course brings its missing prerequisites along, in order', () => {
+  test("a blocked course brings its missing prerequisites along, in order", () => {
     const m = onTrack();
     // EN.525.677 needs EN.525.627, already on the board, and EN.525.642, not.
-    const r = m.autoPlace('EN.525.677');
+    const r = m.autoPlace("EN.525.677");
     expect(r.ok).toBe(true);
-    expect(r.added).toContain('EN.525.642');
+    expect(r.added).toContain("EN.525.642");
     const p = m.plan.placement();
-    expect(p.get('EN.525.642')).toBeLessThan(p.get('EN.525.677') ?? 0);
+    expect(p.get("EN.525.642")).toBeLessThan(p.get("EN.525.677") ?? 0);
     expect(m.plan.violations()).toEqual([]);
   });
 
-  test('a course whose prerequisite is outside the catalog is refused, not placed broken', () => {
+  test("a course whose prerequisite is outside the catalog is refused, not placed broken", () => {
     const m = onTrack();
     const broken = Object.keys(m.courses).find((c) => !m.isRescuable(c));
     if (!broken) return; // nothing in the current catalog is unreachable
@@ -488,20 +509,22 @@ describe('auto placement after a removal', () => {
   });
 });
 
-describe('degree picks', () => {
-  test('the first manual pick materialises the automatic ten so editing starts from something real', () => {
+describe("degree picks", () => {
+  test("the first manual pick materialises the automatic ten so editing starts from something real", () => {
     const m = rf();
-    const extra = m.plan.courses().find((c) => m.get(c)?.gradeable && !m.audit().counted.includes(c));
+    const extra = m.plan
+      .courses()
+      .find((c) => m.get(c)?.gradeable && !m.audit().counted.includes(c));
     expect(extra).toBeDefined();
     if (!extra) return;
     m.toggleDegreePick(extra);
     expect(m.degreePicks.size).toBe(10);
     expect(m.degreePicks.has(extra)).toBe(true);
   });
-  test('selecting a track clears any manual picks, because the set changed', () => {
+  test("selecting a track clears any manual picks, because the set changed", () => {
     const m = rf();
-    m.degreePicks = new Set(['EN.525.614']);
-    m.selectTrack('sp-core');
+    m.degreePicks = new Set(["EN.525.614"]);
+    m.selectTrack("sp-core");
     expect(m.degreePicks.size).toBe(0);
   });
 });

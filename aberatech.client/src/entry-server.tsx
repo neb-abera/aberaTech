@@ -1,9 +1,9 @@
-import { prerenderToNodeStream } from 'react-dom/static';
-import { renderToString } from 'react-dom/server';
-import { StaticRouter } from 'react-router';
-import Shell from './Shell.tsx';
+import { renderToString } from "react-dom/server";
+import { prerenderToNodeStream } from "react-dom/static";
+import { StaticRouter } from "react-router";
+import Shell from "./Shell.tsx";
 
-export { prerenderedRoutes } from './site/prerenderedRoutes';
+export { prerenderedRoutes } from "./site/prerenderedRoutes";
 
 /**
  * One route rendered to the HTML the browser entry will hydrate. Runs in Node
@@ -38,7 +38,9 @@ export async function render(url: string): Promise<string> {
   // first pass, nothing suspends, and the output is the plain HTML a static
   // file should be.
   const warmup = await prerenderToNodeStream(page(url));
-  warmup.prelude.resume(); // Drain; the output is not used.
+  // The prelude is a Node Readable at run time; react-dom types it as a web
+  // ReadableStream, which has no resume().
+  (warmup.prelude as unknown as { resume(): void }).resume(); // Drain; unused.
 
   return renderToString(page(url));
 }
