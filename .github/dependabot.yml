@@ -1,19 +1,48 @@
 # Weekly dependency updates; security updates are enabled at the repo level.
+#
+# Patch and minor bumps arrive grouped — one PR per ecosystem per week instead
+# of one per package — and the dependabot-automerge workflow merges those when
+# CI is green. Majors arrive as their own PRs and wait for a human, because a
+# major is where the release notes actually need reading.
 version: 2
 updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
       interval: weekly
+    groups:
+      nuget-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+    groups:
+      npm-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: docker
     directory: /aberaTech.Server
     schedule:
       interval: weekly
+    groups:
+      docker-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
