@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Builds only the stages the target needs, so this never builds the
       # .NET server or the final image.
@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # eslint, typescript-eslint and prettier live in the root package and read
       # their config from beside it. The build context is the repository root,
@@ -83,7 +83,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # The daylight saving arithmetic, the queue projection and the delivery
       # retry schedule. Its own job rather than a step on the client one, so a
