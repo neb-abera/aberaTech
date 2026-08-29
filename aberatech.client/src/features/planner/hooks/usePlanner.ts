@@ -1,12 +1,12 @@
 /** Wiring the planner store into React. */
-import { useMemo, useSyncExternalStore } from 'react';
-import rawCatalog from '../data/catalog.json';
-import rawTracks from '../data/tracks.json';
-import { CatalogData } from '../core/catalog';
-import { Tracks } from '../core/tracks';
-import type { RawCatalog, RawTracks } from '../core/types';
-import { DEFAULT_TRACK, PlannerModel } from '../model/PlannerModel';
-import { PlannerStore } from '../model/PlannerStore';
+import { useMemo, useSyncExternalStore } from "react";
+import { CatalogData } from "../core/catalog";
+import { Tracks } from "../core/tracks";
+import type { RawCatalog, RawTracks } from "../core/types";
+import rawCatalog from "../data/catalog.json";
+import rawTracks from "../data/tracks.json";
+import { DEFAULT_TRACK, PlannerModel } from "../model/PlannerModel";
+import { PlannerStore } from "../model/PlannerStore";
 
 export interface Planner {
   store: PlannerStore;
@@ -27,6 +27,10 @@ function createStore(): PlannerStore {
 
 export function usePlanner(): Planner {
   const store = useMemo(createStore, []);
-  const version = useSyncExternalStore(store.subscribe, store.getVersion, store.getVersion);
+  const version = useSyncExternalStore(
+    store.subscribe,
+    store.getVersion,
+    store.getVersion,
+  );
   return { store, model: store.model, update: store.update, version };
 }

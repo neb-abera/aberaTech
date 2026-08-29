@@ -6,9 +6,9 @@
  * set of courses chosen for a purpose, prerequisite closed, and checked against
  * the degree rules by the test suite.
  */
-import { Plan } from './plan';
-import { closureCost, earliestTerm } from './prereq';
-import type { Catalog, RawTracks, Track } from './types';
+import { Plan } from "./plan";
+import { closureCost, earliestTerm } from "./prereq";
+import type { Catalog, RawTracks, Track } from "./types";
 
 export class Tracks {
   readonly map: Record<string, Track> = {};
@@ -27,7 +27,7 @@ export class Tracks {
     return this.map[id];
   }
 
-  byKind(kind: Track['kind']): Track[] {
+  byKind(kind: Track["kind"]): Track[] {
     return this.all().filter((t) => t.kind === kind);
   }
 
@@ -62,7 +62,10 @@ export function expandInOrder(cat: Catalog, order: string[]): string[] {
       if (g.some((m) => seen.has(m))) continue;
       const opts = g.filter((m) => cat[m]);
       if (!opts.length) continue;
-      opts.sort((a, b) => closureCost(cat, a) - closureCost(cat, b) || a.localeCompare(b));
+      opts.sort(
+        (a, b) =>
+          closureCost(cat, a) - closureCost(cat, b) || a.localeCompare(b),
+      );
       emit(opts[0], depth + 1);
     }
     out.push(code);

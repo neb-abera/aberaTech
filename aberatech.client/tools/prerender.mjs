@@ -12,28 +12,31 @@
  * markup, and a client-rendered route like /schedule served over it would
  * flash the wrong page and then hydrate against DOM that contradicts it.
  */
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import process from 'node:process';
-import { prerenderedRoutes, render } from '../dist-server/entry-server.js';
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+import { prerenderedRoutes, render } from "../dist-server/entry-server.js";
 
 const MARK = '<div id="root"></div>';
 
-const template = await readFile('dist/index.html', 'utf8');
+const template = await readFile("dist/index.html", "utf8");
 if (!template.includes(MARK)) {
-  throw new Error(`dist/index.html has no ${MARK} to fill; did the shell change?`);
+  throw new Error(
+    `dist/index.html has no ${MARK} to fill; did the shell change?`,
+  );
 }
 
-await writeFile('dist/spa.html', template);
-process.stdout.write('kept empty shell -> dist/spa.html\n');
+await writeFile("dist/spa.html", template);
+process.stdout.write("kept empty shell -> dist/spa.html\n");
 
 for (const route of prerenderedRoutes) {
   const html = await render(route);
-  if (html.trim() === '') {
+  if (html.trim() === "") {
     throw new Error(`route ${route} rendered to nothing`);
   }
 
-  const file = route === '/' ? 'dist/index.html' : path.join('dist', route, 'index.html');
+  const file =
+    route === "/" ? "dist/index.html" : path.join("dist", route, "index.html");
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, template.replace(MARK, `<div id="root">${html}</div>`));
   process.stdout.write(`prerendered ${route} -> ${file}\n`);

@@ -1,5 +1,5 @@
-import PageShell from '../components/PageShell';
-import SchedulePanel from '../features/scheduling/components/SchedulePanel';
+import PageShell from "../components/PageShell";
+import SchedulePanel from "../features/scheduling/components/SchedulePanel";
 
 export default function ScheduleTime(props: { disableCustomTheme?: boolean }) {
   return (

@@ -6,7 +6,7 @@
  * React state and risk the two drifting, the model stays the single source of
  * truth and the store publishes a version number that React subscribes to.
  */
-import { PlannerModel } from './PlannerModel';
+import type { PlannerModel } from "./PlannerModel";
 
 export class PlannerStore {
   readonly model: PlannerModel;

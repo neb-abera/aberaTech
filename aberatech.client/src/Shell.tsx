@@ -1,7 +1,7 @@
-import { StyledEngineProvider } from '@mui/material/styles';
-import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
-import './index.css';
-import App from './App.tsx';
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+import { StyledEngineProvider } from "@mui/material/styles";
+import "./index.css";
+import App from "./App.tsx";
 
 /**
  * Everything inside the router, shared verbatim by the browser entry and the
@@ -19,7 +19,10 @@ import App from './App.tsx';
 export default function Shell() {
   return (
     <StyledEngineProvider injectFirst>
-      <InitColorSchemeScript attribute="data-mui-color-scheme" defaultMode="dark" />
+      <InitColorSchemeScript
+        attribute="data-mui-color-scheme"
+        defaultMode="dark"
+      />
       <App />
     </StyledEngineProvider>
   );

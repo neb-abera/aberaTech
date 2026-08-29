@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { AdminMessages } from '../core/messages';
+import { useCallback, useEffect, useState } from "react";
+import type { AdminMessages } from "../core/messages";
 
 export interface AdminEntry {
   id: string;
@@ -37,7 +37,10 @@ interface Admin {
   loading: boolean;
   openSession: (name: string, hoursOpen: number) => Promise<string | null>;
   closeSession: () => Promise<void>;
-  advance: (entryId: string, action: 'start' | 'done' | 'no-show') => Promise<void>;
+  advance: (
+    entryId: string,
+    action: "start" | "done" | "no-show",
+  ) => Promise<void>;
   setDuration: (entryId: string, minutes: number) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -57,7 +60,7 @@ export function useAdminQueue(): Admin {
 
   const refresh = useCallback(async () => {
     try {
-      const who = await fetch('/api/scheduling/admin/me');
+      const who = await fetch("/api/scheduling/admin/me");
 
       if (!who.ok) {
         // The admin surface is not configured on this deployment at all.
@@ -65,7 +68,11 @@ export function useAdminQueue(): Admin {
         return;
       }
 
-      const identity = (await who.json()) as { configured: boolean; signedIn: boolean; email: string | null };
+      const identity = (await who.json()) as {
+        configured: boolean;
+        signedIn: boolean;
+        email: string | null;
+      };
       setConfigured(identity.configured);
       setSignedIn(identity.signedIn);
       setEmail(identity.email);
@@ -75,13 +82,15 @@ export function useAdminQueue(): Admin {
         return;
       }
 
-      const [queueResponse, calendarResponse, messagesResponse] = await Promise.all([
-        fetch('/api/scheduling/admin/queue'),
-        fetch('/api/scheduling/admin/calendar'),
-        fetch('/api/scheduling/admin/messages')
-      ]);
+      const [queueResponse, calendarResponse, messagesResponse] =
+        await Promise.all([
+          fetch("/api/scheduling/admin/queue"),
+          fetch("/api/scheduling/admin/calendar"),
+          fetch("/api/scheduling/admin/messages"),
+        ]);
 
-      if (!queueResponse.ok) throw new Error(`Could not read the queue (${queueResponse.status}).`);
+      if (!queueResponse.ok)
+        throw new Error(`Could not read the queue (${queueResponse.status}).`);
 
       setQueue((await queueResponse.json()) as AdminQueue);
 
@@ -109,50 +118,56 @@ export function useAdminQueue(): Admin {
 
   const openSession = useCallback(
     async (name: string, hoursOpen: number) => {
-      const response = await fetch('/api/scheduling/admin/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, hoursOpen })
+      const response = await fetch("/api/scheduling/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, hoursOpen }),
       });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        return body?.error ?? 'Could not open the queue.';
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        return body?.error ?? "Could not open the queue.";
       }
 
       await refresh();
       return null;
     },
-    [refresh]
+    [refresh],
   );
 
   const closeSession = useCallback(async () => {
-    await fetch('/api/scheduling/admin/session/close', { method: 'POST' });
+    await fetch("/api/scheduling/admin/session/close", { method: "POST" });
     await refresh();
   }, [refresh]);
 
   const advance = useCallback(
-    async (entryId: string, action: 'start' | 'done' | 'no-show') => {
-      await fetch(`/api/scheduling/admin/queue/${entryId}/${action}`, { method: 'POST' });
+    async (entryId: string, action: "start" | "done" | "no-show") => {
+      await fetch(`/api/scheduling/admin/queue/${entryId}/${action}`, {
+        method: "POST",
+      });
       await refresh();
     },
-    [refresh]
+    [refresh],
   );
 
   const setDuration = useCallback(
     async (entryId: string, minutes: number) => {
       await fetch(`/api/scheduling/admin/queue/${entryId}/duration`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ minutes })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes }),
       });
       await refresh();
     },
-    [refresh]
+    [refresh],
   );
 
   const disconnectCalendar = useCallback(async () => {
-    await fetch('/api/scheduling/admin/calendar/disconnect', { method: 'POST' });
+    await fetch("/api/scheduling/admin/calendar/disconnect", {
+      method: "POST",
+    });
     await refresh();
   }, [refresh]);
 
@@ -170,6 +185,6 @@ export function useAdminQueue(): Admin {
     closeSession,
     advance,
     setDuration,
-    refresh
+    refresh,
   };
 }
