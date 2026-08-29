@@ -68,6 +68,23 @@ describe('the rail on a narrow screen', () => {
     const pane = summary.closest('.MuiAccordion-root') as HTMLElement;
     expect(getComputedStyle(pane).position).toBe('sticky');
   });
+
+  it('pins itself to the screen while open, so expanding near the bottom shows all of it', () => {
+    mount();
+
+    const summary = screen.getByRole('button', { name: /tracks, focus areas and settings/i });
+    const pane = summary.closest('.MuiAccordion-root') as HTMLElement;
+
+    // Sticky travel ends at the parent's bottom edge, so a pane opened near
+    // the bottom of the page would be shoved up and off the screen. While
+    // open it is fixed to the viewport instead; closed, it goes back to
+    // scrolling with the page.
+    fireEvent.click(summary);
+    expect(getComputedStyle(pane).position).toBe('fixed');
+
+    fireEvent.click(summary);
+    expect(getComputedStyle(pane).position).toBe('sticky');
+  });
 });
 
 describe('the course card on a narrow screen', () => {
@@ -80,6 +97,18 @@ describe('the course card on a narrow screen', () => {
     expect(document.querySelector('.MuiDrawer-root')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close the course card' })).toBeTruthy();
     expect(document.querySelector('[data-popper-placement]')).toBeNull();
+  });
+
+  it('ignores hover, so an emulated mouseover cannot flutter the sheet open and shut', async () => {
+    mount();
+
+    // A tap emulates mouseenter before click. If hover opened the sheet, its
+    // backdrop would steal the pointer, fire mouseleave, close the sheet, and
+    // hand the pointer back — an endless open-and-shut loop.
+    fireEvent.mouseOver(document.querySelector('[data-code]') as HTMLElement);
+    await new Promise((r) => setTimeout(r, 300));
+
+    expect(document.querySelector('.MuiDrawer-root')).toBeNull();
   });
 
   it('closes from its own close button', async () => {
