@@ -75,28 +75,22 @@ export default function PlannerBoard() {
 
   const hoverDetail = useCallback(
     (code: string, anchor: HTMLElement) => {
-      // On a narrow screen the card is a modal sheet, and a touch tap emulates
-      // mouseenter. Opening on hover would let the sheet's backdrop steal the
-      // pointer, fire mouseleave, close, and start over — so only a deliberate
-      // tap opens it there.
-      if (!wide) return;
       clearTimer();
       timer.current = setTimeout(() => {
         setDetail((cur) => (cur?.pinned ? cur : { code, anchor, pinned: false }));
       }, HOVER_OPEN_MS);
     },
-    [clearTimer, wide]
+    [clearTimer]
   );
 
   const releaseDetail = useCallback(() => {
-    if (!wide) return;
     clearTimer();
     // A grace period, so the pointer can travel onto the card to follow a link
     // or scroll it. The card itself cancels this while the pointer is over it.
     timer.current = setTimeout(() => {
       setDetail((cur) => (cur?.pinned ? cur : null));
     }, HOVER_CLOSE_MS);
-  }, [clearTimer, wide]);
+  }, [clearTimer]);
 
   const pinDetail = useCallback(
     (code: string, anchor: HTMLElement) => {
@@ -251,32 +245,42 @@ export default function PlannerBoard() {
           }}
         >
           {detail && (
-            <Paper elevation={8} sx={{ borderRadius: 2 }}>
+            <Paper elevation={8} sx={{ borderRadius: 2, maxWidth: 380 }}>
               <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
             </Paper>
           )}
         </Popper>
       ) : (
-        // A popper beside the chip would hang off the edge of a phone. The
-        // card rises from the bottom instead, and always with its actions,
-        // because on a touch screen every card was asked for deliberately.
-        <Drawer
-          anchor="bottom"
-          open={detail !== null}
-          onClose={closeDetail}
-          slotProps={{
-            paper: {
-              sx: {
-                maxHeight: '75vh',
-                overflowY: 'auto',
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12
+        // A popper beside the chip would hang off the edge of a phone, so the
+        // card rises from the bottom instead. Persistent rather than modal on
+        // purpose: a backdrop would cover the chip the moment the card opened,
+        // fire mouseleave, close it, and start over — hover has to be able to
+        // show this sheet without anything coming between pointer and chip.
+        detail && (
+          <Drawer
+            variant="persistent"
+            anchor="bottom"
+            open
+            slotProps={{
+              transition: { appear: true },
+              paper: {
+                sx: {
+                  maxHeight: '75vh',
+                  overflowY: 'auto',
+                  borderTopLeftRadius: 12,
+                  borderTopRightRadius: 12,
+                  boxShadow: 8
+                },
+                onMouseEnter: clearTimer,
+                onMouseLeave: () => {
+                  if (!detail.pinned) releaseDetail();
+                }
               }
-            }
-          }}
-        >
-          {detail && <CourseCard code={detail.code} pinned onClose={closeDetail} />}
-        </Drawer>
+            }}
+          >
+            <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
+          </Drawer>
+        )
       )}
     </PlannerProvider>
   );

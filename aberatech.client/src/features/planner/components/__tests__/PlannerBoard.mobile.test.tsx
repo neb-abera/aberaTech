@@ -99,16 +99,29 @@ describe('the course card on a narrow screen', () => {
     expect(document.querySelector('[data-popper-placement]')).toBeNull();
   });
 
-  it('ignores hover, so an emulated mouseover cannot flutter the sheet open and shut', async () => {
+  it('opens on hover, with no backdrop that would steal the pointer and flutter it shut', async () => {
     mount();
 
-    // A tap emulates mouseenter before click. If hover opened the sheet, its
-    // backdrop would steal the pointer, fire mouseleave, close the sheet, and
-    // hand the pointer back — an endless open-and-shut loop.
+    // A modal sheet's backdrop covers the chip the moment it opens, firing
+    // mouseleave, closing the sheet, and starting over — so the sheet must be
+    // hoverable without being modal.
     fireEvent.mouseOver(document.querySelector('[data-code]') as HTMLElement);
-    await new Promise((r) => setTimeout(r, 300));
 
-    expect(document.querySelector('.MuiDrawer-root')).toBeNull();
+    await waitFor(() => {
+      expect(document.querySelector('.MuiDrawer-root')).toBeTruthy();
+    });
+    expect(document.querySelector('.MuiBackdrop-root')).toBeNull();
+    expect(document.querySelector('.MuiModal-root')).toBeNull();
+  });
+
+  it('lets the card fill the sheet, rather than capping it at the popper width', () => {
+    mount();
+
+    fireEvent.click(document.querySelector('[data-code]') as HTMLElement);
+
+    const paper = document.querySelector('.MuiDrawer-paper') as HTMLElement;
+    const card = paper.firstElementChild as HTMLElement;
+    expect(getComputedStyle(card).maxWidth).not.toBe('380px');
   });
 
   it('closes from its own close button', async () => {
