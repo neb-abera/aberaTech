@@ -37,6 +37,19 @@ function mount() {
   );
 }
 
+// The first MUI mount in a worker compiles the whole theme through emotion and
+// jsdom's CSS parser, and the first role-by-name query and first click pay
+// similar lazy-initialization costs — several seconds all told under CI load,
+// once per process. Left alone that lands inside whichever test runs first and
+// blows its 5s budget; rehearsed here, every test starts from warm caches and
+// costs the same. The hook budget is wide because this is the known one-time
+// cost, not a wait to tune.
+beforeAll(() => {
+  mount();
+  fireEvent.click(screen.getByRole('button', { name: /tracks, focus areas and settings/i }));
+  cleanup();
+}, 30_000);
+
 describe('the rail on a narrow screen', () => {
   it('is a collapsed pane that expands in place, not an overlay', () => {
     mount();
