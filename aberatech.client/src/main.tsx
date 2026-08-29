@@ -1,19 +1,24 @@
 /* eslint-disable  @typescript-eslint/no-non-null-assertion */
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
-import { StyledEngineProvider } from '@mui/material/styles';
-import './index.css';
-import App from './App.tsx';
+import Shell from './Shell.tsx';
 
-//ignore non-null assertion
+const root = document.getElementById('root')!;
 
-createRoot(document.getElementById('root')!).render(
+const app = (
   <StrictMode>
     <BrowserRouter>
-      <StyledEngineProvider injectFirst>
-        <App />
-      </StyledEngineProvider>
+      <Shell />
     </BrowserRouter>
   </StrictMode>
 );
+
+// Prerendered pages arrive with their markup already in the root, so React
+// adopts it instead of rebuilding it; pages that are not prerendered (the
+// scheduling app) arrive with an empty root and render as they always have.
+if (root.hasChildNodes()) {
+  hydrateRoot(root, app);
+} else {
+  createRoot(root).render(app);
+}
