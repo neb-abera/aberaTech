@@ -23,7 +23,7 @@ export const dataDisplayCustomizations: Components<Theme> = {
         [`& .${svgIconClasses.root}`]: {
           width: '1rem',
           height: '1rem',
-          color: theme.palette.text.secondary
+          color: (theme.vars || theme).palette.text.secondary
         },
         [`& .${typographyClasses.root}`]: {
           fontWeight: 500
@@ -36,15 +36,21 @@ export const dataDisplayCustomizations: Components<Theme> = {
           opacity: 0.7,
           '&.Mui-selected': {
             opacity: 1,
-            backgroundColor: alpha(theme.palette.action.selected, 0.3),
+            backgroundColor: theme.vars
+              ? `rgba(${theme.vars.palette.action.selectedChannel} / 0.3)`
+              : alpha(theme.palette.action.selected, 0.3),
             [`& .${svgIconClasses.root}`]: {
-              color: theme.palette.text.primary
+              color: (theme.vars || theme).palette.text.primary
             },
             '&:focus-visible': {
-              backgroundColor: alpha(theme.palette.action.selected, 0.3)
+              backgroundColor: theme.vars
+                ? `rgba(${theme.vars.palette.action.selectedChannel} / 0.3)`
+                : alpha(theme.palette.action.selected, 0.3)
             },
             '&:hover': {
-              backgroundColor: alpha(theme.palette.action.selected, 0.5)
+              backgroundColor: theme.vars
+                ? `rgba(${theme.vars.palette.action.selectedChannel} / 0.5)`
+                : alpha(theme.palette.action.selected, 0.5)
             }
           },
           '&:focus-visible': {
