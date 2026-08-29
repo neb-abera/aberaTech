@@ -201,12 +201,27 @@ app.UseForwardedHeaders(forwardedOptions);
 // as inline <style> elements, the guides embed Google Docs and YouTube players
 // in iframes, and a handful of partner logos load from their own hosts.
 // Everything else — scripts above all — is same-origin only.
+// The prerendered pages carry MUI's color-scheme bootstrap as an inline
+// script (it must run before first paint), so the policy allows exactly that
+// script by hash, read from the shipped HTML at startup. Every prerendered
+// page bakes the same script, so index.html speaks for all of them.
+var inlineScriptHashes = "";
+var shippedShell = app.Environment.WebRootFileProvider.GetFileInfo("/index.html");
+if (shippedShell.Exists && shippedShell.PhysicalPath is not null)
+{
+    var hashes = CspInlineScripts.HashesIn(File.ReadAllText(shippedShell.PhysicalPath));
+    if (hashes.Count > 0)
+    {
+        inlineScriptHashes = " " + string.Join(' ', hashes);
+    }
+}
+
 app.Use(async (context, next) =>
 {
     var headers = context.Response.Headers;
     headers["Content-Security-Policy"] =
         "default-src 'self'; "
-        + "script-src 'self'; "
+        + $"script-src 'self'{inlineScriptHashes}; "
         + "style-src 'self' 'unsafe-inline'; "
         + "img-src 'self' data: https://www.va.gov https://www.lduhtrp.net "
         + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com; "
@@ -228,6 +243,26 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// Prerendered pages: /transition is on disk as /transition/index.html, so an
+// extensionless GET whose prerendered file exists is rewritten to it before
+// the static file middleware looks. Anything else falls through unchanged.
+var webRoot = app.Environment.WebRootFileProvider;
+app.Use((context, next) =>
+{
+    if (HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method))
+    {
+        var rewritten = PrerenderedPages.RewriteFor(
+            context.Request.Path.Value ?? "/",
+            candidate => webRoot.GetFileInfo(candidate).Exists);
+        if (rewritten is not null)
+        {
+            context.Request.Path = rewritten;
+        }
+    }
+
+    return next();
+});
+
 app.UseDefaultFiles(); // Serves 'index.html' automatically for root requests.
 
 // One options object shared with the SPA fallback below, so every path that
@@ -240,6 +275,14 @@ var staticFileOptions = new StaticFileOptions
 };
 
 app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
+
+// Explicit, and deliberately AFTER the static file middleware. Left implicit,
+// WebApplication puts routing at the front of the pipeline, where the SPA
+// fallback endpoint matches every extensionless request — and the static file
+// middleware stands down when an endpoint has already matched, so the
+// prerendered-page rewrite and the default-files behaviour above would both be
+// dead code and every page would serve the empty shell.
+app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -311,6 +354,14 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
 // a carrier reviewing the campaign will fetch them whatever else is switched on.
 app.MapCompliancePages();
 
-app.MapFallbackToFile("index.html", staticFileOptions);
+// spa.html, not index.html: index.html now carries the home page's
+// prerendered markup, and a client-rendered route served over it would flash
+// the wrong page and then hydrate against DOM that contradicts it. spa.html is
+// the same shell with the root div left empty.
+app.MapFallbackToFile("spa.html", staticFileOptions);
 
 app.Run();
+
+// So WebApplicationFactory can see the entry point; top-level statements
+// compile to an internal Program class otherwise.
+public partial class Program;

@@ -33,11 +33,21 @@ public class StaticAssetCachingTests
     [Fact]
     public void The_shell_served_by_the_spa_fallback_always_revalidates()
     {
-        // Client-side routes fall back to index.html under their own path, so
+        // Client-side routes fall back to the shell under their own path, so
         // the rule has to key on the file being served, not the URL asked for.
         Assert.Equal(
             "no-cache",
-            StaticAssetCaching.For("/guides/military-transition", "index.html"));
+            StaticAssetCaching.For("/schedule", "spa.html"));
+    }
+
+    [Fact]
+    public void A_prerendered_page_always_revalidates()
+    {
+        // Prerendered pages are HTML whose bytes change under a stable URL on
+        // every deploy, exactly like the root shell.
+        Assert.Equal(
+            "no-cache",
+            StaticAssetCaching.For("/transition/index.html", "index.html"));
     }
 
     [Fact]
