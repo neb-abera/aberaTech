@@ -2,6 +2,35 @@
 
 Visit https://abera.tech for a demonstration
 
+## How it stays fast
+
+The public pages — home, the index pages, the guides — are rendered to real
+HTML at build time (`aberatech.client/tools/prerender.mjs` +
+`src/entry-server.tsx`) and hydrated in the browser, so first paint does not
+wait for the React bundle; the client-rendered app pages fall back to the
+empty `spa.html` shell. The server (`StaticAssetCaching.cs`) marks hashed
+`/assets` immutable for a year and every `.html` no-cache, and Cloudflare
+edge-caches the HTML under a dashboard cache rule that is safe only because
+the deploy workflow's `purge-edge-cache` job purges the zone on every merge
+to master. Routing is explicit and placed after the static-file middleware
+in `Program.cs` — left implicit, the SPA fallback swallows every
+extensionless request. The CSP is a response header whose inline-script
+hashes are computed from the shipped HTML at startup (`CspInlineScripts.cs`);
+Cloudflare's RUM beacon is allowlisted deliberately, and its real-user Core
+Web Vitals are the measurement of record.
+
+## How it stays current
+
+Every GitHub Action is pinned by commit SHA with a version comment, and
+Dependabot bumps SHA and comment together — minor/patch grouped into one
+weekly PR per ecosystem. The `dependabot-automerge` workflow arms auto-merge
+on every Dependabot PR, majors included: red CI, not update size, is the
+review signal. It needs the repo's Allow auto-merge setting and a
+`DEPENDABOT_AUTOMERGE_TOKEN` secret (fine-grained PAT — a PAT so the merge
+still triggers the deploy, which `GITHUB_TOKEN` merges do not; expires and
+gets recreated quarterly). Scorecard, CodeQL and a Trivy image scan run as
+scheduled gates.
+
 ## Development
 
 Everything runs in a container. Docker is the only thing that needs to be
