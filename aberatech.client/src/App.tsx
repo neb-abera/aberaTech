@@ -1,18 +1,20 @@
-import { Route, Routes } from 'react-router';
-import React, { Suspense } from 'react';
-import './App.css';
-import ScrollToTop from './components/ScrollToTop';
-import TechnicalTransitionGuide from './views/TechnicalTransitionGuide.tsx';
+import React, { Suspense } from "react";
+import { Route, Routes } from "react-router";
+import "./App.css";
+import ScrollToTop from "./components/ScrollToTop";
+import TechnicalTransitionGuide from "./views/TechnicalTransitionGuide.tsx";
 
 // Lazy loading the pages
-const Home = React.lazy(() => import('./views/Home'));
-const MarketingPage = React.lazy(() => import('./views/MarketingPage'));
-const MilitaryTransitionGuide = React.lazy(() => import('./views/MilitaryTransitionGuide'));
-const CoursePlanner = React.lazy(() => import('./views/CoursePlanner'));
-const ScheduleTime = React.lazy(() => import('./views/ScheduleTime'));
-const ScheduleAdmin = React.lazy(() => import('./views/ScheduleAdmin'));
-const Guides = React.lazy(() => import('./views/Guides'));
-const Projects = React.lazy(() => import('./views/Projects'));
+const Home = React.lazy(() => import("./views/Home"));
+const MarketingPage = React.lazy(() => import("./views/MarketingPage"));
+const MilitaryTransitionGuide = React.lazy(
+  () => import("./views/MilitaryTransitionGuide"),
+);
+const CoursePlanner = React.lazy(() => import("./views/CoursePlanner"));
+const ScheduleTime = React.lazy(() => import("./views/ScheduleTime"));
+const ScheduleAdmin = React.lazy(() => import("./views/ScheduleAdmin"));
+const Guides = React.lazy(() => import("./views/Guides"));
+const Projects = React.lazy(() => import("./views/Projects"));
 
 // Fallback loading spinner or placeholder
 const LoadingFallback = () => <div>Loading...</div>;

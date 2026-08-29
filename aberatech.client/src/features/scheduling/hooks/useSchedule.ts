@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BookingConfirmation, MyPlace, ScheduleState } from '../core/types';
-import { viewerZone } from '../core/format';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { viewerZone } from "../core/format";
+import type {
+  BookingConfirmation,
+  MyPlace,
+  ScheduleState,
+} from "../core/types";
 
 /**
  * How often the page asks where the queue has got to.
@@ -20,21 +24,25 @@ const PollMs = 15_000;
  * one entry, so it stays in this browser and is never put in a URL, where it
  * would leak through history, bookmarks and referer headers.
  */
-const StorageKey = 'aberatech.scheduling.entry';
+const StorageKey = "aberatech.scheduling.entry";
 
 interface Schedule {
   state: ScheduleState | null;
   place: MyPlace | null;
   error: string | null;
   loading: boolean;
-  join: (name: string, phone: string, smsConsent: boolean) => Promise<string | null>;
+  join: (
+    name: string,
+    phone: string,
+    smsConsent: boolean,
+  ) => Promise<string | null>;
   leave: () => Promise<void>;
   book: (
     startsAt: string,
     name: string,
     phone: string,
     smsConsent: boolean,
-    email: string
+    email: string,
   ) => Promise<{ error: string | null }>;
   booking: BookingConfirmation | null;
   selectDate: (date: string) => void;
@@ -56,15 +64,20 @@ export function useSchedule(): Schedule {
     async (signal?: AbortSignal) => {
       try {
         const query = new URLSearchParams({ zone: viewerZone() });
-        if (date !== null) query.set('date', date);
+        if (date !== null) query.set("date", date);
 
-        const response = await fetch(`/api/scheduling/state?${query}`, { signal });
-        if (!response.ok) throw new Error(`The schedule is unavailable (${response.status}).`);
+        const response = await fetch(`/api/scheduling/state?${query}`, {
+          signal,
+        });
+        if (!response.ok)
+          throw new Error(`The schedule is unavailable (${response.status}).`);
         setState((await response.json()) as ScheduleState);
         setError(null);
 
         if (entryId.current) {
-          const mine = await fetch(`/api/scheduling/queue/${entryId.current}`, { signal });
+          const mine = await fetch(`/api/scheduling/queue/${entryId.current}`, {
+            signal,
+          });
           if (mine.ok) {
             setPlace((await mine.json()) as MyPlace);
           } else if (mine.status === 404) {
@@ -76,14 +89,14 @@ export function useSchedule(): Schedule {
           }
         }
       } catch (caught) {
-        if ((caught as Error).name !== 'AbortError') {
+        if ((caught as Error).name !== "AbortError") {
           setError((caught as Error).message);
         }
       } finally {
         setLoading(false);
       }
     },
-    [date]
+    [date],
   );
 
   useEffect(() => {
@@ -100,19 +113,21 @@ export function useSchedule(): Schedule {
 
   const join = useCallback(
     async (name: string, phone: string, smsConsent: boolean) => {
-      const response = await fetch('/api/scheduling/queue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, zoneId: viewerZone(), smsConsent })
+      const response = await fetch("/api/scheduling/queue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, zoneId: viewerZone(), smsConsent }),
       });
 
       if (response.status === 429) {
-        return 'Too many attempts. Please wait a minute and try again.';
+        return "Too many attempts. Please wait a minute and try again.";
       }
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        return body?.error ?? 'Could not join the queue.';
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        return body?.error ?? "Could not join the queue.";
       }
 
       const { id } = (await response.json()) as { id: string };
@@ -121,13 +136,15 @@ export function useSchedule(): Schedule {
       await refresh();
       return null;
     },
-    [refresh]
+    [refresh],
   );
 
   const leave = useCallback(async () => {
     if (!entryId.current) return;
 
-    await fetch(`/api/scheduling/queue/${entryId.current}`, { method: 'DELETE' });
+    await fetch(`/api/scheduling/queue/${entryId.current}`, {
+      method: "DELETE",
+    });
     localStorage.removeItem(StorageKey);
     entryId.current = null;
     setPlace(null);
@@ -135,33 +152,60 @@ export function useSchedule(): Schedule {
   }, [refresh]);
 
   const book = useCallback(
-    async (startsAt: string, name: string, phone: string, smsConsent: boolean, email: string) => {
-      const response = await fetch('/api/scheduling/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startsAt, name, phone, zoneId: viewerZone(), smsConsent, email })
+    async (
+      startsAt: string,
+      name: string,
+      phone: string,
+      smsConsent: boolean,
+      email: string,
+    ) => {
+      const response = await fetch("/api/scheduling/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startsAt,
+          name,
+          phone,
+          zoneId: viewerZone(),
+          smsConsent,
+          email,
+        }),
       });
 
       if (response.status === 429) {
-        return { error: 'Too many attempts. Please wait a minute and try again.' };
+        return {
+          error: "Too many attempts. Please wait a minute and try again.",
+        };
       }
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
         // A 409 here is the database refusing a double booking, which is a
         // normal outcome of two people picking the same time, not a fault.
         await refresh();
-        return { error: body?.error ?? 'Could not book that time.' };
+        return { error: body?.error ?? "Could not book that time." };
       }
 
       setBooking((await response.json()) as BookingConfirmation);
       await refresh();
       return { error: null };
     },
-    [refresh]
+    [refresh],
   );
 
   const selectDate = useCallback((next: string) => setDate(next), []);
 
-  return { state, place, error, loading, join, leave, book, booking, selectDate };
+  return {
+    state,
+    place,
+    error,
+    loading,
+    join,
+    leave,
+    book,
+    booking,
+    selectDate,
+  };
 }

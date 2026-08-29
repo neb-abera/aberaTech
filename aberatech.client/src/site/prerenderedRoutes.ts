@@ -1,4 +1,4 @@
-import { guides } from './sections';
+import { guides } from "./sections";
 
 /**
  * The routes baked to HTML at build time.
@@ -10,8 +10,8 @@ import { guides } from './sections';
  * open stale.
  */
 export const prerenderedRoutes: string[] = [
-  '/',
-  '/guides',
-  '/projects',
-  ...guides.filter((entry) => !entry.external).map((entry) => entry.to)
+  "/",
+  "/guides",
+  "/projects",
+  ...guides.filter((entry) => !entry.external).map((entry) => entry.to),
 ];

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
 export interface AvailabilityDay {
   day: number;
@@ -35,8 +35,9 @@ export function useAvailability(enabled: boolean): Availability {
     }
 
     try {
-      const response = await fetch('/api/scheduling/admin/availability');
-      if (!response.ok) throw new Error(`Could not read your hours (${response.status}).`);
+      const response = await fetch("/api/scheduling/admin/availability");
+      if (!response.ok)
+        throw new Error(`Could not read your hours (${response.status}).`);
 
       setWeek((await response.json()) as AvailabilityWeek);
       setError(null);
@@ -56,15 +57,17 @@ export function useAvailability(enabled: boolean): Availability {
 
     setSaved(false);
 
-    const response = await fetch('/api/scheduling/admin/availability', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(week)
+    const response = await fetch("/api/scheduling/admin/availability", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(week),
     });
 
     if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? 'Could not save your hours.');
+      const body = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      setError(body?.error ?? "Could not save your hours.");
       return;
     }
 

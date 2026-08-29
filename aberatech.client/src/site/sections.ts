@@ -19,35 +19,37 @@ export interface Entry {
 
 export const guides: Entry[] = [
   {
-    title: 'The Military Transition Guide I Wish I Had',
-    navLabel: 'Military Transition Guide',
-    to: '/transition',
-    blurb: 'What to do and when, from eighteen months before ETS to long after it.'
+    title: "The Military Transition Guide I Wish I Had",
+    navLabel: "Military Transition Guide",
+    to: "/transition",
+    blurb:
+      "What to do and when, from eighteen months before ETS to long after it.",
   },
   {
-    title: 'Learning Software Development',
-    to: '/technical',
-    blurb: 'The path from no background to working in software development.'
-  }
+    title: "Learning Software Development",
+    to: "/technical",
+    blurb: "The path from no background to working in software development.",
+  },
 ];
 
 export const projects: Entry[] = [
   {
-    title: 'Learning RF and Signal Processing',
-    to: '/planner',
-    blurb: 'Plan a Johns Hopkins Engineering for Professionals Electrical and Computer Engineering master’s degree.'
+    title: "Learning RF and Signal Processing",
+    to: "/planner",
+    blurb:
+      "Plan a Johns Hopkins Engineering for Professionals Electrical and Computer Engineering master’s degree.",
   },
   {
-    title: 'Schedule time with me',
-    to: '/schedule',
-    blurb: 'Book a time, or join the queue. Confirmed by text.'
+    title: "Schedule time with me",
+    to: "/schedule",
+    blurb: "Book a time, or join the queue. Confirmed by text.",
   },
   {
-    title: 'Facewoof',
-    to: 'https://facewoof.abera.tech',
-    blurb: 'A play dating app for dogs.',
-    external: true
-  }
+    title: "Facewoof",
+    to: "https://facewoof.abera.tech",
+    blurb: "A play dating app for dogs.",
+    external: true,
+  },
 ];
 
 /** The one action in the bar, rather than another place to browse. */
