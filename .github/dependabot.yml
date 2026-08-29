@@ -26,12 +26,36 @@ updates:
         update-types:
           - minor
           - patch
+  # The client has its own manifest; an npm entry only scans its own
+  # directory, so without this the React/MUI/Vite tree is never updated.
+  - package-ecosystem: npm
+    directory: /aberatech.client
+    schedule:
+      interval: weekly
+    groups:
+      client-npm-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: docker
     directory: /aberaTech.Server
     schedule:
       interval: weekly
     groups:
       docker-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+  # Image tags in compose.yaml (the dev postgres); the docker ecosystem
+  # above only scans Dockerfiles.
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      compose-non-major:
         applies-to: version-updates
         update-types:
           - minor
