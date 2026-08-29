@@ -71,7 +71,7 @@ services:
   # overlapping appointments rather than trusting application code to win a race
   # it cannot see.
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: scheduling
       POSTGRES_PASSWORD: scheduling
