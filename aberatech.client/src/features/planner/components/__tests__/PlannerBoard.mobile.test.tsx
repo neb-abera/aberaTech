@@ -6,7 +6,7 @@
  * keeps in its left column.
  */
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AppTheme from '../../../../theme/AppTheme';
 import PlannerBoard from '../PlannerBoard';
 
@@ -59,5 +59,37 @@ describe('the rail on a narrow screen', () => {
 
     expect(screen.getByText('Recommended tracks')).toBeTruthy();
     expect(screen.getByText('Focus areas')).toBeTruthy();
+  });
+
+  it('sticks to the top of the screen, so it is reachable from the bottom of the page', () => {
+    mount();
+
+    const summary = screen.getByRole('button', { name: /tracks, focus areas and settings/i });
+    const pane = summary.closest('.MuiAccordion-root') as HTMLElement;
+    expect(getComputedStyle(pane).position).toBe('sticky');
+  });
+});
+
+describe('the course card on a narrow screen', () => {
+  it('opens as a sheet at the bottom, not a popper beside the chip', () => {
+    mount();
+
+    const chip = document.querySelector('[data-code]') as HTMLElement;
+    fireEvent.click(chip);
+
+    expect(document.querySelector('.MuiDrawer-root')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Close the course card' })).toBeTruthy();
+    expect(document.querySelector('[data-popper-placement]')).toBeNull();
+  });
+
+  it('closes from its own close button', async () => {
+    mount();
+
+    fireEvent.click(document.querySelector('[data-code]') as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Close the course card' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Close the course card' })).toBeNull();
+    });
   });
 });
