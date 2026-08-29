@@ -85,7 +85,7 @@ jobs:
 
       # Step 6: Deploy the Container App with ACR Credentials
       - name: Deploy to Azure Container App
-        uses: azure/CLI@v2
+        uses: azure/CLI@v3
         with:
           inlineScript: |
             # Enable dynamic installation for Azure CLI extensions
