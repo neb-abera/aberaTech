@@ -191,7 +191,7 @@ var forwardedOptions = new ForwardedHeadersOptions
 // empty collection initializer leaves those defaults in place, and a list
 // with entries in it means "trust only these" — cleared lists are how the
 // middleware is told the one hop in front of it has no fixed address.
-forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownIPNetworks.Clear();
 forwardedOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedOptions);
 
