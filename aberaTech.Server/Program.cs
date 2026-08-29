@@ -229,7 +229,17 @@ app.Use(async (context, next) =>
 });
 
 app.UseDefaultFiles(); // Serves 'index.html' automatically for root requests.
-app.UseStaticFiles(); // Serves files from wwwroot.
+
+// One options object shared with the SPA fallback below, so every path that
+// serves a file applies the same cache policy.
+var staticFileOptions = new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+        ctx.Context.Response.Headers.CacheControl =
+            StaticAssetCaching.For(ctx.Context.Request.Path, ctx.File.Name)
+};
+
+app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -301,6 +311,6 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
 // a carrier reviewing the campaign will fetch them whatever else is switched on.
 app.MapCompliancePages();
 
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html", staticFileOptions);
 
 app.Run();

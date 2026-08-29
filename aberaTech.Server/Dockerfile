@@ -125,9 +125,9 @@ RUN dotnet build "aberaTech.Server/aberaTech.Server.csproj" \
 FROM build AS servertest
 ARG BUILD_CONFIGURATION=Release
 COPY ["aberaTech.Server.Tests/aberaTech.Server.Tests.csproj", "aberaTech.Server.Tests/"]
-RUN dotnet restore "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj"
+RUN dotnet restore "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -p:SkipClientProject=true
 COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
-RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore
+RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true
 
 # Publish .NET server
 FROM build AS publish
