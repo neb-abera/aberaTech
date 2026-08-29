@@ -26,12 +26,42 @@ function mount() {
   );
 }
 
+/**
+ * An in-memory Storage, provided explicitly. Node 26 predefines a global
+ * localStorage (experimental, undefined without --localstorage-file), and the
+ * jsdom test environment defers to that existing global — so neither
+ * window.localStorage nor the bare global is usable here. MUI tolerates the
+ * gap silently, but these tests assert on what got stored, so they bring
+ * their own.
+ */
+function memoryStorage(): Storage {
+  const store = new Map<string, string>();
+  return {
+    get length() {
+      return store.size;
+    },
+    clear: () => store.clear(),
+    getItem: (key: string) => store.get(key) ?? null,
+    key: (index: number) => [...store.keys()][index] ?? null,
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      store.set(key, String(value));
+    }
+  };
+}
+
 describe('the stored System preference', () => {
+  let storage: Storage;
+
   beforeEach(() => {
     resetAccountProbeForTests();
     vi.restoreAllMocks();
-    window.localStorage.clear();
-    window.localStorage.setItem('mui-mode', 'system');
+    storage = memoryStorage();
+    vi.stubGlobal('localStorage', storage);
+    Object.defineProperty(window, 'localStorage', { value: storage, configurable: true });
+    storage.setItem('mui-mode', 'system');
   });
 
   it('is left alone while the sign-in answer is still pending', async () => {
@@ -44,7 +74,7 @@ describe('the stored System preference', () => {
     // Give any wrongly-scheduled correction every chance to fire.
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(window.localStorage.getItem('mui-mode')).toBe('system');
+    expect(storage.getItem('mui-mode')).toBe('system');
   });
 
   it('is kept once the visitor turns out to be signed in', async () => {
@@ -54,7 +84,7 @@ describe('the stored System preference', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(window.localStorage.getItem('mui-mode')).toBe('system');
+    expect(storage.getItem('mui-mode')).toBe('system');
   });
 
   it('is demoted to dark once the visitor turns out to be signed out', async () => {
@@ -66,7 +96,7 @@ describe('the stored System preference', () => {
     mount();
 
     await waitFor(() => {
-      expect(window.localStorage.getItem('mui-mode')).toBe('dark');
+      expect(storage.getItem('mui-mode')).toBe('dark');
     });
   });
 });
