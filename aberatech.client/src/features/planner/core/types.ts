@@ -52,7 +52,7 @@ export interface TrackStage {
 
 export interface RawTrack {
   name: string;
-  kind: 'degree' | 'mastery';
+  kind: "degree" | "mastery";
   length: string;
   goal: string;
   tradeoff: string;

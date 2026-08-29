@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router';
+import { useEffect } from "react";
+import { useLocation } from "react-router";
 
 /**
  * Send every navigation to the top of the page.
@@ -15,8 +15,9 @@ import { useLocation } from 'react-router';
  */
 export default function ScrollToTop() {
   const { pathname } = useLocation();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the intentional trigger - scroll to top on every route change
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
   return null;
 }
