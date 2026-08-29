@@ -1,8 +1,8 @@
 # One node image for the client build, its tests, its lint pass and the dev
-# server. Declared before the first FROM deliberately: only a global build
-# argument may be used in a FROM instruction, and an ARG written after the first
-# FROM belongs to that stage alone and expands to nothing here.
-ARG NODE_IMAGE=node:24
+# server. A named stage rather than an ARG deliberately: Dependabot cannot see
+# an image behind ARG indirection, but it watches a literal FROM, and every
+# consumer derives from this one stage so a bump moves them all together.
+FROM node:24 AS nodebase
 
 # Base stage for .NET runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
@@ -22,7 +22,7 @@ RUN echo "nebdebug IN_DOCKER is set to: $IN_DOCKER"
 # committed, so the build should install exactly what it describes and fail
 # loudly when it and package.json disagree, rather than quietly resolving
 # something new on each build.
-FROM ${NODE_IMAGE} AS clientbase
+FROM nodebase AS clientbase
 WORKDIR /client
 
 # Install dependencies for the React app
@@ -77,7 +77,7 @@ RUN npx tsc -b && npm run test
 # Split from the stage below on purpose: `make fmt` has to be able to start a
 # container and rewrite files even when the tree does not currently pass, which
 # it could not do if installing the tooling and checking the code were one step.
-FROM ${NODE_IMAGE} AS clienttools
+FROM nodebase AS clienttools
 WORKDIR /repo
 COPY ["package.json", "package-lock.json", "./"]
 RUN npm ci
