@@ -16,7 +16,7 @@
  * browser refuses to say, which no current one does.
  */
 export function viewerZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 /**
@@ -28,27 +28,27 @@ export function viewerZone(): string {
  * are not in the same place.
  */
 export function formatTime(iso: string, zone: string = viewerZone()): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
-    timeZone: zone
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+    timeZone: zone,
   });
 }
 
 /** "Tue, Jun 1" — the heading a group of slots sits under. */
 export function formatDay(iso: string, zone: string = viewerZone()): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    timeZone: zone
+  return new Date(iso).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: zone,
   });
 }
 
 /** A stable key for the calendar day an instant falls on, in the viewer's zone. */
 export function dayKey(iso: string, zone: string = viewerZone()): string {
-  return new Date(iso).toLocaleDateString('en-CA', { timeZone: zone });
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: zone });
 }
 
 /**
@@ -59,7 +59,10 @@ export function dayKey(iso: string, zone: string = viewerZone()): string {
  * it is for them, not under the previous day because that is when it is for
  * somebody else.
  */
-export function groupByDay<T extends { startsAt: string }>(items: T[], zone: string = viewerZone()): [string, T[]][] {
+export function groupByDay<T extends { startsAt: string }>(
+  items: T[],
+  zone: string = viewerZone(),
+): [string, T[]][] {
   const groups = new Map<string, T[]>();
 
   for (const item of items) {
@@ -77,11 +80,11 @@ export function groupByDay<T extends { startsAt: string }>(items: T[], zone: str
 
 /** "in 25 minutes", "in about 2 hours", "now" — a wait, in words. */
 export function describeWait(minutes: number | null): string {
-  if (minutes === null) return 'not estimated yet';
-  if (minutes <= 0) return 'now';
-  if (minutes === 1) return 'in about a minute';
+  if (minutes === null) return "not estimated yet";
+  if (minutes <= 0) return "now";
+  if (minutes === 1) return "in about a minute";
   if (minutes < 60) return `in about ${minutes} minutes`;
 
   const hours = Math.round(minutes / 60);
-  return hours === 1 ? 'in about an hour' : `in about ${hours} hours`;
+  return hours === 1 ? "in about an hour" : `in about ${hours} hours`;
 }

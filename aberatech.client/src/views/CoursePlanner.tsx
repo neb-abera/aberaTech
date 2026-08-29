@@ -1,6 +1,6 @@
-import Link from '@mui/material/Link';
-import PageShell from '../components/PageShell';
-import PlannerBoard from '../features/planner/components/PlannerBoard';
+import Link from "@mui/material/Link";
+import PageShell from "../components/PageShell";
+import PlannerBoard from "../features/planner/components/PlannerBoard";
 
 export default function CoursePlanner(props: { disableCustomTheme?: boolean }) {
   return (
@@ -11,7 +11,7 @@ export default function CoursePlanner(props: { disableCustomTheme?: boolean }) {
       intro="Plan a Johns Hopkins Engineering for Professionals master&rsquo;s in electrical and computer engineering. All 138 courses, with prerequisites and the degree rules checked as you go. Start from a track or browse by focus area, then drag courses between terms."
       note={
         <>
-          Course data is from the{' '}
+          Course data is from the{" "}
           <Link
             href="https://e-catalogue.jhu.edu/engineering/engineering-professionals/electrical-computer-engineering/"
             target="_blank"

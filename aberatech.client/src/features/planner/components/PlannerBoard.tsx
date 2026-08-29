@@ -6,34 +6,35 @@
  * on screen is derived from it on each render, so there is no second copy of the
  * plan to drift out of step.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Box from '@mui/material/Box';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import Drawer from '@mui/material/Drawer';
-import Paper from '@mui/material/Paper';
-import Popper from '@mui/material/Popper';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useColorScheme, useTheme } from '@mui/material/styles';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import Tune from '@mui/icons-material/Tune';
-import { missingFor } from '../core/prereq';
-import { usePlanner } from '../hooks/usePlanner';
-import CourseCard from './CourseCard';
-import CoursePool from './CoursePool';
-import GraduationPanel from './GraduationPanel';
-import MessageList from './MessageList';
-import NeedBar from './NeedBar';
-import { PlannerProvider } from './PlannerContext';
-import type { PlannerContextValue } from './PlannerContext';
-import RuleList from './RuleList';
-import SettingsRail from './SettingsRail';
-import StatusPills from './StatusPills';
-import TermBoard from './TermBoard';
-import { TrackBanner } from './TrackPicker';
+
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import Tune from "@mui/icons-material/Tune";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
+import Stack from "@mui/material/Stack";
+import { useColorScheme, useTheme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { missingFor } from "../core/prereq";
+import { usePlanner } from "../hooks/usePlanner";
+import CourseCard from "./CourseCard";
+import CoursePool from "./CoursePool";
+import GraduationPanel from "./GraduationPanel";
+import MessageList from "./MessageList";
+import NeedBar from "./NeedBar";
+import type { PlannerContextValue } from "./PlannerContext";
+import { PlannerProvider } from "./PlannerContext";
+import RuleList from "./RuleList";
+import SettingsRail from "./SettingsRail";
+import StatusPills from "./StatusPills";
+import TermBoard from "./TermBoard";
+import { TrackBanner } from "./TrackPicker";
 
 interface Detail {
   code: string;
@@ -50,8 +51,9 @@ export default function PlannerBoard() {
   const { mode: schemeMode, systemMode } = useColorScheme();
   // With a CSS variable theme the active scheme lives on useColorScheme, not on
   // theme.palette.mode, which stays on the default scheme.
-  const mode: 'light' | 'dark' = (systemMode ?? schemeMode) === 'dark' ? 'dark' : 'light';
-  const wide = useMediaQuery(theme.breakpoints.up('md'));
+  const mode: "light" | "dark" =
+    (systemMode ?? schemeMode) === "dark" ? "dark" : "light";
+  const wide = useMediaQuery(theme.breakpoints.up("md"));
   const [railOpen, setRailOpen] = useState(false);
   const [drag, setDrag] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -69,6 +71,7 @@ export default function PlannerBoard() {
   // The anchor is a chip. Removing that course, switching track or changing a
   // focus area detaches the node, and a Popper anchored to a detached node warns
   // and positions itself at the origin. Drop the card when its anchor goes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: version is the mutation counter that forces recompute of the mutable model
   useEffect(() => {
     setDetail((cur) => (cur && !cur.anchor.isConnected ? null : cur));
   }, [version]);
@@ -77,10 +80,12 @@ export default function PlannerBoard() {
     (code: string, anchor: HTMLElement) => {
       clearTimer();
       timer.current = setTimeout(() => {
-        setDetail((cur) => (cur?.pinned ? cur : { code, anchor, pinned: false }));
+        setDetail((cur) =>
+          cur?.pinned ? cur : { code, anchor, pinned: false },
+        );
       }, HOVER_OPEN_MS);
     },
-    [clearTimer]
+    [clearTimer],
   );
 
   const releaseDetail = useCallback(() => {
@@ -95,12 +100,16 @@ export default function PlannerBoard() {
   const pinDetail = useCallback(
     (code: string, anchor: HTMLElement) => {
       clearTimer();
-      setDetail((cur) => (cur?.pinned && cur.code === code ? null : { code, anchor, pinned: true }));
+      setDetail((cur) =>
+        cur?.pinned && cur.code === code
+          ? null
+          : { code, anchor, pinned: true },
+      );
       update((m) => {
         m.focus = m.focus === code ? null : code;
       });
     },
-    [clearTimer, update]
+    [clearTimer, update],
   );
 
   const closeDetail = useCallback(() => {
@@ -114,22 +123,37 @@ export default function PlannerBoard() {
   // Escape closes a pinned card, which is the only one that outlives the pointer.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDetail();
+      if (e.key === "Escape") closeDetail();
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("keydown", onKey);
     };
   }, [closeDetail]);
 
   // Derived once per mutation, then read by every chip.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: version is the mutation counter that forces recompute of the mutable model
   const audit = useMemo(() => model.audit(), [model, version]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: version is the mutation counter that forces recompute of the mutable model
   const auto = useMemo(() => model.autoAdded(), [model, version]);
-  const broken = useMemo(() => new Set(model.plan.violations().map((v) => v.code)), [model, version]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: version is the mutation counter that forces recompute of the mutable model
+  const broken = useMemo(
+    () => new Set(model.plan.violations().map((v) => v.code)),
+    [model, version],
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: version is the mutation counter that forces recompute of the mutable model
   const needed = useMemo(
     () =>
-      model.focus ? new Set(missingFor(model.courses, model.focus, new Set(model.plan.courses()))) : new Set<string>(),
-    [model, version]
+      model.focus
+        ? new Set(
+            missingFor(
+              model.courses,
+              model.focus,
+              new Set(model.plan.courses()),
+            ),
+          )
+        : new Set<string>(),
+    [model, version],
   );
   const applied = useMemo(() => new Set(audit.counted), [audit]);
 
@@ -145,7 +169,7 @@ export default function PlannerBoard() {
     applied,
     auto,
     broken,
-    needed
+    needed,
   };
 
   const rail = <SettingsRail model={model} mode={mode} update={update} />;
@@ -157,15 +181,24 @@ export default function PlannerBoard() {
           // A flex column rather than a grid on a phone: a sticky child can
           // only travel within its containing block, and in a grid that is the
           // row it sits in, which is exactly as tall as the pane itself.
-          display: { xs: 'flex', md: 'grid' },
-          flexDirection: 'column',
-          gridTemplateColumns: { md: '320px minmax(0, 1fr)' },
+          display: { xs: "flex", md: "grid" },
+          flexDirection: "column",
+          gridTemplateColumns: { md: "320px minmax(0, 1fr)" },
           gap: 3,
-          alignItems: { xs: 'stretch', md: 'start' }
+          alignItems: { xs: "stretch", md: "start" },
         }}
       >
         {wide ? (
-          <Paper variant="outlined" sx={{ p: 2, position: 'sticky', top: 96, maxHeight: '82vh', overflowY: 'auto' }}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              position: "sticky",
+              top: 96,
+              maxHeight: "82vh",
+              overflowY: "auto",
+            }}
+          >
             {rail}
           </Paper>
         ) : (
@@ -186,23 +219,27 @@ export default function PlannerBoard() {
               setRailOpen(open);
             }}
             sx={{
-              position: railOpen ? 'fixed' : 'sticky',
-              top: 'calc(var(--template-frame-height, 0px) + 96px)',
-              left: railOpen ? 16 : 'auto',
-              right: railOpen ? 16 : 'auto',
+              position: railOpen ? "fixed" : "sticky",
+              top: "calc(var(--template-frame-height, 0px) + 96px)",
+              left: railOpen ? 16 : "auto",
+              right: railOpen ? 16 : "auto",
               zIndex: (t) => t.zIndex.appBar - 1,
-              bgcolor: 'background.default',
+              bgcolor: "background.default",
               // Floating over the board as it scrolls, the pane needs a shadow
               // to read as above the cards passing beneath it.
               boxShadow: 4,
-              '&::before': { display: 'none' }
+              "&::before": { display: "none" },
             }}
           >
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Tune fontSize="small" sx={{ mr: 1, alignSelf: 'center' }} />
+              <Tune fontSize="small" sx={{ mr: 1, alignSelf: "center" }} />
               <Typography>Tracks, focus areas and settings</Typography>
             </AccordionSummary>
-            <AccordionDetails sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}>{rail}</AccordionDetails>
+            <AccordionDetails
+              sx={{ maxHeight: "calc(100vh - 220px)", overflowY: "auto" }}
+            >
+              {rail}
+            </AccordionDetails>
           </Accordion>
         )}
 
@@ -216,7 +253,11 @@ export default function PlannerBoard() {
             </Typography>
             <RuleList rules={audit.rules} />
           </Paper>
-          <GraduationPanel audit={audit} calendar={model.calendar} model={model} />
+          <GraduationPanel
+            audit={audit}
+            calendar={model.calendar}
+            model={model}
+          />
           <MessageList model={model} />
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -230,13 +271,13 @@ export default function PlannerBoard() {
 
       {wide ? (
         <Popper
-          open={detail !== null && detail.anchor.isConnected}
+          open={detail?.anchor.isConnected ?? false}
           anchorEl={detail?.anchor ?? null}
           placement="right-start"
           modifiers={[
-            { name: 'offset', options: { offset: [0, 10] } },
-            { name: 'preventOverflow', options: { padding: 12 } },
-            { name: 'flip', options: { padding: 12 } }
+            { name: "offset", options: { offset: [0, 10] } },
+            { name: "preventOverflow", options: { padding: 12 } },
+            { name: "flip", options: { padding: 12 } },
           ]}
           sx={{ zIndex: (t) => t.zIndex.tooltip }}
           onMouseEnter={clearTimer}
@@ -246,7 +287,11 @@ export default function PlannerBoard() {
         >
           {detail && (
             <Paper elevation={8} sx={{ borderRadius: 2, maxWidth: 380 }}>
-              <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
+              <CourseCard
+                code={detail.code}
+                pinned={detail.pinned}
+                onClose={closeDetail}
+              />
             </Paper>
           )}
         </Popper>
@@ -265,20 +310,24 @@ export default function PlannerBoard() {
               transition: { appear: true },
               paper: {
                 sx: {
-                  maxHeight: '75vh',
-                  overflowY: 'auto',
+                  maxHeight: "75vh",
+                  overflowY: "auto",
                   borderTopLeftRadius: 12,
                   borderTopRightRadius: 12,
-                  boxShadow: 8
+                  boxShadow: 8,
                 },
                 onMouseEnter: clearTimer,
                 onMouseLeave: () => {
                   if (!detail.pinned) releaseDetail();
-                }
-              }
+                },
+              },
             }}
           >
-            <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
+            <CourseCard
+              code={detail.code}
+              pinned={detail.pinned}
+              onClose={closeDetail}
+            />
           </Drawer>
         )
       )}
