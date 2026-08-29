@@ -8,14 +8,16 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Drawer from '@mui/material/Drawer';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useColorScheme, useTheme } from '@mui/material/styles';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import Tune from '@mui/icons-material/Tune';
 import { missingFor } from '../core/prereq';
 import { usePlanner } from '../hooks/usePlanner';
@@ -49,7 +51,6 @@ export default function PlannerBoard() {
   // theme.palette.mode, which stays on the default scheme.
   const mode: 'light' | 'dark' = (systemMode ?? schemeMode) === 'dark' ? 'dark' : 'light';
   const wide = useMediaQuery(theme.breakpoints.up('md'));
-  const [railOpen, setRailOpen] = useState(false);
   const [drag, setDrag] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -162,26 +163,15 @@ export default function PlannerBoard() {
             {rail}
           </Paper>
         ) : (
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<Tune />}
-              onClick={() => {
-                setRailOpen(true);
-              }}
-            >
-              Tracks, focus areas and settings
-            </Button>
-            <Drawer
-              anchor="left"
-              open={railOpen}
-              onClose={() => {
-                setRailOpen(false);
-              }}
-            >
-              <Box sx={{ width: 320, p: 2 }}>{rail}</Box>
-            </Drawer>
-          </Box>
+          // The same rail, as a pane that expands in place. Collapsed by
+          // default so the plan itself is the first thing a phone shows.
+          <Accordion variant="outlined" disableGutters sx={{ '&::before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Tune fontSize="small" sx={{ mr: 1, alignSelf: 'center' }} />
+              <Typography>Tracks, focus areas and settings</Typography>
+            </AccordionSummary>
+            <AccordionDetails>{rail}</AccordionDetails>
+          </Accordion>
         )}
 
         <Stack spacing={2} sx={{ minWidth: 0 }}>
