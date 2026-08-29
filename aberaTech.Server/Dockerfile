@@ -68,10 +68,9 @@ FROM clientbase AS clienttest
 COPY ["aberatech.client/", "./"]
 RUN npx tsc -b && npm run test
 
-# Lint and format tooling. eslint, typescript-eslint and prettier live in the
-# root package rather than the client one, and the config files they read sit
-# beside it, so this stage reproduces the repository root rather than just the
-# client directory. The build context is the repository root, so all of it is
+# Lint and format tooling. Biome lives in the root package rather than the
+# client one, and biome.json sits beside it, so this stage reproduces the
+# repository root rather than just the client directory. The build context is the repository root, so all of it is
 # reachable.
 #
 # Split from the stage below on purpose: `make fmt` has to be able to start a
@@ -88,7 +87,7 @@ RUN npm ci
 #   make lint
 FROM clienttools AS clientlint
 COPY . .
-RUN npx eslint . && npx prettier --check .
+RUN npx biome check .
 
 # .NET build stage.
 #

@@ -1,8 +1,8 @@
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 
 interface Props {
   checked: boolean;
@@ -34,22 +34,43 @@ export default function SmsConsent({ checked, onChange, disclosure }: Props) {
   return (
     <Box>
       <FormControlLabel
-        control={<Checkbox checked={checked} onChange={(event) => onChange(event.target.checked)} size="small" />}
-        label={<Typography variant="body2">Yes, text me about this appointment</Typography>}
+        control={
+          <Checkbox
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+            size="small"
+          />
+        }
+        label={
+          <Typography variant="body2">
+            Yes, text me about this appointment
+          </Typography>
+        }
       />
 
       {/* The server's wording, rendered as sent. It stores a copy of exactly
           this text alongside each consent, so a second copy written here would
           drift and the stored evidence would describe something nobody saw. */}
-      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5, lineHeight: 1.6 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          display: "block",
+          color: "text.secondary",
+          mt: 0.5,
+          lineHeight: 1.6,
+        }}
+      >
         {disclosure}
       </Typography>
 
-      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+      <Typography
+        variant="caption"
+        sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
+      >
         <Link href="/sms-terms" target="_blank" rel="noopener">
           Text message terms
         </Link>
-        {' · '}
+        {" · "}
         <Link href="/sms-privacy" target="_blank" rel="noopener">
           Privacy policy
         </Link>

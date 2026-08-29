@@ -6,48 +6,58 @@
  * light background, an opaque dark app bar over a light page. Overrides must
  * emit the variable, so the browser resolves the active scheme's colour.
  */
-import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import AppTheme from '../AppTheme';
-import TechnicalTransitionGuide from '../../views/TechnicalTransitionGuide';
+
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import { cleanup, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { afterEach, describe, expect, it } from "vitest";
+import TechnicalTransitionGuide from "../../views/TechnicalTransitionGuide";
+import AppTheme from "../AppTheme";
 
 afterEach(cleanup);
 
-describe('scheme-aware overrides', () => {
-  it('gives outlined buttons the active scheme’s text colour, not the dark default’s', () => {
+describe("scheme-aware overrides", () => {
+  it("gives outlined buttons the active scheme’s text colour, not the dark default’s", () => {
     render(
       <AppTheme>
         <Button variant="outlined">9:00 AM</Button>
-      </AppTheme>
+      </AppTheme>,
     );
 
-    expect(getComputedStyle(screen.getByRole('button')).color).toBe('var(--template-palette-text-primary)');
+    expect(getComputedStyle(screen.getByRole("button")).color).toBe(
+      "var(--template-palette-text-primary)",
+    );
   });
 
-  it('gives icon buttons the active scheme’s text colour, not the dark default’s', () => {
+  it("gives icon buttons the active scheme’s text colour, not the dark default’s", () => {
     render(
       <AppTheme>
         <IconButton aria-label="Instagram" />
-      </AppTheme>
+      </AppTheme>,
     );
 
-    expect(getComputedStyle(screen.getByRole('button')).color).toBe('var(--template-palette-text-primary)');
+    expect(getComputedStyle(screen.getByRole("button")).color).toBe(
+      "var(--template-palette-text-primary)",
+    );
   });
 
-  it('paints the guide pages’ boxes from the active scheme, not the dark default', () => {
+  it("paints the guide pages’ boxes from the active scheme, not the dark default", () => {
     render(
       <MemoryRouter>
         <AppTheme>
           <TechnicalTransitionGuide />
         </AppTheme>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
-    const box = screen.getByText(/the target audience for this/i).parentElement as HTMLElement;
-    expect(getComputedStyle(box).backgroundColor).toBe('var(--template-palette-background-paper)');
-    expect(getComputedStyle(box).color).toBe('var(--template-palette-text-primary)');
+    const box = screen.getByText(/the target audience for this/i)
+      .parentElement as HTMLElement;
+    expect(getComputedStyle(box).backgroundColor).toBe(
+      "var(--template-palette-background-paper)",
+    );
+    expect(getComputedStyle(box).color).toBe(
+      "var(--template-palette-text-primary)",
+    );
   });
 });

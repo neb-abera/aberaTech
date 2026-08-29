@@ -2,33 +2,45 @@
  * Everything that changes the plan, in one column, with the count each control
  * affects sitting next to it rather than a screen away.
  */
-import type { ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import { areaColor } from '../core/areaColors';
-import { plural } from '../core/format';
-import { ADMISSION, holdsBackground, isComposite, missingParts } from '../core/background';
-import { MAX_PER_TERM } from '../model/PlannerModel';
-import type { PlannerModel } from '../model/PlannerModel';
-import TrackPicker from './TrackPicker';
+
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import Divider from "@mui/material/Divider";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
+import { areaColor } from "../core/areaColors";
+import {
+  ADMISSION,
+  holdsBackground,
+  isComposite,
+  missingParts,
+} from "../core/background";
+import { plural } from "../core/format";
+import type { PlannerModel } from "../model/PlannerModel";
+import { MAX_PER_TERM } from "../model/PlannerModel";
+import TrackPicker from "./TrackPicker";
 
 export interface SettingsRailProps {
   model: PlannerModel;
-  mode: 'light' | 'dark';
+  mode: "light" | "dark";
   update: (fn: (model: PlannerModel) => void) => void;
 }
 
-const START_OPTIONS = [2027, 2028, 2029].flatMap((y) => ['Spring', 'Summer', 'Fall'].map((t) => `${t} ${y}`));
+const START_OPTIONS = [2027, 2028, 2029].flatMap((y) =>
+  ["Spring", "Summer", "Fall"].map((t) => `${t} ${y}`),
+);
 
-export default function SettingsRail({ model, mode, update }: SettingsRailProps) {
+export default function SettingsRail({
+  model,
+  mode,
+  update,
+}: SettingsRailProps) {
   return (
     <Stack spacing={2.5}>
       <Section title="Recommended tracks">
@@ -42,17 +54,22 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
         />
       </Section>
 
-      <Section title="Focus areas" hint="Ticking one selects it. The board does not change until you add or replace.">
+      <Section
+        title="Focus areas"
+        hint="Ticking one selects it. The board does not change until you add or replace."
+      >
         {Object.keys(model.data.areas).map((name) => (
           <AreaToggle
             key={name}
             name={name}
             colour={areaColor(name, mode)}
-            count={model.data.areas[name].filter((c) => model.data.get(c)).length}
+            count={
+              model.data.areas[name].filter((c) => model.data.get(c)).length
+            }
             checked={model.areas.has(name)}
             onChange={() => {
               update((m) => {
-                m.toggleArea('area', name);
+                m.toggleArea("area", name);
               });
             }}
           />
@@ -63,13 +80,16 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
         {Object.keys(model.data.concentrations).map((name) => (
           <AreaToggle
             key={name}
-            name={name.replace(' (transcript)', '')}
-            colour={areaColor('Computer Engineering', mode)}
-            count={model.data.concentrations[name].filter((c) => model.data.get(c)).length}
+            name={name.replace(" (transcript)", "")}
+            colour={areaColor("Computer Engineering", mode)}
+            count={
+              model.data.concentrations[name].filter((c) => model.data.get(c))
+                .length
+            }
             checked={model.conc.has(name)}
             onChange={() => {
               update((m) => {
-                m.toggleArea('conc', name);
+                m.toggleArea("conc", name);
               });
             }}
           />
@@ -88,7 +108,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
           return (
             <FormControlLabel
               key={id}
-              sx={{ display: 'flex', ml: 0, alignItems: 'flex-start' }}
+              sx={{ display: "flex", ml: 0, alignItems: "flex-start" }}
               control={
                 <Checkbox
                   size="small"
@@ -96,7 +116,9 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
                   // A composite is a summary of the rows above it. Ticking it
                   // outright is still allowed, because someone who holds the
                   // degree should not have to tick seven boxes to say so.
-                  indeterminate={composite && !model.background.has(id) && satisfied}
+                  indeterminate={
+                    composite && !model.background.has(id) && satisfied
+                  }
                   onChange={(e) => {
                     update((m) => {
                       m.setBackground(id, e.target.checked);
@@ -110,12 +132,18 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
                     {label}
                   </Typography>
                   {ADMISSION.includes(id) && !satisfied && (
-                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary" }}
+                    >
                       Admission prerequisite
                     </Typography>
                   )}
                   {composite && parts.length > 0 && (
-                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary" }}
+                    >
                       {parts.length} of its parts still unticked
                     </Typography>
                   )}
@@ -161,7 +189,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
             label="First term"
             value={`${model.startTerm} ${model.startYear}`}
             onChange={(e) => {
-              const [t, y] = e.target.value.split(' ');
+              const [t, y] = e.target.value.split(" ");
               update((m) => {
                 m.startTerm = t;
                 m.startYear = Number(y);
@@ -208,7 +236,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
 
       <Section title="Behaviour">
         <FormControlLabel
-          sx={{ display: 'flex', ml: 0 }}
+          sx={{ display: "flex", ml: 0 }}
           control={
             <Switch
               size="small"
@@ -228,7 +256,7 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
           }
         />
         <FormControlLabel
-          sx={{ display: 'flex', ml: 0 }}
+          sx={{ display: "flex", ml: 0 }}
           control={
             <Switch
               size="small"
@@ -275,14 +303,25 @@ export default function SettingsRail({ model, mode, update }: SettingsRailProps)
   );
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
         {title}
       </Typography>
       {hint && (
-        <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 0.75 }}>
+        <Typography
+          variant="caption"
+          sx={{ color: "text.disabled", display: "block", mb: 0.75 }}
+        >
           {hint}
         </Typography>
       )}
@@ -297,7 +336,7 @@ function AreaToggle({
   colour,
   count,
   checked,
-  onChange
+  onChange,
 }: {
   name: string;
   colour: string;
@@ -307,18 +346,33 @@ function AreaToggle({
 }) {
   return (
     <FormControlLabel
-      sx={{ display: 'flex', ml: 0, mr: 0 }}
+      sx={{ display: "flex", ml: 0, mr: 0 }}
       control={<Checkbox size="small" checked={checked} onChange={onChange} />}
       label={
-        <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center', width: '100%' }}>
+        <Stack
+          component="span"
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: "center", width: "100%" }}
+        >
           <Box
             component="span"
-            sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: colour, flexShrink: 0 }}
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              backgroundColor: colour,
+              flexShrink: 0,
+            }}
           />
           <Typography component="span" variant="body2" sx={{ flexGrow: 1 }}>
             {name}
           </Typography>
-          <Typography component="span" variant="caption" sx={{ color: 'text.disabled' }}>
+          <Typography
+            component="span"
+            variant="caption"
+            sx={{ color: "text.disabled" }}
+          >
             {count}
           </Typography>
         </Stack>
@@ -334,14 +388,23 @@ function AreaToggle({
  * these" are different intentions and guessing wrong throws away a plan the
  * reader arranged by hand. Ticking a box does neither on its own.
  */
-function SelectionActions({ model, update }: { model: PlannerModel; update: SettingsRailProps['update'] }) {
+function SelectionActions({
+  model,
+  update,
+}: {
+  model: PlannerModel;
+  update: SettingsRailProps["update"];
+}) {
   const pending = model.pendingFromSelection();
   const selected = model.selected().size;
   const onBoard = model.plan.courses().length;
 
   if (!selected) {
     return (
-      <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: 'text.disabled' }}>
+      <Typography
+        variant="caption"
+        sx={{ display: "block", mt: 1.5, color: "text.disabled" }}
+      >
         Tick a focus area or a concentration to choose courses in bulk.
       </Typography>
     );
@@ -349,11 +412,21 @@ function SelectionActions({ model, update }: { model: PlannerModel; update: Sett
 
   return (
     <Box sx={{ mt: 1.5 }}>
-      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-        {selected} {plural(selected, 'course')} selected, including prerequisites.{' '}
-        {pending.length ? `${pending.length} not on the board yet.` : 'All of them are already on the board.'}
+      <Typography
+        variant="caption"
+        sx={{ display: "block", color: "text.secondary" }}
+      >
+        {selected} {plural(selected, "course")} selected, including
+        prerequisites.{" "}
+        {pending.length
+          ? `${pending.length} not on the board yet.`
+          : "All of them are already on the board."}
       </Typography>
-      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}
+      >
         <Button
           size="small"
           variant="contained"
@@ -364,7 +437,9 @@ function SelectionActions({ model, update }: { model: PlannerModel; update: Sett
             });
           }}
         >
-          {pending.length ? `Add ${pending.length} to the plan` : 'Nothing to add'}
+          {pending.length
+            ? `Add ${pending.length} to the plan`
+            : "Nothing to add"}
         </Button>
         <Button
           size="small"

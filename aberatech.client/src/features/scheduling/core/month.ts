@@ -10,26 +10,33 @@ export interface MonthDay {
 export function isoDate(value: Date, zone: string): string {
   // en-CA formats as yyyy-MM-dd, which saves hand-assembling the parts and
   // getting the zero padding subtly wrong.
-  return value.toLocaleDateString('en-CA', { timeZone: zone });
+  return value.toLocaleDateString("en-CA", { timeZone: zone });
 }
 
 /** The month an ISO date belongs to, as { year, month } with month 1-12. */
 export function monthOf(iso: string): { year: number; month: number } {
-  const [year, month] = iso.split('-').map(Number);
+  const [year, month] = iso.split("-").map(Number);
   return { year, month };
 }
 
 export function monthLabel(year: number, month: number): string {
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
   });
 }
 
-export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+export function addMonths(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
   const zeroBased = month - 1 + delta;
-  return { year: year + Math.floor(zeroBased / 12), month: (((zeroBased % 12) + 12) % 12) + 1 };
+  return {
+    year: year + Math.floor(zeroBased / 12),
+    month: (((zeroBased % 12) + 12) % 12) + 1,
+  };
 }
 
 /**
@@ -53,8 +60,11 @@ export function monthGrid(year: number, month: number): MonthDay[] {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const padded = String(day).padStart(2, '0');
-    cells.push({ date: `${year}-${String(month).padStart(2, '0')}-${padded}`, dayOfMonth: day });
+    const padded = String(day).padStart(2, "0");
+    cells.push({
+      date: `${year}-${String(month).padStart(2, "0")}-${padded}`,
+      dayOfMonth: day,
+    });
   }
 
   return cells;
@@ -62,11 +72,11 @@ export function monthGrid(year: number, month: number): MonthDay[] {
 
 /** "Tuesday, 3 June" for a heading over the times. */
 export function longDayLabel(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC'
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
   });
 }

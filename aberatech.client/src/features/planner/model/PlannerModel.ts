@@ -2,23 +2,30 @@
  * Planner state and the values derived from it. Knows nothing about React or
  * the DOM, so every rule in here is testable without rendering anything.
  */
-import { Calendar } from '../core/calendar';
-import { CatalogData } from '../core/catalog';
-import type { Gate } from '../core/catalog';
-import { ADMISSION, holdsBackground, isPrep, PREP_SOURCE, prepId, withBackground } from '../core/background';
-import { Plan } from '../core/plan';
-import { closure, missingFor, unmetGroups } from '../core/prereq';
-import { degreeAudit } from '../core/rules';
-import type { DegreeAudit } from '../core/rules';
-import { expandInOrder, placeInOrder, Tracks } from '../core/tracks';
-import type { Catalog, Course } from '../core/types';
+
+import {
+  ADMISSION,
+  holdsBackground,
+  isPrep,
+  PREP_SOURCE,
+  prepId,
+  withBackground,
+} from "../core/background";
+import { Calendar } from "../core/calendar";
+import type { CatalogData, Gate } from "../core/catalog";
+import { Plan } from "../core/plan";
+import { closure, missingFor, unmetGroups } from "../core/prereq";
+import type { DegreeAudit } from "../core/rules";
+import { degreeAudit } from "../core/rules";
+import { expandInOrder, placeInOrder, type Tracks } from "../core/tracks";
+import type { Catalog, Course } from "../core/types";
 
 /** Stable key for the background sets, so the derived catalog is cached. */
 function bgKey(held: Set<string>, expanded: Set<string>): string {
-  return [...held].sort().join('|') + '::' + [...expanded].sort().join('|');
+  return `${[...held].sort().join("|")}::${[...expanded].sort().join("|")}`;
 }
 
-export const DEFAULT_TRACK = 'sp-rf';
+export const DEFAULT_TRACK = "sp-rf";
 export const MAX_PER_TERM = 8;
 
 /**
@@ -34,7 +41,13 @@ export const MAX_PER_TERM = 8;
  * The distinction matters because only `needs` can be fixed by dropping the
  * course. Offering the others would promise something the planner cannot do.
  */
-export type PlacementKind = 'ok' | 'needs' | 'needsOff' | 'order' | 'strand' | 'unreachable';
+export type PlacementKind =
+  | "ok"
+  | "needs"
+  | "needsOff"
+  | "order"
+  | "strand"
+  | "unreachable";
 
 export interface PlacementNote {
   kind: PlacementKind;
@@ -48,14 +61,17 @@ export class PlannerModel {
 
   /** Selected track id, or null when browsing focus areas instead. */
   track: string | null = null;
-  areas = new Set<string>(['Signal Processing', 'RF and Microwave Engineering']);
+  areas = new Set<string>([
+    "Signal Processing",
+    "RF and Microwave Engineering",
+  ]);
   conc = new Set<string>();
   /**
    * Background the reader already has. Only what a West Point core genuinely
    * covers is ticked to begin with; everything else starts unticked, so the
    * planner asks rather than assumes.
    */
-  background = new Set<string>(['bg_calc', 'bg_phys']);
+  background = new Set<string>(["bg_calc", "bg_phys"]);
   /**
    * Composite background the reader has asked to schedule the parts of. Until a
    * composite is in here it constrains nothing, because "an undergraduate degree
@@ -65,7 +81,7 @@ export class PlannerModel {
   expandedBackground = new Set<string>();
   perTerm = 2;
   termsPerYear = 2;
-  startTerm = 'Spring';
+  startTerm = "Spring";
   startYear = 2027;
   autoPrereq = true;
   autoOnDrop = true;
@@ -100,7 +116,7 @@ export class PlannerModel {
         this.data.courses,
         this.data.background,
         this.background,
-        this.expandedBackground
+        this.expandedBackground,
       );
     }
     return this.cachedCourses;
@@ -118,14 +134,16 @@ export class PlannerModel {
     return new Calendar({
       startTerm: this.startTerm,
       startYear: this.startYear,
-      termsPerYear: this.termsPerYear
+      termsPerYear: this.termsPerYear,
     });
   }
 
   /** What the reader ticked. A track, when one is selected, otherwise the areas. */
   chosen(): Set<string> {
     const t = this.track ? this.tracks.get(this.track) : undefined;
-    const out = t ? new Set(t.courses.filter((c) => this.courses[c])) : new Set<string>();
+    const out = t
+      ? new Set(t.courses.filter((c) => this.courses[c]))
+      : new Set<string>();
     // A track and a focus area layer rather than replace. Picking a curated path
     // and then adding a whole area on top of it is a real thing to want, and an
     // earlier version threw the path away the moment an area was ticked.
@@ -175,8 +193,8 @@ export class PlannerModel {
    * is now an explicit act, so nothing you have arranged disappears behind a
    * checkbox. See addSelectionToPlan and replacePlanWithSelection.
    */
-  toggleArea(kind: 'area' | 'conc', name: string): void {
-    const set = kind === 'area' ? this.areas : this.conc;
+  toggleArea(kind: "area" | "conc", name: string): void {
+    const set = kind === "area" ? this.areas : this.conc;
     if (set.has(name)) set.delete(name);
     else set.add(name);
   }
@@ -252,7 +270,9 @@ export class PlannerModel {
   pulledBy(code: string): string[] {
     const sel = this.selected();
     return [...sel].filter((k) =>
-      (this.courses[k]?.groups ?? []).some((g) => g.includes(code) && !g.some((m) => m !== code && sel.has(m)))
+      (this.courses[k]?.groups ?? []).some(
+        (g) => g.includes(code) && !g.some((m) => m !== code && sel.has(m)),
+      ),
     );
   }
 
@@ -264,7 +284,7 @@ export class PlannerModel {
     return degreeAudit(this.plan, this.calendar, {
       leaveMonths: this.leaveMonths,
       extensionMonths: this.extensionMonths,
-      picks: this.degreePicks
+      picks: this.degreePicks,
     });
   }
 
@@ -281,9 +301,12 @@ export class PlannerModel {
     }
     if (!this.degreePicks.size) {
       // Materialise the automatic ten so the reader edits from a real starting point.
-      this.audit().counted.forEach((c) => this.degreePicks.add(c));
+      this.audit().counted.forEach((c) => {
+        this.degreePicks.add(c);
+      });
     }
-    if (this.degreePicks.size >= 10) this.degreePicks.delete([...this.degreePicks][0]);
+    if (this.degreePicks.size >= 10)
+      this.degreePicks.delete([...this.degreePicks][0]);
     this.degreePicks.add(code);
   }
 
@@ -313,13 +336,19 @@ export class PlannerModel {
     // - comes first, because admission comes first. Preparation a course does
     // need is left to expandInOrder, which puts it immediately ahead of the
     // course that asked.
-    const needed = new Set([...want].flatMap((c) => this.courses[c]?.groups.flat() ?? []));
+    const needed = new Set(
+      [...want].flatMap((c) => this.courses[c]?.groups.flat() ?? []),
+    );
     const front = [...want].filter((c) => isPrep(c) && !needed.has(c)).sort();
     const onFront = new Set(front);
     const curated = t.courses.filter((c) => want.has(c));
     const onCurated = new Set(curated);
     const rest = [...want].filter((c) => !onCurated.has(c) && !onFront.has(c));
-    return placeInOrder(this.courses, expandInOrder(this.courses, [...front, ...curated, ...rest]), this.perTerm);
+    return placeInOrder(
+      this.courses,
+      expandInOrder(this.courses, [...front, ...curated, ...rest]),
+      this.perTerm,
+    );
   }
 
   clearPlan(): void {
@@ -339,14 +368,16 @@ export class PlannerModel {
     const cat = this.courses;
     this.plan = new Plan(
       cat,
-      this.plan.terms.map((t) => t.filter((c) => cat[c]))
+      this.plan.terms.map((t) => t.filter((c) => cat[c])),
     );
   }
 
   /** Drop everything no longer selected. */
   pruneToSelection(): void {
     const sel = this.selected();
-    this.plan = this.plan.withTerms(this.plan.terms.map((t) => t.filter((c) => sel.has(c))));
+    this.plan = this.plan.withTerms(
+      this.plan.terms.map((t) => t.filter((c) => sel.has(c))),
+    );
   }
 
   /**
@@ -362,33 +393,38 @@ export class PlannerModel {
 
   /** Whether `code` may sit at `term`, and if not, precisely why. */
   placementNote(code: string, term: number): PlacementNote {
-    if (this.plan.legalTermsFor(code).has(term)) return { kind: 'ok', courses: [] };
+    if (this.plan.legalTermsFor(code).has(term))
+      return { kind: "ok", courses: [] };
     const cat = this.courses;
     const elsewhere = this.plan.placement();
     elsewhere.delete(code);
     const unmet = unmetGroups(cat, code, term, elsewhere);
-    if (!unmet.length) return { kind: 'strand', courses: [] };
+    if (!unmet.length) return { kind: "strand", courses: [] };
     const have = new Set(this.plan.courses().filter((c) => c !== code));
     const missing = missingFor(cat, code, have);
     if (!missing.length) {
       // Everything it needs is in the plan, just not far enough ahead.
-      return { kind: 'order', courses: unmet.flat().filter((m) => cat[m]) };
+      return { kind: "order", courses: unmet.flat().filter((m) => cat[m]) };
     }
-    if (!this.isRescuable(code)) return { kind: 'unreachable', courses: missing };
-    return { kind: this.autoOnDrop ? 'needs' : 'needsOff', courses: missing };
+    if (!this.isRescuable(code))
+      return { kind: "unreachable", courses: missing };
+    return { kind: this.autoOnDrop ? "needs" : "needsOff", courses: missing };
   }
 
   /** Whether a drop on `term` should be accepted at all. */
   acceptsDrop(code: string, term: number): boolean {
     const kind = this.placementNote(code, term).kind;
-    return kind === 'ok' || kind === 'needs';
+    return kind === "ok" || kind === "needs";
   }
 
   /**
    * Place a course in a term, pulling in prerequisites when that is allowed and
    * necessary. Returns what was added so the interface can say so.
    */
-  placeCourse(code: string, term: number): { ok: boolean; added: string[]; reason?: string } {
+  placeCourse(
+    code: string,
+    term: number,
+  ): { ok: boolean; added: string[]; reason?: string } {
     if (this.plan.legalTermsFor(code).has(term)) {
       const r = this.plan.place(code, term);
       if (r.ok) {
@@ -398,7 +434,12 @@ export class PlannerModel {
       }
       return { ok: r.ok, added: [], reason: r.reason };
     }
-    if (!this.autoOnDrop) return { ok: false, added: [], reason: 'prerequisites are not in the plan yet' };
+    if (!this.autoOnDrop)
+      return {
+        ok: false,
+        added: [],
+        reason: "prerequisites are not in the plan yet",
+      };
     const r = this.plan.placeWithPrerequisites(code, term, this.perTerm);
     if (r.ok) {
       this.plan = r.plan;
@@ -418,13 +459,20 @@ export class PlannerModel {
    * knows where everything goes.
    */
   autoPlace(code: string): { ok: boolean; added: string[]; reason?: string } {
-    if (!this.courses[code]) return { ok: false, added: [], reason: `${code} is not in the catalog` };
+    if (!this.courses[code])
+      return { ok: false, added: [], reason: `${code} is not in the catalog` };
     if (!this.isRescuable(code)) {
-      return { ok: false, added: [], reason: `${code} requires a course that is not in the catalog` };
+      return {
+        ok: false,
+        added: [],
+        reason: `${code} requires a course that is not in the catalog`,
+      };
     }
     const before = new Set(this.plan.courses());
     this.plan = this.scheduleFor(closure(this.courses, [...before, code]));
-    this.lastAdded = this.plan.courses().filter((c) => c !== code && !before.has(c));
+    this.lastAdded = this.plan
+      .courses()
+      .filter((c) => c !== code && !before.has(c));
     this.focus = null;
     return { ok: true, added: this.lastAdded };
   }
