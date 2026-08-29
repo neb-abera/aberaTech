@@ -107,6 +107,24 @@ public sealed class StaticPipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task The_csp_allows_both_hops_of_the_affiliate_image_redirect()
+    {
+        // The transition guide's DITY-calculator banner is a CJ Affiliate
+        // image: lduhtrp.net 302-redirects to yceml.net, which serves the
+        // bytes. CSP checks every hop, so dropping either host breaks the
+        // image — which happened once when the policy moved from the meta
+        // tag to this header.
+        var response = await _factory.CreateClient().GetAsync("/");
+
+        var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        var imgSrc = Assert.Single(
+            csp.Split("; "),
+            directive => directive.StartsWith("img-src "));
+        Assert.Contains("https://www.lduhtrp.net", imgSrc);
+        Assert.Contains("https://www.yceml.net", imgSrc);
+    }
+
+    [Fact]
     public async Task A_head_request_for_a_prerendered_route_is_served_without_a_redirect()
     {
         // Link checkers and crawlers probe with HEAD; a 301 hop to the
