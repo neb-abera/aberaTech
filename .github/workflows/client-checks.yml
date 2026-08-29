@@ -41,7 +41,7 @@ jobs:
       # Builds only the stages the target needs, so this never builds the
       # .NET server or the final image.
       - name: Build the client test stage
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: aberaTech.Server/Dockerfile
@@ -65,7 +65,7 @@ jobs:
       # their config from beside it. The build context is the repository root,
       # so the clientlint stage has all of it.
       - name: Build the client lint stage
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: aberaTech.Server/Dockerfile
@@ -89,7 +89,7 @@ jobs:
       # retry schedule. Its own job rather than a step on the client one, so a
       # failure names which half of the repository broke.
       - name: Build the scheduling test stage
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: aberaTech.Server/Dockerfile
