@@ -8,6 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
 import Typography from '@mui/material/Typography';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -132,7 +133,6 @@ export default function AppAppBar()
                     <CloseRoundedIcon/>
                   </IconButton>
                 </Box>
-                {/*nebdebug todo: links broken*/}
                 {/* The action first, and as a button, because on a phone this
                     drawer is the whole navigation and booking is the thing most
                     likely to be wanted. */}
@@ -156,39 +156,43 @@ export default function AppAppBar()
                 >
                   {primaryAction.title}
                 </Button>
-                <MenuItem component={Link} to="/">
-                  Home
-                </MenuItem>
-                <Divider sx={{my: 1}}/>
-                <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
-                  Guides
-                </Typography>
-                {guides.map((entry) => (
-                  <MenuItem key={entry.to} component={Link} to={entry.to}>
-                    {label(entry)}
+                {/* MUI 9 requires MenuItems to sit inside a Menu or MenuList;
+                    a bare one throws, and a throw here unmounts the whole app. */}
+                <MenuList sx={{p: 0}}>
+                  <MenuItem component={Link} to="/">
+                    Home
                   </MenuItem>
-                ))}
-                <Divider sx={{my: 1}}/>
-                <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
-                  Projects
-                </Typography>
-                {projects.map((entry) =>
-                  entry.external ? (
-                    <MenuItem
-                      key={entry.to}
-                      component="a"
-                      href={entry.to}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {label(entry)}
-                    </MenuItem>
-                  ) : (
+                  <Divider sx={{my: 1}}/>
+                  <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
+                    Guides
+                  </Typography>
+                  {guides.map((entry) => (
                     <MenuItem key={entry.to} component={Link} to={entry.to}>
                       {label(entry)}
                     </MenuItem>
-                  )
-                )}
+                  ))}
+                  <Divider sx={{my: 1}}/>
+                  <Typography variant="caption" sx={{color: 'text.disabled', px: 2, pt: 1, display: 'block'}}>
+                    Projects
+                  </Typography>
+                  {projects.map((entry) =>
+                    entry.external ? (
+                      <MenuItem
+                        key={entry.to}
+                        component="a"
+                        href={entry.to}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {label(entry)}
+                      </MenuItem>
+                    ) : (
+                      <MenuItem key={entry.to} component={Link} to={entry.to}>
+                        {label(entry)}
+                      </MenuItem>
+                    )
+                  )}
+                </MenuList>
                 <Divider sx={{my: 3}}/>
               </Box>
             </Drawer>
