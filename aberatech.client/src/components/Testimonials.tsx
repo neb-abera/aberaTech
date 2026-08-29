@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import { useTheme } from '@mui/system';
+import { useColorScheme } from '@mui/material/styles';
 
 const userTestimonials = [
   {
@@ -77,8 +77,10 @@ const logoStyle = {
 };
 
 export default function Testimonials() {
-  const theme = useTheme();
-  const logos = theme.palette.mode === 'light' ? darkLogos : whiteLogos;
+  // theme.palette.mode is pinned to the default scheme under the CSS-variable
+  // theme; the scheme actually showing lives on useColorScheme.
+  const { mode, systemMode } = useColorScheme();
+  const logos = (systemMode ?? mode) === 'light' ? darkLogos : whiteLogos;
 
   return (
     <Container

@@ -20,7 +20,9 @@ export const inputsCustomizations: Components<Theme> = {
         transition: 'all 100ms ease-in',
         '&:focus-visible': {
           outline: `3px solid ${
-            theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / 0.5)` : alpha(theme.palette.primary.main, 0.5)
+            theme.vars
+              ? `rgba(${theme.vars.palette.primary.mainChannel} / 0.5)`
+              : alpha(theme.palette.primary.main, 0.5)
           }`,
           outlineOffset: '2px'
         }
