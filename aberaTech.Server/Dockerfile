@@ -2,7 +2,7 @@
 # server. A named stage rather than an ARG deliberately: Dependabot cannot see
 # an image behind ARG indirection, but it watches a literal FROM, and every
 # consumer derives from this one stage so a bump moves them all together.
-FROM node:24 AS nodebase
+FROM node:26 AS nodebase
 
 # Base stage for .NET runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
