@@ -1,0 +1,53 @@
+# Known-CVE search inside the production image, on every pull request and
+# weekly — new CVEs are published against images that have not changed.
+# ignore-unfixed skips distro findings Debian has no patch for; everything
+# actionable fails the check and lands in the Security tab.
+name: Security scan
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '45 7 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  image-scan:
+    name: container scan (trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the production image
+        run: docker build -f aberaTech.Server/Dockerfile --target final -t scan-target .
+
+      - name: Scan for fixable HIGH/CRITICAL CVEs
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: scan-target
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy.sarif
+          # SARIF output ignores the severity filter unless this is set,
+          # which makes exit-code fire on LOW/MEDIUM noise.
+          limit-severities-for-sarif: true
+          exit-code: '1'
+
+      - name: Upload findings to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        with:
+          sarif_file: trivy.sarif
