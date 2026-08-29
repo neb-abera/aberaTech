@@ -33,15 +33,22 @@ async function fetchSignedIn(): Promise<boolean> {
   }
 }
 
-export function useAccount(): { signedIn: boolean } {
-  const [signedIn, setSignedIn] = useState(false);
+/**
+ * `resolved` distinguishes "not signed in" from "no answer yet". Anything
+ * destructive that keys on being signed out — demoting a stored System
+ * preference, say — must wait for it: acting on the placeholder "no" while
+ * the probe is in flight is how an account holder's preference got rewritten
+ * on every page load.
+ */
+export function useAccount(): { signedIn: boolean; resolved: boolean } {
+  const [state, setState] = useState({ signedIn: false, resolved: false });
 
   useEffect(() => {
     let cancelled = false;
 
     probe ??= fetchSignedIn();
     void probe.then((value) => {
-      if (!cancelled) setSignedIn(value);
+      if (!cancelled) setState({ signedIn: value, resolved: true });
     });
 
     return () => {
@@ -49,7 +56,7 @@ export function useAccount(): { signedIn: boolean } {
     };
   }, []);
 
-  return { signedIn };
+  return state;
 }
 
 /** Tests share module state through the cache above; let them clear it. */

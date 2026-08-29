@@ -2,8 +2,9 @@
 #
 # Patch and minor bumps arrive grouped — one PR per ecosystem per week instead
 # of one per package — and the dependabot-automerge workflow merges those when
-# CI is green. Majors arrive as their own PRs and wait for a human, because a
-# major is where the release notes actually need reading.
+# CI is green. Majors are armed too: one that passes every check merges
+# itself, and one that genuinely conflicts stays open and red - the human
+# queue is the list of open red Dependabot PRs.
 version: 2
 updates:
   - package-ecosystem: nuget

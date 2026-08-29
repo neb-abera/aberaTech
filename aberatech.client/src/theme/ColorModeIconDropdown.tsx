@@ -16,14 +16,21 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   // choice is the plain one — dark, or light — and following the operating
   // system is a preference the site does not need to expose to a visitor who
   // has no way to store anything else about themselves.
-  const { signedIn } = useAccount();
+  const { signedIn, resolved } = useAccount();
 
   React.useEffect(() => {
+    // Not before the probe answers. The initial signedIn is a placeholder
+    // "no", and correcting against it rewrote an account holder's stored
+    // System preference to dark on every load — visible, on prerendered
+    // pages, as a flash of the system scheme before the stomp.
+    if (!resolved) {
+      return;
+    }
     const corrected = correctedMode(mode, signedIn);
     if (corrected) {
       setMode(corrected);
     }
-  }, [signedIn, mode, setMode]);
+  }, [resolved, signedIn, mode, setMode]);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
