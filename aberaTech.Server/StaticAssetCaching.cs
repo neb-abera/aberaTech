@@ -26,8 +26,10 @@ public static class StaticAssetCaching
 
     public static string For(string requestPath, string fileName)
     {
-        if (fileName.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+        if (fileName.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
         {
+            // The shell, the empty spa.html fallback, and every prerendered
+            // page: HTML whose bytes change under a stable URL on each deploy.
             return Revalidate;
         }
 

@@ -54,8 +54,26 @@ if (!isDocker) {
   };
 }
 
-// Export the Vite configuration
-export default {
+// Export the Vite configuration. A function rather than an object because the
+// build runs twice: once for the browser bundle and once (--ssr) for the
+// build-time renderer, whose single output file must land at a fixed name for
+// tools/prerender.mjs to import.
+export default ({ isSsrBuild = false } = {}) =>
+  isSsrBuild
+    ? {
+        base: '/',
+        build: {
+          outDir: 'dist-server',
+          rollupOptions: {
+            output: {
+              entryFileNames: '[name].js'
+            }
+          }
+        }
+      }
+    : clientConfig;
+
+const clientConfig = {
   // Absolute, not './'. The server hands index.html back for every unmatched
   // path, so a relative asset reference is resolved against whatever URL the
   // visitor happened to arrive on: from /schedule it points at /assets and
