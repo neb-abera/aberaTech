@@ -221,12 +221,16 @@ app.Use(async (context, next) =>
     var headers = context.Response.Headers;
     headers["Content-Security-Policy"] =
         "default-src 'self'; "
-        + $"script-src 'self'{inlineScriptHashes}; "
+        // The one third-party script: Cloudflare's RUM beacon, injected by
+        // the CDN into every HTML response and opted into deliberately for
+        // real-user Core Web Vitals. It loads from static.cloudflareinsights
+        // and reports to cloudflareinsights (connect-src below).
+        + $"script-src 'self' https://static.cloudflareinsights.com{inlineScriptHashes}; "
         + "style-src 'self' 'unsafe-inline'; "
         + "img-src 'self' data: https://www.va.gov https://www.lduhtrp.net "
         + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com; "
         + "font-src 'self' data:; "
-        + "connect-src 'self'; "
+        + "connect-src 'self' https://cloudflareinsights.com; "
         + "frame-src https://docs.google.com https://drive.google.com "
         + "https://www.youtube.com https://www.youtube-nocookie.com; "
         + "object-src 'none'; base-uri 'self'; form-action 'self'; "

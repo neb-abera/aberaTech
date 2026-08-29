@@ -85,7 +85,25 @@ public sealed class StaticPipelineTests : IDisposable
         var response = await _factory.CreateClient().GetAsync("/");
 
         var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
-        Assert.Contains("script-src 'self' 'sha256-", csp);
+        var scriptSrc = Assert.Single(
+            csp.Split("; "),
+            directive => directive.StartsWith("script-src "));
+        Assert.Contains("'sha256-", scriptSrc);
+    }
+
+    [Fact]
+    public async Task The_csp_allows_the_rum_beacon_cloudflare_injects()
+    {
+        // Real-user metrics are opted into deliberately: Cloudflare injects
+        // its beacon into every HTML response, and without these two hosts
+        // the policy blocks it — a console error on every page load, and no
+        // data. The beacon loads from static.cloudflareinsights.com and
+        // reports to cloudflareinsights.com.
+        var response = await _factory.CreateClient().GetAsync("/");
+
+        var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("https://static.cloudflareinsights.com", csp);
+        Assert.Contains("connect-src 'self' https://cloudflareinsights.com", csp);
     }
 
     [Fact]
