@@ -14,14 +14,32 @@ import { resetAccountProbeForTests, useAccount } from '../useAccount';
 afterEach(cleanup);
 
 function Probe({ id }: { id: string }) {
-  const { signedIn } = useAccount();
-  return <span data-testid={id}>{signedIn ? 'in' : 'out'}</span>;
+  const { signedIn, resolved } = useAccount();
+  return <span data-testid={id}>{resolved ? (signedIn ? 'in' : 'out') : 'pending'}</span>;
 }
 
 describe('useAccount', () => {
   beforeEach(() => {
     resetAccountProbeForTests();
     vi.restoreAllMocks();
+  });
+
+  it('reports unresolved until the server answers', async () => {
+    // Callers deciding something destructive on "not signed in" — like
+    // demoting a stored System preference — must be able to tell "no" from
+    // "no answer yet".
+    let answer!: (response: Response) => void;
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise<Response>((resolve) => (answer = resolve))));
+
+    render(<Probe id="only" />);
+
+    expect(screen.getByTestId('only').textContent).toBe('pending');
+
+    answer(new Response(JSON.stringify({ signedIn: true })));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('only').textContent).toBe('in');
+    });
   });
 
   it('asks the server once for any number of mounts', async () => {
