@@ -104,7 +104,16 @@ services:
     volumes:
       - .:/src
     working_dir: /src
-    command: ['dotnet', 'test', 'aberaTech.Server.Tests/aberaTech.Server.Tests.csproj', '--nologo']
+    # SkipClientProject: the tests reference the server project, whose SPA
+    # reference would otherwise make dotnet probe for node this image lacks.
+    command:
+      [
+        'dotnet',
+        'test',
+        'aberaTech.Server.Tests/aberaTech.Server.Tests.csproj',
+        '--nologo',
+        '-p:SkipClientProject=true'
+      ]
 
   # The whole site as it is deployed — .NET server, built client, database —
   # for trying a change the way a visitor meets it rather than through the vite
