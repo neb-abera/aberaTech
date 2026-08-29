@@ -23,9 +23,9 @@
  * flagged rather than blocked, so you can see exactly which parts you are
  * missing and choose to schedule those instead.
  */
-import type { Catalog, Course } from './types';
+import type { Catalog, Course } from "./types";
 
-export const PREP_PREFIX = 'prep.';
+export const PREP_PREFIX = "prep.";
 
 export function prepId(bgKey: string): string {
   return PREP_PREFIX + bgKey;
@@ -46,8 +46,18 @@ export function isPrep(code: string): boolean {
  * part of an EE degree these courses are reaching for.
  */
 export const COMPOSITE: Record<string, string[]> = {
-  bg_ee: ['bg_calc', 'bg_de', 'bg_la', 'bg_cx', 'bg_phys', 'bg_circ', 'bg_ugem', 'bg_sig', 'bg_dig'],
-  bg_eecs: ['bg_calc', 'bg_de', 'bg_dig', 'bg_c']
+  bg_ee: [
+    "bg_calc",
+    "bg_de",
+    "bg_la",
+    "bg_cx",
+    "bg_phys",
+    "bg_circ",
+    "bg_ugem",
+    "bg_sig",
+    "bg_dig",
+  ],
+  bg_eecs: ["bg_calc", "bg_de", "bg_dig", "bg_c"],
 };
 
 /**
@@ -62,7 +72,14 @@ export const COMPOSITE: Record<string, string[]> = {
  * item neither ticked nor covered by a planned bridge course travels with
  * every plan as preparation.
  */
-export const ADMISSION = ['bg_calc', 'bg_de', 'bg_phys', 'bg_circ', 'bg_ugem', 'bg_sig'];
+export const ADMISSION = [
+  "bg_calc",
+  "bg_de",
+  "bg_phys",
+  "bg_circ",
+  "bg_ugem",
+  "bg_sig",
+];
 
 export function isComposite(id: string): boolean {
   return id in COMPOSITE;
@@ -72,7 +89,7 @@ export function isComposite(id: string): boolean {
 export function holdsBackground(id: string, held: Set<string>): boolean {
   if (held.has(id)) return true;
   const parts = COMPOSITE[id];
-  return parts !== undefined && parts.every((p) => held.has(p));
+  return parts?.every((p) => held.has(p));
 }
 
 /** Parts of a composite still outstanding. Empty when it is satisfied. */
@@ -83,69 +100,76 @@ export function missingParts(id: string, held: Set<string>): string[] {
 
 /** True when a group member names a background item rather than a course. */
 export function isBackgroundToken(member: string): boolean {
-  return member.startsWith('bg_');
+  return member.startsWith("bg_");
 }
 
 /**
  * Where each background item can be satisfied. A JHU course number means the
  * program teaches it; otherwise it is taken elsewhere and the note says where.
  */
-export const PREP_SOURCE: Record<string, { jhu: string | null; where: string }> = {
+export const PREP_SOURCE: Record<
+  string,
+  { jhu: string | null; where: string }
+> = {
   bg_calc: {
     jhu: null,
     where:
-      'Any community college. Montgomery College and Northern Virginia Community College both run the full sequence.'
+      "Any community college. Montgomery College and Northern Virginia Community College both run the full sequence.",
   },
   bg_de: {
     jhu: null,
     where:
-      'Community college, or the differential equations content inside EN.525.201 Circuits, Devices and Fields if you take that bridge course.'
+      "Community college, or the differential equations content inside EN.525.201 Circuits, Devices and Fields if you take that bridge course.",
   },
   bg_la: {
-    jhu: 'EN.625.609',
+    jhu: "EN.625.609",
     where:
-      'EN.625.609 Matrix Theory in the Applied and Computational Mathematics program covers this properly, including the singular value decomposition and the matrix exponential. A first linear algebra course usually stops short of both.'
+      "EN.625.609 Matrix Theory in the Applied and Computational Mathematics program covers this properly, including the singular value decomposition and the matrix exponential. A first linear algebra course usually stops short of both.",
   },
   bg_cx: {
     jhu: null,
     where:
-      'Community college or self study. Named explicitly by EN.525.738 Advanced Antenna Systems and quietly assumed by everything with a transform in it.'
+      "Community college or self study. Named explicitly by EN.525.738 Advanced Antenna Systems and quietly assumed by everything with a transform in it.",
   },
-  bg_phys: { jhu: null, where: 'Calculus based physics, two semesters. Community college.' },
+  bg_phys: {
+    jhu: null,
+    where: "Calculus based physics, two semesters. Community college.",
+  },
   bg_circ: {
-    jhu: 'EN.525.201',
+    jhu: "EN.525.201",
     where:
-      'Linear and non-linear circuits, an admission prerequisite for the degree. EN.525.201 Circuits, Devices and Fields is the bridge course JHU runs for exactly this gap; a community college circuit analysis sequence also serves.'
+      "Linear and non-linear circuits, an admission prerequisite for the degree. EN.525.201 Circuits, Devices and Fields is the bridge course JHU runs for exactly this gap; a community college circuit analysis sequence also serves.",
   },
   bg_ugem: {
     jhu: null,
     where:
-      'Undergraduate electromagnetics, before Intermediate Electromagnetics. Ulaby, Fundamentals of Applied Electromagnetics, is the engineering standard.'
+      "Undergraduate electromagnetics, before Intermediate Electromagnetics. Ulaby, Fundamentals of Applied Electromagnetics, is the engineering standard.",
   },
   bg_sig: {
-    jhu: 'EN.525.202',
+    jhu: "EN.525.202",
     where:
-      'Signals and systems, an admission prerequisite for the degree. EN.525.202 Signals and Systems is the bridge course, and the signal processing foundation courses all assume the material.'
+      "Signals and systems, an admission prerequisite for the degree. EN.525.202 Signals and Systems is the bridge course, and the signal processing foundation courses all assume the material.",
   },
   bg_dig: {
     jhu: null,
     where:
-      'Digital logic and state machines. Harris and Harris, Digital Design and Computer Architecture, teaches logic and hardware description language together.'
+      "Digital logic and state machines. Harris and Harris, Digital Design and Computer Architecture, teaches logic and hardware description language together.",
   },
   bg_c: {
     jhu: null,
-    where: 'C and C++. Required outright by the two field programmable gate array laboratory courses.'
+    where:
+      "C and C++. Required outright by the two field programmable gate array laboratory courses.",
   },
   bg_matlab: {
-    jhu: 'EN.525.617',
+    jhu: "EN.525.617",
     where:
-      'EN.525.617 Computation for Engineers is the closest thing the program offers, though most courses simply assume you can drive MATLAB.'
+      "EN.525.617 Computation for Engineers is the closest thing the program offers, though most courses simply assume you can drive MATLAB.",
   },
   bg_ee: {
     jhu: null,
     where:
-      'A full undergraduate electrical engineering background. Several courses state this as their only prerequisite, which is not something you can schedule; treat it as the sum of the other items here.'
-  }
+      "A full undergraduate electrical engineering background. Several courses state this as their only prerequisite, which is not something you can schedule; treat it as the sum of the other items here.",
+  },
 };
 
 /**
@@ -162,22 +186,25 @@ export function withBackground(
   catalog: Catalog,
   background: [string, string][],
   held: Set<string>,
-  expanded = new Set<string>()
+  expanded = new Set<string>(),
 ): Catalog {
   const out: Catalog = {};
 
   // Composites are never scheduled, so they never become preparation courses.
   for (const [id, label] of background) {
     if (isComposite(id) || held.has(id)) continue;
-    const src = PREP_SOURCE[id] ?? { jhu: null, where: 'Taken outside Johns Hopkins.' };
+    const src = PREP_SOURCE[id] ?? {
+      jhu: null,
+      where: "Taken outside Johns Hopkins.",
+    };
     const course: Course = {
       code: prepId(id),
       title: label,
       credits: 0,
       desc: src.where,
-      prereq_text: '',
+      prereq_text: "",
       groups: [],
-      areas: ['Preparation'],
+      areas: ["Preparation"],
       level: 0,
       gradeable: false,
       external: false,
@@ -185,7 +212,7 @@ export function withBackground(
       bg: [],
       prep: true,
       bgKey: id,
-      jhuEquivalent: src.jhu
+      jhuEquivalent: src.jhu,
     };
     out[course.code] = course;
   }
@@ -206,7 +233,13 @@ export function withBackground(
  * EN.525.616" is written down. Holding the background satisfies that group
  * outright; not holding it leaves the courses beside it as the way through.
  */
-function resolveGroups(c: Course, real: Catalog, held: Set<string>, expanded: Set<string>, prep: Catalog): string[][] {
+function resolveGroups(
+  c: Course,
+  real: Catalog,
+  held: Set<string>,
+  expanded: Set<string>,
+  prep: Catalog,
+): string[][] {
   const groups: string[][] = [];
 
   for (const g of c.groups) {
@@ -216,10 +249,13 @@ function resolveGroups(c: Course, real: Catalog, held: Set<string>, expanded: Se
     if (courses.length) groups.push(courses);
     // A group of nothing but unheld background falls through to c.bg below,
     // rather than becoming an empty group that nothing could ever satisfy.
-    else for (const t of tokens) groups.push(...backgroundGroups(t, real, held, expanded, prep));
+    else
+      for (const t of tokens)
+        groups.push(...backgroundGroups(t, real, held, expanded, prep));
   }
 
-  for (const b of c.bg) groups.push(...backgroundGroups(b, real, held, expanded, prep));
+  for (const b of c.bg)
+    groups.push(...backgroundGroups(b, real, held, expanded, prep));
   return groups;
 }
 
@@ -229,7 +265,7 @@ function backgroundGroups(
   real: Catalog,
   held: Set<string>,
   expanded: Set<string>,
-  prep: Catalog
+  prep: Catalog,
 ): string[][] {
   if (holdsBackground(id, held)) return [];
   if (!isComposite(id)) {
@@ -249,12 +285,21 @@ function backgroundGroups(
  * catalog has one. That keeps a plan already carrying the bridge course from
  * also being handed a preparation placeholder that says the same thing.
  */
-function subjectGroup(id: string, real: Catalog, prep: Catalog): string[] | null {
+function subjectGroup(
+  id: string,
+  real: Catalog,
+  prep: Catalog,
+): string[] | null {
   if (!prep[prepId(id)]) return null;
   const jhu = PREP_SOURCE[id]?.jhu;
   return jhu && real[jhu] ? [prepId(id), jhu] : [prepId(id)];
 }
 
 function sameGroups(a: string[][], b: string[][]): boolean {
-  return a.length === b.length && a.every((g, i) => g.length === b[i].length && g.every((m, j) => m === b[i][j]));
+  return (
+    a.length === b.length &&
+    a.every(
+      (g, i) => g.length === b[i].length && g.every((m, j) => m === b[i][j]),
+    )
+  );
 }

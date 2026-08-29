@@ -1,21 +1,27 @@
-import * as React from 'react';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import type { SlotView } from '../core/types';
-import { formatTime } from '../core/format';
-import { addMonths, longDayLabel, monthGrid, monthLabel, monthOf } from '../core/month';
-import SmsConsent from './SmsConsent';
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import { formatTime } from "../core/format";
+import {
+  addMonths,
+  longDayLabel,
+  monthGrid,
+  monthLabel,
+  monthOf,
+} from "../core/month";
+import type { SlotView } from "../core/types";
+import SmsConsent from "./SmsConsent";
 
 interface Props {
   availableDates: string[];
@@ -27,12 +33,12 @@ interface Props {
     name: string,
     phone: string,
     smsConsent: boolean,
-    email: string
+    email: string,
   ) => Promise<{ error: string | null }>;
   consentDisclosure: string;
 }
 
-const WeekdayInitials = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WeekdayInitials = ["S", "M", "T", "W", "T", "F", "S"];
 
 /**
  * Pick a day, then a time — the shape every calendar has taught people to
@@ -50,17 +56,19 @@ export default function SlotList({
   slots,
   onSelectDate,
   onBook,
-  consentDisclosure
+  consentDisclosure,
 }: Props) {
   const firstAvailable = availableDates[0] ?? null;
   const anchor = selectedDate ?? firstAvailable;
 
-  const [view, setView] = React.useState(() => (anchor ? monthOf(anchor) : monthOf(new Date().toISOString())));
+  const [view, setView] = React.useState(() =>
+    anchor ? monthOf(anchor) : monthOf(new Date().toISOString()),
+  );
   const [chosen, setChosen] = React.useState<SlotView | null>(null);
-  const [name, setName] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [name, setName] = React.useState("");
+  const [phone, setPhone] = React.useState("");
   const [smsConsent, setSmsConsent] = React.useState(false);
-  const [email, setEmail] = React.useState('');
+  const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -71,7 +79,7 @@ export default function SlotList({
   // empty grids looking for availability that was never there.
   const withinRange = (delta: number) => {
     const next = addMonths(view.year, view.month, delta);
-    const key = `${next.year}-${String(next.month).padStart(2, '0')}`;
+    const key = `${next.year}-${String(next.month).padStart(2, "0")}`;
     return availableDates.some((date) => date.startsWith(key));
   };
 
@@ -85,7 +93,13 @@ export default function SlotList({
     if (!chosen) return;
 
     setBusy(true);
-    const result = await onBook(chosen.startsAt, name.trim(), phone.trim(), smsConsent, email.trim());
+    const result = await onBook(
+      chosen.startsAt,
+      name.trim(),
+      phone.trim(),
+      smsConsent,
+      email.trim(),
+    );
     setBusy(false);
 
     if (result.error) {
@@ -98,17 +112,22 @@ export default function SlotList({
 
   if (availableDates.length === 0) {
     return (
-      <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-        There is nothing open at the moment. Check back, or send me a note and I will open something up.
+      <Typography variant="body1" sx={{ color: "text.secondary" }}>
+        There is nothing open at the moment. Check back, or send me a note and I
+        will open something up.
       </Typography>
     );
   }
 
   return (
     <>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ alignItems: 'flex-start' }}>
-        <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={4}
+        sx={{ alignItems: "flex-start" }}
+      >
+        <Box sx={{ width: { xs: "100%", md: 320 }, flexShrink: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
             <IconButton
               size="small"
               aria-label="Previous month"
@@ -117,7 +136,10 @@ export default function SlotList({
             >
               <ChevronLeftIcon fontSize="small" />
             </IconButton>
-            <Typography variant="subtitle1" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 600 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ flexGrow: 1, textAlign: "center", fontWeight: 600 }}
+            >
               {monthLabel(view.year, view.month)}
             </Typography>
             <IconButton
@@ -130,9 +152,20 @@ export default function SlotList({
             </IconButton>
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 0.5,
+            }}
+          >
             {WeekdayInitials.map((initial, index) => (
-              <Typography key={index} variant="caption" sx={{ textAlign: 'center', color: 'text.disabled', pb: 0.5 }}>
+              <Typography
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed positional weekday header (initials repeat)
+                key={index}
+                variant="caption"
+                sx={{ textAlign: "center", color: "text.disabled", pb: 0.5 }}
+              >
                 {initial}
               </Typography>
             ))}
@@ -144,15 +177,21 @@ export default function SlotList({
               const day = cell.date;
 
               return day === null ? (
+                // biome-ignore lint/suspicious/noArrayIndexKey: calendar grid cells are positional
                 <Box key={`blank-${index}`} />
               ) : (
                 <Button
                   key={day}
                   size="small"
                   disabled={!open.has(day)}
-                  variant={day === anchor ? 'contained' : 'text'}
+                  variant={day === anchor ? "contained" : "text"}
                   onClick={() => onSelectDate(day)}
-                  sx={{ minWidth: 0, px: 0, aspectRatio: '1 / 1', borderRadius: '50%' }}
+                  sx={{
+                    minWidth: 0,
+                    px: 0,
+                    aspectRatio: "1 / 1",
+                    borderRadius: "50%",
+                  }}
                 >
                   {cell.dayOfMonth}
                 </Button>
@@ -161,14 +200,14 @@ export default function SlotList({
           </Box>
         </Box>
 
-        <Box sx={{ flexGrow: 1, width: '100%' }}>
+        <Box sx={{ flexGrow: 1, width: "100%" }}>
           {anchor ? (
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
               {longDayLabel(anchor)}
             </Typography>
           ) : null}
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             {slots.map((slot) => (
               <Button
                 key={slot.startsAt}
@@ -185,7 +224,11 @@ export default function SlotList({
       </Stack>
 
       <Dialog open={chosen !== null} onClose={close} fullWidth maxWidth="xs">
-        <DialogTitle>{chosen && anchor ? `${longDayLabel(anchor)} at ${formatTime(chosen.startsAt)}` : ''}</DialogTitle>
+        <DialogTitle>
+          {chosen && anchor
+            ? `${longDayLabel(anchor)} at ${formatTime(chosen.startsAt)}`
+            : ""}
+        </DialogTitle>
         <Box component="form" onSubmit={submit}>
           <DialogContent>
             <Stack spacing={2}>
@@ -199,7 +242,11 @@ export default function SlotList({
                 autoFocus
                 slotProps={{ htmlInput: { maxLength: 120 } }}
               />
-              <SmsConsent checked={smsConsent} onChange={setSmsConsent} disclosure={consentDisclosure} />
+              <SmsConsent
+                checked={smsConsent}
+                onChange={setSmsConsent}
+                disclosure={consentDisclosure}
+              />
 
               {/* Only asked for when it will be used. Collecting a number from
                   somebody who declined texts would be holding data with no
@@ -236,7 +283,7 @@ export default function SlotList({
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={busy}>
-              {busy ? 'Booking…' : 'Book it'}
+              {busy ? "Booking…" : "Book it"}
             </Button>
           </DialogActions>
         </Box>

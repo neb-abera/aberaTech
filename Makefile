@@ -48,13 +48,13 @@ servertest: ## Scheduling unit tests, against the working tree
 	$(COMPOSE) build servertest
 	$(COMPOSE) run --rm servertest
 
-lint: ## eslint and prettier, against the working tree
+lint: ## biome lint and format check, against the working tree
 	$(COMPOSE) build lint
 	$(COMPOSE) run --rm lint
 
-fmt: ## Rewrite files to match prettier
+fmt: ## Rewrite files to match biome
 	$(COMPOSE) build lint
-	$(COMPOSE) run --rm lint npx prettier --write .
+	$(COMPOSE) run --rm lint npx biome check --write .
 
 check: ## The gate CI runs: type check, unit tests, lint and format
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .

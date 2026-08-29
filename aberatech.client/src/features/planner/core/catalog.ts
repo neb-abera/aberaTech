@@ -1,6 +1,11 @@
 /** Loading and querying the parsed JHU catalog. */
-import { holdsBackground, isBackgroundToken, isComposite, missingParts } from './background';
-import type { Catalog, Course, RawCatalog } from './types';
+import {
+  holdsBackground,
+  isBackgroundToken,
+  isComposite,
+  missingParts,
+} from "./background";
+import type { Catalog, Course, RawCatalog } from "./types";
 
 /** A background item a course assumes, and what is still outstanding under it. */
 export interface Gate {
@@ -39,8 +44,11 @@ export class CatalogData {
   /** Courses in the given area and concentration names. */
   select(areaNames: string[], concNames: string[] = []): Set<string> {
     const s = new Set<string>();
-    for (const a of areaNames) for (const c of this.areas[a] ?? []) if (this.courses[c]) s.add(c);
-    for (const a of concNames) for (const c of this.concentrations[a] ?? []) if (this.courses[c]) s.add(c);
+    for (const a of areaNames)
+      for (const c of this.areas[a] ?? []) if (this.courses[c]) s.add(c);
+    for (const a of concNames)
+      for (const c of this.concentrations[a] ?? [])
+        if (this.courses[c]) s.add(c);
     return s;
   }
 
@@ -70,7 +78,7 @@ export class CatalogData {
       id,
       label: this.backgroundLabel(id),
       missing: missingParts(id, held).map((p) => this.backgroundLabel(p)),
-      composite: isComposite(id)
+      composite: isComposite(id),
     }));
   }
 

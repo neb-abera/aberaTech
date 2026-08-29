@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import CssBaseline from '@mui/material/CssBaseline';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import AppAppBar from './AppAppBar';
-import Footer from './Footer';
-import AppTheme from '../theme/AppTheme';
-import { pageBackground } from '../theme/pageBackground';
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import CssBaseline from "@mui/material/CssBaseline";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
+import AppTheme from "../theme/AppTheme";
+import { pageBackground } from "../theme/pageBackground";
+import AppAppBar from "./AppAppBar";
+import Footer from "./Footer";
 
 export interface PageShellProps {
   title: string;
@@ -15,7 +15,7 @@ export interface PageShellProps {
   /** A note under the intro, for provenance or caveats. */
   note?: ReactNode;
   /** Reading pages want lg. A wide board wants xl. */
-  maxWidth?: 'md' | 'lg' | 'xl';
+  maxWidth?: "md" | "lg" | "xl";
   children: ReactNode;
   disableCustomTheme?: boolean;
 }
@@ -29,7 +29,14 @@ export interface PageShellProps {
  * gradient, the spacing above the title and the centred header; the page
  * supplies only its own body.
  */
-export default function PageShell({ title, intro, note, maxWidth = 'lg', children, ...props }: PageShellProps) {
+export default function PageShell({
+  title,
+  intro,
+  note,
+  maxWidth = "lg",
+  children,
+  ...props
+}: PageShellProps) {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
@@ -39,14 +46,14 @@ export default function PageShell({ title, intro, note, maxWidth = 'lg', childre
           <Stack
             spacing={1.5}
             sx={{
-              alignItems: 'center',
-              textAlign: 'center',
+              alignItems: "center",
+              textAlign: "center",
               // Home constrains its heading to a 70% column. At full container
               // width the same font reads as a different treatment entirely.
-              width: { xs: '100%', sm: '70%' },
-              mx: 'auto',
+              width: { xs: "100%", sm: "70%" },
+              mx: "auto",
               pt: { xs: 14, sm: 20 },
-              pb: { xs: 5, sm: 7 }
+              pb: { xs: 5, sm: 7 },
             }}
           >
             {/* The home page's h1, so a page title carries the same weight there
@@ -58,19 +65,25 @@ export default function PageShell({ title, intro, note, maxWidth = 'lg', childre
               component="h1"
               sx={{
                 fontWeight: 600,
-                fontSize: 'clamp(2.25rem, 7vw, 3.5rem)',
-                letterSpacing: '-0.5px'
+                fontSize: "clamp(2.25rem, 7vw, 3.5rem)",
+                letterSpacing: "-0.5px",
               }}
             >
               {title}
             </Typography>
             {intro && (
-              <Typography variant="body1" sx={{ color: 'text.primary', maxWidth: 680 }}>
+              <Typography
+                variant="body1"
+                sx={{ color: "text.primary", maxWidth: 680 }}
+              >
                 {intro}
               </Typography>
             )}
             {note && (
-              <Typography variant="caption" sx={{ color: 'text.disabled', maxWidth: 680 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.disabled", maxWidth: 680 }}
+              >
                 {note}
               </Typography>
             )}

@@ -8,11 +8,13 @@
  * browser cannot silently discard a value a newer one wrote.
  */
 export function zoneOptions(current?: string): string[] {
-  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: 'timeZone') => string[] };
+  const intl = Intl as typeof Intl & {
+    supportedValuesOf?: (key: "timeZone") => string[];
+  };
 
   let zones: string[];
   try {
-    zones = intl.supportedValuesOf?.('timeZone') ?? [];
+    zones = intl.supportedValuesOf?.("timeZone") ?? [];
   } catch {
     zones = [];
   }

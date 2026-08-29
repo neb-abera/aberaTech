@@ -6,9 +6,13 @@
  */
 
 /** Month each JHU term begins, zero indexed. Spring January, Summer May, Fall August. */
-const TERM_START_MONTH: Record<string, number> = { Spring: 0, Summer: 4, Fall: 7 };
-const CYCLE_3 = ['Spring', 'Summer', 'Fall'];
-const CYCLE_2 = ['Spring', 'Fall'];
+const TERM_START_MONTH: Record<string, number> = {
+  Spring: 0,
+  Summer: 4,
+  Fall: 7,
+};
+const CYCLE_3 = ["Spring", "Summer", "Fall"];
+const CYCLE_2 = ["Spring", "Fall"];
 /** A JHU Engineering for Professionals term runs about fifteen weeks. */
 const TERM_DAYS = 105;
 const MS_PER_DAY = 86_400_000;
@@ -25,7 +29,11 @@ export class Calendar {
   readonly offset: number;
   readonly startYear: number;
 
-  constructor({ startTerm = 'Spring', startYear = 2027, termsPerYear = 2 }: CalendarOptions = {}) {
+  constructor({
+    startTerm = "Spring",
+    startYear = 2027,
+    termsPerYear = 2,
+  }: CalendarOptions = {}) {
     this.termsPerYear = termsPerYear === 2 ? 2 : 3;
     this.cycle = this.termsPerYear === 2 ? CYCLE_2 : CYCLE_3;
     const i = this.cycle.indexOf(startTerm);
@@ -37,7 +45,7 @@ export class Calendar {
     const abs = this.offset + index;
     return {
       name: this.cycle[abs % this.cycle.length],
-      year: this.startYear + Math.floor(abs / this.cycle.length)
+      year: this.startYear + Math.floor(abs / this.cycle.length),
     };
   }
 
@@ -58,10 +66,15 @@ export class Calendar {
 
   /** Whole months from a to b. Negative when b precedes a. */
   static monthsBetween(a: Date, b: Date): number {
-    return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth());
+    return (
+      (b.getUTCFullYear() - a.getUTCFullYear()) * 12 +
+      (b.getUTCMonth() - a.getUTCMonth())
+    );
   }
 
   static addYears(d: Date, years: number): Date {
-    return new Date(Date.UTC(d.getUTCFullYear() + years, d.getUTCMonth(), d.getUTCDate()));
+    return new Date(
+      Date.UTC(d.getUTCFullYear() + years, d.getUTCMonth(), d.getUTCDate()),
+    );
   }
 }

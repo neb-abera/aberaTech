@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * Whether the visitor is signed in.
@@ -22,7 +22,7 @@ let probe: Promise<boolean> | null = null;
 
 async function fetchSignedIn(): Promise<boolean> {
   try {
-    const response = await fetch('/api/scheduling/admin/me');
+    const response = await fetch("/api/scheduling/admin/me");
     if (!response.ok) return false;
 
     const body = (await response.json()) as { signedIn?: boolean };

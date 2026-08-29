@@ -1,12 +1,12 @@
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Timeline from '@mui/lab/Timeline';
-import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineDot from '@mui/lab/TimelineDot';
-import CircleIcon from '@mui/icons-material/Circle';
-import TimelineConnector from '@mui/lab/TimelineConnector';
-import TimelineContent from '@mui/lab/TimelineContent';
+import CircleIcon from "@mui/icons-material/Circle";
+import Timeline from "@mui/lab/Timeline";
+import TimelineConnector from "@mui/lab/TimelineConnector";
+import TimelineContent from "@mui/lab/TimelineContent";
+import TimelineDot from "@mui/lab/TimelineDot";
+import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
+import TimelineSeparator from "@mui/lab/TimelineSeparator";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 export default function TerminalLeave() {
   return (
@@ -17,20 +17,24 @@ export default function TerminalLeave() {
         backgroundColor: (theme.vars || theme).palette.background.paper,
         color: (theme.vars || theme).palette.text.primary,
         boxShadow: theme.shadows[1],
-        width: '100%',
+        width: "100%",
         marginBottom: 2,
-        textAlign: 'left'
+        textAlign: "left",
       })}
     >
-      <Typography variant="h2" component="h2" sx={{ marginBottom: 2, textAlign: 'center' }}>
+      <Typography
+        variant="h2"
+        component="h2"
+        sx={{ marginBottom: 2, textAlign: "center" }}
+      >
         <strong>30-90 days</strong>
       </Typography>
       <Timeline
         sx={{
           [`& .${timelineItemClasses.root}:before`]: {
             flex: 0,
-            padding: 0
-          }
+            padding: 0,
+          },
         }}
       >
         <TimelineItem>
@@ -48,18 +52,20 @@ export default function TerminalLeave() {
                 backgroundColor: (theme.vars || theme).palette.background.paper,
                 color: (theme.vars || theme).palette.text.primary,
                 boxShadow: theme.shadows[1],
-                width: '100%',
+                width: "100%",
                 marginBottom: 2,
-                textAlign: 'left'
+                textAlign: "left",
               })}
             >
-              <Typography sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                If you're a Reservist then check on the status of your ETS PAR. Ensure you have RSTs submitted in case
-                your orders are delayed. If you're Active Duty, at 30 days out apply for your installation clearance
-                papers through your BN S1.
+              <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
+                If you're a Reservist then check on the status of your ETS PAR.
+                Ensure you have RSTs submitted in case your orders are delayed.
+                If you're Active Duty, at 30 days out apply for your
+                installation clearance papers through your BN S1.
               </Typography>
               <Typography>
-                Fort Moore G1 won't process installation clearance paper requests until you've completed CSP.
+                Fort Moore G1 won't process installation clearance paper
+                requests until you've completed CSP.
               </Typography>
             </Box>
           </TimelineContent>

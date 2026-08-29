@@ -5,7 +5,7 @@
 #   make dev     hot reloading dev server on http://localhost:3000
 #   make test    client unit tests against the working tree
 #   make servertest  scheduling unit tests against the working tree
-#   make lint    eslint and prettier against the working tree
+#   make lint    biome lint and format check against the working tree
 #   make check   the hermetic gate CI runs, built from the Dockerfile alone
 #
 # The services below mount the working tree, so they see uncommitted edits and
@@ -60,7 +60,7 @@ services:
     volumes:
       - .:/repo
       - /repo/node_modules
-    command: ['sh', '-c', 'npx eslint . && npx prettier --check .']
+    command: ['npx', 'biome', 'check', '.']
 
   # Postgres for the scheduling feature.
   #

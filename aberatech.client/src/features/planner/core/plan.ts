@@ -4,8 +4,14 @@
  * Plans are immutable. Every operation returns `{ ok, plan, ... }` and a refused
  * operation returns the original plan object, so a caller can compare by identity.
  */
-import { closure, earliestTerm, legalTerms, missingFor, unmetGroups } from './prereq';
-import type { Catalog, Placement } from './types';
+import {
+  closure,
+  earliestTerm,
+  legalTerms,
+  missingFor,
+  unmetGroups,
+} from "./prereq";
+import type { Catalog, Placement } from "./types";
 
 export interface PlaceResult {
   ok: boolean;
@@ -17,7 +23,7 @@ export interface PlaceWithPrerequisitesResult extends PlaceResult {
   added: string[];
 }
 
-export type ViolationKind = 'prerequisite' | 'exclusion';
+export type ViolationKind = "prerequisite" | "exclusion";
 
 export interface Violation {
   kind: ViolationKind;
@@ -46,7 +52,9 @@ export class Plan {
   placement(): Placement {
     const m: Placement = new Map();
     this.terms.forEach((t, i) => {
-      t.forEach((c) => m.set(c, i));
+      t.forEach((c) => {
+        m.set(c, i);
+      });
     });
     return m;
   }
@@ -71,22 +79,28 @@ export class Plan {
   /** A copy with the given terms, trimmed to exactly one trailing empty term. */
   withTerms(terms: string[][]): Plan {
     const t = terms.map((x) => [...x]);
-    while (t.length > 1 && t[t.length - 1].length === 0 && t[t.length - 2].length === 0) t.pop();
+    while (
+      t.length > 1 &&
+      t[t.length - 1].length === 0 &&
+      t[t.length - 2].length === 0
+    )
+      t.pop();
     if (t.length === 0 || t[t.length - 1].length > 0) t.push([]);
     return new Plan(this.catalog, t);
   }
 
   /** Move or add a course. Refuses anything that would break prerequisite order. */
   place(code: string, term: number): PlaceResult {
-    if (!this.catalog[code]) return { ok: false, plan: this, reason: `${code} is not in the catalog` };
+    if (!this.catalog[code])
+      return { ok: false, plan: this, reason: `${code} is not in the catalog` };
     const terms = this.terms.map((t) => t.filter((c) => c !== code));
     while (terms.length <= term) terms.push([]);
     const probe = new Plan(this.catalog, terms);
     if (!probe.legalTermsFor(code).has(term)) {
       const unmet = unmetGroups(this.catalog, code, term, probe.placement());
       const why = unmet.length
-        ? `prerequisite not met: needs ${unmet.map((g) => g.join(' or ')).join(', then ')} in an earlier term`
-        : 'prerequisite order: moving it here would strand a course that depends on it';
+        ? `prerequisite not met: needs ${unmet.map((g) => g.join(" or ")).join(", then ")} in an earlier term`
+        : "prerequisite order: moving it here would strand a course that depends on it";
       return { ok: false, plan: this, reason: why };
     }
     terms[term] = [...terms[term], code];
@@ -97,17 +111,28 @@ export class Plan {
    * The golden path: drop a blocked course and its missing prerequisites are
    * inserted ahead of it automatically, in a legal order.
    */
-  placeWithPrerequisites(code: string, term: number, perTerm = Infinity): PlaceWithPrerequisitesResult {
+  placeWithPrerequisites(
+    code: string,
+    term: number,
+    perTerm = Infinity,
+  ): PlaceWithPrerequisitesResult {
     if (!this.catalog[code]) {
-      return { ok: false, plan: this, added: [], reason: `${code} is not in the catalog` };
+      return {
+        ok: false,
+        plan: this,
+        added: [],
+        reason: `${code} is not in the catalog`,
+      };
     }
-    const unreachable = this.catalog[code].groups.filter((g) => !g.some((m) => this.catalog[m]));
+    const unreachable = this.catalog[code].groups.filter(
+      (g) => !g.some((m) => this.catalog[m]),
+    );
     if (unreachable.length) {
       return {
         ok: false,
         plan: this,
         added: [],
-        reason: `${code} requires ${unreachable.flat().join(', ')}, which is not in the catalog`
+        reason: `${code} requires ${unreachable.flat().join(", ")}, which is not in the catalog`,
       };
     }
     const have = new Set(this.courses());
@@ -121,7 +146,11 @@ export class Plan {
     const added: string[] = [];
     let target = term;
     for (const c of ordered) {
-      const found = earliestTerm(this.catalog, c, new Plan(this.catalog, terms).placement());
+      const found = earliestTerm(
+        this.catalog,
+        c,
+        new Plan(this.catalog, terms).placement(),
+      );
       const e = found ?? 0;
       // The first term at or after `e` that is still before the target and has room.
       let slot = -1;
@@ -148,7 +177,10 @@ export class Plan {
   }
 
   remove(code: string): PlaceResult {
-    return { ok: true, plan: this.withTerms(this.terms.map((t) => t.filter((c) => c !== code))) };
+    return {
+      ok: true,
+      plan: this.withTerms(this.terms.map((t) => t.filter((c) => c !== code))),
+    };
   }
 
   /** Every rule broken by the plan as it stands. */
@@ -157,41 +189,63 @@ export class Plan {
     const out: Violation[] = [];
     for (const [code, term] of p) {
       for (const g of unmetGroups(this.catalog, code, term, p)) {
-        out.push({ kind: 'prerequisite', code, group: g, detail: g.join(' or ') });
+        out.push({
+          kind: "prerequisite",
+          code,
+          group: g,
+          detail: g.join(" or "),
+        });
       }
       for (const x of this.catalog[code]?.excl ?? []) {
-        if (p.has(x) && code < x) out.push({ kind: 'exclusion', code, detail: x });
+        if (p.has(x) && code < x)
+          out.push({ kind: "exclusion", code, detail: x });
       }
     }
     return out;
   }
 
   /** Build a legal schedule from a set of courses. */
-  static autoSchedule(catalog: Catalog, codes: Iterable<string>, perTerm = 2): Plan {
+  static autoSchedule(
+    catalog: Catalog,
+    codes: Iterable<string>,
+    perTerm = 2,
+  ): Plan {
     const remaining = new Set(closure(catalog, codes));
     const terms: string[][] = [];
     const dependents = (c: string) =>
-      [...remaining].filter((k) => (catalog[k]?.groups ?? []).some((g) => g.includes(c))).length;
+      [...remaining].filter((k) =>
+        (catalog[k]?.groups ?? []).some((g) => g.includes(c)),
+      ).length;
     let guard = 0;
     while (remaining.size && guard++ < 1000) {
       const p = new Plan(catalog, terms).placement();
       const ti = terms.length;
-      const ready = [...remaining].filter((c) => unmetGroups(catalog, c, ti, p).length === 0);
+      const ready = [...remaining].filter(
+        (c) => unmetGroups(catalog, c, ti, p).length === 0,
+      );
       if (!ready.length) break;
       ready.sort(
         (a, b) =>
-          catalog[a].groups.length - catalog[b].groups.length || dependents(b) - dependents(a) || a.localeCompare(b)
+          catalog[a].groups.length - catalog[b].groups.length ||
+          dependents(b) - dependents(a) ||
+          a.localeCompare(b),
       );
       const take = ready.slice(0, perTerm);
       terms.push(take);
-      take.forEach((c) => remaining.delete(c));
+      take.forEach((c) => {
+        remaining.delete(c);
+      });
     }
     return new Plan(catalog, terms.length ? terms : [[]]);
   }
 }
 
 /** Order `need` so each course follows its own prerequisites. */
-function topoOrder(catalog: Catalog, need: string[], have: Set<string>): string[] {
+function topoOrder(
+  catalog: Catalog,
+  need: string[],
+  have: Set<string>,
+): string[] {
   const set = new Set(need);
   const out: string[] = [];
   const seen = new Set(have);
@@ -199,7 +253,9 @@ function topoOrder(catalog: Catalog, need: string[], have: Set<string>): string[
   while (set.size && guard++ < 500) {
     let progressed = false;
     for (const c of [...set].sort()) {
-      const ready = (catalog[c]?.groups ?? []).every((g) => g.some((m) => seen.has(m)) || !g.some((m) => catalog[m]));
+      const ready = (catalog[c]?.groups ?? []).every(
+        (g) => g.some((m) => seen.has(m)) || !g.some((m) => catalog[m]),
+      );
       if (ready) {
         out.push(c);
         seen.add(c);
