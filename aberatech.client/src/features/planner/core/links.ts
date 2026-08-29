@@ -11,10 +11,11 @@
  * holds. `data/link-check.json` is the recorded result of that run, and it is
  * regenerated rather than edited.
  */
-import type { CourseLink } from './types';
+import type { CourseLink } from "./types";
 
 /** The whole Electrical and Computer Engineering course list. */
-export const CATALOGUE_INDEX = 'https://e-catalogue.jhu.edu/course-descriptions/electrical_and_computer_engineering/';
+export const CATALOGUE_INDEX =
+  "https://e-catalogue.jhu.edu/course-descriptions/electrical_and_computer_engineering/";
 
 /**
  * One course in the JHU academic catalogue. The catalogue's own course bubbles
@@ -35,28 +36,28 @@ export function catalogueUrl(code: string): string {
  * requested from an environment that can reach that host.
  */
 export function professionalsUrl(code: string, title: string): string {
-  const num = code.replace(/^EN\./, '').replace(/\./g, '');
+  const num = code.replace(/^EN\./, "").replace(/\./g, "");
   const slug = title
     .toLowerCase()
-    .replace(/&/g, ' ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/&/g, " ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   return `https://ep.jhu.edu/courses/${num}-${slug}/`;
 }
 
 export function courseLinks(code: string, title: string): CourseLink[] {
   return [
     {
-      label: 'Catalogue entry',
+      label: "Catalogue entry",
       href: catalogueUrl(code),
       verified: true,
-      note: 'the official course description in the JHU academic catalogue'
+      note: "the official course description in the JHU academic catalogue",
     },
     {
-      label: 'Offerings',
+      label: "Offerings",
       href: professionalsUrl(code, title),
       verified: false,
-      note: 'terms, instructor and cost on ep.jhu.edu; the address is derived from the course number and title rather than measured'
-    }
+      note: "terms, instructor and cost on ep.jhu.edu; the address is derived from the course number and title rather than measured",
+    },
   ];
 }

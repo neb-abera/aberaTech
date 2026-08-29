@@ -1,11 +1,11 @@
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import QueuePanel from './QueuePanel';
-import SlotList from './SlotList';
-import { useSchedule } from '../hooks/useSchedule';
-import { formatDay, formatTime, viewerZone } from '../core/format';
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { formatDay, formatTime, viewerZone } from "../core/format";
+import { useSchedule } from "../hooks/useSchedule";
+import QueuePanel from "./QueuePanel";
+import SlotList from "./SlotList";
 
 /**
  * One page that decides for itself what it is.
@@ -18,23 +18,36 @@ import { formatDay, formatTime, viewerZone } from '../core/format';
  * otherwise the slots.
  */
 export default function SchedulePanel() {
-  const { state, place, error, loading, join, leave, book, booking, selectDate } = useSchedule();
+  const {
+    state,
+    place,
+    error,
+    loading,
+    join,
+    leave,
+    book,
+    booking,
+    selectDate,
+  } = useSchedule();
 
   if (loading) {
     return <CircularProgress size={28} aria-label="Loading the schedule" />;
   }
 
   if (error || !state) {
-    return <Alert severity="error">{error ?? 'The schedule is unavailable.'}</Alert>;
+    return (
+      <Alert severity="error">{error ?? "The schedule is unavailable."}</Alert>
+    );
   }
 
   return (
     <Stack spacing={3}>
-      {state.mode === 'unavailable' ? (
+      {state.mode === "unavailable" ? (
         <Alert severity="info">
-          Online booking is still being set up. Email me and we will find a time the old fashioned way.
+          Online booking is still being set up. Email me and we will find a time
+          the old fashioned way.
         </Alert>
-      ) : state.mode === 'queue' && state.queue ? (
+      ) : state.mode === "queue" && state.queue ? (
         <QueuePanel
           queue={state.queue}
           place={place}
@@ -46,8 +59,9 @@ export default function SchedulePanel() {
         <>
           {booking ? (
             <Alert severity="success">
-              Booked for {formatDay(booking.startsAt)} at {formatTime(booking.startsAt)}. A confirmation is on its way
-              to your phone.
+              Booked for {formatDay(booking.startsAt)} at{" "}
+              {formatTime(booking.startsAt)}. A confirmation is on its way to
+              your phone.
             </Alert>
           ) : null}
           <SlotList
@@ -63,8 +77,8 @@ export default function SchedulePanel() {
 
       {/* Only where there are times to qualify. Promising a time zone on a
           page showing no times reads as boilerplate. */}
-      {state.mode === 'unavailable' ? null : (
-        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+      {state.mode === "unavailable" ? null : (
+        <Typography variant="caption" sx={{ color: "text.disabled" }}>
           Times are shown in your own time zone ({viewerZone()}).
         </Typography>
       )}

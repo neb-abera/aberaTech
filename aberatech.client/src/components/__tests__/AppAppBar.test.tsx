@@ -5,12 +5,13 @@
  * Menu or MenuList, and a throw here unmounts the entire app — the white
  * screen — rather than breaking one control.
  */
-import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import AppTheme from '../../theme/AppTheme';
-import AppAppBar from '../AppAppBar';
-import { guides, label, projects } from '../../site/sections';
+
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { afterEach, describe, expect, it } from "vitest";
+import { guides, label, projects } from "../../site/sections";
+import AppTheme from "../../theme/AppTheme";
+import AppAppBar from "../AppAppBar";
 
 // Without vitest globals, testing-library cannot register its own cleanup.
 afterEach(cleanup);
@@ -21,29 +22,29 @@ function mount() {
       <AppTheme>
         <AppAppBar />
       </AppTheme>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
-describe('the phone drawer', () => {
-  it('opens without crashing, listing every guide and project', () => {
+describe("the phone drawer", () => {
+  it("opens without crashing, listing every guide and project", () => {
     mount();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Menu button' }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
 
     for (const entry of [...guides, ...projects]) {
-      expect(screen.getByRole('menuitem', { name: label(entry) })).toBeTruthy();
+      expect(screen.getByRole("menuitem", { name: label(entry) })).toBeTruthy();
     }
   });
 
-  it('links each entry to its page', () => {
+  it("links each entry to its page", () => {
     mount();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Menu button' }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
 
     for (const entry of [...guides, ...projects]) {
-      const item = screen.getByRole('menuitem', { name: label(entry) });
-      expect(item.getAttribute('href')).toBe(entry.to);
+      const item = screen.getByRole("menuitem", { name: label(entry) });
+      expect(item.getAttribute("href")).toBe(entry.to);
     }
   });
 });

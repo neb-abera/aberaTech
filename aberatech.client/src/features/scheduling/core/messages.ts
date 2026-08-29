@@ -26,23 +26,23 @@ export interface AdminMessages {
 }
 
 const kinds: Record<string, string> = {
-  Joined: 'Queue welcome',
-  TimeChanged: 'Time changed',
-  Imminent: 'Up soon',
-  YourTurn: 'Your turn',
-  Booked: 'Booking confirmation',
-  ReminderDayBefore: 'Day-before reminder',
-  Reminder: 'Final reminder',
-  Cancelled: 'Cancellation',
-  HostBooked: 'New booking, to you',
-  HostCancelled: 'Cancellation, to you'
+  Joined: "Queue welcome",
+  TimeChanged: "Time changed",
+  Imminent: "Up soon",
+  YourTurn: "Your turn",
+  Booked: "Booking confirmation",
+  ReminderDayBefore: "Day-before reminder",
+  Reminder: "Final reminder",
+  Cancelled: "Cancellation",
+  HostBooked: "New booking, to you",
+  HostCancelled: "Cancellation, to you",
 };
 
 export function kindLabel(kind: string): string {
   return kinds[kind] ?? kind;
 }
 
-export type ChipColor = 'default' | 'success' | 'warning' | 'error' | 'info';
+export type ChipColor = "default" | "success" | "warning" | "error" | "info";
 
 export interface StateChip {
   label: string;
@@ -50,16 +50,16 @@ export interface StateChip {
 }
 
 const states: Record<string, StateChip> = {
-  Pending: { label: 'Queued', color: 'default' },
-  Failed: { label: 'Retrying', color: 'warning' },
+  Pending: { label: "Queued", color: "default" },
+  Failed: { label: "Retrying", color: "warning" },
   // "Sent" deliberately does not claim delivery: the provider accepted it and
   // the receipt is still to come. Treating those as the same thing is the bug
   // this whole outbox exists to avoid.
-  Sent: { label: 'Sent, awaiting receipt', color: 'info' },
-  Delivered: { label: 'Delivered', color: 'success' },
-  DeadLettered: { label: 'Not delivered', color: 'error' }
+  Sent: { label: "Sent, awaiting receipt", color: "info" },
+  Delivered: { label: "Delivered", color: "success" },
+  DeadLettered: { label: "Not delivered", color: "error" },
 };
 
 export function stateChip(state: string): StateChip {
-  return states[state] ?? { label: state, color: 'default' };
+  return states[state] ?? { label: state, color: "default" };
 }

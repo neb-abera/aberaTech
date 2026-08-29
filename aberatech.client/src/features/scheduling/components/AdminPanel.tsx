@@ -1,20 +1,20 @@
-import * as React from 'react';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import MenuItem from '@mui/material/MenuItem';
-import { useAdminQueue } from '../hooks/useAdminQueue';
-import AvailabilityEditor from './AvailabilityEditor';
-import { formatTime } from '../core/format';
-import { kindLabel, stateChip, type AdminMessage } from '../core/messages';
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import { formatTime } from "../core/format";
+import { type AdminMessage, kindLabel, stateChip } from "../core/messages";
+import { useAdminQueue } from "../hooks/useAdminQueue";
+import AvailabilityEditor from "./AvailabilityEditor";
 
 /**
  * The host's side of the queue: open it, work down the line, close it.
@@ -36,9 +36,9 @@ export default function AdminPanel() {
     openSession,
     closeSession,
     advance,
-    setDuration
+    setDuration,
   } = useAdminQueue();
-  const [name, setName] = React.useState('');
+  const [name, setName] = React.useState("");
   const [hoursOpen, setHoursOpen] = React.useState(8);
   const [openError, setOpenError] = React.useState<string | null>(null);
 
@@ -49,7 +49,8 @@ export default function AdminPanel() {
   if (!configured) {
     return (
       <Alert severity="info">
-        Queue administration is not set up on this deployment yet. It needs Google credentials and an allowed address.
+        Queue administration is not set up on this deployment yet. It needs
+        Google credentials and an allowed address.
       </Alert>
     );
   }
@@ -57,11 +58,14 @@ export default function AdminPanel() {
   if (!signedIn) {
     return (
       <Stack spacing={2} sx={{ maxWidth: 420 }}>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+        <Typography variant="body1" sx={{ color: "text.secondary" }}>
           Sign in to run the queue.
         </Typography>
         <Box>
-          <Button variant="contained" href="/api/scheduling/admin/sign-in?returnUrl=/schedule/admin">
+          <Button
+            variant="contained"
+            href="/api/scheduling/admin/sign-in?returnUrl=/schedule/admin"
+          >
             Sign in with Google
           </Button>
         </Box>
@@ -69,14 +73,15 @@ export default function AdminPanel() {
     );
   }
 
-  const waiting = queue?.entries.filter((entry) => entry.state === 'Waiting') ?? [];
-  const serving = queue?.entries.find((entry) => entry.state === 'Serving');
+  const waiting =
+    queue?.entries.filter((entry) => entry.state === "Waiting") ?? [];
+  const serving = queue?.entries.find((entry) => entry.state === "Serving");
 
   return (
     <Stack spacing={3}>
       {error ? <Alert severity="error">{error}</Alert> : null}
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+      <Typography variant="caption" sx={{ color: "text.disabled" }}>
         Signed in as {email}
       </Typography>
 
@@ -91,22 +96,28 @@ export default function AdminPanel() {
 
             {calendar?.connected ? (
               <>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Reading free/busy from {calendar.email}. Times you are busy there are not offered here.
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Reading free/busy from {calendar.email}. Times you are busy
+                  there are not offered here.
                 </Typography>
                 <Box>
-                  <Button size="small" variant="outlined" color="inherit" onClick={() => void disconnectCalendar()}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    onClick={() => void disconnectCalendar()}
+                  >
                     Disconnect
                   </Button>
                 </Box>
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Disconnecting removes the stored token from this site. It does not withdraw the grant at Google — do
-                  that from your{' '}
+                <Typography variant="caption" sx={{ color: "text.disabled" }}>
+                  Disconnecting removes the stored token from this site. It does
+                  not withdraw the grant at Google — do that from your{" "}
                   <a
                     href="https://myaccount.google.com/permissions"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: 'inherit' }}
+                    style={{ color: "inherit" }}
                   >
                     account permissions
                   </a>
@@ -115,12 +126,17 @@ export default function AdminPanel() {
               </>
             ) : (
               <>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Not connected. Slots are offered from your availability rules alone, so anything already in your
-                  calendar can still be booked over.
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Not connected. Slots are offered from your availability rules
+                  alone, so anything already in your calendar can still be
+                  booked over.
                 </Typography>
                 <Box>
-                  <Button size="small" variant="contained" href="/api/scheduling/admin/calendar/connect">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    href="/api/scheduling/admin/calendar/connect"
+                  >
                     Connect Google calendar
                   </Button>
                 </Box>
@@ -134,19 +150,34 @@ export default function AdminPanel() {
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={2}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  flexWrap: "wrap",
+                }}
+              >
                 <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
                   {queue.name}
                 </Typography>
                 <Chip color="success" size="small" label="Open" />
-                <Button size="small" color="inherit" variant="outlined" onClick={() => void closeSession()}>
+                <Button
+                  size="small"
+                  color="inherit"
+                  variant="outlined"
+                  onClick={() => void closeSession()}
+                >
                   Close the queue
                 </Button>
               </Box>
 
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {waiting.length} waiting{serving ? `, with ${serving.displayName} now` : ''}.
-                {queue.closesAt ? ` Open until ${formatTime(queue.closesAt)}, then it closes itself.` : ''}
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                {waiting.length} waiting
+                {serving ? `, with ${serving.displayName} now` : ""}.
+                {queue.closesAt
+                  ? ` Open until ${formatTime(queue.closesAt)}, then it closes itself.`
+                  : ""}
               </Typography>
             </Stack>
           </CardContent>
@@ -165,9 +196,10 @@ export default function AdminPanel() {
               <Typography variant="h6" component="p">
                 No queue is open
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Opening puts the queue on the public booking page immediately — there is nothing further to save. It
-                stops taking names on its own after the time you pick, or when you close it.
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Opening puts the queue on the public booking page immediately —
+                there is nothing further to save. It stops taking names on its
+                own after the time you pick, or when you close it.
               </Typography>
               {openError ? <Alert severity="error">{openError}</Alert> : null}
               <TextField
@@ -191,7 +223,7 @@ export default function AdminPanel() {
                     here is what actually happens. */}
                 {[1, 2, 3, 4, 6, 8, 12, 24].map((hours) => (
                   <MenuItem key={hours} value={hours}>
-                    {hours === 1 ? '1 hour' : `${hours} hours`}
+                    {hours === 1 ? "1 hour" : `${hours} hours`}
                   </MenuItem>
                 ))}
               </TextField>
@@ -210,23 +242,39 @@ export default function AdminPanel() {
           <CardContent>
             <Stack divider={<Divider />} spacing={1.5}>
               {queue.entries.map((entry) => (
-                <Box key={entry.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', pt: 1 }}>
+                <Box
+                  key={entry.id}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    flexWrap: "wrap",
+                    pt: 1,
+                  }}
+                >
                   <Chip size="small" label={entry.position} />
                   <Box sx={{ flexGrow: 1, minWidth: 180 }}>
                     <Typography variant="body1">{entry.displayName}</Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
                       {entry.phoneE164}
-                      {entry.projectedStart ? ` · ${formatTime(entry.projectedStart)}` : ''}
+                      {entry.projectedStart
+                        ? ` · ${formatTime(entry.projectedStart)}`
+                        : ""}
                     </Typography>
                   </Box>
 
-                  {entry.state === 'Waiting' || entry.state === 'Serving' ? (
+                  {entry.state === "Waiting" || entry.state === "Serving" ? (
                     <TextField
                       select
                       size="small"
                       label="Needs"
                       value={entry.expectedMinutes}
-                      onChange={(event) => void setDuration(entry.id, Number(event.target.value))}
+                      onChange={(event) =>
+                        void setDuration(entry.id, Number(event.target.value))
+                      }
                       sx={{ width: 104 }}
                     >
                       {/* Bounded to the same range the server accepts. A queue
@@ -240,17 +288,29 @@ export default function AdminPanel() {
                     </TextField>
                   ) : null}
 
-                  {entry.state === 'Waiting' ? (
+                  {entry.state === "Waiting" ? (
                     <>
-                      <Button size="small" variant="contained" onClick={() => void advance(entry.id, 'start')}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => void advance(entry.id, "start")}
+                      >
                         Start
                       </Button>
-                      <Button size="small" color="inherit" onClick={() => void advance(entry.id, 'no-show')}>
+                      <Button
+                        size="small"
+                        color="inherit"
+                        onClick={() => void advance(entry.id, "no-show")}
+                      >
                         No show
                       </Button>
                     </>
-                  ) : entry.state === 'Serving' ? (
-                    <Button size="small" variant="contained" onClick={() => void advance(entry.id, 'done')}>
+                  ) : entry.state === "Serving" ? (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => void advance(entry.id, "done")}
+                    >
                       Done
                     </Button>
                   ) : (
@@ -270,12 +330,15 @@ export default function AdminPanel() {
               Messages
             </Typography>
 
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Every text this site has decided to send: confirmations and reminders waiting for their moment, then what
-              actually happened to each. A reminder listed here will go out even if this page is closed.
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              Every text this site has decided to send: confirmations and
+              reminders waiting for their moment, then what actually happened to
+              each. A reminder listed here will go out even if this page is
+              closed.
             </Typography>
 
-            {messages && (messages.upcoming.length > 0 || messages.recent.length > 0) ? (
+            {messages &&
+            (messages.upcoming.length > 0 || messages.recent.length > 0) ? (
               <Stack divider={<Divider />} spacing={1.5}>
                 {messages.upcoming.map((message) => (
                   <MessageRow key={message.id} message={message} />
@@ -285,7 +348,7 @@ export default function AdminPanel() {
                 ))}
               </Stack>
             ) : (
-              <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+              <Typography variant="body2" sx={{ color: "text.disabled" }}>
                 Nothing yet. Rows appear when somebody books or joins the queue.
               </Typography>
             )}
@@ -305,32 +368,48 @@ export default function AdminPanel() {
  */
 function MessageRow({ message }: { message: AdminMessage }) {
   const chip = stateChip(message.state);
-  const isQueued = message.state === 'Pending' || message.state === 'Failed';
+  const isQueued = message.state === "Pending" || message.state === "Failed";
   const when = isQueued
     ? message.dueAt
       ? `due ${formatTime(message.dueAt)}`
-      : 'due now'
+      : "due now"
     : message.sentAt
       ? formatTime(message.sentAt)
-      : '';
+      : "";
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', pt: 1 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        flexWrap: "wrap",
+        pt: 1,
+      }}
+    >
       <Box sx={{ flexGrow: 1, minWidth: 180 }}>
         <Typography variant="body2">
           {kindLabel(message.kind)} · {message.to}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>
           {when}
-          {message.attempts > 1 ? ` · attempt ${message.attempts}` : ''}
+          {message.attempts > 1 ? ` · attempt ${message.attempts}` : ""}
         </Typography>
         {message.lastError ? (
-          <Typography variant="caption" sx={{ color: 'error.main', display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: "error.main", display: "block" }}
+          >
             {message.lastError}
           </Typography>
         ) : null}
       </Box>
-      <Chip size="small" color={chip.color} variant={isQueued ? 'outlined' : 'filled'} label={chip.label} />
+      <Chip
+        size="small"
+        color={chip.color}
+        variant={isQueued ? "outlined" : "filled"}
+        label={chip.label}
+      />
     </Box>
   );
 }
