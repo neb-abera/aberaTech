@@ -8,9 +8,11 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import AppTheme from '../AppTheme';
+import TechnicalTransitionGuide from '../../views/TechnicalTransitionGuide';
 
 afterEach(cleanup);
 
@@ -33,5 +35,19 @@ describe('scheme-aware overrides', () => {
     );
 
     expect(getComputedStyle(screen.getByRole('button')).color).toBe('var(--template-palette-text-primary)');
+  });
+
+  it('paints the guide pages’ boxes from the active scheme, not the dark default', () => {
+    render(
+      <MemoryRouter>
+        <AppTheme>
+          <TechnicalTransitionGuide />
+        </AppTheme>
+      </MemoryRouter>
+    );
+
+    const box = screen.getByText(/the target audience for this/i).parentElement as HTMLElement;
+    expect(getComputedStyle(box).backgroundColor).toBe('var(--template-palette-background-paper)');
+    expect(getComputedStyle(box).color).toBe('var(--template-palette-text-primary)');
   });
 });
