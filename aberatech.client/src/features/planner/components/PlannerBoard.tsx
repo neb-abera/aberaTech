@@ -11,6 +11,7 @@ import Box from '@mui/material/Box';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Drawer from '@mui/material/Drawer';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
@@ -152,10 +153,14 @@ export default function PlannerBoard() {
     <PlannerProvider value={ctx}>
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '320px minmax(0, 1fr)' },
+          // A flex column rather than a grid on a phone: a sticky child can
+          // only travel within its containing block, and in a grid that is the
+          // row it sits in, which is exactly as tall as the pane itself.
+          display: { xs: 'flex', md: 'grid' },
+          flexDirection: 'column',
+          gridTemplateColumns: { md: '320px minmax(0, 1fr)' },
           gap: 3,
-          alignItems: 'start'
+          alignItems: { xs: 'stretch', md: 'start' }
         }}
       >
         {wide ? (
@@ -164,13 +169,29 @@ export default function PlannerBoard() {
           </Paper>
         ) : (
           // The same rail, as a pane that expands in place. Collapsed by
-          // default so the plan itself is the first thing a phone shows.
-          <Accordion variant="outlined" disableGutters sx={{ '&::before': { display: 'none' } }}>
+          // default so the plan itself is the first thing a phone shows, and
+          // stuck below the app bar so it is one tap away however far down the
+          // page the reader has scrolled. The details scroll within the pane,
+          // like the wide layout's sticky column.
+          <Accordion
+            variant="outlined"
+            disableGutters
+            sx={{
+              position: 'sticky',
+              top: 'calc(var(--template-frame-height, 0px) + 96px)',
+              zIndex: (t) => t.zIndex.appBar - 1,
+              bgcolor: 'background.default',
+              // Floating over the board as it scrolls, the pane needs a shadow
+              // to read as above the cards passing beneath it.
+              boxShadow: 4,
+              '&::before': { display: 'none' }
+            }}
+          >
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Tune fontSize="small" sx={{ mr: 1, alignSelf: 'center' }} />
               <Typography>Tracks, focus areas and settings</Typography>
             </AccordionSummary>
-            <AccordionDetails>{rail}</AccordionDetails>
+            <AccordionDetails sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}>{rail}</AccordionDetails>
           </Accordion>
         )}
 
@@ -196,27 +217,50 @@ export default function PlannerBoard() {
         </Stack>
       </Box>
 
-      <Popper
-        open={detail !== null && detail.anchor.isConnected}
-        anchorEl={detail?.anchor ?? null}
-        placement="right-start"
-        modifiers={[
-          { name: 'offset', options: { offset: [0, 10] } },
-          { name: 'preventOverflow', options: { padding: 12 } },
-          { name: 'flip', options: { padding: 12 } }
-        ]}
-        sx={{ zIndex: (t) => t.zIndex.tooltip }}
-        onMouseEnter={clearTimer}
-        onMouseLeave={() => {
-          if (!detail?.pinned) releaseDetail();
-        }}
-      >
-        {detail && (
-          <Paper elevation={8} sx={{ borderRadius: 2 }}>
-            <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
-          </Paper>
-        )}
-      </Popper>
+      {wide ? (
+        <Popper
+          open={detail !== null && detail.anchor.isConnected}
+          anchorEl={detail?.anchor ?? null}
+          placement="right-start"
+          modifiers={[
+            { name: 'offset', options: { offset: [0, 10] } },
+            { name: 'preventOverflow', options: { padding: 12 } },
+            { name: 'flip', options: { padding: 12 } }
+          ]}
+          sx={{ zIndex: (t) => t.zIndex.tooltip }}
+          onMouseEnter={clearTimer}
+          onMouseLeave={() => {
+            if (!detail?.pinned) releaseDetail();
+          }}
+        >
+          {detail && (
+            <Paper elevation={8} sx={{ borderRadius: 2 }}>
+              <CourseCard code={detail.code} pinned={detail.pinned} onClose={closeDetail} />
+            </Paper>
+          )}
+        </Popper>
+      ) : (
+        // A popper beside the chip would hang off the edge of a phone. The
+        // card rises from the bottom instead, and always with its actions,
+        // because on a touch screen every card was asked for deliberately.
+        <Drawer
+          anchor="bottom"
+          open={detail !== null}
+          onClose={closeDetail}
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: '75vh',
+                overflowY: 'auto',
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12
+              }
+            }
+          }}
+        >
+          {detail && <CourseCard code={detail.code} pinned onClose={closeDetail} />}
+        </Drawer>
+      )}
     </PlannerProvider>
   );
 }
