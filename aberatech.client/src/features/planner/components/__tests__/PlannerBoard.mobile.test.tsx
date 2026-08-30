@@ -49,13 +49,31 @@ function mount() {
 // similar lazy-initialization costs — several seconds all told under CI load,
 // once per process. Left alone that lands inside whichever test runs first and
 // blows its 5s budget; rehearsed here, every test starts from warm caches and
-// costs the same. The hook budget is wide because this is the known one-time
-// cost, not a wait to tune.
-beforeAll(() => {
+// costs the same. The rehearsal walks every expensive first: the rail click,
+// the Drawer the course card opens in (its Modal machinery is its own emotion
+// compile — under a 2-CPU cap the whole course-card describe timed out before
+// it was rehearsed), and one getComputedStyle, which lazy-builds jsdom's
+// CSSOM. The hook budget is wide because this is the known one-time cost, not
+// a wait to tune.
+beforeAll(async () => {
   mount();
+  const summary = screen.getByRole("button", {
+    name: /tracks, focus areas and settings/i,
+  });
+  fireEvent.click(summary);
+  getComputedStyle(summary);
+  fireEvent.click(document.querySelector("[data-code]") as HTMLElement);
   fireEvent.click(
-    screen.getByRole("button", { name: /tracks, focus areas and settings/i }),
+    screen.getByRole("button", { name: "Close the course card" }),
   );
+  // Through the exit transition too: the close path runs its own first-time
+  // machinery, and the waitFor polling a queryByRole over this board's large
+  // tree is itself a cost worth paying once out here.
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", { name: "Close the course card" }),
+    ).toBeNull();
+  });
   cleanup();
 }, 30_000);
 
