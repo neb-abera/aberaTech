@@ -100,4 +100,17 @@ public class AthleteSettings
 
     /// <summary>When the anchor was measured; predictions project from here.</summary>
     public LocalDate? VdotMeasuredOn { get; set; }
+
+    /// <summary>Birth year, for the age adjustment on the reclaimable peak.</summary>
+    public int? BirthYear { get; set; }
+
+    /// <summary>The lifetime-best race: distance, time, and roughly when.</summary>
+    public double? PastPeakDistanceMeters { get; set; }
+
+    public double? PastPeakSeconds { get; set; }
+
+    public int? PastPeakYear { get; set; }
+
+    /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
+    public double HomeAltitudeMeters { get; set; }
 }
