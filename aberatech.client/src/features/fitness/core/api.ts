@@ -127,7 +127,8 @@ export const fetchSummary = () => get<Summary>("/api/fitness/summary");
 
 export const fetchCitations = () => get<Citation[]>("/api/fitness/citations");
 
-export const fetchActivities = () => get<ActivityRow[]>("/api/fitness/activities");
+export const fetchActivities = () =>
+  get<ActivityRow[]>("/api/fitness/activities");
 
 export function fetchPrediction(
   weeklyHours: number,

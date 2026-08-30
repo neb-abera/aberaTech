@@ -29,11 +29,18 @@ export default function SourcesPanel() {
       {citations.map((citation) => (
         <Card key={citation.id} variant="outlined">
           <CardContent>
-            <Chip size="small" label={citation.id} sx={{ mb: 1, fontFamily: "monospace" }} />
+            <Chip
+              size="small"
+              label={citation.id}
+              sx={{ mb: 1, fontFamily: "monospace" }}
+            />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               {citation.claim}
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.secondary", mt: 0.5 }}
+            >
               {citation.who}
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5 }}>

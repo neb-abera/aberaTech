@@ -12,9 +12,15 @@ const WIDTH = 720;
 const HEIGHT = 260;
 const MARGIN = { top: 16, right: 96, bottom: 34, left: 56 };
 
-function scale(domainMin: number, domainMax: number, rangeMin: number, rangeMax: number) {
+function scale(
+  domainMin: number,
+  domainMax: number,
+  rangeMin: number,
+  rangeMax: number,
+) {
   const span = domainMax - domainMin || 1;
-  return (value: number) => rangeMin + ((value - domainMin) / span) * (rangeMax - rangeMin);
+  return (value: number) =>
+    rangeMin + ((value - domainMin) / span) * (rangeMax - rangeMin);
 }
 
 interface AxisProps {
@@ -67,10 +73,20 @@ export function AerobicTrendChart({ points }: { points: AerobicPoint[] }) {
   const hi = Math.max(...paces) + 20;
   // Faster on top: the y scale is inverted on purpose.
   const y = scale(lo, hi, HEIGHT - MARGIN.bottom, MARGIN.top);
-  const x = scale(0, Math.max(points.length - 1, 1), MARGIN.left, WIDTH - MARGIN.right);
+  const x = scale(
+    0,
+    Math.max(points.length - 1, 1),
+    MARGIN.left,
+    WIDTH - MARGIN.right,
+  );
 
   const path = points
-    .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)} ${y(p.medianSecPerKm).toFixed(1)}`)
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(i).toFixed(1)} ${y(p.medianSecPerKm).toFixed(
+          1,
+        )}`,
+    )
     .join(" ");
 
   return (
@@ -78,7 +94,7 @@ export function AerobicTrendChart({ points }: { points: AerobicPoint[] }) {
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       width="100%"
       role="img"
-      aria-label="Monthly median heart-rate-normalized pace, faster toward the top"
+      aria-label="Monthly median heart-rate-normalized pace, faster on top"
     >
       <Axis
         color={theme.palette.text.secondary}
@@ -88,7 +104,12 @@ export function AerobicTrendChart({ points }: { points: AerobicPoint[] }) {
           label: formatPace(v),
         }))}
       />
-      <path d={path} fill="none" stroke={theme.palette.primary.main} strokeWidth={2} />
+      <path
+        d={path}
+        fill="none"
+        stroke={theme.palette.primary.main}
+        strokeWidth={2}
+      />
       {points.map((p, i) => (
         <g key={p.month}>
           <circle
@@ -97,7 +118,11 @@ export function AerobicTrendChart({ points }: { points: AerobicPoint[] }) {
             r={4}
             fill={theme.palette.primary.main}
           >
-            <title>{`${p.month}: ${formatPace(p.medianSecPerKm)} median of ${p.runs} runs`}</title>
+            <title>
+              {`${p.month}: ${formatPace(
+                p.medianSecPerKm,
+              )} median of ${p.runs} runs`}
+            </title>
           </circle>
           <text
             x={x(i)}
@@ -141,7 +166,10 @@ export function VolumeChart({
       <Axis
         color={theme.palette.text.secondary}
         position={MARGIN.left - 8}
-        ticks={[0, planMinutes, top].map((v) => ({ at: y(v), label: `${Math.round(v)}m` }))}
+        ticks={[0, planMinutes, top].map((v) => ({
+          at: y(v),
+          label: `${Math.round(v)}m`,
+        }))}
       />
       {shown.map((week, i) => (
         <rect
@@ -154,7 +182,9 @@ export function VolumeChart({
           fill={theme.palette.primary.main}
           opacity={week.minutes >= planMinutes ? 1 : 0.55}
         >
-          <title>{`Week of ${week.weekStart}: ${Math.round(week.minutes)} min`}</title>
+          <title>
+            {`Week of ${week.weekStart}: ${Math.round(week.minutes)} min`}
+          </title>
         </rect>
       ))}
       <line
@@ -205,7 +235,12 @@ export function ProjectionChart({
   const x = scale(0, months, MARGIN.left, WIDTH - MARGIN.right);
 
   const path = curve
-    .map((p, i) => `${i === 0 ? "M" : "L"}${x(p.months).toFixed(1)} ${y(p.vdot).toFixed(1)}`)
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(p.months).toFixed(1)} ${y(p.vdot).toFixed(
+          1,
+        )}`,
+    )
     .join(" ");
 
   return (
@@ -271,7 +306,12 @@ export function ProjectionChart({
           </text>
         </g>
       ))}
-      <path d={path} fill="none" stroke={theme.palette.primary.main} strokeWidth={2.5} />
+      <path
+        d={path}
+        fill="none"
+        stroke={theme.palette.primary.main}
+        strokeWidth={2.5}
+      />
     </svg>
   );
 }
