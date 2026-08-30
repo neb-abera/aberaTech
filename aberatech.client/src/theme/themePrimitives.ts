@@ -5,6 +5,15 @@ import {
   type Shadows,
 } from "@mui/material/styles";
 
+/*
+ * The system font stack, chosen on purpose. The theme used to name Inter and
+ * never load it, so every visitor silently fell back to their platform
+ * default anyway. Naming the platform faces makes that the design: native
+ * rendering on every OS, zero font bytes on the wire, no swap flash.
+ */
+export const SystemFontStack =
+  'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 declare module "@mui/material/Paper" {
   interface PaperPropsVariantOverrides {
     highlighted: true;
@@ -195,7 +204,7 @@ export const getDesignTokens = (mode: PaletteMode) => {
       },
     },
     typography: {
-      fontFamily: "Inter, sans-serif",
+      fontFamily: SystemFontStack,
       h1: {
         fontSize: defaultTheme.typography.pxToRem(48),
         fontWeight: 600,
@@ -353,7 +362,7 @@ export const colorSchemes = {
 };
 
 export const typography = {
-  fontFamily: "Inter, sans-serif",
+  fontFamily: SystemFontStack,
   h1: {
     fontSize: defaultTheme.typography.pxToRem(48),
     fontWeight: 600,
