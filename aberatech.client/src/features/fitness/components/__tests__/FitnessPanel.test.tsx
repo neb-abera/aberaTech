@@ -29,6 +29,11 @@ const emptySummary = {
     startVdot: 37,
     vdotMeasuredOn: null,
     currentWeightKg: 78.9,
+    birthYear: 1993,
+    pastPeakDistanceMeters: 3218.688,
+    pastPeakSeconds: 765,
+    pastPeakYear: 2019,
+    homeAltitudeMeters: 1190,
   },
   aerobicTrend: [
     { month: "2026-07", medianSecPerKm: 447, runs: 2 },

@@ -34,18 +34,22 @@ export default function FitnessPanel() {
   const [failed, setFailed] = React.useState(false);
   const [tab, setTab] = React.useState(0);
 
+  const reloadSummary = React.useCallback(() => {
+    fetchSummary()
+      .then(setSummary)
+      .catch(() => setFailed(true));
+  }, []);
+
   React.useEffect(() => {
     fetchMe()
       .then((state) => {
         setMe(state);
         if (state.signedIn) {
-          fetchSummary()
-            .then(setSummary)
-            .catch(() => setFailed(true));
+          reloadSummary();
         }
       })
       .catch(() => setFailed(true));
-  }, []);
+  }, [reloadSummary]);
 
   if (failed) {
     return (
@@ -105,7 +109,13 @@ export default function FitnessPanel() {
 
       {tab === 0 && <Dashboard summary={summary} />}
       {tab === 1 && <ProjectionPanel summary={summary} />}
-      {tab === 2 && <DataPanel hevyApi={me.hevyApi} />}
+      {tab === 2 && (
+        <DataPanel
+          hevyApi={me.hevyApi}
+          settings={summary.settings}
+          onProfileSaved={reloadSummary}
+        />
+      )}
       {tab === 3 && <SourcesPanel />}
     </Stack>
   );
