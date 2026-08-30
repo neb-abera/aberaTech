@@ -50,6 +50,17 @@ public static class SchedulingDataSource
     public static NpgsqlDataSource Build(string connectionString, DatabaseOptions options, ILoggerFactory loggers)
     {
         var builder = new NpgsqlDataSourceBuilder(connectionString);
+
+        // The shared abera-postgres server allows 50 connections and also
+        // serves Facewoof (pool 10 x up to 3 replicas). Npgsql's default
+        // Maximum Pool Size is 100 - one busy replica could exhaust the whole
+        // server. Pin it unless the connection string already says otherwise.
+        if (!connectionString.Contains("Maximum Pool Size", StringComparison.OrdinalIgnoreCase)
+            && !connectionString.Contains("MaxPoolSize", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.ConnectionStringBuilder.MaxPoolSize = 10;
+        }
+
         builder.UseNodaTime();
         builder.UseLoggerFactory(loggers);
 
