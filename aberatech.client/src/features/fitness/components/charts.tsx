@@ -217,17 +217,22 @@ export function ProjectionChart({
   curve,
   goals,
   engineVdot,
+  reclaimVdot = null,
 }: {
   curve: ProjectionPoint[];
   goals: GoalLine[];
   engineVdot: number | null;
+  reclaimVdot?: number | null;
 }) {
   const theme = useTheme();
   if (curve.length === 0) {
     return null;
   }
 
-  const values = curve.map((p) => p.vdot).concat(goals.map((g) => g.vdot));
+  const values = curve
+    .map((p) => p.vdot)
+    .concat(goals.map((g) => g.vdot))
+    .concat(reclaimVdot === null ? [] : [reclaimVdot]);
   const lo = Math.min(...values) - 1.5;
   const hi = Math.max(...values) + 1.5;
   const y = scale(lo, hi, HEIGHT - MARGIN.bottom, MARGIN.top);
@@ -283,6 +288,26 @@ export function ProjectionChart({
             fill={theme.palette.text.secondary}
           >
             engine {engineVdot.toFixed(0)}
+          </text>
+        </g>
+      )}
+      {reclaimVdot !== null && reclaimVdot > lo && reclaimVdot < hi && (
+        <g>
+          <line
+            x1={MARGIN.left}
+            x2={WIDTH - MARGIN.right}
+            y1={y(reclaimVdot)}
+            y2={y(reclaimVdot)}
+            stroke={theme.palette.success.main}
+            strokeDasharray="8 4"
+          />
+          <text
+            x={WIDTH - MARGIN.right + 6}
+            y={y(reclaimVdot) + 4}
+            fontSize={11}
+            fill={theme.palette.success.main}
+          >
+            past peak {reclaimVdot.toFixed(1)}
           </text>
         </g>
       )}

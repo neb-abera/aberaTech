@@ -80,6 +80,38 @@ public static class Citations
         1993,
         null);
 
+    public static readonly Citation MujikaRetraining = new(
+        "mujika-retraining",
+        "Detrained athletes regain previously held fitness far faster than novices build it; much of detraining loss is rapidly reversible.",
+        "Inigo Mujika, PhD — the physiologist of detraining and tapering, coach and consultant to Olympic and world-champion endurance athletes; with Sabino Padilla, PhD.",
+        "Detraining: loss of training-induced physiological and performance adaptations, Parts I & II (Sports Med 30)",
+        2000,
+        "https://pubmed.ncbi.nlm.nih.gov/10999420/");
+
+    public static readonly Citation MuscleMemory = new(
+        "muscle-memory",
+        "Muscle keeps structural and epigenetic receipts of past training — myonuclei persist through years of detraining — so retraining starts ahead.",
+        "Kristian Gundersen's Oslo lab (Bruusgaard et al.) on myonuclear permanence; Robert Seaborne and Adam Sharples on the epigenetic memory of hypertrophy.",
+        "Myonuclei acquired by overload persist (PNAS 107); Human skeletal muscle possesses an epigenetic memory of hypertrophy (Sci Rep 8)",
+        2010,
+        "https://pubmed.ncbi.nlm.nih.gov/20713720/");
+
+    public static readonly Citation WmaAgeGrading = new(
+        "wma-age-grading",
+        "Distance-running capability holds essentially flat through the early thirties, then declines roughly 0.7% per year — so a twenties peak is intact at 33.",
+        "World Masters Athletics age-grading factors, maintained by the WMA statistics team (the Alan Jones tables) — the standard every masters result is scored against.",
+        "WMA Age-Grading Tables (2023 factors)",
+        2023,
+        "https://github.com/AlanLyttonJones/Age-Grade-Tables");
+
+    public static readonly Citation PeronnetAltitude = new(
+        "peronnet-altitude",
+        "Aerobic race times slow with altitude — near zero below ~600 m, roughly 2-3% at Mexico City's 2,240 m, about 1% at El Paso's elevation.",
+        "Francois Peronnet, PhD, and Guy Thibault, PhD — the exercise physiologists whose power-duration model anchored altitude effects on the Mexico City record book.",
+        "A theoretical analysis of the effect of altitude on running performance (J Appl Physiol 70)",
+        1991,
+        "https://pubmed.ncbi.nlm.nih.gov/2010409/");
+
     public static readonly Citation CogganPmc = new(
         "coggan-training-load",
         "Chronic and acute training load (CTL/ATL) summarise the dose the body is adapting to; ramping chronic load gradually is what the body absorbs.",
@@ -90,7 +122,8 @@ public static class Citations
 
     public static IReadOnlyList<Citation> All { get; } =
     [
-        DanielsVdot, BanisterModel, SeilerPolarized, SanMillanBrooks,
+        DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
+        WmaAgeGrading, PeronnetAltitude, SeilerPolarized, SanMillanBrooks,
         UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc
     ];
 }

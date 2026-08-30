@@ -17,6 +17,26 @@ export interface SettingsDto {
   startVdot: number;
   vdotMeasuredOn: string | null;
   currentWeightKg: number | null;
+  birthYear: number | null;
+  pastPeakDistanceMeters: number | null;
+  pastPeakSeconds: number | null;
+  pastPeakYear: number | null;
+  homeAltitudeMeters: number;
+}
+
+export interface SettingsUpdate {
+  referenceHr: number;
+  ltSecondsPerKm: number | null;
+  planMinutesPerWeek: number;
+  startVdot: number;
+  vdotMeasuredOn: string | null;
+  birthYear: number | null;
+  pastPeakDistanceMeters: number | null;
+  pastPeakSeconds: number | null;
+  pastPeakYear: number | null;
+  homeAltitudeMeters: number;
+  anchorDistanceMeters: number | null;
+  anchorSeconds: number | null;
 }
 
 export interface AerobicPoint {
@@ -84,13 +104,22 @@ export interface GoalOutlook {
   reachable: boolean;
 }
 
+export interface RealityCheck {
+  measuredPacePercent: number | null;
+  measuredOverDays: number;
+  modelPacePercentNext90Days: number;
+}
+
 export interface Prediction {
   effectiveHours: number;
   ceiling: number;
   weightAdjustedStartVdot: number;
+  reclaimVdot: number | null;
+  altitudePenaltyPercent: number;
   curve: ProjectionPoint[];
   checkpoints: Checkpoint[];
   goals: GoalOutlook[];
+  realityCheck: RealityCheck;
   assumptions: string[];
 }
 
@@ -190,6 +219,17 @@ export async function syncHevy(): Promise<{ fetched: number; added: number }> {
     throw new Error(await response.text());
   }
   return (await response.json()) as { fetched: number; added: number };
+}
+
+export async function saveSettings(update: SettingsUpdate): Promise<void> {
+  const response = await fetch("/api/fitness/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(update),
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
 }
 
 export async function saveBodyMetric(
