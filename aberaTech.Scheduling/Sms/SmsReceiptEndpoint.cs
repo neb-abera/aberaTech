@@ -55,7 +55,17 @@ public static class SmsReceiptEndpoint
         }
 
         var sid = form["MessageSid"].ToString();
-        var status = form["MessageStatus"].ToString();
+
+        // The signature check above proves the sender holds the auth token,
+        // but the value still originates outside this process and ends up in
+        // log lines and stored errors, so flatten anything that could forge a
+        // log entry (CodeQL cs/log-forging). Real Twilio statuses are single
+        // short tokens, which pass through untouched.
+        var status = new string(
+            form["MessageStatus"].ToString()
+                .Where(c => !char.IsControl(c))
+                .Take(64)
+                .ToArray());
 
         if (string.IsNullOrEmpty(sid) || string.IsNullOrEmpty(status))
         {
