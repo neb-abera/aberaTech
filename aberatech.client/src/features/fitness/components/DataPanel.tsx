@@ -11,6 +11,7 @@ import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import type { SettingsDto } from "../core/api";
 import {
   type ActivityRow,
   fetchActivities,
@@ -19,12 +20,21 @@ import {
   uploadFile,
 } from "../core/api";
 import { formatSeconds, lbToKg } from "../core/format";
+import ProfileCard from "./ProfileCard";
 
 /**
  * The pipes: file uploads for the zero-cost paths, the Hevy API button when a
  * key is configured, weigh-ins, and a view of what actually landed.
  */
-export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
+export default function DataPanel({
+  hevyApi,
+  settings,
+  onProfileSaved,
+}: {
+  hevyApi: boolean;
+  settings: SettingsDto;
+  onProfileSaved: () => void;
+}) {
   const [status, setStatus] = React.useState<{
     ok: boolean;
     text: string;
@@ -80,6 +90,8 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
 
   return (
     <Stack spacing={3}>
+      <ProfileCard settings={settings} onSaved={onProfileSaved} />
+
       <Card variant="outlined">
         <CardContent>
           <Typography variant="h6" sx={{ mb: 0.5 }}>
