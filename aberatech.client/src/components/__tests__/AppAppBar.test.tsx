@@ -8,7 +8,7 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { guides, label, projects } from "../../site/sections";
 import AppTheme from "../../theme/AppTheme";
 import AppAppBar from "../AppAppBar";
@@ -25,6 +25,16 @@ function mount() {
     </MemoryRouter>,
   );
 }
+
+// Same rehearsal as PlannerBoard.mobile: the worker's first MUI mount, first
+// role query and first click each pay a one-time emotion/jsdom cost that
+// under CI load blows the first test's 5s budget. Paying it here, outside any
+// timed test, leaves every test starting from warm caches.
+beforeAll(() => {
+  mount();
+  fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
+  cleanup();
+}, 30_000);
 
 describe("the phone drawer", () => {
   it("opens without crashing, listing every guide and project", () => {
