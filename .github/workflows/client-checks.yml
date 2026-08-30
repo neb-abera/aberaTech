@@ -37,6 +37,11 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            uploads.github.com:443
             auth.docker.io:443
             registry-1.docker.io:443
             production.cloudflare.docker.com:443
@@ -80,6 +85,11 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            uploads.github.com:443
             auth.docker.io:443
             registry-1.docker.io:443
             production.cloudflare.docker.com:443
@@ -128,6 +138,11 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            uploads.github.com:443
             auth.docker.io:443
             registry-1.docker.io:443
             production.cloudflare.docker.com:443
@@ -172,6 +187,11 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            uploads.github.com:443
             auth.docker.io:443
             registry-1.docker.io:443
             production.cloudflare.docker.com:443
