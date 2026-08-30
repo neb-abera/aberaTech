@@ -251,6 +251,11 @@ app.Use(async (context, next) =>
     headers["X-Content-Type-Options"] = "nosniff";
     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    // Cross-origin isolation (Spectre-class leak mitigations). COEP is
+    // deliberately absent: the partner images (va.gov, yceml.net, ...) send
+    // no CORP headers and require-corp would block them.
+    headers["Cross-Origin-Opener-Policy"] = "same-origin";
+    headers["Cross-Origin-Resource-Policy"] = "same-origin";
 
     if (context.Request.IsHttps)
     {

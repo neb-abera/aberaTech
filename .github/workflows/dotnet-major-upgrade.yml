@@ -11,7 +11,7 @@ name: dotnet-major-upgrade
 
 on:
   schedule:
-    - cron: '0 6 3 * *'
+    - cron: "0 6 3 * *"
   workflow_dispatch:
 
 # Nothing at the workflow level: the write grants live on the one job that
@@ -39,6 +39,6 @@ jobs:
           # Commit via GitHub's API so the commit is signed by GitHub itself;
           # branches requiring Verified commits reject CLI-made bot commits.
           sign-commits: true
-          commit-message: 'Upgrade to .NET ${{ steps.check.outputs.new-version }}'
-          title: 'Upgrade to .NET ${{ steps.check.outputs.new-version }}'
+          commit-message: "Upgrade to .NET ${{ steps.check.outputs.new-version }}"
+          title: "Upgrade to .NET ${{ steps.check.outputs.new-version }}"
           body-path: ${{ runner.temp }}/dotnet-major-summary.md

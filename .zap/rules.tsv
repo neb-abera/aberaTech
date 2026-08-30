@@ -1,0 +1,7 @@
+10027	IGNORE	(Suspicious comments - bundler artifacts in the built JS)
+10049	IGNORE	(Storable and Cacheable Content - hashed assets are immutable by design)
+10055	IGNORE	(style-src unsafe-inline - emotion/MUI inject runtime style tags; revisit with emotion nonce support)
+10096	IGNORE	(Timestamp Disclosure - version numbers in the bundle pattern-match as timestamps)
+10109	IGNORE	(Modern Web Application - informational)
+90003	IGNORE	(SRI - the only external script is the Cloudflare insights beacon, which rotates content; CSP pins its host)
+90004	IGNORE	(COEP require-corp would block the partner images (va.gov, yceml.net, ...), which send no CORP headers; COOP and CORP are set)

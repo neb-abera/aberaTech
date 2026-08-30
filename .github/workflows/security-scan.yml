@@ -9,7 +9,7 @@ on:
   push:
     branches: [master]
   schedule:
-    - cron: '45 7 * * 1'
+    - cron: "45 7 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,6 +30,9 @@ jobs:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
+          # Audit, not block: this job builds/runs containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface as
+          # refused raw-IP dials. Host-process jobs stay on block.
           egress-policy: audit
 
       - name: Checkout source code
@@ -49,7 +52,7 @@ jobs:
           # SARIF output ignores the severity filter unless this is set,
           # which makes exit-code fire on LOW/MEDIUM noise.
           limit-severities-for-sarif: true
-          exit-code: '1'
+          exit-code: "1"
 
       - name: Upload findings to code scanning
         if: always()
@@ -67,7 +70,29 @@ jobs:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            uploads.github.com:443
+            api.deps.dev:443
+            api.securityscorecards.dev:443
+            auth.docker.io:443
+            registry-1.docker.io:443
+            production.cloudflare.docker.com:443
+            index.docker.io:443
+            mcr.microsoft.com:443
+            *.data.mcr.microsoft.com:443
+            api.nuget.org:443
+            globalcdn.nuget.org:443
+            registry.npmjs.org:443
+            ghcr.io:443
+            pkg-containers.githubusercontent.com:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+            mirror.gcr.io:443
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,3 +101,35 @@ jobs:
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
+
+  dast:
+    name: dast (ZAP baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Boot the production image against postgres
+        run: |
+          docker compose up -d --build db app
+          for i in $(seq 1 40); do
+            curl -sf http://localhost:8080/healthz > /dev/null 2>&1 && break || sleep 2
+          done
+          curl -sf http://localhost:8080/healthz > /dev/null
+
+      - name: ZAP baseline scan
+        # An attacker's-eye scan of the running production image. Accepted
+        # findings live in .zap/rules.tsv with their reasoning.
+        run: |
+          docker run --rm --network host -v "$PWD/.zap":/zap/wrk:ro \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8080 -c rules.tsv
+
+      - name: App logs
+        if: always()
+        run: docker compose logs app 2>&1 | tail -40 || true
