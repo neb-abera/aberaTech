@@ -12,8 +12,7 @@ on:
 permissions:
   contents: read
 
-jobs:
-  analyze:
+jobs:  analyze:
     name: analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
