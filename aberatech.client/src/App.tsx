@@ -12,6 +12,7 @@ const MilitaryTransitionGuide = React.lazy(
 );
 const CoursePlanner = React.lazy(() => import("./views/CoursePlanner"));
 const ScheduleTime = React.lazy(() => import("./views/ScheduleTime"));
+const Fitness = React.lazy(() => import("./views/Fitness"));
 const ScheduleAdmin = React.lazy(() => import("./views/ScheduleAdmin"));
 const Guides = React.lazy(() => import("./views/Guides"));
 const Projects = React.lazy(() => import("./views/Projects"));
@@ -33,6 +34,7 @@ function App() {
           <Route path="technical" element={<TechnicalTransitionGuide />} />
           <Route path="planner" element={<CoursePlanner />} />
           <Route path="schedule" element={<ScheduleTime />} />
+          <Route path="fitness" element={<Fitness />} />
           <Route path="schedule/admin" element={<ScheduleAdmin />} />
         </Routes>
       </Suspense>

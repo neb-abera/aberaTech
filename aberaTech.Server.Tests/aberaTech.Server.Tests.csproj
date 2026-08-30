@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\aberaTech.Fitness\aberaTech.Fitness.csproj" />
     <ProjectReference Include="..\aberaTech.Scheduling\aberaTech.Scheduling.csproj" />
     <ProjectReference Include="..\aberaTech.Server\aberaTech.Server.csproj" />
   </ItemGroup>

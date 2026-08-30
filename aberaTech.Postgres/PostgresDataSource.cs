@@ -1,8 +1,9 @@
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace aberaTech.Scheduling.Data;
+namespace aberaTech.Postgres;
 
 /// <summary>How the application proves who it is to Postgres.</summary>
 public sealed class DatabaseOptions
@@ -25,7 +26,7 @@ public sealed class DatabaseOptions
     public bool UseEntraAuth { get; set; }
 }
 
-public static class SchedulingDataSource
+public static class PostgresDataSource
 {
     /// <summary>
     /// The scope Azure Database for PostgreSQL issues access tokens for.
