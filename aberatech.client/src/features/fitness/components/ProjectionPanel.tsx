@@ -1,0 +1,343 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Grid from "@mui/material/Grid";
+import MenuItem from "@mui/material/MenuItem";
+import Slider from "@mui/material/Slider";
+import Stack from "@mui/material/Stack";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import {
+  fetchPrediction,
+  fetchRequiredDose,
+  type Prediction,
+  type RequiredDose,
+  type Summary,
+} from "../core/api";
+import {
+  formatSeconds,
+  kgToLb,
+  lbToKg,
+  metricLabel,
+  monthsFromNow,
+} from "../core/format";
+import { ProjectionChart } from "./charts";
+
+const MILE = 1609.344;
+
+const GOAL_DISTANCES: Record<string, number> = {
+  "run-1.5mi": 1.5 * MILE,
+  "run-2mi": 2 * MILE,
+  "run-5mi": 5 * MILE,
+  "run-10mi": 10 * MILE,
+};
+
+/**
+ * The adjustable-factors panel: dose, compliance and bodyweight in, projected
+ * times and goal dates out — and the inverse, a goal and a date in, the
+ * required dose out. All math happens server-side; this renders it.
+ */
+export default function ProjectionPanel({ summary }: { summary: Summary }) {
+  const currentWeightLb = summary.settings.currentWeightKg
+    ? Math.round(kgToLb(summary.settings.currentWeightKg))
+    : null;
+
+  const [weeklyHours, setWeeklyHours] = React.useState(6.75);
+  const [compliance, setCompliance] = React.useState(85);
+  const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(currentWeightLb);
+  const [prediction, setPrediction] = React.useState<Prediction | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      const weightKg =
+        targetWeightLb !== null && targetWeightLb !== currentWeightLb
+          ? lbToKg(targetWeightLb)
+          : null;
+      fetchPrediction(weeklyHours, compliance / 100, weightKg)
+        .then((result) => {
+          if (!cancelled) {
+            setPrediction(result);
+            setError(null);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setError("Could not compute the projection.");
+          }
+        });
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [weeklyHours, compliance, targetWeightLb, currentWeightLb]);
+
+  return (
+    <Stack spacing={3}>
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            The factors you control
+          </Typography>
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Typography gutterBottom variant="body2">
+                Weekly endurance hours: <strong>{weeklyHours.toFixed(2)}</strong>
+              </Typography>
+              <Slider
+                aria-label="Weekly endurance hours"
+                min={1}
+                max={12}
+                step={0.25}
+                value={weeklyHours}
+                onChange={(_, value) => setWeeklyHours(value as number)}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Typography gutterBottom variant="body2">
+                Compliance: <strong>{compliance}%</strong>
+              </Typography>
+              <Slider
+                aria-label="Compliance percent"
+                min={30}
+                max={100}
+                step={5}
+                value={compliance}
+                onChange={(_, value) => setCompliance(value as number)}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Typography gutterBottom variant="body2">
+                Race weight:{" "}
+                <strong>{targetWeightLb === null ? "—" : `${targetWeightLb} lb`}</strong>
+              </Typography>
+              <Slider
+                aria-label="Race weight in pounds"
+                min={currentWeightLb ? currentWeightLb - 17 : 140}
+                max={currentWeightLb ? currentWeightLb + 17 : 210}
+                step={1}
+                disabled={currentWeightLb === null}
+                value={targetWeightLb ?? 174}
+                onChange={(_, value) => setTargetWeightLb(value as number)}
+              />
+              {currentWeightLb === null && (
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Log a weigh-in on the Data tab to unlock the weight factor.
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {error && <Alert severity="error">{error}</Alert>}
+
+      {prediction && (
+        <>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6">Projected fitness</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                Effective dose {prediction.effectiveHours.toFixed(1)} h/week, supporting a
+                ceiling of VDOT {prediction.ceiling.toFixed(1)}.
+              </Typography>
+              <ProjectionChart
+                curve={prediction.curve}
+                engineVdot={43}
+                goals={prediction.goals
+                  .filter((g) => GOAL_DISTANCES[g.metric])
+                  .map((g) => ({
+                    vdot: g.targetVdot,
+                    label: `${metricLabel(g.metric)} ${formatSeconds(g.targetValue)}`,
+                  }))}
+              />
+              <Table size="small" sx={{ mt: 1 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Horizon</TableCell>
+                    <TableCell align="right">VDOT</TableCell>
+                    <TableCell align="right">1.5 mile</TableCell>
+                    <TableCell align="right">2 mile</TableCell>
+                    <TableCell align="right">5 mile</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {prediction.checkpoints.map((point) => (
+                    <TableRow key={point.months}>
+                      <TableCell>
+                        {point.months === 0 ? "Now" : monthsFromNow(point.months)}
+                      </TableCell>
+                      <TableCell align="right">{point.vdot.toFixed(1)}</TableCell>
+                      <TableCell align="right">
+                        {formatSeconds(point.oneAndAHalfMileSeconds)}
+                      </TableCell>
+                      <TableCell align="right">{formatSeconds(point.twoMileSeconds)}</TableCell>
+                      <TableCell align="right">{formatSeconds(point.fiveMileSeconds)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {prediction.goals.length > 0 && (
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Your goals at this dose
+                </Typography>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Goal</TableCell>
+                      <TableCell align="right">Target</TableCell>
+                      <TableCell align="right">Arrives</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {prediction.goals.map((goal) => (
+                      <TableRow key={goal.metric}>
+                        <TableCell>{metricLabel(goal.metric)}</TableCell>
+                        <TableCell align="right">{formatSeconds(goal.targetValue)}</TableCell>
+                        <TableCell align="right">
+                          {goal.monthsToReach === null
+                            ? "not at this dose"
+                            : monthsFromNow(goal.monthsToReach)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 0.5 }}>
+                Model assumptions
+              </Typography>
+              {prediction.assumptions.map((assumption) => (
+                <Typography
+                  key={assumption}
+                  variant="body2"
+                  sx={{ color: "text.secondary", mb: 0.5 }}
+                >
+                  {assumption}
+                </Typography>
+              ))}
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Bracketed keys are cited in full under Sources.
+              </Typography>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      <GoalSeek />
+    </Stack>
+  );
+}
+
+/** The inverse question: name the goal and the date, get the required dose. */
+function GoalSeek() {
+  const [metric, setMetric] = React.useState("run-2mi");
+  const [minutes, setMinutes] = React.useState("12:15");
+  const [months, setMonths] = React.useState(18);
+  const [result, setResult] = React.useState<RequiredDose | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const compute = async () => {
+    const parts = minutes.split(":").map(Number);
+    const seconds =
+      parts.length === 2 && parts.every((p) => Number.isFinite(p))
+        ? parts[0] * 60 + parts[1]
+        : Number.NaN;
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      setError("Time must look like 12:15.");
+      return;
+    }
+
+    try {
+      setResult(await fetchRequiredDose(GOAL_DISTANCES[metric], seconds, months, 0.9));
+      setError(null);
+    } catch {
+      setError("Could not compute the required dose.");
+    }
+  };
+
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
+          What would it take?
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+          Pick the goal and the deadline; the model answers with the weekly dose
+          that gets there, assuming 90% compliance.
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
+          <TextField
+            select
+            label="Goal"
+            value={metric}
+            onChange={(event) => setMetric(event.target.value)}
+            sx={{ minWidth: 160 }}
+          >
+            {Object.keys(GOAL_DISTANCES).map((key) => (
+              <MenuItem key={key} value={key}>
+                {metricLabel(key)}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Target time"
+            value={minutes}
+            onChange={(event) => setMinutes(event.target.value)}
+            sx={{ width: 140 }}
+          />
+          <TextField
+            label="Months from now"
+            type="number"
+            value={months}
+            onChange={(event) => setMonths(Number(event.target.value))}
+            sx={{ width: 160 }}
+          />
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Button variant="contained" onClick={compute}>
+              Compute
+            </Button>
+          </Box>
+        </Stack>
+        {error && <Alert severity="error">{error}</Alert>}
+        {result && (
+          <Alert severity={result.requiredEffectiveHours === null ? "warning" : "info"}>
+            {result.requiredWeeklyHoursAtCompliance !== null &&
+              result.requiredEffectiveHours !== null &&
+              result.requiredEffectiveHours > 0 && (
+                <>
+                  Requires about{" "}
+                  <strong>
+                    {result.requiredWeeklyHoursAtCompliance.toFixed(1)} planned hours/week
+                  </strong>{" "}
+                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT{" "}
+                  {result.targetVdot.toFixed(1)}).{" "}
+                </>
+              )}
+            {result.verdict}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

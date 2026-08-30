@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\aberaTech.Scheduling\aberaTech.Scheduling.csproj" />
+    <ProjectReference Include="..\aberaTech.Fitness\aberaTech.Fitness.csproj" />
     <!--
       For the IDE and for `dotnet run` on a developer machine: it is what makes
       F5 start the vite dev server. The container build sets SkipClientProject,
