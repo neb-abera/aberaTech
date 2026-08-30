@@ -32,6 +32,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       # Step 1: Checkout the Repository
       - name: Checkout Source Code
@@ -57,7 +58,7 @@ jobs:
           subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to Azure Container Registry (ACR)
-        run: az acr login --name ${CONTAINER_REGISTRY_LOGIN_SERVER%%.*}
+        run: az acr login --name "${CONTAINER_REGISTRY_LOGIN_SERVER%%.*}"
 
       # Step 4: Build and push Docker image to ACR
       - name: Build and Push Docker Image
@@ -93,6 +94,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: build
     steps:
       # Step 5: Azure CLI Login with Federated Credentials
@@ -139,6 +141,7 @@ jobs:
   # miss each, not correctness.
   purge-edge-cache:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: deploy
     steps:
       - name: Purge Cloudflare cache

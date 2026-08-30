@@ -1,0 +1,23 @@
+# The status-check contexts the "standard" ruleset on master requires, one
+# per line. This file is the in-repo mirror of that list:
+# scripts/check-required-contexts.sh (run by the lint job) fails CI whenever
+# this list and the PR-gating job names drift apart, in either direction.
+#
+# Changing a job name, adding a PR-gating job, or changing the ruleset means
+# updating both sides:
+#
+#   gh api repos/neb-abera/aberaTech/rulesets/3113290 \
+#     --jq '.rules[] | select(.type=="required_status_checks")'
+#
+Compose database boots healthy
+Lint and format, in the container
+Production image, in the container
+Scheduling unit tests, in the container
+Type check and unit tests, in the container
+analyze (actions)
+analyze (csharp)
+analyze (javascript-typescript)
+container scan (trivy)
+dast (ZAP baseline)
+dependency review
+lint (actionlint + shellcheck)
