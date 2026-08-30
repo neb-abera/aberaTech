@@ -5,6 +5,29 @@
     <link rel="icon" type="image/png" href="/fingerprint_24dp_E8EAED.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Built by Neb using .NET</title>
+    <!--
+      Prefetch pages when a link looks likely to be used (hover/press), so
+      navigating between the prerendered pages is near-instant. The API routes
+      are excluded: speculating a GET against the scheduling API would be a
+      real request with real rate-limit budget. The CSP covers this inline
+      script automatically - hashes are computed from the shipped HTML at
+      startup.
+    -->
+    <script type="speculationrules">
+      {
+        "prefetch": [
+          {
+            "where": {
+              "and": [
+                { "href_matches": "/*" },
+                { "not": { "href_matches": "/api/*" } }
+              ]
+            },
+            "eagerness": "moderate"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
