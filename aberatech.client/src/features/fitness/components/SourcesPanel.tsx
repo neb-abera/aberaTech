@@ -17,7 +17,9 @@ export default function SourcesPanel() {
   const [citations, setCitations] = React.useState<Citation[] | null>(null);
 
   React.useEffect(() => {
-    fetchCitations().then(setCitations).catch(() => setCitations([]));
+    fetchCitations()
+      .then(setCitations)
+      .catch(() => setCitations([]));
   }, []);
 
   if (citations === null) {

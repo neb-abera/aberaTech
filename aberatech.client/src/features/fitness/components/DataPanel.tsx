@@ -32,12 +32,15 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
   const [activities, setActivities] = React.useState<ActivityRow[]>([]);
 
   const refresh = React.useCallback(() => {
-    fetchActivities().then(setActivities).catch(() => setActivities([]));
+    fetchActivities()
+      .then(setActivities)
+      .catch(() => setActivities([]));
   }, []);
 
   React.useEffect(refresh, [refresh]);
 
-  const upload = (kind: "hevy-csv" | "garmin-csv" | "fit") =>
+  const upload =
+    (kind: "hevy-csv" | "garmin-csv" | "fit") =>
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       event.target.value = "";
@@ -83,8 +86,7 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
             Bring data in
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-            Garmin Connect: Activities page → export CSV for bulk history, or
-            a
+            Garmin Connect: Activities page → export CSV for bulk history, or a
             single activity&apos;s .fit file for full detail. Hevy: Settings →
             Export Data emails a CSV — free tier included.
           </Typography>
