@@ -6,7 +6,7 @@
 # the same SDK it passed on at the laptop. Nothing is installed on the runner
 # but Docker.
 #
-# Three jobs rather than three steps in one, so a red X names which part of the
+# Separate jobs rather than steps in one, so a red X names which part of the
 # repository broke without anybody opening the log.
 name: Checks
 
@@ -158,3 +158,37 @@ jobs:
           load: false
           cache-from: type=gha,scope=servertest
           cache-to: type=gha,scope=servertest,mode=max
+
+  production-image:
+    name: Production image, in the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          # Audit, not block: this job builds/runs containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface as
+          # refused raw-IP dials. Host-process jobs stay on block.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      # The stage the deploy workflow builds on push to master, built here
+      # first. The test and lint stages never run `npm run build` or
+      # `dotnet publish`, so without this job a change could pass every test
+      # and still break the production build — with the deploy to the live
+      # site as the first place it failed.
+      - name: Build the production image stage
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: final
+          push: false
+          load: false
+          cache-from: type=gha,scope=final
+          cache-to: type=gha,scope=final,mode=max
