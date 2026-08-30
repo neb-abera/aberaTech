@@ -19,7 +19,12 @@ public sealed record SettingsDto(
     double PlanMinutesPerWeek,
     double StartVdot,
     string? VdotMeasuredOn,
-    double? CurrentWeightKg);
+    double? CurrentWeightKg,
+    int? BirthYear,
+    double? PastPeakDistanceMeters,
+    double? PastPeakSeconds,
+    int? PastPeakYear,
+    double HomeAltitudeMeters);
 
 public sealed record TrainingPaceDto(
     string Zone,
@@ -44,13 +49,21 @@ public sealed record RaceTimesDto(double Months, double Vdot, double TwoMileSeco
 
 public sealed record GoalOutlookDto(string Metric, double TargetValue, double TargetVdot, string TargetDate, double? MonthsToReach, bool Reachable);
 
+public sealed record RealityCheckDto(
+    double? MeasuredPacePercent,
+    int MeasuredOverDays,
+    double ModelPacePercentNext90Days);
+
 public sealed record PredictionDto(
     double EffectiveHours,
     double Ceiling,
     double WeightAdjustedStartVdot,
+    double? ReclaimVdot,
+    double AltitudePenaltyPercent,
     IReadOnlyList<ProjectionPointDto> Curve,
     IReadOnlyList<RaceTimesDto> Checkpoints,
     IReadOnlyList<GoalOutlookDto> Goals,
+    RealityCheckDto RealityCheck,
     IReadOnlyList<string> Assumptions);
 
 public sealed record RequiredDoseDto(
@@ -70,22 +83,9 @@ public static class FitnessReports
         var weight = await database.BodyMetrics.OrderByDescending(m => m.Date)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var endurance = await database.Activities
-            .Where(a => (a.Sport == "run" || a.Sport == "ruck") && a.DistanceMeters != null && a.AverageHr != null)
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken);
-
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var steadyRuns = endurance
-            .Where(a => a.Sport == "run")
-            .Select(a => new SteadyRun(
-                a.StartedAt.InZone(zone).Date,
-                a.DistanceMeters!.Value,
-                a.DurationSeconds,
-                a.AverageHr!.Value))
-            .ToArray();
-
-        var trend = AerobicAnalysis.MonthlyTrend(steadyRuns, settings.ReferenceHr);
+        var trend = AerobicAnalysis.MonthlyTrend(
+            await SteadyRunsAsync(database, cancellationToken), settings.ReferenceHr);
 
         var weeks = WeeklyVolumes(await database.Activities
             .Where(a => a.Sport == "run" || a.Sport == "ruck")
@@ -128,16 +128,18 @@ public static class FitnessReports
         double weeklyHours,
         double compliance,
         double? targetWeightKg,
+        int currentYear,
         CancellationToken cancellationToken)
     {
         var settings = await SettingsAsync(database, cancellationToken);
         var currentWeight = (await database.BodyMetrics.OrderByDescending(m => m.Date)
             .FirstOrDefaultAsync(cancellationToken))?.WeightKg;
 
+        var altitudePenalty = Altitude.Penalty(settings.HomeAltitudeMeters);
+
         var assumptions = new List<string>
         {
-            "Trajectory: V(t) = C − (C − V0)·e^(−kt), the constant-dose solution of the Banister impulse-response family [banister-impulse-response].",
-            $"Ceiling C = 38 + 1.6 × effective weekly hours, calibrated to documented aerobic-deficiency recoveries [uphill-athlete-aet, seiler-polarized].",
+            "Trajectory: fitness climbs toward a dose-set ceiling, C = 38 + 1.6 × effective weekly hours, calibrated to documented aerobic-deficiency recoveries [banister-impulse-response, uphill-athlete-aet, seiler-polarized].",
             "Race equivalencies via Daniels VDOT [daniels-vdot].",
         };
 
@@ -149,7 +151,22 @@ public static class FitnessReports
                 $"Bodyweight {current:0.0} → {target:0.0} kg scales VDOT by mass ratio (fat-mass change, absolute VO2 preserved; clamped to ±10%) [cureton-added-mass]. Assumed reached by the horizon.");
         }
 
-        var p = new TrajectoryParameters(startVdot);
+        var row = await database.Settings.SingleOrDefaultAsync(r => r.Id == 1, cancellationToken)
+                  ?? new AthleteSettings { Id = 1 };
+        var reclaimVdot = ReclaimVdotFrom(row, currentYear);
+        if (reclaimVdot is not null)
+        {
+            assumptions.Add(
+                $"You have held VDOT {reclaimVdot:0.0} before (age-adjusted [wma-age-grading]); fitness up to that level is reclaimed at {Retraining.ReclaimRateMultiplier:0.0}× the de-novo rate — detrained athletes are not beginners [mujika-retraining, muscle-memory]. Only territory beyond the lifetime best moves at the slow rate.");
+        }
+
+        if (altitudePenalty > 0)
+        {
+            assumptions.Add(
+                $"Times shown for your home altitude ({settings.HomeAltitudeMeters:0} m): aerobic races run ~{altitudePenalty:P1} slower there than at sea level [peronnet-altitude]. The anchor and past peak are assumed run at the same altitude.");
+        }
+
+        var p = new TrajectoryParameters(startVdot, reclaimVdot);
         var effective = Trajectory.EffectiveHours(weeklyHours, compliance);
         var ceiling = Trajectory.Ceiling(p, effective);
 
@@ -165,9 +182,9 @@ public static class FitnessReports
                 var v = Trajectory.VdotAt(p, effective, m);
                 return new RaceTimesDto(
                     m, v,
-                    Vdot.MinutesFor(2 * Vdot.MileMeters, v) * 60,
-                    Vdot.MinutesFor(5 * Vdot.MileMeters, v) * 60,
-                    Vdot.MinutesFor(1.5 * Vdot.MileMeters, v) * 60);
+                    Altitude.AtAltitude(Vdot.MinutesFor(2 * Vdot.MileMeters, v) * 60, settings.HomeAltitudeMeters),
+                    Altitude.AtAltitude(Vdot.MinutesFor(5 * Vdot.MileMeters, v) * 60, settings.HomeAltitudeMeters),
+                    Altitude.AtAltitude(Vdot.MinutesFor(1.5 * Vdot.MileMeters, v) * 60, settings.HomeAltitudeMeters));
             })
             .ToArray();
 
@@ -176,25 +193,70 @@ public static class FitnessReports
         {
             if (RunGoalDistanceMeters(goal.Metric) is not { } distance) continue;
 
-            var targetVdot = Vdot.FromRace(distance, goal.TargetValue / 60.0);
+            // The goal time will be run at home altitude, so its difficulty in
+            // VDOT terms is its sea-level equivalent.
+            var targetVdot = Vdot.FromRace(
+                distance,
+                Altitude.ToSeaLevel(goal.TargetValue, settings.HomeAltitudeMeters) / 60.0);
             var months = Trajectory.MonthsToReach(p, effective, targetVdot);
             goals.Add(new GoalOutlookDto(
                 goal.Metric, goal.TargetValue, targetVdot, goal.TargetDate.ToString("yyyy-MM-dd", null),
                 months, months is not null));
         }
 
-        return new PredictionDto(effective, ceiling, startVdot, curve, checkpoints, goals, assumptions);
+        var realityCheck = await RealityCheckAsync(database, settings.ReferenceHr, p, effective, cancellationToken);
+
+        return new PredictionDto(
+            effective, ceiling, startVdot, reclaimVdot, altitudePenalty * 100,
+            curve, checkpoints, goals, realityCheck, assumptions);
+    }
+
+    /// <summary>
+    /// The model against the athlete's own data: measured normalized-pace
+    /// improvement between the first and last month with runs, next to what
+    /// the current sliders project for the coming 90 days. Pace and VDOT move
+    /// nearly proportionally over these ranges, so the two percentages are
+    /// comparable.
+    /// </summary>
+    private static async Task<RealityCheckDto> RealityCheckAsync(
+        FitnessDbContext database,
+        int referenceHr,
+        TrajectoryParameters p,
+        double effectiveHours,
+        CancellationToken cancellationToken)
+    {
+        var trend = AerobicAnalysis.MonthlyTrend(await SteadyRunsAsync(database, cancellationToken), referenceHr);
+
+        double? measured = null;
+        var days = 0;
+        if (trend.Count >= 2)
+        {
+            var first = trend[0];
+            var last = trend[^1];
+            measured = (first.MedianNormalizedSecPerKm - last.MedianNormalizedSecPerKm)
+                       / first.MedianNormalizedSecPerKm * 100;
+            days = ((last.Year - first.Year) * 12 + (last.Month - first.Month)) * 30;
+        }
+
+        var now = Vdot.MinutesFor(2 * Vdot.MileMeters, p.StartVdot);
+        var inNinety = Vdot.MinutesFor(2 * Vdot.MileMeters, Trajectory.VdotAt(p, effectiveHours, 3));
+        var model = (now - inNinety) / now * 100;
+
+        return new RealityCheckDto(measured, days, model);
     }
 
     public static RequiredDoseDto RequiredDose(
         double startVdot,
+        double? reclaimVdot,
+        double homeAltitudeMeters,
         double distanceMeters,
         double targetSeconds,
         double monthsAvailable,
         double compliance)
     {
-        var targetVdot = Vdot.FromRace(distanceMeters, targetSeconds / 60.0);
-        var p = new TrajectoryParameters(startVdot);
+        var targetVdot = Vdot.FromRace(
+            distanceMeters, Altitude.ToSeaLevel(targetSeconds, homeAltitudeMeters) / 60.0);
+        var p = new TrajectoryParameters(startVdot, reclaimVdot);
         var requiredEffective = Trajectory.HoursToReach(p, targetVdot, monthsAvailable);
 
         string verdict;
@@ -218,6 +280,28 @@ public static class FitnessReports
         return new RequiredDoseDto(startVdot, targetVdot, monthsAvailable, requiredEffective, weekly, verdict);
     }
 
+    /// <summary>The age-adjusted reclaimable peak from stored settings, if any.</summary>
+    internal static double? ReclaimVdotFrom(AthleteSettings row, int currentYear)
+    {
+        if (row.PastPeakDistanceMeters is not { } distance || row.PastPeakSeconds is not { } seconds)
+        {
+            return null;
+        }
+
+        var peakVdot = Vdot.FromRace(
+            distance, Altitude.ToSeaLevel(seconds, row.HomeAltitudeMeters) / 60.0);
+
+        if (row is { BirthYear: { } birthYear, PastPeakYear: { } peakYear })
+        {
+            return Retraining.AgeAdjustedPeak(
+                peakVdot,
+                ageAtPeak: Math.Max(0, peakYear - birthYear),
+                ageNow: Math.Max(peakYear - birthYear, currentYear - birthYear));
+        }
+
+        return peakVdot;
+    }
+
     internal static double? RunGoalDistanceMeters(string metric) => metric switch
     {
         "run-1.5mi" => 1.5 * Vdot.MileMeters,
@@ -226,6 +310,24 @@ public static class FitnessReports
         "run-10mi" => 10 * Vdot.MileMeters,
         _ => null
     };
+
+    private static async Task<IReadOnlyList<SteadyRun>> SteadyRunsAsync(
+        FitnessDbContext database, CancellationToken cancellationToken)
+    {
+        var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var runs = await database.Activities
+            .Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null)
+            .OrderBy(a => a.StartedAt)
+            .ToListAsync(cancellationToken);
+
+        return runs
+            .Select(a => new SteadyRun(
+                a.StartedAt.InZone(zone).Date,
+                a.DistanceMeters!.Value,
+                a.DurationSeconds,
+                a.AverageHr!.Value))
+            .ToArray();
+    }
 
     private static async Task<SettingsDto> SettingsAsync(FitnessDbContext database, CancellationToken cancellationToken)
     {
@@ -238,7 +340,12 @@ public static class FitnessReports
             row.PlanMinutesPerWeek,
             row.StartVdot,
             row.VdotMeasuredOn?.ToString("yyyy-MM-dd", null),
-            null);
+            null,
+            row.BirthYear,
+            row.PastPeakDistanceMeters,
+            row.PastPeakSeconds,
+            row.PastPeakYear,
+            row.HomeAltitudeMeters);
     }
 
     private static IReadOnlyList<WeekVolumeDto> WeeklyVolumes(List<Activity> endurance, DateTimeZone zone)
