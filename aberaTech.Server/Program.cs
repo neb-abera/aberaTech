@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using System.Threading.RateLimiting;
 using aberaTech.Server;
 using aberaTech.Scheduling;
@@ -17,6 +18,15 @@ using NodaTime;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Observability: OpenTelemetry traces, metrics and logs shipped to Azure
+// Monitor when APPLICATIONINSIGHTS_CONNECTION_STRING is set (the container
+// app sets it; local runs stay silent). The availability alerts tell us
+// *that* something broke; this is how we see *why*.
+if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+{
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
