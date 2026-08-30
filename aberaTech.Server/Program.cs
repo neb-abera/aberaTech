@@ -157,6 +157,13 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 // Partitioned by remote address, with a queue limit of zero: excess requests are
 // rejected outright rather than held, because holding them is itself a way to
 // exhaust the server.
+// Compress what leaves the origin. Cloudflare compresses edge-to-browser
+// regardless, but a cache MISS travels origin-to-edge as sent — and the
+// template and Facewoof both learned this the measured way. EnableForHttps is
+// safe here for the same reason it is there: no secrets appear in
+// compressible responses (BREACH needs both in one body).
+builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -173,6 +180,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 // Container Apps ingress terminates TLS and forwards over HTTP. Without this,
 // every request appears to come from the ingress over plain HTTP: the rate
