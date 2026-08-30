@@ -66,12 +66,19 @@ for (const code of codes) {
   const expected = courses[code].title;
   const { status, body } = await get(catalogueUrl(code));
   const m = BLOCK.exec(body);
-  const catalogueTitle = m
-    ? m[2]
-        .replace(/<[^>]+>/g, "")
-        .replace(/&amp;/g, "&")
-        .trim()
-    : null;
+  // Strip tags until none remain: a single pass over crafted input can
+  // leave a fragment like "<scr<script>ipt" behind (CodeQL
+  // js/incomplete-multi-character-sanitization).
+  let strippedTitle = m ? m[2] : null;
+  if (strippedTitle !== null) {
+    let before;
+    do {
+      before = strippedTitle;
+      strippedTitle = strippedTitle.replace(/<[^>]*>/g, "");
+    } while (strippedTitle !== before);
+    strippedTitle = strippedTitle.replace(/&amp;/g, "&").trim();
+  }
+  const catalogueTitle = strippedTitle;
   const titleMatches =
     Boolean(catalogueTitle) && norm(catalogueTitle) === norm(expected);
   const row = { httpStatus: status, catalogueTitle, titleMatches };
