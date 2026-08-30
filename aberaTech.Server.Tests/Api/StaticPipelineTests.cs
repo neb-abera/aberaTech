@@ -40,6 +40,7 @@ public sealed class StaticPipelineTests : IDisposable
                 // No database: the app is designed to boot without one, and
                 // these tests are about the static pipeline alone.
                 builder.UseSetting("ConnectionStrings:Scheduling", "");
+                builder.UseSetting("ConnectionStrings:Fitness", "");
             });
     }
 

@@ -135,6 +135,11 @@ services:
       # that looks like a bug.
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Scheduling: 'Host=db;Port=5432;Database=scheduling;Username=scheduling;Password=scheduling'
+      # The fitness database rides the same local Postgres; EF creates it on
+      # first start. DevelopmentOwner skips sign-in — Development only, see
+      # FitnessGate — so /fitness works out of the box.
+      ConnectionStrings__Fitness: 'Host=db;Port=5432;Database=fitness;Username=scheduling;Password=scheduling'
+      Fitness__DevelopmentOwner: 'true'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #

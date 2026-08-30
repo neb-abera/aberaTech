@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The one way this codebase connects to Postgres. Scheduling and Fitness both
+    talk to the same shared Azure server (abera-postgres, one B1ms serving every
+    app), so the pool sizing and the Entra token plumbing live here once rather
+    than being copied into each feature library and drifting apart.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="Npgsql.NodaTime" Version="10.0.3" />
+  </ItemGroup>
+
+</Project>

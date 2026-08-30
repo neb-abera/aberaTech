@@ -13,6 +13,11 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
+using aberaTech.Fitness;
+using aberaTech.Fitness.Api;
+using aberaTech.Fitness.Data;
+using aberaTech.Fitness.Ingest;
+using aberaTech.Postgres;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Npgsql;
@@ -69,7 +74,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     // One data source for the process. It owns the connection pool and, with
     // Entra auth, the token refresh — so the token is fetched on a timer for the
     // whole application rather than per connection.
-    builder.Services.AddSingleton(services => SchedulingDataSource.Build(
+    builder.Services.AddSingleton(services => PostgresDataSource.Build(
         connectionString,
         databaseOptions,
         services.GetRequiredService<ILoggerFactory>()));
@@ -157,6 +162,61 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         }
     }
     builder.Services.AddHostedService<OutboxDispatcher>();
+}
+
+// ---------------------------------------------------------------- fitness
+
+// Personal training data and predictions. Fails closed three separate ways on
+// purpose: no database connection, no allowlist, or no Google credentials for
+// the sign-in schemes each mean the endpoints are never mapped at all. The one
+// exception is the explicit Development-only owner bypass, decided by
+// FitnessGate, so `make up` can show the real console against the local
+// loopback database without a Google project.
+var fitnessOptions = builder.Configuration.GetSection(FitnessOptions.Section).Get<FitnessOptions>()
+                     ?? new FitnessOptions();
+builder.Services.AddSingleton(fitnessOptions);
+
+var fitnessConnection = builder.Configuration.GetConnectionString("Fitness");
+var fitnessRequiresSignIn = FitnessGate.RequiresOwnerSignIn(
+    builder.Environment.IsDevelopment(), fitnessOptions);
+var fitnessEnabled = FitnessGate.IsEnabled(
+    builder.Environment.IsDevelopment(), fitnessOptions, adminOptions.IsConfigured, fitnessConnection);
+
+if (fitnessEnabled)
+{
+    if (fitnessRequiresSignIn)
+    {
+        builder.Services.AddFitnessAuthorization(fitnessOptions);
+    }
+
+    // Its own data source: a different database on the same shared server, so
+    // it cannot share scheduling's. Keyed, because the container can only hold
+    // one unkeyed NpgsqlDataSource and scheduling already is it.
+    var fitnessDatabaseOptions = builder.Configuration.GetSection(aberaTech.Postgres.DatabaseOptions.Section)
+                                     .Get<aberaTech.Postgres.DatabaseOptions>()
+                                 ?? new aberaTech.Postgres.DatabaseOptions();
+
+    builder.Services.AddKeyedSingleton(
+        "fitness-db",
+        (services, _) => PostgresDataSource.Build(
+            fitnessConnection!,
+            fitnessDatabaseOptions,
+            services.GetRequiredService<ILoggerFactory>()));
+
+    builder.Services.AddDbContext<FitnessDbContext>((services, options) =>
+        options.UseNpgsql(
+            services.GetRequiredKeyedService<NpgsqlDataSource>("fitness-db"),
+            npgsql => npgsql.UseNodaTime()));
+
+    if (fitnessOptions.HasHevyApi)
+    {
+        builder.Services.AddHttpClient<HevyApiClient>(client =>
+        {
+            client.BaseAddress = new Uri(HevyApiClient.BaseAddress);
+            client.DefaultRequestHeaders.Add("api-key", fitnessOptions.HevyApiKey);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+    }
 }
 
 // Rate limiting on everything a stranger can call that writes a row or causes a
@@ -368,6 +428,22 @@ else
     // Deployed without a database yet. The tab is visible either way, so it has
     // to explain itself rather than break.
     app.MapSchedulingUnavailable(schedulingOptions);
+}
+
+if (fitnessEnabled)
+{
+    // Same single-writer reasoning as the scheduling migration above.
+    using (var scope = app.Services.CreateScope())
+    {
+        var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
+        await database.Database.MigrateAsync();
+    }
+
+    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn);
+}
+else
+{
+    app.MapFitnessUnavailable();
 }
 
 // Running the queue needs a database *and* credentials, so the "not configured"
