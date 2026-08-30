@@ -168,19 +168,26 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
 // Personal training data and predictions. Fails closed three separate ways on
 // purpose: no database connection, no allowlist, or no Google credentials for
-// the sign-in schemes each mean the endpoints are never mapped at all.
+// the sign-in schemes each mean the endpoints are never mapped at all. The one
+// exception is the explicit Development-only owner bypass, decided by
+// FitnessGate, so `make up` can show the real console against the local
+// loopback database without a Google project.
 var fitnessOptions = builder.Configuration.GetSection(FitnessOptions.Section).Get<FitnessOptions>()
                      ?? new FitnessOptions();
 builder.Services.AddSingleton(fitnessOptions);
 
 var fitnessConnection = builder.Configuration.GetConnectionString("Fitness");
-var fitnessEnabled = !string.IsNullOrWhiteSpace(fitnessConnection)
-                     && fitnessOptions.IsConfigured
-                     && adminOptions.IsConfigured;
+var fitnessRequiresSignIn = FitnessGate.RequiresOwnerSignIn(
+    builder.Environment.IsDevelopment(), fitnessOptions);
+var fitnessEnabled = FitnessGate.IsEnabled(
+    builder.Environment.IsDevelopment(), fitnessOptions, adminOptions.IsConfigured, fitnessConnection);
 
 if (fitnessEnabled)
 {
-    builder.Services.AddFitnessAuthorization(fitnessOptions);
+    if (fitnessRequiresSignIn)
+    {
+        builder.Services.AddFitnessAuthorization(fitnessOptions);
+    }
 
     // Its own data source: a different database on the same shared server, so
     // it cannot share scheduling's. Keyed, because the container can only hold
@@ -432,7 +439,7 @@ if (fitnessEnabled)
         await database.Database.MigrateAsync();
     }
 
-    app.MapFitnessEndpoints(fitnessOptions);
+    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn);
 }
 else
 {

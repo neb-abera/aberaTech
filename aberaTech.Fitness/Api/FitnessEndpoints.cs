@@ -40,9 +40,16 @@ public static class FitnessEndpoints
         return services;
     }
 
-    public static IEndpointRouteBuilder MapFitnessEndpoints(this IEndpointRouteBuilder routes, FitnessOptions options)
+    public static IEndpointRouteBuilder MapFitnessEndpoints(
+        this IEndpointRouteBuilder routes,
+        FitnessOptions options,
+        bool requireOwnerSignIn = true)
     {
-        var api = routes.MapGroup("/api/fitness").RequireAuthorization(PolicyName);
+        var group = routes.MapGroup("/api/fitness");
+
+        // The Development bypass is the one case with no policy: sign-in is
+        // skipped entirely, decided by FitnessGate, never by this default.
+        var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group;
 
         // Who am I — the one anonymous route, so the page can decide whether to
         // show a sign-in button or the dashboard. Discloses nothing but the
@@ -50,11 +57,12 @@ public static class FitnessEndpoints
         routes.MapGet("/api/fitness/me", (HttpContext context) =>
         {
             var email = context.User.FindFirstValue(ClaimTypes.Email);
-            var allowed = options.Allows(email);
+            var signedIn = !requireOwnerSignIn
+                           || (context.User.Identity?.IsAuthenticated == true && options.Allows(email));
             return Results.Ok(new
             {
                 configured = true,
-                signedIn = context.User.Identity?.IsAuthenticated == true && allowed,
+                signedIn,
                 hevyApi = options.HasHevyApi
             });
         });
