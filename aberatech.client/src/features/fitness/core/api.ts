@@ -43,12 +43,21 @@ export interface Highlight {
   positive: boolean;
 }
 
+export interface TrainingPace {
+  zone: string;
+  name: string;
+  purpose: string;
+  fastSecPerKm: number;
+  slowSecPerKm: number;
+}
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
   weeklyVolume: WeekVolume[];
   strengthTrend: E1RmPoint[];
   highlights: Highlight[];
+  trainingPaces: TrainingPace[];
   deficiencySpread: number | null;
   activityCount: number;
 }
@@ -86,6 +95,7 @@ export interface Prediction {
 }
 
 export interface RequiredDose {
+  startVdot: number;
   targetVdot: number;
   monthsAvailable: number;
   requiredEffectiveHours: number | null;
