@@ -84,9 +84,12 @@ jobs:
         run: |
           [ -n "${GITHUB_STEP_SUMMARY:-}" ] || exit 0
           sed 's/\x1b\[[0-9;]*m//g' clienttest-build.log > clienttest-build.clean
-          tests=$(grep -Eo 'Tests[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1)
-          files=$(grep -Eo 'Test Files[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1)
-          lines=$(grep -Eo 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' clienttest-build.clean | tail -1 | grep -Eo '[0-9.]+')
+          # `|| true`: the runner shell is bash -e, and a fully cached build
+          # stage replays no test output — a no-match grep must fall through
+          # to the guard below, not fail the step.
+          tests=$(grep -Eo 'Tests[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          files=$(grep -Eo 'Test Files[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          lines=$(grep -Eo 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' clienttest-build.clean | tail -1 | grep -Eo '[0-9.]+' || true)
           [ -n "${tests:-}" ] || exit 0
           {
             echo "### Client: type check + unit tests (container)"
@@ -221,9 +224,12 @@ jobs:
         run: |
           [ -n "${GITHUB_STEP_SUMMARY:-}" ] || exit 0
           sed 's/\x1b\[[0-9;]*m//g' servertest-build.log > servertest-build.clean
-          passed=$(grep -Eo 'Passed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1)
-          failed=$(grep -Eo 'Failed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1)
-          coverage=$(grep -Eo 'server line coverage: [0-9.]+%' servertest-build.clean | grep -Eo '[0-9.]+%' | tail -1)
+          # `|| true`: the runner shell is bash -e, and a fully cached build
+          # stage replays no test output — a no-match grep must fall through
+          # to the guard below, not fail the step.
+          passed=$(grep -Eo 'Passed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          failed=$(grep -Eo 'Failed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          coverage=$(grep -Eo 'server line coverage: [0-9.]+%' servertest-build.clean | grep -Eo '[0-9.]+%' | tail -1 || true)
           [ -n "${passed:-}" ] || exit 0
           {
             echo "### Scheduling: unit tests (container)"
