@@ -27,14 +27,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:  container-tests:
+jobs:
+  container-tests:
     name: Type check and unit tests, in the container
     runs-on: ubuntu-latest
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-# Audit, not block: this job builds/runs containers, and container-side
+          # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
           # refused raw-IP dials. Host-process jobs stay on block.
           egress-policy: audit
@@ -65,7 +66,7 @@ jobs:  container-tests:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-# Audit, not block: this job builds/runs containers, and container-side
+          # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
           # refused raw-IP dials. Host-process jobs stay on block.
           egress-policy: audit
@@ -101,7 +102,7 @@ jobs:  container-tests:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-# Audit, not block: this job builds/runs containers, and container-side
+          # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
           # refused raw-IP dials. Host-process jobs stay on block.
           egress-policy: audit
@@ -133,7 +134,7 @@ jobs:  container-tests:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-# Audit, not block: this job builds/runs containers, and container-side
+          # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
           # refused raw-IP dials. Host-process jobs stay on block.
           egress-policy: audit
