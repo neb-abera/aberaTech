@@ -6,13 +6,10 @@ import { config as dotenvConfig } from "dotenv";
 // Load .env file before anything else
 dotenvConfig();
 
-console.log("Available ENV variables:", process.env);
-console.log("nebdebug: process.env.IN_DOCKER:", process.env.IN_DOCKER); // Should log 'true'
-
-// Check if we are running inside Docker using the IN_DOCKER environment variable
-console.log("nebdebug: process.env.IN_DOCKER:", process.env.IN_DOCKER);
+// Never log process.env here: with dotenv loaded it holds every secret the
+// shell or CI has, and vite runs this file on every build, so a debug dump
+// lands verbatim in the build logs (CodeQL js/clear-text-logging).
 const isDocker = process.env.IN_DOCKER?.toLowerCase() === "true" || false;
-console.log("nebdebug: Is Docker:", isDocker);
 
 // Define HTTPS config variable (will remain undefined during Docker builds)
 let httpsConfig: { key: string; cert: string } | undefined;
