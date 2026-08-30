@@ -13,7 +13,15 @@ public sealed record SettingsUpdate(
     double? LtSecondsPerKm,
     double PlanMinutesPerWeek,
     double StartVdot,
-    string? VdotMeasuredOn);
+    string? VdotMeasuredOn,
+    int? BirthYear = null,
+    double? PastPeakDistanceMeters = null,
+    double? PastPeakSeconds = null,
+    int? PastPeakYear = null,
+    double HomeAltitudeMeters = 0,
+    // When set, the anchor VDOT is computed from this race instead of StartVdot.
+    double? AnchorDistanceMeters = null,
+    double? AnchorSeconds = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -85,7 +93,8 @@ public static class FitnessEndpoints
             }
 
             var prediction = await FitnessReports.PredictionsAsync(
-                database, weeklyHours, compliance, targetWeightKg, cancellationToken);
+                database, weeklyHours, compliance, targetWeightKg,
+                DateTime.UtcNow.Year, cancellationToken);
             return Results.Ok(prediction);
         });
 
@@ -107,7 +116,10 @@ public static class FitnessEndpoints
                            ?? new AthleteSettings { Id = 1 };
 
             return Results.Ok(FitnessReports.RequiredDose(
-                settings.StartVdot, distanceMeters, targetSeconds, monthsAvailable, compliance));
+                settings.StartVdot,
+                FitnessReports.ReclaimVdotFrom(settings, DateTime.UtcNow.Year),
+                settings.HomeAltitudeMeters,
+                distanceMeters, targetSeconds, monthsAvailable, compliance));
         });
 
         api.MapPost("/import/hevy-csv", async (HttpRequest request, FitnessDbContext database, CancellationToken cancellationToken) =>
@@ -182,11 +194,35 @@ public static class FitnessEndpoints
                 database.Settings.Add(row);
             }
 
+            if (update.HomeAltitudeMeters is < 0 or > 5000)
+            {
+                return Results.BadRequest("Home altitude 0-5000 m.");
+            }
+
             row.ReferenceHr = update.ReferenceHr;
             row.LtSecondsPerKm = update.LtSecondsPerKm;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
-            row.StartVdot = update.StartVdot;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
+            row.BirthYear = update.BirthYear;
+            row.PastPeakDistanceMeters = update.PastPeakDistanceMeters;
+            row.PastPeakSeconds = update.PastPeakSeconds;
+            row.PastPeakYear = update.PastPeakYear;
+            row.HomeAltitudeMeters = update.HomeAltitudeMeters;
+
+            // A race is the honest way to state the anchor; raw VDOT stays as
+            // the escape hatch. The race happened at home altitude, so its
+            // sea-level equivalent is what scores it.
+            if (update is { AnchorDistanceMeters: { } anchorDistance, AnchorSeconds: { } anchorSeconds }
+                && anchorDistance is >= 400 and <= 100_000 && anchorSeconds > 0)
+            {
+                row.StartVdot = Domain.Vdot.FromRace(
+                    anchorDistance,
+                    Domain.Altitude.ToSeaLevel(anchorSeconds, update.HomeAltitudeMeters) / 60.0);
+            }
+            else
+            {
+                row.StartVdot = update.StartVdot;
+            }
 
             await database.SaveChangesAsync(cancellationToken);
             return Results.NoContent();

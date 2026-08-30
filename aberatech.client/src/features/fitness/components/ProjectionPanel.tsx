@@ -72,6 +72,11 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
         )
       : null;
 
+  const easyPace = summary.trainingPaces.find((pace) => pace.zone === "E");
+  const easyPaceMidSecPerKm = easyPace
+    ? (easyPace.fastSecPerKm + easyPace.slowSecPerKm) / 2
+    : null;
+
   const [weeklyHours, setWeeklyHours] = React.useState(6.75);
   const [compliance, setCompliance] = React.useState(measuredCompliance ?? 85);
   const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(
@@ -118,6 +123,20 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
               ? ` (time trial on ${summary.settings.vdotMeasuredOn})`
               : " (default — record a fresh time trial in settings to reset it)"}
             {currentWeightLb !== null && <> at {currentWeightLb} lb</>}
+            {prediction?.reclaimVdot != null && (
+              <>
+                . You have held{" "}
+                <strong>VDOT {prediction.reclaimVdot.toFixed(1)}</strong> before
+                — everything below that line comes back at the retraining rate,
+                not the beginner rate
+              </>
+            )}
+            {prediction && prediction.altitudePenaltyPercent > 0 && (
+              <>
+                . Times shown for your home altitude (+
+                {prediction.altitudePenaltyPercent.toFixed(1)}% vs sea level)
+              </>
+            )}
             {prediction && (
               <>
                 {" "}
@@ -152,6 +171,8 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
               />
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 Endurance sessions you plan to schedule.
+                {easyPaceMidSecPerKm !== null &&
+                  ` ~${Math.round((weeklyHours * 3600) / (easyPaceMidSecPerKm * 1.609))} mi/week at your Easy pace.`}
                 {measuredMinutes !== null &&
                   ` Logged over your last 4 weeks: ${(measuredMinutes / 60).toFixed(1)} h/week.`}
               </Typography>
@@ -218,6 +239,7 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
               <ProjectionChart
                 curve={prediction.curve}
                 engineVdot={43}
+                reclaimVdot={prediction.reclaimVdot}
                 goals={prediction.goals
                   .filter((g) => GOAL_DISTANCES[g.metric])
                   .map((g) => ({
@@ -297,6 +319,38 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
               </CardContent>
             </Card>
           )}
+
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 0.5 }}>
+                Reality check
+              </Typography>
+              {prediction.realityCheck.measuredPacePercent === null ? (
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Import two or more months of runs and this compares the
+                  model&apos;s slope against your actual measured improvement.
+                </Typography>
+              ) : (
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Your HR-normalized pace improved{" "}
+                  <strong>
+                    {prediction.realityCheck.measuredPacePercent.toFixed(1)}%
+                  </strong>{" "}
+                  over roughly {prediction.realityCheck.measuredOverDays} days
+                  of imported runs. At the sliders above, the model projects{" "}
+                  <strong>
+                    {prediction.realityCheck.modelPacePercentNext90Days.toFixed(
+                      1,
+                    )}
+                    %
+                  </strong>{" "}
+                  over the next 90 days. If your measured rate keeps beating the
+                  model, the dates above are conservative — trust the
+                  measurements.
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
 
           <Card variant="outlined">
             <CardContent>
