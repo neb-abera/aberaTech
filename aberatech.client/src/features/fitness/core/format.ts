@@ -26,7 +26,11 @@ export function lbToKg(lb: number): number {
 
 /** Months-from-now to a "Mar 2027" label, anchored at the current month. */
 export function monthsFromNow(months: number, from: Date = new Date()): string {
-  const date = new Date(from.getFullYear(), from.getMonth() + Math.round(months), 1);
+  const date = new Date(
+    from.getFullYear(),
+    from.getMonth() + Math.round(months),
+    1,
+  );
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 

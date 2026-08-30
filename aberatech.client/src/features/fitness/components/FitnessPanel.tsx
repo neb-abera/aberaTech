@@ -11,7 +11,12 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { fetchMe, fetchSummary, type FitnessMe, type Summary } from "../core/api";
+import {
+  fetchMe,
+  fetchSummary,
+  type FitnessMe,
+  type Summary,
+} from "../core/api";
 import { formatPace, kgToLb } from "../core/format";
 import DataPanel from "./DataPanel";
 import ProjectionPanel from "./ProjectionPanel";
@@ -41,7 +46,11 @@ export default function FitnessPanel() {
   }, []);
 
   if (failed) {
-    return <Alert severity="error">The fitness service did not answer. Try a reload.</Alert>;
+    return (
+      <Alert severity="error">
+        The fitness service did not answer. Try a reload.
+      </Alert>
+    );
   }
 
   if (me === null) {
@@ -81,7 +90,11 @@ export default function FitnessPanel() {
 
   return (
     <Stack spacing={3}>
-      <Tabs value={tab} onChange={(_, next) => setTab(next)} aria-label="Fitness sections">
+      <Tabs
+        value={tab}
+        onChange={(_, next) => setTab(next)}
+        aria-label="Fitness sections"
+      >
         <Tab label="Dashboard" />
         <Tab label="Predictions" />
         <Tab label="Data" />
@@ -111,7 +124,10 @@ function Dashboard({ summary }: { summary: Summary }) {
       {summary.highlights.length > 0 && (
         <Grid container spacing={2}>
           {summary.highlights.map((highlight) => (
-            <Grid key={highlight.kind + highlight.headline} size={{ xs: 12, sm: 6 }}>
+            <Grid
+              key={highlight.kind + highlight.headline}
+              size={{ xs: 12, sm: 6 }}
+            >
               <Card variant="outlined" sx={{ height: "100%" }}>
                 <CardContent>
                   <Chip
@@ -137,7 +153,8 @@ function Dashboard({ summary }: { summary: Summary }) {
         <CardContent>
           <Typography variant="h6">Aerobic base</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-            Monthly median pace, HR-normalized to {summary.settings.referenceHr} bpm.
+            Monthly median pace, HR-normalized to{" "}
+            {summary.settings.referenceHr} bpm.
             Falling is fitness.
             {summary.deficiencySpread !== null && (
               <>
@@ -145,7 +162,7 @@ function Dashboard({ summary }: { summary: Summary }) {
                 Aerobic-to-lactate-threshold spread:{" "}
                 <strong>{(summary.deficiencySpread * 100).toFixed(0)}%</strong>
                 {summary.deficiencySpread > 0.1
-                  ? " — above the 10% aerobic-deficiency line; base volume is the fix."
+                  ? " — over the 10% deficiency line; base volume fixes it."
                   : " — inside the 10% line."}
               </>
             )}
@@ -179,7 +196,11 @@ function Dashboard({ summary }: { summary: Summary }) {
                 <Typography key={point.exercise} variant="body2">
                   {point.exercise}:{" "}
                   <strong>{Math.round(kgToLb(point.e1RmKg))} lb</strong>{" "}
-                  <Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
                     (as of {point.date})
                   </Typography>
                 </Typography>
@@ -191,7 +212,11 @@ function Dashboard({ summary }: { summary: Summary }) {
 
       {summary.aerobicTrend.length > 0 && (
         <Typography variant="caption" sx={{ color: "text.secondary" }}>
-          Latest month: {formatPace(summary.aerobicTrend[summary.aerobicTrend.length - 1].medianSecPerKm)}{" "}
+          Latest month:{" "}
+          {formatPace(
+            summary.aerobicTrend[summary.aerobicTrend.length - 1]
+              .medianSecPerKm,
+          )}{" "}
           at {summary.settings.referenceHr} bpm across{" "}
           {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs.
         </Typography>
@@ -201,7 +226,10 @@ function Dashboard({ summary }: { summary: Summary }) {
 }
 
 function latestPerExercise(summary: Summary) {
-  const byExercise = new Map<string, { exercise: string; e1RmKg: number; date: string }>();
+  const byExercise = new Map<
+    string,
+    { exercise: string; e1RmKg: number; date: string }
+  >();
   for (const point of summary.strengthTrend) {
     const existing = byExercise.get(point.exercise);
     if (!existing || existing.date < point.date) {

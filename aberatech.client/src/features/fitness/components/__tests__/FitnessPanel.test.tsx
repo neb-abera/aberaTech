@@ -35,7 +35,9 @@ const emptySummary = {
     { month: "2026-08", medianSecPerKm: 410, runs: 11 },
   ],
   weeklyVolume: [{ weekStart: "2026-08-24", minutes: 85 }],
-  strengthTrend: [{ date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 }],
+  strengthTrend: [
+    { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },
+  ],
   highlights: [
     {
       kind: "aerobic-gain",
@@ -52,7 +54,11 @@ describe("FitnessPanel", () => {
   it("explains an unconfigured deployment instead of erroring", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(json({ configured: false, signedIn: false, hevyApi: false })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          json({ configured: false, signedIn: false, hevyApi: false }),
+        ),
     );
 
     render(<FitnessPanel />);
@@ -63,24 +69,32 @@ describe("FitnessPanel", () => {
   it("offers sign-in and nothing else to the signed-out", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(json({ configured: true, signedIn: false, hevyApi: false })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          json({ configured: true, signedIn: false, hevyApi: false }),
+        ),
     );
 
     render(<FitnessPanel />);
 
-    const button = await screen.findByRole("link", { name: /sign in with google/i });
+    const button = await screen.findByRole("link", {
+      name: /sign in with google/i,
+    });
     expect(button.getAttribute("href")).toContain("returnUrl=/fitness");
     // No data was fetched for a stranger.
     expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the owner their highlights and the deficiency verdict", async () => {
+  it("shows the owner highlights and the deficiency verdict", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation((url: RequestInfo | URL) => {
         const path = String(url);
         if (path.includes("/api/fitness/me")) {
-          return Promise.resolve(json({ configured: true, signedIn: true, hevyApi: false }));
+          return Promise.resolve(
+            json({ configured: true, signedIn: true, hevyApi: false }),
+          );
         }
         if (path.includes("/api/fitness/summary")) {
           return Promise.resolve(json(emptySummary));
@@ -92,7 +106,7 @@ describe("FitnessPanel", () => {
     render(<FitnessPanel />);
 
     await screen.findByText(/aerobic base up 8%/i);
-    await screen.findByText(/above the 10% aerobic-deficiency line/i);
+    await screen.findByText(/over the 10% deficiency line/i);
 
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: /predictions/i })).toBeDefined();

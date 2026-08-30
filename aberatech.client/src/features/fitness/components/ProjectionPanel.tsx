@@ -52,7 +52,9 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
 
   const [weeklyHours, setWeeklyHours] = React.useState(6.75);
   const [compliance, setCompliance] = React.useState(85);
-  const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(currentWeightLb);
+  const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(
+    currentWeightLb,
+  );
   const [prediction, setPrediction] = React.useState<Prediction | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -92,7 +94,8 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Typography gutterBottom variant="body2">
-                Weekly endurance hours: <strong>{weeklyHours.toFixed(2)}</strong>
+                Weekly endurance hours:{" "}
+                <strong>{weeklyHours.toFixed(2)}</strong>
               </Typography>
               <Slider
                 aria-label="Weekly endurance hours"
@@ -119,7 +122,9 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
             <Grid size={{ xs: 12, sm: 4 }}>
               <Typography gutterBottom variant="body2">
                 Race weight:{" "}
-                <strong>{targetWeightLb === null ? "—" : `${targetWeightLb} lb`}</strong>
+                <strong>
+                  {targetWeightLb === null ? "—" : `${targetWeightLb} lb`}
+                </strong>
               </Typography>
               <Slider
                 aria-label="Race weight in pounds"
@@ -147,9 +152,12 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6">Projected fitness</Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-                Effective dose {prediction.effectiveHours.toFixed(1)} h/week, supporting a
-                ceiling of VDOT {prediction.ceiling.toFixed(1)}.
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", mb: 1 }}
+              >
+                Effective dose {prediction.effectiveHours.toFixed(1)} h/week,
+                supporting a ceiling of VDOT {prediction.ceiling.toFixed(1)}.
               </Typography>
               <ProjectionChart
                 curve={prediction.curve}
@@ -158,7 +166,9 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
                   .filter((g) => GOAL_DISTANCES[g.metric])
                   .map((g) => ({
                     vdot: g.targetVdot,
-                    label: `${metricLabel(g.metric)} ${formatSeconds(g.targetValue)}`,
+                    label: `${metricLabel(g.metric)} ${formatSeconds(
+                      g.targetValue,
+                    )}`,
                   }))}
               />
               <Table size="small" sx={{ mt: 1 }}>
@@ -175,14 +185,22 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
                   {prediction.checkpoints.map((point) => (
                     <TableRow key={point.months}>
                       <TableCell>
-                        {point.months === 0 ? "Now" : monthsFromNow(point.months)}
+                        {point.months === 0
+                          ? "Now"
+                          : monthsFromNow(point.months)}
                       </TableCell>
-                      <TableCell align="right">{point.vdot.toFixed(1)}</TableCell>
+                      <TableCell align="right">
+                        {point.vdot.toFixed(1)}
+                      </TableCell>
                       <TableCell align="right">
                         {formatSeconds(point.oneAndAHalfMileSeconds)}
                       </TableCell>
-                      <TableCell align="right">{formatSeconds(point.twoMileSeconds)}</TableCell>
-                      <TableCell align="right">{formatSeconds(point.fiveMileSeconds)}</TableCell>
+                      <TableCell align="right">
+                        {formatSeconds(point.twoMileSeconds)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatSeconds(point.fiveMileSeconds)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -208,7 +226,9 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
                     {prediction.goals.map((goal) => (
                       <TableRow key={goal.metric}>
                         <TableCell>{metricLabel(goal.metric)}</TableCell>
-                        <TableCell align="right">{formatSeconds(goal.targetValue)}</TableCell>
+                        <TableCell align="right">
+                          {formatSeconds(goal.targetValue)}
+                        </TableCell>
                         <TableCell align="right">
                           {goal.monthsToReach === null
                             ? "not at this dose"
@@ -269,7 +289,9 @@ function GoalSeek() {
     }
 
     try {
-      setResult(await fetchRequiredDose(GOAL_DISTANCES[metric], seconds, months, 0.9));
+      setResult(
+        await fetchRequiredDose(GOAL_DISTANCES[metric], seconds, months, 0.9),
+      );
       setError(null);
     } catch {
       setError("Could not compute the required dose.");
@@ -286,7 +308,11 @@ function GoalSeek() {
           Pick the goal and the deadline; the model answers with the weekly dose
           that gets there, assuming 90% compliance.
         </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          sx={{ mb: 2 }}
+        >
           <TextField
             select
             label="Goal"
@@ -321,16 +347,22 @@ function GoalSeek() {
         </Stack>
         {error && <Alert severity="error">{error}</Alert>}
         {result && (
-          <Alert severity={result.requiredEffectiveHours === null ? "warning" : "info"}>
+          <Alert
+            severity={
+              result.requiredEffectiveHours === null ? "warning" : "info"
+            }
+          >
             {result.requiredWeeklyHoursAtCompliance !== null &&
               result.requiredEffectiveHours !== null &&
               result.requiredEffectiveHours > 0 && (
                 <>
                   Requires about{" "}
                   <strong>
-                    {result.requiredWeeklyHoursAtCompliance.toFixed(1)} planned hours/week
+                    {result.requiredWeeklyHoursAtCompliance.toFixed(1)} planned
+                    hours/week
                   </strong>{" "}
-                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT{" "}
+                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT
+                  {" "}
                   {result.targetVdot.toFixed(1)}).{" "}
                 </>
               )}

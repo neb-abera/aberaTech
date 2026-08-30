@@ -25,7 +25,10 @@ import { formatSeconds, lbToKg } from "../core/format";
  * key is configured, weigh-ins, and a view of what actually landed.
  */
 export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
-  const [status, setStatus] = React.useState<{ ok: boolean; text: string } | null>(null);
+  const [status, setStatus] = React.useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
   const [activities, setActivities] = React.useState<ActivityRow[]>([]);
 
   const refresh = React.useCallback(() => {
@@ -43,20 +46,32 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
       }
       try {
         const result = await uploadFile(kind, file);
-        setStatus({ ok: true, text: `${file.name}: ${result.parsed} parsed, ${result.added} new.` });
+        setStatus({
+          ok: true,
+          text: `${file.name}: ${result.parsed} parsed, ${result.added} new.`,
+        });
         refresh();
       } catch (error) {
-        setStatus({ ok: false, text: `${file.name}: ${(error as Error).message}` });
+        setStatus({
+          ok: false,
+          text: `${file.name}: ${(error as Error).message}`,
+        });
       }
     };
 
   const runHevySync = async () => {
     try {
       const result = await syncHevy();
-      setStatus({ ok: true, text: `Hevy: ${result.fetched} workouts fetched, ${result.added} new.` });
+      setStatus({
+        ok: true,
+        text: `Hevy: ${result.fetched} workouts fetched, ${result.added} new.`,
+      });
       refresh();
     } catch (error) {
-      setStatus({ ok: false, text: `Hevy sync failed: ${(error as Error).message}` });
+      setStatus({
+        ok: false,
+        text: `Hevy sync failed: ${(error as Error).message}`,
+      });
     }
   };
 
@@ -68,22 +83,38 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
             Bring data in
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-            Garmin Connect: Activities page → export CSV for bulk history, or a
+            Garmin Connect: Activities page → export CSV for bulk history, or
+            a
             single activity&apos;s .fit file for full detail. Hevy: Settings →
             Export Data emails a CSV — free tier included.
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <Button variant="outlined" component="label">
               Garmin activities CSV
-              <input type="file" hidden accept=".csv" onChange={upload("garmin-csv")} />
+              <input
+                type="file"
+                hidden
+                accept=".csv"
+                onChange={upload("garmin-csv")}
+              />
             </Button>
             <Button variant="outlined" component="label">
               Garmin .fit file
-              <input type="file" hidden accept=".fit" onChange={upload("fit")} />
+              <input
+                type="file"
+                hidden
+                accept=".fit"
+                onChange={upload("fit")}
+              />
             </Button>
             <Button variant="outlined" component="label">
               Hevy export CSV
-              <input type="file" hidden accept=".csv" onChange={upload("hevy-csv")} />
+              <input
+                type="file"
+                hidden
+                accept=".csv"
+                onChange={upload("hevy-csv")}
+              />
             </Button>
             {hevyApi && (
               <Button variant="contained" onClick={runHevySync}>
@@ -92,7 +123,10 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
             )}
           </Stack>
           {!hevyApi && (
-            <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", display: "block", mt: 1 }}
+            >
               Live Hevy sync appears here once a Hevy Pro API key is configured
               (~$24/year, optional).
             </Typography>
@@ -102,7 +136,9 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
 
       <WeighIn onSaved={(text) => setStatus({ ok: true, text })} />
 
-      {status && <Alert severity={status.ok ? "success" : "error"}>{status.text}</Alert>}
+      {status && (
+        <Alert severity={status.ok ? "success" : "error"}>{status.text}</Alert>
+      )}
 
       <Card variant="outlined">
         <CardContent>
@@ -137,8 +173,12 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
                         ? "—"
                         : `${(activity.distanceMeters / 1000).toFixed(2)} km`}
                     </TableCell>
-                    <TableCell align="right">{formatSeconds(activity.durationSeconds)}</TableCell>
-                    <TableCell align="right">{activity.averageHr ?? "—"}</TableCell>
+                    <TableCell align="right">
+                      {formatSeconds(activity.durationSeconds)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {activity.averageHr ?? "—"}
+                    </TableCell>
                     <TableCell>{activity.source}</TableCell>
                   </TableRow>
                 ))}
@@ -152,7 +192,9 @@ export default function DataPanel({ hevyApi }: { hevyApi: boolean }) {
 }
 
 function WeighIn({ onSaved }: { onSaved: (text: string) => void }) {
-  const [date, setDate] = React.useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = React.useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
   const [pounds, setPounds] = React.useState("");
   const [bodyFat, setBodyFat] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
