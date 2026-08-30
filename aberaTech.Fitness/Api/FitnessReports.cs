@@ -21,12 +21,20 @@ public sealed record SettingsDto(
     string? VdotMeasuredOn,
     double? CurrentWeightKg);
 
+public sealed record TrainingPaceDto(
+    string Zone,
+    string Name,
+    string Purpose,
+    double FastSecPerKm,
+    double SlowSecPerKm);
+
 public sealed record SummaryDto(
     SettingsDto Settings,
     IReadOnlyList<AerobicPointDto> AerobicTrend,
     IReadOnlyList<WeekVolumeDto> WeeklyVolume,
     IReadOnlyList<E1RmDto> StrengthTrend,
     IReadOnlyList<HighlightDto> Highlights,
+    IReadOnlyList<TrainingPaceDto> TrainingPaces,
     double? DeficiencySpread,
     int ActivityCount);
 
@@ -46,6 +54,7 @@ public sealed record PredictionDto(
     IReadOnlyList<string> Assumptions);
 
 public sealed record RequiredDoseDto(
+    double StartVdot,
     double TargetVdot,
     double MonthsAvailable,
     double? RequiredEffectiveHours,
@@ -97,12 +106,19 @@ public static class FitnessReports
             spread = AerobicAnalysis.DeficiencySpread(trend[^1].MedianNormalizedSecPerKm, lt);
         }
 
+        var paces = TrainingPaces.For(settings.StartVdot)
+            .Select(p => new TrainingPaceDto(
+                p.Zone, p.Name, p.Purpose,
+                Math.Round(p.FastSecPerKm), Math.Round(p.SlowSecPerKm)))
+            .ToArray();
+
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
             trend.Select(p => new AerobicPointDto($"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount)).ToArray(),
             weeks,
             strength,
             highlights.Select(h => new HighlightDto(h.Kind, h.Headline, h.Evidence, h.Positive)).ToArray(),
+            paces,
             spread,
             await database.Activities.CountAsync(cancellationToken));
     }
@@ -199,7 +215,7 @@ public static class FitnessReports
                 : "Reachable at this dose, held consistently.";
         }
 
-        return new RequiredDoseDto(targetVdot, monthsAvailable, requiredEffective, weekly, verdict);
+        return new RequiredDoseDto(startVdot, targetVdot, monthsAvailable, requiredEffective, weekly, verdict);
     }
 
     internal static double? RunGoalDistanceMeters(string metric) => metric switch

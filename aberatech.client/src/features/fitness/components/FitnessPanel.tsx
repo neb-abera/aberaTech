@@ -172,6 +172,40 @@ function Dashboard({ summary }: { summary: Summary }) {
         </CardContent>
       </Card>
 
+      {summary.trainingPaces.length > 0 && (
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6">
+              Today&apos;s training paces (Daniels)
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+              Prescriptions, not predictions: the pace each kind of session
+              should happen at, from your current VDOT{" "}
+              {summary.settings.startVdot.toFixed(0)}. Bands, not laps to hit to
+              the second.
+            </Typography>
+            <Stack spacing={0.5}>
+              {summary.trainingPaces.map((pace) => (
+                <Typography key={pace.zone} variant="body2">
+                  <strong>
+                    {pace.zone} · {pace.name}:
+                  </strong>{" "}
+                  {formatPace(pace.slowSecPerKm)} –{" "}
+                  {formatPace(pace.fastSecPerKm)}{" "}
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    {pace.purpose}
+                  </Typography>
+                </Typography>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
       <Card variant="outlined">
         <CardContent>
           <Typography variant="h6">Training dose</Typography>

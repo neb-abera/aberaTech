@@ -50,8 +50,30 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
     ? Math.round(kgToLb(summary.settings.currentWeightKg))
     : null;
 
+  // What the imports actually show, so the sliders start at reality rather
+  // than at optimism. NN/g's calculator guidance: defaults set expectations,
+  // so make them measured ones.
+  const recentWeeks = summary.weeklyVolume.slice(-4);
+  const measuredMinutes =
+    recentWeeks.length > 0
+      ? recentWeeks.reduce((total, week) => total + week.minutes, 0) /
+        recentWeeks.length
+      : null;
+  const measuredCompliance =
+    measuredMinutes !== null && summary.settings.planMinutesPerWeek > 0
+      ? Math.min(
+          100,
+          Math.max(
+            10,
+            Math.round(
+              (100 * measuredMinutes) / summary.settings.planMinutesPerWeek / 5,
+            ) * 5,
+          ),
+        )
+      : null;
+
   const [weeklyHours, setWeeklyHours] = React.useState(6.75);
-  const [compliance, setCompliance] = React.useState(85);
+  const [compliance, setCompliance] = React.useState(measuredCompliance ?? 85);
   const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(
     currentWeightLb,
   );
@@ -88,6 +110,29 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
     <Stack spacing={3}>
       <Card variant="outlined">
         <CardContent>
+          <Typography variant="h6">Where you start</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Every projection below launches from your measured anchor:{" "}
+            <strong>VDOT {summary.settings.startVdot.toFixed(1)}</strong>
+            {summary.settings.vdotMeasuredOn
+              ? ` (time trial on ${summary.settings.vdotMeasuredOn})`
+              : " (default — record a fresh time trial in settings to reset it)"}
+            {currentWeightLb !== null && <> at {currentWeightLb} lb</>}
+            {prediction && (
+              <>
+                {" "}
+                — equivalent today to a{" "}
+                {formatSeconds(prediction.checkpoints[0].twoMileSeconds)} 2-mile
+                and a {formatSeconds(prediction.checkpoints[0].fiveMileSeconds)}{" "}
+                5-mile.
+              </>
+            )}
+          </Typography>
+        </CardContent>
+      </Card>
+
+      <Card variant="outlined">
+        <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
             The factors you control
           </Typography>
@@ -105,6 +150,11 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
                 value={weeklyHours}
                 onChange={(_, value) => setWeeklyHours(value as number)}
               />
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                Endurance sessions you plan to schedule.
+                {measuredMinutes !== null &&
+                  ` Logged over your last 4 weeks: ${(measuredMinutes / 60).toFixed(1)} h/week.`}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Typography gutterBottom variant="body2">
@@ -112,12 +162,18 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
               </Typography>
               <Slider
                 aria-label="Compliance percent"
-                min={30}
+                min={10}
                 max={100}
                 step={5}
                 value={compliance}
                 onChange={(_, value) => setCompliance(value as number)}
               />
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                The share of planned sessions that actually happen.
+                {measuredCompliance !== null
+                  ? ` Measured from your imports: ~${measuredCompliance}% of the plan's ${Math.round(summary.settings.planMinutesPerWeek)} min/week.`
+                  : " No imports yet to measure it from."}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Typography gutterBottom variant="body2">
@@ -264,13 +320,13 @@ export default function ProjectionPanel({ summary }: { summary: Summary }) {
         </>
       )}
 
-      <GoalSeek />
+      <GoalSeek compliance={compliance} />
     </Stack>
   );
 }
 
 /** The inverse question: name the goal and the date, get the required dose. */
-function GoalSeek() {
+function GoalSeek({ compliance }: { compliance: number }) {
   const [metric, setMetric] = React.useState("run-2mi");
   const [minutes, setMinutes] = React.useState("12:15");
   const [months, setMonths] = React.useState(18);
@@ -290,7 +346,12 @@ function GoalSeek() {
 
     try {
       setResult(
-        await fetchRequiredDose(GOAL_DISTANCES[metric], seconds, months, 0.9),
+        await fetchRequiredDose(
+          GOAL_DISTANCES[metric],
+          seconds,
+          months,
+          compliance / 100,
+        ),
       );
       setError(null);
     } catch {
@@ -306,7 +367,8 @@ function GoalSeek() {
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
           Pick the goal and the deadline; the model answers with the weekly dose
-          that gets there, assuming 90% compliance.
+          that gets there from your current anchor, at the compliance set above
+          ({compliance}%).
         </Typography>
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -352,6 +414,8 @@ function GoalSeek() {
               result.requiredEffectiveHours === null ? "warning" : "info"
             }
           >
+            From VDOT {result.startVdot.toFixed(1)} to{" "}
+            {result.targetVdot.toFixed(1)}:{" "}
             {result.requiredWeeklyHoursAtCompliance !== null &&
               result.requiredEffectiveHours !== null &&
               result.requiredEffectiveHours > 0 && (
@@ -361,8 +425,7 @@ function GoalSeek() {
                     {result.requiredWeeklyHoursAtCompliance.toFixed(1)} planned
                     hours/week
                   </strong>{" "}
-                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT{" "}
-                  {result.targetVdot.toFixed(1)}).{" "}
+                  ({result.requiredEffectiveHours.toFixed(1)} effective).{" "}
                 </>
               )}
             {result.verdict}

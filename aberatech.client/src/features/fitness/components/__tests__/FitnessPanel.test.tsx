@@ -38,6 +38,15 @@ const emptySummary = {
   strengthTrend: [
     { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },
   ],
+  trainingPaces: [
+    {
+      zone: "E",
+      name: "Easy",
+      purpose: "aerobic base",
+      fastSecPerKm: 373,
+      slowSecPerKm: 446,
+    },
+  ],
   highlights: [
     {
       kind: "aerobic-gain",
@@ -106,6 +115,8 @@ describe("FitnessPanel", () => {
     render(<FitnessPanel />);
 
     await screen.findByText(/aerobic base up 8%/i);
+    await screen.findByText(/training paces \(daniels\)/i);
+    await screen.findByText(/7:26\/km – 6:13\/km/);
     await screen.findByText(/over the 10% deficiency line/i);
 
     await waitFor(() => {
