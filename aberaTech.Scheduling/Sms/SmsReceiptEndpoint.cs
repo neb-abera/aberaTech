@@ -98,10 +98,15 @@ public static class SmsReceiptEndpoint
                 // The case the whole design exists for. A carrier refusing the
                 // message is a failure that has to re-enter the retry path
                 // rather than sit in Sent looking successful.
+                //
+                // In this branch the status is one of two known literals, so
+                // record that literal rather than the wire value: nothing
+                // request-derived reaches the log (CodeQL cs/log-forging).
+                var reported = status == "failed" ? "failed" : "undelivered";
                 var error = form["ErrorCode"].ToString();
                 message.LastError = string.IsNullOrEmpty(error)
-                    ? $"Twilio reported {status}."
-                    : $"Twilio reported {status} with error {error}.";
+                    ? $"Twilio reported {reported}."
+                    : $"Twilio reported {reported} with error {error}.";
                 message.SentAt = null;
 
                 var next = DeliveryPolicy.NextAttemptAt(message.Attempts, now);
@@ -112,7 +117,7 @@ public static class SmsReceiptEndpoint
                     logger.LogError(
                         "Message {MessageId} dead lettered after Twilio reported {Status}.",
                         message.Id,
-                        status);
+                        reported);
                 }
                 else
                 {
