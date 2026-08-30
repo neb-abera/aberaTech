@@ -20,6 +20,8 @@ on:
 permissions:
   contents: read
   id-token: write
+  # For the provenance attestation on the pushed image.
+  attestations: write
 env:
   CONTAINER_APP_CONTAINER_NAME: aberatechserver
   CONTAINER_APP_NAME: aberatechserver-app-202412211749
@@ -59,11 +61,35 @@ jobs:
 
       # Step 4: Build and push Docker image to ACR
       - name: Build and Push Docker Image
+        id: push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           push: true
           tags: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}
           file: ${{ env.DOCKER_FILE_PATH }}
+
+      # SLSA build provenance, pushed to the registry alongside the image:
+      # anyone (including a future incident review) can verify the deployed
+      # image was built by this workflow from this commit, with
+      # `gh attestation verify`. Same machinery the template's releases use.
+      - name: Attest image provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      # SBOM of what actually shipped (the pushed image, not the source
+      # tree), kept as a build artifact so "what exactly is running" has an
+      # answer dated to the deploy that put it there.
+      - name: Generate SBOM of the deployed image
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}@${{ steps.push.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: true
+          upload-release-assets: false
 
   deploy:
     runs-on: ubuntu-latest
