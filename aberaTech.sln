@@ -9,6 +9,10 @@ Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "aberatech.client", "aberate
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aberaTech.Scheduling", "aberaTech.Scheduling\aberaTech.Scheduling.csproj", "{3B7C9E21-5A64-4C88-9F0D-6E2A1D4F8B10}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aberaTech.Postgres", "aberaTech.Postgres\aberaTech.Postgres.csproj", "{7C1E4A90-2D3B-4F6E-9A85-1B0D8C6E4F27}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aberaTech.Fitness", "aberaTech.Fitness\aberaTech.Fitness.csproj", "{5E9A7D42-6C1F-4B38-8D2A-3F7B9E0C5A14}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aberaTech.Server.Tests", "aberaTech.Server.Tests\aberaTech.Server.Tests.csproj", "{9D2E6F13-8C47-4A55-B3E1-7F0C5A9D2E64}"
 EndProject
 Global
@@ -35,6 +39,14 @@ Global
 		{590D6E4E-7BB6-46A0-9BB0-E88A204DBA07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{590D6E4E-7BB6-46A0-9BB0-E88A204DBA07}.Release|Any CPU.Build.0 = Release|Any CPU
 		{590D6E4E-7BB6-46A0-9BB0-E88A204DBA07}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{7C1E4A90-2D3B-4F6E-9A85-1B0D8C6E4F27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C1E4A90-2D3B-4F6E-9A85-1B0D8C6E4F27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C1E4A90-2D3B-4F6E-9A85-1B0D8C6E4F27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C1E4A90-2D3B-4F6E-9A85-1B0D8C6E4F27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E9A7D42-6C1F-4B38-8D2A-3F7B9E0C5A14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E9A7D42-6C1F-4B38-8D2A-3F7B9E0C5A14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E9A7D42-6C1F-4B38-8D2A-3F7B9E0C5A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E9A7D42-6C1F-4B38-8D2A-3F7B9E0C5A14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

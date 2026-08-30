@@ -106,10 +106,14 @@ WORKDIR /src
 
 COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/"]
 COPY ["aberaTech.Scheduling/aberaTech.Scheduling.csproj", "aberaTech.Scheduling/"]
+COPY ["aberaTech.Postgres/aberaTech.Postgres.csproj", "aberaTech.Postgres/"]
+COPY ["aberaTech.Fitness/aberaTech.Fitness.csproj", "aberaTech.Fitness/"]
 RUN dotnet restore "aberaTech.Server/aberaTech.Server.csproj" -p:SkipClientProject=true
 
 COPY aberaTech.Server ./aberaTech.Server
 COPY aberaTech.Scheduling ./aberaTech.Scheduling
+COPY aberaTech.Postgres ./aberaTech.Postgres
+COPY aberaTech.Fitness ./aberaTech.Fitness
 RUN dotnet build "aberaTech.Server/aberaTech.Server.csproj" \
     -c $BUILD_CONFIGURATION -o /app/build -p:SkipClientProject=true --no-restore
 
