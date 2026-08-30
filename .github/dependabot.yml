@@ -11,6 +11,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       nuget-non-major:
         applies-to: version-updates
@@ -21,6 +25,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       npm-non-major:
         applies-to: version-updates
@@ -33,6 +41,10 @@ updates:
     directory: /aberatech.client
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       client-npm-non-major:
         applies-to: version-updates
@@ -43,6 +55,10 @@ updates:
     directory: /aberaTech.Server
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       docker-non-major:
         applies-to: version-updates
@@ -55,6 +71,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       compose-non-major:
         applies-to: version-updates
@@ -65,6 +85,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A new release gets 5 days of other people finding its bugs and pulled
+    # releases before it is offered here.
+    cooldown:
+      default-days: 5
     groups:
       actions-non-major:
         applies-to: version-updates

@@ -3,8 +3,14 @@ name: CodeQL
 on:
   push:
     branches: [master]
+  # Every pull request, unfiltered. Filtering on master meant a PR stacked on
+  # another feature branch got no analyze(...) runs at all — and because those
+  # contexts are required with a strict up-to-date policy, such a PR could
+  # never merge: the ruleset waited forever for checks that never started.
   pull_request:
-    branches: [master]
+  # If a merge queue is ever enabled, required checks must run on the queued
+  # merge group or every merge waits forever. Harmless while no queue exists.
+  merge_group:
   schedule:
     # Weekly scan so new queries run even without commits
     - cron: "30 6 * * 1"
@@ -16,6 +22,9 @@ jobs:
   analyze:
     name: analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    # Buildless C# analysis is the slow leg; it normally finishes well inside
+    # this, and a hung run should not hold the runner for six hours.
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -40,6 +49,10 @@ jobs:
             uploads.github.com:443
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # This job never pushes; don't leave the token on disk for every
+          # later step and child process to read.
+          persist-credentials: false
 
       - name: initialize CodeQL
         uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9

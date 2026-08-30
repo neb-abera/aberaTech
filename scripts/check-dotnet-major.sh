@@ -62,6 +62,7 @@ replace aberaTech.Server/Dockerfile "s{dotnet/(sdk|aspnet):\Q${current}\E}{dotne
 # and called out in the summary.
 pending=""
 bumped=""
+# shellcheck disable=SC2086 # $projects is a newline-separated list; word splitting is the point
 while read -r pkg; do
   lower="$(echo "$pkg" | tr '[:upper:]' '[:lower:]')"
   new_ver="$(curl -fsSL "https://api.nuget.org/v3-flatcontainer/${lower}/index.json" \

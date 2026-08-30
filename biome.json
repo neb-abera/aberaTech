@@ -11,7 +11,8 @@
       "!**/dist",
       "!**/bin",
       "!**/obj",
-      "!aberatech.client/public"
+      "!aberatech.client/public",
+      "!**/packages.lock.json"
     ]
   },
   "formatter": {
