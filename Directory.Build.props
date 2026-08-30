@@ -1,0 +1,11 @@
+<Project>
+  <!-- Lock NuGet restore the way package-lock.json locks npm: every .csproj
+       gets a committed packages.lock.json, and the Dockerfile restores with
+       RestoreLockedMode=true so a build fails loudly when a manifest and its
+       lock file disagree, rather than quietly resolving something new.
+       Scoped to .csproj so the client's .esproj (npm, not NuGet) is not
+       dragged in. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+</Project>

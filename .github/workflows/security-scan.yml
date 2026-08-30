@@ -6,6 +6,9 @@ name: Security scan
 
 on:
   pull_request:
+  # If a merge queue is ever enabled, required checks must run on the queued
+  # merge group or every merge waits forever. Harmless while no queue exists.
+  merge_group:
   push:
     branches: [master]
   schedule:
@@ -22,6 +25,7 @@ jobs:
   image-scan:
     name: container scan (trivy)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -37,6 +41,10 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # This job never pushes; don't leave the token on disk for every
+          # later step and child process to read.
+          persist-credentials: false
 
       - name: Build the production image
         run: docker build -f aberaTech.Server/Dockerfile --target final -t scan-target .
@@ -66,6 +74,7 @@ jobs:
     name: dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -96,15 +105,29 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Review dependency diff
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
+          # Copyleft licenses a new dependency must not bring into this
+          # Apache-2.0 project. SPDX identifiers, comma-separated; the
+          # -only and -or-later variants are distinct identifiers, so both
+          # are listed.
+          deny-licenses: >-
+            AGPL-3.0-only, AGPL-3.0-or-later,
+            GPL-2.0-only, GPL-2.0-or-later,
+            GPL-3.0-only, GPL-3.0-or-later,
+            LGPL-2.0-only, LGPL-2.0-or-later,
+            LGPL-2.1-only, LGPL-2.1-or-later,
+            LGPL-3.0-only, LGPL-3.0-or-later
 
   dast:
     name: dast (ZAP baseline)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -113,12 +136,17 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Boot the production image against postgres
         run: |
           docker compose up -d --build db app
-          for i in $(seq 1 40); do
-            curl -sf http://localhost:8080/healthz > /dev/null 2>&1 && break || sleep 2
+          for _ in $(seq 1 40); do
+            if curl -sf http://localhost:8080/healthz > /dev/null 2>&1; then
+              break
+            fi
+            sleep 2
           done
           curl -sf http://localhost:8080/healthz > /dev/null
 

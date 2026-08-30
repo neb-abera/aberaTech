@@ -8,9 +8,19 @@ security updates.
 ## Reporting a Vulnerability
 
 Please report vulnerabilities privately via
-[GitHub's private vulnerability reporting](../../security/advisories/new)
-rather than opening a public issue. You should receive a response within a
-week. Please include a proof of concept or reproduction steps where possible.
+[GitHub's private vulnerability reporting](https://github.com/neb-abera/aberaTech/security/advisories/new)
+rather than opening a public issue. If you cannot use GitHub's flow, email
+<support@alias.abera.tech> instead. Please include a proof of concept or
+reproduction steps where possible.
+
+What to expect:
+
+* an acknowledgement within 7 days,
+* coordinated disclosure: we ask that you keep the report private until a
+  fix is deployed, and we will credit you in the advisory unless you prefer
+  otherwise,
+* a fix, or a status update explaining what is taking longer, within 90
+  days of the report.
 
 ## How this repository searches for vulnerabilities
 

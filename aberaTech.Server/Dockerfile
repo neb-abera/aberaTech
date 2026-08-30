@@ -67,7 +67,9 @@ CMD ["npx", "vite", "--host", "0.0.0.0", "--port", "3000"]
 #   make test
 FROM clientbase AS clienttest
 COPY ["aberatech.client/", "./"]
-RUN npx tsc -b && npm run test
+# --coverage activates the thresholds in vitest.config.ts, which fail the run
+# below their floors on their own.
+RUN npx tsc -b && npm run test -- --coverage
 
 # Lint and format tooling. Biome lives in the root package rather than the
 # client one, and biome.json sits beside it, so this stage reproduces the
@@ -104,11 +106,16 @@ ENV IN_DOCKER=$IN_DOCKER
 
 WORKDIR /src
 
-COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/"]
-COPY ["aberaTech.Scheduling/aberaTech.Scheduling.csproj", "aberaTech.Scheduling/"]
-COPY ["aberaTech.Postgres/aberaTech.Postgres.csproj", "aberaTech.Postgres/"]
-COPY ["aberaTech.Fitness/aberaTech.Fitness.csproj", "aberaTech.Fitness/"]
-RUN dotnet restore "aberaTech.Server/aberaTech.Server.csproj" -p:SkipClientProject=true
+# Directory.Build.props turns on RestorePackagesWithLockFile; the committed
+# packages.lock.json files plus RestoreLockedMode=true make every restore
+# reproduce exactly what was reviewed, and fail loudly when a csproj and its
+# lock file disagree — the NuGet equivalent of `npm ci`.
+COPY ["Directory.Build.props", "./"]
+COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/packages.lock.json", "aberaTech.Server/"]
+COPY ["aberaTech.Scheduling/aberaTech.Scheduling.csproj", "aberaTech.Scheduling/packages.lock.json", "aberaTech.Scheduling/"]
+COPY ["aberaTech.Postgres/aberaTech.Postgres.csproj", "aberaTech.Postgres/packages.lock.json", "aberaTech.Postgres/"]
+COPY ["aberaTech.Fitness/aberaTech.Fitness.csproj", "aberaTech.Fitness/packages.lock.json", "aberaTech.Fitness/"]
+RUN dotnet restore "aberaTech.Server/aberaTech.Server.csproj" -p:SkipClientProject=true -p:RestoreLockedMode=true
 
 COPY aberaTech.Server ./aberaTech.Server
 COPY aberaTech.Scheduling ./aberaTech.Scheduling
@@ -128,16 +135,31 @@ RUN dotnet build "aberaTech.Server/aberaTech.Server.csproj" \
 #   make servertest
 FROM build AS servertest
 ARG BUILD_CONFIGURATION=Release
-COPY ["aberaTech.Server.Tests/aberaTech.Server.Tests.csproj", "aberaTech.Server.Tests/"]
-RUN dotnet restore "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -p:SkipClientProject=true
+COPY ["aberaTech.Server.Tests/aberaTech.Server.Tests.csproj", "aberaTech.Server.Tests/packages.lock.json", "aberaTech.Server.Tests/"]
+RUN dotnet restore "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -p:SkipClientProject=true -p:RestoreLockedMode=true
 COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
-RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true
+# Tests plus a line-coverage floor, enforced here so `make check` and CI gate
+# identically. coverlet.collector writes a cobertura report (generated EF
+# migrations excluded — they inflate the denominator without being testable
+# logic); the floor sits below the measured value (30.5% on 2026-08) so a
+# reasonable refactor doesn't break the build, while deleting tests or
+# landing a large untested feature does. Low on purpose: it is a ratchet to
+# raise as coverage grows, not a target.
+ARG SERVER_COVERAGE_MIN=25
+RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs" && \
+    report="$(find aberaTech.Server.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)" && \
+    [ -n "$report" ] && \
+    rate="$(sed -n 's/.*<coverage[^>]*line-rate="\([0-9.]*\)".*/\1/p' "$report" | head -1)" && \
+    awk -v r="$rate" -v m="$SERVER_COVERAGE_MIN" 'BEGIN { \
+      printf "server line coverage: %.1f%% (minimum %d%%)\n", r * 100, m; \
+      exit (r * 100 >= m) ? 0 : 1 \
+    }'
 
 # Publish .NET server
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "aberaTech.Server/aberaTech.Server.csproj" \
-    -c $BUILD_CONFIGURATION -o /app/publish -p:SkipClientProject=true /p:UseAppHost=false
+    -c $BUILD_CONFIGURATION -o /app/publish -p:SkipClientProject=true -p:RestoreLockedMode=true /p:UseAppHost=false
 
 # Final production-ready stage
 FROM base AS final

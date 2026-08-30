@@ -16,6 +16,9 @@ on:
   # kind of change most likely to go wrong — the one built on top of unmerged
   # work — was the one nothing verified.
   pull_request:
+  # If a merge queue is ever enabled, required checks must run on the queued
+  # merge group or every merge waits forever. Harmless while no queue exists.
+  merge_group:
   push:
     branches: [master]
 
@@ -31,6 +34,7 @@ jobs:
   container-tests:
     name: Type check and unit tests, in the container
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -42,26 +46,63 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # This job never pushes; don't leave the token on disk for every
+          # later step and child process to read.
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
+      # Exposes ACTIONS_RUNTIME_TOKEN/ACTIONS_CACHE_URL to run steps, so the
+      # CLI build below can keep using the same type=gha cache scope the
+      # docker/build-push-action step used before it.
+      - name: Expose GitHub runtime for the buildx cache
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
+
       # Builds only the stages the target needs, so this never builds the
-      # .NET server or the final image.
+      # .NET server or the final image. A CLI build rather than
+      # docker/build-push-action so the test output lands in a file the
+      # summary step below can parse — same builder, same gha cache scope.
       - name: Build the client test stage
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          file: aberaTech.Server/Dockerfile
-          target: clienttest
-          push: false
-          load: false
-          cache-from: type=gha,scope=clienttest
-          cache-to: type=gha,scope=clienttest,mode=max
+        run: |
+          set -o pipefail
+          docker buildx build \
+            --file aberaTech.Server/Dockerfile \
+            --target clienttest \
+            --cache-from type=gha,scope=clienttest \
+            --cache-to type=gha,scope=clienttest,mode=max \
+            --progress plain \
+            . 2>&1 | tee clienttest-build.log
+
+      # Parses the vitest summary and coverage lines already in the build
+      # log — never re-runs tests. vitest colors its summary even without a
+      # TTY, so ANSI escapes are stripped before matching. Guarded so a
+      # missing line (e.g. a fully cached stage) degrades to no summary
+      # rather than a red job.
+      - name: Append test totals to the job summary
+        run: |
+          [ -n "${GITHUB_STEP_SUMMARY:-}" ] || exit 0
+          sed 's/\x1b\[[0-9;]*m//g' clienttest-build.log > clienttest-build.clean
+          # `|| true`: the runner shell is bash -e, and a fully cached build
+          # stage replays no test output — a no-match grep must fall through
+          # to the guard below, not fail the step.
+          tests=$(grep -Eo 'Tests[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          files=$(grep -Eo 'Test Files[[:space:]]+[0-9]+ passed' clienttest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          lines=$(grep -Eo 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' clienttest-build.clean | tail -1 | grep -Eo '[0-9.]+' || true)
+          [ -n "${tests:-}" ] || exit 0
+          {
+            echo "### Client: type check + unit tests (container)"
+            echo ""
+            echo "| Tests passed | Test files | Line coverage |"
+            echo "| --- | --- | --- |"
+            echo "| ${tests} | ${files:-?} | ${lines:-?}% |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   compose-db:
     name: Compose database boots healthy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -73,6 +114,8 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # What a developer's `make up` does first, on a fresh volume — because
       # nothing else in CI ever booted the compose database, the automerged
@@ -98,6 +141,7 @@ jobs:
   style:
     name: Lint and format, in the container
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -109,6 +153,8 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -130,6 +176,7 @@ jobs:
   scheduling-tests:
     name: Scheduling unit tests, in the container
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -141,27 +188,61 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
+      # Exposes ACTIONS_RUNTIME_TOKEN/ACTIONS_CACHE_URL to run steps, so the
+      # CLI build below can keep using the same type=gha cache scope the
+      # docker/build-push-action step used before it.
+      - name: Expose GitHub runtime for the buildx cache
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
+
       # The daylight saving arithmetic, the queue projection and the delivery
       # retry schedule. Its own job rather than a step on the client one, so a
-      # failure names which half of the repository broke.
+      # failure names which half of the repository broke. A CLI build rather
+      # than docker/build-push-action so the test output lands in a file the
+      # summary step below can parse — same builder, same gha cache scope.
       - name: Build the scheduling test stage
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          file: aberaTech.Server/Dockerfile
-          target: servertest
-          push: false
-          load: false
-          cache-from: type=gha,scope=servertest
-          cache-to: type=gha,scope=servertest,mode=max
+        run: |
+          set -o pipefail
+          docker buildx build \
+            --file aberaTech.Server/Dockerfile \
+            --target servertest \
+            --cache-from type=gha,scope=servertest \
+            --cache-to type=gha,scope=servertest,mode=max \
+            --progress plain \
+            . 2>&1 | tee servertest-build.log
+
+      # Parses the test-runner summary and the coverage line the servertest
+      # stage prints — never re-runs tests. ANSI escapes are stripped before
+      # matching. Guarded so a missing line (e.g. a fully cached stage)
+      # degrades to no summary rather than a red job.
+      - name: Append test totals to the job summary
+        run: |
+          [ -n "${GITHUB_STEP_SUMMARY:-}" ] || exit 0
+          sed 's/\x1b\[[0-9;]*m//g' servertest-build.log > servertest-build.clean
+          # `|| true`: the runner shell is bash -e, and a fully cached build
+          # stage replays no test output — a no-match grep must fall through
+          # to the guard below, not fail the step.
+          passed=$(grep -Eo 'Passed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          failed=$(grep -Eo 'Failed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
+          coverage=$(grep -Eo 'server line coverage: [0-9.]+%' servertest-build.clean | grep -Eo '[0-9.]+%' | tail -1 || true)
+          [ -n "${passed:-}" ] || exit 0
+          {
+            echo "### Scheduling: unit tests (container)"
+            echo ""
+            echo "| Passed | Failed | Line coverage |"
+            echo "| --- | --- | --- |"
+            echo "| ${passed} | ${failed:-0} | ${coverage:-?} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   production-image:
     name: Production image, in the container
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -173,6 +254,8 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -182,6 +265,9 @@ jobs:
       # `dotnet publish`, so without this job a change could pass every test
       # and still break the production build — with the deploy to the live
       # site as the first place it failed.
+      #
+      # load: true (unlike the other build jobs) so the assertion below can
+      # inspect the image's runtime config.
       - name: Build the production image stage
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -189,6 +275,78 @@ jobs:
           file: aberaTech.Server/Dockerfile
           target: final
           push: false
-          load: false
+          load: true
+          tags: aberatech-ci-final
           cache-from: type=gha,scope=final
           cache-to: type=gha,scope=final,mode=max
+
+      # The Dockerfile drops privileges with USER $APP_UID; a base-image
+      # change (or a refactor that reorders the final stage) could silently
+      # revert the container to root and CI would stay green. Assert the
+      # image's configured user is a real non-root user.
+      - name: Assert the production image runs as non-root
+        run: |
+          user=$(docker inspect --format '{{.Config.User}}' aberatech-ci-final)
+          echo "image runs as user: '${user}'"
+          case "$user" in
+            ""|0|root|0:*|root:*)
+              echo "::error::production image runs as root (Config.User='${user}')"
+              exit 1
+              ;;
+          esac
+
+  # Lint the linters: the workflows and shell scripts every other gate is
+  # built out of get no checks from the app toolchain, so a typo'd `if:` or
+  # an unquoted variable in a script fails silently until it matters.
+  # actionlint validates the workflow files (delegating embedded run: blocks
+  # to shellcheck); shellcheck covers scripts/*.sh. Both binaries are
+  # version- and checksum-pinned so this job runs exactly what was reviewed.
+  lint:
+    name: lint (actionlint + shellcheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: block
+          # checkout dials github.com; the two release tarballs redirect to
+          # the githubusercontent asset hosts.
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned actionlint and shellcheck
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+          SHELLCHECK_VERSION: 0.11.0
+          SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -fsSLo actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          curl -fsSLo shellcheck.tar.xz \
+            "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          echo "${SHELLCHECK_SHA256}  shellcheck.tar.xz" | sha256sum -c -
+          tar -xJf shellcheck.tar.xz --strip-components=1 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
+
+      - name: actionlint (workflows, including embedded shell)
+        run: '"$RUNNER_TEMP/actionlint" -color -shellcheck "$RUNNER_TEMP/shellcheck"'
+
+      - name: shellcheck (scripts/*.sh)
+        run: '"$RUNNER_TEMP/shellcheck" scripts/*.sh'
+
+      # The ruleset's required contexts live in .github/required-contexts.txt;
+      # this fails when that list and the PR-gating job names drift apart.
+      - name: Required contexts match the PR-gating workflows
+        run: ./scripts/check-required-contexts.sh

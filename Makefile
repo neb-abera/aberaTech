@@ -56,7 +56,8 @@ fmt: ## Rewrite files to match biome
 	$(COMPOSE) build lint
 	$(COMPOSE) run --rm lint npx biome check --write .
 
-check: ## The gate CI runs: type check, unit tests, lint and format
+check: ## The gate CI runs: type check, unit tests, coverage, lint and format
+	./scripts/check-required-contexts.sh
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
