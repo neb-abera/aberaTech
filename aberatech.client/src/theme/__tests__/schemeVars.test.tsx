@@ -11,11 +11,27 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import TechnicalTransitionGuide from "../../views/TechnicalTransitionGuide";
 import AppTheme from "../AppTheme";
 
 afterEach(cleanup);
+
+// Same rehearsal as PlannerBoard.mobile: the worker's first MUI mount and
+// first getComputedStyle each pay a one-time emotion/jsdom cost that under CI
+// load blows the first test's 5s budget. The guide page is the heavy mount
+// here, so it is the one rehearsed.
+beforeAll(() => {
+  render(
+    <MemoryRouter>
+      <AppTheme>
+        <TechnicalTransitionGuide />
+      </AppTheme>
+    </MemoryRouter>,
+  );
+  getComputedStyle(screen.getByText(/the target audience for this/i));
+  cleanup();
+}, 30_000);
 
 describe("scheme-aware overrides", () => {
   it("gives outlined buttons the active scheme’s text colour, not the dark default’s", () => {
