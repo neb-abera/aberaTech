@@ -7,7 +7,7 @@ on:
     branches: [master]
   schedule:
     # Weekly scan so new queries run even without commits
-    - cron: '30 6 * * 1'
+    - cron: "30 6 * * 1"
 
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-          egress-policy: audit
+          egress-policy: block
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -42,4 +42,4 @@ jobs:
       - name: perform CodeQL analysis
         uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
-          category: '/language:${{ matrix.language }}'
+          category: "/language:${{ matrix.language }}"

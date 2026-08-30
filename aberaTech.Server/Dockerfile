@@ -5,7 +5,9 @@
 FROM node:26 AS nodebase
 
 # Base stage for .NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+# Chiseled: distroless-style, no shell, no package manager, non-root by
+# default - and none of the ~30 unfixable distro CVEs the full image carries.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled@sha256:0839314d08bb65da369135389a5d8291f75ace587fbb0488f469eb92c62eef68 AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
@@ -14,7 +16,6 @@ EXPOSE 8080
 EXPOSE 8081
 
 # Debugging: Print the value of the IN_DOCKER argument
-RUN echo "nebdebug IN_DOCKER is set to: $IN_DOCKER"
 
 # Base stage for client (React app)
 #
@@ -144,17 +145,9 @@ ENV IN_DOCKER=$IN_DOCKER
 # Copy the .NET publish output
 COPY --from=publish /app/publish .
 
-# Ensure wwwroot folder exists
-RUN mkdir -p /app/wwwroot
-
-# Copy the React app build output into the server's wwwroot folder
+# Copy the React app build output into the server's wwwroot folder (COPY
+# creates the directory; chiseled images have no shell for RUN steps).
 COPY --from=clientbuild /client/dist /app/wwwroot
-
-# Debugging: Validate copied React static files in the final image
-RUN echo "Contents of /app/wwwroot (to verify final static files):" && \
-    ls -l /app/wwwroot && \
-    echo "Contents of /app/wwwroot/assets (if assets exist):" && \
-    ls -l /app/wwwroot/assets || echo "No assets folder found in /app/wwwroot"
 
 # Drop privileges. The aspnet image ships an app user (APP_UID) for exactly
 # this; port 8080 needs no root to bind.
