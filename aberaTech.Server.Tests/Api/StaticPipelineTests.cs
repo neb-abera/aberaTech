@@ -137,6 +137,20 @@ public sealed class StaticPipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task Responses_leave_the_origin_compressed()
+    {
+        // Cloudflare compresses edge-to-browser regardless; this pins the
+        // origin-to-edge leg, which used to ship uncompressed on cache MISS.
+        using var client = _factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/");
+        request.Headers.AcceptEncoding.ParseAdd("gzip");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Contains("gzip", response.Content.Headers.ContentEncoding);
+    }
+
+    [Fact]
     public async Task A_hashed_asset_is_served_immutable()
     {
         var response = await _factory.CreateClient().GetAsync("/assets/index-abc123.js");

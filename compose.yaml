@@ -87,7 +87,10 @@ services:
       # this mapping exists only so a database tool on the host can connect.
       - '127.0.0.1:5433:5432'
     volumes:
-      - scheduling-db:/var/lib/postgresql/data
+      # postgres:18 moved its data directory up a level (major-version
+      # subdirectories, docker-library/postgres#1259) and refuses a volume
+      # mounted at the old path. Mounting the parent is the 18+ contract.
+      - scheduling-db:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U scheduling -d scheduling']
       interval: 5s
