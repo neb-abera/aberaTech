@@ -55,7 +55,17 @@ public static class SmsReceiptEndpoint
         }
 
         var sid = form["MessageSid"].ToString();
-        var status = form["MessageStatus"].ToString();
+
+        // The signature check above proves the sender holds the auth token,
+        // but the value still originates outside this process and ends up in
+        // log lines and stored errors, so flatten anything that could forge a
+        // log entry (CodeQL cs/log-forging). Real Twilio statuses are single
+        // short tokens, which pass through untouched.
+        var status = new string(
+            form["MessageStatus"].ToString()
+                .Where(c => !char.IsControl(c))
+                .Take(64)
+                .ToArray());
 
         if (string.IsNullOrEmpty(sid) || string.IsNullOrEmpty(status))
         {
@@ -88,10 +98,15 @@ public static class SmsReceiptEndpoint
                 // The case the whole design exists for. A carrier refusing the
                 // message is a failure that has to re-enter the retry path
                 // rather than sit in Sent looking successful.
+                //
+                // In this branch the status is one of two known literals, so
+                // record that literal rather than the wire value: nothing
+                // request-derived reaches the log (CodeQL cs/log-forging).
+                var reported = status == "failed" ? "failed" : "undelivered";
                 var error = form["ErrorCode"].ToString();
                 message.LastError = string.IsNullOrEmpty(error)
-                    ? $"Twilio reported {status}."
-                    : $"Twilio reported {status} with error {error}.";
+                    ? $"Twilio reported {reported}."
+                    : $"Twilio reported {reported} with error {error}.";
                 message.SentAt = null;
 
                 var next = DeliveryPolicy.NextAttemptAt(message.Attempts, now);
@@ -102,7 +117,7 @@ public static class SmsReceiptEndpoint
                     logger.LogError(
                         "Message {MessageId} dead lettered after Twilio reported {Status}.",
                         message.Id,
-                        status);
+                        reported);
                 }
                 else
                 {
