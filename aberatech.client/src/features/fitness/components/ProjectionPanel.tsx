@@ -361,8 +361,7 @@ function GoalSeek() {
                     {result.requiredWeeklyHoursAtCompliance.toFixed(1)} planned
                     hours/week
                   </strong>{" "}
-                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT
-                  {" "}
+                  ({result.requiredEffectiveHours.toFixed(1)} effective, VDOT{" "}
                   {result.targetVdot.toFixed(1)}).{" "}
                 </>
               )}

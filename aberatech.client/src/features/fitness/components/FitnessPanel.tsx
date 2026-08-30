@@ -12,16 +12,16 @@ import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import {
+  type FitnessMe,
   fetchMe,
   fetchSummary,
-  type FitnessMe,
   type Summary,
 } from "../core/api";
 import { formatPace, kgToLb } from "../core/format";
+import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
 import ProjectionPanel from "./ProjectionPanel";
 import SourcesPanel from "./SourcesPanel";
-import { AerobicTrendChart, VolumeChart } from "./charts";
 
 /**
  * The athlete's console: highlights and trends, the prediction calculator, the
@@ -39,7 +39,9 @@ export default function FitnessPanel() {
       .then((state) => {
         setMe(state);
         if (state.signedIn) {
-          fetchSummary().then(setSummary).catch(() => setFailed(true));
+          fetchSummary()
+            .then(setSummary)
+            .catch(() => setFailed(true));
         }
       })
       .catch(() => setFailed(true));
@@ -153,9 +155,8 @@ function Dashboard({ summary }: { summary: Summary }) {
         <CardContent>
           <Typography variant="h6">Aerobic base</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-            Monthly median pace, HR-normalized to{" "}
-            {summary.settings.referenceHr} bpm.
-            Falling is fitness.
+            Monthly median pace, HR-normalized to {summary.settings.referenceHr}{" "}
+            bpm. Falling is fitness.
             {summary.deficiencySpread !== null && (
               <>
                 {" "}
