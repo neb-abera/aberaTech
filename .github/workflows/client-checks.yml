@@ -56,6 +56,39 @@ jobs:
           cache-from: type=gha,scope=clienttest
           cache-to: type=gha,scope=clienttest,mode=max
 
+  compose-db:
+    name: Compose database boots healthy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # What a developer's `make up` does first, on a fresh volume — because
+      # nothing else in CI ever booted the compose database, the automerged
+      # postgres:18 bump shipped green while breaking every local `make up`
+      # (18 moved its data directory and refuses a volume at the old path,
+      # docker-library/postgres#1259). Cheap on purpose: no app build, just
+      # the database reaching its own healthcheck.
+      - name: Boot the compose database to healthy
+        run: |
+          docker compose up -d db
+          for i in $(seq 1 45); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' aberatech-db-1 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then
+              echo "database healthy after ~$((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::compose db never reached healthy; a db image bump likely broke local dev"
+          docker logs aberatech-db-1 || true
+          exit 1
+
   style:
     name: Lint and format, in the container
     runs-on: ubuntu-latest
