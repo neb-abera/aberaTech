@@ -51,14 +51,23 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
     /// <summary>Weeks per month, for turning a weekly ramp into a monthly one.</summary>
     public const double WeeksPerMonth = 52.0 / 12.0;
 
+    /// <summary>
+    /// The week a ramp begins from when the athlete has no logged training.
+    /// </summary>
+    /// <remarks>
+    /// A percentage increase on nothing is nothing, so an athlete starting
+    /// from zero would ramp forever and every goal would come back
+    /// unreachable. Someone with no history does not add 8% to nothing, they
+    /// go for a couple of runs — which is where the ramp actually starts.
+    /// </remarks>
+    public const double StandingStartHours = 1.5;
+
     public static DoseSchedule Constant(TrainingDose dose) => new(dose, dose);
 
     /// <summary>The week being trained <paramref name="months"/> from the start.</summary>
     public TrainingDose At(double months)
     {
-        if (Start is not { } start || Target.TotalHours <= 0) return Target;
-
-        var ratio = start.TotalHours / Target.TotalHours;
+        var ratio = StartingRatio();
         if (ratio >= 1) return Target;
 
         var grown = ratio * Math.Pow(1 + RampPerWeek, months * WeeksPerMonth);
@@ -68,10 +77,18 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
     /// <summary>Months of ramping before the target week is being trained in full.</summary>
     public double MonthsToFullDose()
     {
-        if (Start is not { } start || Target.TotalHours <= 0) return 0;
-        var ratio = start.TotalHours / Target.TotalHours;
+        var ratio = StartingRatio();
         if (ratio >= 1) return 0;
         return Math.Log(1 / ratio) / Math.Log(1 + RampPerWeek) / WeeksPerMonth;
+    }
+
+    /// <summary>What fraction of the target week the athlete starts on.</summary>
+    private double StartingRatio()
+    {
+        if (Start is not { } start || Target.TotalHours <= 0) return 1;
+
+        var from = Math.Max(start.TotalHours, Math.Min(StandingStartHours, Target.TotalHours));
+        return from / Target.TotalHours;
     }
 }
 

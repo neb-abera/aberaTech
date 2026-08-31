@@ -17,6 +17,15 @@ internal static class Format
             : string.Create(CultureInfo.InvariantCulture, $"{minutes}:{rest:00}");
     }
 
+    /// <summary>
+    /// A fraction as a percentage. Written out rather than using the "P"
+    /// format, which under the invariant culture renders "3 %".
+    /// </summary>
+    public static string Percent(double fraction, int decimals = 0) =>
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{Math.Round(fraction * 100, decimals).ToString($"0.{new string('0', decimals)}".TrimEnd('.'), CultureInfo.InvariantCulture)}%");
+
     /// <summary>Metres as the unit an athlete would say it in.</summary>
     public static string Distance(double meters)
     {

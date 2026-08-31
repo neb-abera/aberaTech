@@ -72,22 +72,33 @@ public static class HumanLimits
     /// <summary>The highest VDOT any human has demonstrated in this record book.</summary>
     public static double OpenCeiling(bool female) => BestRecord(female).VdotScore;
 
-    /// <summary>
-    /// The human ceiling discounted to <paramref name="age"/>. Null age means
-    /// the open ceiling, which is the most permissive reading.
-    /// </summary>
-    public static double AgeGradedCeiling(bool female, int? age)
+    /// <summary>The human ceiling discounted to <paramref name="age"/>.</summary>
+    public static double AgeGraded(double vdot, int? age)
     {
-        var open = OpenCeiling(female);
-        if (age is not { } years || years <= RecordAge) return open;
-        return Retraining.AgeAdjustedPeak(open, RecordAge, years);
+        if (age is not { } years || years <= RecordAge) return vdot;
+        return Retraining.AgeAdjustedPeak(vdot, RecordAge, years);
     }
 
-    /// <summary>Where a performance sits against the age-graded record: 1.0 is the record.</summary>
-    public static double Grade(double vdot, bool female, int? age)
+    /// <summary>The open ceiling discounted to an age.</summary>
+    public static double AgeGradedCeiling(bool female, int? age) =>
+        AgeGraded(OpenCeiling(female), age);
+
+    /// <summary>The best score on record over the distance nearest this one.</summary>
+    public static double DistanceCeiling(double distanceMeters, bool female) =>
+        NearestRecord(distanceMeters, female).VdotScore;
+
+    /// <summary>That distance's ceiling, discounted to the athlete's age.</summary>
+    public static double AgeGradedDistanceCeiling(double distanceMeters, bool female, int? age) =>
+        AgeGraded(DistanceCeiling(distanceMeters, female), age);
+
+    /// <summary>
+    /// Where a performance sits against the age-graded record for its own
+    /// distance: 1.0 is the record.
+    /// </summary>
+    public static double Grade(double vdot, double distanceMeters, bool female, int? age)
     {
         if (vdot <= 0) throw new ArgumentOutOfRangeException(nameof(vdot));
-        return vdot / AgeGradedCeiling(female, age);
+        return vdot / AgeGradedDistanceCeiling(distanceMeters, female, age);
     }
 
     /// <summary>The age-grading convention's name for a percentage band.</summary>
@@ -110,27 +121,28 @@ public static class HumanLimits
             .Where(r => r.Female == female)
             .MinBy(r => Math.Abs(Math.Log(r.DistanceMeters / distanceMeters)))!;
 
-    /// <summary>What the record holder's VDOT would run over an arbitrary distance.</summary>
+    /// <summary>A record-level time over an arbitrary distance, at the athlete's age.</summary>
     public static double RecordEquivalentSeconds(double distanceMeters, bool female, int? age) =>
-        Vdot.MinutesFor(distanceMeters, AgeGradedCeiling(female, age)) * 60.0;
+        Vdot.MinutesFor(distanceMeters, AgeGradedDistanceCeiling(distanceMeters, female, age)) * 60.0;
 
     /// <summary>The trace for a grading, so the athlete can check the arithmetic.</summary>
-    public static IReadOnlyList<CalculationStep> Explain(double vdot, bool female, int? age)
+    public static IReadOnlyList<CalculationStep> Explain(
+        double vdot, double distanceMeters, bool female, int? age)
     {
-        var best = BestRecord(female);
-        var ceiling = AgeGradedCeiling(female, age);
+        var nearest = NearestRecord(distanceMeters, female);
+        var ceiling = AgeGradedDistanceCeiling(distanceMeters, female, age);
         var trace = new CalculationTrace()
             .Add(
-                "Human ceiling",
-                $"{best.Holder}'s {best.Event} {Format.Clock(best.Seconds)} ({best.Year}) scored by the same equations",
-                $"VDOT {best.VdotScore:0.0}",
+                "Record for this distance",
+                $"{nearest.Holder}'s {nearest.Event} {Format.Clock(nearest.Seconds)} ({nearest.Year}) scored by the same equations",
+                $"VDOT {nearest.VdotScore:0.0}",
                 Citations.DanielsVdot.Id);
 
         if (age is { } years && years > RecordAge)
         {
             trace.Add(
-                "Age-graded ceiling",
-                $"{best.VdotScore:0.0} × (1 − 0.007)^({years} − {RecordAge})",
+                "Age-graded",
+                $"{nearest.VdotScore:0.0} × (1 − 0.007)^({years} − {RecordAge})",
                 $"VDOT {ceiling:0.0}",
                 Citations.WmaAgeGrading.Id);
         }
@@ -140,7 +152,7 @@ public static class HumanLimits
             .Add(
                 "Where the target sits",
                 $"{vdot:0.0} ÷ {ceiling:0.0}",
-                $"{grade:P0} of the record — {Band(grade)}",
+                $"{Format.Percent(grade)} of the record — {Band(grade)}",
                 Citations.WmaAgeGrading.Id)
             .Steps;
     }

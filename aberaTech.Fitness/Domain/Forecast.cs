@@ -159,14 +159,14 @@ public static class Forecast
                 Text($"± {band.StandardDeviation:0.0} VDOT (1 sd)"),
                 Citations.NonlinearRegression.Id)
             .Add(
-                Text($"{band.Confidence:P0} interval"),
+                Text($"{Format.Percent(band.Confidence)} interval"),
                 Text($"{band.Vdot:0.0} ± {Linear.NormalQuantile(0.5 + band.Confidence / 2):0.00} × {band.StandardDeviation:0.0}"),
                 Text($"VDOT {band.Low:0.0} to {band.High:0.0}"),
                 Citations.NonlinearRegression.Id)
             .Add(
                 "Chance of holding the target by then",
                 Text($"Φ(({band.Vdot:0.0} − {targetVdot:0.0}) ÷ {band.StandardDeviation:0.0})"),
-                Text($"{chance:P0}"),
+                Text($"{Format.Percent(chance)}"),
                 Citations.NonlinearRegression.Id)
             .Steps;
     }

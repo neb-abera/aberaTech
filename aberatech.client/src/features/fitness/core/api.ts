@@ -18,6 +18,8 @@ export interface SettingsDto {
   vdotMeasuredOn: string | null;
   currentWeightKg: number | null;
   birthYear: number | null;
+  female: boolean | null;
+  availableHoursPerWeek: number;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
@@ -31,6 +33,8 @@ export interface SettingsUpdate {
   startVdot: number;
   vdotMeasuredOn: string | null;
   birthYear: number | null;
+  female: boolean | null;
+  availableHoursPerWeek: number;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
@@ -71,6 +75,35 @@ export interface TrainingPace {
   slowSecPerKm: number;
 }
 
+/** One line of the arithmetic behind a number the page shows. */
+export interface Step {
+  label: string;
+  expression: string;
+  value: string;
+  citationId: string | null;
+}
+
+export type Zone = "Easy" | "Threshold" | "Interval" | "Strength";
+
+export interface ZoneHours {
+  zone: Zone;
+  hours: number;
+  strain: number;
+  marginalVdotPerHour: number;
+}
+
+/** A training week, by intensity. */
+export interface Dose {
+  easyHours: number;
+  thresholdHours: number;
+  intervalHours: number;
+  strengthHours: number;
+  runningHours: number;
+  strain: number;
+  easyShare: number;
+  zones: ZoneHours[];
+}
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
@@ -78,30 +111,61 @@ export interface Summary {
   strengthTrend: E1RmPoint[];
   highlights: Highlight[];
   trainingPaces: TrainingPace[];
+  measuredDose: Dose;
+  measuredDoseSteps: Step[];
   deficiencySpread: number | null;
   activityCount: number;
 }
 
+/** A projected fitness with the interval around it. */
 export interface ProjectionPoint {
   months: number;
   vdot: number;
+  low: number;
+  high: number;
+  standardDeviation: number;
+}
+
+export interface RaceTime {
+  distanceMeters: number;
+  seconds: number;
+  fastSeconds: number;
+  slowSeconds: number;
 }
 
 export interface Checkpoint {
   months: number;
   vdot: number;
-  twoMileSeconds: number;
-  fiveMileSeconds: number;
-  oneAndAHalfMileSeconds: number;
+  low: number;
+  high: number;
+  races: RaceTime[];
+}
+
+export interface Fit {
+  startVdot: number;
+  ratePerMonth: number;
+  rateStandardError: number;
+  responsiveness: number;
+  responsivenessStandardError: number;
+  residualSd: number;
+  rSquared: number;
+  observations: number;
+  dataWeight: number;
+  steps: Step[];
 }
 
 export interface GoalOutlook {
   metric: string;
+  label: string;
+  distanceMeters: number;
   targetValue: number;
   targetVdot: number;
   targetDate: string;
+  monthsAway: number;
   monthsToReach: number | null;
-  reachable: boolean;
+  probability: number;
+  verdict: string;
+  headline: string;
 }
 
 export interface RealityCheck {
@@ -111,25 +175,66 @@ export interface RealityCheck {
 }
 
 export interface Prediction {
-  effectiveHours: number;
+  plan: Dose;
+  measured: Dose;
+  effective: Dose;
   ceiling: number;
+  hourPrice: number;
+  strainPrice: number;
+  rampMonths: number;
+  startVdot: number;
   weightAdjustedStartVdot: number;
   reclaimVdot: number | null;
   altitudePenaltyPercent: number;
   curve: ProjectionPoint[];
   checkpoints: Checkpoint[];
   goals: GoalOutlook[];
+  fit: Fit;
   realityCheck: RealityCheck;
+  steps: Step[];
   assumptions: string[];
 }
 
-export interface RequiredDose {
-  startVdot: number;
-  targetVdot: number;
+export interface Prescription {
+  dose: Dose;
+  hourPrice: number;
+  strainPrice: number;
+  rampMonths: number;
+  weeklyMiles: number | null;
+}
+
+export type Verdict =
+  | "AlreadyThere"
+  | "PastTheWorldRecord"
+  | "PastTheAgeGradedRecord"
+  | "PastAnyTrainingCeiling"
+  | "NotByThatDate"
+  | "MoreHoursThanYouHave"
+  | "Reachable";
+
+/** Everything the engine can say about one goal. */
+export interface Feasibility {
+  verdict: Verdict;
+  headline: string;
+  detail: string;
+  bindingConstraint: string;
+  distanceMeters: number;
+  targetSeconds: number;
   monthsAvailable: number;
-  requiredEffectiveHours: number | null;
-  requiredWeeklyHoursAtCompliance: number | null;
-  verdict: string;
+  targetVdot: number;
+  startVdot: number;
+  grade: number;
+  gradeBand: string;
+  recordEquivalentSeconds: number;
+  recordHolder: string;
+  ceilingReachable: number | null;
+  prescription: Prescription | null;
+  monthsAtHoursAvailable: number | null;
+  earliestMonths: number | null;
+  probabilityByDate: number;
+  monthsForEvenOdds: number | null;
+  achievableSecondsByDate: number | null;
+  steps: Step[];
 }
 
 export interface Citation {
@@ -169,34 +274,80 @@ export const fetchCitations = () => get<Citation[]>("/api/fitness/citations");
 export const fetchActivities = () =>
   get<ActivityRow[]>("/api/fitness/activities");
 
+/** A plan stated by zone, or a total the model is asked to split itself. */
+export interface PlanRequest {
+  weeklyHours?: number;
+  easyHours?: number;
+  thresholdHours?: number;
+  intervalHours?: number;
+  strengthHours?: number;
+}
+
 export function fetchPrediction(
-  weeklyHours: number,
+  plan: PlanRequest,
   compliance: number,
   targetWeightKg: number | null,
+  distances: number[],
+  horizons: number[],
 ): Promise<Prediction> {
-  const query = new URLSearchParams({
-    weeklyHours: String(weeklyHours),
-    compliance: String(compliance),
-  });
+  const query = new URLSearchParams({ compliance: String(compliance) });
+  for (const [key, value] of Object.entries(plan)) {
+    if (value !== undefined) {
+      query.set(key, String(value));
+    }
+  }
   if (targetWeightKg !== null) {
     query.set("targetWeightKg", String(targetWeightKg));
+  }
+  if (distances.length > 0) {
+    query.set("distances", distances.join(","));
+  }
+  if (horizons.length > 0) {
+    query.set("horizons", horizons.join(","));
   }
   return get<Prediction>(`/api/fitness/predictions?${query}`);
 }
 
-export function fetchRequiredDose(
+export function fetchFeasibility(
   distanceMeters: number,
   targetSeconds: number,
   monthsAvailable: number,
-  compliance: number,
-): Promise<RequiredDose> {
+  availableHours: number,
+): Promise<Feasibility> {
   const query = new URLSearchParams({
     distanceMeters: String(distanceMeters),
     targetSeconds: String(targetSeconds),
     monthsAvailable: String(monthsAvailable),
-    compliance: String(compliance),
+    availableHours: String(availableHours),
   });
-  return get<RequiredDose>(`/api/fitness/predictions/required?${query}`);
+  return get<Feasibility>(`/api/fitness/predictions/goal?${query}`);
+}
+
+export async function saveGoal(goal: {
+  metric: string;
+  targetValue: number;
+  targetDate: string;
+  distanceMeters: number;
+  label: string;
+}): Promise<void> {
+  const response = await fetch("/api/fitness/goals", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(goal),
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+}
+
+export async function deleteGoal(metric: string): Promise<void> {
+  const response = await fetch(
+    `/api/fitness/goals/${encodeURIComponent(metric)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
 }
 
 export async function uploadFile(

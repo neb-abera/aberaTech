@@ -34,6 +34,8 @@ const emptySummary = {
     pastPeakSeconds: 765,
     pastPeakYear: 2019,
     homeAltitudeMeters: 1190,
+    female: null,
+    availableHoursPerWeek: 7,
   },
   aerobicTrend: [
     { month: "2026-07", medianSecPerKm: 447, runs: 2 },
@@ -58,6 +60,34 @@ const emptySummary = {
       headline: "Aerobic base up 8% month over month",
       evidence: "Median HR-normalized pace 7:27/km -> 6:50/km (2 -> 11 runs).",
       positive: true,
+    },
+  ],
+  measuredDose: {
+    easyHours: 3.1,
+    thresholdHours: 0.3,
+    intervalHours: 0.1,
+    strengthHours: 1.2,
+    runningHours: 3.5,
+    strain: 5.9,
+    easyShare: 0.886,
+    zones: [
+      { zone: "Easy", hours: 3.1, strain: 3.1, marginalVdotPerHour: 1.58 },
+      {
+        zone: "Threshold",
+        hours: 0.3,
+        strain: 0.75,
+        marginalVdotPerHour: 2.22,
+      },
+      { zone: "Interval", hours: 0.1, strain: 0.45, marginalVdotPerHour: 2.85 },
+      { zone: "Strength", hours: 1.2, strain: 1.8, marginalVdotPerHour: 0.48 },
+    ],
+  },
+  measuredDoseSteps: [
+    {
+      label: "Your current week, from the log",
+      expression: "18 sessions over 8 weeks",
+      value: "3.1 h easy, 0.3 h threshold",
+      citationId: "daniels-vdot",
     },
   ],
   deficiencySpread: 0.147,
