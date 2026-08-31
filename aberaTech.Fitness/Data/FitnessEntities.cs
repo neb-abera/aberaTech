@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using NodaTime;
 
 namespace aberaTech.Fitness.Data;
@@ -112,23 +111,6 @@ public class AthleteSettings
 
     public int? PastPeakYear { get; set; }
 
-    /// <summary>
-    /// Where the athlete is now, and so where the goal times will be run. Thin
-    /// air slows aerobic times: about 1% at 1,200 m, nothing below 600 m.
-    /// </summary>
+    /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
-
-    /// <summary>
-    /// Where the anchor race and the lifetime best were run, when that is not
-    /// here. A posting moves an athlete without moving their history: the peak
-    /// stays worth what the thin air it was set in made it worth, while the
-    /// goals belong to the altitude they will actually be raced at. Null means
-    /// the two are the same place, which is what every athlete who has not
-    /// moved should leave it as.
-    /// </summary>
-    public double? PastAltitudeMeters { get; set; }
-
-    /// <summary>The altitude to score the anchor and the lifetime best at.</summary>
-    [NotMapped]
-    public double PastAltitudeOrHome => PastAltitudeMeters ?? HomeAltitudeMeters;
 }

@@ -34,7 +34,6 @@ const emptySummary = {
     pastPeakSeconds: 765,
     pastPeakYear: 2019,
     homeAltitudeMeters: 1190,
-    pastAltitudeMeters: null,
   },
   aerobicTrend: [
     { month: "2026-07", medianSecPerKm: 447, runs: 2 },

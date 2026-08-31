@@ -22,8 +22,6 @@ export interface SettingsDto {
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
   homeAltitudeMeters: number;
-  /** Where the anchor and the lifetime best were run, when that is not here. */
-  pastAltitudeMeters: number | null;
 }
 
 export interface SettingsUpdate {
@@ -37,8 +35,6 @@ export interface SettingsUpdate {
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
   homeAltitudeMeters: number;
-  /** Where the anchor and the lifetime best were run, when that is not here. */
-  pastAltitudeMeters: number | null;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
 }

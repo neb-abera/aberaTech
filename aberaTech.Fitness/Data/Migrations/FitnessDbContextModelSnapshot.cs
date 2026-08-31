@@ -91,9 +91,6 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.Property<double?>("LtSecondsPerKm")
                         .HasColumnType("double precision");
 
-                    b.Property<double?>("PastAltitudeMeters")
-                        .HasColumnType("double precision");
-
                     b.Property<double?>("PastPeakDistanceMeters")
                         .HasColumnType("double precision");
 
