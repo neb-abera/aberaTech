@@ -45,6 +45,12 @@ export const projects: Entry[] = [
     blurb: "Book a time, or join the queue. Confirmed by text.",
   },
   {
+    title: "Military athlete console",
+    to: "/fitness",
+    blurb:
+      "Verified training data in, sourced predictions out. Model the dose, or price a goal against a date.",
+  },
+  {
     title: "Facewoof",
     to: "https://facewoof.abera.tech",
     blurb: "A play dating app for dogs.",
@@ -52,8 +58,17 @@ export const projects: Entry[] = [
   },
 ];
 
-/** The one action in the bar, rather than another place to browse. */
-export const primaryAction: Entry = projects[1];
+/**
+ * The one action in the bar, rather than another place to browse.
+ *
+ * Found by path rather than by index. This was `projects[1]`, which would have
+ * quietly promoted a different project to the bar's button the first time
+ * anyone inserted an entry above it.
+ */
+const scheduling = projects.find((entry) => entry.to === "/schedule");
+if (!scheduling)
+  throw new Error("sections: /schedule is missing from projects");
+export const primaryAction: Entry = scheduling;
 
 /** What to show where space is tight. */
 export const label = (entry: Entry): string => entry.navLabel ?? entry.title;
