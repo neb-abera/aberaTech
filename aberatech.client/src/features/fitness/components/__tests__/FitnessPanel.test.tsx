@@ -155,7 +155,10 @@ describe("FitnessPanel", () => {
     await screen.findByText(/over the 10% deficiency line/i);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: /predictions/i })).toBeDefined();
+      // The console's two prediction surfaces: the what-if workbench and the
+      // training plan behind it.
+      expect(screen.getByRole("tab", { name: /solve/i })).toBeDefined();
+      expect(screen.getByRole("tab", { name: /plan/i })).toBeDefined();
     });
   });
 });

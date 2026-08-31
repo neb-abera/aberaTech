@@ -87,6 +87,8 @@ public static class FitnessEndpoints
 
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
+        api.MapSolverEndpoints();
+
         api.MapGet("/predictions", async (
             FitnessDbContext database,
             HttpRequest request,
@@ -167,27 +169,29 @@ public static class FitnessEndpoints
                 DateTime.UtcNow.Year, cancellationToken));
         });
 
-        api.MapPost("/import/hevy-csv", async (HttpRequest request, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPost("/import/hevy-csv", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             var text = await ReadBodyAsync(request, cancellationToken);
             if (text is null) return Results.BadRequest("Empty or oversized upload.");
 
             var activities = HevyCsv.Parse(text, DateTimeZoneProviders.Tzdb["Etc/UTC"]);
             var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
+            cache.Invalidate();
             return Results.Ok(new { parsed = activities.Count, added });
         });
 
-        api.MapPost("/import/garmin-csv", async (HttpRequest request, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPost("/import/garmin-csv", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             var text = await ReadBodyAsync(request, cancellationToken);
             if (text is null) return Results.BadRequest("Empty or oversized upload.");
 
             var activities = GarminActivitiesCsv.Parse(text, DateTimeZoneProviders.Tzdb["Etc/UTC"]);
             var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
+            cache.Invalidate();
             return Results.Ok(new { parsed = activities.Count, added });
         });
 
-        api.MapPost("/import/fit", async (HttpRequest request, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPost("/import/fit", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             using var buffer = new MemoryStream();
             await request.Body.CopyToAsync(buffer, cancellationToken);
@@ -198,15 +202,17 @@ public static class FitnessEndpoints
             if (activity is null) return Results.BadRequest("Not a decodable FIT activity file.");
 
             var added = await ActivityStore.UpsertAsync(database, [activity], cancellationToken);
+            cache.Invalidate();
             return Results.Ok(new { parsed = 1, added });
         });
 
         if (options.HasHevyApi)
         {
-            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, CancellationToken cancellationToken) =>
+            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
             {
                 var activities = await hevy.FetchAllAsync(cancellationToken);
                 var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
+                cache.Invalidate();
                 return Results.Ok(new { fetched = activities.Count, added });
             });
         }
@@ -228,7 +234,7 @@ public static class FitnessEndpoints
                 })
                 .ToListAsync(cancellationToken));
 
-        api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             if (update.ReferenceHr is < 80 or > 220) return Results.BadRequest("Reference HR out of range.");
 
@@ -272,6 +278,7 @@ public static class FitnessEndpoints
             }
 
             await database.SaveChangesAsync(cancellationToken);
+            cache.Invalidate();
             return Results.NoContent();
         });
 
