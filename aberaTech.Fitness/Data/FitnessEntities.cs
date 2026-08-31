@@ -112,8 +112,10 @@ public class AthleteSettings
 
     public int? PastPeakYear { get; set; }
 
-    /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
-    /// <summary>Where the athlete is now, and so where the goal times will be run.</summary>
+    /// <summary>
+    /// Where the athlete is now, and so where the goal times will be run. Thin
+    /// air slows aerobic times: about 1% at 1,200 m, nothing below 600 m.
+    /// </summary>
     public double HomeAltitudeMeters { get; set; }
 
     /// <summary>
