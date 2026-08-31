@@ -1,4 +1,3 @@
-using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using NodaTime;
 using Xunit;
@@ -81,58 +80,5 @@ public sealed class SameSessionTests
     {
         Assert.False(SameSession.Matches(Run(Noon), Run(Noon, distance: null)));
         Assert.True(SameSession.Matches(Run(Noon, distance: null), Run(Noon, distance: null)));
-    }
-}
-
-/// <summary>
-/// An athlete who has moved. The lifetime best and the anchor race were run at
-/// one altitude and the goals will be run at another, so one number cannot
-/// score both — the peak would be credited with thin air it never faced, or
-/// the goals discounted for air that is no longer there.
-/// </summary>
-public sealed class PastAltitudeTests
-{
-    /// <summary>The 2019 five-mile best, set at El Paso's 1,190 m.</summary>
-    private static AthleteSettings Peak(double home, double? past) => new()
-    {
-        Id = 1,
-        PastPeakDistanceMeters = 5 * 1609.344,
-        PastPeakSeconds = 34.5 * 60,
-        PastPeakYear = 2019,
-        BirthYear = 1993,
-        HomeAltitudeMeters = home,
-        PastAltitudeMeters = past
-    };
-
-    [Fact]
-    public void Scores_the_lifetime_best_where_it_was_actually_run()
-    {
-        // Moved to sea level; the best was set at 1,190 m and is worth more
-        // than the same clock time at sea level would be.
-        var moved = FitnessReports.ReclaimVdotFrom(Peak(home: 0, past: 1190), currentYear: 2026);
-        var neverMoved = FitnessReports.ReclaimVdotFrom(Peak(home: 0, past: null), currentYear: 2026);
-
-        Assert.NotNull(moved);
-        Assert.NotNull(neverMoved);
-        Assert.True(moved > neverMoved, "thin air at the time makes the peak worth more, not less");
-    }
-
-    [Fact]
-    public void Leaving_it_unset_reproduces_exactly_what_the_one_number_did()
-    {
-        // Every athlete who has not moved must see no change at all.
-        var before = FitnessReports.ReclaimVdotFrom(Peak(home: 1190, past: null), currentYear: 2026);
-        var after = FitnessReports.ReclaimVdotFrom(Peak(home: 1190, past: 1190), currentYear: 2026);
-
-        Assert.Equal(before!.Value, after!.Value, precision: 10);
-    }
-
-    [Fact]
-    public void Where_you_are_now_does_not_move_a_peak_set_somewhere_else()
-    {
-        var atSeaLevel = FitnessReports.ReclaimVdotFrom(Peak(home: 0, past: 1190), currentYear: 2026);
-        var atAltitude = FitnessReports.ReclaimVdotFrom(Peak(home: 2400, past: 1190), currentYear: 2026);
-
-        Assert.Equal(atSeaLevel!.Value, atAltitude!.Value, precision: 10);
     }
 }

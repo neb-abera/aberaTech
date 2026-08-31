@@ -30,11 +30,7 @@ sourced predictions out.
 - **Predicts**: VDOT trajectory under an adjustable dose (weekly hours ×
   compliance), with bodyweight as a factor (VDOT is per-kilogram), race-time
   checkpoints at 6/12/18/24 months, goal arrival dates, and the inverse — name
-  a goal and a deadline, get the required weekly dose. Altitude is asked twice,
-  because a posting moves an athlete without moving their history: the anchor
-  and the lifetime best are scored where they were run, the goals where they
-  will be. Leaving the past one blank means "same place" and reproduces the
-  single-altitude behaviour exactly.
+  a goal and a deadline, get the required weekly dose.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
   Cureton & Sparling, Epley, Brzycki, Coggan). `/api/fitness/citations` serves

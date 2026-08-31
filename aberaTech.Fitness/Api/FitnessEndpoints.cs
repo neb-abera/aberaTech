@@ -20,7 +20,6 @@ public sealed record SettingsUpdate(
     double? PastPeakSeconds = null,
     int? PastPeakYear = null,
     double HomeAltitudeMeters = 0,
-    double? PastAltitudeMeters = null,
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
     double? AnchorSeconds = null);
@@ -224,11 +223,6 @@ public static class FitnessEndpoints
                 return Results.BadRequest("Home altitude 0-5000 m.");
             }
 
-            if (update.PastAltitudeMeters is < 0 or > 5000)
-            {
-                return Results.BadRequest("Past altitude 0-5000 m.");
-            }
-
             row.ReferenceHr = update.ReferenceHr;
             row.LtSecondsPerKm = update.LtSecondsPerKm;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
@@ -238,18 +232,16 @@ public static class FitnessEndpoints
             row.PastPeakSeconds = update.PastPeakSeconds;
             row.PastPeakYear = update.PastPeakYear;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
-            row.PastAltitudeMeters = update.PastAltitudeMeters;
 
             // A race is the honest way to state the anchor; raw VDOT stays as
-            // the escape hatch. The race happened where the athlete was then,
-            // which is not necessarily where they are now, so its sea-level
-            // equivalent is taken at the past altitude.
+            // the escape hatch. The race happened at home altitude, so its
+            // sea-level equivalent is what scores it.
             if (update is { AnchorDistanceMeters: { } anchorDistance, AnchorSeconds: { } anchorSeconds }
                 && anchorDistance is >= 400 and <= 100_000 && anchorSeconds > 0)
             {
                 row.StartVdot = Domain.Vdot.FromRace(
                     anchorDistance,
-                    Domain.Altitude.ToSeaLevel(anchorSeconds, row.PastAltitudeOrHome) / 60.0);
+                    Domain.Altitude.ToSeaLevel(anchorSeconds, update.HomeAltitudeMeters) / 60.0);
             }
             else
             {
