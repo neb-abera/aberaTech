@@ -126,7 +126,7 @@ public static class FitnessReports
         trace
             .Add(
                 "Compliance",
-                Text($"{plan.RunningHours:0.0} h planned × {compliance:P0} kept"),
+                Text($"{plan.RunningHours:0.0} h planned × {Format.Percent(compliance)} kept"),
                 Text($"{effective.RunningHours:0.0} h/week actually trained"),
                 Citations.CogganPmc.Id)
             .AddRange(DoseResponse.Explain(effective, p.Responsiveness))
@@ -398,7 +398,7 @@ public static class FitnessReports
         };
 
         assumptions.Add(athlete.Fit.Observations >= ModelFit.MinimumObservations
-            ? Text($"Approach rate and responsiveness fitted to your own {athlete.Fit.Observations} months (R² {athlete.Fit.RSquared:0.00}, {athlete.Fit.DataWeight:P0} of the answer from your data rather than the priors) [seber-wild-nls].")
+            ? Text($"Approach rate and responsiveness fitted to your own {athlete.Fit.Observations} months (R² {athlete.Fit.RSquared:0.00}, {Format.Percent(athlete.Fit.DataWeight)} of the answer from your data rather than the priors) [seber-wild-nls].")
             : Text($"Fewer than {ModelFit.MinimumObservations} months of imported runs, so the rate and responsiveness are the literature priors, not yours [seber-wild-nls]."));
 
         if (athlete.ReclaimVdot is { } reclaim)
@@ -410,7 +410,7 @@ public static class FitnessReports
         if (altitudePenalty > 0)
         {
             assumptions.Add(Text(
-                $"Times shown for your home altitude ({row.HomeAltitudeMeters:0} m): aerobic races run ~{altitudePenalty:P1} slower there than at sea level [peronnet-altitude]."));
+                $"Times shown for your home altitude ({row.HomeAltitudeMeters:0} m): aerobic races run ~{Format.Percent(altitudePenalty, 1)} slower there than at sea level [peronnet-altitude]."));
         }
 
         assumptions.Add(row.Female is null

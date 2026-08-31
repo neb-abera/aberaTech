@@ -127,8 +127,13 @@ public static class Feasibility
         var seaLevel = Altitude.ToSeaLevel(goal.TargetSeconds, athlete.AltitudeMeters);
         var targetVdot = Vdot.FromRace(goal.DistanceMeters, seaLevel / 60.0);
 
-        var grade = HumanLimits.Grade(targetVdot, athlete.Female, athlete.Age);
-        var record = HumanLimits.BestRecord(athlete.Female);
+        // Graded against the record nearest this distance, the way age-grading
+        // works, rather than against whichever mark in the book scores highest.
+        var grade = HumanLimits.Grade(targetVdot, goal.DistanceMeters, athlete.Female, athlete.Age);
+        var record = HumanLimits.NearestRecord(goal.DistanceMeters, athlete.Female);
+        var openCeiling = HumanLimits.DistanceCeiling(goal.DistanceMeters, athlete.Female);
+        var ageGradedCeiling =
+            HumanLimits.AgeGradedDistanceCeiling(goal.DistanceMeters, athlete.Female, athlete.Age);
         var recordEquivalent = Altitude.AtAltitude(
             HumanLimits.RecordEquivalentSeconds(goal.DistanceMeters, athlete.Female, athlete.Age),
             athlete.AltitudeMeters);
@@ -143,7 +148,7 @@ public static class Feasibility
                 Text($"{Format.Distance(goal.DistanceMeters)} in {Format.Clock(goal.TargetSeconds)}") + thinAir,
                 Text($"VDOT {targetVdot:0.0}"),
                 Citations.DanielsVdot.Id)
-            .AddRange(HumanLimits.Explain(targetVdot, athlete.Female, athlete.Age));
+            .AddRange(HumanLimits.Explain(targetVdot, goal.DistanceMeters, athlete.Female, athlete.Age));
 
         // The ceiling of the biggest week this athlete could sustain, which is
         // the outer bound on anything training can do for them.
@@ -176,14 +181,14 @@ public static class Feasibility
                 achievable: BestTime(p.StartVdot, goal.DistanceMeters, athlete.AltitudeMeters));
         }
 
-        if (grade >= 1.0 && targetVdot > HumanLimits.OpenCeiling(athlete.Female))
+        if (targetVdot > openCeiling)
         {
-            var margin = targetVdot / HumanLimits.OpenCeiling(athlete.Female) - 1;
+            var margin = targetVdot / openCeiling - 1;
             return Report(
                 FeasibilityVerdict.PastTheWorldRecord,
-                $"No human has run this. {Format.Clock(goal.TargetSeconds)} for {Format.Distance(goal.DistanceMeters)} scores VDOT {targetVdot:0.0}; the best performance on record scores {HumanLimits.OpenCeiling(athlete.Female):0.0}.",
-                $"The target is {margin:P0} beyond the record book, so no training answer exists. Record-equivalent for this distance is {Format.Clock(recordEquivalent)} ({record.Holder}'s level).",
-                $"the world record — VDOT {HumanLimits.OpenCeiling(athlete.Female):0.0}",
+                $"No human has run this. {Format.Clock(goal.TargetSeconds)} for {Format.Distance(goal.DistanceMeters)} scores VDOT {targetVdot:0.0}; the record nearest that distance scores {openCeiling:0.0}.",
+                $"The target is {Format.Percent(margin)} beyond the record book, so no training answer exists. Record-equivalent for this distance is {Format.Clock(recordEquivalent)} ({record.Holder}'s level).",
+                $"the world record — VDOT {openCeiling:0.0}",
                 achievable: recordEquivalent);
         }
 
@@ -191,9 +196,9 @@ public static class Feasibility
         {
             return Report(
                 FeasibilityVerdict.PastTheAgeGradedRecord,
-                $"Faster than anyone has run it at {athlete.Age}. VDOT {targetVdot:0.0} against an age-graded ceiling of {HumanLimits.AgeGradedCeiling(athlete.Female, athlete.Age):0.0}.",
-                $"The open record scores {HumanLimits.OpenCeiling(athlete.Female):0.0}, which the age-grading discounts to {HumanLimits.AgeGradedCeiling(athlete.Female, athlete.Age):0.0} at your age. An age-graded record run would be {Format.Clock(recordEquivalent)}.",
-                $"the age-graded record — VDOT {HumanLimits.AgeGradedCeiling(athlete.Female, athlete.Age):0.0}",
+                $"Faster than anyone has run it at {athlete.Age}. VDOT {targetVdot:0.0} against an age-graded ceiling of {ageGradedCeiling:0.0}.",
+                $"The open record over this distance scores {openCeiling:0.0}, which the age-grading discounts to {ageGradedCeiling:0.0} at your age. An age-graded record run would be {Format.Clock(recordEquivalent)}.",
+                $"the age-graded record — VDOT {ageGradedCeiling:0.0}",
                 achievable: recordEquivalent);
         }
 
@@ -304,15 +309,20 @@ public static class Feasibility
                 BestTime(byDate, goal.DistanceMeters, athlete.AltitudeMeters));
         }
 
-        var confidence = probability >= 0.5
+        // A dose solved to arrive exactly on the date is a coin flip by
+        // construction, and saying so is more use than dressing 50% up as
+        // either confidence or doubt.
+        var confidence = probability >= 0.65
             ? "and the fitted uncertainty puts the odds in your favour"
-            : probability >= LongShot
-                ? "though the fitted uncertainty makes it a stretch rather than a plan"
-                : "but on your own measured scatter it is a long shot at that date";
+            : probability > 0.35
+                ? "which lands the projection on your date exactly — even odds, so hours above this buy the margin"
+                : probability >= LongShot
+                    ? "though the fitted uncertainty makes it a stretch rather than a plan"
+                    : "but on your own measured scatter it is a long shot at that date";
 
         return Report(
             FeasibilityVerdict.Reachable,
-            $"Reachable on {requiredHours.Value:0.0} h/week of running — {probability:P0} by your date.",
+            $"Reachable on {requiredHours.Value:0.0} h/week of running — {Format.Percent(probability)} by your date.",
             $"{allocation.Dose.EasyHours:0.0} h easy, {allocation.Dose.ThresholdHours:0.0} h threshold and {allocation.Dose.IntervalHours:0.0} h intervals, built from your current {athlete.CurrentDose.RunningHours:0.0} h over about {schedule.MonthsToFullDose():0.0} months, {confidence}."
             + (evenOdds is { } fifty && Math.Abs(fifty - goal.Months) > 0.5
                 ? $" Even odds land around month {fifty:0.0}."

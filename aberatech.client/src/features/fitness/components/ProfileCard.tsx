@@ -66,6 +66,12 @@ export default function ProfileCard({
   const [peakYear, setPeakYear] = React.useState(
     settings.pastPeakYear === null ? "" : String(settings.pastPeakYear),
   );
+  const [book, setBook] = React.useState(
+    settings.female === null ? "unstated" : settings.female ? "women" : "men",
+  );
+  const [availableHours, setAvailableHours] = React.useState(
+    String(settings.availableHoursPerWeek),
+  );
   const [status, setStatus] = React.useState<{
     ok: boolean;
     text: string;
@@ -86,6 +92,11 @@ export default function ProfileCard({
       });
       return;
     }
+    const hours = Number(availableHours);
+    if (!Number.isFinite(hours) || hours < 0 || hours > 40) {
+      setStatus({ ok: false, text: "Available hours must be 0-40 a week." });
+      return;
+    }
     const altitude = Number(altitudeFt);
     if (!Number.isFinite(altitude) || altitude < 0 || altitude > 15000) {
       setStatus({ ok: false, text: "Altitude must be 0-15000 ft." });
@@ -100,6 +111,8 @@ export default function ProfileCard({
         startVdot: settings.startVdot,
         vdotMeasuredOn: anchorDate.trim() === "" ? null : anchorDate,
         birthYear: birthYear.trim() === "" ? null : Number(birthYear),
+        female: book === "unstated" ? null : book === "women",
+        availableHoursPerWeek: Number(availableHours),
         pastPeakDistanceMeters: peakSeconds === null ? null : peakDistance,
         pastPeakSeconds: peakSeconds,
         pastPeakYear: peakYear.trim() === "" ? null : Number(peakYear),
@@ -127,6 +140,31 @@ export default function ProfileCard({
         </Typography>
 
         <Stack spacing={2}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              select
+              label="Grade targets against"
+              value={book}
+              onChange={(event) => setBook(event.target.value)}
+              helperText="Which record book a target is measured against"
+              sx={{ minWidth: 220 }}
+            >
+              <MenuItem value="unstated">
+                Unstated (open men's — most permissive)
+              </MenuItem>
+              <MenuItem value="men">Men's record book</MenuItem>
+              <MenuItem value="women">Women's record book</MenuItem>
+            </TextField>
+            <TextField
+              label="Hours you can train"
+              type="number"
+              value={availableHours}
+              onChange={(event) => setAvailableHours(event.target.value)}
+              helperText="Weekly running hours you can realistically commit"
+              slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
+              sx={{ width: 200 }}
+            />
+          </Stack>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               select

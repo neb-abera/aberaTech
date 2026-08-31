@@ -108,7 +108,9 @@ export default function FitnessPanel() {
       </Tabs>
 
       {tab === 0 && <Dashboard summary={summary} />}
-      {tab === 1 && <ProjectionPanel summary={summary} />}
+      {tab === 1 && (
+        <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
+      )}
       {tab === 2 && (
         <DataPanel
           hevyApi={me.hevyApi}

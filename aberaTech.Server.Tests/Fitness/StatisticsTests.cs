@@ -216,18 +216,37 @@ public sealed class HumanLimitsTests
     [Fact]
     public void A_record_equivalent_time_is_quoted_for_any_distance_asked_about()
     {
-        // Five miles has no ratified record; the ceiling still answers for it.
+        // Five miles has no ratified record; the record nearest it answers.
         var seconds = HumanLimits.RecordEquivalentSeconds(5 * Vdot.MileMeters, false, null);
         Assert.InRange(seconds, 20 * 60, 23 * 60);
     }
 
     [Fact]
+    public void A_target_is_graded_against_its_own_distance_not_the_best_mark_in_the_book()
+    {
+        // The half marathon scores highest of the men's records, but quoting it
+        // as the standard for two miles makes a record-level two-mile look half
+        // a minute faster than it is.
+        Assert.Equal(
+            "10,000 m",
+            HumanLimits.NearestRecord(5 * Vdot.MileMeters, female: false).Event);
+        Assert.Equal(
+            "5000 m",
+            HumanLimits.NearestRecord(2 * Vdot.MileMeters, female: false).Event);
+
+        Assert.True(
+            HumanLimits.DistanceCeiling(2 * Vdot.MileMeters, false) <
+            HumanLimits.OpenCeiling(false));
+    }
+
+    [Fact]
     public void Grading_is_explained_step_by_step()
     {
-        var steps = HumanLimits.Explain(vdot: 60, female: false, age: 45);
+        var steps = HumanLimits.Explain(
+            vdot: 60, distanceMeters: 5 * Vdot.MileMeters, female: false, age: 45);
 
-        Assert.Contains(steps, s => s.Label == "Human ceiling");
-        Assert.Contains(steps, s => s.Label == "Age-graded ceiling");
+        Assert.Contains(steps, s => s.Label == "Record for this distance");
+        Assert.Contains(steps, s => s.Label == "Age-graded");
         Assert.Contains(steps, s => s.Label == "Where the target sits");
     }
 }

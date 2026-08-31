@@ -121,4 +121,17 @@ public sealed class TrajectoryTests
         Assert.Equal(0, Trajectory.HoursToReach(P, targetVdot: 36, months: 6));
         Assert.Equal(0, Trajectory.MonthsToReach(P, 5, targetVdot: 37));
     }
+
+    [Fact]
+    public void A_standing_start_still_ramps_somewhere()
+    {
+        // A percentage increase on an empty log is still nothing, which once
+        // made every goal unreachable for an athlete with no imports.
+        var schedule = new DoseSchedule(DoseResponse.Allocate(8).Dose, new TrainingDose());
+
+        Assert.True(schedule.At(0).RunningHours > 1);
+        Assert.True(schedule.At(12).RunningHours > schedule.At(1).RunningHours);
+        Assert.InRange(schedule.MonthsToFullDose(), 4, 6);
+        Assert.True(Trajectory.VdotAt(P, schedule, 24) > 44);
+    }
 }
