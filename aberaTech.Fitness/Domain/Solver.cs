@@ -437,7 +437,9 @@ public static class Solver
             trace.Add(
                 $"Sensitivity to {Name(sensitivity.Factor)}",
                 Text($"∂(time)/∂({Name(sensitivity.Factor)}) at {sensitivity.Value:0.00}"),
-                Text($"{sensitivity.PerUnitSeconds:0.0} s per unit — {Format.Percent(Math.Abs(sensitivity.Elasticity), 2)} of race time per 1% change"),
+                // An elasticity is already a ratio of fractional changes, so
+                // it is a percentage per percentage — not a percentage of one.
+                Text($"{sensitivity.PerUnitSeconds:0.0} s per unit — {Math.Abs(sensitivity.Elasticity):0.000}% of race time per 1% change"),
                 Citations.BanisterModel.Id);
         }
 
