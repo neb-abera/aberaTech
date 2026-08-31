@@ -5,10 +5,16 @@ sourced predictions out.
 
 ## What it does
 
-- **Ingests** Garmin Connect exports (activities CSV for bulk history, single
-  `.fit` files decoded with Garmin's own SDK), Hevy exports (free-tier CSV),
-  and — when a Hevy Pro API key is configured — the official Hevy REST API.
-  Every import is idempotent: records land keyed by `(source, external id)`.
+- **Ingests** whatever these services hand out, as they hand it out. One
+  route, `POST /api/fitness/import`, sniffs the bytes: Garmin's "Export Your
+  Data" archive (walked for its activity summaries and the originals nested in
+  a second zip), a single `.fit` decoded with Garmin's own SDK, the Connect
+  website's activities CSV, or a Hevy export CSV — and, when a Hevy Pro API key
+  is configured, the official Hevy REST API. Content decides, never the file
+  name. Every import is idempotent: records land keyed by
+  `(source, external id)`, and the archive keys on Garmin's own activity id, so
+  re-importing it — or a later archive that overlaps it — updates rather than
+  duplicates.
 - **Analyses**: monthly aerobic trend as HR-normalized pace (the field version
   of a monthly aerobic-threshold test), weekly training dose against the plan,
   estimated 1RM trends (Epley, Brzycki cross-check), and rule-based highlights
@@ -55,3 +61,13 @@ the CSV upload path keeps the free tier fully functional. Garmin's official
 API is enterprise-only, so Garmin data arrives by export upload — by design,
 no credentials for any third-party service are stored anywhere in this
 feature.
+
+## Reading an archive safely
+
+An upload is a zip from outside, so `Ingest/Import.cs` treats it as hostile:
+nothing is ever written to disk, so there is no path to traverse; members are
+read as streams and counted as they are read, because a zip's declared sizes
+are written by whoever made it; and the walk stops at 20,000 members, 64 MB for
+any one of them, 512 MB across the whole archive, and two levels of nesting —
+one more than Garmin itself uses. The request body is capped at 100 MB, which
+is Kestrel's 30 MB default raised deliberately for this one route.

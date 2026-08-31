@@ -199,18 +199,25 @@ export function fetchRequiredDose(
   return get<RequiredDose>(`/api/fitness/predictions/required?${query}`);
 }
 
+/**
+ * Any file these services hand out. The server decides what it was — see
+ * Ingest/Import.cs — so the page never asks which button a download belongs to.
+ */
 export async function uploadFile(
-  kind: "hevy-csv" | "garmin-csv" | "fit",
   file: File,
-): Promise<{ parsed: number; added: number }> {
-  const response = await fetch(`/api/fitness/import/${kind}`, {
+): Promise<{ kind: string; parsed: number; added: number }> {
+  const response = await fetch("/api/fitness/import", {
     method: "POST",
     body: file,
   });
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  return (await response.json()) as { parsed: number; added: number };
+  return (await response.json()) as {
+    kind: string;
+    parsed: number;
+    added: number;
+  };
 }
 
 export async function syncHevy(): Promise<{ fetched: number; added: number }> {
