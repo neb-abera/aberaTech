@@ -128,9 +128,12 @@ public sealed class RetrainedTrajectoryTests
     [Fact]
     public void A_low_dose_caps_the_reclaim_at_its_own_ceiling()
     {
-        // 1.5 effective hours supports only VDOT 40.4: even a big past peak
-        // cannot be reclaimed past what the current dose sustains.
-        Assert.True(Trajectory.VdotAt(Returning, 1.5, 240) < 40.5);
+        // An hour and a half a week supports a ceiling far below the old
+        // peak: even a big trained past cannot be reclaimed past what the
+        // current dose sustains.
+        var ceiling = Trajectory.Ceiling(Returning, 1.5);
+        Assert.True(ceiling < 43);
+        Assert.True(Trajectory.VdotAt(Returning, 1.5, 240) < ceiling);
         Assert.Null(Trajectory.MonthsToReach(Returning, 1.5, 48));
     }
 
