@@ -19,7 +19,8 @@ internal sealed record AthleteSnapshot(
     double MeasuredWeeks,
     FitResult Fit,
     double? EasyPaceSecPerKm,
-    IReadOnlyList<MonthlyAerobicPoint> Trend);
+    IReadOnlyList<MonthlyAerobicPoint> Trend,
+    IReadOnlyList<FitObservation> Observations);
 
 /// <summary>Builds the analysis and prediction views out of stored data and the domain models.</summary>
 public static class FitnessReports
@@ -256,6 +257,39 @@ public static class FitnessReports
             Steps(report.Steps).Concat(Steps(athlete.Fit.Steps)).ToArray());
     }
 
+    /// <summary>
+    /// The athlete as the solver needs them: the cached posterior plus the
+    /// fixed facts every what-if holds constant.
+    /// </summary>
+    public static async Task<SolverContext> SolverContextAsync(
+        FitnessDbContext database,
+        PosteriorCache cache,
+        int currentYear,
+        CancellationToken cancellationToken)
+    {
+        var athlete = await SnapshotAsync(database, currentYear, cancellationToken);
+        var observations = athlete.Observations;
+
+        var posterior = await cache.GetAsync(
+            observations,
+            new Posterior.Priors(
+                observations.Count > 0 ? observations[0].ObservedVdot : athlete.AnchorVdot),
+            athlete.ReclaimVdot,
+            cancellationToken);
+
+        var mass = (await database.BodyMetrics.OrderByDescending(m => m.Date)
+            .FirstOrDefaultAsync(cancellationToken))?.WeightKg;
+
+        return new SolverContext(
+            posterior,
+            athlete.AnchorVdot,
+            athlete.ReclaimVdot,
+            athlete.MeasuredDose,
+            mass,
+            athlete.Row.HomeAltitudeMeters,
+            new DoseLimits());
+    }
+
     private static AthleteContext Context(AthleteSnapshot athlete, TrajectoryParameters p, double availableHours) =>
         new(
             p,
@@ -297,7 +331,8 @@ public static class FitnessReports
             RecentWeeks,
             fit,
             (easyPace.FastSecPerKm + easyPace.SlowSecPerKm) / 2,
-            trend);
+            trend,
+            observations);
     }
 
     /// <summary>

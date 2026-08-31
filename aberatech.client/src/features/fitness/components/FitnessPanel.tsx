@@ -22,6 +22,7 @@ import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
 import ProjectionPanel from "./ProjectionPanel";
 import SourcesPanel from "./SourcesPanel";
+import Workbench from "./Workbench";
 
 /**
  * The athlete's console: highlights and trends, the prediction calculator, the
@@ -102,23 +103,25 @@ export default function FitnessPanel() {
         aria-label="Fitness sections"
       >
         <Tab label="Dashboard" />
-        <Tab label="Predictions" />
+        <Tab label="Solve" />
+        <Tab label="Plan" />
         <Tab label="Data" />
         <Tab label="Sources" />
       </Tabs>
 
       {tab === 0 && <Dashboard summary={summary} />}
-      {tab === 1 && (
+      {tab === 1 && <Workbench summary={summary} />}
+      {tab === 2 && (
         <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
       )}
-      {tab === 2 && (
+      {tab === 3 && (
         <DataPanel
           hevyApi={me.hevyApi}
           settings={summary.settings}
           onProfileSaved={reloadSummary}
         />
       )}
-      {tab === 3 && <SourcesPanel />}
+      {tab === 4 && <SourcesPanel />}
     </Stack>
   );
 }
