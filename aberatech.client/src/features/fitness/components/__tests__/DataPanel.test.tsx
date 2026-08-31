@@ -37,6 +37,7 @@ const settings: SettingsDto = {
   pastPeakSeconds: 765,
   pastPeakYear: 2019,
   homeAltitudeMeters: 1190,
+  pastAltitudeMeters: null,
 };
 
 function json(body: unknown, ok = true): Response {
@@ -89,7 +90,13 @@ beforeAll(() => {
 describe("bringing data in", () => {
   it("posts whatever file it is given to the one import route", async () => {
     const calls = stubFetch(() =>
-      json({ kind: "Garmin export archive", parsed: 28, added: 28 }),
+      json({
+        kind: "Garmin export archive",
+        parsed: 28,
+        added: 28,
+        skipped: 0,
+        superseded: 0,
+      }),
     );
     const { container } = mount();
 
@@ -110,7 +117,13 @@ describe("bringing data in", () => {
 
   it("reports what the server made of the file", async () => {
     stubFetch(() =>
-      json({ kind: "Garmin export archive", parsed: 28, added: 28 }),
+      json({
+        kind: "Garmin export archive",
+        parsed: 28,
+        added: 28,
+        skipped: 0,
+        superseded: 0,
+      }),
     );
     const { container } = mount();
 
