@@ -24,7 +24,8 @@ public sealed record SettingsDto(
     double? PastPeakDistanceMeters,
     double? PastPeakSeconds,
     int? PastPeakYear,
-    double HomeAltitudeMeters);
+    double HomeAltitudeMeters,
+    double? PastAltitudeMeters);
 
 public sealed record TrainingPaceDto(
     string Zone,
@@ -163,7 +164,10 @@ public static class FitnessReports
         if (altitudePenalty > 0)
         {
             assumptions.Add(
-                $"Times shown for your home altitude ({settings.HomeAltitudeMeters:0} m): aerobic races run ~{altitudePenalty:P1} slower there than at sea level [peronnet-altitude]. The anchor and past peak are assumed run at the same altitude.");
+                $"Times shown for where you are now ({settings.HomeAltitudeMeters:0} m): aerobic races run ~{altitudePenalty:P1} slower there than at sea level [peronnet-altitude]. "
+                + (settings.PastAltitudeMeters is { } past
+                    ? $"The anchor and lifetime best are scored at {past:0} m, where they were run."
+                    : "The anchor and past peak are assumed run at the same altitude."));
         }
 
         var p = new TrajectoryParameters(startVdot, reclaimVdot);
@@ -289,7 +293,7 @@ public static class FitnessReports
         }
 
         var peakVdot = Vdot.FromRace(
-            distance, Altitude.ToSeaLevel(seconds, row.HomeAltitudeMeters) / 60.0);
+            distance, Altitude.ToSeaLevel(seconds, row.PastAltitudeOrHome) / 60.0);
 
         if (row is { BirthYear: { } birthYear, PastPeakYear: { } peakYear })
         {
@@ -345,7 +349,8 @@ public static class FitnessReports
             row.PastPeakDistanceMeters,
             row.PastPeakSeconds,
             row.PastPeakYear,
-            row.HomeAltitudeMeters);
+            row.HomeAltitudeMeters,
+            row.PastAltitudeMeters);
     }
 
     private static IReadOnlyList<WeekVolumeDto> WeeklyVolumes(List<Activity> endurance, DateTimeZone zone)

@@ -14,7 +14,15 @@ sourced predictions out.
   name. Every import is idempotent: records land keyed by
   `(source, external id)`, and the archive keys on Garmin's own activity id, so
   re-importing it — or a later archive that overlaps it — updates rather than
-  duplicates.
+  duplicates. Two files describing one session reconcile: see below.
+- **Reconciles** the two files Garmin offers. The export carries a real UTC
+  clock; the Connect website's CSV carries a wall clock and no zone, and an
+  athlete who has moved has no single zone that would fit their history. So the
+  same run read from both is matched on what the session was — sport, duration
+  to the second, distance to 25 m, within any real UTC offset — and becomes one
+  row. The export wins: a CSV row it already covers is not stored, and one
+  imported earlier is replaced. Without that, uploading both doubles the weekly
+  volume chart, quietly and in the flattering direction.
 - **Analyses**: monthly aerobic trend as HR-normalized pace (the field version
   of a monthly aerobic-threshold test), weekly training dose against the plan,
   estimated 1RM trends (Epley, Brzycki cross-check), and rule-based highlights
@@ -22,7 +30,11 @@ sourced predictions out.
 - **Predicts**: VDOT trajectory under an adjustable dose (weekly hours ×
   compliance), with bodyweight as a factor (VDOT is per-kilogram), race-time
   checkpoints at 6/12/18/24 months, goal arrival dates, and the inverse — name
-  a goal and a deadline, get the required weekly dose.
+  a goal and a deadline, get the required weekly dose. Altitude is asked twice,
+  because a posting moves an athlete without moving their history: the anchor
+  and the lifetime best are scored where they were run, the goals where they
+  will be. Leaving the past one blank means "same place" and reproduces the
+  single-altitude behaviour exactly.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
   Cureton & Sparling, Epley, Brzycki, Coggan). `/api/fitness/citations` serves

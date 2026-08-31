@@ -22,6 +22,8 @@ export interface SettingsDto {
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
   homeAltitudeMeters: number;
+  /** Where the anchor and the lifetime best were run, when that is not here. */
+  pastAltitudeMeters: number | null;
 }
 
 export interface SettingsUpdate {
@@ -35,6 +37,8 @@ export interface SettingsUpdate {
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
   homeAltitudeMeters: number;
+  /** Where the anchor and the lifetime best were run, when that is not here. */
+  pastAltitudeMeters: number | null;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
 }
@@ -203,9 +207,17 @@ export function fetchRequiredDose(
  * Any file these services hand out. The server decides what it was — see
  * Ingest/Import.cs — so the page never asks which button a download belongs to.
  */
-export async function uploadFile(
-  file: File,
-): Promise<{ kind: string; parsed: number; added: number }> {
+export interface ImportOutcome {
+  kind: string;
+  parsed: number;
+  added: number;
+  /** Already described better by an export, so not stored again. */
+  skipped: number;
+  /** Wall-clock copies replaced by an export's account of the same session. */
+  superseded: number;
+}
+
+export async function uploadFile(file: File): Promise<ImportOutcome> {
   const response = await fetch("/api/fitness/import", {
     method: "POST",
     body: file,
@@ -213,11 +225,7 @@ export async function uploadFile(
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  return (await response.json()) as {
-    kind: string;
-    parsed: number;
-    added: number;
-  };
+  return (await response.json()) as ImportOutcome;
 }
 
 export async function syncHevy(): Promise<{ fetched: number; added: number }> {

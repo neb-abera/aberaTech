@@ -69,8 +69,16 @@ export default function DataPanel({
       for (const file of chosen) {
         try {
           const result = await uploadFile(file);
+          // Reconciliation is said out loud. Uploading both of the files
+          // Garmin offers should visibly resolve, not look like half of it
+          // quietly did nothing.
+          const reconciled = [
+            result.skipped > 0 && `${result.skipped} already in your export`,
+            result.superseded > 0 && `${result.superseded} replaced`,
+          ].filter(Boolean);
           notes.push(
-            `${file.name} — ${result.kind}: ${result.parsed} activities, ${result.added} new.`,
+            `${file.name} — ${result.kind}: ${result.parsed} activities, ${result.added} new` +
+              (reconciled.length > 0 ? ` (${reconciled.join(", ")}).` : "."),
           );
         } catch (error) {
           failed = true;

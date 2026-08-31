@@ -35,7 +35,11 @@ function parseRaceTime(value: string): number | null {
  * The athlete's history and context — the inputs that make the predictions
  * personal rather than generic: a recent race as the anchor, the lifetime
  * best (retraining runs faster below it), birth year (the peak age-adjusts),
- * and home altitude (thin air slows every aerobic time).
+ * and altitude (thin air slows every aerobic time).
+ *
+ * Altitude is asked twice because a posting moves an athlete without moving
+ * their history. One number would either credit the lifetime best with thin
+ * air it never faced, or discount the goals for air that is no longer there.
  */
 export default function ProfileCard({
   settings,
@@ -49,6 +53,13 @@ export default function ProfileCard({
   );
   const [altitudeFt, setAltitudeFt] = React.useState(
     String(Math.round(settings.homeAltitudeMeters * FEET_PER_METER)),
+  );
+  // Blank means "same place", which is the right answer for anyone who has
+  // not moved — and keeps the model behaving exactly as it did before.
+  const [pastAltitudeFt, setPastAltitudeFt] = React.useState(
+    settings.pastAltitudeMeters === null
+      ? ""
+      : String(Math.round(settings.pastAltitudeMeters * FEET_PER_METER)),
   );
   const [anchorDistance, setAnchorDistance] = React.useState(2 * MILE);
   const [anchorTime, setAnchorTime] = React.useState("");
@@ -91,6 +102,17 @@ export default function ProfileCard({
       setStatus({ ok: false, text: "Altitude must be 0-15000 ft." });
       return;
     }
+    const pastAltitude =
+      pastAltitudeFt.trim() === "" ? null : Number(pastAltitudeFt);
+    if (
+      pastAltitude !== null &&
+      (!Number.isFinite(pastAltitude) ||
+        pastAltitude < 0 ||
+        pastAltitude > 15000)
+    ) {
+      setStatus({ ok: false, text: "Past altitude must be 0-15000 ft." });
+      return;
+    }
 
     try {
       await saveSettings({
@@ -104,6 +126,8 @@ export default function ProfileCard({
         pastPeakSeconds: peakSeconds,
         pastPeakYear: peakYear.trim() === "" ? null : Number(peakYear),
         homeAltitudeMeters: altitude / FEET_PER_METER,
+        pastAltitudeMeters:
+          pastAltitude === null ? null : pastAltitude / FEET_PER_METER,
         anchorDistanceMeters: anchorSeconds === null ? null : anchorDistance,
         anchorSeconds,
       });
@@ -197,11 +221,18 @@ export default function ProfileCard({
               sx={{ width: 160 }}
             />
             <TextField
-              label="Home altitude (ft)"
+              label="Altitude now (ft)"
               value={altitudeFt}
               onChange={(event) => setAltitudeFt(event.target.value)}
-              helperText="El Paso ≈ 3,900 ft; ~1% on race times"
-              sx={{ width: 200 }}
+              helperText="Where the goals will be run"
+              sx={{ width: 190 }}
+            />
+            <TextField
+              label="Altitude then (ft)"
+              value={pastAltitudeFt}
+              onChange={(event) => setPastAltitudeFt(event.target.value)}
+              helperText="Where the best was set. Blank if unmoved"
+              sx={{ width: 210 }}
             />
             <Button
               variant="contained"
