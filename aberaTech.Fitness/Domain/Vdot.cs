@@ -68,5 +68,31 @@ public static class Vdot
         return (faster + slower) / 2;
     }
 
+    /// <summary>
+    /// How hard VDOT reacts to speed: d(ln VDOT)/d(ln velocity) at a given
+    /// performance.
+    /// </summary>
+    /// <remarks>
+    /// Turning a measured pace improvement into a fitness improvement needs
+    /// this number, and assuming it is 1 is wrong by several percent — the
+    /// oxygen-cost curve is quadratic in velocity, so faster running costs
+    /// disproportionately more. It is computed here by differentiating the
+    /// equations above rather than quoted, so it stays right at whatever speed
+    /// the athlete is actually running.
+    /// </remarks>
+    public static double SpeedElasticity(double distanceMeters, double minutes)
+    {
+        if (distanceMeters <= 0) throw new ArgumentOutOfRangeException(nameof(distanceMeters));
+        if (minutes <= 0) throw new ArgumentOutOfRangeException(nameof(minutes));
+
+        const double nudge = 0.005;
+        var faster = FromRace(distanceMeters, minutes * (1 - nudge));
+        var slower = FromRace(distanceMeters, minutes * (1 + nudge));
+
+        // Velocity is inversely proportional to time, so the log-velocity span
+        // is the negative of the log-time span.
+        return Math.Log(faster / slower) / Math.Log((1 + nudge) / (1 - nudge));
+    }
+
     public const double MileMeters = 1609.344;
 }

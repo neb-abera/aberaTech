@@ -42,5 +42,6 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<Activity>().Property(a => a.Name).HasMaxLength(256);
         modelBuilder.Entity<StrengthSet>().Property(s => s.Exercise).HasMaxLength(128);
         modelBuilder.Entity<Goal>().Property(g => g.Metric).HasMaxLength(64);
+        modelBuilder.Entity<Goal>().Property(g => g.Label).HasMaxLength(128);
     }
 }
