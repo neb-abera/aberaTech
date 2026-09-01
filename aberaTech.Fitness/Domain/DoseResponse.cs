@@ -172,7 +172,7 @@ public static class DoseResponse
             // Strain falls monotonically in that price, because a dearer unit
             // of recovery moves hours towards the zone that uses least of it.
             double cheap = 0, dear = 100;
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 40; i++)
             {
                 strainPrice = (cheap + dear) / 2;
                 if (SplitAt(hours, strainPrice, bounds.Responsiveness).Dose.Strain > bounds.MaxStrain)
@@ -207,8 +207,11 @@ public static class DoseResponse
     private static Allocation SplitAt(double runningHours, double strainPrice, double responsiveness)
     {
         var floor = -strainPrice * TrainingDose.RunningZones.Min(TrainingDose.StrainWeight);
+        // Sixty halvings of a bracket a few units wide is already past double
+        // precision; the count matters because the solver calls this inside a
+        // root-find inside a loop over posterior draws.
         double low = floor + 1e-9, high = responsiveness * TrainingDose.RunningZones.Max(FirstHourValue);
-        for (var i = 0; i < 200; i++)
+        for (var i = 0; i < 60; i++)
         {
             var mid = (low + high) / 2;
             if (HoursAt(mid, strainPrice, responsiveness).RunningHours > runningHours) low = mid; else high = mid;

@@ -6,7 +6,16 @@ namespace aberaTech.Fitness.Domain;
 /// <param name="Months">Months since the first observation.</param>
 /// <param name="ObservedVdot">Fitness that month, scored in VDOT.</param>
 /// <param name="Dose">The training week actually carried out that month.</param>
-public sealed record FitObservation(double Months, double ObservedVdot, TrainingDose Dose);
+/// <param name="Kind">
+/// How the number was obtained. A time trial measures fitness; a month of
+/// steady runs infers it from pace at a reference heart rate, which is a proxy
+/// carrying a scale error the posterior estimates rather than assumes away.
+/// </param>
+public sealed record FitObservation(
+    double Months,
+    double ObservedVdot,
+    TrainingDose Dose,
+    ObservationKind Kind = ObservationKind.NormalizedPace);
 
 /// <summary>A fitted parameter, with the uncertainty that comes with it.</summary>
 public sealed record Estimate(string Name, double Value, double StandardError, double PriorValue)
