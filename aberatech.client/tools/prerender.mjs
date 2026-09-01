@@ -15,7 +15,11 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { prerenderedRoutes, render } from "../dist-server/entry-server.js";
+import {
+  prerenderedRoutes,
+  render,
+  routes,
+} from "../dist-server/entry-server.js";
 
 const MARK = '<div id="root"></div>';
 
@@ -28,6 +32,15 @@ if (!template.includes(MARK)) {
 
 await writeFile("dist/spa.html", template);
 process.stdout.write("kept empty shell -> dist/spa.html\n");
+
+// The routes the app can actually render, for the server to answer 404 on
+// anything else. Derived from site/routes.ts, so a page added there is served
+// by being listed once rather than in two places that can disagree.
+const manifest = routes.map((route) => route.path);
+await writeFile("dist/app-routes.json", JSON.stringify(manifest, null, 2));
+process.stdout.write(
+  `route manifest -> dist/app-routes.json (${manifest.length})\n`,
+);
 
 for (const route of prerenderedRoutes) {
   const html = await render(route);

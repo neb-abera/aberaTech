@@ -107,7 +107,7 @@ public static class FitnessEndpoints
             double? targetWeightKg,
             CancellationToken cancellationToken) =>
         {
-            if (compliance is < 0 or > 1) return Results.BadRequest("compliance 0-1.");
+            if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
 
             // Either name the week zone by zone, or give a total and let the
             // model split it the way it would advise splitting it.
@@ -118,7 +118,7 @@ public static class FitnessEndpoints
                 if (new[] { easyHours, thresholdHours, intervalHours, strengthHours }
                     .Any(h => h is < 0 or > 40))
                 {
-                    return Results.BadRequest("Each zone takes 0-40 hours a week.");
+                    return Fail("Each zone takes 0-40 hours a week.");
                 }
 
                 plan = new TrainingDose(
@@ -128,7 +128,7 @@ public static class FitnessEndpoints
             {
                 if (weeklyHours is not { } total || total is < 0 or > 40)
                 {
-                    return Results.BadRequest("weeklyHours 0-40, or name the hours by zone.");
+                    return Fail("weeklyHours 0-40, or name the hours by zone.");
                 }
 
                 plan = DoseResponse.Allocate(total).Dose with { StrengthHours = strengthHours ?? 0 };
@@ -141,7 +141,7 @@ public static class FitnessEndpoints
 
             if (distances.Count > 8 || horizons.Count > 12)
             {
-                return Results.BadRequest("At most 8 distances and 12 horizons.");
+                return Fail("At most 8 distances and 12 horizons.");
             }
 
             return Results.Ok(await FitnessReports.PredictionsAsync(
@@ -163,7 +163,7 @@ public static class FitnessEndpoints
                 || monthsAvailable is <= 0 or > 120
                 || availableHours is < 0 or > 40)
             {
-                return Results.BadRequest("Out-of-range goal parameters.");
+                return Fail("Out-of-range goal parameters.");
             }
 
             var settings = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
@@ -193,11 +193,11 @@ public static class FitnessEndpoints
             }
             catch (BadHttpRequestException)
             {
-                return Results.BadRequest("That file is larger than 100 MB.");
+                return Fail("That file is larger than 100 MB.");
             }
 
-            if (buffer.Length == 0) return Results.BadRequest("Empty upload.");
-            if (buffer.Length > MaxUploadBytes) return Results.BadRequest("That file is larger than 100 MB.");
+            if (buffer.Length == 0) return Fail("Empty upload.");
+            if (buffer.Length > MaxUploadBytes) return Fail("That file is larger than 100 MB.");
 
             buffer.Position = 0;
 
@@ -210,7 +210,7 @@ public static class FitnessEndpoints
             {
                 // What the file was is the owner's problem to fix, so say it
                 // rather than answering a bare 400.
-                return Results.BadRequest(exception.Message);
+                return Fail(exception.Message);
             }
 
             var outcome = await ActivityStore.UpsertAsync(database, result.Activities, cancellationToken);
@@ -243,10 +243,15 @@ public static class FitnessEndpoints
             });
         }
 
-        api.MapGet("/activities", (FitnessDbContext database, CancellationToken cancellationToken) =>
-            database.Activities
+        // The page shows the newest few and says so. Returning a bare fifty made
+        // a truncated list look like the whole history.
+        api.MapGet("/activities", async (FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            const int limit = 50;
+
+            var rows = await database.Activities
                 .OrderByDescending(a => a.StartedAt)
-                .Take(50)
+                .Take(limit)
                 .Select(a => new
                 {
                     a.Id,
@@ -258,11 +263,31 @@ public static class FitnessEndpoints
                     a.DurationSeconds,
                     a.AverageHr
                 })
-                .ToListAsync(cancellationToken));
+                .ToListAsync(cancellationToken);
+
+            var total = await database.Activities.CountAsync(cancellationToken);
+
+            return Results.Ok(new { activities = rows, total, limit });
+        });
+
+        // A bad import has to be undoable from the page. Without this the only
+        // way to take a wrong row back out was the database.
+        api.MapDelete("/activities/{id:guid}", async (Guid id, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var activity = await database.Activities
+                .Include(a => a.Sets)
+                .SingleOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+            if (activity is null) return Results.NotFound();
+
+            database.Activities.Remove(activity);
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
+        });
 
         api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
-            if (update.ReferenceHr is < 80 or > 220) return Results.BadRequest("Reference HR out of range.");
+            if (update.ReferenceHr is < 80 or > 220) return Fail("Reference HR out of range.");
 
             var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
             if (row is null)
@@ -273,7 +298,7 @@ public static class FitnessEndpoints
 
             if (update.HomeAltitudeMeters is < 0 or > 5000)
             {
-                return Results.BadRequest("Home altitude 0-5000 m.");
+                return Fail("Home altitude 0-5000 m.");
             }
 
             row.ReferenceHr = update.ReferenceHr;
@@ -315,7 +340,7 @@ public static class FitnessEndpoints
         api.MapPost("/body-metrics", async (BodyMetricUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
         {
             var date = ParseDate(update.Date);
-            if (date is null || update.WeightKg is <= 30 or > 250) return Results.BadRequest("Implausible weigh-in.");
+            if (date is null || update.WeightKg is <= 30 or > 250) return Fail("Implausible weigh-in.");
 
             var existing = await database.BodyMetrics.SingleOrDefaultAsync(m => m.Date == date, cancellationToken);
             if (existing is null)
@@ -343,12 +368,12 @@ public static class FitnessEndpoints
             var date = ParseDate(update.TargetDate);
             if (date is null || update.TargetValue <= 0 || string.IsNullOrWhiteSpace(update.Metric))
             {
-                return Results.BadRequest("A goal needs a metric, a positive target and a date.");
+                return Fail("A goal needs a metric, a positive target and a date.");
             }
 
             if (update.DistanceMeters is { } distance && distance is < 400 or > 100_000)
             {
-                return Results.BadRequest("A running goal is over 400 m to 100 km.");
+                return Fail("A running goal is over 400 m to 100 km.");
             }
 
             var existing = await database.Goals.SingleOrDefaultAsync(g => g.Metric == update.Metric, cancellationToken);
@@ -423,6 +448,16 @@ public static class FitnessEndpoints
 
         return routes;
     }
+
+    /// <summary>
+    /// A 400 whose body is the message itself.
+    ///
+    /// Results.BadRequest(string) serialises the message as a JSON string, and
+    /// the page shows the response body verbatim, so the reader was handed the
+    /// quotes as well: <c>holiday.jpg: "Nothing importable in that file."</c>
+    /// </summary>
+    private static IResult Fail(string message) =>
+        Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);
 
     private static LocalDate? ParseDate(string? value)
     {

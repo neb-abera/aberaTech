@@ -460,6 +460,23 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
     app.MapAdminUnavailable();
 }
 
+// Liveness, for anything that needs to know the container has finished
+// starting: compose, the DAST job's boot gate, a probe in front of the
+// container app.
+//
+// This did not exist. Every caller of /healthz was answered by the SPA
+// fallback instead — 200, and the HTML shell — so a check written to wait for
+// the app to come up passed the instant the web server bound a port, and would
+// have gone on passing had the app been unable to serve a single page. It only
+// came to light when unknown paths started answering 404 and the boot gate
+// failed for the first time.
+//
+// Liveness, not readiness: it says this process is up and serving, and
+// deliberately does not touch a database. The fitness and scheduling surfaces
+// each fail closed on their own configuration, and a deployment with neither
+// database is still a healthy deployment of this app.
+app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
+
 // Before the SPA fallback, so a plain fetch of these two gets real HTML rather
 // than an empty shell. Mapped unconditionally: they must answer on any
 // deployment, including one with no database and no messaging configured, since
@@ -470,7 +487,31 @@ app.MapCompliancePages();
 // prerendered markup, and a client-rendered route served over it would flash
 // the wrong page and then hydrate against DOM that contradicts it. spa.html is
 // the same shell with the root div left empty.
-app.MapFallbackToFile("spa.html", staticFileOptions);
+//
+// The status code is the app's own answer, not a blanket 200. app-routes.json
+// is written at build time from site/routes.ts — the list the router itself
+// reads — so a path the app cannot render is a 404 here as well as on screen.
+// A deployment without the manifest keeps the old behaviour rather than
+// answering 404 to everything.
+var appRoutes = AppRoutes.Load(app.Environment.WebRootPath);
+
+app.MapFallback(async context =>
+{
+    var known = appRoutes is null || appRoutes.Contains(context.Request.Path.Value ?? "/");
+    context.Response.StatusCode = known ? StatusCodes.Status200OK : StatusCodes.Status404NotFound;
+
+    // The same policy the static pipeline gives the shell: it changes under a
+    // stable URL on every deploy, so it always revalidates.
+    context.Response.Headers.CacheControl = StaticAssetCaching.For(context.Request.Path, "spa.html");
+    context.Response.ContentType = "text/html; charset=utf-8";
+
+    // The environment's provider, not staticFileOptions': that object leaves
+    // FileProvider null and the middleware fills it in from the web root at
+    // request time, which this endpoint never goes through.
+    await context.Response.SendFileAsync(
+        app.Environment.WebRootFileProvider.GetFileInfo("spa.html"),
+        context.RequestAborted);
+});
 
 app.Run();
 

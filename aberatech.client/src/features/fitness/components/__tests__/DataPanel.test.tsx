@@ -49,7 +49,14 @@ function json(body: unknown, ok = true): Response {
 }
 
 /** Answers /activities, and lets each test say what the import returns. */
-function stubFetch(reply: (request: Request) => Response) {
+function stubFetch(
+  reply: (request: Request) => Response,
+  page: { activities: unknown[]; total: number; limit: number } = {
+    activities: [],
+    total: 0,
+    limit: 50,
+  },
+) {
   const calls: Request[] = [];
   vi.stubGlobal(
     "fetch",
@@ -60,7 +67,7 @@ function stubFetch(reply: (request: Request) => Response) {
       );
       calls.push(request);
       if (request.url.endsWith("/api/fitness/activities")) {
-        return Promise.resolve(json([]));
+        return Promise.resolve(json(page));
       }
       return Promise.resolve(reply(request));
     }),
@@ -196,6 +203,48 @@ describe("bringing data in", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Nothing importable in that file/)).toBeTruthy();
+    });
+  });
+  it("says how much of the history the table is showing", async () => {
+    // It always showed the newest fifty and never said so, which made a
+    // truncated list read as the whole log.
+    stubFetch(() => json({}), {
+      activities: [],
+      total: 214,
+      limit: 50,
+    });
+    mount();
+
+    await waitFor(() =>
+      expect(screen.getByText(/The newest 0 of 214/)).toBeTruthy(),
+    );
+  });
+
+  it("can take a wrong row back out", async () => {
+    const row = {
+      id: "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+      source: "garmin-export",
+      startedAt: "2026-08-27T03:57:36Z",
+      sport: "run",
+      name: "Treadmill Running",
+      distanceMeters: 3020,
+      durationSeconds: 1200,
+      averageHr: 153,
+    };
+    const calls = stubFetch(() => json({}), {
+      activities: [row],
+      total: 1,
+      limit: 50,
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mount();
+
+    const remove = await screen.findByRole("button", { name: /^Remove / });
+    fireEvent.click(remove);
+
+    await waitFor(() => {
+      const del = calls.find((call) => call.method === "DELETE");
+      expect(del?.url).toContain(`/api/fitness/activities/${row.id}`);
     });
   });
 });
