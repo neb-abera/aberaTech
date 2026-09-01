@@ -24,6 +24,14 @@ public sealed record SettingsDto(
     double? PastPeakDistanceMeters,
     double? PastPeakSeconds,
     int? PastPeakYear,
+    double? PastPeakWeightKg,
+    double? GoalWeightKg,
+    /// <summary>
+    /// The clamp the server applies to a weight adjustment, served so the page
+    /// can offer exactly the range the model will honour rather than a range
+    /// that silently gets clamped to a different answer.
+    /// </summary>
+    double MaxWeightAdjustmentFraction,
     double HomeAltitudeMeters);
 
 public sealed record TrainingPaceDto(

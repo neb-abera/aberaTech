@@ -8,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { type SettingsDto, saveSettings } from "../core/api";
-import { formatSeconds } from "../core/format";
+import { formatSeconds, kgToLb, lbToKg } from "../core/format";
 
 const MILE = 1609.344;
 
@@ -72,6 +72,16 @@ export default function ProfileCard({
   const [availableHours, setAvailableHours] = React.useState(
     String(settings.availableHoursPerWeek),
   );
+  const [peakWeightLb, setPeakWeightLb] = React.useState(
+    settings.pastPeakWeightKg === null
+      ? ""
+      : String(Math.round(kgToLb(settings.pastPeakWeightKg))),
+  );
+  const [goalWeightLb, setGoalWeightLb] = React.useState(
+    settings.goalWeightKg === null
+      ? ""
+      : String(Math.round(kgToLb(settings.goalWeightKg))),
+  );
   const [status, setStatus] = React.useState<{
     ok: boolean;
     text: string;
@@ -92,6 +102,20 @@ export default function ProfileCard({
       });
       return;
     }
+    for (const [label, value] of [
+      ["Lifetime-best weight", peakWeightLb],
+      ["Goal race weight", goalWeightLb],
+    ] as const) {
+      const pounds = Number(value);
+      if (
+        value.trim() !== "" &&
+        (!Number.isFinite(pounds) || pounds < 66 || pounds > 550)
+      ) {
+        setStatus({ ok: false, text: `${label} must be 66-550 lb.` });
+        return;
+      }
+    }
+
     const hours = Number(availableHours);
     if (!Number.isFinite(hours) || hours < 0 || hours > 40) {
       setStatus({ ok: false, text: "Available hours must be 0-40 a week." });
@@ -113,6 +137,10 @@ export default function ProfileCard({
         birthYear: birthYear.trim() === "" ? null : Number(birthYear),
         female: book === "unstated" ? null : book === "women",
         availableHoursPerWeek: Number(availableHours),
+        pastPeakWeightKg:
+          peakWeightLb.trim() === "" ? null : lbToKg(Number(peakWeightLb)),
+        goalWeightKg:
+          goalWeightLb.trim() === "" ? null : lbToKg(Number(goalWeightLb)),
         pastPeakDistanceMeters: peakSeconds === null ? null : peakDistance,
         pastPeakSeconds: peakSeconds,
         pastPeakYear: peakYear.trim() === "" ? null : Number(peakYear),
@@ -223,6 +251,27 @@ export default function ProfileCard({
               value={peakYear}
               onChange={(event) => setPeakYear(event.target.value)}
               sx={{ width: 140 }}
+            />
+            <TextField
+              label="Weight then (lb)"
+              type="number"
+              value={peakWeightLb}
+              onChange={(event) => setPeakWeightLb(event.target.value)}
+              helperText="What that best was run at — without it the peak cannot follow race weight"
+              slotProps={{ htmlInput: { min: 66, max: 550, step: 1 } }}
+              sx={{ width: 190 }}
+            />
+          </Stack>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              label="Goal race weight (lb)"
+              type="number"
+              value={goalWeightLb}
+              onChange={(event) => setGoalWeightLb(event.target.value)}
+              helperText="Where the projection opens, instead of today's weight"
+              slotProps={{ htmlInput: { min: 66, max: 550, step: 1 } }}
+              sx={{ width: 220 }}
             />
           </Stack>
 

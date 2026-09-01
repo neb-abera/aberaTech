@@ -71,8 +71,13 @@ export default function ProjectionPanel({
         },
   );
   const [compliance, setCompliance] = React.useState(85);
+  // Opens on the weight the athlete is actually training towards, which they
+  // have now told us, rather than on today's — and survives a reload.
+  const goalWeightLb = summary.settings.goalWeightKg
+    ? Math.round(kgToLb(summary.settings.goalWeightKg))
+    : null;
   const [targetWeightLb, setTargetWeightLb] = React.useState<number | null>(
-    currentWeightLb,
+    goalWeightLb ?? currentWeightLb,
   );
   const [distances, setDistances] = React.useState(DEFAULT_DISTANCES);
   const [horizons, setHorizons] = React.useState(DEFAULT_HORIZONS);
@@ -135,8 +140,14 @@ export default function ProjectionPanel({
             </Typography>
             <Slider
               aria-label="Race weight in pounds"
-              min={currentWeightLb - 17}
-              max={currentWeightLb + 17}
+              min={Math.round(
+                currentWeightLb *
+                  (1 - summary.settings.maxWeightAdjustmentFraction),
+              )}
+              max={Math.round(
+                currentWeightLb *
+                  (1 + summary.settings.maxWeightAdjustmentFraction),
+              )}
               step={1}
               value={targetWeightLb ?? currentWeightLb}
               onChange={(_, value) => setTargetWeightLb(value as number)}
@@ -144,7 +155,19 @@ export default function ProjectionPanel({
             />
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
               Relative VO2max scales with the inverse of body mass, so shed fat
-              mass moves the anchor before any training does.
+              mass moves both your current fitness and the lifetime best you can
+              reclaim — that best was itself run at a bodyweight. The range is
+              the ±
+              {Math.round(summary.settings.maxWeightAdjustmentFraction * 100)}%
+              the model will honour; past that the fat-mass-only assumption has
+              nothing behind it.
+              {summary.settings.pastPeakWeightKg === null && (
+                <>
+                  {" "}
+                  Record what your lifetime best was run at, on the Data tab,
+                  and the ceiling will follow this slider too.
+                </>
+              )}
             </Typography>
           </CardContent>
         </Card>
@@ -157,6 +180,17 @@ export default function ProjectionPanel({
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6">Projected fitness</Typography>
+              {targetWeightLb !== null &&
+                currentWeightLb !== null &&
+                targetWeightLb !== currentWeightLb && (
+                  <Alert severity="info" sx={{ my: 1 }}>
+                    Every number below assumes you race at {targetWeightLb} lb,
+                    not today's {currentWeightLb} lb
+                    {summary.settings.pastPeakWeightKg === null
+                      ? " — and only your current fitness is adjusted for it, because the weight your lifetime best was run at is not recorded."
+                      : "."}
+                  </Alert>
+                )}
               <Typography
                 variant="body2"
                 sx={{ color: "text.secondary", mb: 1 }}

@@ -37,6 +37,9 @@ const settings: SettingsDto = {
   pastPeakSeconds: 765,
   pastPeakYear: 2019,
   homeAltitudeMeters: 1190,
+  pastPeakWeightKg: 80.7,
+  goalWeightKg: 74.8,
+  maxWeightAdjustmentFraction: 0.1,
   female: null,
   availableHoursPerWeek: 7,
 };
