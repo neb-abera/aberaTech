@@ -93,9 +93,12 @@ public static class FitnessReports
         IReadOnlyList<double> distances,
         IReadOnlyList<double> horizons,
         int currentYear,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        double? startHours = null,
+        double rampPerWeek = 0,
+        bool useHistory = true)
     {
-        var athlete = await SnapshotAsync(database, currentYear, cancellationToken);
+        var athlete = await SnapshotAsync(database, currentYear, cancellationToken, useHistory);
         var row = athlete.Row;
         var currentWeight = (await database.BodyMetrics.OrderByDescending(m => m.Date)
             .FirstOrDefaultAsync(cancellationToken))?.WeightKg;
@@ -145,7 +148,16 @@ public static class FitnessReports
             startVdot, reclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
 
         var effective = plan.Scale(compliance);
-        var schedule = new DoseSchedule(effective, athlete.MeasuredDose);
+
+        // The plan is projected as written unless a build-up was asked for.
+        // Reading the starting week off the log answers a question nobody
+        // asked when the log records years of not training.
+        var schedule = rampPerWeek > 0 && startHours is { } from
+            ? new DoseSchedule(
+                effective,
+                DoseResponse.Allocate(from * compliance, new DoseLimits()).Dose,
+                rampPerWeek)
+            : DoseSchedule.Constant(effective);
         var allocation = new DoseResponse.Allocation(
             effective,
             DoseResponse.Marginal(effective, TrainingZone.Easy, p.Responsiveness),
@@ -159,9 +171,13 @@ public static class FitnessReports
                 Citations.CogganPmc.Id)
             .AddRange(DoseResponse.Explain(effective, p.Responsiveness))
             .Add(
-                "Building to it",
-                Text($"from your logged {athlete.MeasuredDose.RunningHours:0.0} h/week at 8% a week"),
-                Text($"{schedule.MonthsToFullDose():0.0} months of ramp"),
+                "Starting point",
+                rampPerWeek > 0 && startHours is { } stated
+                    ? Text($"building from the {stated:0.0} h/week you said you are on, at {Format.Percent(rampPerWeek)} a week")
+                    : "the plan as written, trained in full from the first week",
+                rampPerWeek > 0 && startHours is not null
+                    ? Text($"{schedule.MonthsToFullDose():0.0} months of ramp")
+                    : "no ramp",
                 Citations.GabbettWorkload.Id)
             .AddRange(athlete.Fit.Steps);
 
@@ -292,9 +308,10 @@ public static class FitnessReports
         FitnessDbContext database,
         PosteriorCache cache,
         int currentYear,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool useHistory = true)
     {
-        var athlete = await SnapshotAsync(database, currentYear, cancellationToken);
+        var athlete = await SnapshotAsync(database, currentYear, cancellationToken, useHistory);
         var observations = athlete.Observations;
 
         var posterior = await cache.GetAsync(
@@ -332,8 +349,16 @@ public static class FitnessReports
     /// Assembles the athlete: the measured anchor, the reclaimable peak, the
     /// week they are training now, and the model fitted to their history.
     /// </summary>
+    /// <param name="useHistory">
+    /// Whether the imported months are evidence about how this athlete responds
+    /// to training. For a returning athlete they are not: a period of almost no
+    /// dose carries almost no information about dose-response, and what looks
+    /// like improvement is detraining unwinding. Saying so explicitly beats
+    /// having the model quietly fit to it.
+    /// </param>
     internal static async Task<AthleteSnapshot> SnapshotAsync(
-        FitnessDbContext database, int currentYear, CancellationToken cancellationToken)
+        FitnessDbContext database, int currentYear, CancellationToken cancellationToken,
+        bool useHistory = true)
     {
         var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
                   ?? new AthleteSettings { Id = 1 };
@@ -342,7 +367,9 @@ public static class FitnessReports
             await SteadyRunsAsync(database, cancellationToken), row.ReferenceHr);
 
         var (measured, sessions) = await MeasuredDoseAsync(database, row.StartVdot, cancellationToken);
-        var observations = await ObservationsAsync(database, row, trend, cancellationToken);
+        var observations = useHistory
+            ? await ObservationsAsync(database, row, trend, cancellationToken)
+            : [];
 
         var fit = ModelFit.Fit(
             observations,

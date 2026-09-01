@@ -468,6 +468,12 @@ export interface ScenarioRequest {
   compliance: number;
   raceMassKg: number | null;
   strengthHours: number;
+  /** The week you say you are starting from; null means start on the plan. */
+  startHours: number | null;
+  /** Fractional weekly build-up. Zero projects the plan as written. */
+  rampPerWeek: number;
+  /** Whether the imported months count as evidence about how you respond. */
+  useHistory: boolean;
 }
 
 /** An answer as a distribution, which is the only honest shape for one. */
