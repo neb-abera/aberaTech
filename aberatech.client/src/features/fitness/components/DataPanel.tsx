@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -29,11 +30,18 @@ import ProfileCard from "./ProfileCard";
 export default function DataPanel({
   hevyApi,
   settings,
-  onProfileSaved,
+  onDataChanged,
 }: {
   hevyApi: boolean;
   settings: SettingsDto;
-  onProfileSaved: () => void;
+  /**
+   * Anything that changes what the dashboard would say. Every mutation on this
+   * panel calls it, because the dashboard is built once when the page loads:
+   * an import that only refreshed the list below it left the charts showing
+   * the state of things before the upload, on the tab the athlete actually
+   * reads.
+   */
+  onDataChanged: () => void;
 }) {
   const [status, setStatus] = React.useState<{
     ok: boolean;
@@ -49,28 +57,55 @@ export default function DataPanel({
 
   React.useEffect(refresh, [refresh]);
 
-  const upload =
-    (kind: "hevy-csv" | "garmin-csv" | "fit") =>
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      event.target.value = "";
-      if (!file) {
+  const [busy, setBusy] = React.useState(false);
+  const [dragging, setDragging] = React.useState(false);
+
+  // One file at a time, but every file in turn, so dropping the whole set of
+  // downloads works rather than silently importing the first.
+  const send = React.useCallback(
+    async (files: FileList | null) => {
+      const chosen = Array.from(files ?? []);
+      if (chosen.length === 0) {
         return;
       }
-      try {
-        const result = await uploadFile(kind, file);
-        setStatus({
-          ok: true,
-          text: `${file.name}: ${result.parsed} parsed, ${result.added} new.`,
-        });
-        refresh();
-      } catch (error) {
-        setStatus({
-          ok: false,
-          text: `${file.name}: ${(error as Error).message}`,
-        });
+
+      setBusy(true);
+      const notes: string[] = [];
+      let failed = false;
+
+      for (const file of chosen) {
+        try {
+          const result = await uploadFile(file);
+          // Reconciliation is said out loud. Uploading both of the files
+          // Garmin offers should visibly resolve, not look like half of it
+          // quietly did nothing.
+          const reconciled = [
+            result.skipped > 0 && `${result.skipped} already in your export`,
+            result.superseded > 0 && `${result.superseded} replaced`,
+          ].filter(Boolean);
+          notes.push(
+            `${file.name} — ${result.kind}: ${result.parsed} activities, ${result.added} new` +
+              (reconciled.length > 0 ? ` (${reconciled.join(", ")}).` : "."),
+          );
+        } catch (error) {
+          failed = true;
+          notes.push(`${file.name}: ${(error as Error).message}`);
+        }
       }
-    };
+
+      setBusy(false);
+      setStatus({ ok: !failed, text: notes.join(" ") });
+      refresh();
+      onDataChanged();
+    },
+    [refresh, onDataChanged],
+  );
+
+  const onDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    await send(event.dataTransfer.files);
+  };
 
   const runHevySync = async () => {
     try {
@@ -80,6 +115,7 @@ export default function DataPanel({
         text: `Hevy: ${result.fetched} workouts fetched, ${result.added} new.`,
       });
       refresh();
+      onDataChanged();
     } catch (error) {
       setStatus({
         ok: false,
@@ -90,7 +126,7 @@ export default function DataPanel({
 
   return (
     <Stack spacing={3}>
-      <ProfileCard settings={settings} onSaved={onProfileSaved} />
+      <ProfileCard settings={settings} onSaved={onDataChanged} />
 
       <Card variant="outlined">
         <CardContent>
@@ -98,44 +134,62 @@ export default function DataPanel({
             Bring data in
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-            Garmin Connect: Activities page → export CSV for bulk history, or a
-            single activity&apos;s .fit file for full detail. Hevy: Settings →
-            Export Data emails a CSV — free tier included.
+            Whatever they sent you. Garmin&apos;s &ldquo;Export Your Data&rdquo;
+            archive, a single activity&apos;s .fit file, an activities CSV from
+            the Connect website, or Hevy&apos;s export — drop the file in as it
+            arrived and it will be read for what it is. Re-importing the same
+            file never duplicates anything.
           </Typography>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <Button variant="outlined" component="label">
-              Garmin activities CSV
-              <input
-                type="file"
-                hidden
-                accept=".csv"
-                onChange={upload("garmin-csv")}
-              />
-            </Button>
-            <Button variant="outlined" component="label">
-              Garmin .fit file
-              <input
-                type="file"
-                hidden
-                accept=".fit"
-                onChange={upload("fit")}
-              />
-            </Button>
-            <Button variant="outlined" component="label">
-              Hevy export CSV
-              <input
-                type="file"
-                hidden
-                accept=".csv"
-                onChange={upload("hevy-csv")}
-              />
-            </Button>
-            {hevyApi && (
-              <Button variant="contained" onClick={runHevySync}>
-                Sync Hevy now
+
+          {/* A drop target that is also a button, because the archive arrives
+              as a download and dragging it here is one gesture rather than
+              four dialogs. */}
+          <Box
+            onDragOver={(event: React.DragEvent) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+            sx={{
+              border: "1px dashed",
+              borderColor: dragging ? "primary.main" : "divider",
+              bgcolor: dragging ? "action.hover" : "transparent",
+              borderRadius: 1,
+              px: 2,
+              py: 3,
+              textAlign: "center",
+              transition: "border-color 120ms, background-color 120ms",
+            }}
+          >
+            <Stack spacing={1.5} sx={{ alignItems: "center" }}>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Drop files here
+              </Typography>
+              <Button variant="outlined" component="label" disabled={busy}>
+                {busy ? "Reading…" : "Choose files"}
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  accept=".zip,.csv,.fit,.json"
+                  onChange={async (
+                    event: React.ChangeEvent<HTMLInputElement>,
+                  ) => {
+                    const files = event.target.files;
+                    event.target.value = "";
+                    await send(files);
+                  }}
+                />
               </Button>
-            )}
-          </Stack>
+            </Stack>
+          </Box>
+
+          {hevyApi && (
+            <Button variant="contained" sx={{ mt: 2 }} onClick={runHevySync}>
+              Sync Hevy now
+            </Button>
+          )}
           {!hevyApi && (
             <Typography
               variant="caption"
@@ -148,7 +202,13 @@ export default function DataPanel({
         </CardContent>
       </Card>
 
-      <WeighIn onSaved={(text) => setStatus({ ok: true, text })} />
+      {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
+      <WeighIn
+        onSaved={(text) => {
+          setStatus({ ok: true, text });
+          onDataChanged();
+        }}
+      />
 
       {status && (
         <Alert severity={status.ok ? "success" : "error"}>{status.text}</Alert>
