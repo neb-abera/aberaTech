@@ -1,20 +1,27 @@
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import type { SettingsDto } from "../core/api";
 import {
   type ActivityRow,
+  deleteActivity,
   fetchActivities,
   saveBodyMetric,
   syncHevy,
@@ -48,16 +55,22 @@ export default function DataPanel({
     text: string;
   } | null>(null);
   const [activities, setActivities] = React.useState<ActivityRow[]>([]);
+  const [total, setTotal] = React.useState(0);
 
   const refresh = React.useCallback(() => {
     fetchActivities()
-      .then(setActivities)
+      .then((page) => {
+        setActivities(page.activities);
+        setTotal(page.total);
+      })
       .catch(() => setActivities([]));
   }, []);
 
   React.useEffect(refresh, [refresh]);
 
-  const [busy, setBusy] = React.useState(false);
+  const [busy, setBusy] = React.useState<{ done: number; of: number } | null>(
+    null,
+  );
   const [dragging, setDragging] = React.useState(false);
 
   // One file at a time, but every file in turn, so dropping the whole set of
@@ -69,11 +82,15 @@ export default function DataPanel({
         return;
       }
 
-      setBusy(true);
+      // A Garmin archive takes seconds to read; without this the page looked
+      // inert while it worked, and a second drop mid-read started a
+      // concurrent upload of the same thing.
+      setBusy({ done: 0, of: chosen.length });
       const notes: string[] = [];
       let failed = false;
 
-      for (const file of chosen) {
+      for (const [index, file] of chosen.entries()) {
+        setBusy({ done: index, of: chosen.length });
         try {
           const result = await uploadFile(file);
           // Reconciliation is said out loud. Uploading both of the files
@@ -93,7 +110,7 @@ export default function DataPanel({
         }
       }
 
-      setBusy(false);
+      setBusy(null);
       setStatus({ ok: !failed, text: notes.join(" ") });
       refresh();
       onDataChanged();
@@ -104,7 +121,22 @@ export default function DataPanel({
   const onDrop = async (event: React.DragEvent) => {
     event.preventDefault();
     setDragging(false);
+    if (busy) return;
     await send(event.dataTransfer.files);
+  };
+
+  const remove = async (activity: ActivityRow) => {
+    try {
+      await deleteActivity(activity.id);
+      setStatus({
+        ok: true,
+        text: `Removed ${activity.name || activity.sport} of ${activity.startedAt.slice(0, 10)}.`,
+      });
+      refresh();
+      onDataChanged();
+    } catch (error) {
+      setStatus({ ok: false, text: (error as Error).message });
+    }
   };
 
   const runHevySync = async () => {
@@ -164,26 +196,50 @@ export default function DataPanel({
           >
             <Stack spacing={1.5} sx={{ alignItems: "center" }}>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Drop files here
+                {busy
+                  ? busy.of > 1
+                    ? `Reading file ${busy.done + 1} of ${busy.of}…`
+                    : "Reading…"
+                  : "Drop files here"}
               </Typography>
-              <Button variant="outlined" component="label" disabled={busy}>
-                {busy ? "Reading…" : "Choose files"}
-                <input
-                  type="file"
-                  hidden
-                  multiple
-                  accept=".zip,.csv,.fit,.json"
-                  onChange={async (
-                    event: React.ChangeEvent<HTMLInputElement>,
-                  ) => {
-                    const files = event.target.files;
-                    event.target.value = "";
-                    await send(files);
-                  }}
-                />
-              </Button>
+              {busy ? (
+                <CircularProgress size={24} aria-label="Reading" />
+              ) : (
+                <Button variant="outlined" component="label">
+                  Choose files
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    accept=".zip,.csv,.fit,.json"
+                    onChange={async (
+                      event: React.ChangeEvent<HTMLInputElement>,
+                    ) => {
+                      const files = event.target.files;
+                      event.target.value = "";
+                      await send(files);
+                    }}
+                  />
+                </Button>
+              )}
             </Stack>
           </Box>
+
+          {busy && <LinearProgress sx={{ mt: 1 }} />}
+
+          {/* The answer where the question was asked. This used to render
+              below the weigh-in card — on a phone, 460px further down and off
+              the bottom of the screen, so dropping a file looked like it had
+              done nothing at all. */}
+          {status && (
+            <Alert
+              severity={status.ok ? "success" : "error"}
+              onClose={() => setStatus(null)}
+              sx={{ mt: 2 }}
+            >
+              {status.text}
+            </Alert>
+          )}
 
           {hevyApi && (
             <Button variant="contained" sx={{ mt: 2 }} onClick={runHevySync}>
@@ -203,61 +259,84 @@ export default function DataPanel({
       </Card>
 
       {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
-      <WeighIn
-        onSaved={(text) => {
-          setStatus({ ok: true, text });
-          onDataChanged();
-        }}
-      />
-
-      {status && (
-        <Alert severity={status.ok ? "success" : "error"}>{status.text}</Alert>
-      )}
+      <WeighIn onSaved={onDataChanged} />
 
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 1 }}>
+          <Typography variant="h6" sx={{ mb: 0.5 }}>
             Latest activities
           </Typography>
-          {activities.length === 0 ? (
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Nothing imported yet.
-            </Typography>
-          ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>When</TableCell>
-                  <TableCell>Sport</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell align="right">Distance</TableCell>
-                  <TableCell align="right">Time</TableCell>
-                  <TableCell align="right">Avg HR</TableCell>
-                  <TableCell>Source</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {activities.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell>{activity.startedAt.slice(0, 10)}</TableCell>
-                    <TableCell>{activity.sport}</TableCell>
-                    <TableCell>{activity.name}</TableCell>
-                    <TableCell align="right">
-                      {activity.distanceMeters === null
-                        ? "—"
-                        : `${(activity.distanceMeters / 1000).toFixed(2)} km`}
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatSeconds(activity.durationSeconds)}
-                    </TableCell>
-                    <TableCell align="right">
-                      {activity.averageHr ?? "—"}
-                    </TableCell>
-                    <TableCell>{activity.source}</TableCell>
+          {/* It always showed fifty and never said so, which made a truncated
+              list look like the whole history. */}
+          <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+            {total === 0
+              ? "Nothing imported yet."
+              : total > activities.length
+                ? `The newest ${activities.length} of ${total}.`
+                : `${total} in total.`}
+          </Typography>
+          {activities.length === 0 ? null : (
+            /* Seven columns do not fit a phone. Without this the Card clipped
+               them at the screen edge — Time, Avg HR and Source were simply
+               gone, with nothing to scroll. */
+            <TableContainer sx={{ overflowX: "auto" }}>
+              <Table size="small" sx={{ minWidth: 560 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>When</TableCell>
+                    <TableCell>Sport</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell align="right">Distance</TableCell>
+                    <TableCell align="right">Time</TableCell>
+                    <TableCell align="right">Avg HR</TableCell>
+                    <TableCell>Source</TableCell>
+                    <TableCell />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {activities.map((activity) => (
+                    <TableRow key={activity.id}>
+                      <TableCell>{activity.startedAt.slice(0, 10)}</TableCell>
+                      <TableCell>{activity.sport}</TableCell>
+                      <TableCell>{activity.name}</TableCell>
+                      <TableCell align="right">
+                        {activity.distanceMeters === null
+                          ? "—"
+                          : `${(activity.distanceMeters / 1000).toFixed(2)} km`}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatSeconds(activity.durationSeconds)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {activity.averageHr ?? "—"}
+                      </TableCell>
+                      <TableCell>{activity.source}</TableCell>
+                      <TableCell align="right" padding="none">
+                        {/* A wrong file used to be correctable only in the
+                          database. */}
+                        <Tooltip title="Remove this activity">
+                          <IconButton
+                            size="small"
+                            aria-label={`Remove ${activity.name || activity.sport} of ${activity.startedAt.slice(0, 10)}`}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Remove this ${activity.sport} of ${activity.startedAt.slice(0, 10)}? Re-importing the file brings it back.`,
+                                )
+                              ) {
+                                void remove(activity);
+                              }
+                            }}
+                          >
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
@@ -265,13 +344,18 @@ export default function DataPanel({
   );
 }
 
-function WeighIn({ onSaved }: { onSaved: (text: string) => void }) {
-  const [date, setDate] = React.useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+function WeighIn({ onSaved }: { onSaved: () => void }) {
+  // The local date, not the UTC one. toISOString() dated a weigh-in taken
+  // before 03:00 in Jordan to the day before.
+  const [date, setDate] = React.useState(() => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+  });
   const [pounds, setPounds] = React.useState("");
   const [bodyFat, setBodyFat] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState<string | null>(null);
 
   const save = async () => {
     const lb = Number(pounds);
@@ -283,8 +367,10 @@ function WeighIn({ onSaved }: { onSaved: (text: string) => void }) {
     try {
       await saveBodyMetric(date, lbToKg(lb), fat);
       setError(null);
-      onSaved(`Weigh-in saved: ${lb} lb on ${date}.`);
+      setSaved(`Saved: ${lb} lb on ${date}.`);
+      onSaved();
     } catch {
+      setSaved(null);
       setError("Could not save the weigh-in.");
     }
   };
@@ -326,6 +412,15 @@ function WeighIn({ onSaved }: { onSaved: (text: string) => void }) {
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
+          </Alert>
+        )}
+        {saved && !error && (
+          <Alert
+            severity="success"
+            onClose={() => setSaved(null)}
+            sx={{ mt: 2 }}
+          >
+            {saved}
           </Alert>
         )}
       </CardContent>

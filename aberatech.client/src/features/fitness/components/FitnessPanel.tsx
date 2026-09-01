@@ -11,7 +11,9 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import { useSearchParams } from "react-router";
 import {
+  ApiError,
   type FitnessMe,
   fetchMe,
   fetchSummary,
@@ -24,6 +26,42 @@ import ProjectionPanel from "./ProjectionPanel";
 import SourcesPanel from "./SourcesPanel";
 import Workbench from "./Workbench";
 
+/** The tabs, in order. The slug is what goes in the URL. */
+const TAB_SLUGS: readonly string[] = [
+  "dashboard",
+  "solve",
+  "plan",
+  "data",
+  "sources",
+];
+
+/**
+ * One tab's contents, mounted the first time it is opened and kept mounted
+ * afterwards.
+ *
+ * Switching tabs used to unmount the panel, which threw away anything typed
+ * and not yet saved: fill in an anchor race, glance at Predictions to check it,
+ * come back to an empty field. Mounting lazily rather than all at once keeps
+ * the first paint as cheap as it was, and mounting while visible means the
+ * charts measure a real width.
+ */
+function Section({
+  index,
+  tab,
+  visited,
+  children,
+}: {
+  index: number;
+  tab: number;
+  visited: ReadonlySet<number>;
+  children: React.ReactNode;
+}) {
+  if (!visited.has(index)) return null;
+  return (
+    <Box sx={{ display: tab === index ? "block" : "none" }}>{children}</Box>
+  );
+}
+
 /**
  * The athlete's console: highlights and trends, the prediction calculator, the
  * data pipes, and the sources behind every number. Health data, so the whole
@@ -33,13 +71,60 @@ export default function FitnessPanel() {
   const [me, setMe] = React.useState<FitnessMe | null>(null);
   const [summary, setSummary] = React.useState<Summary | null>(null);
   const [failed, setFailed] = React.useState(false);
-  const [tab, setTab] = React.useState(0);
+  const [staleError, setStaleError] = React.useState<string | null>(null);
+  const [visited, setVisited] = React.useState<ReadonlySet<number>>(
+    () => new Set<number>(),
+  );
+  const [params, setParams] = useSearchParams();
 
+  // The open tab lives in the URL, so a reload comes back to where you were,
+  // Back steps between sections, and a tab can be linked to at all.
+  const tab = Math.max(0, TAB_SLUGS.indexOf(params.get("tab") ?? TAB_SLUGS[0]));
+
+  const showTab = (next: number) => {
+    const updated = new URLSearchParams(params);
+    updated.set("tab", TAB_SLUGS[next]);
+    setParams(updated, { replace: false });
+  };
+
+  /**
+   * Refetch the numbers behind the dashboard.
+   *
+   * A failure here is only fatal before there is anything to show. Once the
+   * console is on screen a failed refresh says so and leaves the page standing:
+   * this used to set one latch that every render checked first, so a single
+   * blip — or a session quietly expiring — replaced the whole console, tabs and
+   * all, with "the service did not answer".
+   */
   const reloadSummary = React.useCallback(() => {
     fetchSummary()
-      .then(setSummary)
-      .catch(() => setFailed(true));
+      .then((next) => {
+        setSummary(next);
+        setStaleError(null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.needsSignIn) {
+          // Not an outage. Say the true thing and offer the way back.
+          setMe((current) =>
+            current ? { ...current, signedIn: false } : current,
+          );
+          return;
+        }
+
+        setSummary((current) => {
+          if (current === null) setFailed(true);
+          else
+            setStaleError(
+              "Could not refresh — showing the last numbers loaded.",
+            );
+          return current;
+        });
+      });
   }, []);
+
+  React.useEffect(() => {
+    setVisited((seen) => (seen.has(tab) ? seen : new Set(seen).add(tab)));
+  }, [tab]);
 
   React.useEffect(() => {
     fetchMe()
@@ -97,10 +182,18 @@ export default function FitnessPanel() {
 
   return (
     <Stack spacing={3}>
+      {staleError && (
+        <Alert severity="warning" onClose={() => setStaleError(null)}>
+          {staleError}
+        </Alert>
+      )}
+
       <Tabs
         value={tab}
-        onChange={(_, next) => setTab(next)}
+        onChange={(_, next) => showTab(next)}
         aria-label="Fitness sections"
+        variant="scrollable"
+        allowScrollButtonsMobile
       >
         <Tab label="Dashboard" />
         <Tab label="Solve" />
@@ -109,19 +202,25 @@ export default function FitnessPanel() {
         <Tab label="Sources" />
       </Tabs>
 
-      {tab === 0 && <Dashboard summary={summary} />}
-      {tab === 1 && <Workbench summary={summary} />}
-      {tab === 2 && (
+      <Section index={0} tab={tab} visited={visited}>
+        <Dashboard summary={summary} />
+      </Section>
+      <Section index={1} tab={tab} visited={visited}>
+        <Workbench summary={summary} />
+      </Section>
+      <Section index={2} tab={tab} visited={visited}>
         <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
-      )}
-      {tab === 3 && (
+      </Section>
+      <Section index={3} tab={tab} visited={visited}>
         <DataPanel
           hevyApi={me.hevyApi}
           settings={summary.settings}
           onDataChanged={reloadSummary}
         />
-      )}
-      {tab === 4 && <SourcesPanel />}
+      </Section>
+      <Section index={4} tab={tab} visited={visited}>
+        <SourcesPanel />
+      </Section>
     </Stack>
   );
 }
