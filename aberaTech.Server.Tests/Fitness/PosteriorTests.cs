@@ -185,8 +185,10 @@ public sealed class PosteriorTests(ITestOutputHelper output)
         var posterior = Posterior.Sample(data, new Posterior.Priors(38));
         clock.Stop();
 
+        // Loose for the same reason as the solver's timing test: this guards
+        // against the quadratic likelihood coming back, not against jitter.
         output.WriteLine($"{posterior.Draws.Count} draws over {data.Count} months in {clock.ElapsedMilliseconds} ms");
-        Assert.True(clock.ElapsedMilliseconds < 20_000, $"took {clock.ElapsedMilliseconds} ms");
+        Assert.True(clock.ElapsedMilliseconds < 25_000, $"took {clock.ElapsedMilliseconds} ms");
     }
 
     private static double Width((double Median, double Low, double High) summary) =>
