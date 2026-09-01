@@ -66,9 +66,13 @@ function stubFetch(reply: (request: Request) => Response) {
   return calls;
 }
 
-function mount() {
+function mount(onDataChanged: () => void = () => {}) {
   return render(
-    <DataPanel hevyApi={false} settings={settings} onProfileSaved={() => {}} />,
+    <DataPanel
+      hevyApi={false}
+      settings={settings}
+      onDataChanged={onDataChanged}
+    />,
   );
 }
 
@@ -133,6 +137,48 @@ describe("bringing data in", () => {
         screen.getByText(/Garmin export archive: 28 activities, 28 new/),
       ).toBeTruthy();
     });
+  });
+
+  it("tells the page to rebuild the dashboard, not just the list below", async () => {
+    // The bug this guards: an import refreshed the activity table on this tab
+    // and nothing else, so the Dashboard — built once when the page loaded —
+    // went on showing the state of things before the upload. The rows were
+    // visibly there and the charts said there was nothing.
+    const onDataChanged = vi.fn();
+    stubFetch(() =>
+      json({
+        kind: "Garmin export archive",
+        parsed: 28,
+        added: 28,
+        skipped: 0,
+        superseded: 0,
+      }),
+    );
+    const { container } = mount(onDataChanged);
+
+    pick(container, new File(["PK"], "garmin-export.zip"));
+
+    await waitFor(() => expect(onDataChanged).toHaveBeenCalled());
+  });
+
+  it("rebuilds it even when the file added nothing new", async () => {
+    // Re-uploading the archive adds nothing, but a supersede still changes
+    // what the charts should say.
+    const onDataChanged = vi.fn();
+    stubFetch(() =>
+      json({
+        kind: "Garmin export archive",
+        parsed: 28,
+        added: 0,
+        skipped: 0,
+        superseded: 28,
+      }),
+    );
+    const { container } = mount(onDataChanged);
+
+    pick(container, new File(["PK"], "garmin-export.zip"));
+
+    await waitFor(() => expect(onDataChanged).toHaveBeenCalled());
   });
 
   it("shows the server's own words when a file is not one it reads", async () => {
