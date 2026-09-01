@@ -107,9 +107,14 @@ public static class FitnessEndpoints
             double? strengthHours,
             double compliance,
             double? targetWeightKg,
+            double? startHours,
+            double? rampPerWeek,
+            bool? useHistory,
             CancellationToken cancellationToken) =>
         {
             if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
+            if (startHours is < 0 or > 40) return Fail("startHours 0-40.");
+            if (rampPerWeek is < 0 or > 0.5) return Fail("rampPerWeek 0-0.5.");
 
             // Either name the week zone by zone, or give a total and let the
             // model split it the way it would advise splitting it.
@@ -148,7 +153,8 @@ public static class FitnessEndpoints
 
             return Results.Ok(await FitnessReports.PredictionsAsync(
                 database, plan, compliance, targetWeightKg, distances, horizons,
-                DateTime.UtcNow.Year, cancellationToken));
+                DateTime.UtcNow.Year, cancellationToken,
+                startHours, rampPerWeek ?? 0, useHistory ?? true));
         });
 
         // The inverse question, over any distance and any date the athlete
@@ -305,7 +311,7 @@ public static class FitnessEndpoints
 
             if (update.PastPeakWeightKg is < 30 or > 250 || update.GoalWeightKg is < 30 or > 250)
             {
-                return Results.BadRequest("Weights are 30-250 kg.");
+                return Fail("Weights are 30-250 kg.");
             }
 
             row.ReferenceHr = update.ReferenceHr;
