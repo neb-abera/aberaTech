@@ -37,6 +37,8 @@ const settings: SettingsDto = {
   pastPeakSeconds: 765,
   pastPeakYear: 2019,
   homeAltitudeMeters: 1190,
+  female: null,
+  availableHoursPerWeek: 7,
 };
 
 function json(body: unknown, ok = true): Response {

@@ -16,6 +16,8 @@ public sealed record SettingsUpdate(
     double StartVdot,
     string? VdotMeasuredOn,
     int? BirthYear = null,
+    bool? Female = null,
+    double AvailableHoursPerWeek = 7,
     double? PastPeakDistanceMeters = null,
     double? PastPeakSeconds = null,
     int? PastPeakYear = null,
@@ -26,7 +28,12 @@ public sealed record SettingsUpdate(
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
-public sealed record GoalUpdate(string Metric, double TargetValue, string TargetDate);
+public sealed record GoalUpdate(
+    string Metric,
+    double TargetValue,
+    string TargetDate,
+    double? DistanceMeters = null,
+    string? Label = null);
 
 /// <summary>The fitness API. Personal health data, so everything requires the owner policy.</summary>
 public static class FitnessEndpoints
@@ -88,32 +95,71 @@ public static class FitnessEndpoints
 
         api.MapGet("/predictions", async (
             FitnessDbContext database,
-            double weeklyHours,
+            HttpRequest request,
+            double? weeklyHours,
+            double? easyHours,
+            double? thresholdHours,
+            double? intervalHours,
+            double? strengthHours,
             double compliance,
             double? targetWeightKg,
             CancellationToken cancellationToken) =>
         {
-            if (weeklyHours is < 0 or > 40 || compliance is < 0 or > 1)
+            if (compliance is < 0 or > 1) return Results.BadRequest("compliance 0-1.");
+
+            // Either name the week zone by zone, or give a total and let the
+            // model split it the way it would advise splitting it.
+            var named = easyHours ?? thresholdHours ?? intervalHours;
+            TrainingDose plan;
+            if (named is not null)
             {
-                return Results.BadRequest("weeklyHours 0-40, compliance 0-1.");
+                if (new[] { easyHours, thresholdHours, intervalHours, strengthHours }
+                    .Any(h => h is < 0 or > 40))
+                {
+                    return Results.BadRequest("Each zone takes 0-40 hours a week.");
+                }
+
+                plan = new TrainingDose(
+                    easyHours ?? 0, thresholdHours ?? 0, intervalHours ?? 0, strengthHours ?? 0);
+            }
+            else
+            {
+                if (weeklyHours is not { } total || total is < 0 or > 40)
+                {
+                    return Results.BadRequest("weeklyHours 0-40, or name the hours by zone.");
+                }
+
+                plan = DoseResponse.Allocate(total).Dose with { StrengthHours = strengthHours ?? 0 };
             }
 
-            var prediction = await FitnessReports.PredictionsAsync(
-                database, weeklyHours, compliance, targetWeightKg,
-                DateTime.UtcNow.Year, cancellationToken);
-            return Results.Ok(prediction);
+            var distances = ParseNumbers(request.Query["distances"], 400, 100_000)
+                            ?? FitnessReports.DefaultDistances;
+            var horizons = ParseNumbers(request.Query["horizons"], 0, 120)
+                           ?? FitnessReports.DefaultHorizons;
+
+            if (distances.Count > 8 || horizons.Count > 12)
+            {
+                return Results.BadRequest("At most 8 distances and 12 horizons.");
+            }
+
+            return Results.Ok(await FitnessReports.PredictionsAsync(
+                database, plan, compliance, targetWeightKg, distances, horizons,
+                DateTime.UtcNow.Year, cancellationToken));
         });
 
-        api.MapGet("/predictions/required", async (
+        // The inverse question, over any distance and any date the athlete
+        // names rather than a menu of four.
+        api.MapGet("/predictions/goal", async (
             FitnessDbContext database,
             double distanceMeters,
             double targetSeconds,
             double monthsAvailable,
-            double compliance,
+            double? availableHours,
             CancellationToken cancellationToken) =>
         {
             if (distanceMeters is < 400 or > 100_000 || targetSeconds <= 0
-                || monthsAvailable is <= 0 or > 120 || compliance is <= 0 or > 1)
+                || monthsAvailable is <= 0 or > 120
+                || availableHours is < 0 or > 40)
             {
                 return Results.BadRequest("Out-of-range goal parameters.");
             }
@@ -121,11 +167,10 @@ public static class FitnessEndpoints
             var settings = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
                            ?? new AthleteSettings { Id = 1 };
 
-            return Results.Ok(FitnessReports.RequiredDose(
-                settings.StartVdot,
-                FitnessReports.ReclaimVdotFrom(settings, DateTime.UtcNow.Year),
-                settings.HomeAltitudeMeters,
-                distanceMeters, targetSeconds, monthsAvailable, compliance));
+            return Results.Ok(await FitnessReports.GoalAsync(
+                database, distanceMeters, targetSeconds, monthsAvailable,
+                availableHours ?? settings.AvailableHoursPerWeek,
+                DateTime.UtcNow.Year, cancellationToken));
         });
 
         // One import route, whatever the file is. Asking the owner to classify
@@ -228,6 +273,8 @@ public static class FitnessEndpoints
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
             row.BirthYear = update.BirthYear;
+            row.Female = update.Female;
+            row.AvailableHoursPerWeek = Math.Clamp(update.AvailableHoursPerWeek, 0, 40);
             row.PastPeakDistanceMeters = update.PastPeakDistanceMeters;
             row.PastPeakSeconds = update.PastPeakSeconds;
             row.PastPeakYear = update.PastPeakYear;
@@ -286,6 +333,11 @@ public static class FitnessEndpoints
                 return Results.BadRequest("A goal needs a metric, a positive target and a date.");
             }
 
+            if (update.DistanceMeters is { } distance && distance is < 400 or > 100_000)
+            {
+                return Results.BadRequest("A running goal is over 400 m to 100 km.");
+            }
+
             var existing = await database.Goals.SingleOrDefaultAsync(g => g.Metric == update.Metric, cancellationToken);
             if (existing is null)
             {
@@ -294,20 +346,56 @@ public static class FitnessEndpoints
                     Id = Guid.NewGuid(),
                     Metric = update.Metric,
                     TargetValue = update.TargetValue,
-                    TargetDate = date.Value
+                    TargetDate = date.Value,
+                    DistanceMeters = update.DistanceMeters,
+                    Label = update.Label
                 });
             }
             else
             {
                 existing.TargetValue = update.TargetValue;
                 existing.TargetDate = date.Value;
+                existing.DistanceMeters = update.DistanceMeters ?? existing.DistanceMeters;
+                existing.Label = update.Label ?? existing.Label;
             }
 
             await database.SaveChangesAsync(cancellationToken);
             return Results.NoContent();
         });
 
+        api.MapDelete("/goals/{metric}", async (
+            string metric, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var existing = await database.Goals.SingleOrDefaultAsync(g => g.Metric == metric, cancellationToken);
+            if (existing is null) return Results.NotFound();
+
+            database.Goals.Remove(existing);
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
+        });
+
         return routes;
+    }
+
+    /// <summary>Comma-separated numbers from the query string, validated, or null when absent.</summary>
+    private static IReadOnlyList<double>? ParseNumbers(string? raw, double low, double high)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+
+        var values = new List<double>();
+        foreach (var part in raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!double.TryParse(part, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var value)
+                || value < low || value > high)
+            {
+                return null;
+            }
+
+            values.Add(value);
+        }
+
+        return values.Count > 0 ? values : null;
     }
 
     /// <summary>The identity endpoint alone, for a deployment where fitness is not configured.</summary>
