@@ -108,6 +108,23 @@ training — read out of their log, each session placed by its own average pace
 against their own bands — at 8% a week, so no date assumes a jump nobody
 could start.
 
+### Bodyweight
+
+VDOT is oxygen uptake *per kilogram*, so shedding fat mass leaves the engine's
+absolute output alone while shrinking the denominator: VDOT scales with the
+inverse of mass (Cureton & Sparling's added-load studies). Clamped to ±10% of
+the starting mass, past which the fat-mass-only assumption has nothing behind
+it, and symmetric — gaining mass costs exactly what losing it buys.
+
+It applies to **both** ends of the trajectory, which it originally did not. The
+anchor moves with race weight, and so does the reclaimable lifetime peak,
+because that peak is a performance and the performance was run at a bodyweight.
+Scaling only the anchor raised the starting fitness toward a ceiling that stayed
+put, shortening the stretch re-earned at the retraining rate and making the
+model gloomier the lighter the athlete planned to race. If the weight the peak
+was set at is not recorded, the peak is left as run and the page says so rather
+than guessing.
+
 ### Fitting it to the athlete
 
 Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
@@ -140,6 +157,23 @@ decided it:
 5. **More hours than you have** — reachable by the date, on hours the athlete
    has said they cannot give; the date on the hours they can is quoted.
 6. **Reachable** — with the week it needs, zone by zone, and the odds.
+
+### Bodyweight
+
+VDOT is oxygen uptake *per kilogram*, so shedding fat mass leaves the engine's
+absolute output alone while shrinking the denominator: VDOT scales with the
+inverse of mass (Cureton & Sparling's added-load studies). Clamped to ±10% of
+the starting mass, past which the fat-mass-only assumption has nothing behind
+it, and symmetric — gaining mass costs exactly what losing it buys.
+
+It applies to **both** ends of the trajectory, which it originally did not. The
+anchor moves with race weight, and so does the reclaimable lifetime peak,
+because that peak is a performance and the performance was run at a bodyweight.
+Scaling only the anchor raised the starting fitness toward a ceiling that stayed
+put, shortening the stretch re-earned at the retraining rate and making the
+model gloomier the lighter the athlete planned to race. If the weight the peak
+was set at is not recorded, the peak is left as run and the page says so rather
+than guessing.
 
 ### Fitting it to the athlete
 
