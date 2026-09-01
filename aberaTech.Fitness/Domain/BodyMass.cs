@@ -41,6 +41,28 @@ public static class BodyMass
         return vdot * (currentKg / clamped);
     }
 
+    /// <summary>
+    /// A lifetime best re-scored at the weight the athlete intends to race at.
+    /// </summary>
+    /// <remarks>
+    /// A past peak is a performance, and a performance was run at a bodyweight.
+    /// Scoring it as though it belonged to no weight at all is what let the
+    /// race-weight factor raise the starting fitness toward a ceiling that
+    /// stayed put — which shrank the reclaim runway and made the model
+    /// <i>less</i> optimistic the lighter the athlete planned to race, exactly
+    /// backwards. The mark and the anchor get the same treatment, clamp and
+    /// caveat included.
+    ///
+    /// Null weights mean the athlete has not said what the peak was set at, so
+    /// the peak is returned untouched rather than guessed at.
+    /// </remarks>
+    public static double? AtRaceWeight(double? peakVdot, double? peakWeightKg, double? raceWeightKg)
+    {
+        if (peakVdot is not { } peak) return null;
+        if (peakWeightKg is not { } setAt || raceWeightKg is not { } racing) return peakVdot;
+        return AdjustVdot(peak, setAt, racing);
+    }
+
     public const double PoundsPerKg = 2.2046226218;
 
     public static double PoundsToKg(double pounds) => pounds / PoundsPerKg;

@@ -21,6 +21,8 @@ public sealed record SettingsUpdate(
     double? PastPeakDistanceMeters = null,
     double? PastPeakSeconds = null,
     int? PastPeakYear = null,
+    double? PastPeakWeightKg = null,
+    double? GoalWeightKg = null,
     double HomeAltitudeMeters = 0,
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
@@ -276,6 +278,11 @@ public static class FitnessEndpoints
                 return Results.BadRequest("Home altitude 0-5000 m.");
             }
 
+            if (update.PastPeakWeightKg is < 30 or > 250 || update.GoalWeightKg is < 30 or > 250)
+            {
+                return Results.BadRequest("Weights are 30-250 kg.");
+            }
+
             row.ReferenceHr = update.ReferenceHr;
             row.LtSecondsPerKm = update.LtSecondsPerKm;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
@@ -286,6 +293,8 @@ public static class FitnessEndpoints
             row.PastPeakDistanceMeters = update.PastPeakDistanceMeters;
             row.PastPeakSeconds = update.PastPeakSeconds;
             row.PastPeakYear = update.PastPeakYear;
+            row.PastPeakWeightKg = update.PastPeakWeightKg;
+            row.GoalWeightKg = update.GoalWeightKg;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
 
             // A race is the honest way to state the anchor; raw VDOT stays as

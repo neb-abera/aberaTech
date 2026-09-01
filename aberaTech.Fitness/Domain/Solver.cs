@@ -52,6 +52,12 @@ public sealed record Scenario(
 }
 
 /// <summary>Everything about the athlete the solver holds fixed.</summary>
+/// <param name="PeakWeightKg">
+/// What the athlete weighed when the lifetime best was set. Without it the
+/// reclaimable peak cannot follow the race-weight factor, and moving the anchor
+/// alone would shrink the reclaim runway every time the athlete planned to race
+/// lighter.
+/// </param>
 public sealed record SolverContext(
     PosteriorSamples Posterior,
     double AnchorVdot,
@@ -59,7 +65,8 @@ public sealed record SolverContext(
     TrainingDose CurrentDose,
     double? CurrentMassKg,
     double AltitudeMeters,
-    DoseLimits Limits)
+    DoseLimits Limits,
+    double? PeakWeightKg = null)
 {
     /// <summary>
     /// Draws to solve over. Solving is a bisection per draw, so the full cloud
@@ -164,7 +171,14 @@ public static class Solver
             anchor = BodyMass.AdjustVdot(anchor, current, target);
         }
 
-        var p = draw.ToParameters(context.ReclaimVdot, anchor);
+        // The peak moves with the anchor. Scaling one and not the other made
+        // the race-weight factor eat its own benefit: a lighter plan raised the
+        // starting fitness toward a fixed ceiling, shortening the stretch that
+        // is re-earned at the retraining rate.
+        var reclaim = BodyMass.AtRaceWeight(
+            context.ReclaimVdot, context.PeakWeightKg, scenario.RaceMassKg ?? context.CurrentMassKg);
+
+        var p = draw.ToParameters(reclaim, anchor);
         var effective = DoseResponse
             .Allocate(scenario.WeeklyHours * scenario.Compliance, context.Limits with { Responsiveness = draw.Responsiveness })
             .Dose with { StrengthHours = scenario.StrengthHours * scenario.Compliance };
