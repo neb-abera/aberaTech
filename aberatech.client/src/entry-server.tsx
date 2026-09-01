@@ -4,6 +4,9 @@ import { StaticRouter } from "react-router";
 import Shell from "./Shell.tsx";
 
 export { prerenderedRoutes } from "./site/prerenderedRoutes";
+// The server needs the app's own list of pages to tell a real page from a
+// typo; without it every unknown path was answered with the shell and a 200.
+export { routes } from "./site/routes";
 
 /**
  * One route rendered to the HTML the browser entry will hydrate. Runs in Node
