@@ -115,7 +115,7 @@ export default function FitnessPanel() {
         <DataPanel
           hevyApi={me.hevyApi}
           settings={summary.settings}
-          onProfileSaved={reloadSummary}
+          onDataChanged={reloadSummary}
         />
       )}
       {tab === 3 && <SourcesPanel />}
