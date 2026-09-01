@@ -106,6 +106,18 @@ public sealed class StaticPipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task Healthz_answers_for_itself_rather_than_through_the_fallback()
+    {
+        // It never existed: /healthz was answered by the SPA fallback with 200
+        // and the HTML shell, so the boot gate that waits on it passed whatever
+        // the app was doing.
+        var response = await _factory.CreateClient().GetAsync("/healthz");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("ok", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task A_deployment_without_the_manifest_serves_the_shell_as_before()
     {
         // An older build, or a host with a bare webroot: no manifest means

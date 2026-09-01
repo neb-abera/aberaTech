@@ -460,6 +460,23 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
     app.MapAdminUnavailable();
 }
 
+// Liveness, for anything that needs to know the container has finished
+// starting: compose, the DAST job's boot gate, a probe in front of the
+// container app.
+//
+// This did not exist. Every caller of /healthz was answered by the SPA
+// fallback instead — 200, and the HTML shell — so a check written to wait for
+// the app to come up passed the instant the web server bound a port, and would
+// have gone on passing had the app been unable to serve a single page. It only
+// came to light when unknown paths started answering 404 and the boot gate
+// failed for the first time.
+//
+// Liveness, not readiness: it says this process is up and serving, and
+// deliberately does not touch a database. The fitness and scheduling surfaces
+// each fail closed on their own configuration, and a deployment with neither
+// database is still a healthy deployment of this app.
+app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
+
 // Before the SPA fallback, so a plain fetch of these two gets real HTML rather
 // than an empty shell. Mapped unconditionally: they must answer on any
 // deployment, including one with no database and no messaging configured, since
