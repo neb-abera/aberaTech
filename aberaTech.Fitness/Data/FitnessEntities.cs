@@ -134,6 +134,19 @@ public class AthleteSettings
 
     public int? PastPeakYear { get; set; }
 
+    /// <summary>
+    /// What the athlete weighed when the lifetime best was set. Without it the
+    /// peak cannot be re-scored at a different race weight, so a plan to race
+    /// lighter raises the starting fitness toward a ceiling that does not move.
+    /// </summary>
+    public double? PastPeakWeightKg { get; set; }
+
+    /// <summary>
+    /// The weight the athlete intends to race at, kept so the projection opens
+    /// on the plan rather than resetting to today's weight on every reload.
+    /// </summary>
+    public double? GoalWeightKg { get; set; }
+
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
 }

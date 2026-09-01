@@ -121,7 +121,10 @@ export default function Workbench({ summary }: { summary: Summary }) {
       Number(summary.measuredDose.runningHours.toFixed(1)) || 6,
     ),
     compliance: 0.85,
-    raceMassLb: currentMassLb,
+    raceMassLb:
+      (summary.settings.goalWeightKg
+        ? Math.round(kgToLb(summary.settings.goalWeightKg))
+        : null) ?? currentMassLb,
     strengthHours: Number(summary.measuredDose.strengthHours.toFixed(1)),
     targetSeconds: 34 * 60,
   });
@@ -408,7 +411,12 @@ export default function Workbench({ summary }: { summary: Summary }) {
 
       {result && (
         <>
-          <Answer result={result} state={state} unknown={unknown} />
+          <Answer
+            result={result}
+            state={state}
+            unknown={unknown}
+            currentMassLb={currentMassLb}
+          />
 
           <Card variant="outlined">
             <CardContent>
@@ -621,10 +629,12 @@ function Answer({
   result,
   state,
   unknown,
+  currentMassLb,
 }: {
   result: SolveResult;
   state: WorkbenchState;
   unknown: FactorName | "RaceTime";
+  currentMassLb: number | null;
 }) {
   const predicted = result.predicted;
 
@@ -677,6 +687,16 @@ function Answer({
           )}
         </Stack>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          {state.raceMassLb !== null &&
+            currentMassLb !== null &&
+            state.raceMassLb !== currentMassLb && (
+              <>
+                <strong>
+                  Quoted at a race weight of {state.raceMassLb} lb, not
+                  today&apos;s {currentMassLb} lb.
+                </strong>{" "}
+              </>
+            )}
           At {state.weeklyHours.toFixed(1)} h/week and{" "}
           {Math.round(state.compliance * 100)}% compliance, the model puts your{" "}
           {formatDistance(state.distanceMeters)} at{" "}

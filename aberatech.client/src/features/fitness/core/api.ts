@@ -23,6 +23,10 @@ export interface SettingsDto {
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
+  pastPeakWeightKg: number | null;
+  goalWeightKg: number | null;
+  /** The clamp the server applies, so the page can offer the range it honours. */
+  maxWeightAdjustmentFraction: number;
   homeAltitudeMeters: number;
 }
 
@@ -38,6 +42,8 @@ export interface SettingsUpdate {
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
+  pastPeakWeightKg: number | null;
+  goalWeightKg: number | null;
   homeAltitudeMeters: number;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
