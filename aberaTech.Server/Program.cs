@@ -466,7 +466,31 @@ app.MapCompliancePages();
 // prerendered markup, and a client-rendered route served over it would flash
 // the wrong page and then hydrate against DOM that contradicts it. spa.html is
 // the same shell with the root div left empty.
-app.MapFallbackToFile("spa.html", staticFileOptions);
+//
+// The status code is the app's own answer, not a blanket 200. app-routes.json
+// is written at build time from site/routes.ts — the list the router itself
+// reads — so a path the app cannot render is a 404 here as well as on screen.
+// A deployment without the manifest keeps the old behaviour rather than
+// answering 404 to everything.
+var appRoutes = AppRoutes.Load(app.Environment.WebRootPath);
+
+app.MapFallback(async context =>
+{
+    var known = appRoutes is null || appRoutes.Contains(context.Request.Path.Value ?? "/");
+    context.Response.StatusCode = known ? StatusCodes.Status200OK : StatusCodes.Status404NotFound;
+
+    // The same policy the static pipeline gives the shell: it changes under a
+    // stable URL on every deploy, so it always revalidates.
+    context.Response.Headers.CacheControl = StaticAssetCaching.For(context.Request.Path, "spa.html");
+    context.Response.ContentType = "text/html; charset=utf-8";
+
+    // The environment's provider, not staticFileOptions': that object leaves
+    // FileProvider null and the middleware fills it in from the web root at
+    // request time, which this endpoint never goes through.
+    await context.Response.SendFileAsync(
+        app.Environment.WebRootFileProvider.GetFileInfo("spa.html"),
+        context.RequestAborted);
+});
 
 app.Run();
 

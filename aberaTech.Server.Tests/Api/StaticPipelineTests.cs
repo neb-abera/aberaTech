@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
@@ -75,6 +76,44 @@ public sealed class StaticPipelineTests : IDisposable
 
         Assert.Contains("empty shell", await response.Content.ReadAsStringAsync());
         Assert.Equal("no-cache", response.Headers.CacheControl?.ToString());
+    }
+
+    [Fact]
+    public async Task An_unknown_path_is_a_404_when_the_build_says_what_the_pages_are()
+    {
+        // The manifest the client build writes from site/routes.ts. With it, a
+        // path the app cannot render answers 404 — to a reader and to a
+        // crawler — instead of 200 and a blank shell.
+        File.WriteAllText(
+            Path.Combine(_webRoot, "app-routes.json"),
+            """["/", "/guides", "/schedule"]""");
+
+        using var factory = _factory.WithWebHostBuilder(builder => builder.UseWebRoot(_webRoot));
+        using var client = factory.CreateClient();
+
+        var known = await client.GetAsync("/schedule");
+        var gone = await client.GetAsync("/marketing");
+
+        Assert.Equal(HttpStatusCode.OK, known.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
+
+        // Still the shell, so the app renders its own not-found page rather
+        // than the browser's.
+        Assert.Contains("empty shell", await gone.Content.ReadAsStringAsync());
+        Assert.Equal("no-cache", gone.Headers.CacheControl?.ToString());
+
+        File.Delete(Path.Combine(_webRoot, "app-routes.json"));
+    }
+
+    [Fact]
+    public async Task A_deployment_without_the_manifest_serves_the_shell_as_before()
+    {
+        // An older build, or a host with a bare webroot: no manifest means
+        // "answer as before", never "nothing is a real page".
+        var response = await _factory.CreateClient().GetAsync("/anything-at-all");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("empty shell", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

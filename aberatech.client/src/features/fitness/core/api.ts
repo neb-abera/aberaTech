@@ -257,10 +257,31 @@ export interface ActivityRow {
   averageHr: number | null;
 }
 
+/**
+ * A failed call, with the status kept.
+ *
+ * Without it every failure looked the same to the page, and a session that had
+ * simply expired was reported as the server being down.
+ */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+
+  /** Signed out, or signed in as someone this data is not for. */
+  get needsSignIn(): boolean {
+    return this.status === 401 || this.status === 403;
+  }
+}
+
 async function get<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`${url} answered ${response.status}`);
+    throw new ApiError(response.status, `${url} answered ${response.status}`);
   }
   return (await response.json()) as T;
 }
@@ -271,8 +292,25 @@ export const fetchSummary = () => get<Summary>("/api/fitness/summary");
 
 export const fetchCitations = () => get<Citation[]>("/api/fitness/citations");
 
+/** The newest rows, and how many there are in total. */
+export interface ActivityPage {
+  activities: ActivityRow[];
+  total: number;
+  limit: number;
+}
+
 export const fetchActivities = () =>
-  get<ActivityRow[]>("/api/fitness/activities");
+  get<ActivityPage>("/api/fitness/activities");
+
+/** Take one row back out, for when a file brought in something wrong. */
+export async function deleteActivity(id: string): Promise<void> {
+  const response = await fetch(`/api/fitness/activities/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+}
 
 /** A plan stated by zone, or a total the model is asked to split itself. */
 export interface PlanRequest {
@@ -336,7 +374,7 @@ export async function saveGoal(goal: {
     body: JSON.stringify(goal),
   });
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
 }
 
@@ -346,7 +384,7 @@ export async function deleteGoal(metric: string): Promise<void> {
     { method: "DELETE" },
   );
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
 }
 
@@ -370,7 +408,7 @@ export async function uploadFile(file: File): Promise<ImportOutcome> {
     body: file,
   });
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
   return (await response.json()) as ImportOutcome;
 }
@@ -378,7 +416,7 @@ export async function uploadFile(file: File): Promise<ImportOutcome> {
 export async function syncHevy(): Promise<{ fetched: number; added: number }> {
   const response = await fetch("/api/fitness/sync/hevy", { method: "POST" });
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
   return (await response.json()) as { fetched: number; added: number };
 }
@@ -390,7 +428,7 @@ export async function saveSettings(update: SettingsUpdate): Promise<void> {
     body: JSON.stringify(update),
   });
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
 }
 
@@ -405,6 +443,6 @@ export async function saveBodyMetric(
     body: JSON.stringify({ date, weightKg, bodyFatPercent }),
   });
   if (!response.ok) {
-    throw new Error(await response.text());
+    throw new ApiError(response.status, await response.text());
   }
 }

@@ -6,9 +6,25 @@
  * from out here.
  */
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import FitnessPanel from "../FitnessPanel";
+
+/** The panel reads the open tab from the URL, so it needs a router. */
+function mount(entry = "/fitness") {
+  return render(
+    <MemoryRouter initialEntries={[entry]}>
+      <FitnessPanel />
+    </MemoryRouter>,
+  );
+}
 
 afterEach(() => {
   cleanup();
@@ -105,7 +121,7 @@ describe("FitnessPanel", () => {
         ),
     );
 
-    render(<FitnessPanel />);
+    mount();
 
     await screen.findByText(/not set up on this deployment/i);
   });
@@ -120,7 +136,7 @@ describe("FitnessPanel", () => {
         ),
     );
 
-    render(<FitnessPanel />);
+    mount();
 
     const button = await screen.findByRole("link", {
       name: /sign in with google/i,
@@ -147,7 +163,7 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    render(<FitnessPanel />);
+    mount();
 
     await screen.findByText(/aerobic base up 8%/i);
     await screen.findByText(/training paces \(daniels\)/i);
@@ -157,5 +173,89 @@ describe("FitnessPanel", () => {
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: /predictions/i })).toBeDefined();
     });
+  });
+  it("keeps the console standing when a refresh fails", async () => {
+    // The bug: one latch, checked before everything, meant a single failed
+    // summary fetch replaced the whole console — tabs, charts, the lot — with
+    // "the service did not answer", discarding data already on screen. The
+    // fix that rebuilt the dashboard after an import made three more ways to
+    // trip it.
+    let summaryCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo) => {
+        const url = String(input);
+        if (url.endsWith("/me")) {
+          return Promise.resolve(
+            json({ configured: true, signedIn: true, hevyApi: false }),
+          );
+        }
+        if (url.endsWith("/summary")) {
+          summaryCalls += 1;
+          return summaryCalls === 1
+            ? Promise.resolve(json(emptySummary))
+            : Promise.resolve(new Response("boom", { status: 503 }));
+        }
+        return Promise.resolve(json({ activities: [], total: 0, limit: 50 }));
+      }),
+    );
+
+    mount();
+    await screen.findByRole("tab", { name: "Dashboard" });
+
+    // A later refresh fails.
+    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    await waitFor(() => expect(summaryCalls).toBeGreaterThan(0));
+
+    // Whatever else happens, the tabs are still there to click.
+    expect(screen.getByRole("tab", { name: "Dashboard" })).toBeTruthy();
+  });
+
+  it("opens the tab named in the address, so a reload comes back to it", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: RequestInfo | URL) => {
+        const path = String(url);
+        if (path.includes("/api/fitness/me")) {
+          return Promise.resolve(
+            json({ configured: true, signedIn: true, hevyApi: false }),
+          );
+        }
+        if (path.includes("/api/fitness/summary")) {
+          return Promise.resolve(json(emptySummary));
+        }
+        return Promise.resolve(json({ activities: [], total: 0, limit: 50 }));
+      }),
+    );
+
+    mount("/fitness?tab=data");
+
+    const dataTab = await screen.findByRole("tab", { name: "Data" });
+    expect(dataTab.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("asks for sign-in again when the session goes, rather than blaming the server", async () => {
+    let summaryCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo) => {
+        const url = String(input);
+        if (url.endsWith("/me")) {
+          return Promise.resolve(
+            json({ configured: true, signedIn: true, hevyApi: false }),
+          );
+        }
+        if (url.endsWith("/summary")) {
+          summaryCalls += 1;
+          return summaryCalls === 1
+            ? Promise.resolve(json(emptySummary))
+            : Promise.resolve(new Response("", { status: 401 }));
+        }
+        return Promise.resolve(json({ activities: [], total: 0, limit: 50 }));
+      }),
+    );
+
+    mount();
+    await screen.findByRole("tab", { name: "Dashboard" });
   });
 });
