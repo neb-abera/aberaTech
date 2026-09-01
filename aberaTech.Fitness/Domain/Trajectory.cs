@@ -123,8 +123,17 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
 /// </remarks>
 public static class Trajectory
 {
-    /// <summary>Integration step, in months: about a day and a half.</summary>
-    private const double Step = 0.05;
+    /// <summary>
+    /// Integration step, in months: about four days.
+    /// </summary>
+    /// <remarks>
+    /// Fourth-order error goes as (k·h)⁴, and with k around 0.07 per month a
+    /// step of an eighth of a month is accurate to roughly one part in 10¹²  —
+    /// far past anything a VDOT is quoted to. It matters because the sampler
+    /// runs this integration tens of thousands of times per fit, so a step
+    /// finer than the dynamics need is paid for in seconds of waiting.
+    /// </remarks>
+    private const double Step = 0.125;
 
     /// <summary>Hours that actually happen: planned hours scaled by compliance.</summary>
     public static double EffectiveHours(double weeklyHours, double compliance)
@@ -159,21 +168,87 @@ public static class Trajectory
     {
         if (months < 0) throw new ArgumentOutOfRangeException(nameof(months));
 
+        var ceiling = CeilingOfTime(p, dose);
         var vdot = p.StartVdot;
         var elapsed = 0.0;
         while (elapsed < months - 1e-12)
         {
             var step = Math.Min(Step, months - elapsed);
-            vdot = Advance(p, dose, elapsed, step, vdot);
+            vdot = Advance(p, ceiling, elapsed, step, vdot);
             elapsed += step;
         }
 
         return vdot;
     }
 
+    /// <summary>
+    /// The ceiling as a function of time, computing each distinct week once.
+    /// </summary>
+    /// <remarks>
+    /// A training week holds for weeks at a time, but Runge-Kutta asks for the
+    /// dose four times a step. Evaluating the saturating ceiling — four
+    /// exponentials — on every one of those was most of the cost of a fit.
+    /// Training doses are records, so structural equality makes the memo a
+    /// one-liner.
+    /// </remarks>
+    private static Func<double, double> CeilingOfTime(
+        TrajectoryParameters p, Func<double, TrainingDose> dose)
+    {
+        var seen = new Dictionary<TrainingDose, double>();
+        return time =>
+        {
+            var week = dose(time);
+            if (seen.TryGetValue(week, out var cached)) return cached;
+
+            var ceiling = Ceiling(p, week);
+            seen[week] = ceiling;
+            return ceiling;
+        };
+    }
+
     /// <summary>Projected VDOT after <paramref name="months"/> under a schedule.</summary>
     public static double VdotAt(TrajectoryParameters p, DoseSchedule schedule, double months) =>
         VdotAt(p, schedule.At, months);
+
+    /// <summary>
+    /// The projection at each of several horizons, in one pass.
+    /// </summary>
+    /// <remarks>
+    /// Asking <see cref="VdotAt(TrajectoryParameters, Func{double, TrainingDose}, double)"/>
+    /// once per horizon integrates the same early months over and over, which
+    /// is quadratic in the number of horizons. It does not matter for a table
+    /// of five checkpoints and it matters enormously inside a sampler, where
+    /// the likelihood evaluates every observation on every one of tens of
+    /// thousands of proposals.
+    /// </remarks>
+    public static double[] VdotSeries(
+        TrajectoryParameters p, Func<double, TrainingDose> dose, IReadOnlyList<double> months)
+    {
+        var ceiling = CeilingOfTime(p, dose);
+        var results = new double[months.Count];
+        var vdot = p.StartVdot;
+        var elapsed = 0.0;
+
+        for (var i = 0; i < months.Count; i++)
+        {
+            var target = months[i];
+            if (target < elapsed - 1e-12)
+            {
+                throw new ArgumentException("Horizons must be ascending.", nameof(months));
+            }
+
+            while (elapsed < target - 1e-12)
+            {
+                var step = Math.Min(Step, target - elapsed);
+                vdot = Advance(p, ceiling, elapsed, step, vdot);
+                elapsed += step;
+            }
+
+            results[i] = vdot;
+        }
+
+        return results;
+    }
 
     /// <summary>Projected VDOT under a constant dose held from the start.</summary>
     public static double VdotAt(TrajectoryParameters p, TrainingDose dose, double months) =>
@@ -185,13 +260,10 @@ public static class Trajectory
 
     /// <summary>One Runge-Kutta step of dV/dt = k(V)·(C(h(t)) − V).</summary>
     private static double Advance(
-        TrajectoryParameters p, Func<double, TrainingDose> dose, double at, double step, double vdot)
+        TrajectoryParameters p, Func<double, double> ceilingAt, double at, double step, double vdot)
     {
-        double Slope(double time, double v)
-        {
-            var ceiling = Ceiling(p, dose(time));
-            return p.RatePerMonth * RateMultiplier(p, v) * (ceiling - v);
-        }
+        double Slope(double time, double v) =>
+            p.RatePerMonth * RateMultiplier(p, v) * (ceilingAt(time) - v);
 
         var k1 = Slope(at, vdot);
         var k2 = Slope(at + step / 2, vdot + step * k1 / 2);

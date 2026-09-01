@@ -189,6 +189,10 @@ if (fitnessEnabled)
         builder.Services.AddFitnessAuthorization(fitnessOptions);
     }
 
+    // One posterior per version of the history, shared by every request — the
+    // development bypass needs it as much as the signed-in path does.
+    builder.Services.AddSingleton<PosteriorCache>();
+
     // Its own data source: a different database on the same shared server, so
     // it cannot share scheduling's. Keyed, because the container can only hold
     // one unkeyed NpgsqlDataSource and scheduling already is it.

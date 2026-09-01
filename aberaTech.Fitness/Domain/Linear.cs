@@ -69,6 +69,43 @@ internal static class Linear
         return inverse;
     }
 
+    /// <summary>
+    /// The lower-triangular Cholesky factor L with L·Lᵀ = A, or null when A is
+    /// not positive definite.
+    /// </summary>
+    /// <remarks>
+    /// This is how a sampler proposes moves shaped like the distribution it is
+    /// exploring: draw z from independent standard normals and L·z has the
+    /// covariance A. Without it, a proposal that ignores the correlation
+    /// between parameters spends its life being rejected.
+    /// </remarks>
+    public static double[,]? Cholesky(double[,] a)
+    {
+        var n = a.GetLength(0);
+        var l = new double[n, n];
+
+        for (var i = 0; i < n; i++)
+        {
+            for (var j = 0; j <= i; j++)
+            {
+                var sum = a[i, j];
+                for (var k = 0; k < j; k++) sum -= l[i, k] * l[j, k];
+
+                if (i == j)
+                {
+                    if (sum <= 0) return null;
+                    l[i, j] = Math.Sqrt(sum);
+                }
+                else
+                {
+                    l[i, j] = sum / l[j, j];
+                }
+            }
+        }
+
+        return l;
+    }
+
     /// <summary>The standard normal cumulative distribution.</summary>
     /// <remarks>
     /// Erf by the Abramowitz &amp; Stegun 7.1.26 rational approximation, which

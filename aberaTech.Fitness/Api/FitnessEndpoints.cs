@@ -93,6 +93,8 @@ public static class FitnessEndpoints
 
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
+        api.MapSolverEndpoints();
+
         api.MapGet("/predictions", async (
             FitnessDbContext database,
             HttpRequest request,
@@ -177,7 +179,7 @@ public static class FitnessEndpoints
         // their own download is how the Garmin archive — the file Garmin
         // actually sends — ended up fitting none of the three buttons there
         // used to be here.
-        api.MapPost("/import", async (HttpRequest request, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPost("/import", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             // Kestrel's own 30 MB default would reject a Garmin archive before
             // this handler ever ran.
@@ -212,6 +214,11 @@ public static class FitnessEndpoints
             }
 
             var outcome = await ActivityStore.UpsertAsync(database, result.Activities, cancellationToken);
+
+            // New history means the fitted posterior is stale, whatever shape
+            // the file arrived in.
+            cache.Invalidate();
+
             return Results.Ok(new
             {
                 kind = result.Kind,
@@ -227,10 +234,11 @@ public static class FitnessEndpoints
 
         if (options.HasHevyApi)
         {
-            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, CancellationToken cancellationToken) =>
+            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
             {
                 var activities = await hevy.FetchAllAsync(cancellationToken);
                 var outcome = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
+                cache.Invalidate();
                 return Results.Ok(new { fetched = activities.Count, added = outcome.Added });
             });
         }
@@ -277,7 +285,7 @@ public static class FitnessEndpoints
             return Results.NoContent();
         });
 
-        api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             if (update.ReferenceHr is < 80 or > 220) return Fail("Reference HR out of range.");
 
@@ -321,6 +329,11 @@ public static class FitnessEndpoints
             }
 
             await database.SaveChangesAsync(cancellationToken);
+
+            // The anchor is what the priors are built from, so moving it moves
+            // the posterior.
+            cache.Invalidate();
+
             return Results.NoContent();
         });
 
