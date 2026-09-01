@@ -27,26 +27,119 @@ sourced predictions out.
   of a monthly aerobic-threshold test), weekly training dose against the plan,
   estimated 1RM trends (Epley, Brzycki cross-check), and rule-based highlights
   that carry their evidence — regressions included.
-- **Predicts**: VDOT trajectory under an adjustable dose (weekly hours ×
-  compliance), with bodyweight as a factor (VDOT is per-kilogram), race-time
-  checkpoints at 6/12/18/24 months, goal arrival dates, and the inverse — name
-  a goal and a deadline, get the required weekly dose.
+- **Predicts**: a VDOT trajectory under a training week stated by intensity,
+  with an 80% band around it, race-time checkpoints over whatever distances
+  and horizons are asked for, and per-goal probabilities.
+- **Prescribes**: name any distance, any time and any date, and get back the
+  week it needs — hours by zone — or the constraint that makes it impossible.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
-  Cureton & Sparling, Epley, Brzycki, Coggan). `/api/fitness/citations` serves
-  the registry; the UI renders it under Sources.
+  Cureton & Sparling, Rønnestad & Mujika, Gabbett, Coggan, Epley, Brzycki,
+  Seber & Wild). `/api/fitness/citations` serves the registry; the UI renders
+  it under Sources, and every number links to the step that produced it.
 
-## The model, in one paragraph
+## The model
 
-Race equivalency is Daniels VDOT (Daniels & Gilbert 1979). The trajectory is
-the constant-dose solution of the Banister impulse-response family:
-`V(t) = C − (C − V0)·e^(−kt)` with `C = 38 + 1.6 × effective weekly hours` and
-`k = 0.0676/month`, calibrated so the athlete's plan dose reproduces documented
-aerobic-deficiency recoveries. Bodyweight scales VDOT by the inverse mass ratio
-(clamped to ±10%; fat-mass assumption). The inverse solver inverts the same
-equation for `C`, so forward and inverse can never disagree. A new time trial
-recalibrates `StartVdot` in settings — predictions are only ever as good as the
-last measured anchor.
+Everything below is computed, not asserted, and every result the API returns
+ships a trace of the arithmetic with this athlete's numbers substituted.
+
+### Race equivalency
+
+Daniels VDOT (Daniels & Gilbert 1979): a race time implies an oxygen-cost
+score, and equal scores are equivalent performances. `Vdot.SpeedElasticity`
+differentiates the same equations to get d(ln VDOT)/d(ln speed) at the
+athlete's own pace — about 1.1, not 1 — which is what turns a measured pace
+improvement into a fitness one.
+
+### What a training week buys
+
+The dose is a vector of hours by intensity, and each zone saturates:
+
+```
+C(h) = 38 + r · Σ bᵢ·sᵢ·(1 − e^(−hᵢ/sᵢ))
+```
+
+| Zone | bᵢ (VDOT per hour, first hour) | sᵢ (saturation, h/week) | strain per hour |
+| --- | --- | --- | --- |
+| Easy | 1.960 | 14.0 | 1.0 |
+| Threshold | 2.856 | 1.2 | 2.5 |
+| Interval | 3.373 | 0.6 | 4.5 |
+| Strength | 1.078 | 1.5 | 1.5 |
+
+The `bᵢ` were fixed by two conditions, both asserted in `DoseResponseTests`:
+the optimal split of an eight-hour week comes out at 80% easy — Seiler's
+observed distribution, reproduced rather than assumed — and over 4–12 h/week
+the surface agrees within ~1.5 VDOT with the linear `C = 38 + 1.6h` ceiling
+this app previously used, which was calibrated against documented
+aerobic-deficiency recoveries. Past that range it deliberately diverges: a
+straight line has no ceiling, and extrapolating one is what let this
+calculator once answer "45.8 hours a week" for a five-mile time no human has
+run. `r` is the athlete's responsiveness, fitted from their own history.
+
+### How the hours get split
+
+Maximising `C(h)` subject to `Σhᵢ = H` and `Σcᵢhᵢ ≤ Sₘₐₓ` is a constrained
+optimum, solved from the Lagrangian conditions rather than by search:
+
+```
+r·bᵢ·e^(−hᵢ/sᵢ) = λ + μ·cᵢ    ⟹    hᵢ = sᵢ·ln(r·bᵢ / (λ + μ·cᵢ))
+```
+
+so an inner bisection on λ meets the hours constraint and an outer one on μ
+meets the recovery budget. λ is the shadow price of an hour — what one more
+hour a week is worth in VDOT — and μ the price of recovery; both are reported,
+because "where should my next hour go" is answered by comparing them.
+
+### The trajectory
+
+An ODE rather than a formula, so a ramping plan is as computable as a steady
+one:
+
+```
+dV/dt = k(V)·(C(h(t)) − V)
+```
+
+integrated by fourth-order Runge-Kutta at ~1.5-day steps. Under a constant
+dose it reproduces the closed-form exponential to eight decimals, which is the
+test that keeps the numerics honest. `k(V)` carries the retraining fast lane:
+2.5× the de-novo rate at the starting fitness, tapering to 1× at the
+age-adjusted lifetime peak. Plans ramp from the week the athlete is actually
+training — read out of their log, each session placed by its own average pace
+against their own bands — at 8% a week, so no date assumes a jump nobody
+could start.
+
+### Fitting it to the athlete
+
+Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
+penalised nonlinear least squares (Levenberg-Marquardt, central-difference
+Jacobian over the ODE solve). The penalty is a Gaussian prior on each
+parameter at its literature value, so four noisy months cannot conclude the
+athlete is twice as trainable as anyone alive; the priors wash out as the
+history grows, and `dataWeight` reports which regime the answer is in.
+Parameter covariance is `s²·(JᵀJ + Λ)⁻¹`.
+
+### Uncertainty
+
+The delta method pushes that covariance forward — `Var[V(t)] ≈ ∇θV·Σ·∇θV'`,
+plus the residual spread — into the band on every projection and the
+probability on every goal, `Φ((V(t) − target)/sd)`. A target with a 4% chance
+is told it has a 4% chance.
+
+### Whether a goal is possible at all
+
+Checked in the order the constraints bind, each answered with the number that
+decided it:
+
+1. **Past the world record** — the target scores above the best performance on
+   record, scored through the same equations.
+2. **Past the age-graded record** — above that ceiling discounted to the
+   athlete's age (flat to 34, then ~0.7%/year, the WMA shape).
+3. **Past any trainable ceiling** — above `C(h)` at the largest week the
+   athlete could sustain.
+4. **Not by that date** — reachable, but later; the earliest date is quoted.
+5. **More hours than you have** — reachable by the date, on hours the athlete
+   has said they cannot give; the date on the hours they can is quoted.
+6. **Reachable** — with the week it needs, zone by zone, and the odds.
 
 ## Configuration
 

@@ -69,8 +69,21 @@ public class Goal
 {
     public Guid Id { get; set; }
 
-    /// <summary>Stable metric key: run-2mi, run-5mi, ruck-12mi, deadlift-3rm, pull-ups, ...</summary>
+    /// <summary>
+    /// Stable key for the goal. Distances the athlete names themselves get a
+    /// generated one (run-8047m), which is what keeps the goal list open-ended
+    /// rather than a menu of four.
+    /// </summary>
     public required string Metric { get; set; }
+
+    /// <summary>
+    /// The distance for a timed running goal, in metres. Any distance, not
+    /// only the ones with a preset; null for goals that are not races.
+    /// </summary>
+    public double? DistanceMeters { get; set; }
+
+    /// <summary>What the athlete calls it, when they call it something.</summary>
+    public string? Label { get; set; }
 
     /// <summary>Seconds for timed metrics, kilograms for loads, count for reps.</summary>
     public double TargetValue { get; set; }
@@ -103,6 +116,16 @@ public class AthleteSettings
 
     /// <summary>Birth year, for the age adjustment on the reclaimable peak.</summary>
     public int? BirthYear { get; set; }
+
+    /// <summary>
+    /// Which record book a target is graded against. Null means unstated, and
+    /// the model says so rather than guessing: it grades against the open
+    /// men's book, which is the most permissive reading available.
+    /// </summary>
+    public bool? Female { get; set; }
+
+    /// <summary>Weekly running hours the athlete says they can commit to.</summary>
+    public double AvailableHoursPerWeek { get; set; } = 7;
 
     /// <summary>The lifetime-best race: distance, time, and roughly when.</summary>
     public double? PastPeakDistanceMeters { get; set; }

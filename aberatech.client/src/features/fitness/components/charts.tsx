@@ -230,7 +230,7 @@ export function ProjectionChart({
   }
 
   const values = curve
-    .map((p) => p.vdot)
+    .flatMap((p) => [p.vdot, p.low, p.high])
     .concat(goals.map((g) => g.vdot))
     .concat(reclaimVdot === null ? [] : [reclaimVdot]);
   const lo = Math.min(...values) - 1.5;
@@ -248,13 +248,28 @@ export function ProjectionChart({
     )
     .join(" ");
 
+  // The band is the same curve out along its high edge and back along its low
+  // one, closed: a projection without it is a guess drawn as a fact.
+  const band = [
+    ...curve.map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"}${x(p.months).toFixed(1)} ${y(p.high).toFixed(1)}`,
+    ),
+    ...curve
+      .slice()
+      .reverse()
+      .map((p) => `L${x(p.months).toFixed(1)} ${y(p.low).toFixed(1)}`),
+    "Z",
+  ].join(" ");
+
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       width="100%"
       role="img"
-      aria-label="Projected VDOT over the coming months against goal thresholds"
+      aria-label="Projected VDOT over the coming months, with its confidence band, against goal thresholds"
     >
+      <path d={band} fill={theme.palette.primary.main} opacity={0.16} />
       <Axis
         color={theme.palette.text.secondary}
         position={MARGIN.left - 8}

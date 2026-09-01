@@ -61,9 +61,9 @@ public static class Highlights
 
         highlights.Add(change > 0
             ? new Highlight("aerobic-gain",
-                $"Aerobic base up {change:P0} month over month", evidence, Positive: true)
+                $"Aerobic base up {Format.Percent(change)} month over month", evidence, Positive: true)
             : new Highlight("aerobic-loss",
-                $"Aerobic base down {Math.Abs(change):P0} month over month", evidence, Positive: false));
+                $"Aerobic base down {Format.Percent(Math.Abs(change))} month over month", evidence, Positive: false));
     }
 
     private static void AddVolume(List<Highlight> highlights, IReadOnlyList<WeekVolume> weeks, double planMinutes)
@@ -94,7 +94,7 @@ public static class Highlights
             if (share < 0.5)
             {
                 highlights.Add(new Highlight("volume-gap",
-                    $"Last week was {share:P0} of plan volume",
+                    $"Last week was {Format.Percent(share)} of plan volume",
                     $"{recent.Minutes:0} of {planMinutes:0} planned minutes in the week of {recent.WeekStart:yyyy-MM-dd}.",
                     Positive: false));
             }
@@ -121,7 +121,7 @@ public static class Highlights
             else if (latest.E1Rm < bestBefore * 0.93)
             {
                 highlights.Add(new Highlight("strength-slide",
-                    $"{exercise.Key}: estimated 1RM down {1 - latest.E1Rm / bestBefore:P0} from peak",
+                    $"{exercise.Key}: estimated 1RM down {Format.Percent(1 - latest.E1Rm / bestBefore)} from peak",
                     $"Peak {bestBefore:0}, latest {latest.E1Rm:0} on {latest.Date:yyyy-MM-dd}. Strength holds on ~2 sessions/week.",
                     Positive: false));
             }

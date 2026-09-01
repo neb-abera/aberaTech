@@ -120,10 +120,35 @@ public static class Citations
         2010,
         null);
 
+    public static readonly Citation RonnestadStrength = new(
+        "ronnestad-strength",
+        "Heavy resistance training improves running economy by a few percent in trained endurance athletes without adding bulk — a small but real ceiling gain per hour.",
+        "Bent Ronnestad, PhD, Inland Norway University, and Inigo Mujika, PhD — the pair whose review consolidated the strength-for-endurance evidence.",
+        "Optimizing strength training for running and cycling endurance performance: a review (Scand J Med Sci Sports 24)",
+        2014,
+        "https://pubmed.ncbi.nlm.nih.gov/24151913/");
+
+    public static readonly Citation GabbettWorkload = new(
+        "gabbett-workload",
+        "Injury risk rises when the training load of the current week runs far ahead of the load the athlete has been carrying; chronic load is built, not jumped to.",
+        "Tim Gabbett, PhD - applied sport scientist whose acute:chronic workload work underpins how professional sport ramps training.",
+        "The training-injury prevention paradox (Br J Sports Med 50)",
+        2016,
+        "https://pubmed.ncbi.nlm.nih.gov/26758673/");
+
+    public static readonly Citation NonlinearRegression = new(
+        "seber-wild-nls",
+        "Fitting a nonlinear model to observations by least squares yields parameter standard errors from the Jacobian, and prediction intervals by propagating them.",
+        "George Seber and Chris Wild, statisticians, University of Auckland - the standard reference on nonlinear regression.",
+        "Nonlinear Regression (Wiley Series in Probability and Statistics)",
+        1989,
+        null);
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
         WmaAgeGrading, PeronnetAltitude, SeilerPolarized, SanMillanBrooks,
-        UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc
+        UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc,
+        RonnestadStrength, GabbettWorkload, NonlinearRegression
     ];
 }
