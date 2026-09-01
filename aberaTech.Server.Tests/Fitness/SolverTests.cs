@@ -29,7 +29,7 @@ public sealed class SolverTests(ITestOutputHelper output)
             Posterior.Sample(history, new Posterior.Priors(history[0].ObservedVdot)),
             anchorVdot,
             ReclaimVdot: null,
-            CurrentDose: DoseResponse.Allocate(3).Dose,
+            LoggedDose: DoseResponse.Allocate(3).Dose,
             CurrentMassKg: mass,
             AltitudeMeters: 1190,
             Limits: new DoseLimits());
