@@ -408,3 +408,140 @@ export async function saveBodyMetric(
     throw new Error(await response.text());
   }
 }
+
+/** The five levers a what-if can hold or solve for. */
+export type FactorName =
+  | "WeeklyHours"
+  | "Compliance"
+  | "RaceMassKg"
+  | "StrengthHours"
+  | "Months";
+
+export interface ScenarioRequest {
+  distanceMeters: number;
+  months: number;
+  weeklyHours: number;
+  compliance: number;
+  raceMassKg: number | null;
+  strengthHours: number;
+}
+
+/** An answer as a distribution, which is the only honest shape for one. */
+export interface SpreadValue {
+  median: number;
+  low: number;
+  high: number;
+  /** Share of the posterior in which nothing reaches the target. */
+  impossible: number;
+  /** Share in which the factor needs no change at all. */
+  alreadyMet: number;
+}
+
+export interface Sensitivity {
+  factor: FactorName;
+  label: string;
+  value: number;
+  elasticity: number;
+  perUnitSeconds: number;
+  lowValue: number;
+  highValue: number;
+  lowSeconds: number;
+  highSeconds: number;
+  swing: number;
+}
+
+export interface ModelParameter {
+  name: string;
+  median: number;
+  low: number;
+  high: number;
+  unit: string;
+}
+
+export interface ModelCard {
+  parameters: ModelParameter[];
+  acceptanceRate: number;
+  rHat: number;
+  effectiveSampleSize: number;
+  converged: boolean;
+  observations: number;
+  timeTrials: number;
+  draws: number;
+  steps: Step[];
+}
+
+export interface SolveResult {
+  predicted: SpreadValue;
+  solveFor: FactorName | null;
+  solved: SpreadValue | null;
+  probability: number | null;
+  sensitivities: Sensitivity[];
+  fan: ProjectionPoint[];
+  model: ModelCard;
+  steps: Step[];
+}
+
+export interface SurfaceResult {
+  across: FactorName;
+  down: FactorName;
+  acrossValues: number[];
+  downValues: number[];
+  seconds: number[][];
+  targetSeconds: number | null;
+}
+
+export interface Measurement {
+  atMonths: number;
+  kind: "TimeTrial" | "NormalizedPace";
+  widthBeforeSeconds: number;
+  widthAfterSeconds: number;
+  reduction: number;
+}
+
+export interface MeasurePlan {
+  options: Measurement[];
+  steps: Step[];
+}
+
+async function post<T>(url: string, body: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(`${url} answered ${response.status}`);
+  }
+  return (await response.json()) as T;
+}
+
+export const fetchModel = () => get<ModelCard>("/api/fitness/model");
+
+export function solve(
+  scenario: ScenarioRequest,
+  solveFor: FactorName | null,
+  targetSeconds: number | null,
+): Promise<SolveResult> {
+  return post<SolveResult>("/api/fitness/solve", {
+    scenario,
+    solveFor,
+    targetSeconds,
+  });
+}
+
+export function fetchSurface(
+  scenario: ScenarioRequest,
+  across: FactorName,
+  down: FactorName,
+  targetSeconds: number | null,
+): Promise<SurfaceResult> {
+  return post<SurfaceResult>("/api/fitness/surface", {
+    scenario,
+    across,
+    down,
+    targetSeconds,
+  });
+}
+
+export const fetchMeasurementPlan = (scenario: ScenarioRequest) =>
+  post<MeasurePlan>("/api/fitness/measure", scenario);
