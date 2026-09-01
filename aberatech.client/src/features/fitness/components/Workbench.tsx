@@ -3,10 +3,12 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import Radio from "@mui/material/Radio";
 import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -67,6 +69,9 @@ interface WorkbenchState {
   raceMassLb: number | null;
   strengthHours: number;
   targetSeconds: number;
+  startHours: number | null;
+  rampPercent: number;
+  useHistory: boolean;
 }
 
 function toRequest(state: WorkbenchState): ScenarioRequest {
@@ -77,6 +82,9 @@ function toRequest(state: WorkbenchState): ScenarioRequest {
     compliance: state.compliance,
     raceMassKg: state.raceMassLb === null ? null : lbToKg(state.raceMassLb),
     strengthHours: state.strengthHours,
+    startHours: state.startHours,
+    rampPerWeek: state.rampPercent / 100,
+    useHistory: state.useHistory,
   };
 }
 
@@ -127,6 +135,11 @@ export default function Workbench({ summary }: { summary: Summary }) {
         : null) ?? currentMassLb,
     strengthHours: Number(summary.measuredDose.strengthHours.toFixed(1)),
     targetSeconds: 34 * 60,
+    // Nothing here is read off the log. A projection is of a plan, and the
+    // plan starts when it starts.
+    startHours: null,
+    rampPercent: 0,
+    useHistory: false,
   });
 
   const [result, setResult] = React.useState<SolveResult | null>(null);
@@ -401,6 +414,104 @@ export default function Workbench({ summary }: { summary: Summary }) {
               );
             })}
           </Grid>
+        </CardContent>
+      </Card>
+
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h6">Where the plan starts</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+            Stated, not inferred. Nothing below is read off your imports — a
+            training log records what you have done, and a projection is of what
+            you are going to do.
+          </Typography>
+
+          <Stack direction="row" sx={{ flexWrap: "wrap", mb: 2 }}>
+            <Chip
+              size="small"
+              label="Start the plan as written"
+              variant={state.rampPercent === 0 ? "filled" : "outlined"}
+              color={state.rampPercent === 0 ? "primary" : "default"}
+              onClick={() => setState((p) => ({ ...p, rampPercent: 0 }))}
+              sx={{ mr: 0.5, mb: 0.5 }}
+            />
+            <Chip
+              size="small"
+              label="Build up to it"
+              variant={state.rampPercent > 0 ? "filled" : "outlined"}
+              color={state.rampPercent > 0 ? "primary" : "default"}
+              onClick={() =>
+                setState((p) => ({
+                  ...p,
+                  rampPercent: p.rampPercent > 0 ? p.rampPercent : 8,
+                  startHours: p.startHours ?? 2,
+                }))
+              }
+              sx={{ mr: 0.5, mb: 0.5 }}
+            />
+          </Stack>
+
+          {state.rampPercent > 0 && (
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{ mb: 2 }}
+            >
+              <TextField
+                size="small"
+                type="number"
+                label="Starting at (h/week)"
+                value={state.startHours ?? 0}
+                slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
+                onChange={(event) =>
+                  set("startHours", Math.max(0, Number(event.target.value)))
+                }
+                helperText={
+                  summary.measuredDose.runningHours > 0
+                    ? `Your log shows ${summary.measuredDose.runningHours.toFixed(1)} h/week — a suggestion, not the answer`
+                    : "What you are on now, in your own estimation"
+                }
+                sx={{ width: 240 }}
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="Build at (% a week)"
+                value={state.rampPercent}
+                slotProps={{ htmlInput: { min: 1, max: 50, step: 1 } }}
+                onChange={(event) =>
+                  set("rampPercent", Math.max(1, Number(event.target.value)))
+                }
+                helperText="10% a week is the usual caution"
+                sx={{ width: 200 }}
+              />
+            </Stack>
+          )}
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={state.useHistory}
+                onChange={(event) => set("useHistory", event.target.checked)}
+              />
+            }
+            label={
+              <Typography variant="body2">
+                Fit the model to my imported months
+              </Typography>
+            }
+          />
+          <Typography
+            variant="caption"
+            sx={{ display: "block", color: "text.secondary" }}
+          >
+            Off by default. Months with almost no training carry almost no
+            information about how you respond to training, and improvement
+            during a return is detraining unwinding rather than a training
+            response. Left off, the rate and responsiveness come from the
+            literature and your starting fitness comes from the anchor you
+            entered.
+          </Typography>
         </CardContent>
       </Card>
 
