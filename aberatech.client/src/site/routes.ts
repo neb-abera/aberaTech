@@ -24,7 +24,6 @@ export interface PageRoute {
 
 export const routes: PageRoute[] = [
   { path: "/", Page: lazy(() => import("../views/Home")) },
-  { path: "/marketing", Page: lazy(() => import("../views/MarketingPage")) },
   { path: "/guides", Page: lazy(() => import("../views/Guides")) },
   { path: "/projects", Page: lazy(() => import("../views/Projects")) },
   {
@@ -58,8 +57,6 @@ export const structural: string[] = ["/", "/guides", "/projects"];
  * protecting belongs here — it belongs behind the account check.
  */
 export const unlisted: Record<string, string> = {
-  "/marketing":
-    "The unedited Material UI template page — stock pricing tiers, invented testimonials, Sitemark's logos. Kept only as a reference for its section components, and not something to link anyone to.",
   "/schedule/admin":
     "Useful only when signed in as the queue owner. Everyone else would open a panel they cannot act on, so it is reached by address and gated by the API.",
 };
