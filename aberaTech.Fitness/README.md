@@ -125,6 +125,28 @@ model gloomier the lighter the athlete planned to race. If the weight the peak
 was set at is not recorded, the peak is left as run and the page says so rather
 than guessing.
 
+### Where a plan starts
+
+A projection is of a plan, so the plan's starting conditions are stated, not
+inferred. Three inputs the athlete gives rather than the model guesses:
+
+- **the week to start from**, if a build-up is being modelled at all;
+- **the build-up rate**, which defaults to none — a plan is projected as
+  written, trained in full from the first week;
+- **whether the imported months count as evidence** about how this athlete
+  responds to training.
+
+The last one matters for a returning athlete more than anything else here. A
+period of almost no training carries almost no information about dose-response,
+and improvement during a return is detraining unwinding rather than a training
+response. Fitting to it produces a confident-looking number about the wrong
+thing. Left off, the rate and responsiveness come from the literature and the
+starting fitness comes from the anchor race the athlete entered — which is the
+honest position when the history is a record of not training.
+
+The logged week is still read and still shown, as a suggestion beside the input
+it might fill. It no longer reaches the projection on its own.
+
 ### Fitting it to the athlete
 
 Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
@@ -174,6 +196,28 @@ put, shortening the stretch re-earned at the retraining rate and making the
 model gloomier the lighter the athlete planned to race. If the weight the peak
 was set at is not recorded, the peak is left as run and the page says so rather
 than guessing.
+
+### Where a plan starts
+
+A projection is of a plan, so the plan's starting conditions are stated, not
+inferred. Three inputs the athlete gives rather than the model guesses:
+
+- **the week to start from**, if a build-up is being modelled at all;
+- **the build-up rate**, which defaults to none — a plan is projected as
+  written, trained in full from the first week;
+- **whether the imported months count as evidence** about how this athlete
+  responds to training.
+
+The last one matters for a returning athlete more than anything else here. A
+period of almost no training carries almost no information about dose-response,
+and improvement during a return is detraining unwinding rather than a training
+response. Fitting to it produces a confident-looking number about the wrong
+thing. Left off, the rate and responsiveness come from the literature and the
+starting fitness comes from the anchor race the athlete entered — which is the
+honest position when the history is a record of not training.
+
+The logged week is still read and still shown, as a suggestion beside the input
+it might fill. It no longer reaches the projection on its own.
 
 ### Fitting it to the athlete
 
