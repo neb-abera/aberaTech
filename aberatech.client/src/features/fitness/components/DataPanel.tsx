@@ -30,11 +30,18 @@ import ProfileCard from "./ProfileCard";
 export default function DataPanel({
   hevyApi,
   settings,
-  onProfileSaved,
+  onDataChanged,
 }: {
   hevyApi: boolean;
   settings: SettingsDto;
-  onProfileSaved: () => void;
+  /**
+   * Anything that changes what the dashboard would say. Every mutation on this
+   * panel calls it, because the dashboard is built once when the page loads:
+   * an import that only refreshed the list below it left the charts showing
+   * the state of things before the upload, on the tab the athlete actually
+   * reads.
+   */
+  onDataChanged: () => void;
 }) {
   const [status, setStatus] = React.useState<{
     ok: boolean;
@@ -89,8 +96,9 @@ export default function DataPanel({
       setBusy(false);
       setStatus({ ok: !failed, text: notes.join(" ") });
       refresh();
+      onDataChanged();
     },
-    [refresh],
+    [refresh, onDataChanged],
   );
 
   const onDrop = async (event: React.DragEvent) => {
@@ -107,6 +115,7 @@ export default function DataPanel({
         text: `Hevy: ${result.fetched} workouts fetched, ${result.added} new.`,
       });
       refresh();
+      onDataChanged();
     } catch (error) {
       setStatus({
         ok: false,
@@ -117,7 +126,7 @@ export default function DataPanel({
 
   return (
     <Stack spacing={3}>
-      <ProfileCard settings={settings} onSaved={onProfileSaved} />
+      <ProfileCard settings={settings} onSaved={onDataChanged} />
 
       <Card variant="outlined">
         <CardContent>
@@ -193,7 +202,13 @@ export default function DataPanel({
         </CardContent>
       </Card>
 
-      <WeighIn onSaved={(text) => setStatus({ ok: true, text })} />
+      {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
+      <WeighIn
+        onSaved={(text) => {
+          setStatus({ ok: true, text });
+          onDataChanged();
+        }}
+      />
 
       {status && (
         <Alert severity={status.ok ? "success" : "error"}>{status.text}</Alert>
