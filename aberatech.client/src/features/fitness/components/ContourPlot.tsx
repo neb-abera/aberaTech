@@ -135,6 +135,11 @@ export default function ContourPlot({
   const pick = (event: React.MouseEvent<HTMLElement>) => {
     if (!onPick) return;
     const box = event.currentTarget.getBoundingClientRect();
+
+    // A collapsed container — a hidden tab, a display:none ancestor — measures
+    // zero, and dividing by it turns a click into NaN factors that would be
+    // written straight into the scenario.
+    if (box.width <= 0 || box.height <= 0) return;
     const px = ((event.clientX - box.left) / box.width) * WIDTH;
     const py = ((event.clientY - box.top) / box.height) * HEIGHT;
 
