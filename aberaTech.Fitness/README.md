@@ -141,6 +141,70 @@ decided it:
    has said they cannot give; the date on the hours they can is quoted.
 6. **Reachable** — with the week it needs, zone by zone, and the odds.
 
+### Fitting it to the athlete
+
+Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
+penalised nonlinear least squares (Levenberg-Marquardt, central-difference
+Jacobian over the ODE solve). The penalty is a Gaussian prior on each parameter
+at its literature value, so four noisy months cannot conclude the athlete is
+twice as trainable as anyone alive; the priors wash out as the history grows,
+and `dataWeight` reports which regime the answer is in.
+
+### The posterior
+
+The point fit above is the starting position for the real inference. A point
+estimate with a delta-method normal is right when data are plentiful and the
+likelihood is quadratic; for one athlete with a handful of noisy months, tightly
+correlated parameters and hard bounds, it quietly reports symmetric intervals for
+a skewed answer. So the model is sampled instead — adaptive Metropolis, four
+chains, proposals shaped by the Cholesky factor of the chain's own covariance
+(the parameters are correlated enough that a diagonal proposal is rejected 98% of
+the time), with split-R̂ and effective sample size reported rather than assumed.
+
+A fifth parameter joins the three above: the **scale error in pace-at-heart-rate
+as a measure of fitness**. A treadmill that reads fast, a strap that reads high
+and the imperfection of the normalisation itself all bias the proxy without
+biasing a race, so that bias is estimated instead of assumed away. A synthetic
+series read 4% fast is recovered at 0.957.
+
+**What is and is not identified.** The parameters lie on a ridge: a proxy read
+low, from a low start, approached slowly fits about as well as an accurate one
+from a high start approached fast. The marginals therefore lean on their priors,
+and presenting `k` as *measured* would be dishonest. What survives the ridge is
+the prediction — every combination on it fits the past and they agree closely
+about the future — which is why the predictive intervals are calibrated where the
+marginals are not. A time trial cuts across the ridge, because it observes
+fitness without the proxy's scale: two of them take a thirty-month prediction
+from 3.9 VDOT wide to 1.3.
+
+Sampling takes ~2 s and is cached per version of the history, invalidated by
+every import, sync and settings write.
+
+### One solver, five factors
+
+Weekly hours, compliance, race weight, strength hours and the date are all
+factors, and each relationship is monotone, so one root-find answers every
+direction: name a target, mark one factor as the unknown, and it is solved for —
+once per posterior draw, so the answer is a distribution. Draws where nothing in
+the bracket reaches the target are reported as having no answer rather than
+clamped to the edge, and draws needing no change are counted separately, because
+a median over a mixture of "needs nine hours" and "no change needed" means
+nothing.
+
+The derivatives come from the same evaluation. Elasticity — the percentage change
+in race time per percentage change in a factor — is what makes an hour, a
+kilogram and a compliance point comparable, and a two-factor sweep with the
+target isoline traced through it answers what happens when both move.
+
+### What to measure next
+
+The model's real limit is how thin the record is, not its mathematics, so it
+prices the fix. For a candidate measurement, the value it might return is drawn
+from the current posterior predictive, the existing draws are reweighted by how
+well each explains that value, and the spread of the prediction under those
+weights is the expected result. Reweighting rather than re-sampling is what makes
+it cheap enough to offer for every candidate at once.
+
 ## Configuration
 
 Everything fails closed: with any of these missing, `/api/fitness/*` is never
