@@ -12,7 +12,10 @@ public sealed record ScenarioRequest(
     double WeeklyHours,
     double Compliance,
     double? RaceMassKg = null,
-    double StrengthHours = 0);
+    double StrengthHours = 0,
+    double? StartHours = null,
+    double RampPerWeek = 0,
+    bool UseHistory = true);
 
 /// <summary>Solve for one factor, or leave it null to just predict.</summary>
 public sealed record SolveRequest(
@@ -126,7 +129,7 @@ public static class SolverEndpoints
             }
 
             var context = await FitnessReports.SolverContextAsync(
-                database, cache, DateTime.UtcNow.Year, cancellationToken);
+                database, cache, DateTime.UtcNow.Year, cancellationToken, request.Scenario.UseHistory);
             var scenario = Of(request.Scenario, context);
 
             var predicted = Solver.Predict(context, scenario);
@@ -179,7 +182,7 @@ public static class SolverEndpoints
 
             var resolution = Math.Clamp(request.Resolution, 8, 48);
             var context = await FitnessReports.SolverContextAsync(
-                database, cache, DateTime.UtcNow.Year, cancellationToken);
+                database, cache, DateTime.UtcNow.Year, cancellationToken, request.Scenario.UseHistory);
             var scenario = Of(request.Scenario, context);
 
             var acrossRange = Solver.Range(context, scenario, across);
@@ -212,7 +215,7 @@ public static class SolverEndpoints
             if (Validate(request) is { } complaint) return Results.BadRequest(complaint);
 
             var context = await FitnessReports.SolverContextAsync(
-                database, cache, DateTime.UtcNow.Year, cancellationToken);
+                database, cache, DateTime.UtcNow.Year, cancellationToken, request.UseHistory);
             var options = Information.Options(context, Of(request, context));
 
             return Results.Ok(new MeasurePlanDto(
@@ -235,6 +238,8 @@ public static class SolverEndpoints
             { Compliance: <= 0 or > 1 } => "Compliance is above 0 and at most 1.",
             { StrengthHours: < 0 or > 20 } => "Strength hours are 0 to 20.",
             { RaceMassKg: < 30 or > 250 } => "Race weight is 30 to 250 kg.",
+            { StartHours: < 0 or > 40 } => "Starting hours are 0 to 40 a week.",
+            { RampPerWeek: < 0 or > 0.5 } => "A ramp is 0 to 50% a week.",
             _ => null
         };
 
@@ -245,7 +250,9 @@ public static class SolverEndpoints
             request.WeeklyHours,
             request.Compliance,
             request.RaceMassKg ?? context.CurrentMassKg,
-            request.StrengthHours);
+            request.StrengthHours,
+            request.StartHours,
+            request.RampPerWeek);
 
     private static IReadOnlyList<double> Axis((double Low, double High) range, int resolution) =>
         Enumerable.Range(0, resolution)

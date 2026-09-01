@@ -129,7 +129,7 @@ public static class Information
 
         return Trajectory.VdotAt(
             draw.ToParameters(context.ReclaimVdot, context.AnchorVdot),
-            new DoseSchedule(effective, context.CurrentDose),
+            scenario.ScheduleTo(effective, context.Limits with { Responsiveness = draw.Responsiveness }),
             months);
     }
 

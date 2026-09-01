@@ -22,14 +22,36 @@ public enum Factor
 }
 
 /// <summary>One complete what-if: every factor set, nothing implied.</summary>
+/// <param name="StartHours">
+/// The week the athlete is starting from, stated rather than read off a log.
+/// An athlete returning after years away has a training history that records
+/// the absence of training; inferring a starting point from it answers a
+/// question nobody asked. Null means start on the planned week itself.
+/// </param>
+/// <param name="RampPerWeek">
+/// Fractional weekly increase while building from <paramref name="StartHours"/>
+/// to the plan. Zero starts the plan as written, which is what "predict this
+/// plan" means; a positive rate models the build-up instead.
+/// </param>
 public sealed record Scenario(
     double DistanceMeters,
     double Months,
     double WeeklyHours,
     double Compliance,
     double? RaceMassKg = null,
-    double StrengthHours = 0)
+    double StrengthHours = 0,
+    double? StartHours = null,
+    double RampPerWeek = 0)
 {
+    /// <summary>The schedule this scenario describes: a ramp, or the plan itself.</summary>
+    public DoseSchedule ScheduleTo(TrainingDose planned, DoseLimits limits)
+    {
+        if (RampPerWeek <= 0 || StartHours is not { } from) return DoseSchedule.Constant(planned);
+
+        var start = DoseResponse.Allocate(from * Compliance, limits).Dose;
+        return new DoseSchedule(planned, start, RampPerWeek);
+    }
+
     public double this[Factor factor] => factor switch
     {
         Factor.WeeklyHours => WeeklyHours,
@@ -62,7 +84,7 @@ public sealed record SolverContext(
     PosteriorSamples Posterior,
     double AnchorVdot,
     double? ReclaimVdot,
-    TrainingDose CurrentDose,
+    TrainingDose LoggedDose,
     double? CurrentMassKg,
     double AltitudeMeters,
     DoseLimits Limits,
@@ -183,7 +205,10 @@ public static class Solver
             .Allocate(scenario.WeeklyHours * scenario.Compliance, context.Limits with { Responsiveness = draw.Responsiveness })
             .Dose with { StrengthHours = scenario.StrengthHours * scenario.Compliance };
 
-        var vdot = Trajectory.VdotAt(p, new DoseSchedule(effective, context.CurrentDose), scenario.Months);
+        var vdot = Trajectory.VdotAt(
+            p,
+            scenario.ScheduleTo(effective, context.Limits with { Responsiveness = draw.Responsiveness }),
+            scenario.Months);
         return Altitude.AtAltitude(Vdot.MinutesFor(scenario.DistanceMeters, vdot) * 60, context.AltitudeMeters);
     }
 

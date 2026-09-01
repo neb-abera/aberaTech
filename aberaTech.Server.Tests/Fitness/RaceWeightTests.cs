@@ -65,7 +65,7 @@ public sealed class RaceWeightTests(ITestOutputHelper output)
             Posterior.Sample(history, new Posterior.Priors(history[0].ObservedVdot)),
             AnchorVdot: 37,
             ReclaimVdot: peak,
-            CurrentDose: DoseResponse.Allocate(3).Dose,
+            LoggedDose: DoseResponse.Allocate(3).Dose,
             CurrentMassKg: Lb(174),
             AltitudeMeters: 1190,
             Limits: new DoseLimits(),
