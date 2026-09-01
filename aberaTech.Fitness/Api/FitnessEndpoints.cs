@@ -2,6 +2,7 @@ using System.Security.Claims;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
 using aberaTech.Fitness.Ingest;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
@@ -39,8 +40,13 @@ public static class FitnessEndpoints
 {
     public const string PolicyName = "fitness-owner";
 
-    /// <summary>Uploads are files the owner picked; 10 MB covers years of history.</summary>
-    private const long MaxUploadBytes = 10 * 1024 * 1024;
+    /// <summary>
+    /// Uploads are files the owner picked. A Garmin "Export Your Data" archive
+    /// carries every original .fit file alongside the summaries, so the ceiling
+    /// is the archive's, not a CSV's; what the archive is allowed to weigh once
+    /// decompressed is Import's business.
+    /// </summary>
+    private const long MaxUploadBytes = 100L * 1024 * 1024;
 
     public static IServiceCollection AddFitnessAuthorization(this IServiceCollection services, FitnessOptions options)
     {
@@ -169,41 +175,61 @@ public static class FitnessEndpoints
                 DateTime.UtcNow.Year, cancellationToken));
         });
 
-        api.MapPost("/import/hevy-csv", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
+        // One import route, whatever the file is. Asking the owner to classify
+        // their own download is how the Garmin archive — the file Garmin
+        // actually sends — ended up fitting none of the three buttons there
+        // used to be here.
+        api.MapPost("/import", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
-            var text = await ReadBodyAsync(request, cancellationToken);
-            if (text is null) return Results.BadRequest("Empty or oversized upload.");
+            // Kestrel's own 30 MB default would reject a Garmin archive before
+            // this handler ever ran.
+            var sizeLimit = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+            if (sizeLimit is { IsReadOnly: false }) sizeLimit.MaxRequestBodySize = MaxUploadBytes;
 
-            var activities = HevyCsv.Parse(text, DateTimeZoneProviders.Tzdb["Etc/UTC"]);
-            var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
-            cache.Invalidate();
-            return Results.Ok(new { parsed = activities.Count, added });
-        });
-
-        api.MapPost("/import/garmin-csv", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
-        {
-            var text = await ReadBodyAsync(request, cancellationToken);
-            if (text is null) return Results.BadRequest("Empty or oversized upload.");
-
-            var activities = GarminActivitiesCsv.Parse(text, DateTimeZoneProviders.Tzdb["Etc/UTC"]);
-            var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
-            cache.Invalidate();
-            return Results.Ok(new { parsed = activities.Count, added });
-        });
-
-        api.MapPost("/import/fit", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
-        {
             using var buffer = new MemoryStream();
-            await request.Body.CopyToAsync(buffer, cancellationToken);
-            if (buffer.Length is 0 or > MaxUploadBytes) return Results.BadRequest("Empty or oversized upload.");
+            try
+            {
+                await request.Body.CopyToAsync(buffer, cancellationToken);
+            }
+            catch (BadHttpRequestException)
+            {
+                return Results.BadRequest("That file is larger than 100 MB.");
+            }
+
+            if (buffer.Length == 0) return Results.BadRequest("Empty upload.");
+            if (buffer.Length > MaxUploadBytes) return Results.BadRequest("That file is larger than 100 MB.");
 
             buffer.Position = 0;
-            var activity = Ingest.FitImport.Parse(buffer);
-            if (activity is null) return Results.BadRequest("Not a decodable FIT activity file.");
 
-            var added = await ActivityStore.UpsertAsync(database, [activity], cancellationToken);
+            ImportResult result;
+            try
+            {
+                result = Import.Read(buffer, DateTimeZoneProviders.Tzdb["Etc/UTC"]);
+            }
+            catch (Exception exception) when (exception is FormatException or InvalidDataException)
+            {
+                // What the file was is the owner's problem to fix, so say it
+                // rather than answering a bare 400.
+                return Results.BadRequest(exception.Message);
+            }
+
+            var outcome = await ActivityStore.UpsertAsync(database, result.Activities, cancellationToken);
+
+            // New history means the fitted posterior is stale, whatever shape
+            // the file arrived in.
             cache.Invalidate();
-            return Results.Ok(new { parsed = 1, added });
+
+            return Results.Ok(new
+            {
+                kind = result.Kind,
+                parsed = result.Activities.Count,
+                added = outcome.Added,
+                // Said out loud rather than folded into the count: uploading
+                // both of the files Garmin offers should visibly reconcile,
+                // not silently look like half of it did nothing.
+                skipped = outcome.Skipped,
+                superseded = outcome.Superseded
+            });
         });
 
         if (options.HasHevyApi)
@@ -211,9 +237,9 @@ public static class FitnessEndpoints
             api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
             {
                 var activities = await hevy.FetchAllAsync(cancellationToken);
-                var added = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
+                var outcome = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
                 cache.Invalidate();
-                return Results.Ok(new { fetched = activities.Count, added });
+                return Results.Ok(new { fetched = activities.Count, added = outcome.Added });
             });
         }
 
@@ -278,7 +304,11 @@ public static class FitnessEndpoints
             }
 
             await database.SaveChangesAsync(cancellationToken);
+
+            // The anchor is what the priors are built from, so moving it moves
+            // the posterior.
             cache.Invalidate();
+
             return Results.NoContent();
         });
 
@@ -392,14 +422,6 @@ public static class FitnessEndpoints
         }));
 
         return routes;
-    }
-
-    private static async Task<string?> ReadBodyAsync(HttpRequest request, CancellationToken cancellationToken)
-    {
-        using var buffer = new MemoryStream();
-        await request.Body.CopyToAsync(buffer, cancellationToken);
-        if (buffer.Length is 0 or > MaxUploadBytes) return null;
-        return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
     }
 
     private static LocalDate? ParseDate(string? value)
