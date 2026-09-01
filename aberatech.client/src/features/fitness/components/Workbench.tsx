@@ -248,7 +248,6 @@ export default function Workbench({ summary }: { summary: Summary }) {
     else set("strengthHours", Math.max(0, round(value, 1)));
   };
 
-
   return (
     <Stack spacing={3}>
       <Card variant="outlined">
