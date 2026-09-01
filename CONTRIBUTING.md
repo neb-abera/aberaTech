@@ -11,13 +11,18 @@ The host needs only Docker and git — the toolchain lives in containers.
 Run `make` on its own to list every target.
 
 ```bash
-make up         # the whole site and its database on http://localhost:8080
-make dev        # hot reloading dev server on http://localhost:3000
+make ports      # which compose project and host ports this copy uses
+make up         # the whole site and its database
+make dev        # hot reloading dev server
 make test       # client unit tests, against the working tree
 make servertest # scheduling unit tests, against the working tree
 make lint       # biome lint and format check
 make check      # the hermetic gate CI runs, built from the Dockerfile alone
 ```
+
+Ports and container names are derived from the directory, so several worktrees
+of this repository run side by side without colliding and `make clean` only
+takes down the copy you are standing in. `make ports` says where yours is.
 
 `make check` builds the same Dockerfile stages CI builds (`clienttest`,
 `clientlint`, `servertest`), so if it is green on your machine, CI will
