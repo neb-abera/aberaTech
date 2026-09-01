@@ -103,19 +103,46 @@ public static class FitnessReports
         var altitudePenalty = Altitude.Penalty(row.HomeAltitudeMeters);
         var trace = new CalculationTrace();
 
+        // The weight every number below is quoted at: what the athlete asked
+        // for, or what they weigh now.
+        var raceWeight = targetWeightKg ?? currentWeight;
+
         var startVdot = athlete.AnchorVdot;
-        if (targetWeightKg is { } target && currentWeight is { } current && Math.Abs(target - current) > 0.01)
+        if (raceWeight is { } target && currentWeight is { } current && Math.Abs(target - current) > 0.01)
         {
             startVdot = BodyMass.AdjustVdot(startVdot, current, target);
             trace.Add(
-                "Race weight",
+                "Race weight, on the anchor",
                 Text($"VDOT {athlete.AnchorVdot:0.0} × {current:0.0} ÷ {target:0.0} kg (absolute VO2 preserved, clamped to ±10%)"),
                 Text($"VDOT {startVdot:0.0}"),
                 Citations.CuretonSparling.Id);
         }
 
+        // And on the ceiling. A lifetime best was run at a bodyweight too, so
+        // moving the anchor without moving the peak shrinks the reclaim runway
+        // and makes racing lighter look worse than racing heavy.
+        var reclaimVdot = BodyMass.AtRaceWeight(athlete.ReclaimVdot, athlete.Row.PastPeakWeightKg, raceWeight);
+        if (reclaimVdot is { } reclaimed && athlete.ReclaimVdot is { } asRun
+            && Math.Abs(reclaimed - asRun) > 0.01 && athlete.Row.PastPeakWeightKg is { } peakWeight
+            && raceWeight is { } racing)
+        {
+            trace.Add(
+                "Race weight, on the reclaimable peak",
+                Text($"VDOT {asRun:0.0} × {peakWeight:0.0} ÷ {racing:0.0} kg — the best was set at {peakWeight * BodyMass.PoundsPerKg:0} lb"),
+                Text($"VDOT {reclaimed:0.0}"),
+                Citations.CuretonSparling.Id);
+        }
+        else if (athlete.ReclaimVdot is not null && athlete.Row.PastPeakWeightKg is null)
+        {
+            trace.Add(
+                "Race weight, on the reclaimable peak",
+                "not applied — the weight the lifetime best was set at is not recorded",
+                "peak left as run",
+                Citations.CuretonSparling.Id);
+        }
+
         var p = new TrajectoryParameters(
-            startVdot, athlete.ReclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
+            startVdot, reclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
 
         var effective = plan.Scale(compliance);
         var schedule = new DoseSchedule(effective, athlete.MeasuredDose);
@@ -193,7 +220,7 @@ public static class FitnessReports
             schedule.MonthsToFullDose(),
             athlete.AnchorVdot,
             startVdot,
-            athlete.ReclaimVdot,
+            reclaimVdot,
             altitudePenalty * 100,
             curve,
             checkpoints,
@@ -287,7 +314,8 @@ public static class FitnessReports
             athlete.MeasuredDose,
             mass,
             athlete.Row.HomeAltitudeMeters,
-            new DoseLimits());
+            new DoseLimits(),
+            athlete.Row.PastPeakWeightKg);
     }
 
     private static AthleteContext Context(AthleteSnapshot athlete, TrajectoryParameters p, double availableHours) =>
@@ -581,6 +609,9 @@ public static class FitnessReports
             row.PastPeakDistanceMeters,
             row.PastPeakSeconds,
             row.PastPeakYear,
+            row.PastPeakWeightKg,
+            row.GoalWeightKg,
+            BodyMass.MaxAdjustmentFraction,
             row.HomeAltitudeMeters);
     }
 
