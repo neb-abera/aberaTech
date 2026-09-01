@@ -139,6 +139,27 @@ export default function Workbench({ summary }: { summary: Summary }) {
     value: WorkbenchState[K],
   ) => setState((previous) => ({ ...previous, [key]: value }));
 
+  // The factor being solved for is an output, so it cannot also be an axis to
+  // drag along — picking a value for it would be picking the answer.
+  const axisChoices = (
+    [
+      "WeeklyHours",
+      "Compliance",
+      "Months",
+      "RaceMassKg",
+      "StrengthHours",
+    ] as FactorName[]
+  ).filter(
+    (factor) =>
+      factor !== unknown &&
+      !(factor === "RaceMassKg" && currentMassLb === null),
+  );
+  const plotAcross = axisChoices.includes(across) ? across : axisChoices[0];
+  const plotDown =
+    axisChoices.includes(down) && down !== plotAcross
+      ? down
+      : (axisChoices.find((factor) => factor !== plotAcross) ?? plotAcross);
+
   React.useEffect(() => {
     let cancelled = false;
     const handle = window.setTimeout(() => {
@@ -169,8 +190,8 @@ export default function Workbench({ summary }: { summary: Summary }) {
     const handle = window.setTimeout(() => {
       fetchSurface(
         toRequest(state),
-        across,
-        down,
+        plotAcross,
+        plotDown,
         unknown === "RaceTime" ? null : state.targetSeconds,
       )
         .then((grid) => !cancelled && setSurface(grid))
@@ -180,7 +201,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [state, across, down, unknown]);
+  }, [state, plotAcross, plotDown, unknown]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -210,15 +231,23 @@ export default function Workbench({ summary }: { summary: Summary }) {
     }
   };
 
+  // Picked off a chart, a factor arrives as whatever float the pixel worked
+  // out to. Rounding it to the precision the input actually offers is the
+  // difference between "9.4 h" and "9.35351589376634".
   const setFactor = (factor: FactorName, value: number) => {
-    if (factor === "WeeklyHours") set("weeklyHours", Math.max(0, value));
+    const round = (x: number, places: number) =>
+      Math.round(x * 10 ** places) / 10 ** places;
+
+    if (factor === "WeeklyHours")
+      set("weeklyHours", Math.max(0, round(value, 1)));
     else if (factor === "Compliance")
-      set("compliance", Math.min(1, Math.max(0.05, value)));
-    else if (factor === "Months") set("months", Math.max(0.5, value));
+      set("compliance", Math.min(1, Math.max(0.05, round(value, 2))));
+    else if (factor === "Months") set("months", Math.max(0.5, round(value, 1)));
     else if (factor === "RaceMassKg")
       set("raceMassLb", Math.round(kgToLb(value)));
-    else set("strengthHours", Math.max(0, value));
+    else set("strengthHours", Math.max(0, round(value, 1)));
   };
+
 
   return (
     <Stack spacing={3}>
@@ -340,7 +369,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                             factor === "Compliance"
                               ? Math.round(state.compliance * 100)
                               : factor === "RaceMassKg"
-                                ? (state.raceMassLb ?? 0)
+                                ? (state.raceMassLb ?? "")
                                 : factorValue(factor)
                           }
                           slotProps={{
@@ -452,7 +481,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   select
                   size="small"
                   label="Across"
-                  value={across}
+                  value={plotAcross}
                   onChange={(event) =>
                     setAcross(event.target.value as FactorName)
                   }
@@ -470,7 +499,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   select
                   size="small"
                   label="Down"
-                  value={down}
+                  value={plotDown}
                   onChange={(event) =>
                     setDown(event.target.value as FactorName)
                   }
@@ -496,11 +525,11 @@ export default function Workbench({ summary }: { summary: Summary }) {
               {surface && (
                 <ContourPlot
                   surface={surface}
-                  currentAcross={factorValue(across)}
-                  currentDown={factorValue(down)}
+                  currentAcross={factorValue(plotAcross)}
+                  currentDown={factorValue(plotDown)}
                   onPick={(a, d) => {
-                    setFactor(across, a);
-                    setFactor(down, d);
+                    setFactor(plotAcross, a);
+                    setFactor(plotDown, d);
                   }}
                 />
               )}
