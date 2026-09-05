@@ -148,9 +148,7 @@ public static class FitnessReports
         var p = new TrajectoryParameters(
             startVdot, reclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
 
-        var limits = new DoseLimits(
-            Responsiveness: athlete.Fit.Responsiveness.Value,
-            MaxIntensityShare: DoseResponse.IntensityCapFor(athlete.DeficiencySpread));
+        var limits = LimitsFor(athlete, athlete.Fit.Responsiveness.Value);
 
         var effective = plan.Scale(compliance);
 
@@ -336,9 +334,21 @@ public static class FitnessReports
             athlete.MeasuredDose,
             mass,
             athlete.Row.HomeAltitudeMeters,
-            new DoseLimits(MaxIntensityShare: DoseResponse.IntensityCapFor(athlete.DeficiencySpread)),
+            LimitsFor(athlete),
             athlete.Row.PastPeakWeightKg);
     }
+
+    /// <summary>
+    /// What this athlete's week is allowed to be: their own recovery budget and
+    /// the intensity their base can carry, rather than an elite athlete's.
+    /// </summary>
+    private static DoseLimits LimitsFor(AthleteSnapshot athlete, double responsiveness = 1.0) =>
+        new(
+            athlete.Row.SustainedWeeklyHours is { } sustained
+                ? DoseResponse.StrainFor(sustained)
+                : DoseResponse.EliteStrain,
+            responsiveness,
+            DoseResponse.IntensityCapFor(athlete.DeficiencySpread));
 
     private static AthleteContext Context(AthleteSnapshot athlete, TrajectoryParameters p, double availableHours) =>
         new(
@@ -517,6 +527,10 @@ public static class FitnessReports
                 $"Times shown for your home altitude ({row.HomeAltitudeMeters:0} m): aerobic races run ~{Format.Percent(altitudePenalty, 1)} slower there than at sea level [peronnet-altitude]."));
         }
 
+        assumptions.Add(row.SustainedWeeklyHours is { } sustained
+            ? Text($"Ceilings are planned against your own recovery budget: the {sustained:0.#} h/week you have held for a month without breaking down [gabbett-workload].")
+            : "No sustained week recorded, so ceilings assume a full-time endurance athlete's recovery budget — generous. Record the biggest week you have held for a month and every ceiling below becomes yours [gabbett-workload].");
+
         assumptions.Add(row.Female is null
             ? "Sex is unstated, so targets are graded against the open men's record book — the most permissive bound available [wma-age-grading]."
             : Text($"Targets are graded against the {(row.Female.Value ? "women's" : "men's")} record book, age-adjusted [wma-age-grading]."));
@@ -647,6 +661,7 @@ public static class FitnessReports
             row.BirthYear,
             row.Female,
             row.AvailableHoursPerWeek,
+            row.SustainedWeeklyHours,
             row.PastPeakDistanceMeters,
             row.PastPeakSeconds,
             row.PastPeakYear,

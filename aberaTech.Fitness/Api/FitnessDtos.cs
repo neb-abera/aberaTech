@@ -21,6 +21,7 @@ public sealed record SettingsDto(
     int? BirthYear,
     bool? Female,
     double AvailableHoursPerWeek,
+    double? SustainedWeeklyHours,
     double? PastPeakDistanceMeters,
     double? PastPeakSeconds,
     int? PastPeakYear,

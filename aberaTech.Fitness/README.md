@@ -168,6 +168,26 @@ honest position when the history is a record of not training.
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
 
+### How much the athlete can absorb
+
+The recovery budget used to be a constant — every athlete was assumed to
+tolerate what a full-time endurance athlete tolerates, so the model believed a
+beginner could hold twenty hours a week as readily as someone eight years into
+consistent base.
+
+What grows with training age is the capacity to absorb load. Rather than model
+that from a proxy, the athlete is asked for the quantity itself: **the biggest
+week you have held for a month without breaking down**. That is answerable from
+experience, and the budget is that week scored in the same strain units as
+everything it is compared against, capped at a full-time athlete's.
+
+It is a floor, not a cap — a week already held is evidence the body absorbed it,
+and a plan may still ramp beyond it. What it stops is a ceiling calculated from
+volume nobody has reason to think this athlete could carry. The effect is large:
+the maximum reachable ceiling is 49.9 for an athlete who has sustained four
+hours a week, 60.0 at fourteen, and 64.4 when nothing is stated. An unstated
+week keeps the previous behaviour and says so in the assumptions.
+
 ### Losing it
 
 Fitness falls as well as rises, and until recently this model could not say so:
@@ -264,6 +284,26 @@ honest position when the history is a record of not training.
 
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
+
+### How much the athlete can absorb
+
+The recovery budget used to be a constant — every athlete was assumed to
+tolerate what a full-time endurance athlete tolerates, so the model believed a
+beginner could hold twenty hours a week as readily as someone eight years into
+consistent base.
+
+What grows with training age is the capacity to absorb load. Rather than model
+that from a proxy, the athlete is asked for the quantity itself: **the biggest
+week you have held for a month without breaking down**. That is answerable from
+experience, and the budget is that week scored in the same strain units as
+everything it is compared against, capped at a full-time athlete's.
+
+It is a floor, not a cap — a week already held is evidence the body absorbed it,
+and a plan may still ramp beyond it. What it stops is a ceiling calculated from
+volume nobody has reason to think this athlete could carry. The effect is large:
+the maximum reachable ceiling is 49.9 for an athlete who has sustained four
+hours a week, 60.0 at fourteen, and 64.4 when nothing is stated. An unstated
+week keeps the previous behaviour and says so in the assumptions.
 
 ### Losing it
 

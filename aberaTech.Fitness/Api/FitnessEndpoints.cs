@@ -18,6 +18,7 @@ public sealed record SettingsUpdate(
     int? BirthYear = null,
     bool? Female = null,
     double AvailableHoursPerWeek = 7,
+    double? SustainedWeeklyHours = null,
     double? PastPeakDistanceMeters = null,
     double? PastPeakSeconds = null,
     int? PastPeakYear = null,
@@ -321,6 +322,9 @@ public static class FitnessEndpoints
             row.BirthYear = update.BirthYear;
             row.Female = update.Female;
             row.AvailableHoursPerWeek = Math.Clamp(update.AvailableHoursPerWeek, 0, 40);
+            row.SustainedWeeklyHours = update.SustainedWeeklyHours is { } sustained
+                ? Math.Clamp(sustained, 0, 40)
+                : null;
             row.PastPeakDistanceMeters = update.PastPeakDistanceMeters;
             row.PastPeakSeconds = update.PastPeakSeconds;
             row.PastPeakYear = update.PastPeakYear;
