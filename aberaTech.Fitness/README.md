@@ -78,6 +78,8 @@ run. `r` is the athlete's responsiveness, fitted from their own history.
 
 ### How the hours get split
 
+
+
 Maximising `C(h)` subject to `Σhᵢ = H` and `Σcᵢhᵢ ≤ Sₘₐₓ` is a constrained
 optimum, solved from the Lagrangian conditions rather than by search:
 
@@ -89,6 +91,25 @@ so an inner bisection on λ meets the hours constraint and an outer one on μ
 meets the recovery budget. λ is the shadow price of an hour — what one more
 hour a week is worth in VDOT — and μ the price of recovery; both are reported,
 because "where should my next hour go" is answered by comparing them.
+
+**Constrained by the state of the base.** Maximising the ceiling is the wrong
+objective at low volume: with ninety minutes a week nothing is saturated, every
+zone's first hour looks valuable, and the unconstrained optimum put only 43% of
+the week into easy running. For an athlete whose aerobic threshold already lags
+their lactate threshold by more than about 10% — the Uphill Athlete deficiency
+test the app already computes — that is the opposite of the prescription, since
+the deficit *is* base. So intensity is capped at 10% of running hours for a
+deficient athlete and 25% for a sound one, and the same 90-minute week comes
+back 90% easy. The objective is constrained, not replaced: the hard hours that
+survive are split between threshold and interval exactly as the optimiser chose,
+in the same ratio. An unrecorded lactate threshold takes the cautious cap — an
+unmeasured base is not evidence of a sound one.
+
+**Rucking counts at a discount.** It is the same engine through a different
+movement: aerobic work that builds the same base, with a stride and economy that
+do not fully transfer to running a race. An hour rucked counts as 0.75 of an
+hour run towards the running ceiling. Hour-for-hour flattered a rucking week;
+zero would be worse.
 
 ### The trajectory
 

@@ -14,7 +14,16 @@ namespace aberaTech.Fitness.Domain;
 /// it (<see cref="ModelFit"/>); it is the single knob that separates a talented
 /// responder from an average one, and it carries a confidence interval.
 /// </param>
-public sealed record DoseLimits(double MaxStrain = DoseResponse.EliteStrain, double Responsiveness = 1.0);
+/// <param name="MaxIntensityShare">
+/// The largest share of running hours that may be spent above easy. One means
+/// unconstrained, which is right for an athlete whose aerobic base is sound and
+/// wrong for one whose is not — see
+/// <see cref="DoseResponse.IntensityCapFor"/>.
+/// </param>
+public sealed record DoseLimits(
+    double MaxStrain = DoseResponse.EliteStrain,
+    double Responsiveness = 1.0,
+    double MaxIntensityShare = 1.0);
 
 /// <summary>
 /// The dose-response surface: what ceiling a week of training supports, what
@@ -65,6 +74,41 @@ public static class DoseResponse
 
     /// <summary>Weekly strain a full-time endurance athlete sustains.</summary>
     public const double EliteStrain = 33.0;
+
+    /// <summary>The intensity share a deficient athlete's week should not exceed.</summary>
+    public const double DeficientIntensityShare = 0.10;
+
+    /// <summary>The intensity share a sound aerobic base leaves room for.</summary>
+    public const double SoundIntensityShare = 0.25;
+
+    /// <summary>
+    /// How much of a week may be spent above easy, given the state of the
+    /// athlete's aerobic base.
+    /// </summary>
+    /// <remarks>
+    /// Maximising the ceiling is the wrong objective at low volume. With only a
+    /// couple of hours a week nothing is saturated, so every zone's first hour
+    /// looks valuable and the optimiser spreads them evenly — it put barely
+    /// forty per cent of a ninety-minute week into easy running. For an athlete
+    /// whose aerobic threshold already lags their lactate threshold by more
+    /// than about ten per cent, that is the opposite of the prescription: the
+    /// deficit is base, and base is built by volume at low intensity.
+    ///
+    /// So the objective is constrained rather than replaced. The optimiser
+    /// still decides how to spend what is left, it just cannot spend a third of
+    /// a beginner's week on intervals.
+    ///
+    /// A null spread means the lactate-threshold pace has never been recorded,
+    /// and an unmeasured base is not an excuse to assume a sound one: the
+    /// cautious cap applies until there is a measurement saying otherwise.
+    ///
+    /// Citations: <see cref="Citations.UphillAthleteAet"/>,
+    /// <see cref="Citations.SeilerPolarized"/>, <see cref="Citations.SanMillanBrooks"/>.
+    /// </remarks>
+    public static double IntensityCapFor(double? deficiencySpread) =>
+        deficiencySpread is { } spread && spread <= AerobicAnalysis.DeficiencyThreshold
+            ? SoundIntensityShare
+            : DeficientIntensityShare;
 
     /// <summary>Hours at which a zone's returns are about 63% spent.</summary>
     public static double Saturation(TrainingZone zone) => zone switch
@@ -165,6 +209,7 @@ public static class DoseResponse
 
         var strainPrice = 0.0;
         var dose = SplitAt(hours, strainPrice, bounds.Responsiveness);
+        dose = CapIntensity(dose, bounds, hours);
 
         if (dose.Dose.Strain > bounds.MaxStrain)
         {
@@ -187,6 +232,7 @@ public static class DoseResponse
 
             strainPrice = dear;
             dose = SplitAt(hours, strainPrice, bounds.Responsiveness);
+            dose = CapIntensity(dose, bounds, hours);
         }
 
         return dose with { StrainPrice = strainPrice };
@@ -219,6 +265,41 @@ public static class DoseResponse
 
         var dose = HoursAt((low + high) / 2, strainPrice, responsiveness);
         return new Allocation(dose, Marginal(dose, TrainingZone.Easy, responsiveness), strainPrice);
+    }
+
+    /// <summary>
+    /// Moves whatever exceeds the intensity cap into easy running, leaving the
+    /// optimiser to split what remains between threshold and interval.
+    /// </summary>
+    /// <remarks>
+    /// A constraint that binds is still an optimum, just a constrained one: the
+    /// hard hours that survive are allocated between the two hard zones exactly
+    /// as before, and everything the cap took goes where the deficit is.
+    /// </remarks>
+    private static Allocation CapIntensity(Allocation allocation, DoseLimits bounds, double runningHours)
+    {
+        if (bounds.MaxIntensityShare >= 1 || runningHours <= 0) return allocation;
+
+        var dose = allocation.Dose;
+        var hard = dose.ThresholdHours + dose.IntervalHours;
+        var allowed = bounds.MaxIntensityShare * runningHours;
+        if (hard <= allowed + 1e-12) return allocation;
+
+        // The split between the two hard zones is the one the optimiser already
+        // chose; only its size changes.
+        var scale = allowed / hard;
+        var capped = dose with
+        {
+            ThresholdHours = dose.ThresholdHours * scale,
+            IntervalHours = dose.IntervalHours * scale,
+            EasyHours = runningHours - allowed
+        };
+
+        return allocation with
+        {
+            Dose = capped,
+            HourPrice = Marginal(capped, TrainingZone.Easy, bounds.Responsiveness)
+        };
     }
 
     /// <summary>The stationarity solution hᵢ = sᵢ·ln(r·bᵢ/(λ + μ·cᵢ)), floored at zero.</summary>
