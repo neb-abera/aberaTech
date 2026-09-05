@@ -18,6 +18,7 @@ internal sealed record AthleteSnapshot(
     int MeasuredSessions,
     double MeasuredWeeks,
     FitResult Fit,
+    double? DeficiencySpread,
     double? EasyPaceSecPerKm,
     IReadOnlyList<MonthlyAerobicPoint> Trend,
     IReadOnlyList<FitObservation> Observations);
@@ -147,6 +148,10 @@ public static class FitnessReports
         var p = new TrajectoryParameters(
             startVdot, reclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
 
+        var limits = new DoseLimits(
+            Responsiveness: athlete.Fit.Responsiveness.Value,
+            MaxIntensityShare: DoseResponse.IntensityCapFor(athlete.DeficiencySpread));
+
         var effective = plan.Scale(compliance);
 
         // The plan is projected as written unless a build-up was asked for.
@@ -155,7 +160,7 @@ public static class FitnessReports
         var schedule = rampPerWeek > 0 && startHours is { } from
             ? new DoseSchedule(
                 effective,
-                DoseResponse.Allocate(from * compliance, new DoseLimits()).Dose,
+                DoseResponse.Allocate(from * compliance, limits).Dose,
                 rampPerWeek)
             : DoseSchedule.Constant(effective);
         var allocation = new DoseResponse.Allocation(
@@ -331,7 +336,7 @@ public static class FitnessReports
             athlete.MeasuredDose,
             mass,
             athlete.Row.HomeAltitudeMeters,
-            new DoseLimits(),
+            new DoseLimits(MaxIntensityShare: DoseResponse.IntensityCapFor(athlete.DeficiencySpread)),
             athlete.Row.PastPeakWeightKg);
     }
 
@@ -375,6 +380,14 @@ public static class FitnessReports
             observations,
             new ModelFit.Priors(observations.Count > 0 ? observations[0].ObservedVdot : row.StartVdot));
 
+        // How far the aerobic threshold lags the lactate threshold, which is
+        // what decides how much of a week should be spent above easy.
+        double? spread = null;
+        if (row.LtSecondsPerKm is { } lt && trend.Count > 0)
+        {
+            spread = AerobicAnalysis.DeficiencySpread(trend[^1].MedianNormalizedSecPerKm, lt);
+        }
+
         var easyPace = TrainingPaces.For(row.StartVdot).Single(b => b.Zone == "E");
 
         return new AthleteSnapshot(
@@ -385,6 +398,7 @@ public static class FitnessReports
             sessions,
             RecentWeeks,
             fit,
+            spread,
             (easyPace.FastSecPerKm + easyPace.SlowSecPerKm) / 2,
             trend,
             observations);
