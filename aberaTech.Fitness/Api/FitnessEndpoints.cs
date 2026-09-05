@@ -97,6 +97,7 @@ public static class FitnessEndpoints
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
         api.MapSolverEndpoints();
+        api.MapPredictionLedger();
 
         api.MapGet("/predictions", async (
             FitnessDbContext database,

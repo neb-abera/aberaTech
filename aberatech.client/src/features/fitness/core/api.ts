@@ -597,3 +597,68 @@ export function fetchSurface(
 
 export const fetchMeasurementPlan = (scenario: ScenarioRequest) =>
   post<MeasurePlan>("/api/fitness/measure", scenario);
+
+/** A prediction written down before the fact, and how it turned out. */
+export interface LockedPrediction {
+  id: string;
+  madeOn: string;
+  targetDate: string;
+  distanceMeters: number;
+  predictedSeconds: number;
+  predictedFastSeconds: number;
+  predictedSlowSeconds: number;
+  weeklyHours: number;
+  compliance: number;
+  raceMassKg: number | null;
+  actualSeconds: number | null;
+  note: string | null;
+  status: "pending" | "due" | "scored";
+  /** Positive means the day came out slower than predicted. */
+  errorSeconds: number | null;
+  insideInterval: boolean | null;
+}
+
+export const fetchLockedPredictions = () =>
+  get<LockedPrediction[]>("/api/fitness/predictions/locked");
+
+export async function lockPrediction(body: {
+  targetDate: string;
+  distanceMeters: number;
+  predictedSeconds: number;
+  predictedFastSeconds: number;
+  predictedSlowSeconds: number;
+  weeklyHours: number;
+  compliance: number;
+  raceMassKg: number | null;
+  note: string | null;
+}): Promise<void> {
+  const response = await fetch("/api/fitness/predictions/locked", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(await response.text());
+}
+
+export async function scorePrediction(
+  id: string,
+  actualSeconds: number,
+): Promise<void> {
+  const response = await fetch(
+    `/api/fitness/predictions/locked/${encodeURIComponent(id)}/actual`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actualSeconds }),
+    },
+  );
+  if (!response.ok) throw new Error(await response.text());
+}
+
+export async function deleteLockedPrediction(id: string): Promise<void> {
+  const response = await fetch(
+    `/api/fitness/predictions/locked/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) throw new Error(await response.text());
+}
