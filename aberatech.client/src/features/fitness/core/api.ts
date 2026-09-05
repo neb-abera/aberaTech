@@ -20,6 +20,7 @@ export interface SettingsDto {
   birthYear: number | null;
   female: boolean | null;
   availableHoursPerWeek: number;
+  sustainedWeeklyHours: number | null;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
@@ -39,6 +40,7 @@ export interface SettingsUpdate {
   birthYear: number | null;
   female: boolean | null;
   availableHoursPerWeek: number;
+  sustainedWeeklyHours: number | null;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
