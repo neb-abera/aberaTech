@@ -163,3 +163,37 @@ public sealed record FeasibilityDto(
     double? MonthsForEvenOdds,
     double? AchievableSecondsByDate,
     IReadOnlyList<StepDto> Steps);
+
+/// <summary>A prediction written down before the fact, and how it turned out.</summary>
+public sealed record LockedPredictionDto(
+    string Id,
+    string MadeOn,
+    string TargetDate,
+    double DistanceMeters,
+    double PredictedSeconds,
+    double PredictedFastSeconds,
+    double PredictedSlowSeconds,
+    double WeeklyHours,
+    double Compliance,
+    double? RaceMassKg,
+    double? ActualSeconds,
+    string? Note,
+    /// <summary>pending, due, or scored.</summary>
+    string Status,
+    /// <summary>Signed error in seconds once scored: positive means slower than predicted.</summary>
+    double? ErrorSeconds,
+    /// <summary>Whether the outcome fell inside the interval that was quoted.</summary>
+    bool? InsideInterval);
+
+public sealed record LockPredictionRequest(
+    string TargetDate,
+    double DistanceMeters,
+    double PredictedSeconds,
+    double PredictedFastSeconds,
+    double PredictedSlowSeconds,
+    double WeeklyHours,
+    double Compliance,
+    double? RaceMassKg = null,
+    string? Note = null);
+
+public sealed record ScorePredictionRequest(double ActualSeconds, string? Note = null);

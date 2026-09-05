@@ -394,6 +394,26 @@ well each explains that value, and the spread of the prediction under those
 weights is the expected result. Reweighting rather than re-sampling is what makes
 it cheap enough to offer for every candidate at once.
 
+### Checking it against reality
+
+Every other number here is a claim about the future that nothing later checks.
+The prediction ledger is the part that can say the model is wrong: a prediction
+is written down with the plan it assumed and the interval it was quoted with,
+and when its date arrives the page asks for the result.
+
+The interval is the claim worth scoring, more than the median. A model whose
+80% intervals contain the outcome about 80% of the time is working correctly;
+one whose intervals almost always contain it is overcautious and not saying
+much. The error is kept signed, because a model wrong in one direction is
+biased while one wrong in both is merely imprecise, and averaging unsigned
+errors hides which. An unscored prediction reports nothing rather than a zero
+error, which would read as a perfect one and flatter every average taken over
+the ledger.
+
+The plan travels with the prediction because a miss is only attributable with
+its assumptions attached — the difference between the model being wrong and the
+plan not having happened.
+
 ## Configuration
 
 Everything fails closed: with any of these missing, `/api/fitness/*` is never
