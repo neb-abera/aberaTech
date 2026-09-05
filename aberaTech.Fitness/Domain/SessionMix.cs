@@ -26,6 +26,25 @@ public sealed record LoggedSession(string Sport, double? DistanceMeters, double 
 /// </remarks>
 public static class SessionMix
 {
+    /// <summary>
+    /// What an hour of rucking is worth as an hour of easy running, towards a
+    /// running ceiling.
+    /// </summary>
+    /// <remarks>
+    /// Rucking is aerobic work and builds the same engine, but it is not the
+    /// same movement: slower, heavier, and with a stride and economy that do
+    /// not fully transfer to running a race. Counting it hour-for-hour
+    /// flattered a rucking week's effect on a running time. Counting it as
+    /// nothing would be worse — it is a large part of this athlete's training
+    /// and a large part of the aerobic base it builds.
+    ///
+    /// The weight is a judgement, not a measurement, and it is here as one
+    /// number so it can be argued with rather than buried in a classifier.
+    ///
+    /// Citation: <see cref="Citations.UphillAthleteAet"/>.
+    /// </remarks>
+    public const double RuckTransfer = 0.75;
+
     public static TrainingZone ZoneOf(LoggedSession session, double vdot)
     {
         if (session.Sport == "strength") return TrainingZone.Strength;
@@ -54,7 +73,13 @@ public static class SessionMix
         foreach (var session in sessions)
         {
             var zone = ZoneOf(session, vdot);
-            dose = dose.With(zone, dose[zone] + session.Seconds / 3600.0 / weeks);
+            var hours = session.Seconds / 3600.0 / weeks;
+
+            // Rucking counts towards the running ceiling at a discount, because
+            // it is the same engine through a different movement.
+            if (session.Sport == "ruck") hours *= RuckTransfer;
+
+            dose = dose.With(zone, dose[zone] + hours);
         }
 
         return dose;
