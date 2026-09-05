@@ -27,6 +27,24 @@ public static class Retraining
     /// <summary>How much faster reclaiming old fitness runs than building new.</summary>
     public const double ReclaimRateMultiplier = 2.5;
 
+    /// <summary>How much faster fitness is lost than it is built.</summary>
+    /// <remarks>
+    /// Detraining is not training in reverse; it is far quicker. Mujika and
+    /// Padilla put the VO2max loss of a trained athlete at several per cent
+    /// within the first four weeks of inactivity, most of it the rapidly
+    /// reversible plasma-volume and enzyme changes rather than anything
+    /// structural. Against a de-novo approach rate whose time constant is well
+    /// over a year, that puts the decay constant nearer two months — the
+    /// multiple here.
+    ///
+    /// It is the reason a plan with a hole in it is worse than the same hours
+    /// spread evenly, and the reason the fitness lost over a lay-off comes back
+    /// faster than it was built the first time.
+    ///
+    /// Citation: <see cref="Citations.MujikaRetraining"/>.
+    /// </remarks>
+    public const double DetrainingRateMultiplier = 7.0;
+
     /// <summary>Age through which the peak carries forward undiminished.</summary>
     public const int PlateauEndAge = 34;
 
