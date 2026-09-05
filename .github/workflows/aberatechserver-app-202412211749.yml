@@ -180,15 +180,23 @@ jobs:
                 exit 1
               fi
 
-              if [ "$state" = "Failed" ]; then
-                echo "::error::Revision ${name} failed to provision."
-                az containerapp logs show --name "$app" --resource-group "$group" \
-                  --revision "$name" --tail 60 --type console || true
-                exit 1
-              fi
+              case "$state:$running" in
+                Failed:* | *:Failed | *:Degraded | *:Stopped)
+                  echo "::error::Revision ${name} is ${state}/${running}."
+                  az containerapp logs show --name "$app" --resource-group "$group" \
+                    --revision "$name" --tail 60 --type console || true
+                  exit 1
+                  ;;
+              esac
 
-              if [ "$state" = "Provisioned" ] && [ "$running" = "Running" ] && [ "$image" = "$expected" ]; then
-                echo "Revision ${name} is running the image this run pushed."
+              # Provisioned plus the right image is the health signal. The
+              # running state is matched only against the states that mean
+              # broken, because the ones that mean fine are a list Azure is
+              # free to add to: requiring the literal "Running" failed a deploy
+              # whose revision was serving perfectly as "RunningAtMaxScale",
+              # which is a scaling detail and not a verdict.
+              if [ "$state" = "Provisioned" ] && [ "$image" = "$expected" ]; then
+                echo "Revision ${name} is provisioned on the image this run pushed (${running:-state unreported})."
                 exit 0
               fi
 
