@@ -138,43 +138,64 @@ jobs:
         uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: |
-            set -euo pipefail
+            set -uo pipefail
             az config set extension.use_dynamic_install=yes_without_prompt
 
+            app="${{ env.CONTAINER_APP_NAME }}"
+            group="${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }}"
             expected="${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}"
 
+            # One scalar per query. A single tab-separated row loses its shape
+            # the moment a field is empty, and every field here is empty for the
+            # first few seconds of a revision's life.
+            field() {
+              az containerapp revision show --name "$app" --resource-group "$group" \
+                --revision "$1" --query "$2" --output tsv 2>/dev/null || true
+            }
+
             for attempt in $(seq 1 40); do
-              read -r name state running image <<< "$(az containerapp revision list \
-                --name ${{ env.CONTAINER_APP_NAME }} \
-                --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
-                --query "sort_by([?properties.active], &properties.createdTime)[-1].[name, properties.provisioningState, properties.runningState, properties.template.containers[0].image]" \
-                --output tsv)"
+              name=$(az containerapp revision list --name "$app" --resource-group "$group" \
+                --query "sort_by([?properties.active], &properties.createdTime)[-1].name" \
+                --output tsv 2>/dev/null || true)
 
-              echo "attempt ${attempt}: ${name} provisioning=${state} running=${running}"
-              echo "  image=${image}"
+              if [ -z "$name" ]; then
+                echo "attempt ${attempt}: no active revision yet"
+                sleep 15
+                continue
+              fi
 
-              if [ "${image}" != "${expected}" ]; then
+              state=$(field "$name" "properties.provisioningState")
+              running=$(field "$name" "properties.runningState")
+              image=$(field "$name" "properties.template.containers[0].image")
+
+              echo "attempt ${attempt}: ${name} provisioning=${state:-?} running=${running:-?}"
+              echo "  image=${image:-?}"
+
+              # Unreadable is not wrong. A revision reports nothing at all for
+              # its first few seconds, and failing on that reads a not-yet as a
+              # mismatch — which is exactly how this step failed the first time
+              # it ever ran, on a deploy that had in fact rolled correctly.
+              if [ -n "$image" ] && [ "$image" != "$expected" ]; then
                 echo "::error::Newest active revision runs ${image}, not the image this run pushed (${expected})."
                 exit 1
               fi
 
-              if [ "${state}" = "Provisioned" ] && [ "${running}" = "Running" ]; then
-                echo "Revision ${name} is running the image this run pushed."
-                exit 0
+              if [ "$state" = "Failed" ]; then
+                echo "::error::Revision ${name} failed to provision."
+                az containerapp logs show --name "$app" --resource-group "$group" \
+                  --revision "$name" --tail 60 --type console || true
+                exit 1
               fi
 
-              if [ "${state}" = "Failed" ]; then
-                echo "::error::Revision ${name} failed to provision."
-                az containerapp logs show --name ${{ env.CONTAINER_APP_NAME }} \
-                  --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
-                  --revision "${name}" --tail 60 --type console || true
-                exit 1
+              if [ "$state" = "Provisioned" ] && [ "$running" = "Running" ] && [ "$image" = "$expected" ]; then
+                echo "Revision ${name} is running the image this run pushed."
+                exit 0
               fi
 
               sleep 15
             done
 
-            echo "::error::Revision did not reach Running within ten minutes."
+            echo "::error::Revision did not reach Running with the pushed image within ten minutes."
             exit 1
 
       # Step 7: Azure Logout
