@@ -82,6 +82,26 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
         return Math.Log(1 / ratio) / Math.Log(1 + RampPerWeek) / WeeksPerMonth;
     }
 
+    /// <summary>
+    /// The same plan with a stretch of nothing in the middle of it: an injury,
+    /// a deployment, a work crunch.
+    /// </summary>
+    /// <remarks>
+    /// Compliance as a single fraction cannot express this. Eighty-five per
+    /// cent spread evenly is not the same as three good weeks and one lost
+    /// one, because what is lost during the gap decays several times faster
+    /// than it was built — so the shape of the missed training matters as much
+    /// as the amount, and only one of the two was expressible before.
+    /// </remarks>
+    public Func<double, TrainingDose> WithGap(double fromMonths, double months)
+    {
+        if (fromMonths < 0) throw new ArgumentOutOfRangeException(nameof(fromMonths));
+        if (months < 0) throw new ArgumentOutOfRangeException(nameof(months));
+
+        var nothing = new TrainingDose();
+        return at => at >= fromMonths && at < fromMonths + months ? nothing : At(at);
+    }
+
     /// <summary>What fraction of the target week the athlete starts on.</summary>
     private double StartingRatio()
     {
@@ -144,8 +164,17 @@ public static class Trajectory
     }
 
     /// <summary>The VDOT a sustained dose supports in the limit.</summary>
+    /// <remarks>
+    /// Not floored at the starting fitness. It used to be, and that one call to
+    /// Math.Max was the reason this model could not represent decline at all:
+    /// with the ceiling pinned at or above where the athlete began, the gap
+    /// driving the trajectory was never negative and the curve only ever went
+    /// up. A week of training that supports less than the athlete currently
+    /// holds is a week they get slower, which is the ordinary experience of
+    /// stopping.
+    /// </remarks>
     public static double Ceiling(TrajectoryParameters p, TrainingDose dose) =>
-        Math.Max(p.StartVdot, DoseResponse.Ceiling(dose, p.Responsiveness));
+        DoseResponse.Ceiling(dose, p.Responsiveness);
 
     /// <summary>The VDOT a sustained total of running hours supports, split optimally.</summary>
     public static double Ceiling(TrajectoryParameters p, double effectiveHours) =>
@@ -262,8 +291,20 @@ public static class Trajectory
     private static double Advance(
         TrajectoryParameters p, Func<double, double> ceilingAt, double at, double step, double vdot)
     {
-        double Slope(double time, double v) =>
-            p.RatePerMonth * RateMultiplier(p, v) * (ceilingAt(time) - v);
+        double Slope(double time, double v)
+        {
+            var gap = ceilingAt(time) - v;
+
+            // Gaining and losing run at different speeds, and the retraining
+            // fast lane belongs only to the first. Applying it while fitness is
+            // falling would make a lay-off cost more the better the athlete
+            // used to be, which is backwards.
+            var rate = gap >= 0
+                ? p.RatePerMonth * RateMultiplier(p, v)
+                : p.RatePerMonth * Retraining.DetrainingRateMultiplier;
+
+            return rate * gap;
+        }
 
         var k1 = Slope(at, vdot);
         var k2 = Slope(at + step / 2, vdot + step * k1 / 2);
