@@ -477,6 +477,52 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
 // database is still a healthy deployment of this app.
 app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 
+// Readiness, which is the other half and was missing. Liveness above answers
+// "is this process serving"; this answers "are the dependencies it was
+// configured with actually reachable". The distinction matters because the two
+// fail differently: a crashed process stops answering at all, while a database
+// that has gone away leaves every page up and only the feature broken — which
+// is invisible to a deploy that never asks.
+//
+// A subsystem that is switched off is not a failure. Only something configured
+// and unreachable is, so a deployment with no databases is still ready, exactly
+// as it is still healthy.
+app.MapGet("/readyz", async (IServiceProvider services, CancellationToken cancellationToken) =>
+{
+    // A hung database must not hang the probe; an unanswered check inside this
+    // budget is a failed check.
+    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+    deadline.CancelAfter(TimeSpan.FromSeconds(5));
+
+    async Task<ReadinessCheck> Check<TContext>(string name, bool configured) where TContext : DbContext
+    {
+        if (!configured) return Readiness.NotConfigured(name);
+
+        try
+        {
+            using var scope = services.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<TContext>();
+            return await database.Database.CanConnectAsync(deadline.Token)
+                ? Readiness.Reachable(name)
+                : Readiness.Unreachable(name, "unreachable");
+        }
+        catch (Exception exception)
+        {
+            // The type, never the message: a connection string can end up in a
+            // provider exception and this endpoint is unauthenticated.
+            return Readiness.Unreachable(name, exception.GetType().Name);
+        }
+    }
+
+    var report = Readiness.From(
+    [
+        await Check<SchedulingDbContext>("scheduling-db", !string.IsNullOrWhiteSpace(connectionString)),
+        await Check<FitnessDbContext>("fitness-db", fitnessEnabled)
+    ]);
+
+    return Results.Json(report, statusCode: report.StatusCode);
+});
+
 // Before the SPA fallback, so a plain fetch of these two gets real HTML rather
 // than an empty shell. Mapped unconditionally: they must answer on any
 // deployment, including one with no database and no messaging configured, since

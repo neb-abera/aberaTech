@@ -129,6 +129,54 @@ jobs:
               --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
               --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}
 
+      # `az containerapp update` returns when Azure has accepted the new
+      # revision, not when it is running. A revision that crashes on boot
+      # leaves the previous one serving and the deploy still reports success —
+      # which is how a broken release can look like a good one all the way to
+      # the end of the log.
+      - name: Wait for the new revision to run
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
+        with:
+          inlineScript: |
+            set -euo pipefail
+            az config set extension.use_dynamic_install=yes_without_prompt
+
+            expected="${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}"
+
+            for attempt in $(seq 1 40); do
+              read -r name state running image <<< "$(az containerapp revision list \
+                --name ${{ env.CONTAINER_APP_NAME }} \
+                --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
+                --query "sort_by([?properties.active], &properties.createdTime)[-1].[name, properties.provisioningState, properties.runningState, properties.template.containers[0].image]" \
+                --output tsv)"
+
+              echo "attempt ${attempt}: ${name} provisioning=${state} running=${running}"
+              echo "  image=${image}"
+
+              if [ "${image}" != "${expected}" ]; then
+                echo "::error::Newest active revision runs ${image}, not the image this run pushed (${expected})."
+                exit 1
+              fi
+
+              if [ "${state}" = "Provisioned" ] && [ "${running}" = "Running" ]; then
+                echo "Revision ${name} is running the image this run pushed."
+                exit 0
+              fi
+
+              if [ "${state}" = "Failed" ]; then
+                echo "::error::Revision ${name} failed to provision."
+                az containerapp logs show --name ${{ env.CONTAINER_APP_NAME }} \
+                  --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
+                  --revision "${name}" --tail 60 --type console || true
+                exit 1
+              fi
+
+              sleep 15
+            done
+
+            echo "::error::Revision did not reach Running within ten minutes."
+            exit 1
+
       # Step 7: Azure Logout
       - name: Logout from Azure
         run: az logout
@@ -150,11 +198,61 @@ jobs:
           API_TOKEN: ${{ secrets.CLOUDFLARE_PURGE_TOKEN }}
         run: |
           if [ -z "$ZONE_ID" ] || [ -z "$API_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_ZONE_ID / CLOUDFLARE_PURGE_TOKEN not set; edge cache not purged, stale HTML may be served until it expires."
-            exit 0
+            echo "::error::CLOUDFLARE_ZONE_ID / CLOUDFLARE_PURGE_TOKEN not set. The edge caches HTML with a TTL that overrides the origin, so without a purge this deploy would keep serving the previous release. Failing rather than warning: a deploy nobody can see the result of is not a deploy."
+            exit 1
           fi
           curl --silent --show-error --fail -X POST \
             "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache" \
             -H "Authorization: Bearer ${API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data '{"purge_everything":true}'
+
+  # The gate that was missing. Everything above proves the pipeline ran; this
+  # proves the site answers. Liveness says the process is serving, readiness
+  # says the databases it was configured with are reachable, and the two pages
+  # confirm the SPA shell and a prerendered route both render — the failure
+  # mode that once shipped an empty shell to every path.
+  #
+  # After the purge, so it reads what a visitor reads rather than a cached copy.
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: purge-edge-cache
+    steps:
+      - name: Check the deployed site answers
+        env:
+          SITE: https://abera.tech
+        run: |
+          set -uo pipefail
+          failed=0
+
+          check() {
+            local path="$1" expected="$2" attempt code
+            for attempt in $(seq 1 5); do
+              code=$(curl --silent --show-error --location --max-time 20 \
+                --output /dev/null --write-out '%{http_code}' "${SITE}${path}" || echo 000)
+              if [ "${code}" = "${expected}" ]; then
+                echo "  ${path} -> ${code}"
+                return 0
+              fi
+              echo "  ${path} -> ${code} (attempt ${attempt}/5)"
+              sleep 10
+            done
+            echo "::error::${SITE}${path} answered ${code}, expected ${expected}."
+            failed=1
+          }
+
+          check /healthz 200
+          check /readyz 200
+          check / 200
+          check /fitness 200
+
+          # Mapped unconditionally and fetched by the carrier reviewing the
+          # A2P campaign, so they must answer on any deployment.
+          check /sms-terms 200
+          check /sms-privacy 200
+
+          # A path the router does not know must 404 rather than serve a shell.
+          check /this-route-does-not-exist 404
+
+          exit "${failed}"
