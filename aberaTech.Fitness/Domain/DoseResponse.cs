@@ -75,6 +75,39 @@ public static class DoseResponse
     /// <summary>Weekly strain a full-time endurance athlete sustains.</summary>
     public const double EliteStrain = 33.0;
 
+    /// <summary>
+    /// The recovery budget implied by the biggest week an athlete has actually
+    /// sustained.
+    /// </summary>
+    /// <remarks>
+    /// The budget used to be a constant: every athlete was assumed to tolerate
+    /// what a full-time endurance athlete tolerates, so the model believed a
+    /// beginner could hold twenty hours a week as readily as someone eight
+    /// years into consistent base.
+    ///
+    /// What grows with training age is the capacity to absorb load, and rather
+    /// than model that from a proxy the athlete is asked for it directly: the
+    /// biggest week they have held for a month without breaking down. That is
+    /// a number they can answer from experience, and it is the quantity itself
+    /// rather than something correlated with it.
+    ///
+    /// It is a floor on what they can build to, not a cap: a week already held
+    /// is evidence the body absorbed it, and the plan may still ramp beyond it.
+    /// What it stops is a ceiling calculated from volume nobody has any reason
+    /// to think this athlete could carry.
+    ///
+    /// Citations: <see cref="Citations.CogganPmc"/>, <see cref="Citations.GabbettWorkload"/>.
+    /// </remarks>
+    public static double StrainFor(double sustainedWeeklyHours)
+    {
+        if (sustainedWeeklyHours < 0) throw new ArgumentOutOfRangeException(nameof(sustainedWeeklyHours));
+
+        // Scored the way that week would be spent, so the budget is in the
+        // same units as everything it is compared against.
+        var week = Allocate(sustainedWeeklyHours, new DoseLimits(MaxStrain: EliteStrain)).Dose;
+        return Math.Min(EliteStrain, week.Strain);
+    }
+
     /// <summary>The intensity share a deficient athlete's week should not exceed.</summary>
     public const double DeficientIntensityShare = 0.10;
 

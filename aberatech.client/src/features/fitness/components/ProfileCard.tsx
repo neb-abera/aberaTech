@@ -72,6 +72,11 @@ export default function ProfileCard({
   const [availableHours, setAvailableHours] = React.useState(
     String(settings.availableHoursPerWeek),
   );
+  const [sustainedHours, setSustainedHours] = React.useState(
+    settings.sustainedWeeklyHours === null
+      ? ""
+      : String(settings.sustainedWeeklyHours),
+  );
   const [peakWeightLb, setPeakWeightLb] = React.useState(
     settings.pastPeakWeightKg === null
       ? ""
@@ -116,6 +121,18 @@ export default function ProfileCard({
       }
     }
 
+    const sustained = Number(sustainedHours);
+    if (
+      sustainedHours.trim() !== "" &&
+      (!Number.isFinite(sustained) || sustained < 0 || sustained > 40)
+    ) {
+      setStatus({
+        ok: false,
+        text: "Biggest sustained week must be 0-40 hours.",
+      });
+      return;
+    }
+
     const hours = Number(availableHours);
     if (!Number.isFinite(hours) || hours < 0 || hours > 40) {
       setStatus({ ok: false, text: "Available hours must be 0-40 a week." });
@@ -137,6 +154,8 @@ export default function ProfileCard({
         birthYear: birthYear.trim() === "" ? null : Number(birthYear),
         female: book === "unstated" ? null : book === "women",
         availableHoursPerWeek: Number(availableHours),
+        sustainedWeeklyHours:
+          sustainedHours.trim() === "" ? null : Number(sustainedHours),
         pastPeakWeightKg:
           peakWeightLb.trim() === "" ? null : lbToKg(Number(peakWeightLb)),
         goalWeightKg:
@@ -183,6 +202,15 @@ export default function ProfileCard({
               <MenuItem value="men">Men's record book</MenuItem>
               <MenuItem value="women">Women's record book</MenuItem>
             </TextField>
+            <TextField
+              label="Biggest week you have held (h)"
+              type="number"
+              value={sustainedHours}
+              onChange={(event) => setSustainedHours(event.target.value)}
+              helperText="Held for a month without breaking down — sets the recovery budget ceilings are planned against"
+              slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
+              sx={{ width: 260 }}
+            />
             <TextField
               label="Hours you can train"
               type="number"
