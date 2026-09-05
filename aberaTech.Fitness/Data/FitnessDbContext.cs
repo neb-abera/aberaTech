@@ -9,6 +9,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<BodyMetric> BodyMetrics => Set<BodyMetric>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<AthleteSettings> Settings => Set<AthleteSettings>();
+    public DbSet<LockedPrediction> Predictions => Set<LockedPrediction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,5 +44,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<StrengthSet>().Property(s => s.Exercise).HasMaxLength(128);
         modelBuilder.Entity<Goal>().Property(g => g.Metric).HasMaxLength(64);
         modelBuilder.Entity<Goal>().Property(g => g.Label).HasMaxLength(128);
+        modelBuilder.Entity<LockedPrediction>().Property(p => p.Note).HasMaxLength(512);
+        modelBuilder.Entity<LockedPrediction>().HasIndex(p => p.TargetDate);
     }
 }

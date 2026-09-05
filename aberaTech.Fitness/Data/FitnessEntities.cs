@@ -158,3 +158,51 @@ public class AthleteSettings
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
 }
+
+/// <summary>
+/// A prediction written down before the fact, so it can be scored after it.
+/// </summary>
+/// <remarks>
+/// A model that has never been checked against an outcome is a calculator with
+/// good manners. This one had grown considerably without ever having made a
+/// prediction anybody later compared to reality — and the way that gets fixed
+/// is not more modelling, it is writing one down and waiting.
+///
+/// The scenario is stored alongside the answer because a prediction is only
+/// meaningful with its assumptions attached: what it assumed about training,
+/// compliance and race weight is the difference between the model being wrong
+/// and the plan not having happened.
+/// </remarks>
+public class LockedPrediction
+{
+    public Guid Id { get; set; }
+
+    /// <summary>When the prediction was made.</summary>
+    public LocalDate MadeOn { get; set; }
+
+    /// <summary>The date the prediction is about.</summary>
+    public LocalDate TargetDate { get; set; }
+
+    public double DistanceMeters { get; set; }
+
+    /// <summary>The median predicted time, in seconds.</summary>
+    public double PredictedSeconds { get; set; }
+
+    /// <summary>The fast and slow ends of the interval that was quoted with it.</summary>
+    public double PredictedFastSeconds { get; set; }
+
+    public double PredictedSlowSeconds { get; set; }
+
+    /// <summary>The plan it assumed, so a miss can be attributed rather than argued about.</summary>
+    public double WeeklyHours { get; set; }
+
+    public double Compliance { get; set; }
+
+    public double? RaceMassKg { get; set; }
+
+    /// <summary>What actually happened, once it has.</summary>
+    public double? ActualSeconds { get; set; }
+
+    /// <summary>Anything worth remembering about the day.</summary>
+    public string? Note { get; set; }
+}
