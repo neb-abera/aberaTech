@@ -42,6 +42,7 @@ const settings: SettingsDto = {
   maxWeightAdjustmentFraction: 0.1,
   female: null,
   availableHoursPerWeek: 7,
+  sustainedWeeklyHours: null,
 };
 
 function json(body: unknown, ok = true): Response {

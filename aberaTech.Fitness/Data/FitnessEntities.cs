@@ -127,6 +127,14 @@ public class AthleteSettings
     /// <summary>Weekly running hours the athlete says they can commit to.</summary>
     public double AvailableHoursPerWeek { get; set; } = 7;
 
+    /// <summary>
+    /// The biggest week the athlete has held for a month without breaking
+    /// down, in running hours. It sets the recovery budget the model plans
+    /// against; unset, the budget is a full-time athlete's, which is generous
+    /// and said so in the assumptions.
+    /// </summary>
+    public double? SustainedWeeklyHours { get; set; }
+
     /// <summary>The lifetime-best race: distance, time, and roughly when.</summary>
     public double? PastPeakDistanceMeters { get; set; }
 

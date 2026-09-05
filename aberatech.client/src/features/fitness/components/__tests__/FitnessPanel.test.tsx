@@ -55,6 +55,7 @@ const emptySummary = {
     maxWeightAdjustmentFraction: 0.1,
     female: null,
     availableHoursPerWeek: 7,
+    sustainedWeeklyHours: null,
   },
   aerobicTrend: [
     { month: "2026-07", medianSecPerKm: 447, runs: 2 },
