@@ -27,8 +27,10 @@ fi
 
 worktree="$(basename "$PWD")"
 
-# The main checkout keeps the numbers every document quotes.
-if [ "$worktree" = "aberaTech" ]; then
+# A linked worktree has `.git` as a file pointing at the real one; the main
+# checkout has it as a directory. Testing that rather than the directory name
+# keeps this true of a clone under any name.
+if [ -d .git ]; then
   offset=0
 else
   offset="$(printf '%s' "$worktree" | cksum | awk '{print ($1 % 300) + 1}')"
