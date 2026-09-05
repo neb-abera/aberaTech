@@ -1,8 +1,8 @@
 # Every way of working on the client runs in a container, so nothing but Docker
 # needs to be installed on the machine.
 #
-#   make up      the whole site and its database on http://localhost:8080
-#   make dev     hot reloading dev server on http://localhost:3000
+#   make up      the whole site and its database, on the port `make ports` names
+#   make dev     hot reloading dev server, likewise
 #   make test    client unit tests against the working tree
 #   make servertest  scheduling unit tests against the working tree
 #   make lint    biome lint and format check against the working tree
@@ -12,7 +12,17 @@
 # give a fast loop. `make check` deliberately does not: it builds the clienttest
 # and clientlint stages, which copy the tree into the image, so it measures what
 # a reviewer would actually get.
-name: aberatech
+# No `name:` on purpose.
+#
+# A fixed project name is shared by every worktree of this repository, and the
+# project name is what container names and volumes are derived from — so
+# `docker compose up` in one worktree replaces the container another session is
+# running, and `make clean` destroys its database. Left unset, compose names the
+# project after the directory, and worktree directories are already unique, so
+# each session is isolated by construction rather than by remembering to be.
+#
+# COMPOSE_PROJECT_NAME still overrides this if a session wants to say it
+# explicitly.
 
 services:
   dev:
@@ -26,7 +36,7 @@ services:
       # has; the vite advisories that keep appearing are precisely "any website
       # can reach the dev server" and "server.fs.deny can be bypassed for files
       # under the project root". There is no reason for it to leave the host.
-      - '127.0.0.1:3000:3000'
+      - '127.0.0.1:${DEV_PORT:-3000}:3000'
     volumes:
       # Edits on the host reload in the container.
       - ./aberatech.client:/client
@@ -85,7 +95,7 @@ services:
       # projects at once and the default is the one they all reach for first.
       # The server container talks to db:5432 on the compose network regardless;
       # this mapping exists only so a database tool on the host can connect.
-      - '127.0.0.1:5433:5432'
+      - '127.0.0.1:${DB_PORT:-5433}:5432'
     volumes:
       # postgres:18 moved its data directory up a level (major-version
       # subdirectories, docker-library/postgres#1259) and refuses a volume
@@ -128,7 +138,7 @@ services:
       args:
         IN_DOCKER: 'true'
     ports:
-      - '127.0.0.1:8080:8080'
+      - '127.0.0.1:${APP_PORT:-8080}:8080'
     environment:
       # Development so the availability rules seed themselves and a fresh
       # database produces a page with slots on it rather than an empty state
