@@ -147,6 +147,31 @@ honest position when the history is a record of not training.
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
 
+### Losing it
+
+Fitness falls as well as rises, and until recently this model could not say so:
+the ceiling was floored at the athlete's starting fitness, so the gap driving
+the trajectory was never negative and no dose — including none at all — made
+anyone slower. A week that supports less than the athlete currently holds is
+now a week they lose ground.
+
+Losing is faster than gaining. Detraining is not training in reverse: Mujika and
+Padilla put a trained athlete's VO2max loss at several per cent inside four
+weeks, most of it rapidly reversible plasma volume and enzyme activity rather
+than anything structural. The decay runs at seven times the de-novo approach
+rate, which puts a month of nothing at about 8% — inside the range the
+literature reports. The retraining fast lane applies only while fitness is
+being regained; speeding up a lay-off in proportion to how good the athlete
+used to be would be backwards.
+
+This is also what makes the shape of missed training matter, not just the
+amount. Compliance as a single fraction cannot tell three good weeks and one
+lost one from 85% spread evenly, and the two are not the same: on this model a
+plan with one month missing lands materially behind the same total hours spread
+across the year, and over half of what the gap costs is still there nine months
+later on identical training since. A `DoseSchedule` can now carry a gap so that
+question can be asked directly.
+
 ### Fitting it to the athlete
 
 Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
@@ -218,6 +243,31 @@ honest position when the history is a record of not training.
 
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
+
+### Losing it
+
+Fitness falls as well as rises, and until recently this model could not say so:
+the ceiling was floored at the athlete's starting fitness, so the gap driving
+the trajectory was never negative and no dose — including none at all — made
+anyone slower. A week that supports less than the athlete currently holds is
+now a week they lose ground.
+
+Losing is faster than gaining. Detraining is not training in reverse: Mujika and
+Padilla put a trained athlete's VO2max loss at several per cent inside four
+weeks, most of it rapidly reversible plasma volume and enzyme activity rather
+than anything structural. The decay runs at seven times the de-novo approach
+rate, which puts a month of nothing at about 8% — inside the range the
+literature reports. The retraining fast lane applies only while fitness is
+being regained; speeding up a lay-off in proportion to how good the athlete
+used to be would be backwards.
+
+This is also what makes the shape of missed training matter, not just the
+amount. Compliance as a single fraction cannot tell three good weeks and one
+lost one from 85% spread evenly, and the two are not the same: on this model a
+plan with one month missing lands materially behind the same total hours spread
+across the year, and over half of what the gap costs is still there nine months
+later on identical training since. A `DoseSchedule` can now carry a gap so that
+question can be asked directly.
 
 ### Fitting it to the athlete
 
