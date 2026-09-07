@@ -174,6 +174,19 @@ describe("the training plan", () => {
     }
   });
 
+  it("carries the plan template and the reference cards", () => {
+    render(<TrainingPlan />);
+
+    expect(
+      screen.getByRole("heading", { name: "Communications plan template" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Reference cards" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Antenna lengths" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Net diagram" })).toBeTruthy();
+  });
+
   it("keeps a gate attempt across a reload", () => {
     const { unmount } = render(<TrainingPlan />);
     const gate = screen.getByRole("region", { name: "Gate for wire" });

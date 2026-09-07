@@ -58,6 +58,8 @@ export const copy = {
   note: "Progress is stored in this browser only. Nothing here is sent anywhere.",
   scoring:
     "The plan is scored on logs, gates and clocks, not on hours spent. A block is finished when its gate passes, timed, outdoors.",
+  cards:
+    "The reference cards below are what to carry until the drill makes them unnecessary. Print them; the plan template prints with them.",
   practice:
     "Reading is passive; every block also lists practice that scores you. Those sites cannot report back here, so write their results into the gate log below the block: a practice exam percentage, a drill time, where a signal was heard. The log is the one place everything is scored.",
 };
@@ -225,6 +227,22 @@ export const plan: Block[] = [
         text: "Build and tune a half-wave dipole, an inverted V and an end-fed half-wave. Sweep each with the analyzer and log the standing wave ratio before and after every trim.",
       },
       {
+        id: "wire-ocf",
+        text: "Build a half-wave dipole fed 14 percent from its centre through a 4:1 balun, and confirm on the analyzer that it works on its even harmonics too. Compute the feed point in feet and inches before you cut.",
+      },
+      {
+        id: "wire-longwire",
+        text: "Build a long wire, several wavelengths on the band in use, fed at one end against a counterpoise. Log which directions it favours.",
+      },
+      {
+        id: "wire-terminated",
+        text: "Build the two terminated directional wires: a sloping vee and a vertical half-rhombic, each ended in a 400 to 600 ohm non-inductive resistor. Point them by compass at a distant station and compare against the dipole on the same hour.",
+      },
+      {
+        id: "wire-multimeter",
+        text: "With a multimeter: zero it, prove the continuity of every antenna wire and feedline, and read the battery's voltage, inside ten minutes. Do it before every field build.",
+      },
+      {
         id: "wire-nvis",
         text: "Build a near vertical incidence skywave (NVIS) antenna low to the ground and make contacts inside three hundred miles on 40 and 80 meters, the band that is hard to reach any other way.",
       },
@@ -241,7 +259,7 @@ export const plan: Block[] = [
         text: "Keep a propagation log: time, band, solar flux, what you could and could not hear. Learn the maximum and lowest usable frequencies from your own data before reading about them.",
       },
     ],
-    gate: "From a bare spool of wire to a logged contact in under thirty minutes, in the dark, by headlamp.",
+    gate: "Given a frequency and an azimuth to the distant station: compute the length, cut the wire to within three inches of it, erect it broadside to that azimuth by compass, connect the radio and log a contact, all inside thirty minutes, in the dark, by headlamp. Then the same with the off-centre-fed and a terminated wire.",
     resources: [
       {
         title: "Near vertical incidence skywave",
@@ -415,6 +433,10 @@ export const plan: Block[] = [
       },
       {
         id: "spectrum-interference",
+        text: "Learn what interference looks like on the waterfall: broadband noise, a carrier parked on the frequency, sweeping and pulsed sources. When it lands on your own link, recognise it, note the time and the shape, change something (band, antenna, power, timing) and get the traffic through anyway.",
+      },
+      {
+        id: "spectrum-source",
         text: "Log every interference problem on your own field network and find its physical source. Write down how you found it.",
       },
     ],
@@ -522,7 +544,15 @@ export const plan: Block[] = [
       },
       {
         id: "field-plan",
-        text: "Before each one, write the communications plan: primary, alternate, contingency and emergency means for every link, the scheduled contact windows, and the frequencies by time of day.",
+        text: "Before each one, write the communications plan from the template on this page: primary, alternate, contingency and emergency means for every link, a net diagram, the scheduled contact windows in Zulu, the frequencies by time of day, and the power plan. Four hours from scenario to finished plan is the standard.",
+      },
+      {
+        id: "field-site",
+        text: "Choose the transmission site from the map before you walk: line of sight to the far station for ground wave, or, for sky wave, ridge lines in the direction of transmission no higher than half the take-off angle you need, with room for the antenna and its supports. Then confirm it on the ground.",
+      },
+      {
+        id: "field-leave",
+        text: "Leave the site as you found it: wire, insulators, stakes, tape and batteries all counted back into the pack. A dropped length of wire is a failed exercise.",
       },
       {
         id: "field-teach",

@@ -117,9 +117,11 @@ export default function DrillPanel({ seed, count = 20, now }: Props) {
             Daily drill
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {count} problems: decibels, wavelength, dipole length, Ohm's law and
-            subnetting, four of each. The clock runs from the first problem to
-            the last. Same problems all day; new ones tomorrow.
+            {count} problems across ten kinds: decibels, wavelength, dipole
+            length, the off-centre feed point, Ohm's law, power budgets,
+            azimuths, Zulu time, one-time pads and subnetting. The clock runs
+            from the first problem to the last. Same problems all day; new ones
+            tomorrow.
           </Typography>
         </Box>
 
@@ -277,9 +279,10 @@ function weakest(result: Result): string {
   let worst: DrillKind | null = null;
   let worstShare = 1;
   for (const kind of kinds) {
-    const { total, correct } = result.byKind[kind];
-    if (total === 0) continue;
-    const share = correct / total;
+    // Sessions saved before a kind existed have no entry for it.
+    const entry = result.byKind[kind];
+    if (!entry || entry.total === 0) continue;
+    const share = entry.correct / entry.total;
     if (share < worstShare) {
       worstShare = share;
       worst = kind;

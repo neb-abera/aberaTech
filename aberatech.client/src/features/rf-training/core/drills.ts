@@ -1,10 +1,12 @@
 /**
  * The daily drill: fresh arithmetic across the plan, generated from a seed.
  *
- * Five kinds, one per thing the plan says must become a reflex: decibels,
- * wavelength, dipole length, Ohm's law, and subnetting. Every generator is
- * a pure function of a random source, so a session is reproducible from
- * its seed and every answer can be checked against the formula in a test.
+ * Ten kinds, one per thing the plan says must become a reflex: decibels,
+ * wavelength, dipole length, the off-centre feed point, Ohm's law, power
+ * budgets, azimuths, Zulu time, one-time pads, and subnetting. Every
+ * generator is a pure function of a random source, so a session is
+ * reproducible from its seed and every answer can be checked against the
+ * formula in a test.
  *
  * Answers are strings. Numeric ones are checked within a tolerance, because
  * "20" is the right answer to "13 dB as a ratio" even though the exact value
@@ -12,13 +14,28 @@
  * is nearly right is wrong.
  */
 
-export type DrillKind = "db" | "wavelength" | "dipole" | "ohm" | "subnet";
+export type DrillKind =
+  | "db"
+  | "wavelength"
+  | "dipole"
+  | "ocf"
+  | "ohm"
+  | "power"
+  | "azimuth"
+  | "zulu"
+  | "pad"
+  | "subnet";
 
 export const kinds: DrillKind[] = [
   "db",
   "wavelength",
   "dipole",
+  "ocf",
   "ohm",
+  "power",
+  "azimuth",
+  "zulu",
+  "pad",
   "subnet",
 ];
 
@@ -26,7 +43,12 @@ export const kindLabel: Record<DrillKind, string> = {
   db: "Decibels",
   wavelength: "Wavelength",
   dipole: "Dipole length",
+  ocf: "Off-centre feed",
   ohm: "Ohm's law",
+  power: "Power budget",
+  azimuth: "Azimuth",
+  zulu: "Zulu time",
+  pad: "One-time pad",
   subnet: "Subnetting",
 };
 
@@ -219,6 +241,235 @@ export function ohmProblem(random: Random, id: string): Problem {
   };
 }
 
+/** Feet with a decimal to feet and inches, the way a tape measure reads. */
+export function feetAndInches(feet: number): string {
+  const whole = Math.floor(feet);
+  const inches = Math.round((feet - whole) * 12);
+  if (inches === 12) return `${whole + 1} ft 0 in`;
+  return `${whole} ft ${inches} in`;
+}
+
+// The off-centre-fed dipole: a half-wave of wire fed 14 percent from the
+// middle. The drill asks for the feed point in feet and inches, because the
+// arithmetic that fails in the field is the tenths-of-a-foot conversion.
+export function ocfProblem(random: Random, id: string): Problem {
+  const f = pick(
+    random,
+    bandsMHz.filter((band) => band < 30),
+  );
+  const length = 468 / f;
+  const offset = 0.14 * length;
+  if (random() < 0.5) {
+    return {
+      id,
+      kind: "ocf",
+      prompt: `A half-wave for ${f} MHz is fed 14 percent from its centre. How far from the centre is the feed point, in feet?`,
+      answer: round(offset, 1),
+      unit: "ft",
+      tolerance: 0.02,
+      explanation: `468 / ${f} = ${round(length, 1)} ft; 0.14 × ${round(length, 1)} = ${round(offset, 1)} ft, which is ${feetAndInches(offset)}.`,
+    };
+  }
+  const tenths = Math.round((offset - Math.floor(offset)) * 10) / 10;
+  return {
+    id,
+    kind: "ocf",
+    prompt: `${tenths} of a foot is how many inches?`,
+    answer: round(tenths * 12, 1),
+    unit: "in",
+    tolerance: 0.05,
+    explanation: `Tenths of a foot × 12: ${tenths} × 12 = ${round(tenths * 12, 1)} in.`,
+  };
+}
+
+// A power budget: loads to watts, watts and hours to amp-hours at 12 V,
+// or a battery's amp-hours to hours of runtime.
+const loads = [
+  ["radio on receive", 0.6],
+  ["radio on transmit, one third duty", 4],
+  ["mesh node", 0.15],
+  ["phone charging", 1],
+  ["laptop", 3.5],
+  ["router and modem", 1.2],
+  ["drone battery charger", 5],
+] as const;
+
+export function powerProblem(random: Random, id: string): Problem {
+  const form = between(random, 0, 2);
+  const volts = 12;
+  if (form === 0) {
+    const count = between(random, 2, 4);
+    const chosen: (typeof loads)[number][] = [];
+    while (chosen.length < count) {
+      const load = pick(random, loads);
+      if (!chosen.includes(load)) chosen.push(load);
+    }
+    const amps = chosen.reduce((sum, [, a]) => sum + a, 0);
+    const watts = amps * volts;
+    const list = chosen.map(([name, a]) => `${name} at ${a} A`).join(", ");
+    return {
+      id,
+      kind: "power",
+      prompt: `At ${volts} V, these loads run together: ${list}. What is the total draw, in watts?`,
+      answer: round(watts, 1),
+      unit: "W",
+      tolerance: 0.02,
+      explanation: `${round(amps, 2)} A × ${volts} V = ${round(watts, 1)} W.`,
+    };
+  }
+  if (form === 1) {
+    const amps = pick(random, [0.5, 1, 1.5, 2, 2.5, 3] as const);
+    const hours = pick(random, [12, 24, 48, 72] as const);
+    return {
+      id,
+      kind: "power",
+      prompt: `A kit averages ${amps} A for ${hours} hours. How many amp-hours does it need, before any reserve?`,
+      answer: round(amps * hours, 1),
+      unit: "Ah",
+      tolerance: 0.02,
+      explanation: `${amps} A × ${hours} h = ${round(amps * hours, 1)} Ah. Add reserve for cold and for the day the sun does not come out.`,
+    };
+  }
+  const capacity = pick(random, [7, 12, 20, 50, 100] as const);
+  const amps = pick(random, [0.5, 1, 2, 2.5] as const);
+  return {
+    id,
+    kind: "power",
+    prompt: `A ${capacity} Ah battery feeds a steady ${amps} A load. How many hours does it last, using all of it?`,
+    answer: round(capacity / amps, 1),
+    unit: "h",
+    tolerance: 0.02,
+    explanation: `${capacity} Ah / ${amps} A = ${round(capacity / amps, 1)} h.`,
+  };
+}
+
+// Azimuths: the back azimuth for a path, and the line a broadside wire
+// runs along to face a station. Degrees, 0 to 359, exact.
+export function azimuthProblem(random: Random, id: string): Problem {
+  const azimuth = between(random, 0, 359);
+  if (random() < 0.5) {
+    const back = (azimuth + 180) % 360;
+    return {
+      id,
+      kind: "azimuth",
+      prompt: `The distant station bears ${azimuth}°. What is the back azimuth, in degrees?`,
+      answer: String(back),
+      unit: "°",
+      tolerance: 0,
+      explanation: `Add 180 if under 180, subtract 180 otherwise: ${azimuth} → ${back}.`,
+    };
+  }
+  const low = (azimuth + 90) % 360;
+  const high = (azimuth + 270) % 360;
+  const answer = String(Math.min(low, high));
+  return {
+    id,
+    kind: "azimuth",
+    prompt: `A wire antenna must sit broadside to a station at ${azimuth}°. Along which azimuth does the wire run? Give the smaller of the two, in degrees.`,
+    answer,
+    unit: "°",
+    tolerance: 0,
+    explanation: `Broadside means the wire runs at right angles to the bearing: ${azimuth} ± 90 gives ${Math.min(low, high)} and ${Math.max(low, high)}.`,
+  };
+}
+
+// Zulu time. Zones the reader lives and drives in, standard and daylight.
+export const zones = [
+  ["Eastern Standard", -5],
+  ["Eastern Daylight", -4],
+  ["Central Standard", -6],
+  ["Central Daylight", -5],
+  ["Mountain Standard", -7],
+  ["Mountain Daylight", -6],
+  ["Pacific Standard", -8],
+  ["Pacific Daylight", -7],
+] as const;
+
+const hhmm = (minutes: number): string => {
+  const m = ((minutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}${String(m % 60).padStart(2, "0")}`;
+};
+
+export function zuluProblem(random: Random, id: string): Problem {
+  const [zone, offset] = pick(random, zones);
+  const local =
+    between(random, 0, 23) * 60 + pick(random, [0, 15, 30, 45] as const);
+  if (random() < 0.5) {
+    const zulu = local - offset * 60;
+    return {
+      id,
+      kind: "zulu",
+      prompt: `It is ${hhmm(local)} ${zone} time (UTC${offset}). What is that in Zulu, as four digits?`,
+      answer: hhmm(zulu),
+      unit: "Z",
+      tolerance: 0,
+      explanation: `Zulu is local minus the offset: ${hhmm(local)} − (${offset}) h = ${hhmm(zulu)}Z${zulu >= 1440 ? ", the next day" : zulu < 0 ? ", the day before" : ""}.`,
+    };
+  }
+  const back = local + offset * 60;
+  return {
+    id,
+    kind: "zulu",
+    prompt: `A contact window is ${hhmm(local)}Z. What is that in ${zone} time (UTC${offset}), as four digits?`,
+    answer: hhmm(back),
+    tolerance: 0,
+    explanation: `Local is Zulu plus the offset: ${hhmm(local)} + (${offset}) h = ${hhmm(back)}${back < 0 ? ", the day before" : back >= 1440 ? ", the next day" : ""}.`,
+  };
+}
+
+// A one-time pad on letters: cipher = plain + key, plain = cipher − key,
+// both mod 26 with A as 0. Groups of five, exact.
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+export function padApply(text: string, key: string, direction: 1 | -1): string {
+  return [...text.toUpperCase()]
+    .map((letter, i) => {
+      const p = alphabet.indexOf(letter);
+      const k = alphabet.indexOf(key[i % key.length].toUpperCase());
+      if (p < 0 || k < 0) return letter;
+      return alphabet[(((p + direction * k) % 26) + 26) % 26];
+    })
+    .join("");
+}
+
+const padWords = [
+  "RIVER",
+  "NORTH",
+  "READY",
+  "MOVED",
+  "CLEAR",
+  "WATER",
+  "RELAY",
+  "TOWER",
+] as const;
+
+export function padProblem(random: Random, id: string): Problem {
+  const plain = pick(random, padWords);
+  const key = Array.from(
+    { length: 5 },
+    () => alphabet[between(random, 0, 25)],
+  ).join("");
+  const cipher = padApply(plain, key, 1);
+  if (random() < 0.5) {
+    return {
+      id,
+      kind: "pad",
+      prompt: `Encode the group ${plain} with the pad group ${key}, adding letter values with A as 0 and wrapping at Z.`,
+      answer: cipher,
+      tolerance: 0,
+      explanation: `Letter by letter, plain + key mod 26: ${plain} + ${key} = ${cipher}.`,
+    };
+  }
+  return {
+    id,
+    kind: "pad",
+    prompt: `Decode the group ${cipher} with the pad group ${key}, subtracting letter values with A as 0 and wrapping below A.`,
+    answer: plain,
+    tolerance: 0,
+    explanation: `Letter by letter, cipher − key mod 26: ${cipher} − ${key} = ${plain}.`,
+  };
+}
+
 // Subnetting, both directions, checked exactly.
 const toInt = (octets: number[]): number =>
   ((octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3]) >>> 0;
@@ -312,13 +563,18 @@ const generators: Record<DrillKind, (random: Random, id: string) => Problem> = {
   db: dbProblem,
   wavelength: wavelengthProblem,
   dipole: dipoleProblem,
+  ocf: ocfProblem,
   ohm: ohmProblem,
+  power: powerProblem,
+  azimuth: azimuthProblem,
+  zulu: zuluProblem,
+  pad: padProblem,
   subnet: subnetProblem,
 };
 
 /**
  * A session of `count` problems, kinds dealt round-robin then shuffled, so
- * twenty problems are four of each and never five subnets in a row.
+ * twenty problems are two of each and never three subnets in a row.
  */
 export function makeSession(seed: number, count = 20): Session {
   const random = seededRandom(seed);
@@ -353,7 +609,12 @@ export function isCorrect(problem: Problem, input: string): boolean {
   if (!given) return false;
   if (problem.tolerance === 0) {
     const want = problem.answer.toLowerCase();
-    return given === want || (want.startsWith("/") && `/${given}` === want);
+    const bare = given.replace(/[z°\s]+$/g, "");
+    return (
+      given === want ||
+      bare === want ||
+      (want.startsWith("/") && `/${given}` === want)
+    );
   }
   const number = Number.parseFloat(given.replace(/[^0-9.+-]/g, ""));
   if (!Number.isFinite(number)) return false;

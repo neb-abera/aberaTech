@@ -6,12 +6,18 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  azimuthProblem,
   dbProblem,
   dipoleProblem,
+  feetAndInches,
   isCorrect,
   kinds,
   makeSession,
+  ocfProblem,
   ohmProblem,
+  padApply,
+  padProblem,
+  powerProblem,
   prefixForHosts,
   score,
   seededRandom,
@@ -19,6 +25,7 @@ import {
   subnetOf,
   subnetProblem,
   wavelengthProblem,
+  zuluProblem,
 } from "../drills";
 
 /** Within one percent: prompts show rounded values, answers are exact. */
@@ -143,6 +150,118 @@ describe("generators", () => {
   });
 });
 
+describe("the new generators", () => {
+  const seeds = Array.from({ length: 60 }, (_, i) => i + 1);
+
+  it("writes feet and inches the way a tape reads", () => {
+    expect(feetAndInches(16.38)).toBe("16 ft 5 in");
+    expect(feetAndInches(58.5)).toBe("58 ft 6 in");
+    expect(feetAndInches(9.99)).toBe("10 ft 0 in");
+  });
+
+  it.each(seeds)(
+    "off-centre feed problems use 0.14 × 468 / f (seed %i)",
+    (seed) => {
+      const problem = ocfProblem(seededRandom(seed), "p");
+      const value = Number(problem.answer);
+      if (problem.unit === "ft") {
+        const f = Number(problem.prompt.match(/for ([\d.]+) MHz/)?.[1]);
+        within1pct(value, (0.14 * 468) / f);
+      } else {
+        const tenths = Number(problem.prompt.match(/^([\d.]+) of a foot/)?.[1]);
+        within1pct(value, tenths * 12);
+      }
+    },
+  );
+
+  it.each(seeds)("power problems add up (seed %i)", (seed) => {
+    const problem = powerProblem(seededRandom(seed), "p");
+    const value = Number(problem.answer);
+    if (problem.unit === "W") {
+      const amps = [...problem.prompt.matchAll(/at ([\d.]+) A/g)].reduce(
+        (sum, m) => sum + Number(m[1]),
+        0,
+      );
+      within1pct(value, amps * 12);
+    } else if (problem.unit === "Ah") {
+      const [, amps, hours] =
+        problem.prompt.match(/([\d.]+) A for (\d+) hours/) ?? [];
+      within1pct(value, Number(amps) * Number(hours));
+    } else {
+      const [, capacity, amps] =
+        problem.prompt.match(/A (\d+) Ah battery feeds a steady ([\d.]+) A/) ??
+        [];
+      within1pct(value, Number(capacity) / Number(amps));
+    }
+  });
+
+  it.each(seeds)("azimuth problems stay on the compass (seed %i)", (seed) => {
+    const problem = azimuthProblem(seededRandom(seed), "p");
+    const azimuth = Number(problem.prompt.match(/(\d+)°/)?.[1]);
+    const value = Number(problem.answer);
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThan(360);
+    if (problem.prompt.includes("back azimuth")) {
+      expect(value).toBe((azimuth + 180) % 360);
+    } else {
+      expect([(azimuth + 90) % 360, (azimuth + 270) % 360]).toContain(value);
+      expect(value).toBe(Math.min((azimuth + 90) % 360, (azimuth + 270) % 360));
+    }
+  });
+
+  it.each(seeds)("zulu problems convert both ways (seed %i)", (seed) => {
+    const problem = zuluProblem(seededRandom(seed), "p");
+    expect(problem.answer).toMatch(/^([01]\d|2[0-3])[0-5]\d$/);
+    const offset = Number(problem.prompt.match(/UTC(-\d+)/)?.[1]);
+    const shown = problem.prompt.match(/(\d{4})(Z| )/)?.[1] ?? "";
+    const minutes = (t: string) =>
+      Number(t.slice(0, 2)) * 60 + Number(t.slice(2));
+    const wrap = (m: number) => ((m % 1440) + 1440) % 1440;
+    const expected = problem.prompt.includes("What is that in Zulu")
+      ? wrap(minutes(shown) - offset * 60)
+      : wrap(minutes(shown) + offset * 60);
+    expect(minutes(problem.answer)).toBe(expected);
+  });
+
+  it("applies a pad and takes it off again", () => {
+    expect(padApply("HELLO", "XMCKL", 1)).toBe("EQNVZ");
+    expect(padApply("EQNVZ", "XMCKL", -1)).toBe("HELLO");
+  });
+
+  it.each(seeds)("pad problems round-trip (seed %i)", (seed) => {
+    const problem = padProblem(seededRandom(seed), "p");
+    const [, group, key] =
+      problem.prompt.match(/group ([A-Z]{5}) with the pad group ([A-Z]{5})/) ??
+      [];
+    if (problem.prompt.startsWith("Encode")) {
+      expect(problem.answer).toBe(padApply(group, key, 1));
+    } else {
+      expect(padApply(problem.answer, key, 1)).toBe(group);
+    }
+  });
+
+  it("accepts a Zulu answer with or without the Z, and degrees with the sign", () => {
+    const zulu = {
+      id: "p",
+      kind: "zulu" as const,
+      prompt: "",
+      answer: "1930",
+      tolerance: 0,
+      explanation: "",
+    };
+    expect(isCorrect(zulu, "1930")).toBe(true);
+    expect(isCorrect(zulu, "1930Z")).toBe(true);
+    expect(isCorrect(zulu, "1930 z")).toBe(true);
+    expect(isCorrect(zulu, "0730")).toBe(false);
+    const az = { ...zulu, kind: "azimuth" as const, answer: "270" };
+    expect(isCorrect(az, "270°")).toBe(true);
+    expect(isCorrect(az, "90")).toBe(false);
+    const pad = { ...zulu, kind: "pad" as const, answer: "RIVER" };
+    expect(isCorrect(pad, "river")).toBe(true);
+    expect(isCorrect(pad, "rivet")).toBe(false);
+  });
+});
+
 describe("makeSession", () => {
   it("deals the kinds evenly and reproduces from its seed", () => {
     const a = makeSession(7, 20);
@@ -151,7 +270,7 @@ describe("makeSession", () => {
       b.problems.map((p) => p.prompt),
     );
     for (const kind of kinds) {
-      expect(a.problems.filter((p) => p.kind === kind)).toHaveLength(4);
+      expect(a.problems.filter((p) => p.kind === kind)).toHaveLength(2);
     }
     expect(new Set(a.problems.map((p) => p.id)).size).toBe(20);
   });

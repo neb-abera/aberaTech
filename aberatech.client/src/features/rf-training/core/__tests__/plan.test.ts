@@ -73,6 +73,22 @@ describe("the plan", () => {
     }
   });
 
+  it("holds the antenna block to a measured standard", () => {
+    const wire = plan.find((block) => block.id === "wire");
+    expect(wire?.gate).toContain("three inches");
+    expect(wire?.gate).toContain("thirty minutes");
+    expect(wire?.gate).toContain("azimuth");
+    const ids = wire?.tasks.map((task) => task.id) ?? [];
+    for (const id of [
+      "wire-ocf",
+      "wire-longwire",
+      "wire-terminated",
+      "wire-multimeter",
+    ]) {
+      expect(ids).toContain(id);
+    }
+  });
+
   it("has a weekly cadence and a gear list with a cost on every line", () => {
     expect(cadence.length).toBeGreaterThan(3);
     expect(gear.length).toBeGreaterThan(5);
@@ -103,6 +119,20 @@ describe("the subject", () => {
     "Fort Liberty",
     "Camp Mackall",
     "selection",
+    "STP",
+    "Soldier's Manual",
+    "Trainer's Guide",
+    "OPORD",
+    "operations order",
+    "SOI",
+    "signal operating instructions",
+    "signal annex",
+    "SFOD",
+    "ANCOC",
+    "clandestine",
+    "sterilize",
+    "331-201",
+    "113-596",
   ];
 
   it.each(offSubject)("never says %s", (word) => {
