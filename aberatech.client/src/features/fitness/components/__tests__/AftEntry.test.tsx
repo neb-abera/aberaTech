@@ -4,6 +4,11 @@
  * Both are numbers the athlete types that no device knows, and both go to
  * the server in the unit the log keeps (kilograms) whatever unit they were
  * typed in.
+ *
+ * Each card is rendered on its own. Mounting the whole data panel to type
+ * into one of its cards paid for the profile card's dozen fields and its
+ * Select on every test — 0.7s a test alone, and past the 15s budget under
+ * coverage with the server build running alongside.
  */
 
 import {
@@ -13,35 +18,14 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import type { SettingsDto } from "../../core/api";
-import DataPanel from "../DataPanel";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import AftEntry from "../AftEntry";
+import LoadField from "../LoadField";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
-
-const settings: SettingsDto = {
-  referenceHr: 152,
-  ltSecondsPerKm: 340,
-  planMinutesPerWeek: 160,
-  startVdot: 37,
-  vdotMeasuredOn: null,
-  currentWeightKg: 78.9,
-  birthYear: 1993,
-  pastPeakDistanceMeters: 3218.688,
-  pastPeakSeconds: 765,
-  pastPeakYear: 2019,
-  homeAltitudeMeters: 1190,
-  pastPeakWeightKg: 80.7,
-  goalWeightKg: 74.8,
-  maxWeightAdjustmentFraction: 0.1,
-  female: null,
-  availableHoursPerWeek: 7,
-  sustainedWeeklyHours: null,
-  selectionDate: null,
-};
 
 function json(body: unknown, ok = true): Response {
   return new Response(JSON.stringify(body), {
@@ -50,7 +34,8 @@ function json(body: unknown, ok = true): Response {
   });
 }
 
-function stubFetch(activities: unknown[]) {
+/** Scores any test it is sent, and accepts anything else with a 204. */
+function stubFetch() {
   const calls: Request[] = [];
   vi.stubGlobal(
     "fetch",
@@ -60,31 +45,6 @@ function stubFetch(activities: unknown[]) {
         init,
       );
       calls.push(request);
-      if (request.url.endsWith("/api/fitness/ingest")) {
-        return Promise.resolve(
-          json({
-            hevy: {
-              configured: false,
-              connected: false,
-              lastRunAt: null,
-              lastSyncedAt: null,
-              lastOutcome: null,
-            },
-            strava: {
-              configured: false,
-              connected: false,
-              lastRunAt: null,
-              lastSyncedAt: null,
-              lastOutcome: null,
-            },
-          }),
-        );
-      }
-      if (request.url.endsWith("/api/fitness/activities")) {
-        return Promise.resolve(
-          json({ activities, total: activities.length, limit: 50 }),
-        );
-      }
       if (request.url.endsWith("/api/fitness/aft")) {
         return Promise.resolve(
           json({
@@ -104,17 +64,24 @@ function stubFetch(activities: unknown[]) {
   return calls;
 }
 
+// Same rehearsal as DataPanel.test: the worker's first MUI mount, first label
+// query and first click each pay a one-time emotion/jsdom cost that under
+// coverage instrumentation blew the first test's budget. The empty save
+// renders the Alert too, so its styles are compiled here as well.
+beforeAll(() => {
+  stubFetch();
+  render(<AftEntry onSaved={() => {}} />);
+  fireEvent.click(screen.getByRole("button", { name: "Save test" }));
+  screen.getByText(/Deadlift is pounds/);
+  cleanup();
+  vi.restoreAllMocks();
+}, 30_000);
+
 describe("AftEntry", () => {
   it("posts the five results in the log's units and reports the score", async () => {
-    const calls = stubFetch([]);
-    const onDataChanged = vi.fn();
-    render(
-      <DataPanel
-        hevyApi={false}
-        settings={settings}
-        onDataChanged={onDataChanged}
-      />,
-    );
+    const calls = stubFetch();
+    const onSaved = vi.fn();
+    render(<AftEntry onSaved={onSaved} />);
 
     fireEvent.change(screen.getByLabelText("Deadlift 3RM (lb)"), {
       target: { value: "300" },
@@ -133,9 +100,9 @@ describe("AftEntry", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Save test" }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/Scored 402 on the 32-36 band/)).toBeTruthy(),
-    );
+    expect(
+      await screen.findByText(/Scored 402 on the 32-36 band/),
+    ).toBeTruthy();
 
     const post = calls.find((c) => c.url.endsWith("/api/fitness/aft"));
     if (!post) throw new Error("no POST to /api/fitness/aft");
@@ -146,18 +113,12 @@ describe("AftEntry", () => {
     expect(body.sprintDragCarrySeconds).toBe(120);
     expect(body.plankSeconds).toBe(180);
     expect(body.twoMileSeconds).toBe(930);
-    expect(onDataChanged).toHaveBeenCalled();
+    expect(onSaved).toHaveBeenCalled();
   });
 
-  it("refuses a test whose times are not times", async () => {
-    stubFetch([]);
-    render(
-      <DataPanel
-        hevyApi={false}
-        settings={settings}
-        onDataChanged={() => {}}
-      />,
-    );
+  it("refuses a test whose times are not times", () => {
+    const calls = stubFetch();
+    render(<AftEntry onSaved={() => {}} />);
 
     fireEvent.change(screen.getByLabelText("Deadlift 3RM (lb)"), {
       target: { value: "300" },
@@ -170,9 +131,9 @@ describe("AftEntry", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Save test" }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/are times like 2:10/)).toBeTruthy(),
-    );
+    // Refused on the page, before anything is sent.
+    expect(screen.getByText(/are times like 2:10/)).toBeTruthy();
+    expect(calls).toHaveLength(0);
   });
 });
 
@@ -190,48 +151,33 @@ describe("LoadField", () => {
   };
 
   it("sends a load typed in pounds as kilograms", async () => {
-    const calls = stubFetch([ruck]);
-    const onDataChanged = vi.fn();
-    render(
-      <DataPanel
-        hevyApi={false}
-        settings={settings}
-        onDataChanged={onDataChanged}
-      />,
-    );
+    const calls = stubFetch();
+    const onSaved = vi.fn();
+    const onError = vi.fn();
+    render(<LoadField activity={ruck} onSaved={onSaved} onError={onError} />);
 
-    const field = await screen.findByLabelText(
-      "Load for Morning Ruck of 2026-08-02",
-    );
+    const field = screen.getByLabelText("Load for Morning Ruck of 2026-08-02");
     fireEvent.change(field, { target: { value: "45" } });
     fireEvent.blur(field);
 
-    await waitFor(() =>
-      expect(
-        calls.some((c) => c.url.endsWith("/api/fitness/activities/r1/load")),
-      ).toBe(true),
-    );
+    // onSaved fires once the server has answered, so by then the request is
+    // fully on record; waiting on the call itself was a race with it.
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
     const put = calls.find((c) => c.url.endsWith("/activities/r1/load"));
     if (!put) throw new Error("no PUT to /activities/r1/load");
     expect(put.method).toBe("PUT");
     const body = JSON.parse(await put.text()) as { loadKg: number };
     expect(body.loadKg).toBeCloseTo(20.41, 1);
-    expect(onDataChanged).toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
   });
 
-  it("switches the unit and converts what was typed", async () => {
-    stubFetch([ruck]);
-    render(
-      <DataPanel
-        hevyApi={false}
-        settings={settings}
-        onDataChanged={() => {}}
-      />,
-    );
+  it("switches the unit and converts what was typed", () => {
+    stubFetch();
+    render(<LoadField activity={ruck} onSaved={() => {}} onError={() => {}} />);
 
-    const field = (await screen.findByLabelText(
+    const field = screen.getByLabelText(
       "Load for Morning Ruck of 2026-08-02",
-    )) as HTMLInputElement;
+    ) as HTMLInputElement;
     fireEvent.change(field, { target: { value: "44" } });
     fireEvent.click(screen.getByRole("button", { name: "Switch load unit" }));
 
