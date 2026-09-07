@@ -64,8 +64,9 @@ export default function DecisionPanel({
   const [compliance, setCompliance] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
 
-  // The first fetch lets the server pick the week the log shows; every later
-  // one is the slider's, debounced so a drag is one request, not thirty.
+  // The first fetch lets the server pick the week to start from, the hours
+  // the profile says can be trained; every later one is the slider's,
+  // debounced so a drag is one request, not thirty.
   React.useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -117,6 +118,7 @@ export default function DecisionPanel({
           below. Running lines come from the fitted trajectory with its error
           bars; everything else from a straight line through its own dated
           readings. A gate&apos;s chance is the product of its lines&apos;.
+          Every input is listed under the gates, with where it came from.
         </Typography>
 
         <Stack
@@ -127,9 +129,17 @@ export default function DecisionPanel({
           <Box sx={{ flex: 1, minWidth: 220 }}>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
               Running hours a week: {hours === null ? "—" : hours.toFixed(1)} h
-              {outlook !== null &&
-                ` (log shows ${outlook.measuredWeeklyHours.toFixed(1)} h)`}
             </Typography>
+            {outlook !== null && (
+              <Typography
+                variant="caption"
+                component="p"
+                sx={{ color: "text.secondary" }}
+              >
+                Starts from {outlook.hoursBasis}. The log&apos;s last eight
+                weeks average {outlook.measuredWeeklyHours.toFixed(1)} h.
+              </Typography>
+            )}
             <Slider
               aria-label="Running hours a week"
               value={hours ?? 0}
@@ -144,10 +154,11 @@ export default function DecisionPanel({
           <TextField
             select
             size="small"
-            label="Weeks kept"
+            label="Share of each week done"
+            helperText="Multiplies the planned hours before the forecast"
             value={compliance}
             onChange={(e) => setCompliance(Number(e.target.value))}
-            sx={{ minWidth: 140 }}
+            sx={{ minWidth: 200 }}
           >
             <MenuItem value={1}>100%</MenuItem>
             <MenuItem value={0.9}>90%</MenuItem>
@@ -186,9 +197,34 @@ export default function DecisionPanel({
             </Stack>
 
             <Typography
+              variant="subtitle2"
+              component="h3"
+              sx={{ mt: 3, mb: 0.5 }}
+            >
+              What this forecast is computed from
+            </Typography>
+            <Typography
               variant="caption"
               component="ul"
-              sx={{ color: "text.secondary", mt: 2, pl: 2 }}
+              aria-label="Forecast inputs"
+              sx={{ color: "text.secondary", pl: 2 }}
+            >
+              {outlook.inputs.map((input) => (
+                <li key={input}>{input}</li>
+              ))}
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              component="h3"
+              sx={{ mt: 2, mb: 0.5 }}
+            >
+              How the numbers are made
+            </Typography>
+            <Typography
+              variant="caption"
+              component="ul"
+              aria-label="Forecast method"
+              sx={{ color: "text.secondary", pl: 2 }}
             >
               {outlook.assumptions.map((a) => (
                 <li key={a}>{a}</li>
