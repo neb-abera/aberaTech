@@ -312,3 +312,19 @@ public class LockedPrediction
     /// <summary>Anything worth remembering about the day.</summary>
     public string? Note { get; set; }
 }
+
+/// <summary>
+/// One JSON document the owner keeps: training ticks, drill history, a
+/// course plan. Keyed by a name from a short allowlist rather than by user,
+/// because there is one owner and the policy on the route is what decides
+/// who may read or write it.
+/// </summary>
+public class OwnerDocument
+{
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>The document as the page sent it. Opaque to the server beyond being a JSON object.</summary>
+    public string Json { get; set; } = "{}";
+
+    public Instant UpdatedAt { get; set; }
+}
