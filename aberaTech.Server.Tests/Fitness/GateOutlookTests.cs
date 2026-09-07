@@ -35,6 +35,35 @@ public sealed class GateOutlookTests
         new(metric, metric, comparison, target, unit, "test");
 
     [Fact]
+    public void Every_forecast_line_carries_its_own_gates_standard()
+    {
+        // The competitive row and the prep row both have a five-mile line,
+        // at 35:00 and 45:00. Printing the wrong one under the right
+        // probability is how "competitive" came to read as 45:00.
+        var gates = GateOutlook.Evaluate(Context(), null);
+
+        foreach (var gate in gates)
+        {
+            var definition = SelectionReadiness.Gates.Single(g => g.Id == gate.GateId);
+            foreach (var line in gate.Lines)
+            {
+                var requirement = definition.Requirements.Single(r => r.Metric == line.Metric);
+                Assert.Equal(requirement.Target, line.Target);
+                Assert.Equal(requirement.Unit, line.Unit);
+                Assert.Equal(requirement.Comparison, line.Comparison);
+            }
+        }
+
+        var competitive = gates.Single(g => g.GateId == "sfas-competitive");
+        Assert.Equal(35 * 60, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunFiveMile).Target);
+        Assert.Equal(2 * 3600 + 45 * 60, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RuckTwelveMileAt45).Target);
+        Assert.Equal(13 * 60 + 30, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunTwoMile).Target);
+
+        var prep = gates.Single(g => g.GateId == "selection-prep-entry");
+        Assert.Equal(45 * 60, prep.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunFiveMile).Target);
+    }
+
+    [Fact]
     public void A_two_mile_already_inside_the_standard_is_near_certain_and_a_hard_one_is_not()
     {
         var context = Context();

@@ -23,9 +23,15 @@ function json(body: unknown): Response {
 
 const outlook: Outlook = {
   selectionDate: "2028-04-01",
-  weeklyHours: 4.5,
-  measuredWeeklyHours: 4.5,
+  weeklyHours: 7,
+  measuredWeeklyHours: 0.9,
+  plannedWeeklyHours: 7,
+  hoursBasis: "the hours a week the profile says you can train (7.0 h)",
   compliance: 1,
+  inputs: [
+    "Anchor: VDOT 35.4, from the 2026-04-03 time trial in the profile.",
+    "Running hours: 7.0 h a week, the hours a week the profile says you can train (7.0 h). The log's last eight weeks average 0.9 h.",
+  ],
   startVdot: 35.4,
   gates: [
     {
@@ -106,10 +112,48 @@ describe("DecisionPanel", () => {
     expect(screen.getByText("2028-01-22")).toBeTruthy();
     expect(screen.getByText(/Your 2028-04-01 date holds/)).toBeTruthy();
 
-    // The first ask lets the server pick the week the log shows.
+    // The first ask lets the server pick the week to start from.
     const first = String(fetchMock.mock.calls[0][0]);
     expect(first).toContain("/api/fitness/readiness/outlook?");
     expect(first).not.toContain("weeklyHours");
+  });
+
+  it("starts the slider from the profile's week and says so, with the log beside it", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(json(outlook));
+
+    render(<DecisionPanel selectionDate="2028-04-01" />);
+
+    await screen.findByText("SFAS day-one minimums");
+    expect(screen.getByText("Running hours a week: 7.0 h")).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Starts from the hours a week the profile says you can train \(7\.0 h\)\. The log's last eight weeks average 0\.9 h\./,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("slider", { name: "Running hours a week" })
+        .getAttribute("aria-valuenow"),
+    ).toBe("7");
+    expect(
+      screen.getByText("Multiplies the planned hours before the forecast"),
+    ).toBeTruthy();
+  });
+
+  it("lists every input the forecast was computed from, with its source", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(json(outlook));
+
+    render(<DecisionPanel selectionDate="2028-04-01" />);
+
+    await screen.findByText("SFAS day-one minimums");
+    const inputs = screen.getByRole("list", { name: "Forecast inputs" });
+    expect(inputs.textContent).toContain(
+      "Anchor: VDOT 35.4, from the 2026-04-03 time trial",
+    );
+    expect(inputs.textContent).toContain("Running hours: 7.0 h a week");
+    expect(
+      screen.getByRole("list", { name: "Forecast method" }).textContent,
+    ).toContain("product of its lines");
   });
 
   it("says when the named date is earlier than the week supports", async () => {

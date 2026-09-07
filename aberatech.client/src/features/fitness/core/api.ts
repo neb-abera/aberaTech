@@ -911,11 +911,17 @@ export interface Outlook {
   selectionDate: string | null;
   weeklyHours: number;
   measuredWeeklyHours: number;
+  /** The hours a week the profile says can be trained: the slider's start. */
+  plannedWeeklyHours: number;
+  /** Where the week being asked about came from, in words. */
+  hoursBasis: string;
   compliance: number;
   startVdot: number;
   gates: OutlookGate[];
   earliestSelectionDate: string | null;
   bindingGate: string | null;
+  /** Every number the forecast is computed from, with where each came from. */
+  inputs: string[];
   assumptions: string[];
 }
 

@@ -27,6 +27,7 @@ public static class OutlookMethod
 /// <param name="Projected">The central projection at the date, in the line's unit.</param>
 /// <param name="ReadyInMonths">When the chance first reaches <see cref="GateOutlook.ReadyProbability"/>; null when it never does within the horizon.</param>
 /// <param name="HoursToReach">Weekly running hours whose central trajectory clears the line by the date; trajectory lines only.</param>
+/// <param name="Target">The standard this line was asked against: its own gate's, not the first gate that shares the metric.</param>
 public sealed record LineOutlook(
     string Metric,
     string Label,
@@ -35,7 +36,10 @@ public sealed record LineOutlook(
     string Evidence,
     double? Projected,
     double? ReadyInMonths,
-    double? HoursToReach);
+    double? HoursToReach,
+    double Target,
+    string Unit,
+    Comparison Comparison);
 
 /// <summary>One gate, looked at by its due date.</summary>
 /// <param name="Probability">The product of the forecast lines' probabilities, treating them as independent.</param>
@@ -185,9 +189,11 @@ public static class GateOutlook
 
         return passing
             ? new LineOutlook(requirement.Metric, requirement.Label, null, OutlookMethod.Held,
-                $"Clear today, held rather than forecast: {need}.", current!.Value, null, null)
+                $"Clear today, held rather than forecast: {need}.", current!.Value, null, null,
+                requirement.Target, requirement.Unit, requirement.Comparison)
             : new LineOutlook(requirement.Metric, requirement.Label, null, OutlookMethod.None,
-                $"Nothing to project from: {need}.", null, null, null);
+                $"Nothing to project from: {need}.", null, null, null,
+                requirement.Target, requirement.Unit, requirement.Comparison);
     }
 
     /// <summary>The VDOT that clears a running line, or null when the line is not a running one.</summary>
@@ -251,7 +257,8 @@ public static class GateOutlook
             + (hours is { } h ? Text($"; {h:0.0} h/week would put the central projection there on the date") : "; no sustainable week gets the central projection there in time")
             + ".";
 
-        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trajectory, evidence, projected, ready, hours);
+        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trajectory, evidence, projected, ready, hours,
+            requirement.Target, requirement.Unit, requirement.Comparison);
     }
 
     /// <summary>The line's own unit at a projected VDOT, for the reader who does not think in VDOT.</summary>
@@ -286,7 +293,8 @@ public static class GateOutlook
         var evidence = Text(
             $"Straight line through {history.Count} readings from {first:yyyy-MM-dd} to {last:yyyy-MM-dd} projects {SelectionReadiness.Describe(requirement.Unit, trend.Projected)} ± {SelectionReadiness.Describe(requirement.Unit, trend.Sd)} at the date.");
 
-        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trend, evidence, trend.Projected, ready, null);
+        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trend, evidence, trend.Projected, ready, null,
+            requirement.Target, requirement.Unit, requirement.Comparison);
     }
 
     private static double TrendProbability(Requirement requirement, (double Projected, double Sd) trend)
