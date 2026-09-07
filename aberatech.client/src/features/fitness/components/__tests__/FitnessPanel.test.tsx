@@ -213,6 +213,16 @@ describe("FitnessPanel", () => {
         if (path.includes("/api/fitness/summary")) {
           return Promise.resolve(json(emptySummary));
         }
+        if (path.includes("/api/fitness/digest")) {
+          return Promise.resolve(
+            json({
+              date: "2026-09-07",
+              weekStart: "2026-09-07",
+              text: "abera.tech/fitness — week of 2026-09-07",
+              lines: [],
+            }),
+          );
+        }
         return Promise.reject(new Error(`unexpected ${path}`));
       }),
     );

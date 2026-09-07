@@ -23,6 +23,7 @@ import { formatPace, kgToLb } from "../core/format";
 import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
 import DecisionPanel from "./DecisionPanel";
+import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
@@ -256,6 +257,8 @@ function Dashboard({
 
   return (
     <Stack spacing={3}>
+      <DigestCard />
+
       {summary.highlights.length > 0 && (
         <Grid container spacing={2}>
           {summary.highlights.map((highlight) => (
