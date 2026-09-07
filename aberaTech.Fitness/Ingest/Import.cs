@@ -81,6 +81,22 @@ public static class Import
                 summary.DistanceMeters ??= fit.DistanceMeters;
                 summary.AverageHr ??= fit.AverageHr;
                 summary.MaxHr ??= fit.MaxHr;
+                summary.Indoor ??= fit.Indoor;
+                if (summary.Laps.Count == 0 && fit.Laps.Count > 0)
+                {
+                    foreach (var lap in fit.Laps)
+                    {
+                        summary.Laps.Add(new Lap
+                        {
+                            Id = Guid.NewGuid(),
+                            ActivityId = summary.Id,
+                            Index = lap.Index,
+                            DistanceMeters = lap.DistanceMeters,
+                            Seconds = lap.Seconds,
+                            AverageHr = lap.AverageHr
+                        });
+                    }
+                }
                 continue;
             }
 

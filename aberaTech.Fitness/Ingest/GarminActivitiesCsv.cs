@@ -49,6 +49,8 @@ public static class GarminActivitiesCsv
             if (seconds <= 0) continue;
 
             var started = parsedDate.Value.InZoneLeniently(zone).ToInstant();
+            var sport = MapSport(row[type]);
+            var name = title >= 0 && row.Length > title ? row[title] : "";
 
             activities.Add(new Activity
             {
@@ -56,16 +58,26 @@ public static class GarminActivitiesCsv
                 Source = "garmin-csv",
                 ExternalId = $"garmin:{parsedDate.Value:yyyyMMdd'T'HHmmss}",
                 StartedAt = started,
-                Sport = MapSport(row[type]),
-                Name = title >= 0 && row.Length > title ? row[title] : "",
+                Sport = sport,
+                Name = name,
                 DistanceMeters = distance >= 0 ? ParseKilometers(row[distance]) : null,
                 DurationSeconds = seconds,
                 AverageHr = ParseHr(avgHr, row),
-                MaxHr = ParseHr(maxHr, row)
+                MaxHr = ParseHr(maxHr, row),
+                LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null,
+                Indoor = IsIndoor(row[type])
             });
         }
 
         return activities;
+    }
+
+    /// <summary>Garmin names the treadmill in the activity type; anything else outdoors is not.</summary>
+    internal static bool? IsIndoor(string activityType)
+    {
+        var t = activityType.Trim().ToLowerInvariant();
+        if (t.Length == 0) return null;
+        return t.Contains("treadmill") || t.Contains("indoor") || t.Contains("virtual");
     }
 
     internal static string MapSport(string activityType)

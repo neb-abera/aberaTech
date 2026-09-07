@@ -8,6 +8,8 @@ export interface FitnessMe {
   configured: boolean;
   signedIn: boolean;
   hevyApi: boolean;
+  /** Whether this deployment has Strava credentials, so a connect button makes sense. */
+  strava: boolean;
 }
 
 export interface SettingsDto {
@@ -20,6 +22,7 @@ export interface SettingsDto {
   birthYear: number | null;
   female: boolean | null;
   availableHoursPerWeek: number;
+  sustainedWeeklyHours: number | null;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
@@ -28,6 +31,10 @@ export interface SettingsDto {
   /** The clamp the server applies, so the page can offer the range it honours. */
   maxWeightAdjustmentFraction: number;
   homeAltitudeMeters: number;
+  /** The date the readiness gates count back from, if named. */
+  selectionDate: string | null;
+  /** The lactate-threshold heart rate, when a test has set it. */
+  ltHr: number | null;
 }
 
 export interface SettingsUpdate {
@@ -39,6 +46,7 @@ export interface SettingsUpdate {
   birthYear: number | null;
   female: boolean | null;
   availableHoursPerWeek: number;
+  sustainedWeeklyHours: number | null;
   pastPeakDistanceMeters: number | null;
   pastPeakSeconds: number | null;
   pastPeakYear: number | null;
@@ -47,12 +55,38 @@ export interface SettingsUpdate {
   homeAltitudeMeters: number;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
+  selectionDate: string | null;
+  ltHr: number | null;
 }
 
 export interface AerobicPoint {
   month: string;
   medianSecPerKm: number;
   runs: number;
+  /** How many of the month's runs were on a treadmill. */
+  indoorRuns: number;
+}
+
+/** A field test the log turned out to contain: an AeT (MAF / drift) run or a threshold time trial. */
+export interface FieldTest {
+  kind: "aet" | "threshold";
+  activityId: string;
+  date: string;
+  secPerKm: number;
+  averageHr: number;
+  /** Pace-to-heart-rate decoupling between the halves, when laps allowed it. */
+  driftPercent: number | null;
+  indoor: boolean;
+  evidence: string;
+}
+
+/** What the latest tests say the profile's thresholds should read. */
+export interface ThresholdSuggestion {
+  aetHr: number | null;
+  ltHr: number | null;
+  ltSecPerKm: number | null;
+  reason: string;
+  basis: string;
 }
 
 export interface WeekVolume {
@@ -110,6 +144,37 @@ export interface Dose {
   zones: ZoneHours[];
 }
 
+/** One day's training load, in easy-hour equivalents. */
+export interface DailyLoad {
+  date: string;
+  load: number;
+  impact: boolean;
+}
+
+/** How the recent load is being carried: ratio, monotony, streak. */
+export interface Durability {
+  acuteLoad: number;
+  chronicLoad: number;
+  acwr: number | null;
+  monotony: number | null;
+  weeklyStrain: number | null;
+  impactStreakDays: number;
+  restDaysLast7: number;
+  daysOfLog: number;
+  days: DailyLoad[];
+  steps: Step[];
+}
+
+/** The week in one page, as the morning brief sees it. */
+export interface Digest {
+  date: string;
+  weekStart: string;
+  text: string;
+  lines: string[];
+}
+
+export const fetchDigest = () => get<Digest>("/api/fitness/digest");
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
@@ -121,6 +186,10 @@ export interface Summary {
   measuredDoseSteps: Step[];
   deficiencySpread: number | null;
   activityCount: number;
+  readiness: Readiness;
+  fieldTests: FieldTest[];
+  thresholdSuggestion: ThresholdSuggestion | null;
+  durability: Durability;
 }
 
 /** A projected fitness with the interval around it. */
@@ -261,6 +330,8 @@ export interface ActivityRow {
   distanceMeters: number | null;
   durationSeconds: number;
   averageHr: number | null;
+  /** The dry load on a ruck, in kilograms; null when nothing recorded it. */
+  loadKg: number | null;
 }
 
 /**
@@ -419,12 +490,43 @@ export async function uploadFile(file: File): Promise<ImportOutcome> {
   return (await response.json()) as ImportOutcome;
 }
 
-export async function syncHevy(): Promise<{ fetched: number; added: number }> {
-  const response = await fetch("/api/fitness/sync/hevy", { method: "POST" });
+/** Where one automatic source stands. */
+export interface SourceStatus {
+  configured: boolean;
+  connected: boolean;
+  lastRunAt: string | null;
+  lastSyncedAt: string | null;
+  lastOutcome: string | null;
+}
+
+export interface IngestStatus {
+  hevy: SourceStatus;
+  strava: SourceStatus;
+}
+
+export const fetchIngestStatus = () => get<IngestStatus>("/api/fitness/ingest");
+
+async function runSync(
+  url: string,
+): Promise<{ fetched: number; added: number }> {
+  const response = await fetch(url, { method: "POST" });
   if (!response.ok) {
     throw new ApiError(response.status, await response.text());
   }
   return (await response.json()) as { fetched: number; added: number };
+}
+
+export const syncHevy = () => runSync("/api/fitness/ingest/hevy/sync");
+
+export const syncStrava = () => runSync("/api/fitness/ingest/strava/sync");
+
+export async function disconnectStrava(): Promise<void> {
+  const response = await fetch("/api/fitness/ingest/strava/disconnect", {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
 }
 
 export async function saveSettings(update: SettingsUpdate): Promise<void> {
@@ -595,3 +697,300 @@ export function fetchSurface(
 
 export const fetchMeasurementPlan = (scenario: ScenarioRequest) =>
   post<MeasurePlan>("/api/fitness/measure", scenario);
+
+/** A prediction written down before the fact, and how it turned out. */
+export interface LockedPrediction {
+  id: string;
+  madeOn: string;
+  targetDate: string;
+  distanceMeters: number;
+  predictedSeconds: number;
+  predictedFastSeconds: number;
+  predictedSlowSeconds: number;
+  weeklyHours: number;
+  compliance: number;
+  raceMassKg: number | null;
+  actualSeconds: number | null;
+  note: string | null;
+  status: "pending" | "due" | "scored";
+  /** Positive means the day came out slower than predicted. */
+  errorSeconds: number | null;
+  insideInterval: boolean | null;
+}
+
+export const fetchLockedPredictions = () =>
+  get<LockedPrediction[]>("/api/fitness/predictions/locked");
+
+export async function lockPrediction(body: {
+  targetDate: string;
+  distanceMeters: number;
+  predictedSeconds: number;
+  predictedFastSeconds: number;
+  predictedSlowSeconds: number;
+  weeklyHours: number;
+  compliance: number;
+  raceMassKg: number | null;
+  note: string | null;
+}): Promise<void> {
+  const response = await fetch("/api/fitness/predictions/locked", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(await response.text());
+}
+
+export async function scorePrediction(
+  id: string,
+  actualSeconds: number,
+): Promise<void> {
+  const response = await fetch(
+    `/api/fitness/predictions/locked/${encodeURIComponent(id)}/actual`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actualSeconds }),
+    },
+  );
+  if (!response.ok) throw new Error(await response.text());
+}
+
+export async function deleteLockedPrediction(id: string): Promise<void> {
+  const response = await fetch(
+    `/api/fitness/predictions/locked/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) throw new Error(await response.text());
+}
+
+/** The athlete's standing on one metric, and where the number came from. */
+export interface Standing {
+  metric: string;
+  value: number;
+  basis: "Measured" | "Modeled";
+  evidence: string;
+  on: string | null;
+}
+
+export type GateStatus = "Pass" | "Fail" | "Unknown";
+
+export interface RequirementResult {
+  metric: string;
+  label: string;
+  comparison: "AtLeast" | "AtMost";
+  target: number;
+  unit: string;
+  citationId: string;
+  status: GateStatus;
+  current: Standing | null;
+  gap: string;
+}
+
+/** One published standard on the way to selection, scored and dated. */
+export interface Gate {
+  id: string;
+  name: string;
+  purpose: string;
+  weeksBeforeSelection: number;
+  dueOn: string | null;
+  status: GateStatus;
+  passed: number;
+  known: number;
+  requirements: RequirementResult[];
+  untracked: string[];
+}
+
+export interface RuckPoint {
+  month: string;
+  medianSecPerKm: number;
+  rucks: number;
+}
+
+export interface RuckMarch {
+  date: string;
+  distanceMeters: number;
+  seconds: number;
+  loadKg: number;
+  averageHr: number | null;
+  impliedVdot: number | null;
+}
+
+export interface RuckReport {
+  referenceLoadKg: number;
+  ruckEfficiency: number;
+  trend: RuckPoint[];
+  marches: RuckMarch[];
+  predictedTwelveMileAt45Seconds: number | null;
+  predictedTwelveMileAt35Seconds: number | null;
+  rucksWithoutLoad: number;
+  steps: Step[];
+}
+
+export interface BestSet {
+  date: string;
+  metric: string;
+  value: number;
+}
+
+export interface CalisthenicsReport {
+  latest: BestSet[];
+  history: BestSet[];
+}
+
+export interface BodyPoint {
+  date: string;
+  weightKg: number;
+  bodyFatPercent: number | null;
+  leanMassKg: number | null;
+}
+
+export interface BodyReport {
+  points: BodyPoint[];
+  latestBodyFatPercent: number | null;
+  latestLeanMassKg: number | null;
+  cohortRateByBodyFat: number | null;
+  cohortRateByLeanMass: number | null;
+}
+
+export interface AftEvent {
+  event: string;
+  name: string;
+  raw: number;
+  points: number;
+}
+
+export interface AftResult {
+  id: string;
+  date: string;
+  deadliftKg: number;
+  handReleasePushUps: number;
+  sprintDragCarrySeconds: number;
+  plankSeconds: number;
+  twoMileSeconds: number;
+  total: number;
+  lowestEvent: number;
+  meetsCombatStandard: boolean;
+  ageBand: string;
+  ageAssumed: boolean;
+  events: AftEvent[];
+  steps: Step[];
+}
+
+/** Everything between the athlete and a selection slot, as the log sees it. */
+/** One gate line, looked at by its due date. */
+export interface OutlookLine {
+  metric: string;
+  label: string;
+  probability: number | null;
+  method: "trajectory" | "trend" | "held" | "none";
+  evidence: string;
+  projected: number | null;
+  readyInMonths: number | null;
+  hoursToReach: number | null;
+  unit: string;
+  comparison: "AtLeast" | "AtMost";
+  target: number;
+}
+
+/** One gate, looked at by its due date. */
+export interface OutlookGate {
+  id: string;
+  name: string;
+  weeksBeforeSelection: number;
+  dueOn: string | null;
+  monthsAway: number;
+  probability: number | null;
+  forecast: number;
+  total: number;
+  readyInMonths: number | null;
+  lines: OutlookLine[];
+}
+
+/** The gates as a forecast, under one training week. */
+export interface Outlook {
+  selectionDate: string | null;
+  weeklyHours: number;
+  measuredWeeklyHours: number;
+  /** The hours a week the profile says can be trained: the slider's start. */
+  plannedWeeklyHours: number;
+  /** Where the week being asked about came from, in words. */
+  hoursBasis: string;
+  compliance: number;
+  startVdot: number;
+  gates: OutlookGate[];
+  earliestSelectionDate: string | null;
+  bindingGate: string | null;
+  /** Every number the forecast is computed from, with where each came from. */
+  inputs: string[];
+  assumptions: string[];
+}
+
+export function fetchOutlook(
+  weeklyHours: number | null,
+  compliance: number,
+): Promise<Outlook> {
+  const query = new URLSearchParams({ compliance: String(compliance) });
+  if (weeklyHours !== null) query.set("weeklyHours", String(weeklyHours));
+  return get<Outlook>(`/api/fitness/readiness/outlook?${query.toString()}`);
+}
+
+export interface Readiness {
+  selectionDate: string | null;
+  gates: Gate[];
+  ruck: RuckReport;
+  calisthenics: CalisthenicsReport;
+  body: BodyReport;
+  aftResults: AftResult[];
+}
+
+export interface AftResultUpdate {
+  date: string;
+  deadliftKg: number;
+  handReleasePushUps: number;
+  sprintDragCarrySeconds: number;
+  plankSeconds: number;
+  twoMileSeconds: number;
+}
+
+async function send(
+  url: string,
+  method: string,
+  body: unknown,
+): Promise<Response> {
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+  return response;
+}
+
+/** Record a fitness test; the answer is the test scored on the published tables. */
+export async function saveAftResult(
+  update: AftResultUpdate,
+): Promise<AftResult> {
+  const response = await send("/api/fitness/aft", "POST", update);
+  return (await response.json()) as AftResult;
+}
+
+export async function deleteAftResult(id: string): Promise<void> {
+  const response = await fetch(`/api/fitness/aft/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+}
+
+/** The load a ruck was carried at, in kilograms; null clears it. */
+export async function saveActivityLoad(
+  id: string,
+  loadKg: number | null,
+): Promise<void> {
+  await send(`/api/fitness/activities/${encodeURIComponent(id)}/load`, "PUT", {
+    loadKg,
+  });
+}
