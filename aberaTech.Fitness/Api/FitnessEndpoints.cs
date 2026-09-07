@@ -106,6 +106,22 @@ public static class FitnessEndpoints
         api.MapPredictionLedger();
         api.MapIngestEndpoints(strava, options.HasHevyApi);
 
+        // The gates as a forecast: the chance of clearing each line by the
+        // date it is due, under a named training week.
+        api.MapGet("/readiness/outlook", async (
+            FitnessDbContext database,
+            double? weeklyHours,
+            double? compliance,
+            CancellationToken cancellationToken) =>
+        {
+            if (weeklyHours is < 0 or > 40) return Fail("weeklyHours 0-40.");
+            if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
+
+            var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+            return Results.Ok(await OutlookReports.BuildAsync(
+                database, weeklyHours, compliance ?? 1.0, today, cancellationToken));
+        });
+
         api.MapGet("/predictions", async (
             FitnessDbContext database,
             HttpRequest request,

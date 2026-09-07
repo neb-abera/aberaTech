@@ -360,7 +360,7 @@ public static class FitnessReports
     /// What this athlete's week is allowed to be: their own recovery budget and
     /// the intensity their base can carry, rather than an elite athlete's.
     /// </summary>
-    private static DoseLimits LimitsFor(AthleteSnapshot athlete, double responsiveness = 1.0) =>
+    internal static DoseLimits LimitsFor(AthleteSnapshot athlete, double responsiveness = 1.0) =>
         new(
             athlete.Row.SustainedWeeklyHours is { } sustained
                 ? DoseResponse.StrainFor(sustained)
