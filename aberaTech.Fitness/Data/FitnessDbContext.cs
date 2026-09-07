@@ -14,6 +14,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<Lap> Laps => Set<Lap>();
     public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
     public DbSet<SyncState> SyncStates => Set<SyncState>();
+    public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,5 +67,9 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<AftResult>()
             .HasIndex(r => r.Date)
             .IsUnique();
+
+        modelBuilder.Entity<OwnerDocument>().HasKey(d => d.Key);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Key).HasMaxLength(64);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Json).HasColumnType("jsonb");
     }
 }
