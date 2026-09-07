@@ -77,10 +77,12 @@ public static class FitnessReports
 
         var (measured, sessions, lapSplit) = await MeasuredDoseAsync(database, row, cancellationToken);
         var (tests, suggestion) = await FieldTestsAsync(database, row, today, cancellationToken);
+        var durability = await DurabilityAsync(database, row, today, cancellationToken);
 
         // The anchor's age belongs with the findings it quietly distorts.
         var findings = highlights.ToList();
         if (Highlights.Anchor(row.VdotMeasuredOn, today) is { } anchor) findings.Insert(0, anchor);
+        findings.AddRange(Durability.Highlights(durability));
 
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
@@ -101,7 +103,18 @@ public static class FitnessReports
             suggestion is null
                 ? null
                 : new ThresholdSuggestionDto(
-                    suggestion.AetHr, suggestion.LtHr, suggestion.LtSecPerKm, suggestion.Reason, suggestion.Basis));
+                    suggestion.AetHr, suggestion.LtHr, suggestion.LtSecPerKm, suggestion.Reason, suggestion.Basis),
+            new DurabilityDto(
+                durability.AcuteLoad,
+                durability.ChronicLoad,
+                durability.Acwr,
+                durability.Monotony,
+                durability.WeeklyStrain,
+                durability.ImpactStreakDays,
+                durability.RestDaysLast7,
+                durability.DaysOfLog,
+                durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
+                Steps(durability.Steps)));
     }
 
     public static async Task<PredictionDto> PredictionsAsync(
@@ -673,6 +686,34 @@ public static class FitnessReports
                 a.AverageHr!.Value,
                 a.Indoor == true))
             .ToArray();
+    }
+
+    /// <summary>The recent load, day by day, through the same zone split the dose uses.</summary>
+    private static async Task<DurabilityReport> DurabilityAsync(
+        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
+    {
+        var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var first = await database.Activities.OrderBy(a => a.StartedAt).Select(a => (Instant?)a.StartedAt).FirstOrDefaultAsync(cancellationToken);
+
+        var since = today.PlusDays(-(Durability.ChronicDays + Durability.StreakLimit + 30)).AtStartOfDayInZone(zone).ToInstant();
+        var recent = await database.Activities
+            .Include(a => a.Laps)
+            .Where(a => a.StartedAt >= since)
+            .ToListAsync(cancellationToken);
+
+        var bands = Bands(row);
+        var sessions = recent
+            .Select(a => new LoadedSession(a.StartedAt.InZone(zone).Date, a.Sport, SessionMix.Split(Session(a), row.StartVdot, bands)))
+            .ToList();
+
+        // The log may be older than the window; the ratio's waiting period is
+        // about the log's age, not the window's.
+        if (first is { } earliest && earliest.InZone(zone).Date < (sessions.Count > 0 ? sessions.Min(s => s.Date) : today))
+        {
+            sessions.Add(new LoadedSession(earliest.InZone(zone).Date, "other", new TrainingDose()));
+        }
+
+        return Durability.Build(sessions, today);
     }
 
     /// <summary>An activity as the classifier sees it, laps and all.</summary>
