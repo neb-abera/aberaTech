@@ -28,6 +28,11 @@ takes down the copy you are standing in. `make ports` says where yours is.
 `clientlint`, `servertest`), so if it is green on your machine, CI will
 agree — both run the same containers.
 
+The server tests are build-and-run gates, never timing gates: a shared machine
+makes wall-clock numbers noise. The tests that time a fit print what they
+measured and assert a budget only when `ABERA_ENFORCE_TIMING` is set, so
+profile on a quiet machine with `ABERA_ENFORCE_TIMING=1 make servertest`.
+
 ## Making a change
 
 * Write tests first, from the entry point a user actually hits (an HTTP
