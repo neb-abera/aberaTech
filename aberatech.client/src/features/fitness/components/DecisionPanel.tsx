@@ -63,11 +63,18 @@ export default function DecisionPanel({
   const [hours, setHours] = React.useState<number | null>(null);
   const [compliance, setCompliance] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
+  // Set when the slider is seeded from the first answer, so that seeding is
+  // not mistaken for a slider move and asked of the server again as one.
+  const seeded = React.useRef(false);
 
   // The first fetch lets the server pick the week to start from, the hours
   // the profile says can be trained; every later one is the slider's,
   // debounced so a drag is one request, not thirty.
   React.useEffect(() => {
+    if (seeded.current) {
+      seeded.current = false;
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     const handle = window.setTimeout(
@@ -77,7 +84,10 @@ export default function DecisionPanel({
             if (cancelled) return;
             setOutlook(result);
             setError(null);
-            if (hours === null) setHours(result.weeklyHours);
+            if (hours === null) {
+              seeded.current = true;
+              setHours(result.weeklyHours);
+            }
           })
           .catch((e: Error) => {
             if (!cancelled) setError(e.message);
