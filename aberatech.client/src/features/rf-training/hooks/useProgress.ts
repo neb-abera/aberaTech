@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { readJson, writeJson } from "../core/storage";
 
 /**
  * Which tasks the visitor has ticked, kept in this browser.
@@ -9,32 +10,14 @@ import { useCallback, useEffect, useState } from "react";
  * two would be a hydration mismatch on every visit with any progress saved.
  * So the first render is always "nothing ticked", and the stored set arrives
  * one effect later.
- *
- * Every read and write is guarded: storage can be absent, full, or throw in
- * a private window, and none of those should cost the visitor the page.
  */
 
 export const storageKey = "rf-training-progress";
 
-function read(): Set<string> {
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return new Set();
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((id): id is string => typeof id === "string"));
-  } catch {
-    return new Set();
-  }
-}
-
-function write(done: Set<string>): void {
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify([...done]));
-  } catch {
-    // Storage full or unavailable: the tick still shows for this visit.
-  }
-}
+const asIds = (value: unknown): string[] | null =>
+  Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string")
+    : null;
 
 export function useProgress(): {
   done: Set<string>;
@@ -44,7 +27,7 @@ export function useProgress(): {
   const [done, setDone] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
-    setDone(read());
+    setDone(new Set(readJson(storageKey, asIds) ?? []));
   }, []);
 
   const toggle = useCallback((id: string) => {
@@ -52,15 +35,14 @@ export function useProgress(): {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      write(next);
+      writeJson(storageKey, [...next]);
       return next;
     });
   }, []);
 
   const reset = useCallback(() => {
-    const empty = new Set<string>();
-    write(empty);
-    setDone(empty);
+    writeJson(storageKey, []);
+    setDone(new Set());
   }, []);
 
   return { done, toggle, reset };
