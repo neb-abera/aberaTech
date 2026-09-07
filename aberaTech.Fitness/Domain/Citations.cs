@@ -256,6 +256,14 @@ public static class Citations
         2010,
         "https://philmaffetone.com/maf-test/");
 
+    public static readonly Citation FosterMonotony = new(
+        "foster-monotony",
+        "Training monotony (mean daily load over its spread) above about 2.0, and the strain it multiplies into, preceded illness and overtraining even at modest volumes.",
+        "Carl Foster, PhD, University of Wisconsin–La Crosse — originator of session-RPE load monitoring and its monotony and strain indices.",
+        "Monitoring training in athletes with reference to overtraining syndrome (Med Sci Sports Exerc 30)",
+        1998,
+        "https://pubmed.ncbi.nlm.nih.gov/9662690/");
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -265,6 +273,6 @@ public static class Citations
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
-        MaffetoneMaf
+        MaffetoneMaf, FosterMonotony
     ];
 }
