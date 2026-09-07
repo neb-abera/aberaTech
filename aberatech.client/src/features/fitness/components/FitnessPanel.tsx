@@ -22,6 +22,7 @@ import {
 import { formatPace, kgToLb } from "../core/format";
 import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
+import DecisionPanel from "./DecisionPanel";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
@@ -210,7 +211,10 @@ export default function FitnessPanel() {
         <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
-        <ReadinessPanel readiness={summary.readiness} />
+        <Stack spacing={3}>
+          <DecisionPanel selectionDate={summary.readiness.selectionDate} />
+          <ReadinessPanel readiness={summary.readiness} />
+        </Stack>
       </Section>
       <Section index={2} tab={tab} visited={visited}>
         <Workbench summary={summary} />
