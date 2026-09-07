@@ -119,11 +119,23 @@ describe("DecisionPanel", () => {
   });
 
   it("starts the slider from the profile's week and says so, with the log beside it", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(json(outlook));
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(json(outlook));
 
     render(<DecisionPanel selectionDate="2028-04-01" />);
 
     await screen.findByText("SFAS day-one minimums");
+    // Seeding the slider from the answer is not a slider move: one request,
+    // and the basis stays the profile's, not "set on the slider".
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole("slider", { name: "Running hours a week" })
+          .getAttribute("aria-valuenow"),
+      ).toBe("7"),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Running hours a week: 7.0 h")).toBeTruthy();
     expect(
       screen.getByText(
