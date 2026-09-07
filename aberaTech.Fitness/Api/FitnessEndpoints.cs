@@ -122,6 +122,13 @@ public static class FitnessEndpoints
                 database, weeklyHours, compliance ?? 1.0, today, cancellationToken));
         });
 
+        // The owner's saved documents, on their own prefix but behind the
+        // same policy and the same Development bypass: the training guide
+        // and the course planner are the owner's, and a visitor gets neither
+        // a read nor a write.
+        var progress = routes.MapGroup("/api/progress");
+        (requireOwnerSignIn ? progress.RequireAuthorization(PolicyName) : progress).MapProgressEndpoints();
+
         api.MapGet("/predictions", async (
             FitnessDbContext database,
             HttpRequest request,
