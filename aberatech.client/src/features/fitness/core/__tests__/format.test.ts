@@ -112,5 +112,6 @@ describe("formatRequirement", () => {
     expect(formatRequirement("lb", 350)).toBe("350 lb (159 kg)");
     expect(formatRequirement("xbw", 1.5)).toBe("1.50× bodyweight");
     expect(formatRequirement("%", 14.5)).toBe("14.5%");
+    expect(formatRequirement("m", 100)).toBe("100 m");
   });
 });

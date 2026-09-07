@@ -216,6 +216,22 @@ public static class Citations
         2024,
         "https://evokeendurance.com/forums/topic/army-special-forces-selection-sfas/");
 
+    public static readonly Citation MtiGrip = new(
+        "mti-grip",
+        "No tactical selection publishes a grip standard; of the grip tests tried on tactical athletes, the loaded farmer's carry is the practical grip-endurance measure, and grip's exact role in tactical performance is still unestablished.",
+        "Rob Shaul's Mountain Tactical Institute, from their own lab study of farmer's carry, towel pull-up and dynamometer tests on tactical athletes.",
+        "Grip strength: does it matter? How to test it. How to train it.",
+        2019,
+        "https://mtntactical.com/research/grip-strength-matter-test-train/");
+
+    public static readonly Citation NebFitnessGoals = new(
+        "neb-fitness-goals",
+        "The athlete's own end-of-2027 standards: a farmer's carry at 1.5× bodyweight for 100 m, 15 pull-ups, 80 push-ups, 62 hand-release push-ups, a 350 lb deadlift triple, 170 lb at 10% body fat, a 500-yard swim in 8:00.",
+        "Neb Abera — the athlete, in the workbook the console is scored against.",
+        "physical fitness goals.xlsx (OneDrive, Documents/physical fitness)",
+        2026,
+        null);
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -224,6 +240,6 @@ public static class Citations
         RonnestadStrength, GabbettWorkload, NonlinearRegression,
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
-        EvokeSfasReady
+        EvokeSfasReady, MtiGrip, NebFitnessGoals
     ];
 }

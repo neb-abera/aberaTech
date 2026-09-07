@@ -56,4 +56,22 @@ public sealed class RuckLoadTests
         Assert.Equal(150, activity.Sets.Single(s => s.Exercise == "Plank").DurationSeconds);
         Assert.Null(activity.Sets.Single(s => s.Exercise == "Pull Up").DurationSeconds);
     }
+
+    [Fact]
+    public void Hevy_csv_keeps_a_carry_distance_in_either_unit()
+    {
+        const string miles =
+            "title,start_time,end_time,description,exercise_title,superset_id,exercise_notes,set_index,set_type,weight_lbs,reps,distance_miles,duration_seconds,rpe\n" +
+            "\"Carries\",\"19 Aug 2026, 20:20\",\"19 Aug 2026, 20:43\",\"\",\"Farmers Walk\",\"\",\"\",0,\"normal\",120,,0.0621371,,\n";
+        const string km =
+            "title,start_time,end_time,description,exercise_title,superset_id,exercise_notes,set_index,set_type,weight_kg,reps,distance_km,duration_seconds,rpe\n" +
+            "\"Carries\",\"19 Aug 2026, 20:20\",\"19 Aug 2026, 20:43\",\"\",\"Farmers Walk\",\"\",\"\",0,\"normal\",55,,0.1,,\n";
+
+        var inMiles = Assert.Single(HevyCsv.Parse(miles, DateTimeZoneProviders.Tzdb["Etc/UTC"])).Sets.Single();
+        var inKm = Assert.Single(HevyCsv.Parse(km, DateTimeZoneProviders.Tzdb["Etc/UTC"])).Sets.Single();
+
+        Assert.Equal(100, inMiles.DistanceMeters!.Value, precision: 1);
+        Assert.Equal(100, inKm.DistanceMeters!.Value, precision: 6);
+        Assert.Equal(55, inKm.WeightKg);
+    }
 }
