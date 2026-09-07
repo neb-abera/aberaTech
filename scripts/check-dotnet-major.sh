@@ -6,9 +6,10 @@
 #   1. <TargetFramework> in every .csproj
 #   2. the dotnet/sdk and dotnet/aspnet base images in
 #      aberaTech.Server/Dockerfile
-#   3. every PackageReference whose version tracks the framework major
-#      (Microsoft.AspNetCore.*, Microsoft.EntityFrameworkCore.*, the Npgsql
-#      EF providers — anything currently versioned <major>.x)
+#   3. every PackageVersion in Directory.Packages.props whose version tracks
+#      the framework major (Microsoft.AspNetCore.*,
+#      Microsoft.EntityFrameworkCore.*, the Npgsql EF providers — anything
+#      currently versioned <major>.x)
 #
 # Dependabot keeps everything current within a major but never crosses one,
 # because the TargetFramework gates it; this script makes the cross-major
@@ -57,25 +58,23 @@ done
 
 replace aberaTech.Server/Dockerfile "s{dotnet/(sdk|aspnet):\Q${current}\E}{dotnet/\${1}:${latest}}g"
 
-# Framework-tracking packages: anything versioned <cur_major>.x moves to the
-# latest stable of the new major. Packages without one yet are left alone
-# and called out in the summary.
+# Framework-tracking packages: anything versioned <cur_major>.x in
+# Directory.Packages.props moves to the latest stable of the new major.
+# Packages without one yet are left alone and called out in the summary.
+versions="Directory.Packages.props"
 pending=""
 bumped=""
-# shellcheck disable=SC2086 # $projects is a newline-separated list; word splitting is the point
 while read -r pkg; do
   lower="$(echo "$pkg" | tr '[:upper:]' '[:lower:]')"
   new_ver="$(curl -fsSL "https://api.nuget.org/v3-flatcontainer/${lower}/index.json" \
     | jq -r --arg m "${new_major}." '.versions | map(select(startswith($m) and (contains("-") | not))) | last // empty')"
   if [ -n "$new_ver" ]; then
-    for p in $projects; do
-      replace "$p" "s|(Include=\"\Q${pkg}\E\" Version=\")\Q${cur_major}\E\.[^\"]+|\${1}${new_ver}|"
-    done
+    replace "$versions" "s|(Include=\"\Q${pkg}\E\" Version=\")\Q${cur_major}\E\.[^\"]+|\${1}${new_ver}|"
     bumped="${bumped}- \`${pkg}\` → ${new_ver}\n"
   else
     pending="${pending}- \`${pkg}\` has no stable ${new_major}.x release yet\n"
   fi
-done < <(cat $projects | sed -n "s/.*PackageReference Include=\"\([^\"]*\)\" Version=\"${cur_major}\..*/\1/p" | sort -u)
+done < <(sed -n "s/.*PackageVersion Include=\"\([^\"]*\)\" Version=\"${cur_major}\..*/\1/p" "$versions" | sort -u)
 
 {
   echo "Moves the repo from **net${current}** to **net${latest}**, the latest GA .NET major."
@@ -84,7 +83,10 @@ done < <(cat $projects | sed -n "s/.*PackageReference Include=\"\([^\"]*\)\" Ver
   echo
   echo "- \`<TargetFramework>\` in every .csproj"
   echo "- \`dotnet/sdk:${latest}\` and \`dotnet/aspnet:${latest}\` in aberaTech.Server/Dockerfile"
+  echo "- these versions in \`Directory.Packages.props\`:"
   printf '%b' "$bumped"
+  echo
+  echo "The lock files must be regenerated on this branch before it can build: \`dotnet restore aberaTech.Server/aberaTech.Server.csproj -p:SkipClientProject=true --force-evaluate\` and the same for aberaTech.Server.Tests, then commit every packages.lock.json that moved."
   if [ -n "$pending" ]; then
     echo
     echo "Left for a human (re-run the workflow once these ship):"

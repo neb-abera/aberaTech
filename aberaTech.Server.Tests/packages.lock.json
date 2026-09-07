@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "dependencies": {
     "net10.0": {
       "coverlet.collector": {
@@ -60,26 +60,6 @@
           "System.Memory.Data": "10.0.9"
         }
       },
-      "Azure.Identity": {
-        "type": "Transitive",
-        "resolved": "1.21.0",
-        "contentHash": "GeFv8sGwRKvDKwI2WFy8r0mhmlxEVZg24Sit2NogTjiSO8RVjllWM65OT6e1sKjOvG8V74y7hAbaELUUPjZQSw==",
-        "dependencies": {
-          "Azure.Core": "1.53.0"
-        }
-      },
-      "Azure.Monitor.OpenTelemetry.AspNetCore": {
-        "type": "Transitive",
-        "resolved": "1.6.0",
-        "contentHash": "9H0JgEl5yVdpOz+GqPBL5Qtfw0k/gAQ9iD8L+W9ucrxwMG/CMwdAg4mWdLWKUvW56iDCQ8PAHVVCxC4Hg5l1AA==",
-        "dependencies": {
-          "Azure.Core": "1.60.0",
-          "Azure.Monitor.OpenTelemetry.Exporter": "1.8.3",
-          "OpenTelemetry.Extensions.Hosting": "1.15.3",
-          "OpenTelemetry.Instrumentation.AspNetCore": "1.15.2",
-          "OpenTelemetry.Instrumentation.Http": "1.15.1"
-        }
-      },
       "Azure.Monitor.OpenTelemetry.Exporter": {
         "type": "Transitive",
         "resolved": "1.8.3",
@@ -89,16 +69,6 @@
           "OpenTelemetry.Extensions.Hosting": "1.15.3",
           "OpenTelemetry.PersistentStorage.FileSystem": "1.0.3"
         }
-      },
-      "Garmin.FIT.Sdk": {
-        "type": "Transitive",
-        "resolved": "21.214.0",
-        "contentHash": "HEjil9Kwrc9fqzcX8a+vAdi/UE4X0jaybfeqHskOnJX0NJ0x71H4beVX0wImfGMLBYaON7FCuWtytyugKA1xzg=="
-      },
-      "Microsoft.AspNetCore.Authentication.Google": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "v/OZld8HxGa5hudLWiChuCf5asMrE36n19sR1RK5cC65SGJoYvQAcwnz3yoAOLDSw90PYc3hgFCh1FW83sakUg=="
       },
       "Microsoft.AspNetCore.Cryptography.Internal": {
         "type": "Transitive",
@@ -124,23 +94,6 @@
         "resolved": "10.0.11",
         "contentHash": "nqpcXNw0g8nlFep5IQKEGRXyXi596uM8WNydR7VikKlokUkAr1cOZh1qstc6AotdfJg1oWUfFS+lY7wlbW3YnA=="
       },
-      "Microsoft.AspNetCore.DataProtection.EntityFrameworkCore": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "hMzgy/JpKNy7vKJBp9iBHiGqGGi+vtPNV8qSamQy3vOO3sPE8RslYkMz6pgCYIkLhLPr29J0lLj7SnA0J5Eoqw==",
-        "dependencies": {
-          "Microsoft.AspNetCore.DataProtection": "10.0.11",
-          "Microsoft.EntityFrameworkCore": "10.0.11"
-        }
-      },
-      "Microsoft.AspNetCore.OpenApi": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "R/1EATnPLU+gRfB6lwVkMcymmyAY5ppBBdRN/5lhNEiT3xP1sWccuSFkU/f1lQvN/WgRq5Vn8AhCdE3fqgsL/w==",
-        "dependencies": {
-          "Microsoft.OpenApi": "[2.7.5, 3.0.0)"
-        }
-      },
       "Microsoft.AspNetCore.TestHost": {
         "type": "Transitive",
         "resolved": "10.0.11",
@@ -156,17 +109,6 @@
         "resolved": "18.9.0",
         "contentHash": "MtegCIKGuG0r/LCdIjoR1HgzCGIUBhR3aNdbtQpts5vMXQuqBDZ2Jsd2uFKoHFM2XrQV6ZrDf3F5oLi3SLTp8w=="
       },
-      "Microsoft.EntityFrameworkCore": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "VOSGU8en6HZJs8t7UMFN+9vGcRgVOOn6fA44Ngcg2NyvJ3P1KE94iAb0XzaVaGhXGtt+qaM/VtEn0/hzluQJeg==",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore.Abstractions": "10.0.11",
-          "Microsoft.EntityFrameworkCore.Analyzers": "10.0.11",
-          "Microsoft.Extensions.Caching.Memory": "10.0.11",
-          "Microsoft.Extensions.Logging": "10.0.11"
-        }
-      },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.11",
@@ -176,17 +118,6 @@
         "type": "Transitive",
         "resolved": "10.0.11",
         "contentHash": "Bv7X4wSSnzCQED9WYXKJ8fwgyvKwf0xZM1GO8xkf6CF9zl+UBnvjxmcPnokJRy0JKjc1SlHSzzhx1HcL4jitTQ=="
-      },
-      "Microsoft.EntityFrameworkCore.Relational": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "grznnTJgEYxaWpdKAsTzg6j+89jHgCXWYp+QGtlX5O92+w/VuhWM6JLPYb+uw8M9VhGUvOTsO76dYOy9vNPd5Q==",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore": "10.0.11",
-          "Microsoft.Extensions.Caching.Memory": "10.0.11",
-          "Microsoft.Extensions.Configuration.Abstractions": "10.0.11",
-          "Microsoft.Extensions.Logging": "10.0.11"
-        }
       },
       "Microsoft.Extensions.Caching.Abstractions": {
         "type": "Transitive",
@@ -397,14 +328,6 @@
           "Microsoft.Extensions.Options": "10.0.11"
         }
       },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.11",
-        "contentHash": "Ljd0Uxoq5XpScD2Bg0nM/r3mwx7Ao5Uq24eo2ARxbGvqJ7Zht6rt2cJtwVRH4Cv+1ZVMdXz6TB43KbpmsxRrvQ==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11"
-        }
-      },
       "Microsoft.Extensions.Logging.Configuration": {
         "type": "Transitive",
         "resolved": "10.0.11",
@@ -530,52 +453,6 @@
         "contentHash": "Oq+Pma/J86aZL72t71bcESvDszDsTjUfl6PIsuDdPoKTHZfNMhKamCfLD5fKx51W/u0KozXtJo2/3fnt0sgPxg==",
         "dependencies": {
           "Microsoft.TestPlatform.ObjectModel": "18.9.0"
-        }
-      },
-      "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
-        "type": "Transitive",
-        "resolved": "1.23.0",
-        "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
-      },
-      "NodaTime": {
-        "type": "Transitive",
-        "resolved": "3.3.3",
-        "contentHash": "EwouHZv99j5hraq34yQqvCQGDR59dynxPHlxFm2vY/sw2N2aR8cFel29ZxPqohjBWp9Qsnld7QCY+7uZ2PESGg=="
-      },
-      "Npgsql": {
-        "type": "Transitive",
-        "resolved": "10.0.3",
-        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w==",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.0"
-        }
-      },
-      "Npgsql.EntityFrameworkCore.PostgreSQL": {
-        "type": "Transitive",
-        "resolved": "10.0.3",
-        "contentHash": "IPGrrZnRkuW7OlHDhUESZz4G5DLkW7Nej/O3Cx+0iTsgyU5XJxBgpsvTHLloo3WWuAKKbDHXBvWPVkX1deRh1Q==",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore": "[10.0.4, 11.0.0)",
-          "Microsoft.EntityFrameworkCore.Relational": "[10.0.4, 11.0.0)",
-          "Npgsql": "10.0.3"
-        }
-      },
-      "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": {
-        "type": "Transitive",
-        "resolved": "10.0.3",
-        "contentHash": "V84fTKMoEBsi5bAKVWrLDWimGqC6Dhn7ioBtoTpsfjpRmTcpv7FqhSqlqREO+6sHFH2sSXEZHEPWJTPsuKhfjA==",
-        "dependencies": {
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
-          "Npgsql.NodaTime": "10.0.3"
-        }
-      },
-      "Npgsql.NodaTime": {
-        "type": "Transitive",
-        "resolved": "10.0.3",
-        "contentHash": "6ba1CM/zAoI7bTuBV7cFhTR3qqUsY5FqqqNoOh7dHoFHcyEEpIsMui3mC3Swyc+oyAJG0Zf8DCiXPnAf+sW09A==",
-        "dependencies": {
-          "NodaTime": "3.2.2",
-          "Npgsql": "10.0.3"
         }
       },
       "OpenTelemetry": {
@@ -737,7 +614,7 @@
         "type": "Project",
         "dependencies": {
           "Azure.Identity": "[1.21.0, )",
-          "Microsoft.Extensions.Logging.Abstractions": "[10.0.3, )",
+          "Microsoft.Extensions.Logging.Abstractions": "[10.0.11, )",
           "Npgsql": "[10.0.3, )",
           "Npgsql.NodaTime": "[10.0.3, )"
         }
@@ -763,6 +640,144 @@
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.23.0, )",
           "aberaTech.Fitness": "[1.0.0, )",
           "aberaTech.Scheduling": "[1.0.0, )"
+        }
+      },
+      "Azure.Identity": {
+        "type": "CentralTransitive",
+        "requested": "[1.21.0, )",
+        "resolved": "1.21.0",
+        "contentHash": "GeFv8sGwRKvDKwI2WFy8r0mhmlxEVZg24Sit2NogTjiSO8RVjllWM65OT6e1sKjOvG8V74y7hAbaELUUPjZQSw==",
+        "dependencies": {
+          "Azure.Core": "1.53.0"
+        }
+      },
+      "Azure.Monitor.OpenTelemetry.AspNetCore": {
+        "type": "CentralTransitive",
+        "requested": "[1.6.0, )",
+        "resolved": "1.6.0",
+        "contentHash": "9H0JgEl5yVdpOz+GqPBL5Qtfw0k/gAQ9iD8L+W9ucrxwMG/CMwdAg4mWdLWKUvW56iDCQ8PAHVVCxC4Hg5l1AA==",
+        "dependencies": {
+          "Azure.Core": "1.60.0",
+          "Azure.Monitor.OpenTelemetry.Exporter": "1.8.3",
+          "OpenTelemetry.Extensions.Hosting": "1.15.3",
+          "OpenTelemetry.Instrumentation.AspNetCore": "1.15.2",
+          "OpenTelemetry.Instrumentation.Http": "1.15.1"
+        }
+      },
+      "Garmin.FIT.Sdk": {
+        "type": "CentralTransitive",
+        "requested": "[21.214.0, )",
+        "resolved": "21.214.0",
+        "contentHash": "HEjil9Kwrc9fqzcX8a+vAdi/UE4X0jaybfeqHskOnJX0NJ0x71H4beVX0wImfGMLBYaON7FCuWtytyugKA1xzg=="
+      },
+      "Microsoft.AspNetCore.Authentication.Google": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "v/OZld8HxGa5hudLWiChuCf5asMrE36n19sR1RK5cC65SGJoYvQAcwnz3yoAOLDSw90PYc3hgFCh1FW83sakUg=="
+      },
+      "Microsoft.AspNetCore.DataProtection.EntityFrameworkCore": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "hMzgy/JpKNy7vKJBp9iBHiGqGGi+vtPNV8qSamQy3vOO3sPE8RslYkMz6pgCYIkLhLPr29J0lLj7SnA0J5Eoqw==",
+        "dependencies": {
+          "Microsoft.AspNetCore.DataProtection": "10.0.11",
+          "Microsoft.EntityFrameworkCore": "10.0.11"
+        }
+      },
+      "Microsoft.AspNetCore.OpenApi": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "R/1EATnPLU+gRfB6lwVkMcymmyAY5ppBBdRN/5lhNEiT3xP1sWccuSFkU/f1lQvN/WgRq5Vn8AhCdE3fqgsL/w==",
+        "dependencies": {
+          "Microsoft.OpenApi": "[2.7.5, 3.0.0)"
+        }
+      },
+      "Microsoft.EntityFrameworkCore": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "VOSGU8en6HZJs8t7UMFN+9vGcRgVOOn6fA44Ngcg2NyvJ3P1KE94iAb0XzaVaGhXGtt+qaM/VtEn0/hzluQJeg==",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore.Abstractions": "10.0.11",
+          "Microsoft.EntityFrameworkCore.Analyzers": "10.0.11",
+          "Microsoft.Extensions.Caching.Memory": "10.0.11",
+          "Microsoft.Extensions.Logging": "10.0.11"
+        }
+      },
+      "Microsoft.EntityFrameworkCore.Relational": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "grznnTJgEYxaWpdKAsTzg6j+89jHgCXWYp+QGtlX5O92+w/VuhWM6JLPYb+uw8M9VhGUvOTsO76dYOy9vNPd5Q==",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "10.0.11",
+          "Microsoft.Extensions.Caching.Memory": "10.0.11",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.11",
+          "Microsoft.Extensions.Logging": "10.0.11"
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "Ljd0Uxoq5XpScD2Bg0nM/r3mwx7Ao5Uq24eo2ARxbGvqJ7Zht6rt2cJtwVRH4Cv+1ZVMdXz6TB43KbpmsxRrvQ==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11"
+        }
+      },
+      "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
+        "type": "CentralTransitive",
+        "requested": "[1.23.0, )",
+        "resolved": "1.23.0",
+        "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
+      },
+      "NodaTime": {
+        "type": "CentralTransitive",
+        "requested": "[3.3.3, )",
+        "resolved": "3.3.3",
+        "contentHash": "EwouHZv99j5hraq34yQqvCQGDR59dynxPHlxFm2vY/sw2N2aR8cFel29ZxPqohjBWp9Qsnld7QCY+7uZ2PESGg=="
+      },
+      "Npgsql": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.0"
+        }
+      },
+      "Npgsql.EntityFrameworkCore.PostgreSQL": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "IPGrrZnRkuW7OlHDhUESZz4G5DLkW7Nej/O3Cx+0iTsgyU5XJxBgpsvTHLloo3WWuAKKbDHXBvWPVkX1deRh1Q==",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "[10.0.4, 11.0.0)",
+          "Microsoft.EntityFrameworkCore.Relational": "[10.0.4, 11.0.0)",
+          "Npgsql": "10.0.3"
+        }
+      },
+      "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "V84fTKMoEBsi5bAKVWrLDWimGqC6Dhn7ioBtoTpsfjpRmTcpv7FqhSqlqREO+6sHFH2sSXEZHEPWJTPsuKhfjA==",
+        "dependencies": {
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
+          "Npgsql.NodaTime": "10.0.3"
+        }
+      },
+      "Npgsql.NodaTime": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "6ba1CM/zAoI7bTuBV7cFhTR3qqUsY5FqqqNoOh7dHoFHcyEEpIsMui3mC3Swyc+oyAJG0Zf8DCiXPnAf+sW09A==",
+        "dependencies": {
+          "NodaTime": "3.2.2",
+          "Npgsql": "10.0.3"
         }
       }
     }

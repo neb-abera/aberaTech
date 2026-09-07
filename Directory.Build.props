@@ -3,8 +3,9 @@
        gets a committed packages.lock.json, and the Dockerfile restores with
        RestoreLockedMode=true so a build fails loudly when a manifest and its
        lock file disagree, rather than quietly resolving something new.
-       Scoped to .csproj so the client's .esproj (npm, not NuGet) is not
-       dragged in. -->
+       Versions themselves live in Directory.Packages.props, one per package
+       for the whole solution. Scoped to .csproj so the client's .esproj
+       (npm, not NuGet) is not dragged in. -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
