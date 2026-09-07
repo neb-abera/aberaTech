@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -19,8 +20,11 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import {
   type FactorName,
+  fetchLockedPredictions,
   fetchMeasurementPlan,
   fetchSurface,
+  type LockedPrediction,
+  lockPrediction,
   type MeasurePlan,
   type ScenarioRequest,
   type SolveResult,
@@ -30,6 +34,7 @@ import {
   solve,
 } from "../core/api";
 import {
+  dateInMonths,
   formatChance,
   formatDistance,
   formatSeconds,
@@ -40,6 +45,7 @@ import {
 import ContourPlot from "./ContourPlot";
 import FanChart from "./FanChart";
 import MathPanel from "./MathPanel";
+import PredictionLedger from "./PredictionLedger";
 import { parseDistance } from "./ProjectionPanel";
 import Tornado from "./Tornado";
 
@@ -148,7 +154,25 @@ export default function Workbench({ summary }: { summary: Summary }) {
   const [across, setAcross] = React.useState<FactorName>("WeeklyHours");
   const [down, setDown] = React.useState<FactorName>("Months");
   const [busy, setBusy] = React.useState(false);
+  // Which scenario the locked prediction was for. Derived rather than reset by
+  // an effect: change any factor and the button honestly offers itself again,
+  // because it would now be writing down a different claim.
+  const [lockedSignature, setLockedSignature] = React.useState<string | null>(
+    null,
+  );
+  const [ledger, setLedger] = React.useState<LockedPrediction[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+
+  const signature = `${JSON.stringify(toRequest(state))}|${unknown}`;
+  const locked = lockedSignature === signature;
+
+  const reloadLedger = React.useCallback(() => {
+    fetchLockedPredictions()
+      .then(setLedger)
+      .catch(() => undefined);
+  }, []);
+
+  React.useEffect(reloadLedger, [reloadLedger]);
 
   const set = <K extends keyof WorkbenchState>(
     key: K,
@@ -527,6 +551,23 @@ export default function Workbench({ summary }: { summary: Summary }) {
             state={state}
             unknown={unknown}
             currentMassLb={currentMassLb}
+            locked={locked}
+            onLock={async () => {
+              await lockPrediction({
+                targetDate: dateInMonths(state.months),
+                distanceMeters: state.distanceMeters,
+                predictedSeconds: result.predicted.median,
+                predictedFastSeconds: result.predicted.low,
+                predictedSlowSeconds: result.predicted.high,
+                weeklyHours: state.weeklyHours,
+                compliance: state.compliance,
+                raceMassKg:
+                  state.raceMassLb === null ? null : lbToKg(state.raceMassLb),
+                note: null,
+              });
+              setLockedSignature(signature);
+              reloadLedger();
+            }}
           />
 
           <Card variant="outlined">
@@ -730,6 +771,8 @@ export default function Workbench({ summary }: { summary: Summary }) {
           )}
 
           <ModelCardView result={result} />
+
+          <PredictionLedger rows={ledger} onChanged={reloadLedger} />
         </>
       )}
     </Stack>
@@ -741,11 +784,15 @@ function Answer({
   state,
   unknown,
   currentMassLb,
+  onLock,
+  locked,
 }: {
   result: SolveResult;
   state: WorkbenchState;
   unknown: FactorName | "RaceTime";
   currentMassLb: number | null;
+  onLock: () => void;
+  locked: boolean;
 }) {
   const predicted = result.predicted;
 
@@ -815,6 +862,23 @@ function Answer({
           {state.months.toFixed(0)} months, and is 80% sure it lands between{" "}
           {formatSeconds(predicted.low)} and {formatSeconds(predicted.high)}.
         </Typography>
+        <Stack direction="row" spacing={1} sx={{ mt: 1, alignItems: "center" }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={onLock}
+            disabled={locked}
+          >
+            {locked
+              ? "Locked — it will ask you on the day"
+              : "Lock this prediction"}
+          </Button>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Writes down what the model says now, with the plan it assumed, so it
+            can be scored rather than argued about.
+          </Typography>
+        </Stack>
+
         <MathPanel steps={result.steps} />
       </CardContent>
     </Card>
