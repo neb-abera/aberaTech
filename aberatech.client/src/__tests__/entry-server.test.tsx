@@ -27,6 +27,17 @@ describe("build-time rendering", () => {
     expect(html).not.toContain("Loading...");
   });
 
+  it("renders the training plan without a browser", async () => {
+    // The plan keeps its ticks in localStorage. Read at render time that
+    // would throw here and mismatch on hydration; read in an effect it is
+    // invisible to the build, and the page comes out with every box empty.
+    const html = await render("/rf-training");
+
+    expect(html).toContain("Tactically Relevant RF Training");
+    expect(html).toContain("Licence and the arithmetic");
+    expect(html).not.toContain("Loading...");
+  });
+
   it("inlines the styles the markup needs", async () => {
     // Emotion's zero-config server rendering emits <style data-emotion> next
     // to the components. Without them the first paint is unstyled HTML, which
