@@ -26,6 +26,9 @@ internal static class Format
             CultureInfo.InvariantCulture,
             $"{Math.Round(fraction * 100, decimals).ToString($"0.{new string('0', decimals)}".TrimEnd('.'), CultureInfo.InvariantCulture)}%");
 
+    /// <summary>Seconds per kilometre as m:ss.</summary>
+    public static string Pace(double secPerKm) => Clock(secPerKm);
+
     /// <summary>Metres as the unit an athlete would say it in.</summary>
     public static string Distance(double meters)
     {

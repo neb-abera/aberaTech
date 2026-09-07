@@ -57,11 +57,14 @@ const emptySummary = {
     availableHoursPerWeek: 7,
     sustainedWeeklyHours: null,
     selectionDate: null,
+    ltHr: null,
   },
   aerobicTrend: [
-    { month: "2026-07", medianSecPerKm: 447, runs: 2 },
-    { month: "2026-08", medianSecPerKm: 410, runs: 11 },
+    { month: "2026-07", medianSecPerKm: 447, runs: 2, indoorRuns: 0 },
+    { month: "2026-08", medianSecPerKm: 410, runs: 11, indoorRuns: 4 },
   ],
+  fieldTests: [],
+  thresholdSuggestion: null,
   weeklyVolume: [{ weekStart: "2026-08-24", minutes: 85 }],
   strengthTrend: [
     { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },

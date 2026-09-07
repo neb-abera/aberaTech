@@ -25,6 +25,7 @@ import DataPanel from "./DataPanel";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
+import ThresholdsCard from "./ThresholdsCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -206,7 +207,7 @@ export default function FitnessPanel() {
       </Tabs>
 
       <Section index={0} tab={tab} visited={visited}>
-        <Dashboard summary={summary} />
+        <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
         <ReadinessPanel readiness={summary.readiness} />
@@ -232,7 +233,13 @@ export default function FitnessPanel() {
   );
 }
 
-function Dashboard({ summary }: { summary: Summary }) {
+function Dashboard({
+  summary,
+  onSettingsChanged,
+}: {
+  summary: Summary;
+  onSettingsChanged: () => void;
+}) {
   if (summary.activityCount === 0) {
     return (
       <Alert severity="info">
@@ -292,6 +299,13 @@ function Dashboard({ summary }: { summary: Summary }) {
           <AerobicTrendChart points={summary.aerobicTrend} />
         </CardContent>
       </Card>
+
+      <ThresholdsCard
+        settings={summary.settings}
+        tests={summary.fieldTests}
+        suggestion={summary.thresholdSuggestion}
+        onSaved={onSettingsChanged}
+      />
 
       {summary.trainingPaces.length > 0 && (
         <Card variant="outlined">
@@ -374,7 +388,11 @@ function Dashboard({ summary }: { summary: Summary }) {
               .medianSecPerKm,
           )}{" "}
           at {summary.settings.referenceHr} bpm across{" "}
-          {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs.
+          {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs
+          {summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns > 0
+            ? ` (${summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns} on a treadmill)`
+            : ""}
+          .
         </Typography>
       )}
     </Stack>
