@@ -17,6 +17,8 @@ using aberaTech.Fitness;
 using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Ingest;
+using aberaTech.Fitness.Strava;
+using aberaTech.Fitness.Sync;
 using aberaTech.Postgres;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -176,6 +178,10 @@ var fitnessOptions = builder.Configuration.GetSection(FitnessOptions.Section).Ge
                      ?? new FitnessOptions();
 builder.Services.AddSingleton(fitnessOptions);
 
+var stravaOptions = builder.Configuration.GetSection(StravaOptions.Section).Get<StravaOptions>()
+                    ?? new StravaOptions();
+builder.Services.AddSingleton(stravaOptions);
+
 var fitnessConnection = builder.Configuration.GetConnectionString("Fitness");
 var fitnessRequiresSignIn = FitnessGate.RequiresOwnerSignIn(
     builder.Environment.IsDevelopment(), fitnessOptions);
@@ -220,7 +226,21 @@ if (fitnessEnabled)
             client.DefaultRequestHeaders.Add("api-key", fitnessOptions.HevyApiKey);
             client.Timeout = TimeSpan.FromSeconds(30);
         });
+        builder.Services.AddScoped<HevySync>();
     }
+
+    // The Strava bridge needs the app's credentials and somewhere to keep the
+    // athlete's token unreadable: the data-protection ring the admin sign-in
+    // already persists. Without either it is never mapped.
+    if (stravaOptions.IsConfigured && adminOptions.IsConfigured)
+    {
+        builder.Services.AddHttpClient<StravaClient>(client =>
+            client.Timeout = TimeSpan.FromSeconds(30));
+        builder.Services.AddScoped<StravaSync>();
+    }
+
+    // Hevy daily, Strava hourly, each only when it is there to sync.
+    builder.Services.AddHostedService<FitnessSyncWorker>();
 }
 
 // Rate limiting on everything a stranger can call that writes a row or causes a
@@ -443,7 +463,10 @@ if (fitnessEnabled)
         await database.Database.MigrateAsync();
     }
 
-    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn);
+    app.MapFitnessEndpoints(
+        fitnessOptions,
+        fitnessRequiresSignIn,
+        adminOptions.IsConfigured ? stravaOptions : new StravaOptions());
 }
 else
 {

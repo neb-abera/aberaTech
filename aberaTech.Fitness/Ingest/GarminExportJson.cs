@@ -102,7 +102,8 @@ public static class GarminExportJson
             DurationSeconds = durationMillis.Value / 1000.0,
             AverageHr = Hr(element, "avgHr"),
             MaxHr = Hr(element, "maxHr"),
-            LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null
+            LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null,
+            Indoor = GarminActivitiesCsv.IsIndoor(Text(element, "activityType"))
         };
     }
 
