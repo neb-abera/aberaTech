@@ -11,6 +11,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<AthleteSettings> Settings => Set<AthleteSettings>();
     public DbSet<LockedPrediction> Predictions => Set<LockedPrediction>();
     public DbSet<AftResult> AftResults => Set<AftResult>();
+    public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,5 +53,9 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<AftResult>()
             .HasIndex(r => r.Date)
             .IsUnique();
+
+        modelBuilder.Entity<OwnerDocument>().HasKey(d => d.Key);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Key).HasMaxLength(64);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Json).HasColumnType("jsonb");
     }
 }
