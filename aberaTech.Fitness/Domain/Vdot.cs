@@ -27,12 +27,21 @@ public static class Vdot
         // Oxygen cost of running at that velocity (Daniels & Gilbert 1979).
         var vo2 = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity;
 
-        // Fraction of VO2max sustainable for a race of that duration.
-        var fraction = 0.8
-                       + 0.1894393 * Math.Exp(-0.012778 * minutes)
-                       + 0.2989558 * Math.Exp(-0.1932605 * minutes);
+        return vo2 / SustainableFraction(minutes);
+    }
 
-        return vo2 / fraction;
+    /// <summary>
+    /// The fraction of VO2max a runner can hold for an effort lasting
+    /// <paramref name="minutes"/> (Daniels &amp; Gilbert 1979): near one for a
+    /// few minutes, settling towards 80% as the hours go by.
+    /// </summary>
+    public static double SustainableFraction(double minutes)
+    {
+        if (minutes <= 0) throw new ArgumentOutOfRangeException(nameof(minutes));
+
+        return 0.8
+               + 0.1894393 * Math.Exp(-0.012778 * minutes)
+               + 0.2989558 * Math.Exp(-0.1932605 * minutes);
     }
 
     /// <summary>

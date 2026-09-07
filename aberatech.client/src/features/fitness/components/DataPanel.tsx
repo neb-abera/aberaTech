@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -22,12 +23,19 @@ import type { SettingsDto } from "../core/api";
 import {
   type ActivityRow,
   deleteActivity,
+  disconnectStrava,
   fetchActivities,
+  fetchIngestStatus,
+  type IngestStatus,
+  type SourceStatus,
   saveBodyMetric,
   syncHevy,
+  syncStrava,
   uploadFile,
 } from "../core/api";
 import { formatSeconds, lbToKg } from "../core/format";
+import AftEntry from "./AftEntry";
+import LoadField from "./LoadField";
 import ProfileCard from "./ProfileCard";
 
 /**
@@ -36,10 +44,13 @@ import ProfileCard from "./ProfileCard";
  */
 export default function DataPanel({
   hevyApi,
+  strava = false,
   settings,
   onDataChanged,
 }: {
   hevyApi: boolean;
+  /** Whether the deployment can offer a Strava connection at all. */
+  strava?: boolean;
   settings: SettingsDto;
   /**
    * Anything that changes what the dashboard would say. Every mutation on this
@@ -139,23 +150,6 @@ export default function DataPanel({
     }
   };
 
-  const runHevySync = async () => {
-    try {
-      const result = await syncHevy();
-      setStatus({
-        ok: true,
-        text: `Hevy: ${result.fetched} workouts fetched, ${result.added} new.`,
-      });
-      refresh();
-      onDataChanged();
-    } catch (error) {
-      setStatus({
-        ok: false,
-        text: `Hevy sync failed: ${(error as Error).message}`,
-      });
-    }
-  };
-
   return (
     <Stack spacing={3}>
       <ProfileCard settings={settings} onSaved={onDataChanged} />
@@ -240,26 +234,25 @@ export default function DataPanel({
               {status.text}
             </Alert>
           )}
-
-          {hevyApi && (
-            <Button variant="contained" sx={{ mt: 2 }} onClick={runHevySync}>
-              Sync Hevy now
-            </Button>
-          )}
-          {!hevyApi && (
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", display: "block", mt: 1 }}
-            >
-              Live Hevy sync appears here once a Hevy Pro API key is configured
-              (~$24/year, optional).
-            </Typography>
-          )}
         </CardContent>
       </Card>
 
+      {/* The sources that bring themselves in. */}
+      <IntegrationsCard
+        hevyApi={hevyApi}
+        strava={strava}
+        onDataChanged={() => {
+          refresh();
+          onDataChanged();
+        }}
+      />
+
       {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
       <WeighIn onSaved={onDataChanged} />
+
+      {/* A fitness test is a measurement the readiness gates outrank the
+          model with. */}
+      <AftEntry onSaved={onDataChanged} />
 
       <Card variant="outlined">
         <CardContent>
@@ -289,6 +282,7 @@ export default function DataPanel({
                     <TableCell align="right">Distance</TableCell>
                     <TableCell align="right">Time</TableCell>
                     <TableCell align="right">Avg HR</TableCell>
+                    <TableCell align="right">Load</TableCell>
                     <TableCell>Source</TableCell>
                     <TableCell />
                   </TableRow>
@@ -309,6 +303,20 @@ export default function DataPanel({
                       </TableCell>
                       <TableCell align="right">
                         {activity.averageHr ?? "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        {activity.sport === "ruck" ? (
+                          <LoadField
+                            activity={activity}
+                            onSaved={() => {
+                              refresh();
+                              onDataChanged();
+                            }}
+                            onError={(text) => setStatus({ ok: false, text })}
+                          />
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell>{activity.source}</TableCell>
                       <TableCell align="right" padding="none">
@@ -421,6 +429,210 @@ function WeighIn({ onSaved }: { onSaved: () => void }) {
             sx={{ mt: 2 }}
           >
             {saved}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** "3 hours ago" for a sync stamp, or "never". */
+function ago(iso: string | null, now: Date = new Date()): string {
+  if (iso === null) return "never";
+  const minutes = Math.round(
+    (now.getTime() - new Date(iso).getTime()) / 60_000,
+  );
+  if (minutes < 2) return "just now";
+  if (minutes < 120) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} h ago`;
+  return `${Math.round(hours / 24)} days ago`;
+}
+
+/**
+ * The sources that bring themselves in: Hevy once a day when a key is
+ * configured, Strava every hour once connected. Each says when it last ran
+ * and what happened, because a sync that fails silently is the old export
+ * ritual with extra steps.
+ */
+function IntegrationsCard({
+  hevyApi,
+  strava,
+  onDataChanged,
+}: {
+  hevyApi: boolean;
+  strava: boolean;
+  onDataChanged: () => void;
+}) {
+  const [status, setStatus] = React.useState<IngestStatus | null>(null);
+  const [note, setNote] = React.useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
+  const [busy, setBusy] = React.useState<"hevy" | "strava" | null>(null);
+
+  const refresh = React.useCallback(() => {
+    fetchIngestStatus()
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, []);
+
+  React.useEffect(refresh, [refresh]);
+
+  // The consent round trip lands back here with a verdict in the URL.
+  React.useEffect(() => {
+    const verdict = new URLSearchParams(window.location.search).get("strava");
+    if (verdict === null) return;
+    const texts: Record<string, { ok: boolean; text: string }> = {
+      connected: { ok: true, text: "Strava connected; first sync done." },
+      refused: { ok: false, text: "Strava access was not granted." },
+      expired: { ok: false, text: "That Strava link had expired; try again." },
+      scope: {
+        ok: false,
+        text: "Strava was connected without activity access; reconnect and leave the activity box ticked.",
+      },
+      failed: { ok: false, text: "Strava did not complete the connection." },
+    };
+    setNote(texts[verdict] ?? null);
+  }, []);
+
+  const run = async (source: "hevy" | "strava") => {
+    setBusy(source);
+    try {
+      const result = source === "hevy" ? await syncHevy() : await syncStrava();
+      setNote({
+        ok: true,
+        text: `${source === "hevy" ? "Hevy" : "Strava"}: ${result.fetched} seen, ${result.added} new.`,
+      });
+      refresh();
+      onDataChanged();
+    } catch (error) {
+      setNote({ ok: false, text: (error as Error).message });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const disconnect = async () => {
+    if (!window.confirm("Disconnect Strava? Imported activities stay.")) return;
+    try {
+      await disconnectStrava();
+      setNote({ ok: true, text: "Strava disconnected." });
+      refresh();
+    } catch (error) {
+      setNote({ ok: false, text: (error as Error).message });
+    }
+  };
+
+  const line = (s: SourceStatus | undefined, connected: boolean) =>
+    !connected
+      ? null
+      : `Last sync ${ago(s?.lastSyncedAt ?? s?.lastRunAt ?? null)}${s?.lastOutcome ? ` — ${s.lastOutcome}` : ""}.`;
+
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
+          Automatic sources
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+          Hevy is pulled once a day, Strava every hour. Garmin syncs to Strava
+          on its own, so connecting Strava ends the export ritual and brings
+          laps and the treadmill flag with it.
+        </Typography>
+
+        <Stack spacing={2}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ alignItems: { sm: "center" } }}
+          >
+            <Typography variant="body2" sx={{ minWidth: 200 }}>
+              <strong>Hevy</strong>{" "}
+              {hevyApi ? (
+                <Chip size="small" color="success" label="daily" />
+              ) : (
+                <Chip size="small" label="key not configured" />
+              )}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", flex: 1 }}
+            >
+              {hevyApi
+                ? line(status?.hevy, true)
+                : "Live sync appears once a Hevy Pro API key is configured (~$24/year, optional); the CSV export works without it."}
+            </Typography>
+            {hevyApi && (
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={busy !== null}
+                onClick={() => void run("hevy")}
+              >
+                Sync Hevy now
+              </Button>
+            )}
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ alignItems: { sm: "center" } }}
+          >
+            <Typography variant="body2" sx={{ minWidth: 200 }}>
+              <strong>Strava</strong>{" "}
+              {!strava ? (
+                <Chip size="small" label="not configured" />
+              ) : status?.strava.connected ? (
+                <Chip size="small" color="success" label="hourly" />
+              ) : (
+                <Chip size="small" label="not connected" />
+              )}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", flex: 1 }}
+            >
+              {!strava
+                ? "Appears once the deployment has a Strava API application (client id and secret)."
+                : status?.strava.connected
+                  ? line(status.strava, true)
+                  : "Connect once; the grant is stored encrypted and refreshed on its own."}
+            </Typography>
+            {strava && status?.strava.connected && (
+              <>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={busy !== null}
+                  onClick={() => void run("strava")}
+                >
+                  Sync Strava now
+                </Button>
+                <Button size="small" onClick={() => void disconnect()}>
+                  Disconnect
+                </Button>
+              </>
+            )}
+            {strava && status !== null && !status.strava.connected && (
+              <Button
+                size="small"
+                variant="contained"
+                href="/api/fitness/ingest/strava/connect"
+              >
+                Connect Strava
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+
+        {note && (
+          <Alert
+            severity={note.ok ? "success" : "error"}
+            onClose={() => setNote(null)}
+            sx={{ mt: 2 }}
+          >
+            {note.text}
           </Alert>
         )}
       </CardContent>

@@ -1,6 +1,7 @@
 using Dynastream.Fit;
 using NodaTime;
 using Activity = aberaTech.Fitness.Data.Activity;
+using Lap = aberaTech.Fitness.Data.Lap;
 
 namespace aberaTech.Fitness.Ingest;
 
@@ -33,7 +34,7 @@ public static class FitImport
         var timerSeconds = session.GetTotalTimerTime() ?? session.GetTotalElapsedTime() ?? 0;
         if (timerSeconds <= 0) return null;
 
-        return new Activity
+        var activity = new Activity
         {
             Id = Guid.NewGuid(),
             Source = "garmin-fit",
@@ -44,9 +45,40 @@ public static class FitImport
             DistanceMeters = session.GetTotalDistance(),
             DurationSeconds = timerSeconds,
             AverageHr = session.GetAvgHeartRate(),
-            MaxHr = session.GetMaxHeartRate()
+            MaxHr = session.GetMaxHeartRate(),
+            Indoor = IsIndoor(session.GetSubSport())
         };
+
+        // The laps as the watch recorded them, in order. A lap that never
+        // ran — the zero-length one a stop leaves behind — is not a lap.
+        var index = 0;
+        foreach (var lap in messages.LapMesgs)
+        {
+            var seconds = lap.GetTotalTimerTime() ?? lap.GetTotalElapsedTime() ?? 0;
+            if (seconds <= 0) continue;
+
+            activity.Laps.Add(new Lap
+            {
+                Id = Guid.NewGuid(),
+                ActivityId = activity.Id,
+                Index = index++,
+                DistanceMeters = lap.GetTotalDistance() is { } metres and > 0 ? metres : null,
+                Seconds = seconds,
+                AverageHr = lap.GetAvgHeartRate()
+            });
+        }
+
+        return activity;
     }
+
+    /// <summary>Whether the sub-sport says the session was indoors; null when it says nothing.</summary>
+    internal static bool? IsIndoor(SubSport? subSport) => subSport switch
+    {
+        SubSport.Treadmill or SubSport.IndoorRunning or SubSport.VirtualActivity
+            or SubSport.IndoorCycling or SubSport.IndoorRowing => true,
+        SubSport.Generic or null => null,
+        _ => false
+    };
 
     internal static string MapSport(Sport? sport, SubSport? subSport) => sport switch
     {
