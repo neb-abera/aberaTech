@@ -23,6 +23,7 @@ import { formatPace, kgToLb } from "../core/format";
 import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
 import DecisionPanel from "./DecisionPanel";
+import DurabilityCard from "./DurabilityCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
@@ -358,6 +359,8 @@ function Dashboard({
           />
         </CardContent>
       </Card>
+
+      <DurabilityCard durability={summary.durability} />
 
       {summary.strengthTrend.length > 0 && (
         <Card variant="outlined">
