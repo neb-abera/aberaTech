@@ -106,11 +106,14 @@ ENV IN_DOCKER=$IN_DOCKER
 
 WORKDIR /src
 
-# Directory.Build.props turns on RestorePackagesWithLockFile; the committed
-# packages.lock.json files plus RestoreLockedMode=true make every restore
-# reproduce exactly what was reviewed, and fail loudly when a csproj and its
-# lock file disagree — the NuGet equivalent of `npm ci`.
-COPY ["Directory.Build.props", "./"]
+# Directory.Build.props turns on RestorePackagesWithLockFile and
+# Directory.Packages.props holds every package version (central package
+# management); the committed packages.lock.json files plus
+# RestoreLockedMode=true make every restore reproduce exactly what was
+# reviewed, and fail loudly when the versions and a lock file disagree — the
+# NuGet equivalent of `npm ci`. Both props files must be here before restore
+# or the csproj files would name packages with no versions.
+COPY ["Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["aberaTech.Server/aberaTech.Server.csproj", "aberaTech.Server/packages.lock.json", "aberaTech.Server/"]
 COPY ["aberaTech.Scheduling/aberaTech.Scheduling.csproj", "aberaTech.Scheduling/packages.lock.json", "aberaTech.Scheduling/"]
 COPY ["aberaTech.Postgres/aberaTech.Postgres.csproj", "aberaTech.Postgres/packages.lock.json", "aberaTech.Postgres/"]
