@@ -13,7 +13,7 @@ afterEach(cleanup);
 
 const fixed = () => new Date(2027, 0, 19, 9, 0);
 
-function mount(attempts: Attempt[] = []) {
+function mount(attempts: Attempt[] = [], readOnly = false) {
   const add = vi.fn();
   const remove = vi.fn();
   render(
@@ -23,6 +23,7 @@ function mount(attempts: Attempt[] = []) {
       attempts={attempts}
       add={add}
       remove={remove}
+      readOnly={readOnly}
       now={fixed}
     />,
   );
@@ -30,6 +31,18 @@ function mount(attempts: Attempt[] = []) {
 }
 
 describe("a gate's log", () => {
+  it("shows a visitor the gate and nothing of the log", () => {
+    mount([{ id: "a", on: "2027-01-05", passed: true, minutes: 41 }], true);
+    expect(
+      screen.getByText(
+        "From a bare spool to a contact in under thirty minutes.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/passed/)).toBeNull();
+    expect(screen.queryByText(/2027-01-05/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Log a pass" })).toBeNull();
+  });
+
   it("says so when nothing has been attempted", () => {
     mount();
     expect(screen.getByText("No attempts yet.")).toBeTruthy();

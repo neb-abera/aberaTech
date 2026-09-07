@@ -141,7 +141,9 @@ describe("the subject", () => {
     expect(everything).not.toMatch(new RegExp(`\\b${escaped}\\b`, "i"));
   });
 
-  it("names its subject in the intro", () => {
-    expect(copy.intro).toContain("Field communications");
+  it("names its subject in the intro, and says whose progress it is", () => {
+    expect(copy.intro).toContain("field radio");
+    expect(copy.note).toContain("read-only");
+    expect(copy.note).not.toContain("browser");
   });
 });

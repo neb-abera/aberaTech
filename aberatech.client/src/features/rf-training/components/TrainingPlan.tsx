@@ -29,8 +29,7 @@ import {
   type Resource,
   rules,
 } from "../core/plan";
-import { useGateLog } from "../hooks/useGateLog";
-import { useProgress } from "../hooks/useProgress";
+import { useTrainingProgress } from "../hooks/useTrainingProgress";
 import DrillPanel from "./DrillPanel";
 import GateLog from "./GateLog";
 import PlanTemplate from "./PlanTemplate";
@@ -41,36 +40,54 @@ import ReferenceCards from "./ReferenceCards";
  *
  * One column, read top to bottom: how it is scored, the rules, the weekly
  * cadence, then the seven blocks each with its checklist and gate, then the
- * gear. Ticks are kept in the visitor's browser by useProgress; the page
- * itself holds no state of its own.
+ * plan template, the cards and the gear.
+ *
+ * The progress is the owner's, kept on the server behind the owner's
+ * sign-in. Signed in, the tasks are checkboxes, the gates take attempts and
+ * the drill keeps its history. Anyone else, and the build-time render, gets
+ * the same page read-only: the tasks as a list, the gate as its text, the
+ * drill runnable but forgotten. Nothing a visitor does is sent anywhere.
  */
 export default function TrainingPlan() {
-  const { done, toggle, reset } = useProgress();
-  const gates = useGateLog();
+  const progress = useTrainingProgress();
+  const owner = progress.status === "owner";
   const total = allTasks.length;
-  const finished = allTasks.filter((task) => done.has(task.id)).length;
+  const finished = allTasks.filter((task) => progress.done.has(task.id)).length;
 
   return (
     <Stack spacing={5}>
       <Paper variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={1.5}>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {finished} of {total} done
-            </Typography>
-            <Button size="small" variant="text" onClick={reset}>
-              Start over
-            </Button>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={total === 0 ? 0 : (finished / total) * 100}
-            aria-label="Tasks done"
-          />
+          {owner && (
+            <>
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{ alignItems: "center", justifyContent: "space-between" }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  {finished} of {total} done
+                  {progress.saving && (
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{ color: "text.secondary", ml: 1 }}
+                    >
+                      saving
+                    </Typography>
+                  )}
+                </Typography>
+                <Button size="small" variant="text" onClick={progress.reset}>
+                  Start over
+                </Button>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={total === 0 ? 0 : (finished / total) * 100}
+                aria-label="Tasks done"
+              />
+            </>
+          )}
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {copy.scoring}
           </Typography>
@@ -80,7 +97,10 @@ export default function TrainingPlan() {
         </Stack>
       </Paper>
 
-      <DrillPanel />
+      <DrillPanel
+        history={owner ? progress.drills : undefined}
+        onResult={owner ? progress.recordDrill : undefined}
+      />
 
       <Section title="Rules">
         <List dense disablePadding>
@@ -118,11 +138,12 @@ export default function TrainingPlan() {
           key={block.id}
           block={block}
           index={index + 1}
-          done={done}
-          toggle={toggle}
-          attempts={gates.log[block.id] ?? []}
-          addAttempt={gates.add}
-          removeAttempt={gates.remove}
+          owner={owner}
+          done={progress.done}
+          toggle={progress.toggle}
+          attempts={progress.gates[block.id] ?? []}
+          addAttempt={progress.addAttempt}
+          removeAttempt={progress.removeAttempt}
         />
       ))}
 
@@ -195,6 +216,7 @@ function Section({
 function BlockSection({
   block,
   index,
+  owner,
   done,
   toggle,
   attempts,
@@ -203,6 +225,7 @@ function BlockSection({
 }: {
   block: Block;
   index: number;
+  owner: boolean;
   done: Set<string>;
   toggle: (id: string) => void;
   attempts: Attempt[];
@@ -231,25 +254,39 @@ function BlockSection({
         {block.why}
       </Typography>
 
-      <FormGroup>
-        {block.tasks.map((task) => (
-          <FormControlLabel
-            key={task.id}
-            control={
-              <Checkbox
-                checked={done.has(task.id)}
-                onChange={() => toggle(task.id)}
-              />
-            }
-            label={task.text}
-            sx={{
-              alignItems: "flex-start",
-              mb: 0.5,
-              "& .MuiCheckbox-root": { pt: 0.25 },
-            }}
-          />
-        ))}
-      </FormGroup>
+      {owner ? (
+        <FormGroup>
+          {block.tasks.map((task) => (
+            <FormControlLabel
+              key={task.id}
+              control={
+                <Checkbox
+                  checked={done.has(task.id)}
+                  onChange={() => toggle(task.id)}
+                />
+              }
+              label={task.text}
+              sx={{
+                alignItems: "flex-start",
+                mb: 0.5,
+                "& .MuiCheckbox-root": { pt: 0.25 },
+              }}
+            />
+          ))}
+        </FormGroup>
+      ) : (
+        <List dense disablePadding aria-label={`Tasks for ${block.id}`}>
+          {block.tasks.map((task) => (
+            <ListItem
+              key={task.id}
+              disableGutters
+              sx={{ display: "list-item", ml: 2.5 }}
+            >
+              <ListItemText primary={task.text} />
+            </ListItem>
+          ))}
+        </List>
+      )}
 
       <Typography
         variant="overline"
@@ -266,6 +303,7 @@ function BlockSection({
         attempts={attempts}
         add={addAttempt}
         remove={removeAttempt}
+        readOnly={!owner}
       />
 
       <Typography
