@@ -196,8 +196,8 @@ public static class SelectionReadiness
             ["Rope climb", "100 m swim", "Pull-ups (no count published)"]),
         new Gate(
             "evoke-sfas-ready",
-            "Paikowski's SFAS-ready numbers",
-            "Where the Selection Prep block is meant to leave you: what Vince Paikowski and the Evoke coaches give when asked what ready for SFAS looks like, not the entry test. No ruck line on purpose — Paikowski's best ruckers were simply the best runners, and the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
+            "Evoke coaches' SFAS-ready numbers",
+            "Where the Selection Prep block is meant to leave you, from what Jack Kuenzle and Scott Johnston told an SFAS candidate on Evoke's forum, with the lifting numbers Kuenzle attributes to Vince Paikowski. No ruck line on purpose: the best ruckers Kuenzle ever saw never trained with a ruck and were simply the best runners, so the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
             4,
             [
                 new Requirement(Metrics.AerobicThresholdPace, "Aerobic-threshold pace on the flat", Comparison.AtMost, 8 * 60, Units.SecondsPerMile, Citations.EvokeSfasReady.Id),
