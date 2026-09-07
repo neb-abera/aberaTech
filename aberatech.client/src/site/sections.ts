@@ -30,6 +30,13 @@ export const guides: Entry[] = [
     to: "/technical",
     blurb: "The path from no background to working in software development.",
   },
+  {
+    title: "Tactically Relevant RF Training",
+    navLabel: "Field RF Training",
+    to: "/rf-training",
+    blurb:
+      "A one-year, self-paced field communications curriculum: HF on wire antennas, networks, mesh, spectrum, drones and power.",
+  },
 ];
 
 export const projects: Entry[] = [
