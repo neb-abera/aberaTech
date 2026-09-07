@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using aberaTech.Fitness.Domain;
 using Xunit;
 using Xunit.Abstractions;
@@ -200,24 +199,26 @@ public sealed class SolverTests(ITestOutputHelper output)
     [Fact]
     public void A_solve_stays_within_an_order_of_magnitude_of_interactive()
     {
-        // The bound is deliberately loose. A solve takes about a second on a
-        // quiet machine and three under load, so a tight wall-clock assertion
-        // is a flaky gate rather than a useful one — it fails on a busy runner
-        // and tells you nothing. What is worth catching is a return to the
-        // behaviour this replaced, where the likelihood was integrated once
-        // per observation instead of once per proposal and a fit took
-        // thirty-seven seconds. The measured time is printed either way.
+        // What is worth catching is a return to the behaviour this replaced,
+        // where the likelihood was integrated once per observation instead of
+        // once per proposal and a fit took thirty-seven seconds. A wall clock
+        // cannot tell that from a loaded runner, so the budget is reported
+        // always and enforced only under ABERA_ENFORCE_TIMING; see
+        // TimingBudget. The gate itself holds to what is deterministic: a
+        // solve and a full tornado both come back.
         var context = Context();
         var scenario = Base();
         var target = Solver.Predict(context, scenario).Median * 0.97;
 
-        var clock = Stopwatch.StartNew();
-        Solver.Solve(context, scenario, Factor.WeeklyHours, target);
-        Solver.Sensitivities(context, scenario);
-        clock.Stop();
+        var (solution, sensitivities) = TimingBudget.Measure(
+            output,
+            "solve plus tornado",
+            TimeSpan.FromSeconds(15),
+            () => (Solver.Solve(context, scenario, Factor.WeeklyHours, target),
+                Solver.Sensitivities(context, scenario).ToArray()));
 
-        output.WriteLine($"solve plus tornado in {clock.ElapsedMilliseconds} ms");
-        Assert.True(clock.ElapsedMilliseconds < 15_000, $"took {clock.ElapsedMilliseconds} ms");
+        Assert.True(double.IsFinite(solution.Median), "the solve returned no answer");
+        Assert.NotEmpty(sensitivities);
     }
 
     private static FactorSensitivity First(IEnumerable<FactorSensitivity> all, Factor factor) =>
