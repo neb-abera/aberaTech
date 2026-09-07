@@ -40,10 +40,11 @@ public sealed class DigestTests
 
     private static OutlookDto Outlook() =>
         new(
-            "2028-04-01", 4.5, 4.5, 1.0, 35.4,
+            "2028-04-01", 4.5, 4.5, 7, "the hours a week the profile says you can train (7.0 h)", 1.0, 35.4,
             [new OutlookGateDto("sfas-day-one", "SFAS day-one minimums", 52, "2027-04-03", 6.9, 0.62, 2, 3, 4.5, [])],
             "2028-01-22",
             "sfas-day-one",
+            [],
             []);
 
     [Fact]
