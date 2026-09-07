@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
+using System.Security.Cryptography;
+using System.Text;
 using aberaTech.Fitness.Ingest;
 using aberaTech.Fitness.Strava;
 using Microsoft.AspNetCore.Http.Features;
@@ -96,6 +98,27 @@ public static class FitnessEndpoints
                 strava = strava.IsConfigured
             });
         });
+
+        // The week in one page, for the dashboard.
+        api.MapGet("/digest", async (FitnessDbContext database, CancellationToken cancellationToken) =>
+            Results.Ok(await DigestReports.BuildAsync(database, UtcToday(), cancellationToken)));
+
+        // The same page as text, for the morning brief: one bearer key, no
+        // sign-in. Mapped only when a key of real length is configured, and
+        // compared in constant time, because a fitness log is health data.
+        if (options.HasDigestKey)
+        {
+            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, CancellationToken cancellationToken) =>
+            {
+                if (!DigestKeyAllows(context.Request.Headers.Authorization.ToString(), options.DigestKey))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var digest = await DigestReports.BuildAsync(database, UtcToday(), cancellationToken);
+                return Results.Text(digest.Text + "\n", "text/plain; charset=utf-8");
+            });
+        }
 
         api.MapGet("/summary", (FitnessDbContext database, CancellationToken cancellationToken) =>
             FitnessReports.SummaryAsync(database, cancellationToken));
@@ -564,6 +587,25 @@ public static class FitnessEndpoints
     /// the page shows the response body verbatim, so the reader was handed the
     /// quotes as well: <c>holiday.jpg: "Nothing importable in that file."</c>
     /// </summary>
+    /// <summary>
+    /// Whether an Authorization header carries the digest key: bearer scheme,
+    /// exact key, compared in constant time so the comparison's timing says
+    /// nothing about how much of a guess was right.
+    /// </summary>
+    internal static bool DigestKeyAllows(string authorizationHeader, string digestKey)
+    {
+        const string scheme = "Bearer ";
+        if (digestKey.Trim().Length < 32) return false;
+        if (!authorizationHeader.StartsWith(scheme, StringComparison.Ordinal)) return false;
+
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(authorizationHeader[scheme.Length..].Trim()),
+            Encoding.UTF8.GetBytes(digestKey.Trim()));
+    }
+
+    private static LocalDate UtcToday() =>
+        SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+
     private static IResult Fail(string message) =>
         Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);
 
