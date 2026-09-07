@@ -165,6 +165,16 @@ export interface Durability {
   steps: Step[];
 }
 
+/** The week in one page, as the morning brief sees it. */
+export interface Digest {
+  date: string;
+  weekStart: string;
+  text: string;
+  lines: string[];
+}
+
+export const fetchDigest = () => get<Digest>("/api/fitness/digest");
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
