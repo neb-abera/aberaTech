@@ -208,6 +208,30 @@ public static class Citations
         2026,
         "https://thebattlebunker.com/pages/army-sfas-calculator");
 
+    public static readonly Citation EvokeSfasReady = new(
+        "evoke-sfas-ready",
+        "Ready for SFAS, per Evoke's coaches: Kuenzle — \"I would get your AeT pace at least below an 8:00 mile on the flat\", a line Johnston repeats; the lifts Kuenzle attributes to Vince Paikowski, a 350 lb deadlift triple and a 250 lb squat for five; and the five-mile in 35:00, 15 strict pull-ups and 80 push-ups the candidate brought as the standard and the coaches trained toward. Kuenzle: the best ruckers he ever saw never trained with a ruck and were incredible runners.",
+        "Jack Kuenzle (ex-Navy SEAL, FKT record holder) and Scott Johnston, answering an SFAS candidate on the Evoke Endurance forum, January–June 2023; Vince Paikowski's lifting standards as Kuenzle reports them.",
+        "Army Special Forces Selection (SFAS) — Evoke Endurance forum thread",
+        2023,
+        "https://evokeendurance.com/forums/topic/army-special-forces-selection-sfas/");
+
+    public static readonly Citation MtiGrip = new(
+        "mti-grip",
+        "No tactical selection publishes a grip standard; of the grip tests tried on tactical athletes, the loaded farmer's carry is the practical grip-endurance measure, and grip's exact role in tactical performance is still unestablished.",
+        "Rob Shaul's Mountain Tactical Institute, from their own lab study of farmer's carry, towel pull-up and dynamometer tests on tactical athletes.",
+        "Grip strength: does it matter? How to test it. How to train it.",
+        2019,
+        "https://mtntactical.com/research/grip-strength-matter-test-train/");
+
+    public static readonly Citation NebFitnessGoals = new(
+        "neb-fitness-goals",
+        "The athlete's own end-of-2027 standards: a farmer's carry at 1.5× bodyweight for 100 m, 15 pull-ups, 80 push-ups, 62 hand-release push-ups, a 350 lb deadlift triple, 170 lb at 10% body fat, a 500-yard swim in 8:00.",
+        "Neb Abera — the athlete, in the workbook the console is scored against.",
+        "physical fitness goals.xlsx (OneDrive, Documents/physical fitness)",
+        2026,
+        null);
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -215,6 +239,7 @@ public static class Citations
         UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc,
         RonnestadStrength, GabbettWorkload, NonlinearRegression,
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
-        SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive
+        SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
+        EvokeSfasReady, MtiGrip, NebFitnessGoals
     ];
 }

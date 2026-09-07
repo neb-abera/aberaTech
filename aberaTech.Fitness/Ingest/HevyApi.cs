@@ -66,7 +66,8 @@ public sealed class HevyApiClient(HttpClient http)
                     SetIndex = index++,
                     WeightKg = set.WeightKg ?? 0,
                     Reps = set.Reps ?? 0,
-                    DurationSeconds = set.DurationSeconds is > 0 ? set.DurationSeconds : null
+                    DurationSeconds = set.DurationSeconds is > 0 ? set.DurationSeconds : null,
+                    DistanceMeters = set.DistanceMeters is > 0 ? set.DistanceMeters : null
                 });
             }
         }
@@ -93,5 +94,6 @@ public sealed class HevyApiClient(HttpClient http)
     internal sealed record HevySet(
         [property: JsonPropertyName("weight_kg")] double? WeightKg,
         [property: JsonPropertyName("reps")] int? Reps,
-        [property: JsonPropertyName("duration_seconds")] double? DurationSeconds = null);
+        [property: JsonPropertyName("duration_seconds")] double? DurationSeconds = null,
+        [property: JsonPropertyName("distance_meters")] double? DistanceMeters = null);
 }

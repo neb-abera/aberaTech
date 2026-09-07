@@ -113,17 +113,33 @@ public static class SelectionReadiness
         public const string AftTotal = "aft-total";
         public const string AftLowestEvent = "aft-lowest-event";
         public const string BodyFat = "body-fat";
+
+        /// <summary>Pace at the reference (aerobic-threshold) heart rate, in seconds per mile.</summary>
+        public const string AerobicThresholdPace = "aet-pace";
+
+        public const string BackSquatFiveLb = "back-squat-5rm-lb";
+
+        /// <summary>Farmer's carry at 1.5× bodyweight, the longest distance held, in metres.</summary>
+        public const string FarmersCarryMeters = "farmer-carry-1.5bw-m";
+
+        public const string BodyweightLb = "bodyweight-lb";
+
+        /// <summary>Estimated one-rep maxes over bodyweight, the way the athlete's own sheet states them.</summary>
+        public const string BenchPressToBodyweight = "bench-1rm-bw";
+        public const string FrontSquatToBodyweight = "front-squat-1rm-bw";
     }
 
     /// <summary>Units a requirement is stated in.</summary>
     public static class Units
     {
         public const string Seconds = "s";
+        public const string SecondsPerMile = "s/mi";
         public const string Reps = "reps";
         public const string Bodyweights = "xbw";
         public const string Pounds = "lb";
         public const string Points = "pts";
         public const string Percent = "%";
+        public const string Meters = "m";
     }
 
     private const double Mile = Vdot.MileMeters;
@@ -179,6 +195,20 @@ public static class SelectionReadiness
             ],
             ["Rope climb", "100 m swim", "Pull-ups (no count published)"]),
         new Gate(
+            "evoke-sfas-ready",
+            "Evoke coaches' SFAS-ready numbers",
+            "Where the Selection Prep block is meant to leave you, from what Jack Kuenzle and Scott Johnston told an SFAS candidate on Evoke's forum, with the lifting numbers Kuenzle attributes to Vince Paikowski. No ruck line on purpose: the best ruckers Kuenzle ever saw never trained with a ruck and were simply the best runners, so the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
+            4,
+            [
+                new Requirement(Metrics.AerobicThresholdPace, "Aerobic-threshold pace on the flat", Comparison.AtMost, 8 * 60, Units.SecondsPerMile, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 35 * 60, Units.Seconds, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.PullUps, "Strict pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.BackSquatFiveLb, "Back squat 5RM", Comparison.AtLeast, 250, Units.Pounds, Citations.EvokeSfasReady.Id)
+            ],
+            ["Deadlift + squat + overhead press total of 750 lb"]),
+        new Gate(
             "sfas-competitive",
             "Competitive at selection",
             "The row selected candidates sit on. The minimums get you in the door; these are what the cadre see from someone who belongs there.",
@@ -191,7 +221,24 @@ public static class SelectionReadiness
                 new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 40, Units.Reps, Citations.SfasDayOne.Id),
                 new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 15, Units.Percent, Citations.FarinaSfasBody.Id)
             ],
-            ["Land navigation, day and night", "Back-to-back days under load"])
+            ["Land navigation, day and night", "Back-to-back days under load"]),
+        new Gate(
+            "own-standards",
+            "Your own 2027 standards",
+            "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \"non-essential\" are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
+            0,
+            [
+                new Requirement(Metrics.FarmersCarryMeters, "Farmer's carry at 1.5× bodyweight", Comparison.AtLeast, 100, Units.Meters, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 62, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BenchPressToBodyweight, "Bench press 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.FrontSquatToBodyweight, "Front squat 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BodyweightLb, "Bodyweight", Comparison.AtMost, 170, Units.Pounds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 10, Units.Percent, Citations.NebFitnessGoals.Id)
+            ],
+            [])
     ];
 
     /// <summary>Every gate, scored against what the athlete has.</summary>
@@ -226,11 +273,13 @@ public static class SelectionReadiness
     public static string Describe(string unit, double value) => unit switch
     {
         Units.Seconds => Format.Clock(value),
+        Units.SecondsPerMile => Text($"{Format.Clock(value)}/mile"),
         Units.Reps => Text($"{value:0} reps"),
         Units.Bodyweights => Text($"{value:0.00}× bodyweight"),
         Units.Pounds => Text($"{value:0} lb ({value / BodyMass.PoundsPerKg:0} kg)"),
         Units.Points => Text($"{value:0} pts"),
         Units.Percent => Text($"{value:0.#}%"),
+        Units.Meters => Text($"{value:0} m"),
         _ => Text($"{value:0.##}")
     };
 

@@ -60,6 +60,9 @@ public class StrengthSet
 
     /// <summary>How long a timed set was held — a plank has no reps.</summary>
     public double? DurationSeconds { get; set; }
+
+    /// <summary>How far a loaded set was carried — a farmer's walk has a distance, not reps.</summary>
+    public double? DistanceMeters { get; set; }
 }
 
 /// <summary>

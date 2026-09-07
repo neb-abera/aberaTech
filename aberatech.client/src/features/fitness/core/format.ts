@@ -53,6 +53,12 @@ const METRIC_LABELS: Record<string, string> = {
   "aft-total": "AFT total",
   "aft-lowest-event": "Lowest AFT event",
   "body-fat": "Body fat",
+  "aet-pace": "Aerobic-threshold pace",
+  "back-squat-5rm-lb": "Back squat 5RM",
+  "farmer-carry-1.5bw-m": "Farmer's carry at 1.5× bodyweight",
+  "bodyweight-lb": "Bodyweight",
+  "bench-1rm-bw": "Bench press to bodyweight",
+  "front-squat-1rm-bw": "Front squat to bodyweight",
 };
 
 /**
@@ -64,6 +70,8 @@ export function formatRequirement(unit: string, value: number): string {
   switch (unit) {
     case "s":
       return formatSeconds(value);
+    case "s/mi":
+      return `${formatSeconds(value)}/mile`;
     case "reps":
       return `${Math.round(value)} reps`;
     case "xbw":
@@ -74,6 +82,8 @@ export function formatRequirement(unit: string, value: number): string {
       return `${Math.round(value)} pts`;
     case "%":
       return `${Number(value.toFixed(1))}%`;
+    case "m":
+      return `${Math.round(value)} m`;
     default:
       return String(Number(value.toFixed(2)));
   }
