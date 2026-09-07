@@ -43,6 +43,7 @@ const settings: SettingsDto = {
   female: null,
   availableHoursPerWeek: 7,
   sustainedWeeklyHours: null,
+  selectionDate: null,
 };
 
 function json(body: unknown, ok = true): Response {

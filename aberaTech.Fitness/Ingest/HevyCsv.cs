@@ -29,6 +29,7 @@ public static class HevyCsv
         var exercise = Col("exercise_title");
         var setIndex = Col("set_index");
         var reps = Col("reps");
+        var durationSeconds = Col("duration_seconds");
 
         // The weight column is named for the account's display unit.
         var weightKg = Col("weight_kg");
@@ -83,6 +84,15 @@ public static class HevyCsv
                     var order = index++;
                     if (setIndex >= 0 && int.TryParse(row[setIndex], out var declared)) order = declared;
 
+                    // A timed hold — the plank — has a duration and no reps.
+                    double? held = null;
+                    if (durationSeconds >= 0 && row.Length > durationSeconds
+                        && double.TryParse(row[durationSeconds], NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
+                        && seconds > 0)
+                    {
+                        held = seconds;
+                    }
+
                     activity.Sets.Add(new StrengthSet
                     {
                         Id = Guid.NewGuid(),
@@ -90,7 +100,8 @@ public static class HevyCsv
                         Exercise = row[exercise],
                         SetIndex = order,
                         WeightKg = kg,
-                        Reps = repCount
+                        Reps = repCount,
+                        DurationSeconds = held
                     });
                 }
 

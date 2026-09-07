@@ -73,17 +73,26 @@ public static class FitnessReports
 
         var (measured, sessions) = await MeasuredDoseAsync(database, settings.StartVdot, cancellationToken);
 
+        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
+        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+                  ?? new AthleteSettings { Id = 1 };
+
+        // The anchor's age belongs with the findings it quietly distorts.
+        var findings = highlights.ToList();
+        if (Highlights.Anchor(row.VdotMeasuredOn, today) is { } anchor) findings.Insert(0, anchor);
+
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
             trend.Select(p => new AerobicPointDto($"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount)).ToArray(),
             weeks,
             strength,
-            highlights.Select(h => new HighlightDto(h.Kind, h.Headline, h.Evidence, h.Positive)).ToArray(),
+            findings.Select(h => new HighlightDto(h.Kind, h.Headline, h.Evidence, h.Positive)).ToArray(),
             paces,
             Dose(measured),
             Steps(SessionMix.Explain(measured, RecentWeeks, sessions)),
             spread,
-            await database.Activities.CountAsync(cancellationToken));
+            await database.Activities.CountAsync(cancellationToken),
+            await ReadinessReports.BuildAsync(database, row, weight, today, cancellationToken));
     }
 
     public static async Task<PredictionDto> PredictionsAsync(
@@ -668,7 +677,8 @@ public static class FitnessReports
             row.PastPeakWeightKg,
             row.GoalWeightKg,
             BodyMass.MaxAdjustmentFraction,
-            row.HomeAltitudeMeters);
+            row.HomeAltitudeMeters,
+            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
     private static IReadOnlyList<WeekVolumeDto> WeeklyVolumes(List<Activity> endurance, DateTimeZone zone)

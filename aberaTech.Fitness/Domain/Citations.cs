@@ -144,11 +144,77 @@ public static class Citations
         1989,
         null);
 
+    public static readonly Citation PandolfLoadCarriage = new(
+        "pandolf-load-carriage",
+        "The metabolic cost of walking under load is M = 1.5W + 2.0(W+L)(L/W)² + η(W+L)(1.5V² + 0.35VG) watts; it under-predicts once the gait breaks into a shuffle above ~2.2 m/s.",
+        "Kent Pandolf, Baruch Givoni and Ralph Goldman of the US Army Research Institute of Environmental Medicine — the load-carriage model the Army's own research still starts from.",
+        "Predicting energy expenditure with loads while standing or walking very slowly (J Appl Physiol 43)",
+        1977,
+        "https://pubmed.ncbi.nlm.nih.gov/908672/");
+
+    public static readonly Citation FarinaSfasPredictors = new(
+        "farina-sfas-predictors",
+        "In 800 candidates, road-march speed was the strongest physical predictor of selection (top quartile selected at 66-67%, bottom at 5-6%), ahead of land navigation, run time, fitness-test score and pull-ups.",
+        "Emily Farina, Lauren Thompson, Joseph Knapik, Stefan Pasiakos, James McClung and Harris Lieberman — the US Army Research Institute of Environmental Medicine team that followed a cohort through Special Forces Assessment and Selection.",
+        "Physical performance, demographic, psychological, and physiological predictors of success in the U.S. Army Special Forces Assessment and Selection course (Physiol Behav 210)",
+        2019,
+        "https://pubmed.ncbi.nlm.nih.gov/31401079/");
+
+    public static readonly Citation FarinaSfasBody = new(
+        "farina-sfas-body",
+        "In the same cohort the leanest quartile (~14% body fat) was selected at 51.6% and the fattest (~25%) at 13.8%; the highest lean-mass quartile (~73 kg) at 58.6% and the lowest (~54 kg) at 20%.",
+        "Emily Farina and the USARIEM team, on the anthropometrics of the same 800-candidate cohort.",
+        "Anthropometrics and Body Composition Predict Physical Performance and Selection to Attend Special Forces Training in United States Army Soldiers (Mil Med 187)",
+        2022,
+        "https://academic.oup.com/milmed/article/187/11-12/1381/6327577");
+
+    public static readonly Citation ArmyAft = new(
+        "army-aft-2025",
+        "The Army Fitness Test scores five events 0-100 by age band; combat specialties need 60 in every event and 350 in total, on the sex-neutral scale.",
+        "Headquarters, Department of the Army — the scoring scales as published, approved 15 May 2025.",
+        "Army Fitness Test Score Tables, effective 1 June 2025",
+        2025,
+        "https://www.army.mil/e2/downloads/rv7/aft/AFT_Scoring_Scales_250601.pdf");
+
+    public static readonly Citation SfasDayOne = new(
+        "sfas-day-one",
+        "The day-one assessment at Special Forces Assessment and Selection drops anyone under 28 hand-release push-ups, 6 pull-ups or a 15:12 two-mile; sub-13:32, 30+, 12+ and a sub-15:00/mile ruck are what selected candidates look like.",
+        "Task & Purpose's reporting of the standards published by the 1st Special Warfare Training Group, as briefed to candidates.",
+        "Special Forces Assessment and Selection: everything you need to know",
+        2024,
+        "https://taskandpurpose.com/military-life/special-forces-assessment-selection-green-beret/");
+
+    public static readonly Citation EvokeSelectionPrep = new(
+        "evoke-selection-prep",
+        "The entry test for the final fifteen-week selection block: 12 miles at 35 lb under 3:00, a two-mile under 14:00, five miles under 45:00, 40 hand-release push-ups, 10 pull-ups, a bodyweight front-squat triple and a 1.5× bodyweight deadlift triple.",
+        "Evoke Endurance's military coaching team — Vince Paikowski, Jack Kuenzle and Scott Johnston — the plan this athlete is training on.",
+        "Selection Prep 2.0 training plan",
+        2025,
+        "https://evokeendurance.com/training-plans/selection-prep-2-0/");
+
+    public static readonly Citation GuardSfrePrerequisites = new(
+        "guard-sfre-prereqs",
+        "A National Guard Special Forces company's readiness evaluation expects a 13:42 two-mile, 64 push-ups and 72 sit-ups in two minutes, 12 miles at 45 lb dry under three hours, pull-ups, a rope climb and a 100 m swim.",
+        "Company C, 1st Battalion, 19th Special Forces Group (California Army National Guard) — one of the units that gates the Guard's SFAS slots with this evaluation.",
+        "Special Forces Readiness Evaluation flyer",
+        2022,
+        "https://calguard.ca.gov/wp-content/uploads/sites/62/2022/07/SFRE_FlyerSepNov2022Updated.pdf");
+
+    public static readonly Citation SfasCompetitive = new(
+        "sfas-competitive",
+        "Competitive at selection means a five-mile at or under 35:00, twelve miles at 45 lb at or under 2:45, twelve or more pull-ups and a fitness test well above the floor; the minimums are the price of entry, not the target.",
+        "Battle Bunker's SFAS calculator and Building the Elite's selection preparation guide, both maintained by former Special Forces cadre and coaches.",
+        "Army SFAS Calculator; How to prepare for Special Forces Assessment and Selection",
+        2026,
+        "https://thebattlebunker.com/pages/army-sfas-calculator");
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
         WmaAgeGrading, PeronnetAltitude, SeilerPolarized, SanMillanBrooks,
         UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc,
-        RonnestadStrength, GabbettWorkload, NonlinearRegression
+        RonnestadStrength, GabbettWorkload, NonlinearRegression,
+        PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
+        SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive
     ];
 }
