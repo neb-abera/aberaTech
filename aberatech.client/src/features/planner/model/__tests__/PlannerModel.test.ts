@@ -528,3 +528,62 @@ describe("degree picks", () => {
     expect(m.degreePicks.size).toBe(0);
   });
 });
+
+describe("saving and restoring", () => {
+  test("a snapshot brings a plan back exactly", () => {
+    const m = rf(3);
+    m.setBackground("bg_calc", false);
+    m.leaveMonths = 6;
+    m.startYear = 2028;
+    const code = m.plan.courses()[0];
+    m.toggleDegreePick(code);
+    const saved = JSON.parse(JSON.stringify(m.snapshot()));
+
+    const back = make();
+    expect(back.restore(saved)).toBe(true);
+
+    expect(back.plan.terms).toEqual(m.plan.terms);
+    expect([...back.areas]).toEqual([...m.areas]);
+    expect([...back.background]).toEqual([...m.background]);
+    expect(back.perTerm).toBe(3);
+    expect(back.leaveMonths).toBe(6);
+    expect(back.startYear).toBe(2028);
+    // Toggling a pick seeds the picks from the automatic set, so compare
+    // against what the model actually holds rather than the one code.
+    expect([...back.degreePicks]).toEqual([...m.degreePicks]);
+    expect(back.degreePicks.has(code)).toBe(m.degreePicks.has(code));
+    expect(back.snapshot()).toEqual(saved);
+  });
+
+  test("a course the catalog no longer has is dropped, not kept", () => {
+    const m = rf();
+    const saved = m.snapshot();
+    saved.terms[0] = ["EN.525.999", ...saved.terms[0]];
+    saved.degreePicks = ["EN.525.999"];
+
+    const back = make();
+    back.restore(saved);
+
+    expect(back.plan.courses()).not.toContain("EN.525.999");
+    expect(back.degreePicks.size).toBe(0);
+    expect(back.unplaced()).toEqual([]);
+  });
+
+  test("the wrong shape is refused and leaves the model alone", () => {
+    const m = rf();
+    const before = m.snapshot();
+    expect(m.restore(null)).toBe(false);
+    expect(m.restore({ version: 2 })).toBe(false);
+    expect(m.restore({ ...before, terms: "not terms" })).toBe(false);
+    expect(m.snapshot()).toEqual(before);
+  });
+
+  test("the focus highlight is transient and not saved", () => {
+    const m = rf();
+    m.focus = m.plan.courses()[0];
+    expect("focus" in m.snapshot()).toBe(false);
+    const back = make();
+    back.restore(m.snapshot());
+    expect(back.focus).toBeNull();
+  });
+});
