@@ -13,6 +13,8 @@ interface Props {
   attempts: Attempt[];
   add: (blockId: string, attempt: Attempt) => void;
   remove: (blockId: string, id: string) => void;
+  /** A visitor sees the gate and nothing of the log. */
+  readOnly?: boolean;
   /** Fixed for tests; the page uses the wall clock. */
   now?: () => Date;
 }
@@ -30,6 +32,7 @@ export default function GateLog({
   attempts,
   add,
   remove,
+  readOnly = false,
   now,
 }: Props) {
   const clock = now ?? (() => new Date());
@@ -73,82 +76,86 @@ export default function GateLog({
       </Typography>
       <Typography variant="body2">{gate}</Typography>
 
-      <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
-        {summary.attempts === 0
-          ? "No attempts yet."
-          : `${summary.passes} of ${summary.attempts} passed.` +
-            (summary.best?.minutes
-              ? ` Best ${summary.best.minutes} min on ${summary.best.on}.`
-              : "") +
-            (summary.latest
-              ? ` Latest: ${summary.latest.passed ? "pass" : "fail"} on ${summary.latest.on}.`
-              : "")}
-      </Typography>
+      {readOnly ? null : (
+        <>
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
+            {summary.attempts === 0
+              ? "No attempts yet."
+              : `${summary.passes} of ${summary.attempts} passed.` +
+                (summary.best?.minutes
+                  ? ` Best ${summary.best.minutes} min on ${summary.best.on}.`
+                  : "") +
+                (summary.latest
+                  ? ` Latest: ${summary.latest.passed ? "pass" : "fail"} on ${summary.latest.on}.`
+                  : "")}
+          </Typography>
 
-      {attempts.length > 0 && (
-        <Box component="ul" sx={{ pl: 2, my: 1 }}>
-          {attempts.map((attempt) => (
-            <Box
-              component="li"
-              key={attempt.id}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                {attempt.on}: {attempt.passed ? "pass" : "fail"}
-                {attempt.minutes ? `, ${attempt.minutes} min` : ""}
-                {attempt.note ? ` (${attempt.note})` : ""}
-              </Typography>
-              <IconButton
-                size="small"
-                aria-label={`Remove attempt on ${attempt.on}`}
-                onClick={() => remove(blockId, attempt.id)}
-              >
-                ×
-              </IconButton>
+          {attempts.length > 0 && (
+            <Box component="ul" sx={{ pl: 2, my: 1 }}>
+              {attempts.map((attempt) => (
+                <Box
+                  component="li"
+                  key={attempt.id}
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                    {attempt.on}: {attempt.passed ? "pass" : "fail"}
+                    {attempt.minutes ? `, ${attempt.minutes} min` : ""}
+                    {attempt.note ? ` (${attempt.note})` : ""}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    aria-label={`Remove attempt on ${attempt.on}`}
+                    onClick={() => remove(blockId, attempt.id)}
+                  >
+                    ×
+                  </IconButton>
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
-      )}
+          )}
 
-      <Stack
-        component="form"
-        direction={{ xs: "column", sm: "row" }}
-        spacing={1}
-        useFlexGap
-        sx={{ mt: 1.5, alignItems: { sm: "flex-start" }, flexWrap: "wrap" }}
-        onSubmit={log(true)}
-      >
-        <TextField
-          size="small"
-          type="date"
-          label="Date"
-          value={on}
-          onChange={(event) => setOn(event.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-        <TextField
-          size="small"
-          label="Minutes"
-          value={minutes}
-          onChange={(event) => setMinutes(event.target.value)}
-          slotProps={{ htmlInput: { inputMode: "decimal" } }}
-          sx={{ width: 110 }}
-        />
-        <TextField
-          size="small"
-          label="Note"
-          placeholder="score, where heard, what failed"
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          sx={{ flexGrow: 1, minWidth: 200 }}
-        />
-        <Button variant="contained" size="small" type="submit">
-          Log a pass
-        </Button>
-        <Button variant="outlined" size="small" onClick={log(false)}>
-          Log a fail
-        </Button>
-      </Stack>
+          <Stack
+            component="form"
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            useFlexGap
+            sx={{ mt: 1.5, alignItems: { sm: "flex-start" }, flexWrap: "wrap" }}
+            onSubmit={log(true)}
+          >
+            <TextField
+              size="small"
+              type="date"
+              label="Date"
+              value={on}
+              onChange={(event) => setOn(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              size="small"
+              label="Minutes"
+              value={minutes}
+              onChange={(event) => setMinutes(event.target.value)}
+              slotProps={{ htmlInput: { inputMode: "decimal" } }}
+              sx={{ width: 110 }}
+            />
+            <TextField
+              size="small"
+              label="Note"
+              placeholder="score, where heard, what failed"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              sx={{ flexGrow: 1, minWidth: 200 }}
+            />
+            <Button variant="contained" size="small" type="submit">
+              Log a pass
+            </Button>
+            <Button variant="outlined" size="small" onClick={log(false)}>
+              Log a fail
+            </Button>
+          </Stack>
+        </>
+      )}
     </Box>
   );
 }

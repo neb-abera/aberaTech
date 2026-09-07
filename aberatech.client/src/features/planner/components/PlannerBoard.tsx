@@ -46,7 +46,7 @@ const HOVER_OPEN_MS = 140;
 const HOVER_CLOSE_MS = 260;
 
 export default function PlannerBoard() {
-  const { model, update, version } = usePlanner();
+  const { model, update, version, saved, saving } = usePlanner();
   const theme = useTheme();
   const { mode: schemeMode, systemMode } = useColorScheme();
   // With a CSS variable theme the active scheme lives on useColorScheme, not on
@@ -245,6 +245,17 @@ export default function PlannerBoard() {
 
         <Stack spacing={2} sx={{ minWidth: 0 }}>
           <StatusPills model={model} audit={audit} />
+          {saved === "owner" && (
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary" }}
+              aria-live="polite"
+            >
+              {saving
+                ? "Saving this plan to your account"
+                : "Saved to your account"}
+            </Typography>
+          )}
           <TrackBanner model={model} />
           <NeedBar />
           <Paper variant="outlined" sx={{ p: 2 }}>
