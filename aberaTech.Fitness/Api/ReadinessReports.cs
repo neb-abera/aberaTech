@@ -26,6 +26,7 @@ internal static class ReadinessReports
         FitnessDbContext database,
         AthleteSettings row,
         BodyMetric? latestWeight,
+        IReadOnlyList<MonthlyAerobicPoint> aerobicTrend,
         LocalDate today,
         CancellationToken cancellationToken)
     {
@@ -43,6 +44,20 @@ internal static class ReadinessReports
         measurements[SelectionReadiness.Metrics.RunFiveMile] = Modeled(
             SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence);
 
+        // The pace held at the reference heart rate is the aerobic-threshold
+        // pace the coaches ask about, if the reference is set at that
+        // threshold — which is what the setting is for.
+        if (aerobicTrend.Count > 0)
+        {
+            var month = aerobicTrend[^1];
+            measurements[SelectionReadiness.Metrics.AerobicThresholdPace] = new Measurement(
+                SelectionReadiness.Metrics.AerobicThresholdPace,
+                month.MedianNormalizedSecPerKm * Vdot.MileMeters / 1000,
+                Basis.Measured,
+                Text($"median pace at {row.ReferenceHr} bpm over {month.RunCount} runs in {month.Year:0000}-{month.Month:00}"),
+                new LocalDate(month.Year, month.Month, 1));
+        }
+
         // Rucks: a timed twelve-mile at the load beats any estimate; without
         // one the load-carriage model reads the run engine through the pack.
         var rucks = await RucksAsync(database, zone, cancellationToken);
@@ -54,9 +69,19 @@ internal static class ReadinessReports
         // Strength: a triple, read back from the Epley estimate the trend already keeps.
         await StrengthAsync(database, zone, latestWeight, since, measurements, cancellationToken);
 
+        // Grip, as a loaded carry; and the bodyweight the athlete's own
+        // standards are set against.
+        await CarriesAsync(database, zone, latestWeight, since, measurements, cancellationToken);
+        if (latestWeight is { } weighed)
+        {
+            measurements[SelectionReadiness.Metrics.BodyweightLb] = new Measurement(
+                SelectionReadiness.Metrics.BodyweightLb, weighed.WeightKg * BodyMass.PoundsPerKg, Basis.Measured,
+                Text($"weigh-in of {weighed.Date:yyyy-MM-dd}"), weighed.Date);
+        }
+
         // The fitness test, scored on the published tables.
         var aftResults = await AftResultsAsync(database, row, today, cancellationToken);
-        AftMeasurements(aftResults, since, measurements);
+        AftMeasurements(aftResults, since, latestWeight, measurements);
 
         // Body composition, and what the selection cohort made of it.
         var body = await BodyReportAsync(database, since, measurements, cancellationToken);
@@ -237,6 +262,36 @@ internal static class ReadinessReports
             best.Select(p => new BestSetDto(p.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), p.Metric, p.Value)).ToArray());
     }
 
+    /// <summary>The longest farmer's carry at the athlete's own standard load, if one is logged.</summary>
+    private static async Task CarriesAsync(
+        FitnessDbContext database,
+        DateTimeZone zone,
+        BodyMetric? weight,
+        LocalDate since,
+        Dictionary<string, Measurement> measurements,
+        CancellationToken cancellationToken)
+    {
+        if (weight is not { } w) return;
+
+        var sets = await database.StrengthSets
+            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
+            .Where(x => x.s.WeightKg > 0 && x.s.DistanceMeters != null)
+            .ToListAsync(cancellationToken);
+
+        var best = Carries.Longest(
+            sets.Select(x => new LoggedCarry(x.StartedAt.InZone(zone).Date, x.s.Exercise, x.s.WeightKg, x.s.DistanceMeters)),
+            w.WeightKg,
+            Carries.StandardBodyweightMultiple,
+            since);
+
+        if (best is null) return;
+
+        measurements[SelectionReadiness.Metrics.FarmersCarryMeters] = new Measurement(
+            SelectionReadiness.Metrics.FarmersCarryMeters, best.DistanceMeters, Basis.Measured,
+            Text($"{best.TotalLoadKg * BodyMass.PoundsPerKg:0} lb total ({best.TotalLoadKg / 2 * BodyMass.PoundsPerKg:0} lb a hand, as logged) on {best.Date:yyyy-MM-dd}, against {w.WeightKg * Carries.StandardBodyweightMultiple * BodyMass.PoundsPerKg:0} lb needed at {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"),
+            best.Date);
+    }
+
     private static async Task StrengthAsync(
         FitnessDbContext database,
         DateTimeZone zone,
@@ -250,10 +305,13 @@ internal static class ReadinessReports
             .Where(x => x.s.WeightKg > 0 && x.s.Reps >= 1 && x.s.Reps <= OneRepMax.MaxTrustworthyReps)
             .ToListAsync(cancellationToken);
 
-        foreach (var (lift, bodyweightMetric, poundsMetric) in new[]
+        foreach (var (lift, reps, bodyweightMetric, poundsMetric) in new[]
                  {
-                     ("deadlift", SelectionReadiness.Metrics.DeadliftTripleToBodyweight, SelectionReadiness.Metrics.DeadliftTripleLb),
-                     ("front squat", SelectionReadiness.Metrics.FrontSquatTripleToBodyweight, (string?)null)
+                     ("deadlift", 3, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, SelectionReadiness.Metrics.DeadliftTripleLb),
+                     ("front squat", 3, SelectionReadiness.Metrics.FrontSquatTripleToBodyweight, (string?)null),
+                     ("front squat", 1, SelectionReadiness.Metrics.FrontSquatToBodyweight, (string?)null),
+                     ("bench press", 1, SelectionReadiness.Metrics.BenchPressToBodyweight, (string?)null),
+                     ("back squat", 5, (string?)null, SelectionReadiness.Metrics.BackSquatFiveLb)
                  })
         {
             var recent = sets
@@ -264,20 +322,21 @@ internal static class ReadinessReports
 
             if (recent.E1Rm <= 0) continue;
 
-            // Epley backwards: the triple is the single divided by (1 + 3/30).
-            var tripleKg = recent.E1Rm / (1 + 3.0 / 30);
-            var evidence = Text($"{tripleKg * BodyMass.PoundsPerKg:0} lb triple, from an Epley estimate of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb on {recent.Date:yyyy-MM-dd}");
+            // Epley backwards: the n-rep max is the single divided by (1 + n/30);
+            // the single is the estimate itself.
+            var repMaxKg = reps == 1 ? recent.E1Rm : recent.E1Rm / (1 + reps / 30.0);
+            var evidence = Text($"{repMaxKg * BodyMass.PoundsPerKg:0} lb for {reps}, from an Epley estimate of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb on {recent.Date:yyyy-MM-dd}");
 
             if (poundsMetric is not null)
             {
                 measurements[poundsMetric] = new Measurement(
-                    poundsMetric, tripleKg * BodyMass.PoundsPerKg, Basis.Modeled, evidence, recent.Date);
+                    poundsMetric, repMaxKg * BodyMass.PoundsPerKg, Basis.Modeled, evidence, recent.Date);
             }
 
-            if (weight is { } w)
+            if (bodyweightMetric is not null && weight is { } w)
             {
                 measurements[bodyweightMetric] = new Measurement(
-                    bodyweightMetric, tripleKg / w.WeightKg, Basis.Modeled,
+                    bodyweightMetric, repMaxKg / w.WeightKg, Basis.Modeled,
                     Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), recent.Date);
             }
         }
@@ -287,6 +346,24 @@ internal static class ReadinessReports
     internal static bool IsLift(string exercise, string lift)
     {
         var name = exercise.Trim().ToLowerInvariant();
+
+        if (lift == "bench press")
+        {
+            // The flat bench; an incline or decline is a different lift.
+            return name.Contains("bench press") && !(name.Contains("incline") || name.Contains("decline"));
+        }
+
+        if (lift == "back squat")
+        {
+            // "Squat (Barbell)" is the back squat; every named variant is not.
+            if (!name.Contains("squat")) return false;
+            return !(name.Contains("front") || name.Contains("split") || name.Contains("bulgarian")
+                     || name.Contains("goblet") || name.Contains("hack") || name.Contains("pistol")
+                     || name.Contains("jump") || name.Contains("overhead") || name.Contains("air")
+                     || name.Contains("wall") || name.Contains("sissy") || name.Contains("zercher")
+                     || name.Contains("belt") || name.Contains("smith") || name.Contains("machine"));
+        }
+
         if (!name.Contains(lift)) return false;
 
         // A Romanian or stiff-leg deadlift is an accessory, not the pull the
@@ -334,26 +411,45 @@ internal static class ReadinessReports
             Aft.Explain(score).Select(s => new StepDto(s.Label, s.Expression, s.Value, s.CitationId)).ToArray());
     }
 
-    /// <summary>What the most recent test says, where it is recent enough to say anything.</summary>
-    private static void AftMeasurements(
-        IReadOnlyList<AftResultDto> results, LocalDate since, Dictionary<string, Measurement> measurements)
+    /// <summary>
+    /// What the most recent test says. The latest official test always counts —
+    /// it is the athlete's record until the next one — but one older than the
+    /// measurement window says so in its evidence, because a gate scored from a
+    /// months-old card is a different thing from one scored from last week's.
+    /// </summary>
+    internal static void AftMeasurements(
+        IReadOnlyList<AftResultDto> results,
+        LocalDate since,
+        BodyMetric? weight,
+        Dictionary<string, Measurement> measurements)
     {
         if (results.Count == 0) return;
 
         var latest = results[0];
         var on = LocalDatePattern(latest.Date);
-        if (on < since) return;
 
-        var evidence = Text($"AFT of {latest.Date}");
+        var evidence = on < since
+            ? Text($"AFT of {latest.Date} ({Period.Between(on, since.PlusDays(MeasurementWindowDays), PeriodUnits.Days).Days} days old — retest to refresh)")
+            : Text($"AFT of {latest.Date}");
+
         measurements[SelectionReadiness.Metrics.AftTotal] = new Measurement(SelectionReadiness.Metrics.AftTotal, latest.Total, Basis.Measured, evidence, on);
         measurements[SelectionReadiness.Metrics.AftLowestEvent] = new Measurement(SelectionReadiness.Metrics.AftLowestEvent, latest.LowestEvent, Basis.Measured, evidence, on);
 
         // A test's events are measurements too, and outrank the model. They
-        // outrank a strength-log set only when they are better or newer.
+        // outrank a strength-log set only when they are better.
         Prefer(measurements, SelectionReadiness.Metrics.RunTwoMile, latest.TwoMileSeconds, lowerIsBetter: true, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.HandReleasePushUps, latest.HandReleasePushUps, lowerIsBetter: false, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.Plank, latest.PlankSeconds, lowerIsBetter: false, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleLb, latest.DeadliftKg * BodyMass.PoundsPerKg, lowerIsBetter: false, evidence, on);
+
+        // The test's deadlift is a real triple, which the log's Epley estimate
+        // only approximates; over the current bodyweight it scores the entry
+        // test's ratio too.
+        if (weight is { } w)
+        {
+            Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, latest.DeadliftKg / w.WeightKg, lowerIsBetter: false,
+                Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), on);
+        }
     }
 
     private static void Prefer(
