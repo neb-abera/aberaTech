@@ -29,6 +29,15 @@ import TrainingPlan from "../TrainingPlan";
 
 afterEach(cleanup);
 
+// This page is the heaviest mount in the suite: thirty-nine checkboxes,
+// seven gate forms, the drill, the cards and the template, each test
+// rendering all of it under coverage instrumentation. On a loaded machine
+// the default 15 s budget has been missed by the first owner test, and a
+// timed-out test leaves its fake timers and fetch stub behind, so every
+// test after it fails too. A wide budget here is the same calibration the
+// planner board's hook has; a real hang still fails, a minute later.
+vi.setConfig({ testTimeout: 60_000 });
+
 const respond = (status: number, body: unknown = null) => ({
   status,
   ok: status >= 200 && status < 300,
