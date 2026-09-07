@@ -147,9 +147,19 @@ COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
 # logic); the floor sits below the measured value (30.5% on 2026-08) so a
 # reasonable refactor doesn't break the build, while deleting tests or
 # landing a large untested feature does. Low on purpose: it is a ratchet to
-# raise as coverage grows, not a target.
+# raise as coverage grows, not a target. Measured 51.4% on 2026-09-08.
+#
+# SingleHit=true: coverlet's default counts every hit of every location, and
+# that counter sits inside the model-fitting loops the Fitness tests drive
+# hard. Measured 2026-09-08 in this image: the 652 tests take 15 s bare and
+# 8 m 38 s under default instrumentation (one posterior test alone went from
+# 6 s to 267 s); with SingleHit they take 28 s and report the same 51.4%
+# line-rate, because covered-or-not is all the floor below reads. Hit counts
+# are the only thing given up, and nothing here consumes them. This stage
+# was the long pole of every pull request, at 5 to 15 minutes on the shared
+# runners, for that one default.
 ARG SERVER_COVERAGE_MIN=25
-RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs" && \
+RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SingleHit=true && \
     report="$(find aberaTech.Server.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)" && \
     [ -n "$report" ] && \
     rate="$(sed -n 's/.*<coverage[^>]*line-rate="\([0-9.]*\)".*/\1/p' "$report" | head -1)" && \
