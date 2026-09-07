@@ -32,6 +32,25 @@ sourced predictions out.
   and horizons are asked for, and per-goal probabilities.
 - **Prescribes**: name any distance, any time and any date, and get back the
   week it needs — hours by zone — or the constraint that makes it impossible.
+- **Gates selection**: the published standards between the athlete and a
+  Special Forces slot — the AFT combat standard, the SFAS day-one minimums,
+  Evoke's Selection Prep entry test, a Guard company's SFRE prerequisites and
+  the competitive row — as dated gates scored from the log. Runs come from the
+  VDOT anchor, rucks from a timed twelve-mile at the load or else from the
+  Pandolf load-carriage model through the run engine, calisthenics from the
+  best recent bodyweight set in the strength log, strength from the Epley
+  triple, and the fitness test from the tables the Army published. Every line
+  says whether its number was measured or modelled, and every line that the
+  log cannot score is listed rather than dropped.
+- **Reads the pack**: a ruck's load is parsed from the activity name
+  ("Ruck 45lb", "12 mi @ 20 kg") or typed per ruck on the page, kept in
+  kilograms and shown in both units; rucks are trended as pace at the
+  reference heart rate and reference load, and a timed march reads back to
+  the run VDOT it implies.
+- **Scores the AFT**: five raw results in, points per event and the combat
+  standard out, on the athlete's age band, from the 1 June 2025 tables
+  transcribed row for row. Body fat and lean mass are placed against the
+  selection cohort's published quartile rates.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
   Cureton & Sparling, Rønnestad & Mujika, Gabbett, Coggan, Epley, Brzycki,

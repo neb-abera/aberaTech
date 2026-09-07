@@ -23,12 +23,14 @@ import { formatPace, kgToLb } from "../core/format";
 import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
 import ProjectionPanel from "./ProjectionPanel";
+import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
 const TAB_SLUGS: readonly string[] = [
   "dashboard",
+  "readiness",
   "solve",
   "plan",
   "data",
@@ -196,6 +198,7 @@ export default function FitnessPanel() {
         allowScrollButtonsMobile
       >
         <Tab label="Dashboard" />
+        <Tab label="Readiness" />
         <Tab label="Solve" />
         <Tab label="Plan" />
         <Tab label="Data" />
@@ -206,19 +209,22 @@ export default function FitnessPanel() {
         <Dashboard summary={summary} />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
-        <Workbench summary={summary} />
+        <ReadinessPanel readiness={summary.readiness} />
       </Section>
       <Section index={2} tab={tab} visited={visited}>
-        <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
+        <Workbench summary={summary} />
       </Section>
       <Section index={3} tab={tab} visited={visited}>
+        <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
+      </Section>
+      <Section index={4} tab={tab} visited={visited}>
         <DataPanel
           hevyApi={me.hevyApi}
           settings={summary.settings}
           onDataChanged={reloadSummary}
         />
       </Section>
-      <Section index={4} tab={tab} visited={visited}>
+      <Section index={5} tab={tab} visited={visited}>
         <SourcesPanel />
       </Section>
     </Stack>

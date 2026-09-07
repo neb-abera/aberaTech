@@ -29,6 +29,8 @@ export interface SettingsDto {
   /** The clamp the server applies, so the page can offer the range it honours. */
   maxWeightAdjustmentFraction: number;
   homeAltitudeMeters: number;
+  /** The date the readiness gates count back from, if named. */
+  selectionDate: string | null;
 }
 
 export interface SettingsUpdate {
@@ -49,6 +51,7 @@ export interface SettingsUpdate {
   homeAltitudeMeters: number;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
+  selectionDate: string | null;
 }
 
 export interface AerobicPoint {
@@ -123,6 +126,7 @@ export interface Summary {
   measuredDoseSteps: Step[];
   deficiencySpread: number | null;
   activityCount: number;
+  readiness: Readiness;
 }
 
 /** A projected fitness with the interval around it. */
@@ -263,6 +267,8 @@ export interface ActivityRow {
   distanceMeters: number | null;
   durationSeconds: number;
   averageHr: number | null;
+  /** The dry load on a ruck, in kilograms; null when nothing recorded it. */
+  loadKg: number | null;
 }
 
 /**
@@ -661,4 +667,179 @@ export async function deleteLockedPrediction(id: string): Promise<void> {
     { method: "DELETE" },
   );
   if (!response.ok) throw new Error(await response.text());
+}
+
+/** The athlete's standing on one metric, and where the number came from. */
+export interface Standing {
+  metric: string;
+  value: number;
+  basis: "Measured" | "Modeled";
+  evidence: string;
+  on: string | null;
+}
+
+export type GateStatus = "Pass" | "Fail" | "Unknown";
+
+export interface RequirementResult {
+  metric: string;
+  label: string;
+  comparison: "AtLeast" | "AtMost";
+  target: number;
+  unit: string;
+  citationId: string;
+  status: GateStatus;
+  current: Standing | null;
+  gap: string;
+}
+
+/** One published standard on the way to selection, scored and dated. */
+export interface Gate {
+  id: string;
+  name: string;
+  purpose: string;
+  weeksBeforeSelection: number;
+  dueOn: string | null;
+  status: GateStatus;
+  passed: number;
+  known: number;
+  requirements: RequirementResult[];
+  untracked: string[];
+}
+
+export interface RuckPoint {
+  month: string;
+  medianSecPerKm: number;
+  rucks: number;
+}
+
+export interface RuckMarch {
+  date: string;
+  distanceMeters: number;
+  seconds: number;
+  loadKg: number;
+  averageHr: number | null;
+  impliedVdot: number | null;
+}
+
+export interface RuckReport {
+  referenceLoadKg: number;
+  ruckEfficiency: number;
+  trend: RuckPoint[];
+  marches: RuckMarch[];
+  predictedTwelveMileAt45Seconds: number | null;
+  predictedTwelveMileAt35Seconds: number | null;
+  rucksWithoutLoad: number;
+  steps: Step[];
+}
+
+export interface BestSet {
+  date: string;
+  metric: string;
+  value: number;
+}
+
+export interface CalisthenicsReport {
+  latest: BestSet[];
+  history: BestSet[];
+}
+
+export interface BodyPoint {
+  date: string;
+  weightKg: number;
+  bodyFatPercent: number | null;
+  leanMassKg: number | null;
+}
+
+export interface BodyReport {
+  points: BodyPoint[];
+  latestBodyFatPercent: number | null;
+  latestLeanMassKg: number | null;
+  cohortRateByBodyFat: number | null;
+  cohortRateByLeanMass: number | null;
+}
+
+export interface AftEvent {
+  event: string;
+  name: string;
+  raw: number;
+  points: number;
+}
+
+export interface AftResult {
+  id: string;
+  date: string;
+  deadliftKg: number;
+  handReleasePushUps: number;
+  sprintDragCarrySeconds: number;
+  plankSeconds: number;
+  twoMileSeconds: number;
+  total: number;
+  lowestEvent: number;
+  meetsCombatStandard: boolean;
+  ageBand: string;
+  ageAssumed: boolean;
+  events: AftEvent[];
+  steps: Step[];
+}
+
+/** Everything between the athlete and a selection slot, as the log sees it. */
+export interface Readiness {
+  selectionDate: string | null;
+  gates: Gate[];
+  ruck: RuckReport;
+  calisthenics: CalisthenicsReport;
+  body: BodyReport;
+  aftResults: AftResult[];
+}
+
+export interface AftResultUpdate {
+  date: string;
+  deadliftKg: number;
+  handReleasePushUps: number;
+  sprintDragCarrySeconds: number;
+  plankSeconds: number;
+  twoMileSeconds: number;
+}
+
+async function send(
+  url: string,
+  method: string,
+  body: unknown,
+): Promise<Response> {
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+  return response;
+}
+
+/** Record a fitness test; the answer is the test scored on the published tables. */
+export async function saveAftResult(
+  update: AftResultUpdate,
+): Promise<AftResult> {
+  const response = await send("/api/fitness/aft", "POST", update);
+  return (await response.json()) as AftResult;
+}
+
+export async function deleteAftResult(id: string): Promise<void> {
+  const response = await fetch(`/api/fitness/aft/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+}
+
+/** The load a ruck was carried at, in kilograms; null clears it. */
+export async function saveActivityLoad(
+  id: string,
+  loadKg: number | null,
+): Promise<void> {
+  await send(`/api/fitness/activities/${encodeURIComponent(id)}/load`, "PUT", {
+    loadKg,
+  });
 }

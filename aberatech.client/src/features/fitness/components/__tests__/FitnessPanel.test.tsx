@@ -56,6 +56,7 @@ const emptySummary = {
     female: null,
     availableHoursPerWeek: 7,
     sustainedWeeklyHours: null,
+    selectionDate: null,
   },
   aerobicTrend: [
     { month: "2026-07", medianSecPerKm: 447, runs: 2 },
@@ -112,6 +113,29 @@ const emptySummary = {
   ],
   deficiencySpread: 0.147,
   activityCount: 25,
+  readiness: {
+    selectionDate: null,
+    gates: [],
+    ruck: {
+      referenceLoadKg: 20.41,
+      ruckEfficiency: 0.67,
+      trend: [],
+      marches: [],
+      predictedTwelveMileAt45Seconds: null,
+      predictedTwelveMileAt35Seconds: null,
+      rucksWithoutLoad: 0,
+      steps: [],
+    },
+    calisthenics: { latest: [], history: [] },
+    body: {
+      points: [],
+      latestBodyFatPercent: null,
+      latestLeanMassKg: null,
+      cohortRateByBodyFat: null,
+      cohortRateByLeanMass: null,
+    },
+    aftResults: [],
+  },
 };
 
 describe("FitnessPanel", () => {
