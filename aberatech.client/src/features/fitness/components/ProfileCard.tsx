@@ -50,6 +50,9 @@ export default function ProfileCard({
   const [altitudeFt, setAltitudeFt] = React.useState(
     String(Math.round(settings.homeAltitudeMeters * FEET_PER_METER)),
   );
+  const [selectionDate, setSelectionDate] = React.useState(
+    settings.selectionDate ?? "",
+  );
   const [anchorDistance, setAnchorDistance] = React.useState(2 * MILE);
   const [anchorTime, setAnchorTime] = React.useState("");
   const [anchorDate, setAnchorDate] = React.useState(
@@ -71,6 +74,11 @@ export default function ProfileCard({
   );
   const [availableHours, setAvailableHours] = React.useState(
     String(settings.availableHoursPerWeek),
+  );
+  const [sustainedHours, setSustainedHours] = React.useState(
+    settings.sustainedWeeklyHours === null
+      ? ""
+      : String(settings.sustainedWeeklyHours),
   );
   const [peakWeightLb, setPeakWeightLb] = React.useState(
     settings.pastPeakWeightKg === null
@@ -116,6 +124,18 @@ export default function ProfileCard({
       }
     }
 
+    const sustained = Number(sustainedHours);
+    if (
+      sustainedHours.trim() !== "" &&
+      (!Number.isFinite(sustained) || sustained < 0 || sustained > 40)
+    ) {
+      setStatus({
+        ok: false,
+        text: "Biggest sustained week must be 0-40 hours.",
+      });
+      return;
+    }
+
     const hours = Number(availableHours);
     if (!Number.isFinite(hours) || hours < 0 || hours > 40) {
       setStatus({ ok: false, text: "Available hours must be 0-40 a week." });
@@ -131,12 +151,15 @@ export default function ProfileCard({
       await saveSettings({
         referenceHr: settings.referenceHr,
         ltSecondsPerKm: settings.ltSecondsPerKm,
+        ltHr: settings.ltHr,
         planMinutesPerWeek: settings.planMinutesPerWeek,
         startVdot: settings.startVdot,
         vdotMeasuredOn: anchorDate.trim() === "" ? null : anchorDate,
         birthYear: birthYear.trim() === "" ? null : Number(birthYear),
         female: book === "unstated" ? null : book === "women",
         availableHoursPerWeek: Number(availableHours),
+        sustainedWeeklyHours:
+          sustainedHours.trim() === "" ? null : Number(sustainedHours),
         pastPeakWeightKg:
           peakWeightLb.trim() === "" ? null : lbToKg(Number(peakWeightLb)),
         goalWeightKg:
@@ -147,6 +170,7 @@ export default function ProfileCard({
         homeAltitudeMeters: altitude / FEET_PER_METER,
         anchorDistanceMeters: anchorSeconds === null ? null : anchorDistance,
         anchorSeconds,
+        selectionDate: selectionDate.trim() === "" ? null : selectionDate,
       });
       setStatus({ ok: true, text: "Profile saved — predictions now use it." });
       onSaved();
@@ -183,6 +207,15 @@ export default function ProfileCard({
               <MenuItem value="men">Men's record book</MenuItem>
               <MenuItem value="women">Women's record book</MenuItem>
             </TextField>
+            <TextField
+              label="Biggest week you have held (h)"
+              type="number"
+              value={sustainedHours}
+              onChange={(event) => setSustainedHours(event.target.value)}
+              helperText="Held for a month without breaking down — sets the recovery budget ceilings are planned against"
+              slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
+              sx={{ width: 260 }}
+            />
             <TextField
               label="Hours you can train"
               type="number"
@@ -288,6 +321,15 @@ export default function ProfileCard({
               value={altitudeFt}
               onChange={(event) => setAltitudeFt(event.target.value)}
               helperText="El Paso ≈ 3,900 ft; ~1% on race times"
+              sx={{ width: 200 }}
+            />
+            <TextField
+              label="Selection date"
+              type="date"
+              value={selectionDate}
+              onChange={(event) => setSelectionDate(event.target.value)}
+              helperText="The SFRE; the readiness gates count back from it"
+              slotProps={{ inputLabel: { shrink: true } }}
               sx={{ width: 200 }}
             />
             <Button

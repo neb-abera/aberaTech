@@ -39,17 +39,27 @@ set up, and no version of them to keep in step with the server.
 
 ```
 make            # list every target
-make up         # the whole site and its database on http://localhost:8080
+make ports      # which compose project and host ports this copy uses
+make up         # the whole site and its database
 make queue-open # switch /schedule into queue mode
 make queue-close# switch it back to showing bookable slots
-make dev        # hot reloading dev server on http://localhost:3000
+make dev        # hot reloading dev server
 make test       # unit tests, against your working tree
 make lint       # eslint and prettier, against your working tree
 make fmt        # rewrite files to match prettier
 make check      # the gate CI runs: type check, unit tests, lint and format
-make run        # build and run the production image on http://localhost:8080
-make clean      # remove the compose containers and their volumes
+make run        # build and run the production image
+make clean      # remove this copy's containers and volumes
 ```
+
+`make ports` first, because the answer is not the same in every copy of this
+repository. Several sessions work here at once, each in its own git worktree,
+and every published port and container name is derived from the directory: one
+copy on `http://localhost:8080`, the next on `8157`, each with its own compose
+project and its own database. `make clean` takes down the copy you are standing
+in and nothing else. The main checkout keeps the numbers this file used to
+quote. Override any of them for one run — `APP_PORT=9001 make up` — or edit the
+`.env` the first `make` writes.
 
 `make dev`, `make test` and `make lint` bind mount the working tree, so they see
 uncommitted edits and give a fast loop.

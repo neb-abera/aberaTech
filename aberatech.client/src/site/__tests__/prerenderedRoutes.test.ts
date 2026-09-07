@@ -19,6 +19,7 @@ describe("prerenderedRoutes", () => {
   it("includes every internal guide from sections.ts", () => {
     expect(prerenderedRoutes).toContain("/transition");
     expect(prerenderedRoutes).toContain("/technical");
+    expect(prerenderedRoutes).toContain("/rf-training");
   });
 
   it("leaves the live app pages client-rendered", () => {

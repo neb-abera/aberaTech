@@ -59,6 +59,12 @@ public static class Highlights
             $"Median HR-normalized pace {Pace(previous.MedianNormalizedSecPerKm)}/km → " +
             $"{Pace(last.MedianNormalizedSecPerKm)}/km ({previous.RunCount} → {last.RunCount} runs).";
 
+        // A treadmill month's pace is the belt's reading; say so next to the number.
+        if (last.IndoorRuns * 2 > last.RunCount)
+        {
+            evidence += $" {last.IndoorRuns} of the latest month's runs were on a treadmill, whose distance is an estimate.";
+        }
+
         highlights.Add(change > 0
             ? new Highlight("aerobic-gain",
                 $"Aerobic base up {Format.Percent(change)} month over month", evidence, Positive: true)
@@ -126,6 +132,37 @@ public static class Highlights
                     Positive: false));
             }
         }
+    }
+
+    /// <summary>Days after which a time trial no longer says where the athlete is.</summary>
+    public const int AnchorStaleAfterDays = 90;
+
+    /// <summary>
+    /// Whether the anchor every projection launches from is worth launching from.
+    /// </summary>
+    /// <remarks>
+    /// The console projected for weeks from a VDOT that was the default, and
+    /// said so only in a caption nobody read. A model is only as good as its
+    /// last measured anchor, so an unmeasured or stale one is a finding on the
+    /// dashboard, next to the trends it is quietly distorting.
+    /// </remarks>
+    public static Highlight? Anchor(LocalDate? measuredOn, LocalDate today)
+    {
+        if (measuredOn is not { } measured)
+        {
+            return new Highlight("anchor-missing",
+                "Your anchor is the default, not a measurement",
+                "Every projection launches from the default VDOT because no time trial is recorded. Run a two-mile and record it on the Data tab.",
+                Positive: false);
+        }
+
+        var age = Period.Between(measured, today, PeriodUnits.Days).Days;
+        if (age <= AnchorStaleAfterDays) return null;
+
+        return new Highlight("anchor-stale",
+            $"Your anchor is {age} days old",
+            $"Time trial on {measured:yyyy-MM-dd}; after {AnchorStaleAfterDays} days of training it no longer says where you are. Re-run it.",
+            Positive: false);
     }
 
     private static string Pace(double secPerKm)
