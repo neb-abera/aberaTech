@@ -35,7 +35,7 @@ export const guides: Entry[] = [
     navLabel: "Field RF Training",
     to: "/rf-training",
     blurb:
-      "A one-year, self-paced field communications curriculum: HF on wire antennas, networks, mesh, spectrum, drones and power.",
+      "A one-year plan for field radio: wire antennas and HF, networks, mesh, spectrum, drones and power.",
   },
 ];
 
