@@ -83,6 +83,8 @@ public static class GarminExportJson
 
         var started = Instant.FromUnixTimeMilliseconds((long)startMillis.Value);
         var id = Number(element, "activityId");
+        var sport = GarminActivitiesCsv.MapSport(Text(element, "activityType"));
+        var name = Text(element, "name");
 
         return new Activity
         {
@@ -94,12 +96,13 @@ public static class GarminExportJson
                 ? $"garmin:{started.ToUnixTimeSeconds()}"
                 : $"garmin:{(long)id.Value}",
             StartedAt = started,
-            Sport = GarminActivitiesCsv.MapSport(Text(element, "activityType")),
-            Name = Text(element, "name"),
+            Sport = sport,
+            Name = name,
             DistanceMeters = Number(element, "distance") is { } cm and > 0 ? cm / 100.0 : null,
             DurationSeconds = durationMillis.Value / 1000.0,
             AverageHr = Hr(element, "avgHr"),
-            MaxHr = Hr(element, "maxHr")
+            MaxHr = Hr(element, "maxHr"),
+            LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null
         };
     }
 

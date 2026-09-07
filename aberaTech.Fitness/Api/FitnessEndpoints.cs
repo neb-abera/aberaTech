@@ -27,7 +27,8 @@ public sealed record SettingsUpdate(
     double HomeAltitudeMeters = 0,
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
-    double? AnchorSeconds = null);
+    double? AnchorSeconds = null,
+    string? SelectionDate = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -271,13 +272,74 @@ public static class FitnessEndpoints
                     a.Name,
                     a.DistanceMeters,
                     a.DurationSeconds,
-                    a.AverageHr
+                    a.AverageHr,
+                    a.LoadKg
                 })
                 .ToListAsync(cancellationToken);
 
             var total = await database.Activities.CountAsync(cancellationToken);
 
             return Results.Ok(new { activities = rows, total, limit });
+        });
+
+        // No watch records what was in the pack, and without it a ruck is a
+        // walk as far as the models know. Typed on the page, per ruck.
+        api.MapPut("/activities/{id:guid}/load", async (
+            Guid id, ActivityLoadUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            if (update.LoadKg is <= 0 or > 100) return Fail("A load is 0-100 kg, or empty to clear it.");
+
+            var activity = await database.Activities.SingleOrDefaultAsync(a => a.Id == id, cancellationToken);
+            if (activity is null) return Results.NotFound();
+            if (activity.Sport != "ruck") return Fail("Only a ruck carries a load.");
+
+            activity.LoadKg = update.LoadKg;
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
+        });
+
+        // A fitness test is a measurement the gates outrank the model with;
+        // stored raw, scored on the way out against the published tables.
+        api.MapPost("/aft", async (AftResultUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var date = ParseDate(update.Date);
+            if (date is null) return Fail("A test needs a date.");
+            if (update.DeadliftKg is < 0 or > 400 || update.HandReleasePushUps is < 0 or > 200
+                || update.SprintDragCarrySeconds is < 0 or > 900 || update.PlankSeconds is < 0 or > 1800
+                || update.TwoMileSeconds is < 0 or > 3600)
+            {
+                return Fail("One of those results is outside anything the tables score.");
+            }
+
+            var existing = await database.AftResults.SingleOrDefaultAsync(r => r.Date == date, cancellationToken);
+            if (existing is null)
+            {
+                existing = new AftResult { Id = Guid.NewGuid(), Date = date.Value };
+                database.AftResults.Add(existing);
+            }
+
+            existing.DeadliftKg = update.DeadliftKg;
+            existing.HandReleasePushUps = update.HandReleasePushUps;
+            existing.SprintDragCarrySeconds = update.SprintDragCarrySeconds;
+            existing.PlankSeconds = update.PlankSeconds;
+            existing.TwoMileSeconds = update.TwoMileSeconds;
+
+            await database.SaveChangesAsync(cancellationToken);
+
+            var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+                      ?? new AthleteSettings { Id = 1 };
+            var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+            return Results.Ok(ReadinessReports.Score(existing, row, today));
+        });
+
+        api.MapDelete("/aft/{id:guid}", async (Guid id, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var existing = await database.AftResults.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (existing is null) return Results.NotFound();
+
+            database.AftResults.Remove(existing);
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
         });
 
         // A bad import has to be undoable from the page. Without this the only
@@ -332,6 +394,7 @@ public static class FitnessEndpoints
             row.PastPeakWeightKg = update.PastPeakWeightKg;
             row.GoalWeightKg = update.GoalWeightKg;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
+            row.SelectionDate = ParseDate(update.SelectionDate);
 
             // A race is the honest way to state the anchor; raw VDOT stays as
             // the escape hatch. The race happened at home altitude, so its

@@ -32,6 +32,13 @@ public class Activity
 
     public int? MaxHr { get; set; }
 
+    /// <summary>
+    /// The dry load carried on a ruck, in kilograms. No watch records it, so
+    /// it is read from the activity's name on import and typed on the page
+    /// otherwise; without it a ruck is a walk as far as the models know.
+    /// </summary>
+    public double? LoadKg { get; set; }
+
     public List<StrengthSet> Sets { get; set; } = [];
 }
 
@@ -50,6 +57,31 @@ public class StrengthSet
     public double WeightKg { get; set; }
 
     public int Reps { get; set; }
+
+    /// <summary>How long a timed set was held — a plank has no reps.</summary>
+    public double? DurationSeconds { get; set; }
+}
+
+/// <summary>
+/// One Army Fitness Test, as taken: the five raw results. Scored on the way
+/// out, never stored scored, so a change to the tables re-scores history.
+/// </summary>
+public class AftResult
+{
+    public Guid Id { get; set; }
+
+    public LocalDate Date { get; set; }
+
+    /// <summary>Three-repetition maximum deadlift. The test records pounds; this keeps kilograms like everything else.</summary>
+    public double DeadliftKg { get; set; }
+
+    public int HandReleasePushUps { get; set; }
+
+    public double SprintDragCarrySeconds { get; set; }
+
+    public double PlankSeconds { get; set; }
+
+    public double TwoMileSeconds { get; set; }
 }
 
 /// <summary>A dated bodyweight observation. Entered by hand; nutrition lives elsewhere.</summary>
@@ -157,6 +189,13 @@ public class AthleteSettings
 
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
+
+    /// <summary>
+    /// The date the athlete is assessing on — for a Guard candidate the
+    /// readiness evaluation, the first gate. The readiness gates count back
+    /// from it; unset, they carry no dates.
+    /// </summary>
+    public LocalDate? SelectionDate { get; set; }
 }
 
 /// <summary>

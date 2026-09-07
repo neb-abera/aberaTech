@@ -101,3 +101,29 @@ public sealed class HighlightsTests
         Assert.Single(highlights, h => h.Kind == "strength-pr" && h.Headline.Contains("Deadlift"));
     }
 }
+
+public sealed class AnchorHighlightTests
+{
+    [Fact]
+    public void A_default_anchor_is_a_finding()
+    {
+        var highlight = Highlights.Anchor(null, new LocalDate(2026, 9, 7));
+
+        Assert.NotNull(highlight);
+        Assert.Equal("anchor-missing", highlight!.Kind);
+        Assert.False(highlight.Positive);
+    }
+
+    [Fact]
+    public void A_recent_time_trial_is_quiet_and_an_old_one_is_not()
+    {
+        var today = new LocalDate(2026, 9, 7);
+
+        Assert.Null(Highlights.Anchor(today.PlusDays(-30), today));
+
+        var stale = Highlights.Anchor(today.PlusDays(-120), today);
+        Assert.NotNull(stale);
+        Assert.Equal("anchor-stale", stale!.Kind);
+        Assert.Contains("120 days", stale.Headline);
+    }
+}
