@@ -84,6 +84,17 @@ public static class FitnessReports
         if (Highlights.Anchor(row.VdotMeasuredOn, today) is { } anchor) findings.Insert(0, anchor);
         findings.AddRange(Durability.Highlights(durability));
 
+        // The ledger's discipline: something locked ahead of the next test,
+        // and every due prediction scored.
+        var ledger = (await database.Predictions.ToListAsync(cancellationToken))
+            .Select(l => new LedgerEntry(l.Id, l.MadeOn, l.TargetDate, l.DistanceMeters, l.PredictedSeconds, l.ActualSeconds))
+            .OrderBy(l => l.TargetDate)
+            .ToArray();
+        var nextTest = row.SelectionDate is { } selection
+            ? SelectionReadiness.Gates.Select(g => selection.PlusWeeks(-g.WeeksBeforeSelection)).Where(d => d > today).DefaultIfEmpty(selection).Min()
+            : (LocalDate?)null;
+        findings.AddRange(Ledger.Highlights(ledger, nextTest, today));
+
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
             trend.Select(p => new AerobicPointDto(

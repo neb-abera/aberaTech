@@ -24,6 +24,16 @@ public sealed class FitnessOptions
     public string HevyApiKey { get; set; } = string.Empty;
 
     /// <summary>
+    /// A bearer key that lets one caller — the morning brief — read the
+    /// plain-text digest without a Google sign-in. Optional; without it the
+    /// route is never mapped. At least 32 characters, a container app secret,
+    /// never appsettings.
+    /// </summary>
+    public string DigestKey { get; set; } = string.Empty;
+
+    public bool HasDigestKey => DigestKey.Trim().Length >= 32;
+
+    /// <summary>
     /// Skip sign-in entirely, so `make up` shows the real console with no
     /// Google project and no allowlist.
     /// </summary>
