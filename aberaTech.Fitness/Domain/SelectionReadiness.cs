@@ -123,6 +123,10 @@ public static class SelectionReadiness
         public const string FarmersCarryMeters = "farmer-carry-1.5bw-m";
 
         public const string BodyweightLb = "bodyweight-lb";
+
+        /// <summary>Estimated one-rep maxes over bodyweight, the way the athlete's own sheet states them.</summary>
+        public const string BenchPressToBodyweight = "bench-1rm-bw";
+        public const string FrontSquatToBodyweight = "front-squat-1rm-bw";
     }
 
     /// <summary>Units a requirement is stated in.</summary>
@@ -221,7 +225,7 @@ public static class SelectionReadiness
         new Gate(
             "own-standards",
             "Your own 2027 standards",
-            "The physical fitness goals workbook, scored from the log. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
+            "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \"non-essential\" are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
             0,
             [
                 new Requirement(Metrics.FarmersCarryMeters, "Farmer's carry at 1.5× bodyweight", Comparison.AtLeast, 100, Units.Meters, Citations.NebFitnessGoals.Id),
@@ -229,10 +233,12 @@ public static class SelectionReadiness
                 new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 62, Units.Reps, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BenchPressToBodyweight, "Bench press 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.FrontSquatToBodyweight, "Front squat 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.BodyweightLb, "Bodyweight", Comparison.AtMost, 170, Units.Pounds, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 10, Units.Percent, Citations.NebFitnessGoals.Id)
             ],
-            ["500-yard swim in 8:00", "Back squat 315 (a single, not the five the gates read)"])
+            [])
     ];
 
     /// <summary>Every gate, scored against what the athlete has.</summary>

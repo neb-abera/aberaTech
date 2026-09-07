@@ -73,6 +73,8 @@ public sealed class ReadinessReportsTests
     [InlineData("Bulgarian Split Squat", "back squat", false)]
     [InlineData("Goblet Squat", "back squat", false)]
     [InlineData("Front Squat (Barbell)", "front squat", true)]
+    [InlineData("Bench Press (Barbell)", "bench press", true)]
+    [InlineData("Incline Bench Press (Dumbbell)", "bench press", false)]
     [InlineData("Deadlift (Barbell)", "deadlift", true)]
     [InlineData("Romanian Deadlift (Barbell)", "deadlift", false)]
     public void Lifts_are_read_by_name_without_their_variants(string exercise, string lift, bool expected)

@@ -57,6 +57,8 @@ const METRIC_LABELS: Record<string, string> = {
   "back-squat-5rm-lb": "Back squat 5RM",
   "farmer-carry-1.5bw-m": "Farmer's carry at 1.5× bodyweight",
   "bodyweight-lb": "Bodyweight",
+  "bench-1rm-bw": "Bench press to bodyweight",
+  "front-squat-1rm-bw": "Front squat to bodyweight",
 };
 
 /**
