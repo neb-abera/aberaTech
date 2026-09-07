@@ -65,6 +65,18 @@ const emptySummary = {
   ],
   fieldTests: [],
   thresholdSuggestion: null,
+  durability: {
+    acuteLoad: 0,
+    chronicLoad: 0,
+    acwr: null,
+    monotony: null,
+    weeklyStrain: null,
+    impactStreakDays: 0,
+    restDaysLast7: 7,
+    daysOfLog: 0,
+    days: [],
+    steps: [],
+  },
   weeklyVolume: [{ weekStart: "2026-08-24", minutes: 85 }],
   strengthTrend: [
     { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },

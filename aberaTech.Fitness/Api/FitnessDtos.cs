@@ -138,6 +138,22 @@ public sealed record PredictionDto(
     IReadOnlyList<StepDto> Steps,
     IReadOnlyList<string> Assumptions);
 
+/// <summary>One day's training load, in easy-hour equivalents.</summary>
+public sealed record DailyLoadDto(string Date, double Load, bool Impact);
+
+/// <summary>How the recent load is being carried.</summary>
+public sealed record DurabilityDto(
+    double AcuteLoad,
+    double ChronicLoad,
+    double? Acwr,
+    double? Monotony,
+    double? WeeklyStrain,
+    int ImpactStreakDays,
+    int RestDaysLast7,
+    int DaysOfLog,
+    IReadOnlyList<DailyLoadDto> Days,
+    IReadOnlyList<StepDto> Steps);
+
 public sealed record SummaryDto(
     SettingsDto Settings,
     IReadOnlyList<AerobicPointDto> AerobicTrend,
@@ -151,7 +167,8 @@ public sealed record SummaryDto(
     int ActivityCount,
     ReadinessDto Readiness,
     IReadOnlyList<FieldTestDto> FieldTests,
-    ThresholdSuggestionDto? ThresholdSuggestion);
+    ThresholdSuggestionDto? ThresholdSuggestion,
+    DurabilityDto Durability);
 
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
 public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On);

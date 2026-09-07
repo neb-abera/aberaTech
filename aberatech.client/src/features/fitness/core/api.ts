@@ -144,6 +144,27 @@ export interface Dose {
   zones: ZoneHours[];
 }
 
+/** One day's training load, in easy-hour equivalents. */
+export interface DailyLoad {
+  date: string;
+  load: number;
+  impact: boolean;
+}
+
+/** How the recent load is being carried: ratio, monotony, streak. */
+export interface Durability {
+  acuteLoad: number;
+  chronicLoad: number;
+  acwr: number | null;
+  monotony: number | null;
+  weeklyStrain: number | null;
+  impactStreakDays: number;
+  restDaysLast7: number;
+  daysOfLog: number;
+  days: DailyLoad[];
+  steps: Step[];
+}
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
@@ -158,6 +179,7 @@ export interface Summary {
   readiness: Readiness;
   fieldTests: FieldTest[];
   thresholdSuggestion: ThresholdSuggestion | null;
+  durability: Durability;
 }
 
 /** A projected fitness with the interval around it. */
