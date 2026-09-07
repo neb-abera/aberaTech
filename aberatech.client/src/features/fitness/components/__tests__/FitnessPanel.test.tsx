@@ -57,11 +57,26 @@ const emptySummary = {
     availableHoursPerWeek: 7,
     sustainedWeeklyHours: null,
     selectionDate: null,
+    ltHr: null,
   },
   aerobicTrend: [
-    { month: "2026-07", medianSecPerKm: 447, runs: 2 },
-    { month: "2026-08", medianSecPerKm: 410, runs: 11 },
+    { month: "2026-07", medianSecPerKm: 447, runs: 2, indoorRuns: 0 },
+    { month: "2026-08", medianSecPerKm: 410, runs: 11, indoorRuns: 4 },
   ],
+  fieldTests: [],
+  thresholdSuggestion: null,
+  durability: {
+    acuteLoad: 0,
+    chronicLoad: 0,
+    acwr: null,
+    monotony: null,
+    weeklyStrain: null,
+    impactStreakDays: 0,
+    restDaysLast7: 7,
+    daysOfLog: 0,
+    days: [],
+    steps: [],
+  },
   weeklyVolume: [{ weekStart: "2026-08-24", minutes: 85 }],
   strengthTrend: [
     { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },
@@ -142,11 +157,14 @@ describe("FitnessPanel", () => {
   it("explains an unconfigured deployment instead of erroring", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          json({ configured: false, signedIn: false, hevyApi: false }),
-        ),
+      vi.fn().mockResolvedValue(
+        json({
+          configured: false,
+          signedIn: false,
+          hevyApi: false,
+          strava: false,
+        }),
+      ),
     );
 
     mount();
@@ -157,11 +175,14 @@ describe("FitnessPanel", () => {
   it("offers sign-in and nothing else to the signed-out", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          json({ configured: true, signedIn: false, hevyApi: false }),
-        ),
+      vi.fn().mockResolvedValue(
+        json({
+          configured: true,
+          signedIn: false,
+          hevyApi: false,
+          strava: false,
+        }),
+      ),
     );
 
     mount();
@@ -181,11 +202,26 @@ describe("FitnessPanel", () => {
         const path = String(url);
         if (path.includes("/api/fitness/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (path.includes("/api/fitness/summary")) {
           return Promise.resolve(json(emptySummary));
+        }
+        if (path.includes("/api/fitness/digest")) {
+          return Promise.resolve(
+            json({
+              date: "2026-09-07",
+              weekStart: "2026-09-07",
+              text: "abera.tech/fitness — week of 2026-09-07",
+              lines: [],
+            }),
+          );
         }
         return Promise.reject(new Error(`unexpected ${path}`));
       }),
@@ -218,7 +254,12 @@ describe("FitnessPanel", () => {
         const url = String(input);
         if (url.endsWith("/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (url.endsWith("/summary")) {
@@ -249,7 +290,12 @@ describe("FitnessPanel", () => {
         const path = String(url);
         if (path.includes("/api/fitness/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (path.includes("/api/fitness/summary")) {
@@ -273,7 +319,12 @@ describe("FitnessPanel", () => {
         const url = String(input);
         if (url.endsWith("/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (url.endsWith("/summary")) {

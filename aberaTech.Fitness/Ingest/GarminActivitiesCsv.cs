@@ -64,11 +64,20 @@ public static class GarminActivitiesCsv
                 DurationSeconds = seconds,
                 AverageHr = ParseHr(avgHr, row),
                 MaxHr = ParseHr(maxHr, row),
-                LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null
+                LoadKg = sport == "ruck" ? RuckLoad.Parse(name) : null,
+                Indoor = IsIndoor(row[type])
             });
         }
 
         return activities;
+    }
+
+    /// <summary>Garmin names the treadmill in the activity type; anything else outdoors is not.</summary>
+    internal static bool? IsIndoor(string activityType)
+    {
+        var t = activityType.Trim().ToLowerInvariant();
+        if (t.Length == 0) return null;
+        return t.Contains("treadmill") || t.Contains("indoor") || t.Contains("virtual");
     }
 
     internal static string MapSport(string activityType)

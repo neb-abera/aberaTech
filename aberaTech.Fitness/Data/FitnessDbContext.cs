@@ -11,6 +11,10 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<AthleteSettings> Settings => Set<AthleteSettings>();
     public DbSet<LockedPrediction> Predictions => Set<LockedPrediction>();
     public DbSet<AftResult> AftResults => Set<AftResult>();
+    public DbSet<Lap> Laps => Set<Lap>();
+    public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
+    public DbSet<SyncState> SyncStates => Set<SyncState>();
+    public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +32,17 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
             .WithOne()
             .HasForeignKey(s => s.ActivityId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Activity>()
+            .HasMany(a => a.Laps)
+            .WithOne()
+            .HasForeignKey(l => l.ActivityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SyncState>().HasKey(s => s.Source);
+        modelBuilder.Entity<SyncState>().Property(s => s.Source).HasMaxLength(32);
+        modelBuilder.Entity<SyncState>().Property(s => s.LastOutcome).HasMaxLength(256);
+        modelBuilder.Entity<StravaConnection>().Property(c => c.LastError).HasMaxLength(256);
 
         // One weigh-in per day; a second entry that day is a correction.
         modelBuilder.Entity<BodyMetric>()
@@ -52,5 +67,9 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<AftResult>()
             .HasIndex(r => r.Date)
             .IsUnique();
+
+        modelBuilder.Entity<OwnerDocument>().HasKey(d => d.Key);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Key).HasMaxLength(64);
+        modelBuilder.Entity<OwnerDocument>().Property(d => d.Json).HasColumnType("jsonb");
     }
 }
