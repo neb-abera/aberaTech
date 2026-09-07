@@ -117,6 +117,11 @@ services:
     volumes:
       - .:/src
     working_dir: /src
+    # The timing tests report their wall clock and enforce it only when asked,
+    # because a shared machine makes the number noise. Pass the flag through
+    # so `ABERA_ENFORCE_TIMING=1 make servertest` profiles on a quiet box.
+    environment:
+      ABERA_ENFORCE_TIMING: ${ABERA_ENFORCE_TIMING:-}
     # SkipClientProject: the tests reference the server project, whose SPA
     # reference would otherwise make dotnet probe for node this image lacks.
     command:
