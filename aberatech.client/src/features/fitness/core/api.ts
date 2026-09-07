@@ -33,6 +33,8 @@ export interface SettingsDto {
   homeAltitudeMeters: number;
   /** The date the readiness gates count back from, if named. */
   selectionDate: string | null;
+  /** The lactate-threshold heart rate, when a test has set it. */
+  ltHr: number | null;
 }
 
 export interface SettingsUpdate {
@@ -54,12 +56,37 @@ export interface SettingsUpdate {
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
   selectionDate: string | null;
+  ltHr: number | null;
 }
 
 export interface AerobicPoint {
   month: string;
   medianSecPerKm: number;
   runs: number;
+  /** How many of the month's runs were on a treadmill. */
+  indoorRuns: number;
+}
+
+/** A field test the log turned out to contain: an AeT (MAF / drift) run or a threshold time trial. */
+export interface FieldTest {
+  kind: "aet" | "threshold";
+  activityId: string;
+  date: string;
+  secPerKm: number;
+  averageHr: number;
+  /** Pace-to-heart-rate decoupling between the halves, when laps allowed it. */
+  driftPercent: number | null;
+  indoor: boolean;
+  evidence: string;
+}
+
+/** What the latest tests say the profile's thresholds should read. */
+export interface ThresholdSuggestion {
+  aetHr: number | null;
+  ltHr: number | null;
+  ltSecPerKm: number | null;
+  reason: string;
+  basis: string;
 }
 
 export interface WeekVolume {
@@ -129,6 +156,8 @@ export interface Summary {
   deficiencySpread: number | null;
   activityCount: number;
   readiness: Readiness;
+  fieldTests: FieldTest[];
+  thresholdSuggestion: ThresholdSuggestion | null;
 }
 
 /** A projected fitness with the interval around it. */

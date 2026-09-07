@@ -29,7 +29,8 @@ public sealed record SettingsUpdate(
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
     double? AnchorSeconds = null,
-    string? SelectionDate = null);
+    string? SelectionDate = null,
+    int? LtHr = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -354,6 +355,11 @@ public static class FitnessEndpoints
         api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             if (update.ReferenceHr is < 80 or > 220) return Fail("Reference HR out of range.");
+            if (update.LtHr is < 80 or > 220) return Fail("Lactate-threshold HR out of range.");
+            if (update.LtHr is { } ltHr && ltHr <= update.ReferenceHr)
+            {
+                return Fail("Lactate-threshold HR has to sit above the aerobic-threshold HR.");
+            }
 
             var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
             if (row is null)
@@ -374,6 +380,7 @@ public static class FitnessEndpoints
 
             row.ReferenceHr = update.ReferenceHr;
             row.LtSecondsPerKm = update.LtSecondsPerKm;
+            row.LtHr = update.LtHr;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
             row.BirthYear = update.BirthYear;
