@@ -8,6 +8,8 @@ export interface FitnessMe {
   configured: boolean;
   signedIn: boolean;
   hevyApi: boolean;
+  /** Whether this deployment has Strava credentials, so a connect button makes sense. */
+  strava: boolean;
 }
 
 export interface SettingsDto {
@@ -427,12 +429,43 @@ export async function uploadFile(file: File): Promise<ImportOutcome> {
   return (await response.json()) as ImportOutcome;
 }
 
-export async function syncHevy(): Promise<{ fetched: number; added: number }> {
-  const response = await fetch("/api/fitness/sync/hevy", { method: "POST" });
+/** Where one automatic source stands. */
+export interface SourceStatus {
+  configured: boolean;
+  connected: boolean;
+  lastRunAt: string | null;
+  lastSyncedAt: string | null;
+  lastOutcome: string | null;
+}
+
+export interface IngestStatus {
+  hevy: SourceStatus;
+  strava: SourceStatus;
+}
+
+export const fetchIngestStatus = () => get<IngestStatus>("/api/fitness/ingest");
+
+async function runSync(
+  url: string,
+): Promise<{ fetched: number; added: number }> {
+  const response = await fetch(url, { method: "POST" });
   if (!response.ok) {
     throw new ApiError(response.status, await response.text());
   }
   return (await response.json()) as { fetched: number; added: number };
+}
+
+export const syncHevy = () => runSync("/api/fitness/ingest/hevy/sync");
+
+export const syncStrava = () => runSync("/api/fitness/ingest/strava/sync");
+
+export async function disconnectStrava(): Promise<void> {
+  const response = await fetch("/api/fitness/ingest/strava/disconnect", {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
 }
 
 export async function saveSettings(update: SettingsUpdate): Promise<void> {

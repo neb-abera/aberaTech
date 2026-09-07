@@ -39,7 +39,71 @@ public class Activity
     /// </summary>
     public double? LoadKg { get; set; }
 
+    /// <summary>
+    /// Whether the session was on a treadmill or trainer. Treadmill distance
+    /// is a wrist estimate, so an indoor run is a weaker witness to pace than
+    /// an outdoor one; null when the source did not say.
+    /// </summary>
+    public bool? Indoor { get; set; }
+
     public List<StrengthSet> Sets { get; set; } = [];
+
+    /// <summary>The laps the watch recorded, when the source carried them.</summary>
+    public List<Lap> Laps { get; set; } = [];
+}
+
+/// <summary>
+/// One lap of a run or ruck: a distance, a time, a heart rate.
+/// </summary>
+/// <remarks>
+/// A session's average pace hides its structure — an interval workout reads
+/// as an easy run once the recoveries are averaged in. Laps are how the log
+/// says what a session actually was, and a lap button pressed at the start
+/// and end of the steady part of a test is how a test declares itself.
+/// </remarks>
+public class Lap
+{
+    public Guid Id { get; set; }
+
+    public Guid ActivityId { get; set; }
+
+    public int Index { get; set; }
+
+    public double? DistanceMeters { get; set; }
+
+    public double Seconds { get; set; }
+
+    public int? AverageHr { get; set; }
+}
+
+/// <summary>
+/// The Strava grant, one row. The refresh token is stored protected, the
+/// way the calendar's Google token is, so the database alone cannot read it.
+/// </summary>
+public class StravaConnection
+{
+    public int Id { get; set; }
+
+    public long? AthleteId { get; set; }
+
+    public required string ProtectedRefreshToken { get; set; }
+
+    public Instant ConnectedAt { get; set; }
+
+    public Instant? LastSyncedAt { get; set; }
+
+    public string? LastError { get; set; }
+}
+
+/// <summary>When an automatic source last ran, and what it said.</summary>
+public class SyncState
+{
+    /// <summary>hevy-api or strava.</summary>
+    public required string Source { get; set; }
+
+    public Instant? LastRunAt { get; set; }
+
+    public string? LastOutcome { get; set; }
 }
 
 /// <summary>One set inside a strength activity.</summary>

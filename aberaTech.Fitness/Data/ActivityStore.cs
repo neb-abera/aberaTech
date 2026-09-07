@@ -54,6 +54,7 @@ public static class ActivityStore
                 ? null
                 : await database.Activities
                     .Include(a => a.Sets)
+                    .Include(a => a.Laps)
                     .SingleOrDefaultAsync(
                         a => a.Source == activity.Source && a.ExternalId == activity.ExternalId,
                         cancellationToken);
@@ -77,6 +78,26 @@ public static class ActivityStore
                 // that names it may set it; a file that does not must not
                 // erase what the owner typed on the page.
                 existing.LoadKg = activity.LoadKg ?? existing.LoadKg;
+                existing.Indoor = activity.Indoor ?? existing.Indoor;
+
+                // Laps travel with the record that carries them; a file
+                // without laps must not erase the ones a richer file brought.
+                if (activity.Laps.Count > 0)
+                {
+                    existing.Laps.Clear();
+                    foreach (var lap in activity.Laps)
+                    {
+                        existing.Laps.Add(new Lap
+                        {
+                            Id = Guid.NewGuid(),
+                            ActivityId = existing.Id,
+                            Index = lap.Index,
+                            DistanceMeters = lap.DistanceMeters,
+                            Seconds = lap.Seconds,
+                            AverageHr = lap.AverageHr
+                        });
+                    }
+                }
 
                 existing.Sets.Clear();
                 foreach (var set in activity.Sets)
