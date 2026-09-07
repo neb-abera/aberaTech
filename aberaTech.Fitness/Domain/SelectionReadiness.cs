@@ -118,6 +118,11 @@ public static class SelectionReadiness
         public const string AerobicThresholdPace = "aet-pace";
 
         public const string BackSquatFiveLb = "back-squat-5rm-lb";
+
+        /// <summary>Farmer's carry at 1.5× bodyweight, the longest distance held, in metres.</summary>
+        public const string FarmersCarryMeters = "farmer-carry-1.5bw-m";
+
+        public const string BodyweightLb = "bodyweight-lb";
     }
 
     /// <summary>Units a requirement is stated in.</summary>
@@ -130,6 +135,7 @@ public static class SelectionReadiness
         public const string Pounds = "lb";
         public const string Points = "pts";
         public const string Percent = "%";
+        public const string Meters = "m";
     }
 
     private const double Mile = Vdot.MileMeters;
@@ -211,7 +217,22 @@ public static class SelectionReadiness
                 new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 40, Units.Reps, Citations.SfasDayOne.Id),
                 new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 15, Units.Percent, Citations.FarinaSfasBody.Id)
             ],
-            ["Land navigation, day and night", "Back-to-back days under load"])
+            ["Land navigation, day and night", "Back-to-back days under load"]),
+        new Gate(
+            "own-standards",
+            "Your own 2027 standards",
+            "The physical fitness goals workbook, scored from the log. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
+            0,
+            [
+                new Requirement(Metrics.FarmersCarryMeters, "Farmer's carry at 1.5× bodyweight", Comparison.AtLeast, 100, Units.Meters, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 62, Units.Reps, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BodyweightLb, "Bodyweight", Comparison.AtMost, 170, Units.Pounds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 10, Units.Percent, Citations.NebFitnessGoals.Id)
+            ],
+            ["500-yard swim in 8:00", "Back squat 315 (a single, not the five the gates read)"])
     ];
 
     /// <summary>Every gate, scored against what the athlete has.</summary>
@@ -252,6 +273,7 @@ public static class SelectionReadiness
         Units.Pounds => Text($"{value:0} lb ({value / BodyMass.PoundsPerKg:0} kg)"),
         Units.Points => Text($"{value:0} pts"),
         Units.Percent => Text($"{value:0.#}%"),
+        Units.Meters => Text($"{value:0} m"),
         _ => Text($"{value:0.##}")
     };
 

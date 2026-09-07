@@ -69,6 +69,16 @@ internal static class ReadinessReports
         // Strength: a triple, read back from the Epley estimate the trend already keeps.
         await StrengthAsync(database, zone, latestWeight, since, measurements, cancellationToken);
 
+        // Grip, as a loaded carry; and the bodyweight the athlete's own
+        // standards are set against.
+        await CarriesAsync(database, zone, latestWeight, since, measurements, cancellationToken);
+        if (latestWeight is { } weighed)
+        {
+            measurements[SelectionReadiness.Metrics.BodyweightLb] = new Measurement(
+                SelectionReadiness.Metrics.BodyweightLb, weighed.WeightKg * BodyMass.PoundsPerKg, Basis.Measured,
+                Text($"weigh-in of {weighed.Date:yyyy-MM-dd}"), weighed.Date);
+        }
+
         // The fitness test, scored on the published tables.
         var aftResults = await AftResultsAsync(database, row, today, cancellationToken);
         AftMeasurements(aftResults, since, latestWeight, measurements);
@@ -250,6 +260,36 @@ internal static class ReadinessReports
         return new CalisthenicsDto(
             latest,
             best.Select(p => new BestSetDto(p.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), p.Metric, p.Value)).ToArray());
+    }
+
+    /// <summary>The longest farmer's carry at the athlete's own standard load, if one is logged.</summary>
+    private static async Task CarriesAsync(
+        FitnessDbContext database,
+        DateTimeZone zone,
+        BodyMetric? weight,
+        LocalDate since,
+        Dictionary<string, Measurement> measurements,
+        CancellationToken cancellationToken)
+    {
+        if (weight is not { } w) return;
+
+        var sets = await database.StrengthSets
+            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
+            .Where(x => x.s.WeightKg > 0 && x.s.DistanceMeters != null)
+            .ToListAsync(cancellationToken);
+
+        var best = Carries.Longest(
+            sets.Select(x => new LoggedCarry(x.StartedAt.InZone(zone).Date, x.s.Exercise, x.s.WeightKg, x.s.DistanceMeters)),
+            w.WeightKg,
+            Carries.StandardBodyweightMultiple,
+            since);
+
+        if (best is null) return;
+
+        measurements[SelectionReadiness.Metrics.FarmersCarryMeters] = new Measurement(
+            SelectionReadiness.Metrics.FarmersCarryMeters, best.DistanceMeters, Basis.Measured,
+            Text($"{best.TotalLoadKg * BodyMass.PoundsPerKg:0} lb total ({best.TotalLoadKg / 2 * BodyMass.PoundsPerKg:0} lb a hand, as logged) on {best.Date:yyyy-MM-dd}, against {w.WeightKg * Carries.StandardBodyweightMultiple * BodyMass.PoundsPerKg:0} lb needed at {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"),
+            best.Date);
     }
 
     private static async Task StrengthAsync(

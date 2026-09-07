@@ -55,6 +55,8 @@ const METRIC_LABELS: Record<string, string> = {
   "body-fat": "Body fat",
   "aet-pace": "Aerobic-threshold pace",
   "back-squat-5rm-lb": "Back squat 5RM",
+  "farmer-carry-1.5bw-m": "Farmer's carry at 1.5× bodyweight",
+  "bodyweight-lb": "Bodyweight",
 };
 
 /**
@@ -78,6 +80,8 @@ export function formatRequirement(unit: string, value: number): string {
       return `${Math.round(value)} pts`;
     case "%":
       return `${Number(value.toFixed(1))}%`;
+    case "m":
+      return `${Math.round(value)} m`;
     default:
       return String(Number(value.toFixed(2)));
   }

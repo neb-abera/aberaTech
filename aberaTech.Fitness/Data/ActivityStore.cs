@@ -89,7 +89,8 @@ public static class ActivityStore
                         SetIndex = set.SetIndex,
                         WeightKg = set.WeightKg,
                         Reps = set.Reps,
-                        DurationSeconds = set.DurationSeconds
+                        DurationSeconds = set.DurationSeconds,
+                        DistanceMeters = set.DistanceMeters
                     });
                 }
             }
