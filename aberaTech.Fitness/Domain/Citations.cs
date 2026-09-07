@@ -210,8 +210,8 @@ public static class Citations
 
     public static readonly Citation EvokeSfasReady = new(
         "evoke-sfas-ready",
-        "Ready for SFAS, per Evoke's military coaches: aerobic-threshold pace under 8:00/mile on the flat, five miles in 35:00, 15+ strict pull-ups and 80 push-ups, a 350 lb deadlift triple, a 250 lb squat for five, ten pull-ups in ~30 lb of kit; and the best ruckers were the best runners.",
-        "Jack Kuenzle (ex-Navy SEAL, FKT record holder) and Vince Paikowski (US Army SOF, 2021 Best Ranger winner), with Scott Johnston, answering an SFAS candidate on the Evoke Endurance forum.",
+        "Ready for SFAS, per Vince Paikowski and the Evoke coaches: aerobic-threshold pace under 8:00/mile on the flat, five miles in 35:00, 15+ strict pull-ups and 80 push-ups, a 350 lb deadlift triple and a 250 lb squat for five; the best ruckers Paikowski saw never trained with a ruck and were simply the best runners.",
+        "Vince Paikowski (US Army SOF, 2021 Best Ranger winner, D1 runner) with Jack Kuenzle and Scott Johnston, answering an SFAS candidate on the Evoke Endurance forum.",
         "Army Special Forces Selection (SFAS) — Evoke Endurance forum thread",
         2024,
         "https://evokeendurance.com/forums/topic/army-special-forces-selection-sfas/");

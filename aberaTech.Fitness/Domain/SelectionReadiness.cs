@@ -186,19 +186,18 @@ public static class SelectionReadiness
             ["Rope climb", "100 m swim", "Pull-ups (no count published)"]),
         new Gate(
             "evoke-sfas-ready",
-            "Evoke coaches' SFAS-ready numbers",
-            "Where the Selection Prep block is meant to leave you: the numbers Evoke's military coaches give when asked what ready for SFAS looks like, not the entry test.",
+            "Paikowski's SFAS-ready numbers",
+            "Where the Selection Prep block is meant to leave you: what Vince Paikowski and the Evoke coaches give when asked what ready for SFAS looks like, not the entry test. No ruck line on purpose — Paikowski's best ruckers were simply the best runners, and the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
             4,
             [
                 new Requirement(Metrics.AerobicThresholdPace, "Aerobic-threshold pace on the flat", Comparison.AtMost, 8 * 60, Units.SecondsPerMile, Citations.EvokeSfasReady.Id),
                 new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 35 * 60, Units.Seconds, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.RuckTwelveMileAt45, "Twelve-mile ruck at 45 lb", Comparison.AtMost, 3 * 3600, Units.Seconds, Citations.SfasDayOne.Id),
                 new Requirement(Metrics.PullUps, "Strict pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.EvokeSfasReady.Id),
                 new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.EvokeSfasReady.Id),
                 new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.EvokeSfasReady.Id),
                 new Requirement(Metrics.BackSquatFiveLb, "Back squat 5RM", Comparison.AtLeast, 250, Units.Pounds, Citations.EvokeSfasReady.Id)
             ],
-            ["Ten pull-ups in ~30 lb of kit", "Deadlift + squat + overhead press total of 750 lb", "5 × 1 mile at 7:30"]),
+            ["Deadlift + squat + overhead press total of 750 lb"]),
         new Gate(
             "sfas-competitive",
             "Competitive at selection",
