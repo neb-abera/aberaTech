@@ -8,6 +8,8 @@ export interface FitnessMe {
   configured: boolean;
   signedIn: boolean;
   hevyApi: boolean;
+  /** Whether this deployment has Strava credentials, so a connect button makes sense. */
+  strava: boolean;
 }
 
 export interface SettingsDto {
@@ -31,6 +33,8 @@ export interface SettingsDto {
   homeAltitudeMeters: number;
   /** The date the readiness gates count back from, if named. */
   selectionDate: string | null;
+  /** The lactate-threshold heart rate, when a test has set it. */
+  ltHr: number | null;
 }
 
 export interface SettingsUpdate {
@@ -52,12 +56,37 @@ export interface SettingsUpdate {
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
   selectionDate: string | null;
+  ltHr: number | null;
 }
 
 export interface AerobicPoint {
   month: string;
   medianSecPerKm: number;
   runs: number;
+  /** How many of the month's runs were on a treadmill. */
+  indoorRuns: number;
+}
+
+/** A field test the log turned out to contain: an AeT (MAF / drift) run or a threshold time trial. */
+export interface FieldTest {
+  kind: "aet" | "threshold";
+  activityId: string;
+  date: string;
+  secPerKm: number;
+  averageHr: number;
+  /** Pace-to-heart-rate decoupling between the halves, when laps allowed it. */
+  driftPercent: number | null;
+  indoor: boolean;
+  evidence: string;
+}
+
+/** What the latest tests say the profile's thresholds should read. */
+export interface ThresholdSuggestion {
+  aetHr: number | null;
+  ltHr: number | null;
+  ltSecPerKm: number | null;
+  reason: string;
+  basis: string;
 }
 
 export interface WeekVolume {
@@ -115,6 +144,37 @@ export interface Dose {
   zones: ZoneHours[];
 }
 
+/** One day's training load, in easy-hour equivalents. */
+export interface DailyLoad {
+  date: string;
+  load: number;
+  impact: boolean;
+}
+
+/** How the recent load is being carried: ratio, monotony, streak. */
+export interface Durability {
+  acuteLoad: number;
+  chronicLoad: number;
+  acwr: number | null;
+  monotony: number | null;
+  weeklyStrain: number | null;
+  impactStreakDays: number;
+  restDaysLast7: number;
+  daysOfLog: number;
+  days: DailyLoad[];
+  steps: Step[];
+}
+
+/** The week in one page, as the morning brief sees it. */
+export interface Digest {
+  date: string;
+  weekStart: string;
+  text: string;
+  lines: string[];
+}
+
+export const fetchDigest = () => get<Digest>("/api/fitness/digest");
+
 export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
@@ -127,6 +187,9 @@ export interface Summary {
   deficiencySpread: number | null;
   activityCount: number;
   readiness: Readiness;
+  fieldTests: FieldTest[];
+  thresholdSuggestion: ThresholdSuggestion | null;
+  durability: Durability;
 }
 
 /** A projected fitness with the interval around it. */
@@ -427,12 +490,43 @@ export async function uploadFile(file: File): Promise<ImportOutcome> {
   return (await response.json()) as ImportOutcome;
 }
 
-export async function syncHevy(): Promise<{ fetched: number; added: number }> {
-  const response = await fetch("/api/fitness/sync/hevy", { method: "POST" });
+/** Where one automatic source stands. */
+export interface SourceStatus {
+  configured: boolean;
+  connected: boolean;
+  lastRunAt: string | null;
+  lastSyncedAt: string | null;
+  lastOutcome: string | null;
+}
+
+export interface IngestStatus {
+  hevy: SourceStatus;
+  strava: SourceStatus;
+}
+
+export const fetchIngestStatus = () => get<IngestStatus>("/api/fitness/ingest");
+
+async function runSync(
+  url: string,
+): Promise<{ fetched: number; added: number }> {
+  const response = await fetch(url, { method: "POST" });
   if (!response.ok) {
     throw new ApiError(response.status, await response.text());
   }
   return (await response.json()) as { fetched: number; added: number };
+}
+
+export const syncHevy = () => runSync("/api/fitness/ingest/hevy/sync");
+
+export const syncStrava = () => runSync("/api/fitness/ingest/strava/sync");
+
+export async function disconnectStrava(): Promise<void> {
+  const response = await fetch("/api/fitness/ingest/strava/disconnect", {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
 }
 
 export async function saveSettings(update: SettingsUpdate): Promise<void> {
@@ -783,6 +877,57 @@ export interface AftResult {
 }
 
 /** Everything between the athlete and a selection slot, as the log sees it. */
+/** One gate line, looked at by its due date. */
+export interface OutlookLine {
+  metric: string;
+  label: string;
+  probability: number | null;
+  method: "trajectory" | "trend" | "held" | "none";
+  evidence: string;
+  projected: number | null;
+  readyInMonths: number | null;
+  hoursToReach: number | null;
+  unit: string;
+  comparison: "AtLeast" | "AtMost";
+  target: number;
+}
+
+/** One gate, looked at by its due date. */
+export interface OutlookGate {
+  id: string;
+  name: string;
+  weeksBeforeSelection: number;
+  dueOn: string | null;
+  monthsAway: number;
+  probability: number | null;
+  forecast: number;
+  total: number;
+  readyInMonths: number | null;
+  lines: OutlookLine[];
+}
+
+/** The gates as a forecast, under one training week. */
+export interface Outlook {
+  selectionDate: string | null;
+  weeklyHours: number;
+  measuredWeeklyHours: number;
+  compliance: number;
+  startVdot: number;
+  gates: OutlookGate[];
+  earliestSelectionDate: string | null;
+  bindingGate: string | null;
+  assumptions: string[];
+}
+
+export function fetchOutlook(
+  weeklyHours: number | null,
+  compliance: number,
+): Promise<Outlook> {
+  const query = new URLSearchParams({ compliance: String(compliance) });
+  if (weeklyHours !== null) query.set("weeklyHours", String(weeklyHours));
+  return get<Outlook>(`/api/fitness/readiness/outlook?${query.toString()}`);
+}
+
 export interface Readiness {
   selectionDate: string | null;
   gates: Gate[];

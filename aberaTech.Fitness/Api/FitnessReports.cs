@@ -43,8 +43,12 @@ public static class FitnessReports
             .FirstOrDefaultAsync(cancellationToken);
 
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
+        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+                  ?? new AthleteSettings { Id = 1 };
+
         var trend = AerobicAnalysis.MonthlyTrend(
-            await SteadyRunsAsync(database, cancellationToken), settings.ReferenceHr);
+            await SteadyRunsAsync(database, Bands(row), cancellationToken), settings.ReferenceHr);
 
         var weeks = WeeklyVolumes(await database.Activities
             .Where(a => a.Sport == "run" || a.Sport == "ruck")
@@ -71,28 +75,57 @@ public static class FitnessReports
                 Math.Round(p.FastSecPerKm), Math.Round(p.SlowSecPerKm)))
             .ToArray();
 
-        var (measured, sessions) = await MeasuredDoseAsync(database, settings.StartVdot, cancellationToken);
-
-        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
-        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
-                  ?? new AthleteSettings { Id = 1 };
+        var (measured, sessions, lapSplit) = await MeasuredDoseAsync(database, row, cancellationToken);
+        var (tests, suggestion) = await FieldTestsAsync(database, row, today, cancellationToken);
+        var durability = await DurabilityAsync(database, row, today, cancellationToken);
 
         // The anchor's age belongs with the findings it quietly distorts.
         var findings = highlights.ToList();
         if (Highlights.Anchor(row.VdotMeasuredOn, today) is { } anchor) findings.Insert(0, anchor);
+        findings.AddRange(Durability.Highlights(durability));
+
+        // The ledger's discipline: something locked ahead of the next test,
+        // and every due prediction scored.
+        var ledger = (await database.Predictions.ToListAsync(cancellationToken))
+            .Select(l => new LedgerEntry(l.Id, l.MadeOn, l.TargetDate, l.DistanceMeters, l.PredictedSeconds, l.ActualSeconds))
+            .OrderBy(l => l.TargetDate)
+            .ToArray();
+        var nextTest = row.SelectionDate is { } selection
+            ? SelectionReadiness.Gates.Select(g => selection.PlusWeeks(-g.WeeksBeforeSelection)).Where(d => d > today).DefaultIfEmpty(selection).Min()
+            : (LocalDate?)null;
+        findings.AddRange(Ledger.Highlights(ledger, nextTest, today));
 
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
-            trend.Select(p => new AerobicPointDto($"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount)).ToArray(),
+            trend.Select(p => new AerobicPointDto(
+                $"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount, p.IndoorRuns)).ToArray(),
             weeks,
             strength,
             findings.Select(h => new HighlightDto(h.Kind, h.Headline, h.Evidence, h.Positive)).ToArray(),
             paces,
             Dose(measured),
-            Steps(SessionMix.Explain(measured, RecentWeeks, sessions)),
+            Steps(SessionMix.Explain(measured, RecentWeeks, sessions, lapSplit)),
             spread,
             await database.Activities.CountAsync(cancellationToken),
-            await ReadinessReports.BuildAsync(database, row, weight, trend, today, cancellationToken));
+            await ReadinessReports.BuildAsync(database, row, weight, trend, today, cancellationToken),
+            tests.Select(t => new FieldTestDto(
+                t.Kind, t.ActivityId, t.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                t.SecPerKm, t.AverageHr, t.DriftPercent, t.Indoor, t.Evidence)).ToArray(),
+            suggestion is null
+                ? null
+                : new ThresholdSuggestionDto(
+                    suggestion.AetHr, suggestion.LtHr, suggestion.LtSecPerKm, suggestion.Reason, suggestion.Basis),
+            new DurabilityDto(
+                durability.AcuteLoad,
+                durability.ChronicLoad,
+                durability.Acwr,
+                durability.Monotony,
+                durability.WeeklyStrain,
+                durability.ImpactStreakDays,
+                durability.RestDaysLast7,
+                durability.DaysOfLog,
+                durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
+                Steps(durability.Steps)));
     }
 
     public static async Task<PredictionDto> PredictionsAsync(
@@ -351,7 +384,7 @@ public static class FitnessReports
     /// What this athlete's week is allowed to be: their own recovery budget and
     /// the intensity their base can carry, rather than an elite athlete's.
     /// </summary>
-    private static DoseLimits LimitsFor(AthleteSnapshot athlete, double responsiveness = 1.0) =>
+    internal static DoseLimits LimitsFor(AthleteSnapshot athlete, double responsiveness = 1.0) =>
         new(
             athlete.Row.SustainedWeeklyHours is { } sustained
                 ? DoseResponse.StrainFor(sustained)
@@ -388,9 +421,9 @@ public static class FitnessReports
                   ?? new AthleteSettings { Id = 1 };
 
         var trend = AerobicAnalysis.MonthlyTrend(
-            await SteadyRunsAsync(database, cancellationToken), row.ReferenceHr);
+            await SteadyRunsAsync(database, Bands(row), cancellationToken), row.ReferenceHr);
 
-        var (measured, sessions) = await MeasuredDoseAsync(database, row.StartVdot, cancellationToken);
+        var (measured, sessions, _) = await MeasuredDoseAsync(database, row, cancellationToken);
         var observations = useHistory
             ? await ObservationsAsync(database, row, trend, cancellationToken)
             : [];
@@ -443,7 +476,11 @@ public static class FitnessReports
         if (trend.Count < ModelFit.MinimumObservations) return [];
 
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var activities = await database.Activities.OrderBy(a => a.StartedAt).ToListAsync(cancellationToken);
+        var activities = await database.Activities
+            .Include(a => a.Laps)
+            .OrderBy(a => a.StartedAt)
+            .ToListAsync(cancellationToken);
+        var bands = Bands(row);
 
         var latest = trend[^1];
         var reference = latest.MedianNormalizedSecPerKm;
@@ -462,32 +499,31 @@ public static class FitnessReports
                         var date = a.StartedAt.InZone(zone).Date;
                         return date.Year == point.Year && date.Month == point.Month;
                     })
-                    .Select(a => new LoggedSession(a.Sport, a.DistanceMeters, a.DurationSeconds))
+                    .Select(Session)
                     .ToArray();
 
                 return new FitObservation(
-                    months, vdot, SessionMix.WeeklyDose(sessions, DoseSchedule.WeeksPerMonth, row.StartVdot));
+                    months, vdot, SessionMix.WeeklyDose(sessions, DoseSchedule.WeeksPerMonth, row.StartVdot, bands));
             })
             .ToArray();
     }
 
     /// <summary>The week the athlete is actually training, read out of the log.</summary>
-    private static async Task<(TrainingDose Dose, int Sessions)> MeasuredDoseAsync(
-        FitnessDbContext database, double vdot, CancellationToken cancellationToken)
+    private static async Task<(TrainingDose Dose, int Sessions, int LapSplit)> MeasuredDoseAsync(
+        FitnessDbContext database, AthleteSettings row, CancellationToken cancellationToken)
     {
         var since = SystemClock.Instance.GetCurrentInstant()
             .Minus(Duration.FromDays(RecentWeeks * 7));
 
         var recent = await database.Activities
+            .Include(a => a.Laps)
             .Where(a => a.StartedAt >= since)
-            .Select(a => new { a.Sport, a.DistanceMeters, a.DurationSeconds })
             .ToListAsync(cancellationToken);
 
-        var sessions = recent
-            .Select(a => new LoggedSession(a.Sport, a.DistanceMeters, a.DurationSeconds))
-            .ToArray();
+        var sessions = recent.Select(Session).ToArray();
+        var lapSplit = sessions.Count(s => s.Sport == "run" && SessionMix.LapsDescribe(s));
 
-        return (SessionMix.WeeklyDose(sessions, RecentWeeks, vdot), sessions.Length);
+        return (SessionMix.WeeklyDose(sessions, RecentWeeks, row.StartVdot, Bands(row)), sessions.Length, lapSplit);
     }
 
     private static RealityCheckDto RealityCheck(
@@ -637,22 +673,99 @@ public static class FitnessReports
         return peakVdot;
     }
 
+    /// <summary>
+    /// The runs the aerobic trend may read pace-at-heart-rate from: steady
+    /// efforts below the lactate threshold, judged by heart rate and, where
+    /// the watch recorded laps, by how evenly they were run.
+    /// </summary>
     private static async Task<IReadOnlyList<SteadyRun>> SteadyRunsAsync(
-        FitnessDbContext database, CancellationToken cancellationToken)
+        FitnessDbContext database, HeartRateBands bands, CancellationToken cancellationToken)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
         var runs = await database.Activities
+            .Include(a => a.Laps)
             .Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null)
             .OrderBy(a => a.StartedAt)
             .ToListAsync(cancellationToken);
 
         return runs
+            .Where(a => SessionMix.IsSteady(Session(a), bands))
             .Select(a => new SteadyRun(
                 a.StartedAt.InZone(zone).Date,
                 a.DistanceMeters!.Value,
                 a.DurationSeconds,
-                a.AverageHr!.Value))
+                a.AverageHr!.Value,
+                a.Indoor == true))
             .ToArray();
+    }
+
+    /// <summary>The recent load, day by day, through the same zone split the dose uses.</summary>
+    private static async Task<DurabilityReport> DurabilityAsync(
+        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
+    {
+        var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var first = await database.Activities.OrderBy(a => a.StartedAt).Select(a => (Instant?)a.StartedAt).FirstOrDefaultAsync(cancellationToken);
+
+        var since = today.PlusDays(-(Durability.ChronicDays + Durability.StreakLimit + 30)).AtStartOfDayInZone(zone).ToInstant();
+        var recent = await database.Activities
+            .Include(a => a.Laps)
+            .Where(a => a.StartedAt >= since)
+            .ToListAsync(cancellationToken);
+
+        var bands = Bands(row);
+        var sessions = recent
+            .Select(a => new LoadedSession(a.StartedAt.InZone(zone).Date, a.Sport, SessionMix.Split(Session(a), row.StartVdot, bands)))
+            .ToList();
+
+        // The log may be older than the window; the ratio's waiting period is
+        // about the log's age, not the window's.
+        if (first is { } earliest && earliest.InZone(zone).Date < (sessions.Count > 0 ? sessions.Min(s => s.Date) : today))
+        {
+            sessions.Add(new LoadedSession(earliest.InZone(zone).Date, "other", new TrainingDose()));
+        }
+
+        return Durability.Build(sessions, today);
+    }
+
+    /// <summary>An activity as the classifier sees it, laps and all.</summary>
+    private static LoggedSession Session(Activity activity) =>
+        new(
+            activity.Sport,
+            activity.DistanceMeters,
+            activity.DurationSeconds,
+            activity.Laps
+                .OrderBy(l => l.Index)
+                .Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr))
+                .ToArray(),
+            activity.Indoor,
+            activity.AverageHr);
+
+    private static HeartRateBands Bands(AthleteSettings row) => new(row.ReferenceHr, row.LtHr);
+
+    /// <summary>The field tests the log contains, and what they say the thresholds are.</summary>
+    private static async Task<(IReadOnlyList<FieldTest> Tests, ThresholdSuggestion? Suggestion)> FieldTestsAsync(
+        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
+    {
+        var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var runs = await database.Activities
+            .Include(a => a.Laps)
+            .Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null)
+            .OrderBy(a => a.StartedAt)
+            .ToListAsync(cancellationToken);
+
+        var candidates = runs.Select(a => new FieldTestRun(
+            a.Id,
+            a.StartedAt.InZone(zone).Date,
+            a.Name,
+            a.DistanceMeters,
+            a.DurationSeconds,
+            a.AverageHr,
+            a.Indoor,
+            a.Laps.OrderBy(l => l.Index).Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr)).ToArray()));
+
+        var bands = Bands(row);
+        var tests = FieldTests.Detect(candidates, bands, row.StartVdot);
+        return (tests, FieldTests.Suggest(tests, bands, row.LtSecondsPerKm, today));
     }
 
     private static async Task<SettingsDto> SettingsAsync(FitnessDbContext database, CancellationToken cancellationToken)
@@ -678,7 +791,8 @@ public static class FitnessReports
             row.GoalWeightKg,
             BodyMass.MaxAdjustmentFraction,
             row.HomeAltitudeMeters,
-            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            row.LtHr);
     }
 
     private static IReadOnlyList<WeekVolumeDto> WeeklyVolumes(List<Activity> endurance, DateTimeZone zone)

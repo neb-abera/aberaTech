@@ -54,14 +54,14 @@ export interface GearItem {
 
 export const copy = {
   intro:
-    "Field communications is where radio theory meets a rucksack: a wire antenna cut by hand, a mesh with no infrastructure under it, a power budget that has to last the weekend. This is my self-paced, one-year curriculum for getting fluent at it. It doubles as hands-on preparation for the electrical engineering coursework I am heading into, because every block here is an applied version of a course I will sit later.",
-  note: "Progress is stored in this browser only. Nothing here is sent anywhere.",
+    "A one-year plan for getting good at field radio: wire antennas and HF, networks, mesh, spectrum, drones and power. I wrote it for myself and I am working through it. The blocks line up with the electrical engineering courses I am taking next, so the field work and the classroom feed each other.",
+  note: "The checklist, drill history and gate log are mine. Signed out, the page is read-only.",
   scoring:
-    "The plan is scored on logs, gates and clocks, not on hours spent. A block is finished when its gate passes, timed, outdoors.",
+    "Blocks are scored on gates and clocks, not hours. A block is done when its gate passes, timed, outdoors.",
   cards:
-    "The reference cards below are what to carry until the drill makes them unnecessary. Print them; the plan template prints with them.",
+    "Cards to carry until the drill makes them unnecessary. They print together with the plan template.",
   practice:
-    "Reading is passive; every block also lists practice that scores you. Those sites cannot report back here, so write their results into the gate log below the block: a practice exam percentage, a drill time, where a signal was heard. The log is the one place everything is scored.",
+    "Each block lists practice that scores you as well as reading. Those sites cannot report back here, so I write their results in the gate log: an exam percentage, a drill time, where a signal was heard.",
 };
 
 export const rules: string[] = [

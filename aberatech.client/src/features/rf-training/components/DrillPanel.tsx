@@ -23,9 +23,12 @@ import {
   score,
   seedForDate,
 } from "../core/drills";
-import { useDrillHistory } from "../hooks/useDrillHistory";
 
 interface Props {
+  /** Past sessions, newest last. Absent for a visitor: nothing is kept. */
+  history?: Result[];
+  /** Where a finished session goes. Absent for a visitor. */
+  onResult?: (result: Result) => void;
   /** Fixed for tests; the page uses today's date. */
   seed?: number;
   count?: number;
@@ -54,10 +57,18 @@ const formatSeconds = (seconds: number): string =>
  * from the first problem to the last, a score at the end, and a history of
  * the last sessions. The session is seeded from the date, so a second run
  * on the same day is the same problems: a retake, not a new test.
+ *
+ * The history is the owner's and arrives through props; a visitor can run
+ * the drill and see the score, and that is all.
  */
-export default function DrillPanel({ seed, count = 20, now }: Props) {
+export default function DrillPanel({
+  history = [],
+  onResult,
+  seed,
+  count = 20,
+  now,
+}: Props) {
   const clock = now ?? (() => new Date());
-  const { history, record } = useDrillHistory();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [input, setInput] = useState("");
 
@@ -95,7 +106,7 @@ export default function DrillPanel({ seed, count = 20, now }: Props) {
     const finished = clock();
     const seconds = Math.round((finished.getTime() - phase.startedAt) / 1000);
     const result = score(phase.session, phase.answers, seconds, finished);
-    record(result);
+    onResult?.(result);
     setPhase({ name: "done", result });
   };
 

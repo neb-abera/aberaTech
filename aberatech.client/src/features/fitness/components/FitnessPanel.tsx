@@ -22,9 +22,13 @@ import {
 import { formatPace, kgToLb } from "../core/format";
 import { AerobicTrendChart, VolumeChart } from "./charts";
 import DataPanel from "./DataPanel";
+import DecisionPanel from "./DecisionPanel";
+import DigestCard from "./DigestCard";
+import DurabilityCard from "./DurabilityCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
+import ThresholdsCard from "./ThresholdsCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -206,10 +210,13 @@ export default function FitnessPanel() {
       </Tabs>
 
       <Section index={0} tab={tab} visited={visited}>
-        <Dashboard summary={summary} />
+        <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
-        <ReadinessPanel readiness={summary.readiness} />
+        <Stack spacing={3}>
+          <DecisionPanel selectionDate={summary.readiness.selectionDate} />
+          <ReadinessPanel readiness={summary.readiness} />
+        </Stack>
       </Section>
       <Section index={2} tab={tab} visited={visited}>
         <Workbench summary={summary} />
@@ -220,6 +227,7 @@ export default function FitnessPanel() {
       <Section index={4} tab={tab} visited={visited}>
         <DataPanel
           hevyApi={me.hevyApi}
+          strava={me.strava}
           settings={summary.settings}
           onDataChanged={reloadSummary}
         />
@@ -231,7 +239,13 @@ export default function FitnessPanel() {
   );
 }
 
-function Dashboard({ summary }: { summary: Summary }) {
+function Dashboard({
+  summary,
+  onSettingsChanged,
+}: {
+  summary: Summary;
+  onSettingsChanged: () => void;
+}) {
   if (summary.activityCount === 0) {
     return (
       <Alert severity="info">
@@ -243,6 +257,8 @@ function Dashboard({ summary }: { summary: Summary }) {
 
   return (
     <Stack spacing={3}>
+      <DigestCard />
+
       {summary.highlights.length > 0 && (
         <Grid container spacing={2}>
           {summary.highlights.map((highlight) => (
@@ -292,6 +308,13 @@ function Dashboard({ summary }: { summary: Summary }) {
         </CardContent>
       </Card>
 
+      <ThresholdsCard
+        settings={summary.settings}
+        tests={summary.fieldTests}
+        suggestion={summary.thresholdSuggestion}
+        onSaved={onSettingsChanged}
+      />
+
       {summary.trainingPaces.length > 0 && (
         <Card variant="outlined">
           <CardContent>
@@ -340,6 +363,8 @@ function Dashboard({ summary }: { summary: Summary }) {
         </CardContent>
       </Card>
 
+      <DurabilityCard durability={summary.durability} />
+
       {summary.strengthTrend.length > 0 && (
         <Card variant="outlined">
           <CardContent>
@@ -373,7 +398,11 @@ function Dashboard({ summary }: { summary: Summary }) {
               .medianSecPerKm,
           )}{" "}
           at {summary.settings.referenceHr} bpm across{" "}
-          {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs.
+          {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs
+          {summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns > 0
+            ? ` (${summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns} on a treadmill)`
+            : ""}
+          .
         </Typography>
       )}
     </Stack>

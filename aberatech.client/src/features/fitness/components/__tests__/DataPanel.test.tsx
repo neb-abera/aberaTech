@@ -44,6 +44,7 @@ const settings: SettingsDto = {
   availableHoursPerWeek: 7,
   sustainedWeeklyHours: null,
   selectionDate: null,
+  ltHr: null,
 };
 
 function json(body: unknown, ok = true): Response {
@@ -71,6 +72,26 @@ function stubFetch(
         init,
       );
       calls.push(request);
+      if (request.url.endsWith("/api/fitness/ingest")) {
+        return Promise.resolve(
+          json({
+            hevy: {
+              configured: false,
+              connected: false,
+              lastRunAt: null,
+              lastSyncedAt: null,
+              lastOutcome: null,
+            },
+            strava: {
+              configured: false,
+              connected: false,
+              lastRunAt: null,
+              lastSyncedAt: null,
+              lastOutcome: null,
+            },
+          }),
+        );
+      }
       if (request.url.endsWith("/api/fitness/activities")) {
         return Promise.resolve(json(page));
       }

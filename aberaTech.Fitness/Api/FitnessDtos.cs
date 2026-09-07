@@ -1,6 +1,20 @@
 namespace aberaTech.Fitness.Api;
 
-public sealed record AerobicPointDto(string Month, double MedianSecPerKm, int Runs);
+public sealed record AerobicPointDto(string Month, double MedianSecPerKm, int Runs, int IndoorRuns = 0);
+
+/// <summary>A field test the log turned out to contain.</summary>
+public sealed record FieldTestDto(
+    string Kind,
+    Guid ActivityId,
+    string Date,
+    double SecPerKm,
+    int AverageHr,
+    double? DriftPercent,
+    bool Indoor,
+    string Evidence);
+
+/// <summary>What the latest tests say the profile's thresholds should read.</summary>
+public sealed record ThresholdSuggestionDto(int? AetHr, int? LtHr, double? LtSecPerKm, string Reason, string Basis);
 
 public sealed record WeekVolumeDto(string WeekStart, double Minutes);
 
@@ -35,7 +49,9 @@ public sealed record SettingsDto(
     double MaxWeightAdjustmentFraction,
     double HomeAltitudeMeters,
     /// <summary>The date the readiness gates count back from, if named.</summary>
-    string? SelectionDate = null);
+    string? SelectionDate = null,
+    /// <summary>The lactate-threshold heart rate, when a test has set it.</summary>
+    int? LtHr = null);
 
 public sealed record TrainingPaceDto(
     string Zone,
@@ -122,6 +138,22 @@ public sealed record PredictionDto(
     IReadOnlyList<StepDto> Steps,
     IReadOnlyList<string> Assumptions);
 
+/// <summary>One day's training load, in easy-hour equivalents.</summary>
+public sealed record DailyLoadDto(string Date, double Load, bool Impact);
+
+/// <summary>How the recent load is being carried.</summary>
+public sealed record DurabilityDto(
+    double AcuteLoad,
+    double ChronicLoad,
+    double? Acwr,
+    double? Monotony,
+    double? WeeklyStrain,
+    int ImpactStreakDays,
+    int RestDaysLast7,
+    int DaysOfLog,
+    IReadOnlyList<DailyLoadDto> Days,
+    IReadOnlyList<StepDto> Steps);
+
 public sealed record SummaryDto(
     SettingsDto Settings,
     IReadOnlyList<AerobicPointDto> AerobicTrend,
@@ -133,7 +165,10 @@ public sealed record SummaryDto(
     IReadOnlyList<StepDto> MeasuredDoseSteps,
     double? DeficiencySpread,
     int ActivityCount,
-    ReadinessDto Readiness);
+    ReadinessDto Readiness,
+    IReadOnlyList<FieldTestDto> FieldTests,
+    ThresholdSuggestionDto? ThresholdSuggestion,
+    DurabilityDto Durability);
 
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
 public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On);

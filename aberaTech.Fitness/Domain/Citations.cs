@@ -232,6 +232,38 @@ public static class Citations
         2026,
         null);
 
+    public static readonly Citation UphillAthleteHrDrift = new(
+        "uphill-athlete-hr-drift",
+        "On a run of an hour at a fixed heart rate, pace-to-heart-rate drift of 5% or less puts that heart rate at or below the aerobic threshold; more puts it above.",
+        "Scott Johnston, Uphill Athlete — the field protocol the Evoke/Uphill Athlete method sets aerobic-threshold heart rate by.",
+        "Heart Rate Drift: A Functional Measure of Aerobic Fitness (Uphill Athlete)",
+        2019,
+        "https://uphillathlete.com/aerobic-training/heart-rate-drift/");
+
+    public static readonly Citation FrielLthr = new(
+        "friel-lthr",
+        "Lactate-threshold heart rate is the average of the final 20 minutes of a 30-minute solo time trial; pace-to-heart-rate decoupling above about 5% marks an effort past the aerobic threshold.",
+        "Joe Friel, endurance coach for four decades and the author of the zone system most heart-rate training software adopted.",
+        "Total Heart Rate Training (Ulysses Press); The Triathlete's Training Bible (VeloPress)",
+        2006,
+        "https://www.trainingpeaks.com/blog/joe-friel-s-quick-guide-to-setting-zones/");
+
+    public static readonly Citation MaffetoneMaf = new(
+        "maffetone-maf",
+        "Pace at a fixed aerobic heart rate, retested monthly on the same course (the MAF test), is the field measure of aerobic development.",
+        "Phil Maffetone, DC, coach of six-time Ironman world champion Mark Allen.",
+        "The Big Book of Endurance Training and Racing (Skyhorse)",
+        2010,
+        "https://philmaffetone.com/maf-test/");
+
+    public static readonly Citation FosterMonotony = new(
+        "foster-monotony",
+        "Training monotony (mean daily load over its spread) above about 2.0, and the strain it multiplies into, preceded illness and overtraining even at modest volumes.",
+        "Carl Foster, PhD, University of Wisconsin–La Crosse — originator of session-RPE load monitoring and its monotony and strain indices.",
+        "Monitoring training in athletes with reference to overtraining syndrome (Med Sci Sports Exerc 30)",
+        1998,
+        "https://pubmed.ncbi.nlm.nih.gov/9662690/");
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -240,6 +272,7 @@ public static class Citations
         RonnestadStrength, GabbettWorkload, NonlinearRegression,
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
-        EvokeSfasReady, MtiGrip, NebFitnessGoals
+        EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
+        MaffetoneMaf, FosterMonotony
     ];
 }

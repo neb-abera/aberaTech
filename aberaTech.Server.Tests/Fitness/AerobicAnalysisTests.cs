@@ -57,3 +57,29 @@ public sealed class AerobicAnalysisTests
         Assert.True(spread > AerobicAnalysis.DeficiencyThreshold);
     }
 }
+
+public sealed class AerobicAnalysisTreadmillTests
+{
+    [Fact]
+    public void A_month_counts_its_treadmill_runs_and_the_highlight_says_so()
+    {
+        var august = new LocalDate(2026, 8, 1);
+        var july = new LocalDate(2026, 7, 1);
+        var runs = new[]
+        {
+            new SteadyRun(july.PlusDays(5), 5000, 5 * 420, 152),
+            new SteadyRun(july.PlusDays(12), 5000, 5 * 418, 152),
+            new SteadyRun(august.PlusDays(5), 5000, 5 * 390, 152, Indoor: true),
+            new SteadyRun(august.PlusDays(10), 5000, 5 * 395, 152, Indoor: true),
+            new SteadyRun(august.PlusDays(15), 5000, 5 * 400, 152)
+        };
+
+        var trend = AerobicAnalysis.MonthlyTrend(runs, referenceHr: 152);
+
+        Assert.Equal(2, trend[^1].IndoorRuns);
+        Assert.Equal(0, trend[0].IndoorRuns);
+
+        var highlight = Assert.Single(Highlights.Build(trend, [], 0, []), h => h.Kind == "aerobic-gain");
+        Assert.Contains("2 of the latest month's runs were on a treadmill", highlight.Evidence);
+    }
+}
