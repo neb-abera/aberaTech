@@ -481,4 +481,111 @@ export class PlannerModel {
     this.plan = this.plan.remove(code).plan;
     if (this.focus === code) this.focus = null;
   }
+
+  /**
+   * Everything a saved plan needs to come back as it was: the selection, the
+   * background, the calendar settings, the degree picks and the board. The
+   * transient bits, the focus highlight and the last automatic additions,
+   * are not part of a plan and are left out.
+   */
+  snapshot(): PlannerSnapshot {
+    return {
+      version: 1,
+      track: this.track,
+      areas: [...this.areas],
+      conc: [...this.conc],
+      background: [...this.background],
+      expandedBackground: [...this.expandedBackground],
+      perTerm: this.perTerm,
+      termsPerYear: this.termsPerYear,
+      startTerm: this.startTerm,
+      startYear: this.startYear,
+      autoPrereq: this.autoPrereq,
+      autoOnDrop: this.autoOnDrop,
+      leaveMonths: this.leaveMonths,
+      extensionMonths: this.extensionMonths,
+      degreePicks: [...this.degreePicks],
+      terms: this.plan.terms.map((term) => [...term]),
+    };
+  }
+
+  /**
+   * Put a saved plan back. Anything the catalog no longer knows is dropped
+   * rather than kept as a dangling code, and a snapshot of the wrong shape
+   * is ignored, so a stale document cannot break the board. The background
+   * is set before the board because the board's catalog depends on it.
+   */
+  restore(saved: unknown): boolean {
+    if (!isSnapshot(saved)) return false;
+    this.track = saved.track;
+    this.areas = new Set(saved.areas);
+    this.conc = new Set(saved.conc);
+    this.background = new Set(saved.background);
+    this.expandedBackground = new Set(saved.expandedBackground);
+    this.perTerm = saved.perTerm;
+    this.termsPerYear = saved.termsPerYear;
+    this.startTerm = saved.startTerm;
+    this.startYear = saved.startYear;
+    this.autoPrereq = saved.autoPrereq;
+    this.autoOnDrop = saved.autoOnDrop;
+    this.leaveMonths = saved.leaveMonths;
+    this.extensionMonths = saved.extensionMonths;
+    this.focus = null;
+    this.lastAdded = [];
+    const known = (code: string) => Boolean(this.courses[code]);
+    this.degreePicks = new Set(saved.degreePicks.filter(known));
+    // The terms exactly as saved, not re-trimmed: a snapshot must come back
+    // equal to itself.
+    this.plan = Plan.fromTerms(
+      this.courses,
+      saved.terms.map((term) => term.filter(known)),
+    );
+    return true;
+  }
+}
+
+export interface PlannerSnapshot {
+  version: 1;
+  track: string | null;
+  areas: string[];
+  conc: string[];
+  background: string[];
+  expandedBackground: string[];
+  perTerm: number;
+  termsPerYear: number;
+  startTerm: string;
+  startYear: number;
+  autoPrereq: boolean;
+  autoOnDrop: boolean;
+  leaveMonths: number;
+  extensionMonths: number;
+  degreePicks: string[];
+  terms: string[][];
+}
+
+const strings = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === "string");
+
+function isSnapshot(value: unknown): value is PlannerSnapshot {
+  if (typeof value !== "object" || value === null) return false;
+  const s = value as Record<string, unknown>;
+  return (
+    s.version === 1 &&
+    (s.track === null || typeof s.track === "string") &&
+    strings(s.areas) &&
+    strings(s.conc) &&
+    strings(s.background) &&
+    strings(s.expandedBackground) &&
+    typeof s.perTerm === "number" &&
+    typeof s.termsPerYear === "number" &&
+    typeof s.startTerm === "string" &&
+    typeof s.startYear === "number" &&
+    typeof s.autoPrereq === "boolean" &&
+    typeof s.autoOnDrop === "boolean" &&
+    typeof s.leaveMonths === "number" &&
+    typeof s.extensionMonths === "number" &&
+    strings(s.degreePicks) &&
+    Array.isArray(s.terms) &&
+    s.terms.every(strings)
+  );
 }
