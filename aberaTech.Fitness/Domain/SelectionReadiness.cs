@@ -113,12 +113,18 @@ public static class SelectionReadiness
         public const string AftTotal = "aft-total";
         public const string AftLowestEvent = "aft-lowest-event";
         public const string BodyFat = "body-fat";
+
+        /// <summary>Pace at the reference (aerobic-threshold) heart rate, in seconds per mile.</summary>
+        public const string AerobicThresholdPace = "aet-pace";
+
+        public const string BackSquatFiveLb = "back-squat-5rm-lb";
     }
 
     /// <summary>Units a requirement is stated in.</summary>
     public static class Units
     {
         public const string Seconds = "s";
+        public const string SecondsPerMile = "s/mi";
         public const string Reps = "reps";
         public const string Bodyweights = "xbw";
         public const string Pounds = "lb";
@@ -179,6 +185,21 @@ public static class SelectionReadiness
             ],
             ["Rope climb", "100 m swim", "Pull-ups (no count published)"]),
         new Gate(
+            "evoke-sfas-ready",
+            "Evoke coaches' SFAS-ready numbers",
+            "Where the Selection Prep block is meant to leave you: the numbers Evoke's military coaches give when asked what ready for SFAS looks like, not the entry test.",
+            4,
+            [
+                new Requirement(Metrics.AerobicThresholdPace, "Aerobic-threshold pace on the flat", Comparison.AtMost, 8 * 60, Units.SecondsPerMile, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 35 * 60, Units.Seconds, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.RuckTwelveMileAt45, "Twelve-mile ruck at 45 lb", Comparison.AtMost, 3 * 3600, Units.Seconds, Citations.SfasDayOne.Id),
+                new Requirement(Metrics.PullUps, "Strict pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.EvokeSfasReady.Id),
+                new Requirement(Metrics.BackSquatFiveLb, "Back squat 5RM", Comparison.AtLeast, 250, Units.Pounds, Citations.EvokeSfasReady.Id)
+            ],
+            ["Ten pull-ups in ~30 lb of kit", "Deadlift + squat + overhead press total of 750 lb", "5 × 1 mile at 7:30"]),
+        new Gate(
             "sfas-competitive",
             "Competitive at selection",
             "The row selected candidates sit on. The minimums get you in the door; these are what the cadre see from someone who belongs there.",
@@ -226,6 +247,7 @@ public static class SelectionReadiness
     public static string Describe(string unit, double value) => unit switch
     {
         Units.Seconds => Format.Clock(value),
+        Units.SecondsPerMile => Text($"{Format.Clock(value)}/mile"),
         Units.Reps => Text($"{value:0} reps"),
         Units.Bodyweights => Text($"{value:0.00}× bodyweight"),
         Units.Pounds => Text($"{value:0} lb ({value / BodyMass.PoundsPerKg:0} kg)"),
