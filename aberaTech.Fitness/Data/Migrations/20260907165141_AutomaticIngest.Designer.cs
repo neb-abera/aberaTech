@@ -13,7 +13,7 @@ using aberaTech.Fitness.Data;
 namespace aberaTech.Fitness.Data.Migrations
 {
     [DbContext(typeof(FitnessDbContext))]
-    [Migration("20260907142544_AutomaticIngest")]
+    [Migration("20260907165141_AutomaticIngest")]
     partial class AutomaticIngest
     {
         /// <inheritdoc />
@@ -304,6 +304,24 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.HasIndex("TargetDate");
 
                     b.ToTable("Predictions");
+                });
+
+            modelBuilder.Entity("aberaTech.Fitness.Data.OwnerDocument", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("aberaTech.Fitness.Data.StravaConnection", b =>
