@@ -13,8 +13,8 @@ using aberaTech.Fitness.Data;
 namespace aberaTech.Fitness.Data.Migrations
 {
     [DbContext(typeof(FitnessDbContext))]
-    [Migration("20260907142544_AutomaticIngest")]
-    partial class AutomaticIngest
+    [Migration("20260907155258_OwnerDocuments")]
+    partial class OwnerDocuments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,9 +44,6 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.Property<string>("ExternalId")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
-
-                    b.Property<bool?>("Indoor")
-                        .HasColumnType("boolean");
 
                     b.Property<double?>("LoadKg")
                         .HasColumnType("double precision");
@@ -231,34 +228,6 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.ToTable("Goals");
                 });
 
-            modelBuilder.Entity("aberaTech.Fitness.Data.Lap", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ActivityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("AverageHr")
-                        .HasColumnType("integer");
-
-                    b.Property<double?>("DistanceMeters")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("Index")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("Seconds")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActivityId");
-
-                    b.ToTable("Laps");
-                });
-
             modelBuilder.Entity("aberaTech.Fitness.Data.LockedPrediction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -306,34 +275,22 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.ToTable("Predictions");
                 });
 
-            modelBuilder.Entity("aberaTech.Fitness.Data.StravaConnection", b =>
+            modelBuilder.Entity("aberaTech.Fitness.Data.OwnerDocument", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<long?>("AthleteId")
-                        .HasColumnType("bigint");
-
-                    b.Property<Instant>("ConnectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastError")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Instant?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ProtectedRefreshToken")
+                    b.Property<string>("Json")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("jsonb");
 
-                    b.HasKey("Id");
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("StravaConnections");
+                    b.HasKey("Key");
+
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("aberaTech.Fitness.Data.StrengthSet", b =>
@@ -372,33 +329,6 @@ namespace aberaTech.Fitness.Data.Migrations
                     b.ToTable("StrengthSets");
                 });
 
-            modelBuilder.Entity("aberaTech.Fitness.Data.SyncState", b =>
-                {
-                    b.Property<string>("Source")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("LastOutcome")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Instant?>("LastRunAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Source");
-
-                    b.ToTable("SyncStates");
-                });
-
-            modelBuilder.Entity("aberaTech.Fitness.Data.Lap", b =>
-                {
-                    b.HasOne("aberaTech.Fitness.Data.Activity", null)
-                        .WithMany("Laps")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("aberaTech.Fitness.Data.StrengthSet", b =>
                 {
                     b.HasOne("aberaTech.Fitness.Data.Activity", null)
@@ -410,8 +340,6 @@ namespace aberaTech.Fitness.Data.Migrations
 
             modelBuilder.Entity("aberaTech.Fitness.Data.Activity", b =>
                 {
-                    b.Navigation("Laps");
-
                     b.Navigation("Sets");
                 });
 #pragma warning restore 612, 618
