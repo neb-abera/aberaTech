@@ -2,6 +2,7 @@ using System.Security.Claims;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
 using aberaTech.Fitness.Ingest;
+using aberaTech.Fitness.Strava;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -68,8 +69,10 @@ public static class FitnessEndpoints
     public static IEndpointRouteBuilder MapFitnessEndpoints(
         this IEndpointRouteBuilder routes,
         FitnessOptions options,
-        bool requireOwnerSignIn = true)
+        bool requireOwnerSignIn = true,
+        StravaOptions? strava = null)
     {
+        strava ??= new StravaOptions();
         var group = routes.MapGroup("/api/fitness");
 
         // The Development bypass is the one case with no policy: sign-in is
@@ -88,7 +91,8 @@ public static class FitnessEndpoints
             {
                 configured = true,
                 signedIn,
-                hevyApi = options.HasHevyApi
+                hevyApi = options.HasHevyApi,
+                strava = strava.IsConfigured
             });
         });
 
@@ -99,6 +103,7 @@ public static class FitnessEndpoints
 
         api.MapSolverEndpoints();
         api.MapPredictionLedger();
+        api.MapIngestEndpoints(strava, options.HasHevyApi);
 
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide
@@ -249,17 +254,6 @@ public static class FitnessEndpoints
                 superseded = outcome.Superseded
             });
         });
-
-        if (options.HasHevyApi)
-        {
-            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
-            {
-                var activities = await hevy.FetchAllAsync(cancellationToken);
-                var outcome = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
-                cache.Invalidate();
-                return Results.Ok(new { fetched = activities.Count, added = outcome.Added });
-            });
-        }
 
         // The page shows the newest few and says so. Returning a bare fifty made
         // a truncated list look like the whole history.
@@ -533,7 +527,8 @@ public static class FitnessEndpoints
         {
             configured = false,
             signedIn = false,
-            hevyApi = false
+            hevyApi = false,
+            strava = false
         }));
 
         return routes;

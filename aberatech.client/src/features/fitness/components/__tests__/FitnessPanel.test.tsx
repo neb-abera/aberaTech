@@ -142,11 +142,14 @@ describe("FitnessPanel", () => {
   it("explains an unconfigured deployment instead of erroring", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          json({ configured: false, signedIn: false, hevyApi: false }),
-        ),
+      vi.fn().mockResolvedValue(
+        json({
+          configured: false,
+          signedIn: false,
+          hevyApi: false,
+          strava: false,
+        }),
+      ),
     );
 
     mount();
@@ -157,11 +160,14 @@ describe("FitnessPanel", () => {
   it("offers sign-in and nothing else to the signed-out", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          json({ configured: true, signedIn: false, hevyApi: false }),
-        ),
+      vi.fn().mockResolvedValue(
+        json({
+          configured: true,
+          signedIn: false,
+          hevyApi: false,
+          strava: false,
+        }),
+      ),
     );
 
     mount();
@@ -181,7 +187,12 @@ describe("FitnessPanel", () => {
         const path = String(url);
         if (path.includes("/api/fitness/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (path.includes("/api/fitness/summary")) {
@@ -218,7 +229,12 @@ describe("FitnessPanel", () => {
         const url = String(input);
         if (url.endsWith("/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (url.endsWith("/summary")) {
@@ -249,7 +265,12 @@ describe("FitnessPanel", () => {
         const path = String(url);
         if (path.includes("/api/fitness/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (path.includes("/api/fitness/summary")) {
@@ -273,7 +294,12 @@ describe("FitnessPanel", () => {
         const url = String(input);
         if (url.endsWith("/me")) {
           return Promise.resolve(
-            json({ configured: true, signedIn: true, hevyApi: false }),
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              strava: false,
+            }),
           );
         }
         if (url.endsWith("/summary")) {
