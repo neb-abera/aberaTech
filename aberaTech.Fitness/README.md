@@ -32,6 +32,25 @@ sourced predictions out.
   and horizons are asked for, and per-goal probabilities.
 - **Prescribes**: name any distance, any time and any date, and get back the
   week it needs — hours by zone — or the constraint that makes it impossible.
+- **Gates selection**: the published standards between the athlete and a
+  Special Forces slot — the AFT combat standard, the SFAS day-one minimums,
+  Evoke's Selection Prep entry test, a Guard company's SFRE prerequisites and
+  the competitive row — as dated gates scored from the log. Runs come from the
+  VDOT anchor, rucks from a timed twelve-mile at the load or else from the
+  Pandolf load-carriage model through the run engine, calisthenics from the
+  best recent bodyweight set in the strength log, strength from the Epley
+  triple, and the fitness test from the tables the Army published. Every line
+  says whether its number was measured or modelled, and every line that the
+  log cannot score is listed rather than dropped.
+- **Reads the pack**: a ruck's load is parsed from the activity name
+  ("Ruck 45lb", "12 mi @ 20 kg") or typed per ruck on the page, kept in
+  kilograms and shown in both units; rucks are trended as pace at the
+  reference heart rate and reference load, and a timed march reads back to
+  the run VDOT it implies.
+- **Scores the AFT**: five raw results in, points per event and the combat
+  standard out, on the athlete's age band, from the 1 June 2025 tables
+  transcribed row for row. Body fat and lean mass are placed against the
+  selection cohort's published quartile rates.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
   Cureton & Sparling, Rønnestad & Mujika, Gabbett, Coggan, Epley, Brzycki,
@@ -78,6 +97,8 @@ run. `r` is the athlete's responsiveness, fitted from their own history.
 
 ### How the hours get split
 
+
+
 Maximising `C(h)` subject to `Σhᵢ = H` and `Σcᵢhᵢ ≤ Sₘₐₓ` is a constrained
 optimum, solved from the Lagrangian conditions rather than by search:
 
@@ -89,6 +110,25 @@ so an inner bisection on λ meets the hours constraint and an outer one on μ
 meets the recovery budget. λ is the shadow price of an hour — what one more
 hour a week is worth in VDOT — and μ the price of recovery; both are reported,
 because "where should my next hour go" is answered by comparing them.
+
+**Constrained by the state of the base.** Maximising the ceiling is the wrong
+objective at low volume: with ninety minutes a week nothing is saturated, every
+zone's first hour looks valuable, and the unconstrained optimum put only 43% of
+the week into easy running. For an athlete whose aerobic threshold already lags
+their lactate threshold by more than about 10% — the Uphill Athlete deficiency
+test the app already computes — that is the opposite of the prescription, since
+the deficit *is* base. So intensity is capped at 10% of running hours for a
+deficient athlete and 25% for a sound one, and the same 90-minute week comes
+back 90% easy. The objective is constrained, not replaced: the hard hours that
+survive are split between threshold and interval exactly as the optimiser chose,
+in the same ratio. An unrecorded lactate threshold takes the cautious cap — an
+unmeasured base is not evidence of a sound one.
+
+**Rucking counts at a discount.** It is the same engine through a different
+movement: aerobic work that builds the same base, with a stride and economy that
+do not fully transfer to running a race. An hour rucked counts as 0.75 of an
+hour run towards the running ceiling. Hour-for-hour flattered a rucking week;
+zero would be worse.
 
 ### The trajectory
 
@@ -146,6 +186,51 @@ honest position when the history is a record of not training.
 
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
+
+### How much the athlete can absorb
+
+The recovery budget used to be a constant — every athlete was assumed to
+tolerate what a full-time endurance athlete tolerates, so the model believed a
+beginner could hold twenty hours a week as readily as someone eight years into
+consistent base.
+
+What grows with training age is the capacity to absorb load. Rather than model
+that from a proxy, the athlete is asked for the quantity itself: **the biggest
+week you have held for a month without breaking down**. That is answerable from
+experience, and the budget is that week scored in the same strain units as
+everything it is compared against, capped at a full-time athlete's.
+
+It is a floor, not a cap — a week already held is evidence the body absorbed it,
+and a plan may still ramp beyond it. What it stops is a ceiling calculated from
+volume nobody has reason to think this athlete could carry. The effect is large:
+the maximum reachable ceiling is 49.9 for an athlete who has sustained four
+hours a week, 60.0 at fourteen, and 64.4 when nothing is stated. An unstated
+week keeps the previous behaviour and says so in the assumptions.
+
+### Losing it
+
+Fitness falls as well as rises, and until recently this model could not say so:
+the ceiling was floored at the athlete's starting fitness, so the gap driving
+the trajectory was never negative and no dose — including none at all — made
+anyone slower. A week that supports less than the athlete currently holds is
+now a week they lose ground.
+
+Losing is faster than gaining. Detraining is not training in reverse: Mujika and
+Padilla put a trained athlete's VO2max loss at several per cent inside four
+weeks, most of it rapidly reversible plasma volume and enzyme activity rather
+than anything structural. The decay runs at seven times the de-novo approach
+rate, which puts a month of nothing at about 8% — inside the range the
+literature reports. The retraining fast lane applies only while fitness is
+being regained; speeding up a lay-off in proportion to how good the athlete
+used to be would be backwards.
+
+This is also what makes the shape of missed training matter, not just the
+amount. Compliance as a single fraction cannot tell three good weeks and one
+lost one from 85% spread evenly, and the two are not the same: on this model a
+plan with one month missing lands materially behind the same total hours spread
+across the year, and over half of what the gap costs is still there nine months
+later on identical training since. A `DoseSchedule` can now carry a gap so that
+question can be asked directly.
 
 ### Fitting it to the athlete
 
@@ -219,6 +304,51 @@ honest position when the history is a record of not training.
 The logged week is still read and still shown, as a suggestion beside the input
 it might fill. It no longer reaches the projection on its own.
 
+### How much the athlete can absorb
+
+The recovery budget used to be a constant — every athlete was assumed to
+tolerate what a full-time endurance athlete tolerates, so the model believed a
+beginner could hold twenty hours a week as readily as someone eight years into
+consistent base.
+
+What grows with training age is the capacity to absorb load. Rather than model
+that from a proxy, the athlete is asked for the quantity itself: **the biggest
+week you have held for a month without breaking down**. That is answerable from
+experience, and the budget is that week scored in the same strain units as
+everything it is compared against, capped at a full-time athlete's.
+
+It is a floor, not a cap — a week already held is evidence the body absorbed it,
+and a plan may still ramp beyond it. What it stops is a ceiling calculated from
+volume nobody has reason to think this athlete could carry. The effect is large:
+the maximum reachable ceiling is 49.9 for an athlete who has sustained four
+hours a week, 60.0 at fourteen, and 64.4 when nothing is stated. An unstated
+week keeps the previous behaviour and says so in the assumptions.
+
+### Losing it
+
+Fitness falls as well as rises, and until recently this model could not say so:
+the ceiling was floored at the athlete's starting fitness, so the gap driving
+the trajectory was never negative and no dose — including none at all — made
+anyone slower. A week that supports less than the athlete currently holds is
+now a week they lose ground.
+
+Losing is faster than gaining. Detraining is not training in reverse: Mujika and
+Padilla put a trained athlete's VO2max loss at several per cent inside four
+weeks, most of it rapidly reversible plasma volume and enzyme activity rather
+than anything structural. The decay runs at seven times the de-novo approach
+rate, which puts a month of nothing at about 8% — inside the range the
+literature reports. The retraining fast lane applies only while fitness is
+being regained; speeding up a lay-off in proportion to how good the athlete
+used to be would be backwards.
+
+This is also what makes the shape of missed training matter, not just the
+amount. Compliance as a single fraction cannot tell three good weeks and one
+lost one from 85% spread evenly, and the two are not the same: on this model a
+plan with one month missing lands materially behind the same total hours spread
+across the year, and over half of what the gap costs is still there nine months
+later on identical training since. A `DoseSchedule` can now carry a gap so that
+question can be asked directly.
+
 ### Fitting it to the athlete
 
 Three parameters — starting VDOT, approach rate `k`, responsiveness `r` — by
@@ -282,6 +412,26 @@ from the current posterior predictive, the existing draws are reweighted by how
 well each explains that value, and the spread of the prediction under those
 weights is the expected result. Reweighting rather than re-sampling is what makes
 it cheap enough to offer for every candidate at once.
+
+### Checking it against reality
+
+Every other number here is a claim about the future that nothing later checks.
+The prediction ledger is the part that can say the model is wrong: a prediction
+is written down with the plan it assumed and the interval it was quoted with,
+and when its date arrives the page asks for the result.
+
+The interval is the claim worth scoring, more than the median. A model whose
+80% intervals contain the outcome about 80% of the time is working correctly;
+one whose intervals almost always contain it is overcautious and not saying
+much. The error is kept signed, because a model wrong in one direction is
+biased while one wrong in both is merely imprecise, and averaging unsigned
+errors hides which. An unscored prediction reports nothing rather than a zero
+error, which would read as a perfect one and flatter every average taken over
+the ledger.
+
+The plan travels with the prediction because a miss is only attributable with
+its assumptions attached — the difference between the model being wrong and the
+plan not having happened.
 
 ## Configuration
 

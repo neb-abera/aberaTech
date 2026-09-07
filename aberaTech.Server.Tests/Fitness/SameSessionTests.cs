@@ -48,6 +48,19 @@ public sealed class SameSessionTests
     }
 
     [Fact]
+    public void Strava_carries_a_real_clock_and_matches_the_export_exactly()
+    {
+        // Garmin pushes the same session to Strava; both are true instants, so
+        // a bridge import and an earlier file import are one row, not two.
+        var export = Run(Noon);
+        var strava = Run(Noon.Plus(Duration.FromSeconds(1)), duration: 1201, distance: 3025);
+        strava.Source = "strava";
+
+        Assert.Contains("strava", SameSession.TrueClock);
+        Assert.True(SameSession.Matches(export, strava));
+    }
+
+    [Fact]
     public void Yesterdays_identical_treadmill_run_is_a_different_session()
     {
         // The whole risk of matching on shape rather than time: someone who

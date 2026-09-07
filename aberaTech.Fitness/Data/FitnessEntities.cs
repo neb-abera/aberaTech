@@ -32,7 +32,78 @@ public class Activity
 
     public int? MaxHr { get; set; }
 
+    /// <summary>
+    /// The dry load carried on a ruck, in kilograms. No watch records it, so
+    /// it is read from the activity's name on import and typed on the page
+    /// otherwise; without it a ruck is a walk as far as the models know.
+    /// </summary>
+    public double? LoadKg { get; set; }
+
+    /// <summary>
+    /// Whether the session was on a treadmill or trainer. Treadmill distance
+    /// is a wrist estimate, so an indoor run is a weaker witness to pace than
+    /// an outdoor one; null when the source did not say.
+    /// </summary>
+    public bool? Indoor { get; set; }
+
     public List<StrengthSet> Sets { get; set; } = [];
+
+    /// <summary>The laps the watch recorded, when the source carried them.</summary>
+    public List<Lap> Laps { get; set; } = [];
+}
+
+/// <summary>
+/// One lap of a run or ruck: a distance, a time, a heart rate.
+/// </summary>
+/// <remarks>
+/// A session's average pace hides its structure — an interval workout reads
+/// as an easy run once the recoveries are averaged in. Laps are how the log
+/// says what a session actually was, and a lap button pressed at the start
+/// and end of the steady part of a test is how a test declares itself.
+/// </remarks>
+public class Lap
+{
+    public Guid Id { get; set; }
+
+    public Guid ActivityId { get; set; }
+
+    public int Index { get; set; }
+
+    public double? DistanceMeters { get; set; }
+
+    public double Seconds { get; set; }
+
+    public int? AverageHr { get; set; }
+}
+
+/// <summary>
+/// The Strava grant, one row. The refresh token is stored protected, the
+/// way the calendar's Google token is, so the database alone cannot read it.
+/// </summary>
+public class StravaConnection
+{
+    public int Id { get; set; }
+
+    public long? AthleteId { get; set; }
+
+    public required string ProtectedRefreshToken { get; set; }
+
+    public Instant ConnectedAt { get; set; }
+
+    public Instant? LastSyncedAt { get; set; }
+
+    public string? LastError { get; set; }
+}
+
+/// <summary>When an automatic source last ran, and what it said.</summary>
+public class SyncState
+{
+    /// <summary>hevy-api or strava.</summary>
+    public required string Source { get; set; }
+
+    public Instant? LastRunAt { get; set; }
+
+    public string? LastOutcome { get; set; }
 }
 
 /// <summary>One set inside a strength activity.</summary>
@@ -50,6 +121,34 @@ public class StrengthSet
     public double WeightKg { get; set; }
 
     public int Reps { get; set; }
+
+    /// <summary>How long a timed set was held — a plank has no reps.</summary>
+    public double? DurationSeconds { get; set; }
+
+    /// <summary>How far a loaded set was carried — a farmer's walk has a distance, not reps.</summary>
+    public double? DistanceMeters { get; set; }
+}
+
+/// <summary>
+/// One Army Fitness Test, as taken: the five raw results. Scored on the way
+/// out, never stored scored, so a change to the tables re-scores history.
+/// </summary>
+public class AftResult
+{
+    public Guid Id { get; set; }
+
+    public LocalDate Date { get; set; }
+
+    /// <summary>Three-repetition maximum deadlift. The test records pounds; this keeps kilograms like everything else.</summary>
+    public double DeadliftKg { get; set; }
+
+    public int HandReleasePushUps { get; set; }
+
+    public double SprintDragCarrySeconds { get; set; }
+
+    public double PlankSeconds { get; set; }
+
+    public double TwoMileSeconds { get; set; }
 }
 
 /// <summary>A dated bodyweight observation. Entered by hand; nutrition lives elsewhere.</summary>
@@ -105,6 +204,13 @@ public class AthleteSettings
     /// <summary>Lactate-threshold pace, for the aerobic-deficiency check.</summary>
     public double? LtSecondsPerKm { get; set; }
 
+    /// <summary>
+    /// The lactate-threshold heart rate, when a test has set it. With the
+    /// aerobic-threshold heart rate (<see cref="ReferenceHr"/>) it places
+    /// treadmill effort, where pace cannot.
+    /// </summary>
+    public int? LtHr { get; set; }
+
     /// <summary>The plan's weekly endurance volume, for compliance math.</summary>
     public double PlanMinutesPerWeek { get; set; } = 160;
 
@@ -126,6 +232,14 @@ public class AthleteSettings
 
     /// <summary>Weekly running hours the athlete says they can commit to.</summary>
     public double AvailableHoursPerWeek { get; set; } = 7;
+
+    /// <summary>
+    /// The biggest week the athlete has held for a month without breaking
+    /// down, in running hours. It sets the recovery budget the model plans
+    /// against; unset, the budget is a full-time athlete's, which is generous
+    /// and said so in the assumptions.
+    /// </summary>
+    public double? SustainedWeeklyHours { get; set; }
 
     /// <summary>The lifetime-best race: distance, time, and roughly when.</summary>
     public double? PastPeakDistanceMeters { get; set; }
@@ -149,4 +263,75 @@ public class AthleteSettings
 
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
+
+    /// <summary>
+    /// The date the athlete is assessing on — for a Guard candidate the
+    /// readiness evaluation, the first gate. The readiness gates count back
+    /// from it; unset, they carry no dates.
+    /// </summary>
+    public LocalDate? SelectionDate { get; set; }
+}
+
+/// <summary>
+/// A prediction written down before the fact, so it can be scored after it.
+/// </summary>
+/// <remarks>
+/// A model that has never been checked against an outcome is a calculator with
+/// good manners. This one had grown considerably without ever having made a
+/// prediction anybody later compared to reality — and the way that gets fixed
+/// is not more modelling, it is writing one down and waiting.
+///
+/// The scenario is stored alongside the answer because a prediction is only
+/// meaningful with its assumptions attached: what it assumed about training,
+/// compliance and race weight is the difference between the model being wrong
+/// and the plan not having happened.
+/// </remarks>
+public class LockedPrediction
+{
+    public Guid Id { get; set; }
+
+    /// <summary>When the prediction was made.</summary>
+    public LocalDate MadeOn { get; set; }
+
+    /// <summary>The date the prediction is about.</summary>
+    public LocalDate TargetDate { get; set; }
+
+    public double DistanceMeters { get; set; }
+
+    /// <summary>The median predicted time, in seconds.</summary>
+    public double PredictedSeconds { get; set; }
+
+    /// <summary>The fast and slow ends of the interval that was quoted with it.</summary>
+    public double PredictedFastSeconds { get; set; }
+
+    public double PredictedSlowSeconds { get; set; }
+
+    /// <summary>The plan it assumed, so a miss can be attributed rather than argued about.</summary>
+    public double WeeklyHours { get; set; }
+
+    public double Compliance { get; set; }
+
+    public double? RaceMassKg { get; set; }
+
+    /// <summary>What actually happened, once it has.</summary>
+    public double? ActualSeconds { get; set; }
+
+    /// <summary>Anything worth remembering about the day.</summary>
+    public string? Note { get; set; }
+}
+
+/// <summary>
+/// One JSON document the owner keeps: training ticks, drill history, a
+/// course plan. Keyed by a name from a short allowlist rather than by user,
+/// because there is one owner and the policy on the route is what decides
+/// who may read or write it.
+/// </summary>
+public class OwnerDocument
+{
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>The document as the page sent it. Opaque to the server beyond being a JSON object.</summary>
+    public string Json { get; set; } = "{}";
+
+    public Instant UpdatedAt { get; set; }
 }
