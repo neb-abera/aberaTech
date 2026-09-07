@@ -151,6 +151,7 @@ export default function ProfileCard({
       await saveSettings({
         referenceHr: settings.referenceHr,
         ltSecondsPerKm: settings.ltSecondsPerKm,
+        ltHr: settings.ltHr,
         planMinutesPerWeek: settings.planMinutesPerWeek,
         startVdot: settings.startVdot,
         vdotMeasuredOn: anchorDate.trim() === "" ? null : anchorDate,

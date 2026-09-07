@@ -3,10 +3,13 @@ using NodaTime;
 namespace aberaTech.Fitness.Domain;
 
 /// <summary>A steady run reduced to what the aerobic analysis needs.</summary>
-public sealed record SteadyRun(LocalDate Date, double DistanceMeters, double Seconds, int AverageHr);
+/// <param name="Indoor">Treadmill: the distance is the belt's reading, so the pace is a weaker witness.</param>
+public sealed record SteadyRun(LocalDate Date, double DistanceMeters, double Seconds, int AverageHr, bool Indoor = false);
 
 /// <summary>One month's aerobic fitness, as the median normalized pace.</summary>
-public sealed record MonthlyAerobicPoint(int Year, int Month, double MedianNormalizedSecPerKm, int RunCount);
+/// <param name="IndoorRuns">How many of the month's runs were on a treadmill.</param>
+public sealed record MonthlyAerobicPoint(
+    int Year, int Month, double MedianNormalizedSecPerKm, int RunCount, int IndoorRuns = 0);
 
 /// <summary>
 /// Aerobic-base analysis: pace-at-heart-rate over time, and the aerobic
@@ -59,6 +62,10 @@ public static class AerobicAnalysis
     /// The median, not the mean: a single walk-run or treadmill mis-calibration
     /// should not drag a month, and with a handful of runs per month a robust
     /// statistic is the difference between a trend and noise.
+    ///
+    /// Treadmill runs are counted, not excluded: for a deployed athlete they
+    /// are the only runs there are. The point says how many were indoors so
+    /// the reader can weigh a month that is mostly the belt's word.
     /// </remarks>
     public static IReadOnlyList<MonthlyAerobicPoint> MonthlyTrend(IEnumerable<SteadyRun> runs, int referenceHr)
     {
@@ -72,7 +79,8 @@ public static class AerobicAnalysis
                     .Select(r => NormalizedSecPerKm(r.DistanceMeters, r.Seconds, r.AverageHr, referenceHr))
                     .OrderBy(x => x)
                     .ToArray();
-                return new MonthlyAerobicPoint(g.Key.Year, g.Key.Month, Median(normalized), normalized.Length);
+                return new MonthlyAerobicPoint(
+                    g.Key.Year, g.Key.Month, Median(normalized), normalized.Length, g.Count(r => r.Indoor));
             })
             .ToArray();
     }

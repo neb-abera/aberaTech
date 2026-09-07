@@ -204,6 +204,13 @@ public class AthleteSettings
     /// <summary>Lactate-threshold pace, for the aerobic-deficiency check.</summary>
     public double? LtSecondsPerKm { get; set; }
 
+    /// <summary>
+    /// The lactate-threshold heart rate, when a test has set it. With the
+    /// aerobic-threshold heart rate (<see cref="ReferenceHr"/>) it places
+    /// treadmill effort, where pace cannot.
+    /// </summary>
+    public int? LtHr { get; set; }
+
     /// <summary>The plan's weekly endurance volume, for compliance math.</summary>
     public double PlanMinutesPerWeek { get; set; } = 160;
 

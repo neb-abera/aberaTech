@@ -41,6 +41,7 @@ const settings: SettingsDto = {
   availableHoursPerWeek: 7,
   sustainedWeeklyHours: null,
   selectionDate: null,
+  ltHr: null,
 };
 
 function json(body: unknown, ok = true): Response {

@@ -59,6 +59,12 @@ public static class Highlights
             $"Median HR-normalized pace {Pace(previous.MedianNormalizedSecPerKm)}/km → " +
             $"{Pace(last.MedianNormalizedSecPerKm)}/km ({previous.RunCount} → {last.RunCount} runs).";
 
+        // A treadmill month's pace is the belt's reading; say so next to the number.
+        if (last.IndoorRuns * 2 > last.RunCount)
+        {
+            evidence += $" {last.IndoorRuns} of the latest month's runs were on a treadmill, whose distance is an estimate.";
+        }
+
         highlights.Add(change > 0
             ? new Highlight("aerobic-gain",
                 $"Aerobic base up {Format.Percent(change)} month over month", evidence, Positive: true)
