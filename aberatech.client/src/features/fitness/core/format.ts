@@ -53,6 +53,8 @@ const METRIC_LABELS: Record<string, string> = {
   "aft-total": "AFT total",
   "aft-lowest-event": "Lowest AFT event",
   "body-fat": "Body fat",
+  "aet-pace": "Aerobic-threshold pace",
+  "back-squat-5rm-lb": "Back squat 5RM",
 };
 
 /**
@@ -64,6 +66,8 @@ export function formatRequirement(unit: string, value: number): string {
   switch (unit) {
     case "s":
       return formatSeconds(value);
+    case "s/mi":
+      return `${formatSeconds(value)}/mile`;
     case "reps":
       return `${Math.round(value)} reps`;
     case "xbw":

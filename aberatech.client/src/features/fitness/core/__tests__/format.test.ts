@@ -4,6 +4,7 @@ import {
   formatChance,
   formatDistance,
   formatPace,
+  formatRequirement,
   formatSeconds,
   fromMeters,
   goalKey,
@@ -101,5 +102,15 @@ describe("inputs an athlete actually types", () => {
 
   it("keys a goal by its distance, so any distance can be one", () => {
     expect(goalKey(8046.72)).toBe("run-8047m");
+  });
+});
+
+describe("formatRequirement", () => {
+  it("reads each unit the way an athlete would say it", () => {
+    expect(formatRequirement("s", 9900)).toBe("2:45:00");
+    expect(formatRequirement("s/mi", 480)).toBe("8:00/mile");
+    expect(formatRequirement("lb", 350)).toBe("350 lb (159 kg)");
+    expect(formatRequirement("xbw", 1.5)).toBe("1.50× bodyweight");
+    expect(formatRequirement("%", 14.5)).toBe("14.5%");
   });
 });

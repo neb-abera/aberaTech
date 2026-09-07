@@ -84,6 +84,7 @@ public sealed class ReadinessTests
     [InlineData(SelectionReadiness.Units.Bodyweights, 1.5, "1.50× bodyweight")]
     [InlineData(SelectionReadiness.Units.Pounds, 340, "340 lb (154 kg)")]
     [InlineData(SelectionReadiness.Units.Percent, 14.5, "14.5%")]
+    [InlineData(SelectionReadiness.Units.SecondsPerMile, 480, "8:00/mile")]
     public void Values_read_in_their_own_units(string unit, double value, string expected)
     {
         Assert.Equal(expected, SelectionReadiness.Describe(unit, value));

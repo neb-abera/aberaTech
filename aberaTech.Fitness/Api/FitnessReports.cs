@@ -92,7 +92,7 @@ public static class FitnessReports
             Steps(SessionMix.Explain(measured, RecentWeeks, sessions)),
             spread,
             await database.Activities.CountAsync(cancellationToken),
-            await ReadinessReports.BuildAsync(database, row, weight, today, cancellationToken));
+            await ReadinessReports.BuildAsync(database, row, weight, trend, today, cancellationToken));
     }
 
     public static async Task<PredictionDto> PredictionsAsync(
