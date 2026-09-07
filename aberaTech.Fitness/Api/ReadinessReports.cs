@@ -309,6 +309,8 @@ internal static class ReadinessReports
                  {
                      ("deadlift", 3, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, SelectionReadiness.Metrics.DeadliftTripleLb),
                      ("front squat", 3, SelectionReadiness.Metrics.FrontSquatTripleToBodyweight, (string?)null),
+                     ("front squat", 1, SelectionReadiness.Metrics.FrontSquatToBodyweight, (string?)null),
+                     ("bench press", 1, SelectionReadiness.Metrics.BenchPressToBodyweight, (string?)null),
                      ("back squat", 5, (string?)null, SelectionReadiness.Metrics.BackSquatFiveLb)
                  })
         {
@@ -320,8 +322,9 @@ internal static class ReadinessReports
 
             if (recent.E1Rm <= 0) continue;
 
-            // Epley backwards: the n-rep max is the single divided by (1 + n/30).
-            var repMaxKg = recent.E1Rm / (1 + reps / 30.0);
+            // Epley backwards: the n-rep max is the single divided by (1 + n/30);
+            // the single is the estimate itself.
+            var repMaxKg = reps == 1 ? recent.E1Rm : recent.E1Rm / (1 + reps / 30.0);
             var evidence = Text($"{repMaxKg * BodyMass.PoundsPerKg:0} lb for {reps}, from an Epley estimate of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb on {recent.Date:yyyy-MM-dd}");
 
             if (poundsMetric is not null)
@@ -343,6 +346,12 @@ internal static class ReadinessReports
     internal static bool IsLift(string exercise, string lift)
     {
         var name = exercise.Trim().ToLowerInvariant();
+
+        if (lift == "bench press")
+        {
+            // The flat bench; an incline or decline is a different lift.
+            return name.Contains("bench press") && !(name.Contains("incline") || name.Contains("decline"));
+        }
 
         if (lift == "back squat")
         {
