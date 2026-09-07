@@ -31,7 +31,13 @@ export interface Block {
   tasks: Task[];
   /** A pass or fail test with a clock on it. The block is done when this is. */
   gate: string;
+  /** Reading and reference. */
   resources: Resource[];
+  /**
+   * Things that score you: practice exams, drills, sites that show where
+   * your signal was heard. Their results go in the gate log's note.
+   */
+  practice: Resource[];
 }
 
 export interface CadenceItem {
@@ -52,6 +58,8 @@ export const copy = {
   note: "Progress is stored in this browser only. Nothing here is sent anywhere.",
   scoring:
     "The plan is scored on logs, gates and clocks, not on hours spent. A block is finished when its gate passes, timed, outdoors.",
+  practice:
+    "Reading is passive; every block also lists practice that scores you. Those sites cannot report back here, so write their results into the gate log below the block: a practice exam percentage, a drill time, where a signal was heard. The log is the one place everything is scored.",
 };
 
 export const rules: string[] = [
@@ -76,7 +84,7 @@ export const cadence: CadenceItem[] = [
   {
     label: "Drills",
     detail:
-      "Ten minutes a day of arithmetic: decibels, wavelengths, antenna lengths, subnetting. Timed, scored, written down.",
+      "Ten minutes a day on the drill at the top of this page: decibels, wavelengths, antenna lengths, Ohm's law, subnetting. Timed, scored, kept.",
   },
   {
     label: "Field build",
@@ -184,6 +192,23 @@ export const plan: Block[] = [
         url: "https://www.comptia.org/certifications/network",
       },
     ],
+    practice: [
+      {
+        title: "HamStudy practice exams",
+        url: "https://hamstudy.org/",
+        note: "Study mode until it reports 85 percent seen and aced, then timed practice exams only. Log the score.",
+      },
+      {
+        title: "HamExam",
+        url: "https://hamexam.org/",
+        note: "A second question pool, for a cold check the week before the session.",
+      },
+      {
+        title: "Anki",
+        url: "https://apps.ankiweb.net/",
+        note: "Write your own cards for the formulas and the regulations. Spaced repetition is the answer to passive reading for the whole plan.",
+      },
+    ],
   },
   {
     id: "wire",
@@ -231,6 +256,38 @@ export const plan: Block[] = [
       { title: "JS8Call", url: "https://js8call.com/" },
       { title: "Winlink", url: "https://winlink.org/" },
     ],
+    practice: [
+      {
+        title: "PSKReporter",
+        url: "https://pskreporter.info/pskmap.html",
+        note: "Where your digital signal was heard and how strong. Change one thing about the antenna, transmit again, compare. Log the difference.",
+      },
+      {
+        title: "Reverse Beacon Network",
+        url: "https://www.reversebeacon.net/",
+        note: "The same for CW and some digital modes: skimmers report your signal-to-noise ratio.",
+      },
+      {
+        title: "VOACAP online",
+        url: "https://www.voacap.com/hf/",
+        note: "Predict a path for a band and hour, then try it. Score your predictions against the log.",
+      },
+      {
+        title: "EZNEC",
+        url: "https://www.eznec.com/",
+        note: "Free antenna modelling. Model it, predict the impedance and pattern, then build it and measure. The gap is the lesson.",
+      },
+      {
+        title: "WebSDR",
+        url: "https://websdr.org/",
+        note: "Remote receivers in a browser. Practise tuning, reading a waterfall and hearing NVIS against skip before the rig arrives.",
+      },
+      {
+        title: "KiwiSDR public receivers",
+        url: "http://kiwisdr.com/public/",
+        note: "Hundreds more remote receivers; listen for your own signal from another state.",
+      },
+    ],
   },
   {
     id: "networks",
@@ -276,6 +333,23 @@ export const plan: Block[] = [
         note: "The free Network+ video course, if that is the exam you sit.",
       },
     ],
+    practice: [
+      {
+        title: "Subnetting Practice",
+        url: "https://subnettingpractice.com/",
+        note: "Timed subnet drills with instant marking. Log the time for twenty.",
+      },
+      {
+        title: "subnetting.net",
+        url: "https://subnetting.net/",
+        note: "A second drill site with a different question style.",
+      },
+      {
+        title: "Jeremy's IT Lab",
+        url: "https://www.youtube.com/@JeremysITLab",
+        note: "The free CCNA course with a Packet Tracer lab file for every lesson. The labs are the practice; the videos are not.",
+      },
+    ],
   },
   {
     id: "mesh",
@@ -311,6 +385,13 @@ export const plan: Block[] = [
         title: "Meshtastic documentation",
         url: "https://meshtastic.org/docs/",
         note: "The LoRa mesh, and the plugin that puts it on the ATAK map.",
+      },
+    ],
+    practice: [
+      {
+        title: "Meshtastic documentation",
+        url: "https://meshtastic.org/docs/",
+        note: "No site scores a mesh. Time yourself from a cold pack to positions on the shared map, and log it at the gate.",
       },
     ],
   },
@@ -358,6 +439,28 @@ export const plan: Block[] = [
         note: "Radio direction finding: antennas to build, events to enter.",
       },
     ],
+    practice: [
+      {
+        title: "PySDR",
+        url: "https://pysdr.org/",
+        note: "A free textbook where every idea comes with Python you run against the receiver. Do every exercise; do not read past one.",
+      },
+      {
+        title: "Signal Identification Wiki",
+        url: "https://www.sigidwiki.com/wiki/Signal_Identification_Guide",
+        note: "Audio and waterfall samples for every signal. Make flashcards of the images, answer on the back, and drill them in Anki.",
+      },
+      {
+        title: "WebSDR",
+        url: "https://websdr.org/",
+        note: "Live signal identification against the wiki, from any receiver in the world, any hour.",
+      },
+      {
+        title: "ARDF USA",
+        url: "https://ardf.us/",
+        note: "Direction finding events. An event is a scored gate run by somebody else.",
+      },
+    ],
   },
   {
     id: "power",
@@ -387,6 +490,23 @@ export const plan: Block[] = [
       {
         title: "FAA: become a certificated remote pilot",
         url: "https://www.faa.gov/uas/commercial_operators/become_a_drone_pilot",
+      },
+    ],
+    practice: [
+      {
+        title: "Pilot Institute Part 107 practice test",
+        url: "https://pilotinstitute.com/part-107-practice-test/",
+        note: "Free, scored, and every answer explained. Log the percentage.",
+      },
+      {
+        title: "Liftoff",
+        url: "https://www.liftoff-game.com/",
+        note: "The simulator FPV pilots train in. Simulator hours count in the log like real ones; say which.",
+      },
+      {
+        title: "Velocidrone",
+        url: "https://www.velocidrone.com/",
+        note: "The other simulator. Either one; pick the one that runs on your machine.",
       },
     ],
   },
@@ -426,6 +546,23 @@ export const plan: Block[] = [
           "Techniques for Tactical Radio Operations (Army Techniques Publication 6-02.53)",
         url: "https://armypubs.army.mil/",
         note: "Public doctrine. The chapters on choosing antennas, propagation and communications planning are the best free reference on the subject.",
+      },
+    ],
+    practice: [
+      {
+        title: "Parks on the Air",
+        url: "https://parksontheair.com/",
+        note: "Scored activations. Ten contacts from the park is the standard; log the count and the time to the tenth.",
+      },
+      {
+        title: "ARRL contests",
+        url: "https://www.arrl.org/contests",
+        note: "A contest weekend is a timed exercise with a scoreboard.",
+      },
+      {
+        title: "Summits on the Air",
+        url: "https://www.sotadata.org.uk/",
+        note: "If the ruck should count for something too.",
       },
     ],
   },

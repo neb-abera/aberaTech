@@ -37,10 +37,28 @@ describe("the plan", () => {
     }
   });
 
-  it("links only over https", () => {
+  it("links reading over https, and practice over https with one named exception", () => {
+    // kiwisdr.com's public receiver list is served over plain http and has
+    // no https listener; it is linked anyway because there is no substitute.
+    const allowedHttp = new Set(["http://kiwisdr.com/public/"]);
     for (const block of plan) {
       for (const resource of block.resources) {
         expect(resource.url.startsWith("https://"), resource.title).toBe(true);
+      }
+      for (const resource of block.practice) {
+        expect(
+          resource.url.startsWith("https://") || allowedHttp.has(resource.url),
+          resource.title,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("gives every block something that scores you, and says what to log", () => {
+    for (const block of plan) {
+      expect(block.practice.length, block.id).toBeGreaterThan(0);
+      for (const resource of block.practice) {
+        expect(resource.note?.length ?? 0, resource.title).toBeGreaterThan(20);
       }
     }
   });
