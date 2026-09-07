@@ -29,10 +29,13 @@ public static class HevyCsv
         var exercise = Col("exercise_title");
         var setIndex = Col("set_index");
         var reps = Col("reps");
+        var durationSeconds = Col("duration_seconds");
 
-        // The weight column is named for the account's display unit.
+        // The weight and distance columns are named for the account's display unit.
         var weightKg = Col("weight_kg");
         var weightLbs = Col("weight_lbs");
+        var distanceKm = Col("distance_km");
+        var distanceMiles = Col("distance_miles");
 
         if (title < 0 || startTime < 0 || exercise < 0)
         {
@@ -83,6 +86,28 @@ public static class HevyCsv
                     var order = index++;
                     if (setIndex >= 0 && int.TryParse(row[setIndex], out var declared)) order = declared;
 
+                    // A timed hold — the plank — has a duration and no reps.
+                    double? held = null;
+                    if (durationSeconds >= 0 && row.Length > durationSeconds
+                        && double.TryParse(row[durationSeconds], NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
+                        && seconds > 0)
+                    {
+                        held = seconds;
+                    }
+
+                    // A carry has a distance and no reps.
+                    double? carried = null;
+                    if (distanceKm >= 0 && row.Length > distanceKm
+                        && double.TryParse(row[distanceKm], NumberStyles.Float, CultureInfo.InvariantCulture, out var km) && km > 0)
+                    {
+                        carried = km * 1000;
+                    }
+                    else if (distanceMiles >= 0 && row.Length > distanceMiles
+                             && double.TryParse(row[distanceMiles], NumberStyles.Float, CultureInfo.InvariantCulture, out var miles) && miles > 0)
+                    {
+                        carried = miles * Vdot.MileMeters;
+                    }
+
                     activity.Sets.Add(new StrengthSet
                     {
                         Id = Guid.NewGuid(),
@@ -90,7 +115,9 @@ public static class HevyCsv
                         Exercise = row[exercise],
                         SetIndex = order,
                         WeightKg = kg,
-                        Reps = repCount
+                        Reps = repCount,
+                        DurationSeconds = held,
+                        DistanceMeters = carried
                     });
                 }
 

@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
+using System.Security.Cryptography;
+using System.Text;
 using aberaTech.Fitness.Ingest;
+using aberaTech.Fitness.Strava;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -18,6 +21,7 @@ public sealed record SettingsUpdate(
     int? BirthYear = null,
     bool? Female = null,
     double AvailableHoursPerWeek = 7,
+    double? SustainedWeeklyHours = null,
     double? PastPeakDistanceMeters = null,
     double? PastPeakSeconds = null,
     int? PastPeakYear = null,
@@ -26,7 +30,9 @@ public sealed record SettingsUpdate(
     double HomeAltitudeMeters = 0,
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
-    double? AnchorSeconds = null);
+    double? AnchorSeconds = null,
+    string? SelectionDate = null,
+    int? LtHr = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -66,8 +72,10 @@ public static class FitnessEndpoints
     public static IEndpointRouteBuilder MapFitnessEndpoints(
         this IEndpointRouteBuilder routes,
         FitnessOptions options,
-        bool requireOwnerSignIn = true)
+        bool requireOwnerSignIn = true,
+        StravaOptions? strava = null)
     {
+        strava ??= new StravaOptions();
         var group = routes.MapGroup("/api/fitness");
 
         // The Development bypass is the one case with no policy: sign-in is
@@ -86,9 +94,31 @@ public static class FitnessEndpoints
             {
                 configured = true,
                 signedIn,
-                hevyApi = options.HasHevyApi
+                hevyApi = options.HasHevyApi,
+                strava = strava.IsConfigured
             });
         });
+
+        // The week in one page, for the dashboard.
+        api.MapGet("/digest", async (FitnessDbContext database, CancellationToken cancellationToken) =>
+            Results.Ok(await DigestReports.BuildAsync(database, UtcToday(), cancellationToken)));
+
+        // The same page as text, for the morning brief: one bearer key, no
+        // sign-in. Mapped only when a key of real length is configured, and
+        // compared in constant time, because a fitness log is health data.
+        if (options.HasDigestKey)
+        {
+            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, CancellationToken cancellationToken) =>
+            {
+                if (!DigestKeyAllows(context.Request.Headers.Authorization.ToString(), options.DigestKey))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var digest = await DigestReports.BuildAsync(database, UtcToday(), cancellationToken);
+                return Results.Text(digest.Text + "\n", "text/plain; charset=utf-8");
+            });
+        }
 
         api.MapGet("/summary", (FitnessDbContext database, CancellationToken cancellationToken) =>
             FitnessReports.SummaryAsync(database, cancellationToken));
@@ -96,6 +126,31 @@ public static class FitnessEndpoints
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
         api.MapSolverEndpoints();
+        api.MapPredictionLedger();
+        api.MapIngestEndpoints(strava, options.HasHevyApi);
+
+        // The gates as a forecast: the chance of clearing each line by the
+        // date it is due, under a named training week.
+        api.MapGet("/readiness/outlook", async (
+            FitnessDbContext database,
+            double? weeklyHours,
+            double? compliance,
+            CancellationToken cancellationToken) =>
+        {
+            if (weeklyHours is < 0 or > 40) return Fail("weeklyHours 0-40.");
+            if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
+
+            var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+            return Results.Ok(await OutlookReports.BuildAsync(
+                database, weeklyHours, compliance ?? 1.0, today, cancellationToken));
+        });
+
+        // The owner's saved documents, on their own prefix but behind the
+        // same policy and the same Development bypass: the training guide
+        // and the course planner are the owner's, and a visitor gets neither
+        // a read nor a write.
+        var progress = routes.MapGroup("/api/progress");
+        (requireOwnerSignIn ? progress.RequireAuthorization(PolicyName) : progress).MapProgressEndpoints();
 
         api.MapGet("/predictions", async (
             FitnessDbContext database,
@@ -240,17 +295,6 @@ public static class FitnessEndpoints
             });
         });
 
-        if (options.HasHevyApi)
-        {
-            api.MapPost("/sync/hevy", async (HevyApiClient hevy, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
-            {
-                var activities = await hevy.FetchAllAsync(cancellationToken);
-                var outcome = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
-                cache.Invalidate();
-                return Results.Ok(new { fetched = activities.Count, added = outcome.Added });
-            });
-        }
-
         // The page shows the newest few and says so. Returning a bare fifty made
         // a truncated list look like the whole history.
         api.MapGet("/activities", async (FitnessDbContext database, CancellationToken cancellationToken) =>
@@ -269,13 +313,74 @@ public static class FitnessEndpoints
                     a.Name,
                     a.DistanceMeters,
                     a.DurationSeconds,
-                    a.AverageHr
+                    a.AverageHr,
+                    a.LoadKg
                 })
                 .ToListAsync(cancellationToken);
 
             var total = await database.Activities.CountAsync(cancellationToken);
 
             return Results.Ok(new { activities = rows, total, limit });
+        });
+
+        // No watch records what was in the pack, and without it a ruck is a
+        // walk as far as the models know. Typed on the page, per ruck.
+        api.MapPut("/activities/{id:guid}/load", async (
+            Guid id, ActivityLoadUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            if (update.LoadKg is <= 0 or > 100) return Fail("A load is 0-100 kg, or empty to clear it.");
+
+            var activity = await database.Activities.SingleOrDefaultAsync(a => a.Id == id, cancellationToken);
+            if (activity is null) return Results.NotFound();
+            if (activity.Sport != "ruck") return Fail("Only a ruck carries a load.");
+
+            activity.LoadKg = update.LoadKg;
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
+        });
+
+        // A fitness test is a measurement the gates outrank the model with;
+        // stored raw, scored on the way out against the published tables.
+        api.MapPost("/aft", async (AftResultUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var date = ParseDate(update.Date);
+            if (date is null) return Fail("A test needs a date.");
+            if (update.DeadliftKg is < 0 or > 400 || update.HandReleasePushUps is < 0 or > 200
+                || update.SprintDragCarrySeconds is < 0 or > 900 || update.PlankSeconds is < 0 or > 1800
+                || update.TwoMileSeconds is < 0 or > 3600)
+            {
+                return Fail("One of those results is outside anything the tables score.");
+            }
+
+            var existing = await database.AftResults.SingleOrDefaultAsync(r => r.Date == date, cancellationToken);
+            if (existing is null)
+            {
+                existing = new AftResult { Id = Guid.NewGuid(), Date = date.Value };
+                database.AftResults.Add(existing);
+            }
+
+            existing.DeadliftKg = update.DeadliftKg;
+            existing.HandReleasePushUps = update.HandReleasePushUps;
+            existing.SprintDragCarrySeconds = update.SprintDragCarrySeconds;
+            existing.PlankSeconds = update.PlankSeconds;
+            existing.TwoMileSeconds = update.TwoMileSeconds;
+
+            await database.SaveChangesAsync(cancellationToken);
+
+            var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+                      ?? new AthleteSettings { Id = 1 };
+            var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+            return Results.Ok(ReadinessReports.Score(existing, row, today));
+        });
+
+        api.MapDelete("/aft/{id:guid}", async (Guid id, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var existing = await database.AftResults.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (existing is null) return Results.NotFound();
+
+            database.AftResults.Remove(existing);
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
         });
 
         // A bad import has to be undoable from the page. Without this the only
@@ -296,6 +401,11 @@ public static class FitnessEndpoints
         api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
             if (update.ReferenceHr is < 80 or > 220) return Fail("Reference HR out of range.");
+            if (update.LtHr is < 80 or > 220) return Fail("Lactate-threshold HR out of range.");
+            if (update.LtHr is { } ltHr && ltHr <= update.ReferenceHr)
+            {
+                return Fail("Lactate-threshold HR has to sit above the aerobic-threshold HR.");
+            }
 
             var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
             if (row is null)
@@ -316,17 +426,22 @@ public static class FitnessEndpoints
 
             row.ReferenceHr = update.ReferenceHr;
             row.LtSecondsPerKm = update.LtSecondsPerKm;
+            row.LtHr = update.LtHr;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
             row.BirthYear = update.BirthYear;
             row.Female = update.Female;
             row.AvailableHoursPerWeek = Math.Clamp(update.AvailableHoursPerWeek, 0, 40);
+            row.SustainedWeeklyHours = update.SustainedWeeklyHours is { } sustained
+                ? Math.Clamp(sustained, 0, 40)
+                : null;
             row.PastPeakDistanceMeters = update.PastPeakDistanceMeters;
             row.PastPeakSeconds = update.PastPeakSeconds;
             row.PastPeakYear = update.PastPeakYear;
             row.PastPeakWeightKg = update.PastPeakWeightKg;
             row.GoalWeightKg = update.GoalWeightKg;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
+            row.SelectionDate = ParseDate(update.SelectionDate);
 
             // A race is the honest way to state the anchor; raw VDOT stays as
             // the escape hatch. The race happened at home altitude, so its
@@ -458,7 +573,8 @@ public static class FitnessEndpoints
         {
             configured = false,
             signedIn = false,
-            hevyApi = false
+            hevyApi = false,
+            strava = false
         }));
 
         return routes;
@@ -471,6 +587,25 @@ public static class FitnessEndpoints
     /// the page shows the response body verbatim, so the reader was handed the
     /// quotes as well: <c>holiday.jpg: "Nothing importable in that file."</c>
     /// </summary>
+    /// <summary>
+    /// Whether an Authorization header carries the digest key: bearer scheme,
+    /// exact key, compared in constant time so the comparison's timing says
+    /// nothing about how much of a guess was right.
+    /// </summary>
+    internal static bool DigestKeyAllows(string authorizationHeader, string digestKey)
+    {
+        const string scheme = "Bearer ";
+        if (digestKey.Trim().Length < 32) return false;
+        if (!authorizationHeader.StartsWith(scheme, StringComparison.Ordinal)) return false;
+
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(authorizationHeader[scheme.Length..].Trim()),
+            Encoding.UTF8.GetBytes(digestKey.Trim()));
+    }
+
+    private static LocalDate UtcToday() =>
+        SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
+
     private static IResult Fail(string message) =>
         Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);
 
