@@ -33,6 +33,8 @@ import { useGateLog } from "../hooks/useGateLog";
 import { useProgress } from "../hooks/useProgress";
 import DrillPanel from "./DrillPanel";
 import GateLog from "./GateLog";
+import PlanTemplate from "./PlanTemplate";
+import ReferenceCards from "./ReferenceCards";
 
 /**
  * The curriculum, rendered from core/plan.ts.
@@ -123,6 +125,17 @@ export default function TrainingPlan() {
           removeAttempt={gates.remove}
         />
       ))}
+
+      <Section title="Communications plan template">
+        <PlanTemplate />
+      </Section>
+
+      <Section title="Reference cards">
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.5 }}>
+          {copy.cards}
+        </Typography>
+        <ReferenceCards />
+      </Section>
 
       <Section title="Gear">
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.5 }}>
