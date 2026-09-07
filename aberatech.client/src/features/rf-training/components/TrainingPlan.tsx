@@ -18,6 +18,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import type { Attempt } from "../core/gates";
 import {
   allTasks,
   type Block,
@@ -25,9 +26,13 @@ import {
   copy,
   gear,
   plan,
+  type Resource,
   rules,
 } from "../core/plan";
+import { useGateLog } from "../hooks/useGateLog";
 import { useProgress } from "../hooks/useProgress";
+import DrillPanel from "./DrillPanel";
+import GateLog from "./GateLog";
 
 /**
  * The curriculum, rendered from core/plan.ts.
@@ -39,6 +44,7 @@ import { useProgress } from "../hooks/useProgress";
  */
 export default function TrainingPlan() {
   const { done, toggle, reset } = useProgress();
+  const gates = useGateLog();
   const total = allTasks.length;
   const finished = allTasks.filter((task) => done.has(task.id)).length;
 
@@ -66,8 +72,13 @@ export default function TrainingPlan() {
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {copy.scoring}
           </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            {copy.practice}
+          </Typography>
         </Stack>
       </Paper>
+
+      <DrillPanel />
 
       <Section title="Rules">
         <List dense disablePadding>
@@ -107,6 +118,9 @@ export default function TrainingPlan() {
           index={index + 1}
           done={done}
           toggle={toggle}
+          attempts={gates.log[block.id] ?? []}
+          addAttempt={gates.add}
+          removeAttempt={gates.remove}
         />
       ))}
 
@@ -170,11 +184,17 @@ function BlockSection({
   index,
   done,
   toggle,
+  attempts,
+  addAttempt,
+  removeAttempt,
 }: {
   block: Block;
   index: number;
   done: Set<string>;
   toggle: (id: string) => void;
+  attempts: Attempt[];
+  addAttempt: (blockId: string, attempt: Attempt) => void;
+  removeAttempt: (blockId: string, id: string) => void;
 }) {
   return (
     <Box component="section">
@@ -218,50 +238,55 @@ function BlockSection({
         ))}
       </FormGroup>
 
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 1.5,
-          mt: 1.5,
-          borderColor: "primary.main",
-        }}
+      <Typography
+        variant="overline"
+        component="p"
+        sx={{ color: "text.secondary", mt: 1.5, lineHeight: 1.5 }}
       >
-        <Typography
-          variant="overline"
-          component="p"
-          sx={{ color: "primary.main", lineHeight: 1.5 }}
-        >
-          Gate
-        </Typography>
-        <Typography variant="body2">{block.gate}</Typography>
-      </Paper>
+        Practice
+      </Typography>
+      <ResourceList resources={block.practice} />
+
+      <GateLog
+        blockId={block.id}
+        gate={block.gate}
+        attempts={attempts}
+        add={addAttempt}
+        remove={removeAttempt}
+      />
 
       <Typography
         variant="overline"
         component="p"
         sx={{ color: "text.secondary", mt: 1.5, lineHeight: 1.5 }}
       >
-        Resources
+        Reading
       </Typography>
-      <List dense disablePadding>
-        {block.resources.map((resource) => (
-          <ListItem key={resource.url} disableGutters>
-            <ListItemText
-              primary={
-                <Link
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {resource.title}
-                </Link>
-              }
-              secondary={resource.note}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <ResourceList resources={block.resources} />
       <Divider sx={{ mt: 3 }} />
     </Box>
+  );
+}
+
+function ResourceList({ resources }: { resources: Resource[] }) {
+  return (
+    <List dense disablePadding>
+      {resources.map((resource) => (
+        <ListItem key={resource.url} disableGutters>
+          <ListItemText
+            primary={
+              <Link
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {resource.title}
+              </Link>
+            }
+            secondary={resource.note}
+          />
+        </ListItem>
+      ))}
+    </List>
   );
 }
