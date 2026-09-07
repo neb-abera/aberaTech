@@ -5,9 +5,24 @@
  * the whole feature, so it is tested from the page.
  */
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { allTasks, plan } from "../../core/plan";
+import { storageKey as gateKey } from "../../hooks/useGateLog";
 import { storageKey } from "../../hooks/useProgress";
 import TrainingPlan from "../TrainingPlan";
 
@@ -36,6 +51,15 @@ function memoryStorage(): Storage {
     },
   };
 }
+
+// Same rehearsal as AppAppBar.test: the worker's first MUI mount of this
+// page, now seven gate forms and the drill on top of the checklist, pays a
+// one-time emotion/jsdom cost that under coverage instrumentation blew the
+// first test's budget. Paying it here leaves every test starting warm.
+beforeAll(() => {
+  render(<TrainingPlan />);
+  cleanup();
+}, 60_000);
 
 let storage: Storage;
 
@@ -119,16 +143,53 @@ describe("the training plan", () => {
     expect(screen.getByText(`0 of ${allTasks.length} done`)).toBeTruthy();
   });
 
-  it("opens every resource on another tab, saying so", () => {
+  it("opens every reading and practice link on another tab, saying so", () => {
     render(<TrainingPlan />);
 
     for (const block of plan) {
-      for (const resource of block.resources) {
-        const link = screen.getByRole("link", { name: resource.title });
-        expect(link.getAttribute("href")).toBe(resource.url);
-        expect(link.getAttribute("target")).toBe("_blank");
-        expect(link.getAttribute("rel")).toContain("noopener");
+      for (const resource of [...block.resources, ...block.practice]) {
+        // Some practice sites appear under more than one block.
+        const links = screen.getAllByRole("link", { name: resource.title });
+        for (const link of links) {
+          expect(link.getAttribute("target")).toBe("_blank");
+          expect(link.getAttribute("rel")).toContain("noopener");
+        }
+        expect(links.map((link) => link.getAttribute("href"))).toContain(
+          resource.url,
+        );
       }
     }
+  });
+
+  it("carries the daily drill and a gate log for every block", () => {
+    render(<TrainingPlan />);
+
+    expect(
+      screen.getByRole("button", { name: "Start today's drill" }),
+    ).toBeTruthy();
+    for (const block of plan) {
+      const gate = screen.getByRole("region", { name: `Gate for ${block.id}` });
+      expect(gate.textContent).toContain(block.gate);
+      expect(gate.textContent).toContain("No attempts yet.");
+    }
+  });
+
+  it("keeps a gate attempt across a reload", () => {
+    const { unmount } = render(<TrainingPlan />);
+    const gate = screen.getByRole("region", { name: "Gate for wire" });
+
+    fireEvent.change(within(gate).getByRole("textbox", { name: "Minutes" }), {
+      target: { value: "28" },
+    });
+    fireEvent.click(within(gate).getByRole("button", { name: "Log a pass" }));
+    unmount();
+    cleanup();
+
+    render(<TrainingPlan />);
+
+    expect(
+      screen.getByRole("region", { name: "Gate for wire" }).textContent,
+    ).toContain("1 of 1 passed. Best 28 min on");
+    expect(JSON.parse(storage.getItem(gateKey) ?? "{}").wire).toHaveLength(1);
   });
 });
