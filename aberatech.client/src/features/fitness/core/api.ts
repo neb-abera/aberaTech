@@ -845,6 +845,57 @@ export interface AftResult {
 }
 
 /** Everything between the athlete and a selection slot, as the log sees it. */
+/** One gate line, looked at by its due date. */
+export interface OutlookLine {
+  metric: string;
+  label: string;
+  probability: number | null;
+  method: "trajectory" | "trend" | "held" | "none";
+  evidence: string;
+  projected: number | null;
+  readyInMonths: number | null;
+  hoursToReach: number | null;
+  unit: string;
+  comparison: "AtLeast" | "AtMost";
+  target: number;
+}
+
+/** One gate, looked at by its due date. */
+export interface OutlookGate {
+  id: string;
+  name: string;
+  weeksBeforeSelection: number;
+  dueOn: string | null;
+  monthsAway: number;
+  probability: number | null;
+  forecast: number;
+  total: number;
+  readyInMonths: number | null;
+  lines: OutlookLine[];
+}
+
+/** The gates as a forecast, under one training week. */
+export interface Outlook {
+  selectionDate: string | null;
+  weeklyHours: number;
+  measuredWeeklyHours: number;
+  compliance: number;
+  startVdot: number;
+  gates: OutlookGate[];
+  earliestSelectionDate: string | null;
+  bindingGate: string | null;
+  assumptions: string[];
+}
+
+export function fetchOutlook(
+  weeklyHours: number | null,
+  compliance: number,
+): Promise<Outlook> {
+  const query = new URLSearchParams({ compliance: String(compliance) });
+  if (weeklyHours !== null) query.set("weeklyHours", String(weeklyHours));
+  return get<Outlook>(`/api/fitness/readiness/outlook?${query.toString()}`);
+}
+
 export interface Readiness {
   selectionDate: string | null;
   gates: Gate[];
