@@ -40,7 +40,49 @@ const METRIC_LABELS: Record<string, string> = {
   "run-5mi": "5-mile run",
   "run-10mi": "10-mile run",
   "ruck-12mi": "12-mile ruck",
+  "ruck-12mi-45lb": "12-mile ruck at 45 lb",
+  "ruck-12mi-35lb": "12-mile ruck at 35 lb",
+  "pull-ups": "Pull-ups",
+  "hand-release-push-ups": "Hand-release push-ups",
+  "push-ups": "Push-ups",
+  "sit-ups": "Sit-ups",
+  plank: "Plank",
+  "deadlift-3rm-bw": "Deadlift 3RM to bodyweight",
+  "front-squat-3rm-bw": "Front squat 3RM to bodyweight",
+  "deadlift-3rm-lb": "Deadlift 3RM",
+  "aft-total": "AFT total",
+  "aft-lowest-event": "Lowest AFT event",
+  "body-fat": "Body fat",
 };
+
+/**
+ * A readiness value in the unit its requirement is stated in. Loads and
+ * lifts are shown in both pounds and kilograms: the standards are written
+ * in pounds and the log keeps kilograms.
+ */
+export function formatRequirement(unit: string, value: number): string {
+  switch (unit) {
+    case "s":
+      return formatSeconds(value);
+    case "reps":
+      return `${Math.round(value)} reps`;
+    case "xbw":
+      return `${value.toFixed(2)}× bodyweight`;
+    case "lb":
+      return `${Math.round(value)} lb (${Math.round(lbToKg(value))} kg)`;
+    case "pts":
+      return `${Math.round(value)} pts`;
+    case "%":
+      return `${Number(value.toFixed(1))}%`;
+    default:
+      return String(Number(value.toFixed(2)));
+  }
+}
+
+/** A load in both units, for a ruck that was carried in one of them. */
+export function formatLoad(loadKg: number): string {
+  return `${Math.round(kgToLb(loadKg))} lb (${Number(loadKg.toFixed(1))} kg)`;
+}
 
 export function metricLabel(metric: string): string {
   return METRIC_LABELS[metric] ?? metric;

@@ -10,6 +10,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<AthleteSettings> Settings => Set<AthleteSettings>();
     public DbSet<LockedPrediction> Predictions => Set<LockedPrediction>();
+    public DbSet<AftResult> AftResults => Set<AftResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,5 +47,10 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<Goal>().Property(g => g.Label).HasMaxLength(128);
         modelBuilder.Entity<LockedPrediction>().Property(p => p.Note).HasMaxLength(512);
         modelBuilder.Entity<LockedPrediction>().HasIndex(p => p.TargetDate);
+
+        // One test per day; a second entry that day is a correction.
+        modelBuilder.Entity<AftResult>()
+            .HasIndex(r => r.Date)
+            .IsUnique();
     }
 }

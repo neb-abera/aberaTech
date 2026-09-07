@@ -128,6 +128,37 @@ public static class Highlights
         }
     }
 
+    /// <summary>Days after which a time trial no longer says where the athlete is.</summary>
+    public const int AnchorStaleAfterDays = 90;
+
+    /// <summary>
+    /// Whether the anchor every projection launches from is worth launching from.
+    /// </summary>
+    /// <remarks>
+    /// The console projected for weeks from a VDOT that was the default, and
+    /// said so only in a caption nobody read. A model is only as good as its
+    /// last measured anchor, so an unmeasured or stale one is a finding on the
+    /// dashboard, next to the trends it is quietly distorting.
+    /// </remarks>
+    public static Highlight? Anchor(LocalDate? measuredOn, LocalDate today)
+    {
+        if (measuredOn is not { } measured)
+        {
+            return new Highlight("anchor-missing",
+                "Your anchor is the default, not a measurement",
+                "Every projection launches from the default VDOT because no time trial is recorded. Run a two-mile and record it on the Data tab.",
+                Positive: false);
+        }
+
+        var age = Period.Between(measured, today, PeriodUnits.Days).Days;
+        if (age <= AnchorStaleAfterDays) return null;
+
+        return new Highlight("anchor-stale",
+            $"Your anchor is {age} days old",
+            $"Time trial on {measured:yyyy-MM-dd}; after {AnchorStaleAfterDays} days of training it no longer says where you are. Re-run it.",
+            Positive: false);
+    }
+
     private static string Pace(double secPerKm)
     {
         var s = (int)Math.Round(secPerKm);

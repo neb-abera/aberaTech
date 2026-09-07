@@ -73,6 +73,11 @@ public static class ActivityStore
                 existing.AverageHr = activity.AverageHr;
                 existing.MaxHr = activity.MaxHr;
 
+                // The load is the one field the source never knew. A file
+                // that names it may set it; a file that does not must not
+                // erase what the owner typed on the page.
+                existing.LoadKg = activity.LoadKg ?? existing.LoadKg;
+
                 existing.Sets.Clear();
                 foreach (var set in activity.Sets)
                 {
@@ -83,7 +88,8 @@ public static class ActivityStore
                         Exercise = set.Exercise,
                         SetIndex = set.SetIndex,
                         WeightKg = set.WeightKg,
-                        Reps = set.Reps
+                        Reps = set.Reps,
+                        DurationSeconds = set.DurationSeconds
                     });
                 }
             }

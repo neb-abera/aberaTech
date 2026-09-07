@@ -23,11 +23,13 @@ import {
   type ActivityRow,
   deleteActivity,
   fetchActivities,
+  saveActivityLoad,
+  saveAftResult,
   saveBodyMetric,
   syncHevy,
   uploadFile,
 } from "../core/api";
-import { formatSeconds, lbToKg } from "../core/format";
+import { formatSeconds, kgToLb, lbToKg, parseClock } from "../core/format";
 import ProfileCard from "./ProfileCard";
 
 /**
@@ -261,6 +263,10 @@ export default function DataPanel({
       {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
       <WeighIn onSaved={onDataChanged} />
 
+      {/* A fitness test is a measurement the readiness gates outrank the
+          model with. */}
+      <AftEntry onSaved={onDataChanged} />
+
       <Card variant="outlined">
         <CardContent>
           <Typography variant="h6" sx={{ mb: 0.5 }}>
@@ -289,6 +295,7 @@ export default function DataPanel({
                     <TableCell align="right">Distance</TableCell>
                     <TableCell align="right">Time</TableCell>
                     <TableCell align="right">Avg HR</TableCell>
+                    <TableCell align="right">Load</TableCell>
                     <TableCell>Source</TableCell>
                     <TableCell />
                   </TableRow>
@@ -309,6 +316,20 @@ export default function DataPanel({
                       </TableCell>
                       <TableCell align="right">
                         {activity.averageHr ?? "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        {activity.sport === "ruck" ? (
+                          <LoadField
+                            activity={activity}
+                            onSaved={() => {
+                              refresh();
+                              onDataChanged();
+                            }}
+                            onError={(text) => setStatus({ ok: false, text })}
+                          />
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell>{activity.source}</TableCell>
                       <TableCell align="right" padding="none">
@@ -408,6 +429,231 @@ function WeighIn({ onSaved }: { onSaved: () => void }) {
           <Button variant="contained" onClick={save}>
             Save
           </Button>
+        </Stack>
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {saved && !error && (
+          <Alert
+            severity="success"
+            onClose={() => setSaved(null)}
+            sx={{ mt: 2 }}
+          >
+            {saved}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * The load a ruck was carried at, typed in pounds or kilograms. No watch
+ * records it, and without it the models read a ruck as a walk.
+ */
+function LoadField({
+  activity,
+  onSaved,
+  onError,
+}: {
+  activity: ActivityRow;
+  onSaved: () => void;
+  onError: (text: string) => void;
+}) {
+  const [unit, setUnit] = React.useState<"lb" | "kg">("lb");
+  const [text, setText] = React.useState(() =>
+    activity.loadKg === null ? "" : String(Math.round(kgToLb(activity.loadKg))),
+  );
+
+  const shown = (loadKg: number | null) =>
+    loadKg === null
+      ? ""
+      : unit === "lb"
+        ? String(Math.round(kgToLb(loadKg)))
+        : String(Number(loadKg.toFixed(1)));
+
+  const switchUnit = () => {
+    const next = unit === "lb" ? "kg" : "lb";
+    const value = Number(text);
+    setUnit(next);
+    if (text.trim() !== "" && Number.isFinite(value) && value > 0) {
+      setText(
+        next === "kg"
+          ? String(Number(lbToKg(value).toFixed(1)))
+          : String(Math.round(kgToLb(value))),
+      );
+    }
+  };
+
+  const save = async () => {
+    const value = text.trim() === "" ? null : Number(text);
+    if (value !== null && (!Number.isFinite(value) || value <= 0)) {
+      onError("A load is a positive number of pounds or kilograms.");
+      return;
+    }
+    const loadKg =
+      value === null ? null : unit === "lb" ? lbToKg(value) : value;
+    if (
+      (loadKg === null && activity.loadKg === null) ||
+      (loadKg !== null &&
+        activity.loadKg !== null &&
+        Math.abs(loadKg - activity.loadKg) < 0.05)
+    ) {
+      return;
+    }
+    try {
+      await saveActivityLoad(activity.id, loadKg);
+      onSaved();
+    } catch (error) {
+      onError((error as Error).message);
+      setText(shown(activity.loadKg));
+    }
+  };
+
+  return (
+    <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
+      <TextField
+        size="small"
+        variant="standard"
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        onBlur={() => void save()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") (event.target as HTMLInputElement).blur();
+        }}
+        slotProps={{
+          htmlInput: {
+            "aria-label": `Load for ${activity.name || "ruck"} of ${activity.startedAt.slice(0, 10)}`,
+            inputMode: "decimal",
+            style: { textAlign: "right", width: 48 },
+          },
+        }}
+      />
+      <Button size="small" onClick={switchUnit} aria-label="Switch load unit">
+        {unit}
+      </Button>
+    </Stack>
+  );
+}
+
+/**
+ * One Army Fitness Test, as taken. The five raw results; the scoring happens
+ * on the server against the published tables and comes back with the save.
+ */
+function AftEntry({ onSaved }: { onSaved: () => void }) {
+  const [date, setDate] = React.useState(() => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+  });
+  const [deadliftLb, setDeadliftLb] = React.useState("");
+  const [pushUps, setPushUps] = React.useState("");
+  const [sprintDragCarry, setSprintDragCarry] = React.useState("");
+  const [plank, setPlank] = React.useState("");
+  const [twoMile, setTwoMile] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState<string | null>(null);
+
+  const save = async () => {
+    const lb = Number(deadliftLb);
+    const reps = Number(pushUps);
+    const sdc = parseClock(sprintDragCarry);
+    const held = parseClock(plank);
+    const run = parseClock(twoMile);
+    if (
+      !Number.isFinite(lb) ||
+      lb <= 0 ||
+      !Number.isInteger(reps) ||
+      reps < 0
+    ) {
+      setError("Deadlift is pounds; push-ups are a count.");
+      return;
+    }
+    if (sdc === null || held === null || run === null) {
+      setError("Sprint-drag-carry, plank and the run are times like 2:10.");
+      return;
+    }
+    try {
+      const result = await saveAftResult({
+        date,
+        deadliftKg: lbToKg(lb),
+        handReleasePushUps: reps,
+        sprintDragCarrySeconds: sdc,
+        plankSeconds: held,
+        twoMileSeconds: run,
+      });
+      setError(null);
+      setSaved(
+        `Scored ${result.total} on the ${result.ageBand} band — combat standard ${result.meetsCombatStandard ? "met" : "not met"}.`,
+      );
+      onSaved();
+    } catch (caught) {
+      setSaved(null);
+      setError((caught as Error).message || "Could not save the test.");
+    }
+  };
+
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
+          Army Fitness Test
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+          The five raw results as taken. Scored against the published tables on
+          your age band, and used as measurements by the readiness gates.
+        </Typography>
+        <Stack spacing={2}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              label="Date"
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Deadlift 3RM (lb)"
+              value={deadliftLb}
+              onChange={(event) => setDeadliftLb(event.target.value)}
+              sx={{ width: 160 }}
+            />
+            <TextField
+              label="Hand-release push-ups"
+              value={pushUps}
+              onChange={(event) => setPushUps(event.target.value)}
+              sx={{ width: 190 }}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              label="Sprint-drag-carry (m:ss)"
+              value={sprintDragCarry}
+              onChange={(event) => setSprintDragCarry(event.target.value)}
+              sx={{ width: 200 }}
+            />
+            <TextField
+              label="Plank (m:ss)"
+              value={plank}
+              onChange={(event) => setPlank(event.target.value)}
+              sx={{ width: 140 }}
+            />
+            <TextField
+              label="Two-mile run (m:ss)"
+              value={twoMile}
+              onChange={(event) => setTwoMile(event.target.value)}
+              sx={{ width: 170 }}
+            />
+            <Button
+              variant="contained"
+              onClick={save}
+              sx={{ alignSelf: "center" }}
+            >
+              Save test
+            </Button>
+          </Stack>
         </Stack>
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
