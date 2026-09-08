@@ -12,17 +12,17 @@ public sealed class SyncScheduleTests
     public void A_source_that_never_ran_is_due()
     {
         Assert.True(SyncSchedule.IsDue(SyncSchedule.HevySource, null, Now));
-        Assert.True(SyncSchedule.IsDue(SyncSchedule.StravaSource, null, Now));
+        Assert.True(SyncSchedule.IsDue(SyncSchedule.IntervalsIcuSource, null, Now));
     }
 
     [Fact]
-    public void Hevy_is_daily_and_strava_is_hourly()
+    public void Hevy_is_daily_and_intervals_icu_is_hourly()
     {
         Assert.False(SyncSchedule.IsDue(SyncSchedule.HevySource, Now - Duration.FromHours(23), Now));
         Assert.True(SyncSchedule.IsDue(SyncSchedule.HevySource, Now - Duration.FromHours(24), Now));
 
-        Assert.False(SyncSchedule.IsDue(SyncSchedule.StravaSource, Now - Duration.FromMinutes(59), Now));
-        Assert.True(SyncSchedule.IsDue(SyncSchedule.StravaSource, Now - Duration.FromMinutes(60), Now));
+        Assert.False(SyncSchedule.IsDue(SyncSchedule.IntervalsIcuSource, Now - Duration.FromMinutes(59), Now));
+        Assert.True(SyncSchedule.IsDue(SyncSchedule.IntervalsIcuSource, Now - Duration.FromMinutes(60), Now));
     }
 
     [Fact]

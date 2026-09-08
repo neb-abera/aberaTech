@@ -17,7 +17,7 @@ using aberaTech.Fitness;
 using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Ingest;
-using aberaTech.Fitness.Strava;
+using aberaTech.Fitness.IntervalsIcu;
 using aberaTech.Fitness.Sync;
 using aberaTech.Postgres;
 using Microsoft.EntityFrameworkCore;
@@ -178,9 +178,9 @@ var fitnessOptions = builder.Configuration.GetSection(FitnessOptions.Section).Ge
                      ?? new FitnessOptions();
 builder.Services.AddSingleton(fitnessOptions);
 
-var stravaOptions = builder.Configuration.GetSection(StravaOptions.Section).Get<StravaOptions>()
-                    ?? new StravaOptions();
-builder.Services.AddSingleton(stravaOptions);
+var intervalsIcuOptions = builder.Configuration.GetSection(IntervalsIcuOptions.Section).Get<IntervalsIcuOptions>()
+                          ?? new IntervalsIcuOptions();
+builder.Services.AddSingleton(intervalsIcuOptions);
 
 var fitnessConnection = builder.Configuration.GetConnectionString("Fitness");
 var fitnessRequiresSignIn = FitnessGate.RequiresOwnerSignIn(
@@ -229,17 +229,23 @@ if (fitnessEnabled)
         builder.Services.AddScoped<HevySync>();
     }
 
-    // The Strava bridge needs the app's credentials and somewhere to keep the
-    // athlete's token unreadable: the data-protection ring the admin sign-in
-    // already persists. Without either it is never mapped.
-    if (stravaOptions.IsConfigured && adminOptions.IsConfigured)
+    // The intervals.icu bridge needs only the personal API key, sent as
+    // basic auth with the literal username the service expects.
+    if (intervalsIcuOptions.IsConfigured)
     {
-        builder.Services.AddHttpClient<StravaClient>(client =>
-            client.Timeout = TimeSpan.FromSeconds(30));
-        builder.Services.AddScoped<StravaSync>();
+        builder.Services.AddHttpClient<IntervalsIcuClient>(client =>
+        {
+            client.BaseAddress = new Uri(IntervalsIcuClient.BaseAddress);
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Basic",
+                Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(
+                    $"{IntervalsIcuClient.ApiKeyUser}:{intervalsIcuOptions.ApiKey}")));
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+        builder.Services.AddScoped<IntervalsIcuSync>();
     }
 
-    // Hevy daily, Strava hourly, each only when it is there to sync.
+    // Hevy daily, intervals.icu hourly, each only when it is there to sync.
     builder.Services.AddHostedService<FitnessSyncWorker>();
 }
 
@@ -463,10 +469,7 @@ if (fitnessEnabled)
         await database.Database.MigrateAsync();
     }
 
-    app.MapFitnessEndpoints(
-        fitnessOptions,
-        fitnessRequiresSignIn,
-        adminOptions.IsConfigured ? stravaOptions : new StravaOptions());
+    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions);
 }
 else
 {
