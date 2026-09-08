@@ -48,7 +48,7 @@ public static class SameSession
     }
 
     /// <summary>Sources whose timestamps are real instants.</summary>
-    public static readonly string[] TrueClock = ["garmin-export", "garmin-fit", "strava"];
+    public static readonly string[] TrueClock = ["garmin-export", "garmin-fit", "intervals-icu"];
 
     /// <summary>Sources that record a wall clock and leave the zone to be guessed.</summary>
     public static readonly string[] LocalClock = ["garmin-csv"];

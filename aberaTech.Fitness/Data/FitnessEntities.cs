@@ -76,29 +76,10 @@ public class Lap
     public int? AverageHr { get; set; }
 }
 
-/// <summary>
-/// The Strava grant, one row. The refresh token is stored protected, the
-/// way the calendar's Google token is, so the database alone cannot read it.
-/// </summary>
-public class StravaConnection
-{
-    public int Id { get; set; }
-
-    public long? AthleteId { get; set; }
-
-    public required string ProtectedRefreshToken { get; set; }
-
-    public Instant ConnectedAt { get; set; }
-
-    public Instant? LastSyncedAt { get; set; }
-
-    public string? LastError { get; set; }
-}
-
 /// <summary>When an automatic source last ran, and what it said.</summary>
 public class SyncState
 {
-    /// <summary>hevy-api or strava.</summary>
+    /// <summary>hevy-api or intervals-icu.</summary>
     public required string Source { get; set; }
 
     public Instant? LastRunAt { get; set; }

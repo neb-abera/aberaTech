@@ -227,7 +227,7 @@ export default function FitnessPanel() {
       <Section index={4} tab={tab} visited={visited}>
         <DataPanel
           hevyApi={me.hevyApi}
-          strava={me.strava}
+          intervalsIcu={me.intervalsIcu}
           settings={summary.settings}
           onDataChanged={reloadSummary}
         />

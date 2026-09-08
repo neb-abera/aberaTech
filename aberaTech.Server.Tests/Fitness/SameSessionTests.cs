@@ -48,16 +48,16 @@ public sealed class SameSessionTests
     }
 
     [Fact]
-    public void Strava_carries_a_real_clock_and_matches_the_export_exactly()
+    public void Intervals_icu_carries_a_real_clock_and_matches_the_export_exactly()
     {
-        // Garmin pushes the same session to Strava; both are true instants, so
+        // Garmin pushes the same session to intervals.icu; both are true instants, so
         // a bridge import and an earlier file import are one row, not two.
         var export = Run(Noon);
-        var strava = Run(Noon.Plus(Duration.FromSeconds(1)), duration: 1201, distance: 3025);
-        strava.Source = "strava";
+        var icu = Run(Noon.Plus(Duration.FromSeconds(1)), duration: 1201, distance: 3025);
+        icu.Source = "intervals-icu";
 
-        Assert.Contains("strava", SameSession.TrueClock);
-        Assert.True(SameSession.Matches(export, strava));
+        Assert.Contains("intervals-icu", SameSession.TrueClock);
+        Assert.True(SameSession.Matches(export, icu));
     }
 
     [Fact]
