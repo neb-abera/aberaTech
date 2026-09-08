@@ -82,7 +82,7 @@ function stubFetch(
               lastSyncedAt: null,
               lastOutcome: null,
             },
-            strava: {
+            intervalsIcu: {
               configured: false,
               connected: false,
               lastRunAt: null,

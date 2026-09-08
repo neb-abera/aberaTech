@@ -23,14 +23,13 @@ import type { SettingsDto } from "../core/api";
 import {
   type ActivityRow,
   deleteActivity,
-  disconnectStrava,
   fetchActivities,
   fetchIngestStatus,
   type IngestStatus,
   type SourceStatus,
   saveBodyMetric,
   syncHevy,
-  syncStrava,
+  syncIntervalsIcu,
   uploadFile,
 } from "../core/api";
 import { formatSeconds, lbToKg } from "../core/format";
@@ -44,13 +43,13 @@ import ProfileCard from "./ProfileCard";
  */
 export default function DataPanel({
   hevyApi,
-  strava = false,
+  intervalsIcu = false,
   settings,
   onDataChanged,
 }: {
   hevyApi: boolean;
-  /** Whether the deployment can offer a Strava connection at all. */
-  strava?: boolean;
+  /** Whether the deployment has an intervals.icu API key. */
+  intervalsIcu?: boolean;
   settings: SettingsDto;
   /**
    * Anything that changes what the dashboard would say. Every mutation on this
@@ -240,7 +239,7 @@ export default function DataPanel({
       {/* The sources that bring themselves in. */}
       <IntegrationsCard
         hevyApi={hevyApi}
-        strava={strava}
+        intervalsIcu={intervalsIcu}
         onDataChanged={() => {
           refresh();
           onDataChanged();
@@ -451,24 +450,24 @@ function ago(iso: string | null, now: Date = new Date()): string {
 
 /**
  * The sources that bring themselves in: Hevy once a day when a key is
- * configured, Strava every hour once connected. Each says when it last ran
- * and what happened, because a sync that fails silently is the old export
- * ritual with extra steps.
+ * configured, intervals.icu every hour when one is. Each says when it last
+ * ran and what happened, because a sync that fails silently is the old
+ * export ritual with extra steps.
  */
 function IntegrationsCard({
   hevyApi,
-  strava,
+  intervalsIcu,
   onDataChanged,
 }: {
   hevyApi: boolean;
-  strava: boolean;
+  intervalsIcu: boolean;
   onDataChanged: () => void;
 }) {
   const [status, setStatus] = React.useState<IngestStatus | null>(null);
   const [note, setNote] = React.useState<{ ok: boolean; text: string } | null>(
     null,
   );
-  const [busy, setBusy] = React.useState<"hevy" | "strava" | null>(null);
+  const [busy, setBusy] = React.useState<"hevy" | "icu" | null>(null);
 
   const refresh = React.useCallback(() => {
     fetchIngestStatus()
@@ -478,30 +477,14 @@ function IntegrationsCard({
 
   React.useEffect(refresh, [refresh]);
 
-  // The consent round trip lands back here with a verdict in the URL.
-  React.useEffect(() => {
-    const verdict = new URLSearchParams(window.location.search).get("strava");
-    if (verdict === null) return;
-    const texts: Record<string, { ok: boolean; text: string }> = {
-      connected: { ok: true, text: "Strava connected; first sync done." },
-      refused: { ok: false, text: "Strava access was not granted." },
-      expired: { ok: false, text: "That Strava link had expired; try again." },
-      scope: {
-        ok: false,
-        text: "Strava was connected without activity access; reconnect and leave the activity box ticked.",
-      },
-      failed: { ok: false, text: "Strava did not complete the connection." },
-    };
-    setNote(texts[verdict] ?? null);
-  }, []);
-
-  const run = async (source: "hevy" | "strava") => {
+  const run = async (source: "hevy" | "icu") => {
     setBusy(source);
     try {
-      const result = source === "hevy" ? await syncHevy() : await syncStrava();
+      const result =
+        source === "hevy" ? await syncHevy() : await syncIntervalsIcu();
       setNote({
         ok: true,
-        text: `${source === "hevy" ? "Hevy" : "Strava"}: ${result.fetched} seen, ${result.added} new.`,
+        text: `${source === "hevy" ? "Hevy" : "intervals.icu"}: ${result.fetched} seen, ${result.added} new.`,
       });
       refresh();
       onDataChanged();
@@ -512,21 +495,8 @@ function IntegrationsCard({
     }
   };
 
-  const disconnect = async () => {
-    if (!window.confirm("Disconnect Strava? Imported activities stay.")) return;
-    try {
-      await disconnectStrava();
-      setNote({ ok: true, text: "Strava disconnected." });
-      refresh();
-    } catch (error) {
-      setNote({ ok: false, text: (error as Error).message });
-    }
-  };
-
-  const line = (s: SourceStatus | undefined, connected: boolean) =>
-    !connected
-      ? null
-      : `Last sync ${ago(s?.lastSyncedAt ?? s?.lastRunAt ?? null)}${s?.lastOutcome ? ` — ${s.lastOutcome}` : ""}.`;
+  const line = (s: SourceStatus | undefined) =>
+    `Last sync ${ago(s?.lastSyncedAt ?? s?.lastRunAt ?? null)}${s?.lastOutcome ? ` — ${s.lastOutcome}` : ""}.`;
 
   return (
     <Card variant="outlined">
@@ -535,9 +505,10 @@ function IntegrationsCard({
           Automatic sources
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-          Hevy is pulled once a day, Strava every hour. Garmin syncs to Strava
-          on its own, so connecting Strava ends the export ritual and brings
-          laps and the treadmill flag with it.
+          Hevy is pulled once a day, intervals.icu every hour. Garmin Connect
+          pushes to intervals.icu on its own, and intervals.icu keeps the
+          original FIT file, so what arrives here is exactly what an upload
+          would have been: laps and the treadmill flag included.
         </Typography>
 
         <Stack spacing={2}>
@@ -559,7 +530,7 @@ function IntegrationsCard({
               sx={{ color: "text.secondary", flex: 1 }}
             >
               {hevyApi
-                ? line(status?.hevy, true)
+                ? line(status?.hevy)
                 : "Live sync appears once a Hevy Pro API key is configured (~$24/year, optional); the CSV export works without it."}
             </Typography>
             {hevyApi && (
@@ -580,47 +551,29 @@ function IntegrationsCard({
             sx={{ alignItems: { sm: "center" } }}
           >
             <Typography variant="body2" sx={{ minWidth: 200 }}>
-              <strong>Strava</strong>{" "}
-              {!strava ? (
-                <Chip size="small" label="not configured" />
-              ) : status?.strava.connected ? (
+              <strong>intervals.icu</strong>{" "}
+              {intervalsIcu ? (
                 <Chip size="small" color="success" label="hourly" />
               ) : (
-                <Chip size="small" label="not connected" />
+                <Chip size="small" label="key not configured" />
               )}
             </Typography>
             <Typography
               variant="caption"
               sx={{ color: "text.secondary", flex: 1 }}
             >
-              {!strava
-                ? "Appears once the deployment has a Strava API application (client id and secret)."
-                : status?.strava.connected
-                  ? line(status.strava, true)
-                  : "Connect once; the grant is stored encrypted and refreshed on its own."}
+              {intervalsIcu
+                ? line(status?.intervalsIcu)
+                : "Appears once an intervals.icu personal API key (free; Settings → Developer) is configured and Garmin Connect is linked to intervals.icu."}
             </Typography>
-            {strava && status?.strava.connected && (
-              <>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={busy !== null}
-                  onClick={() => void run("strava")}
-                >
-                  Sync Strava now
-                </Button>
-                <Button size="small" onClick={() => void disconnect()}>
-                  Disconnect
-                </Button>
-              </>
-            )}
-            {strava && status !== null && !status.strava.connected && (
+            {intervalsIcu && (
               <Button
                 size="small"
-                variant="contained"
-                href="/api/fitness/ingest/strava/connect"
+                variant="outlined"
+                disabled={busy !== null}
+                onClick={() => void run("icu")}
               >
-                Connect Strava
+                Sync intervals.icu now
               </Button>
             )}
           </Stack>
