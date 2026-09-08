@@ -5,7 +5,7 @@ using NodaTime;
 namespace aberaTech.Fitness.Sync;
 
 /// <summary>
-/// Brings the log in on its own: Hevy daily, Strava hourly, each only when
+/// Brings the log in on its own: Hevy daily, intervals.icu hourly, each only when
 /// it is configured or connected.
 /// </summary>
 /// <remarks>
@@ -78,12 +78,11 @@ public sealed class FitnessSyncWorker(
                 outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
         }
 
-        if (scope.ServiceProvider.GetService<StravaSync>() is { } strava
-            && await database.StravaConnections.AnyAsync(cancellationToken)
-            && SyncSchedule.IsDue(SyncSchedule.StravaSource, states.GetValueOrDefault(SyncSchedule.StravaSource)?.LastRunAt, now))
+        if (scope.ServiceProvider.GetService<IntervalsIcuSync>() is { } icu
+            && SyncSchedule.IsDue(SyncSchedule.IntervalsIcuSource, states.GetValueOrDefault(SyncSchedule.IntervalsIcuSource)?.LastRunAt, now))
         {
-            var outcome = await strava.RunAsync(cancellationToken);
-            logger.LogInformation("Strava sync: {Fetched} seen, {Added} new{Error}.",
+            var outcome = await icu.RunAsync(cancellationToken);
+            logger.LogInformation("intervals.icu sync: {Fetched} seen, {Added} new{Error}.",
                 outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
         }
     }

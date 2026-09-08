@@ -8,8 +8,8 @@ export interface FitnessMe {
   configured: boolean;
   signedIn: boolean;
   hevyApi: boolean;
-  /** Whether this deployment has Strava credentials, so a connect button makes sense. */
-  strava: boolean;
+  /** Whether this deployment has an intervals.icu API key, so the hourly pull is on. */
+  intervalsIcu: boolean;
 }
 
 export interface SettingsDto {
@@ -501,7 +501,7 @@ export interface SourceStatus {
 
 export interface IngestStatus {
   hevy: SourceStatus;
-  strava: SourceStatus;
+  intervalsIcu: SourceStatus;
 }
 
 export const fetchIngestStatus = () => get<IngestStatus>("/api/fitness/ingest");
@@ -518,16 +518,8 @@ async function runSync(
 
 export const syncHevy = () => runSync("/api/fitness/ingest/hevy/sync");
 
-export const syncStrava = () => runSync("/api/fitness/ingest/strava/sync");
-
-export async function disconnectStrava(): Promise<void> {
-  const response = await fetch("/api/fitness/ingest/strava/disconnect", {
-    method: "POST",
-  });
-  if (!response.ok) {
-    throw new ApiError(response.status, await response.text());
-  }
-}
+export const syncIntervalsIcu = () =>
+  runSync("/api/fitness/ingest/intervals-icu/sync");
 
 export async function saveSettings(update: SettingsUpdate): Promise<void> {
   const response = await fetch("/api/fitness/settings", {

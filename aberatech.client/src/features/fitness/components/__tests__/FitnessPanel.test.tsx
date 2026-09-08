@@ -162,7 +162,7 @@ describe("FitnessPanel", () => {
           configured: false,
           signedIn: false,
           hevyApi: false,
-          strava: false,
+          intervalsIcu: false,
         }),
       ),
     );
@@ -180,7 +180,7 @@ describe("FitnessPanel", () => {
           configured: true,
           signedIn: false,
           hevyApi: false,
-          strava: false,
+          intervalsIcu: false,
         }),
       ),
     );
@@ -206,7 +206,7 @@ describe("FitnessPanel", () => {
               configured: true,
               signedIn: true,
               hevyApi: false,
-              strava: false,
+              intervalsIcu: false,
             }),
           );
         }
@@ -258,7 +258,7 @@ describe("FitnessPanel", () => {
               configured: true,
               signedIn: true,
               hevyApi: false,
-              strava: false,
+              intervalsIcu: false,
             }),
           );
         }
@@ -294,7 +294,7 @@ describe("FitnessPanel", () => {
               configured: true,
               signedIn: true,
               hevyApi: false,
-              strava: false,
+              intervalsIcu: false,
             }),
           );
         }
@@ -323,7 +323,7 @@ describe("FitnessPanel", () => {
               configured: true,
               signedIn: true,
               hevyApi: false,
-              strava: false,
+              intervalsIcu: false,
             }),
           );
         }

@@ -4,7 +4,7 @@ using aberaTech.Fitness.Domain;
 using System.Security.Cryptography;
 using System.Text;
 using aberaTech.Fitness.Ingest;
-using aberaTech.Fitness.Strava;
+using aberaTech.Fitness.IntervalsIcu;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -73,9 +73,9 @@ public static class FitnessEndpoints
         this IEndpointRouteBuilder routes,
         FitnessOptions options,
         bool requireOwnerSignIn = true,
-        StravaOptions? strava = null)
+        IntervalsIcuOptions? intervalsIcu = null)
     {
-        strava ??= new StravaOptions();
+        intervalsIcu ??= new IntervalsIcuOptions();
         var group = routes.MapGroup("/api/fitness");
 
         // The Development bypass is the one case with no policy: sign-in is
@@ -95,7 +95,7 @@ public static class FitnessEndpoints
                 configured = true,
                 signedIn,
                 hevyApi = options.HasHevyApi,
-                strava = strava.IsConfigured
+                intervalsIcu = intervalsIcu.IsConfigured
             });
         });
 
@@ -127,7 +127,7 @@ public static class FitnessEndpoints
 
         api.MapSolverEndpoints();
         api.MapPredictionLedger();
-        api.MapIngestEndpoints(strava, options.HasHevyApi);
+        api.MapIngestEndpoints(intervalsIcu, options.HasHevyApi);
 
         // The gates as a forecast: the chance of clearing each line by the
         // date it is due, under a named training week.
@@ -574,7 +574,7 @@ public static class FitnessEndpoints
             configured = false,
             signedIn = false,
             hevyApi = false,
-            strava = false
+            intervalsIcu = false
         }));
 
         return routes;
