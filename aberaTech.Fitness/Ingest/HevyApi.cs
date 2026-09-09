@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using aberaTech.Fitness.Data;
 using NodaTime;
-using NodaTime.Text;
 
 namespace aberaTech.Fitness.Ingest;
 
@@ -10,7 +9,7 @@ namespace aberaTech.Fitness.Ingest;
 /// Hevy's official REST API. Needs a Pro subscription's API key; the CSV
 /// upload path covers the free tier, so the key is optional configuration.
 /// </summary>
-public sealed class HevyApiClient(HttpClient http)
+public sealed class HevyApiClient(HttpClient http, ILogger<HevyApiClient>? logger = null)
 {
     public const string BaseAddress = "https://api.hevyapp.com/";
 
@@ -26,7 +25,17 @@ public sealed class HevyApiClient(HttpClient http)
 
             if (response?.Workouts is null || response.Workouts.Count == 0) break;
 
-            activities.AddRange(response.Workouts.Select(Map).Where(a => a is not null).Select(a => a!));
+            var mapped = response.Workouts.Select(Map).Where(a => a is not null).Select(a => a!).ToList();
+            activities.AddRange(mapped);
+
+            // A page that lists workouts none of which can be read is the one
+            // failure that looks like an empty account; say what was refused.
+            if (mapped.Count < response.Workouts.Count)
+            {
+                logger?.LogWarning(
+                    "Hevy page {Page}: {Listed} workouts listed, {Mapped} readable; first start_time was '{StartTime}'.",
+                    page, response.Workouts.Count, mapped.Count, response.Workouts[0].StartTime);
+            }
 
             if (page >= response.PageCount) break;
         }
@@ -34,20 +43,18 @@ public sealed class HevyApiClient(HttpClient http)
         return activities;
     }
 
-    private static Activity? Map(HevyWorkout workout)
+    internal static Activity? Map(HevyWorkout workout)
     {
-        var started = InstantPattern.ExtendedIso.Parse(workout.StartTime);
-        if (!started.Success) return null;
+        if (IsoInstant.Parse(workout.StartTime) is not { } started) return null;
 
-        var ended = InstantPattern.ExtendedIso.Parse(workout.EndTime);
-        var duration = ended.Success ? (ended.Value - started.Value).TotalSeconds : 0;
+        var duration = IsoInstant.Parse(workout.EndTime) is { } ended ? (ended - started).TotalSeconds : 0;
 
         var activity = new Activity
         {
             Id = Guid.NewGuid(),
             Source = "hevy-api",
             ExternalId = workout.Id,
-            StartedAt = started.Value,
+            StartedAt = started,
             Sport = "strength",
             Name = workout.Title ?? "",
             DurationSeconds = Math.Max(0, duration)

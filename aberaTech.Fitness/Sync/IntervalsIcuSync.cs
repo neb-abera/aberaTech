@@ -10,8 +10,8 @@ namespace aberaTech.Fitness.Sync;
 public sealed record IntervalsIcuSyncOutcome(int Fetched, int Added, string? Error);
 
 /// <summary>
-/// One pull from intervals.icu: list what started since the last activity
-/// seen, download each new one's original file, store it all.
+/// One pull from intervals.icu: list the last eighteen months, download each
+/// unseen activity's original file, store it all.
 /// </summary>
 public sealed class IntervalsIcuSync(
     FitnessDbContext database,
@@ -23,8 +23,18 @@ public sealed class IntervalsIcuSync(
     /// <summary>New activities per run. A first sync of years of history takes several runs, on purpose.</summary>
     public const int MaxNewPerRun = 40;
 
-    /// <summary>How far back a first sync reaches; the FIT upload covers anything older.</summary>
-    public static readonly Period FirstSyncReach = Period.FromMonths(18);
+    /// <summary>
+    /// How far back every listing reaches; the FIT upload covers anything older.
+    /// </summary>
+    /// <remarks>
+    /// Every run, not only the first. Activities reach intervals.icu out of
+    /// order — Garmin forwards new ones the day they happen, and the years
+    /// before arrive whenever the athlete uploads the Garmin archive there —
+    /// so a listing that only looked past the newest activity seen would
+    /// never notice the backfill. The listing is one request whatever its
+    /// span, and the known ids keep it from re-reading anything.
+    /// </remarks>
+    public static readonly Period ListingReach = Period.FromMonths(18);
 
     public async Task<IntervalsIcuSyncOutcome> RunAsync(CancellationToken cancellationToken)
     {
@@ -34,18 +44,8 @@ public sealed class IntervalsIcuSync(
 
         try
         {
-            var lastSeen = await database.Activities
-                .Where(a => a.Source == IntervalsIcuMapping.Source)
-                .OrderByDescending(a => a.StartedAt)
-                .Select(a => (Instant?)a.StartedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-
             var today = now.InUtc().Date;
-            var oldest = lastSeen is { } seen
-                ? SyncSchedule.ListFrom(seen).InUtc().Date
-                : today.Minus(FirstSyncReach);
-
-            var summaries = await icu.ActivitiesAsync(oldest, today.PlusDays(1), cancellationToken);
+            var summaries = await icu.ActivitiesAsync(today.Minus(ListingReach), today.PlusDays(1), cancellationToken);
 
             var known = (await database.Activities
                     .Where(a => a.Source == IntervalsIcuMapping.Source && a.ExternalId != null)
