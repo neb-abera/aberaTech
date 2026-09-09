@@ -104,13 +104,7 @@ public static class IntervalsIcuMapping
     /// </summary>
     internal static Instant? Started(IcuActivity summary)
     {
-        if (summary.StartDate is { } zoned)
-        {
-            var parsed = InstantPattern.ExtendedIso.Parse(zoned);
-            if (parsed.Success) return parsed.Value;
-            var offset = OffsetDateTimePattern.ExtendedIso.Parse(zoned);
-            if (offset.Success) return offset.Value.ToInstant();
-        }
+        if (summary.StartDate is { } zoned && IsoInstant.Parse(zoned) is { } instant) return instant;
 
         if (summary.StartDateLocal is { } local)
         {
