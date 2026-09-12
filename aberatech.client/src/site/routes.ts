@@ -50,6 +50,7 @@ export const routes: PageRoute[] = [
     path: "/schedule/admin",
     Page: lazy(() => import("../views/ScheduleAdmin")),
   },
+  { path: "/links", Page: lazy(() => import("../views/Links")) },
 ];
 
 /**
@@ -68,4 +69,6 @@ export const structural: string[] = ["/", "/guides", "/projects"];
 export const unlisted: Record<string, string> = {
   "/schedule/admin":
     "Useful only when signed in as the queue owner. Everyone else would open a panel they cannot act on, so it is reached by address and gated by the API.",
+  "/links":
+    "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API.",
 };

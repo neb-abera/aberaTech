@@ -12,6 +12,8 @@ export default defineConfig({
     // heavy MUI component tests (already warm-cache rehearsed in beforeAll)
     // drift past 5s under CI load. Still tight enough to catch a real hang.
     testTimeout: 15_000,
+    // waitFor's own budget lives in src/test/setup.ts, for the same reason.
+    setupFiles: ["./src/test/setup.ts"],
     // Activated by `vitest run --coverage` (the Dockerfile's clienttest stage
     // and therefore CI); `make test` stays fast without it. The thresholds
     // fail the run on their own, and sit below the measured value so a
