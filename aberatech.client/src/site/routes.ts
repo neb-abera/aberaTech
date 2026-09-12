@@ -70,5 +70,5 @@ export const unlisted: Record<string, string> = {
   "/schedule/admin":
     "Useful only when signed in as the queue owner. Everyone else would open a panel they cannot act on, so it is reached by address and gated by the API.",
   "/links":
-    "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API.",
+    "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API; the app bar adds a Links entry only once the owner is signed in.",
 };
