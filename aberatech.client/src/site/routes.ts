@@ -39,6 +39,10 @@ export const routes: PageRoute[] = [
     path: "/signal-processing",
     Page: lazy(() => import("../views/SignalProcessing")),
   },
+  {
+    path: "/quantum-cryptography",
+    Page: lazy(() => import("../views/QuantumCryptography")),
+  },
   { path: "/planner", Page: lazy(() => import("../views/CoursePlanner")) },
   { path: "/schedule", Page: lazy(() => import("../views/ScheduleTime")) },
   { path: "/fitness", Page: lazy(() => import("../views/Fitness")) },

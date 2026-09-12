@@ -50,6 +50,18 @@ describe("build-time rendering", () => {
     expect(html).not.toContain("Loading...");
   });
 
+  it("renders the cryptography plan without a browser", async () => {
+    // Same contract as the training plan: the owner's ticks are loaded in
+    // an effect, so the build sees the page with every box empty and the
+    // stages, blocks and standards table all present.
+    const html = await render("/quantum-cryptography");
+
+    expect(html).toContain("Learning Quantum and Post-Quantum Cryptography");
+    expect(html).toContain("Classical cryptography, properly");
+    expect(html).toContain("FIPS 203, ML-KEM");
+    expect(html).not.toContain("Loading...");
+  });
+
   it("inlines the styles the markup needs", async () => {
     // Emotion's zero-config server rendering emits <style data-emotion> next
     // to the components. Without them the first paint is unstyled HTML, which
