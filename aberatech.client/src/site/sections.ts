@@ -44,6 +44,13 @@ export const guides: Entry[] = [
     blurb:
       "A three-year plan from the first Fourier transform to reproducing papers: the ideas, the books, and a gate at the end of every block.",
   },
+  {
+    title: "Learning Quantum and Post-Quantum Cryptography",
+    navLabel: "Quantum Cryptography",
+    to: "/quantum-cryptography",
+    blurb:
+      "An eighteen-month plan from the arithmetic under RSA to implementing ML-KEM from its FIPS: classical cryptography, the quantum threat, and the post-quantum transition.",
+  },
 ];
 
 export const projects: Entry[] = [
