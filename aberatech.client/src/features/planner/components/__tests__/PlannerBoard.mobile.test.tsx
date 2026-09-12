@@ -157,9 +157,18 @@ describe("the course card on a narrow screen", () => {
     // hoverable without being modal.
     fireEvent.mouseOver(document.querySelector("[data-code]") as HTMLElement);
 
-    await waitFor(() => {
-      expect(document.querySelector(".MuiDrawer-root")).toBeTruthy();
-    });
+    // The sheet's first open on hover pays MUI's drawer mount under coverage
+    // instrumentation, and on a loaded worker that has taken longer than
+    // waitFor's one-second default: the test passed at eight seconds on a
+    // clean tree and failed the moment two more test files shared the
+    // machine. The budget matches the rehearsal above; a real regression
+    // still fails, ten seconds later.
+    await waitFor(
+      () => {
+        expect(document.querySelector(".MuiDrawer-root")).toBeTruthy();
+      },
+      { timeout: 10_000 },
+    );
     expect(document.querySelector(".MuiBackdrop-root")).toBeNull();
     expect(document.querySelector(".MuiModal-root")).toBeNull();
   });
