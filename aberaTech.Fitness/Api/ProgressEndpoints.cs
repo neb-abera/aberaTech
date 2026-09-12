@@ -6,7 +6,7 @@ using NodaTime;
 namespace aberaTech.Fitness.Api;
 
 /// <summary>
-/// The owner's saved documents: what the two study plans and the course
+/// The owner's saved documents: what the study plans and the course
 /// planner keep between visits.
 /// </summary>
 /// <remarks>
@@ -20,7 +20,7 @@ namespace aberaTech.Fitness.Api;
 public static class ProgressEndpoints
 {
     /// <summary>The documents that exist. Anything else is a 404, not a new row.</summary>
-    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "planner"];
+    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "quantum-cryptography", "planner"];
 
     public const int MaxBytes = 256 * 1024;
 
