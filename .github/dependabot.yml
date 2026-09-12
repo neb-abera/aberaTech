@@ -5,6 +5,9 @@
 # CI is green. Majors are armed too: one that passes every check merges
 # itself, and one that genuinely conflicts stays open and red - the human
 # queue is the list of open red Dependabot PRs.
+#
+# Packages that must move together are grouped at every update level, majors
+# included, or a major arrives as two PRs that each fail to install.
 version: 2
 updates:
   - package-ecosystem: nuget
@@ -46,6 +49,14 @@ updates:
     cooldown:
       default-days: 5
     groups:
+      # vitest and @vitest/* peer-depend on each other's exact version, so a
+      # major split across two PRs cannot install in either (vitest 5, 2026-09:
+      # #145 and #146 each failed npm ci and sat red). First match wins, so
+      # this catches the pair before the non-major group does.
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
       client-npm-non-major:
         applies-to: version-updates
         update-types:
