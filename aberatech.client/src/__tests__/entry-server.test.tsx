@@ -28,13 +28,25 @@ describe("build-time rendering", () => {
   });
 
   it("renders the training plan without a browser", async () => {
-    // The plan keeps its ticks in localStorage. Read at render time that
-    // would throw here and mismatch on hydration; read in an effect it is
-    // invisible to the build, and the page comes out with every box empty.
+    // The plan loads its ticks from the server in an effect. Read at render
+    // time that would throw here and mismatch on hydration; read in an
+    // effect it is invisible to the build, and the page comes out with
+    // every box empty.
     const html = await render("/rf-training");
 
     expect(html).toContain("Tactically Relevant RF Training");
     expect(html).toContain("Licence and the arithmetic");
+    expect(html).not.toContain("Loading...");
+  });
+
+  it("renders the study plan without a browser", async () => {
+    // Same contract as the training plan: the owner's ticks are loaded in
+    // an effect, so the build sees the page with every box empty and the
+    // stages and blocks all present.
+    const html = await render("/signal-processing");
+
+    expect(html).toContain("Learning Signal Processing");
+    expect(html).toContain("Beginner");
     expect(html).not.toContain("Loading...");
   });
 

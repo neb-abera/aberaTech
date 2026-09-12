@@ -8,42 +8,16 @@
  * turn a public page into something it was not meant to be.
  */
 
-export interface Resource {
-  title: string;
-  url: string;
-  /** What to do with it, when the title alone does not say. */
-  note?: string;
-}
+import {
+  type Block,
+  type CadenceItem,
+  type Resource,
+  type Task,
+  tasksOf,
+} from "../../progress/core/curriculum";
 
-export interface Task {
-  /** Stable, unique across the whole plan: it is the key progress is stored under. */
-  id: string;
-  text: string;
-}
-
-export interface Block {
-  id: string;
-  title: string;
-  /** When in the year this block runs. */
-  weeks: string;
-  /** Why the block exists, in one or two sentences. */
-  why: string;
-  tasks: Task[];
-  /** A pass or fail test with a clock on it. The block is done when this is. */
-  gate: string;
-  /** Reading and reference. */
-  resources: Resource[];
-  /**
-   * Things that score you: practice exams, drills, sites that show where
-   * your signal was heard. Their results go in the gate log's note.
-   */
-  practice: Resource[];
-}
-
-export interface CadenceItem {
-  label: string;
-  detail: string;
-}
+// The shapes are the site's, shared with every plan; the content is this one's.
+export type { Block, CadenceItem, Resource, Task };
 
 export interface GearItem {
   item: string;
@@ -599,4 +573,4 @@ export const plan: Block[] = [
 ];
 
 /** Every task in the plan, in the order the page shows them. */
-export const allTasks: Task[] = plan.flatMap((block) => block.tasks);
+export const allTasks: Task[] = tasksOf(plan);
