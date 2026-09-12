@@ -6,8 +6,8 @@ using NodaTime;
 namespace aberaTech.Fitness.Api;
 
 /// <summary>
-/// The owner's saved documents: what the study plans and the course
-/// planner keep between visits.
+/// The owner's saved documents: what the study plans, the course planner
+/// and the bookmark list keep between visits.
 /// </summary>
 /// <remarks>
 /// One document per key, the key from a short allowlist, the body an opaque
@@ -20,7 +20,7 @@ namespace aberaTech.Fitness.Api;
 public static class ProgressEndpoints
 {
     /// <summary>The documents that exist. Anything else is a 404, not a new row.</summary>
-    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "quantum-cryptography", "planner"];
+    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "quantum-cryptography", "planner", "links"];
 
     public const int MaxBytes = 256 * 1024;
 
