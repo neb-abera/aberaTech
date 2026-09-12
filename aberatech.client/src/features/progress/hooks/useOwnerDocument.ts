@@ -15,13 +15,20 @@ export interface OwnerDocument<T> {
 
 /**
  * One of the owner's documents, loaded once and saved a beat after each
- * change.
+ * change, and loaded again whenever the page comes back into view.
  *
  * Loaded in an effect, never during render: the page is prerendered at
  * build time with no server to ask, and hydration must match that HTML, so
  * the first render is always "loading" and read-only. Saves are debounced,
  * and the last pending one is flushed with keepalive when the page hides,
  * so closing the tab a second after a tick does not lose the tick.
+ *
+ * The reload on return is what keeps two devices honest. A save replaces
+ * the whole document, so a tab left open on the laptop while the phone
+ * ticks a task would, on its next tick, put the laptop's stale copy back
+ * over the phone's. Reloading when the tab is shown again means the copy a
+ * tick is applied to is the one the server has. A reload never lands over
+ * a tick made while it was in flight: the local change wins and is saved.
  */
 export function useOwnerDocument<T>(
   key: string,
@@ -33,19 +40,26 @@ export function useOwnerDocument<T>(
   const pending = useRef<T | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusRef = useRef<OwnerStatus>("loading");
+  /** Counts local changes, so a load that raced one can tell and stand down. */
+  const changes = useRef(0);
+  const mounted = useRef(true);
+
+  const load = useCallback(async () => {
+    const before = changes.current;
+    const loaded = await loadDocument<T>(key);
+    if (!mounted.current || changes.current !== before) return;
+    statusRef.current = loaded.status;
+    setStatus(loaded.status);
+    if (loaded.status === "owner") setValue(loaded.value);
+  }, [key]);
 
   useEffect(() => {
-    let cancelled = false;
-    void loadDocument<T>(key).then((loaded) => {
-      if (cancelled) return;
-      statusRef.current = loaded.status;
-      setStatus(loaded.status);
-      if (loaded.status === "owner") setValue(loaded.value);
-    });
+    mounted.current = true;
+    void load();
     return () => {
-      cancelled = true;
+      mounted.current = false;
     };
-  }, [key]);
+  }, [load]);
 
   const flush = useCallback(
     (keepalive: boolean) => {
@@ -65,16 +79,26 @@ export function useOwnerDocument<T>(
 
   useEffect(() => {
     const onHide = () => flush(true);
+    // Shown again, with nothing of ours waiting to be saved: take the
+    // server's copy, which another device may have changed meanwhile.
+    const onShow = () => {
+      if (document.visibilityState !== "visible") return;
+      if (pending.current !== null) return;
+      void load();
+    };
     window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onShow);
     return () => {
       window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onShow);
       flush(true);
     };
-  }, [flush]);
+  }, [flush, load]);
 
   const set = useCallback(
     (next: T | ((current: T | null) => T)) => {
       if (statusRef.current !== "owner") return;
+      changes.current += 1;
       setValue((current) => {
         const resolved =
           typeof next === "function"

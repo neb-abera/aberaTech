@@ -37,6 +37,13 @@ export const guides: Entry[] = [
     blurb:
       "A one-year plan for field radio: wire antennas and HF, networks, mesh, spectrum, drones and power.",
   },
+  {
+    title: "Learning Signal Processing",
+    navLabel: "Signal Processing",
+    to: "/signal-processing",
+    blurb:
+      "A three-year plan from the first Fourier transform to reproducing papers: the ideas, the books, and a gate at the end of every block.",
+  },
 ];
 
 export const projects: Entry[] = [
