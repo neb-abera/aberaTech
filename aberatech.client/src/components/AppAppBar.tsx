@@ -14,7 +14,8 @@ import { alpha, styled } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
+import { signInHref, signOut, useAccount } from "../hooks/useAccount";
 import { guides, label, primaryAction, projects } from "../site/sections";
 import ColorModeIconDropdown from "../theme/ColorModeIconDropdown";
 
@@ -39,6 +40,13 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
+  // The owner's entries and the sign-in control are decided by the probe,
+  // which runs in an effect: the prerendered bar and the first client render
+  // agree (no account yet), and the extra entries appear once the server has
+  // answered.
+  const { signedIn, resolved } = useAccount();
+  const location = useLocation();
+  const signIn = signInHref(location.pathname + location.search);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -95,6 +103,19 @@ export default function AppAppBar() {
               >
                 Projects
               </Button>
+              {/* A fourth item, for the owner only: the bookmark list is
+                  reached by address by everyone else. */}
+              {signedIn && (
+                <Button
+                  variant="text"
+                  color="info"
+                  size="small"
+                  component={Link}
+                  to="/links"
+                >
+                  Links
+                </Button>
+              )}
             </Box>
           </Box>
           <Box
@@ -130,6 +151,21 @@ export default function AppAppBar() {
             >
               {primaryAction.title}
             </Button>
+            {resolved && !signedIn && (
+              <Button variant="text" color="info" size="small" href={signIn}>
+                Sign in
+              </Button>
+            )}
+            {signedIn && (
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => void signOut()}
+              >
+                Sign out
+              </Button>
+            )}
             <ColorModeIconDropdown />
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
@@ -193,6 +229,11 @@ export default function AppAppBar() {
                   <MenuItem component={Link} to="/">
                     Home
                   </MenuItem>
+                  {signedIn && (
+                    <MenuItem component={Link} to="/links">
+                      Links
+                    </MenuItem>
+                  )}
                   <Divider sx={{ my: 1 }} />
                   <Typography
                     variant="caption"
@@ -238,6 +279,20 @@ export default function AppAppBar() {
                         {label(entry)}
                       </MenuItem>
                     ),
+                  )}
+                  {resolved && (
+                    <>
+                      <Divider sx={{ my: 1 }} />
+                      {signedIn ? (
+                        <MenuItem onClick={() => void signOut()}>
+                          Sign out
+                        </MenuItem>
+                      ) : (
+                        <MenuItem component="a" href={signIn}>
+                          Sign in
+                        </MenuItem>
+                      )}
+                    </>
                   )}
                 </MenuList>
                 <Divider sx={{ my: 3 }} />
