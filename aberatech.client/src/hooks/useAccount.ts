@@ -59,6 +59,28 @@ export function useAccount(): { signedIn: boolean; resolved: boolean } {
   return state;
 }
 
+/** Where to send a visitor to sign in, and come back to `path` afterwards. */
+export function signInHref(path: string): string {
+  return `/api/scheduling/admin/sign-in?returnUrl=${encodeURIComponent(path)}`;
+}
+
+/**
+ * End the session and reload, so every cached answer above — and every page
+ * that read it — starts over as a visitor. A failed request still reloads:
+ * the cookie may already be gone, and a reload is the honest way to find out.
+ */
+export async function signOut(): Promise<void> {
+  try {
+    await fetch("/api/scheduling/admin/sign-out", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+  } catch {
+    // Reload regardless; see above.
+  }
+  window.location.reload();
+}
+
 /** Tests share module state through the cache above; let them clear it. */
 export function resetAccountProbeForTests(): void {
   probe = null;
