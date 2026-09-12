@@ -22,6 +22,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { respond } from "../../../../test/fakeFetch";
 import type { Result } from "../../core/drills";
 import { allTasks, plan } from "../../core/plan";
 import type { TrainingDocument } from "../../hooks/useTrainingProgress";
@@ -37,16 +38,6 @@ afterEach(cleanup);
 // test after it fails too. A wide budget here is the same calibration the
 // planner board's hook has; a real hang still fails, a minute later.
 vi.setConfig({ testTimeout: 60_000 });
-
-const respond = (status: number, body: unknown = null) => ({
-  status,
-  ok: status >= 200 && status < 300,
-  headers: {
-    get: (name: string) =>
-      name === "content-type" ? "application/json" : null,
-  },
-  json: async () => body,
-});
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
