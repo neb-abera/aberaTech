@@ -32,6 +32,7 @@ public sealed class ProgressEndpointsTests : IDisposable
     [Theory]
     [InlineData("rf-training", true)]
     [InlineData("signal-processing", true)]
+    [InlineData("quantum-cryptography", true)]
     [InlineData("planner", true)]
     [InlineData("signal_processing", false)]
     [InlineData("fitness", false)]

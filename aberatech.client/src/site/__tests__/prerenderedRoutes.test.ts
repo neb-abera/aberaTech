@@ -21,6 +21,7 @@ describe("prerenderedRoutes", () => {
     expect(prerenderedRoutes).toContain("/technical");
     expect(prerenderedRoutes).toContain("/rf-training");
     expect(prerenderedRoutes).toContain("/signal-processing");
+    expect(prerenderedRoutes).toContain("/quantum-cryptography");
   });
 
   it("leaves the live app pages client-rendered", () => {
