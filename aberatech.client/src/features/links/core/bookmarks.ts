@@ -77,6 +77,22 @@ function encode(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * The text of a fragment: every tag removed, then entities decoded. The
+ * removal runs until nothing changes, so a tag nested inside another's
+ * brackets cannot survive one pass; what comes out is shown as text by
+ * React, never parsed as HTML.
+ */
+export function textOf(fragment: string): string {
+  let text = fragment;
+  let previous: string;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]*>/g, "");
+  } while (text !== previous);
+  return decodeEntities(text).trim();
+}
+
 function attribute(attributes: string, name: string): string | null {
   const match = new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, "i").exec(
     attributes,
@@ -115,7 +131,7 @@ export function parseNetscape(html: string): ImportedLink[] {
   for (const match of html.matchAll(TOKEN)) {
     const [, h3, dlOpen, dlClose, aAttributes, aText, dd] = match;
     if (h3 !== undefined) {
-      pendingFolder = decodeEntities(h3.replace(/<[^>]*>/g, "")).trim();
+      pendingFolder = textOf(h3);
     } else if (dlOpen !== undefined) {
       stack.push(pendingFolder ?? "");
       pendingFolder = null;
@@ -129,7 +145,7 @@ export function parseNetscape(html: string): ImportedLink[] {
         .join(" / ");
       links.push({
         url: href,
-        title: decodeEntities((aText ?? "").replace(/<[^>]*>/g, "")).trim(),
+        title: textOf(aText ?? ""),
         group,
         note: "",
         addedAt: isoDate(attribute(aAttributes, "ADD_DATE")),

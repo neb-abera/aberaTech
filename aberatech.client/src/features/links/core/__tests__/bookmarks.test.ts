@@ -10,6 +10,7 @@ import {
   mergeLinks,
   parseBookmarks,
   parseNetscape,
+  textOf,
 } from "../bookmarks";
 import { addLink, empty, type LinksDocument } from "../links";
 
@@ -68,6 +69,14 @@ describe("parseNetscape", () => {
       "a & b < c 'd'  ",
     );
     expect(links[1].url).toBe("https://www.example.org/handbook?v=2");
+  });
+
+  it("keeps only the text of a title, however the tags are nested", () => {
+    expect(textOf("A <b>bold</b> name")).toBe("A bold name");
+    expect(textOf("<<script>script>alert(1)<</script>/script>")).toBe(
+      "alert(1)",
+    );
+    expect(textOf("  Plain &amp; simple  ")).toBe("Plain & simple");
   });
 
   it("reads nothing from text that is not a bookmark file", () => {
