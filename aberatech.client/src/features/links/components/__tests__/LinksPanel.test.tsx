@@ -3,8 +3,9 @@
  * The bookmark list from two chairs. A visitor gets a sign-in button that
  * brings them back here and nothing is fetched or written beyond the one
  * read that said so. The owner sees the list under its headings, adds a
- * link and it is saved, removes one and that is saved too, and a bad
- * address is refused before anything is sent.
+ * link and it is saved, removes one and that is saved too, a bad address
+ * is refused before anything is sent, a refused save says so, a bookmark
+ * file folds in without doubling anything, and the list downloads as one.
  */
 
 import {
@@ -16,18 +17,9 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { respond } from "../../../../test/fakeFetch";
 import type { LinksDocument } from "../../core/links";
 import LinksPanel from "../LinksPanel";
-
-const respond = (status: number, body: unknown = null) => ({
-  status,
-  ok: status >= 200 && status < 300,
-  headers: {
-    get: (name: string) =>
-      name === "content-type" ? "application/json" : null,
-  },
-  json: async () => body,
-});
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -48,6 +40,13 @@ const settle = async () => {
     await Promise.resolve();
     await Promise.resolve();
   });
+};
+
+const flushSave = async () => {
+  await act(async () => {
+    vi.advanceTimersByTime(1000);
+  });
+  await settle();
 };
 
 const puts = () =>
@@ -89,6 +88,7 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("for a visitor", () => {
@@ -158,10 +158,7 @@ describe("for the owner", () => {
     ).toBeTruthy();
     expect(screen.getByText("Saving…")).toBeTruthy();
 
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
-    await settle();
+    await flushSave();
 
     expect(puts()).toHaveLength(1);
     const body = lastPut();
@@ -185,9 +182,7 @@ describe("for the owner", () => {
     fireEvent.submit(screen.getByRole("form", { name: /add a link/i }));
 
     expect(screen.getByText(/not a web address/i)).toBeTruthy();
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
+    await flushSave();
     expect(puts()).toHaveLength(0);
   });
 
@@ -199,13 +194,27 @@ describe("for the owner", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove Tracker" }));
     expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
 
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
-    await settle();
+    await flushSave();
 
     expect(puts()).toHaveLength(1);
     expect(lastPut().links.map((l) => l.id)).toEqual(["b"]);
+  });
+
+  it("says when a save was refused and keeps the change on the page", async () => {
+    fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(respond(200, saved))
+      .mockResolvedValue(respond(413));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Tracker" }));
+    await flushSave();
+
+    expect(puts()).toHaveLength(1);
+    expect(screen.getByText("Not saved")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
   });
 
   it("narrows the list to what matches", async () => {
@@ -223,6 +232,113 @@ describe("for the owner", () => {
       target: { value: "zzz" },
     });
     expect(screen.getByText(/nothing matches/i)).toBeTruthy();
+    expect(puts()).toHaveLength(0);
+  });
+
+  it("folds an uploaded bookmark file in without doubling what is here", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    const file = new File(
+      [
+        `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<DL><p>
+    <DT><H3>Bookmarks bar</H3>
+    <DL><p>
+        <DT><A HREF="https://example.org/handbook">Handbook</A>
+        <DT><H3>Reading</H3>
+        <DL><p>
+            <DT><A HREF="https://claude.ai/code/artifact/x">Runway</A>
+            <DT><A HREF="https://new.example/page" ADD_DATE="1725000000">New page</A>
+        </DL><p>
+    </DL><p>
+</DL><p>`,
+      ],
+      "bookmarks.html",
+      { type: "text/html" },
+    );
+    const input = screen.getByLabelText(/bookmark file to upload/i);
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [file] } });
+      await Promise.resolve();
+    });
+    await settle();
+
+    expect(
+      screen.getByText(/bookmarks\.html: 1 added, 2 updated, 0 already here\./),
+    ).toBeTruthy();
+    // The tracker took the file's name but stayed under Plans; the
+    // untitled handbook got a name; the new page arrived under Reading.
+    expect(
+      within(screen.getByRole("list", { name: "Links under Plans" })).getByRole(
+        "link",
+        { name: "Runway" },
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Handbook" })).toBeTruthy();
+    expect(
+      within(
+        screen.getByRole("list", { name: "Links under Reading" }),
+      ).getByRole("link", { name: "New page" }),
+    ).toBeTruthy();
+
+    await flushSave();
+    expect(puts()).toHaveLength(1);
+    const body = lastPut();
+    expect(body.links).toHaveLength(3);
+    expect(body.links.map((l) => l.id).slice(0, 2)).toEqual(["a", "b"]);
+  });
+
+  it("refuses a file with no bookmarks in it", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    const file = new File(["just some text"], "notes.txt", {
+      type: "text/plain",
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/bookmark file to upload/i), {
+        target: { files: [file] },
+      });
+      await Promise.resolve();
+    });
+    await settle();
+
+    expect(screen.getByText(/no bookmarks found in notes\.txt/i)).toBeTruthy();
+    await flushSave();
+    expect(puts()).toHaveLength(0);
+  });
+
+  it("downloads the list as a bookmark file", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:links";
+        }),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+
+    fireEvent.click(screen.getByRole("button", { name: "Download" }));
+
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(blobs).toHaveLength(1);
+    const text = await blobs[0].text();
+    expect(text.startsWith("<!DOCTYPE NETSCAPE-Bookmark-file-1>")).toBe(true);
+    expect(text).toContain('<A HREF="https://claude.ai/code/artifact/x"');
+    expect(text).toContain("<DT><H3>Plans</H3>");
     expect(puts()).toHaveLength(0);
   });
 });

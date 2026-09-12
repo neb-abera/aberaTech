@@ -32,19 +32,35 @@ export interface NewLink {
   url: string;
   group?: string;
   note?: string;
+  /** ISO date, when the source knows it; otherwise the day it is added. */
+  addedAt?: string;
 }
 
 /**
  * A usable http(s) URL, or null. A bare host gets https in front of it,
- * because that is what a pasted "abera.tech" means; anything else that
- * fails to parse, or that is not a web URL, is refused rather than saved.
+ * because that is what a pasted "abera.tech" means, and so does a host with
+ * a port, "localhost:5173"; anything with a scheme of its own that is not
+ * http or https, and anything that fails to parse, is refused rather than
+ * saved.
  */
 export function normalizeUrl(input: string): string | null {
   const trimmed = input.trim();
   if (trimmed === "") return null;
-  const candidate = /^[a-z][a-z0-9+.-]*:/i.test(trimmed)
-    ? trimmed
-    : `https://${trimmed}`;
+  const scheme = /^([a-z][a-z0-9+.-]*):(.*)$/is.exec(trimmed);
+  let candidate: string;
+  if (scheme === null) {
+    candidate = `https://${trimmed}`;
+  } else if (scheme[2].startsWith("//")) {
+    // A real scheme, to be checked below.
+    candidate = trimmed;
+  } else if (/^\d+(?:[/?#]|$)/.test(scheme[2])) {
+    // "host:port", which the scheme pattern also matches.
+    candidate = `https://${trimmed}`;
+  } else {
+    // "mailto:", "javascript:" and the like: parsed as they are, and
+    // refused below for not being web addresses.
+    candidate = trimmed;
+  }
   try {
     const url = new URL(candidate);
     if (url.protocol !== "https:" && url.protocol !== "http:") return null;
@@ -53,6 +69,32 @@ export function normalizeUrl(input: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * What makes two addresses the same bookmark: the host without "www.", the
+ * path without a trailing slash, the query, and the fragment. The scheme is
+ * left out so an old http bookmark and its https successor are one entry.
+ */
+export function urlKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+    const path = parsed.pathname.replace(/\/+$/, "");
+    return `${host}${path}${parsed.search}${parsed.hash}`;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * A heading as typed, or the general list. The general heading is a name
+ * the page shows for links with no group, so a group typed as "General"
+ * is that list, not a second heading with the same name.
+ */
+export function normalizeGroup(group: string | undefined): string {
+  const trimmed = (group ?? "").trim();
+  return trimmed.toLowerCase() === GENERAL.toLowerCase() ? "" : trimmed;
 }
 
 /** The host a link points at, for the line under its title. */
@@ -85,9 +127,9 @@ export function addLink(
     id,
     title: link.title.trim(),
     url,
-    group: (link.group ?? "").trim(),
+    group: normalizeGroup(link.group),
     note: (link.note ?? "").trim(),
-    addedAt: now.toISOString().slice(0, 10),
+    addedAt: link.addedAt ?? now.toISOString().slice(0, 10),
   };
   return { version: 1, links: [...document.links, entry] };
 }
@@ -153,7 +195,7 @@ export function coerce(value: unknown): LinksDocument {
       id: typeof r.id === "string" && r.id !== "" ? r.id : newId(),
       title: typeof r.title === "string" ? r.title : "",
       url,
-      group: typeof r.group === "string" ? r.group : "",
+      group: normalizeGroup(typeof r.group === "string" ? r.group : ""),
       note: typeof r.note === "string" ? r.note : "",
       addedAt: typeof r.addedAt === "string" ? r.addedAt : "",
     });

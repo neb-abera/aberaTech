@@ -11,6 +11,12 @@ export interface OwnerDocument<T> {
   set: (next: T | ((current: T | null) => T)) => void;
   /** A save is scheduled or in flight. */
   saving: boolean;
+  /**
+   * The last save was refused or never arrived, and the change is still
+   * waiting here: the next change tries again, and the page's copy is not
+   * replaced by the server's while it waits.
+   */
+  failed: boolean;
 }
 
 /**
@@ -37,6 +43,7 @@ export function useOwnerDocument<T>(
   const [status, setStatus] = useState<OwnerStatus>("loading");
   const [value, setValue] = useState<T | null>(null);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
   const pending = useRef<T | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusRef = useRef<OwnerStatus>("loading");
@@ -70,8 +77,19 @@ export function useOwnerDocument<T>(
       const next = pending.current;
       if (next === null) return;
       pending.current = null;
-      void saveDocument(key, next, keepalive).then(() => {
-        if (pending.current === null) setSaving(false);
+      void saveDocument(key, next, keepalive).then((saved) => {
+        if (!mounted.current) return;
+        if (saved) {
+          setFailed(false);
+        } else if (pending.current === null) {
+          // Keep the unsaved change where the next save will find it, so a
+          // refused document (too large, or a server that went away) is
+          // not shown as saved and is not overwritten by the reload that
+          // runs when the page is shown again.
+          pending.current = next;
+          setFailed(true);
+        }
+        if (pending.current === null || !saved) setSaving(false);
       });
     },
     [key],
@@ -114,5 +132,5 @@ export function useOwnerDocument<T>(
     [debounceMs, flush],
   );
 
-  return { status, value, set, saving };
+  return { status, value, set, saving, failed };
 }

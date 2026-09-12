@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -12,6 +11,7 @@ import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useSearchParams } from "react-router";
+import SignInToSee from "../../progress/components/SignInToSee";
 import {
   ApiError,
   type FitnessMe,
@@ -166,19 +166,10 @@ export default function FitnessPanel() {
 
   if (!me.signedIn) {
     return (
-      <Stack spacing={2} sx={{ maxWidth: 420 }}>
-        <Typography variant="body1" sx={{ color: "text.secondary" }}>
-          Training data is personal. Sign in to see it.
-        </Typography>
-        <Box>
-          <Button
-            variant="contained"
-            href="/api/scheduling/admin/sign-in?returnUrl=/fitness"
-          >
-            Sign in with Google
-          </Button>
-        </Box>
-      </Stack>
+      <SignInToSee
+        message="Training data is personal. Sign in to see it."
+        returnUrl="/fitness"
+      />
     );
   }
 

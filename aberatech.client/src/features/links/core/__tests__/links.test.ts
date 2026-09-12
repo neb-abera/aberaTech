@@ -12,10 +12,12 @@ import {
   groupsOf,
   hostOf,
   inGroup,
+  normalizeGroup,
   normalizeUrl,
   removeLink,
   search,
   titleOf,
+  urlKey,
 } from "../links";
 
 const day = new Date("2026-09-12T15:00:00Z");
@@ -28,6 +30,13 @@ describe("normalizeUrl", () => {
     expect(normalizeUrl("abera.tech")).toBe("https://abera.tech/");
     expect(normalizeUrl("  http://example.org/a?b=1 ")).toBe(
       "http://example.org/a?b=1",
+    );
+  });
+
+  it("treats a host with a port as a web address", () => {
+    expect(normalizeUrl("localhost:5173")).toBe("https://localhost:5173/");
+    expect(normalizeUrl("abera.tech:8080/x?y=1")).toBe(
+      "https://abera.tech:8080/x?y=1",
     );
   });
 
@@ -99,6 +108,33 @@ describe("headings", () => {
 
   it("omits the general heading when every link is grouped", () => {
     expect(groupsOf(removeLink(doc, "id-1"))).toEqual(["Admin", "Work"]);
+  });
+
+  it("files a group typed as General under the general list, not a second heading", () => {
+    const typed = addLink(
+      doc,
+      { title: "five", url: "five.example", group: " general " },
+      day,
+      "id-4",
+    );
+    expect(groupsOf(typed)).toEqual([GENERAL, "Admin", "Work"]);
+    expect(inGroup(typed, GENERAL).map((l) => l.title)).toEqual([
+      "five",
+      "two",
+    ]);
+    expect(normalizeGroup("General")).toBe("");
+    expect(normalizeGroup(" Work ")).toBe("Work");
+  });
+});
+
+describe("urlKey", () => {
+  it("is the same for www, a trailing slash and http versus https", () => {
+    expect(urlKey("https://www.example.org/a/")).toBe("example.org/a");
+    expect(urlKey("http://example.org/a")).toBe("example.org/a");
+    expect(urlKey("https://example.org/a?b=1#c")).toBe("example.org/a?b=1#c");
+    expect(urlKey("https://example.org/a?b=2")).not.toBe(
+      urlKey("https://example.org/a?b=1"),
+    );
   });
 });
 

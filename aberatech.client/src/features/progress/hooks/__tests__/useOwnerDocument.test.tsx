@@ -8,6 +8,7 @@
 
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { respond } from "../../../../test/fakeFetch";
 import { useOwnerDocument } from "../useOwnerDocument";
 
 interface Doc {
@@ -15,7 +16,7 @@ interface Doc {
 }
 
 function Harness() {
-  const { status, value, set, saving } = useOwnerDocument<Doc>(
+  const { status, value, set, saving, failed } = useOwnerDocument<Doc>(
     "rf-training",
     100,
   );
@@ -24,6 +25,7 @@ function Harness() {
       <output data-testid="status">{status}</output>
       <output data-testid="count">{value?.count ?? "none"}</output>
       <output data-testid="saving">{saving ? "saving" : "idle"}</output>
+      <output data-testid="failed">{failed ? "failed" : "ok"}</output>
       <button
         type="button"
         onClick={() => set((current) => ({ count: (current?.count ?? 0) + 1 }))}
@@ -33,16 +35,6 @@ function Harness() {
     </div>
   );
 }
-
-const respond = (status: number, body: unknown = null) => ({
-  status,
-  ok: status >= 200 && status < 300,
-  headers: {
-    get: (name: string) =>
-      name === "content-type" ? "application/json" : null,
-  },
-  json: async () => body,
-});
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -116,6 +108,50 @@ describe("useOwnerDocument", () => {
     expect(JSON.parse(options.body)).toEqual({ count: 6 });
     expect(options.keepalive).toBe(false);
     expect(screen.getByTestId("saving").textContent).toBe("idle");
+  });
+
+  it("keeps a refused save, says so, and tries again with the next change", async () => {
+    fetchMock
+      .mockResolvedValueOnce(respond(404))
+      .mockResolvedValueOnce(respond(413))
+      .mockResolvedValue(respond(204));
+    render(<Harness />);
+    await settle();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "tick" }).click();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(150);
+    });
+    await settle();
+
+    // The PUT was refused: not saved, and said so.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId("failed").textContent).toBe("failed");
+    expect(screen.getByTestId("saving").textContent).toBe("idle");
+    expect(screen.getByTestId("count").textContent).toBe("1");
+
+    // Shown again: the page's copy is kept, not replaced by a reload.
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await settle();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId("count").textContent).toBe("1");
+
+    // The next change carries both ticks, and success clears the flag.
+    await act(async () => {
+      screen.getByRole("button", { name: "tick" }).click();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(150);
+    });
+    await settle();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const [, options] = fetchMock.mock.calls[2];
+    expect(JSON.parse(options.body)).toEqual({ count: 2 });
+    expect(screen.getByTestId("failed").textContent).toBe("ok");
   });
 
   it("flushes a pending save with keepalive when the page hides", async () => {
