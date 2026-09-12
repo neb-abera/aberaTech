@@ -20,6 +20,7 @@ describe("prerenderedRoutes", () => {
     expect(prerenderedRoutes).toContain("/transition");
     expect(prerenderedRoutes).toContain("/technical");
     expect(prerenderedRoutes).toContain("/rf-training");
+    expect(prerenderedRoutes).toContain("/signal-processing");
   });
 
   it("leaves the live app pages client-rendered", () => {
