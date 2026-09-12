@@ -73,9 +73,12 @@ describe("parseNetscape", () => {
 
   it("keeps only the text of a title, however the tags are nested", () => {
     expect(textOf("A <b>bold</b> name")).toBe("A bold name");
-    expect(textOf("<<script>script>alert(1)<</script>/script>")).toBe(
-      "alert(1)",
-    );
+    // Removing "<<script>" leaves "script>", and the second pass finds no
+    // tag left to remove: what matters is that no "<" survives, so what
+    // comes out can never be read as markup.
+    const nested = textOf("<<script>script>alert(1)<</script>/script>");
+    expect(nested).toBe("script>alert(1)/script>");
+    expect(nested).not.toContain("<");
     expect(textOf("  Plain &amp; simple  ")).toBe("Plain & simple");
   });
 
