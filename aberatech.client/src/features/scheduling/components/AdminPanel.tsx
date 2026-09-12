@@ -11,6 +11,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import SignInToSee from "../../progress/components/SignInToSee";
 import { formatTime } from "../core/format";
 import { type AdminMessage, kindLabel, stateChip } from "../core/messages";
 import { useAdminQueue } from "../hooks/useAdminQueue";
@@ -57,19 +58,10 @@ export default function AdminPanel() {
 
   if (!signedIn) {
     return (
-      <Stack spacing={2} sx={{ maxWidth: 420 }}>
-        <Typography variant="body1" sx={{ color: "text.secondary" }}>
-          Sign in to run the queue.
-        </Typography>
-        <Box>
-          <Button
-            variant="contained"
-            href="/api/scheduling/admin/sign-in?returnUrl=/schedule/admin"
-          >
-            Sign in with Google
-          </Button>
-        </Box>
-      </Stack>
+      <SignInToSee
+        message="Sign in to run the queue."
+        returnUrl="/schedule/admin"
+      />
     );
   }
 
