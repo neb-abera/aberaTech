@@ -17,6 +17,7 @@ import {
   removeLink,
   search,
   titleOf,
+  updateLink,
   urlKey,
 } from "../links";
 
@@ -124,6 +125,39 @@ describe("headings", () => {
     ]);
     expect(normalizeGroup("General")).toBe("");
     expect(normalizeGroup(" Work ")).toBe("Work");
+  });
+});
+
+describe("updateLink", () => {
+  const doc = addLink(
+    empty,
+    { title: "Old", url: "old.example", group: "Work", note: "n" },
+    day,
+    "a",
+  );
+
+  it("replaces the fields and keeps the id, the place and the day added", () => {
+    const next = updateLink(doc, "a", {
+      title: " New ",
+      url: "new.example/path",
+      group: " Home ",
+      note: "",
+    });
+    expect(next.links).toEqual([
+      {
+        id: "a",
+        title: "New",
+        url: "https://new.example/path",
+        group: "Home",
+        note: "",
+        addedAt: "2026-09-12",
+      },
+    ]);
+  });
+
+  it("leaves the document alone for a bad address or an unknown id", () => {
+    expect(updateLink(doc, "a", { title: "x", url: "not a url" })).toBe(doc);
+    expect(updateLink(doc, "zzz", { title: "x", url: "ok.example" })).toBe(doc);
   });
 });
 
