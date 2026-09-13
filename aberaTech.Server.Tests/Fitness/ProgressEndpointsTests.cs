@@ -35,6 +35,7 @@ public sealed class ProgressEndpointsTests : IDisposable
     [InlineData("quantum-cryptography", true)]
     [InlineData("planner", true)]
     [InlineData("links", true)]
+    [InlineData("plan", true)]
     [InlineData("signal_processing", false)]
     [InlineData("fitness", false)]
     [InlineData("bookmarks", false)]

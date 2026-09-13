@@ -30,6 +30,7 @@ describe("prerenderedRoutes", () => {
     expect(prerenderedRoutes).not.toContain("/planner");
     expect(prerenderedRoutes).not.toContain("/fitness");
     expect(prerenderedRoutes).not.toContain("/links");
+    expect(prerenderedRoutes).not.toContain("/plan");
   });
 
   it("never names an external URL", () => {
