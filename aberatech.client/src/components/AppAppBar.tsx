@@ -103,18 +103,29 @@ export default function AppAppBar() {
               >
                 Projects
               </Button>
-              {/* A fourth item, for the owner only: the bookmark list is
-                  reached by address by everyone else. */}
+              {/* Two more items, for the owner only: the bookmark list and the
+                  plan are reached by address by everyone else. */}
               {signedIn && (
-                <Button
-                  variant="text"
-                  color="info"
-                  size="small"
-                  component={Link}
-                  to="/links"
-                >
-                  Links
-                </Button>
+                <>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    component={Link}
+                    to="/links"
+                  >
+                    Links
+                  </Button>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    component={Link}
+                    to="/plan"
+                  >
+                    Plan
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
@@ -232,6 +243,11 @@ export default function AppAppBar() {
                   {signedIn && (
                     <MenuItem component={Link} to="/links">
                       Links
+                    </MenuItem>
+                  )}
+                  {signedIn && (
+                    <MenuItem component={Link} to="/plan">
+                      Plan
                     </MenuItem>
                   )}
                   <Divider sx={{ my: 1 }} />
