@@ -18,6 +18,7 @@
 
 import {
   addLink,
+  folderPath,
   type LinkEntry,
   type LinksDocument,
   type NewLink,
@@ -291,18 +292,32 @@ function unixSeconds(isoDate: string): string {
   return Number.isNaN(millis) ? "" : String(Math.floor(millis / 1000));
 }
 
+interface Folder {
+  folders: Map<string, Folder>;
+  links: LinkEntry[];
+}
+
 /**
- * The list as a Netscape bookmark file: one folder per group, the general
- * list at the top level, notes as DD lines, and the day each link was added
- * as ADD_DATE. Every browser's import dialog reads this, and so does
- * parseNetscape above.
+ * The list as a Netscape bookmark file: the general list at the top level,
+ * a folder per group, nested where a group is spelled as a path ("Work /
+ * Tools" is a Tools folder inside Work), notes as DD lines, and the day
+ * each link was added as ADD_DATE. Every browser's import dialog reads
+ * this, and parseNetscape above reads the same nesting back into the same
+ * group names.
  */
 export function exportBookmarks(document: LinksDocument): string {
-  const groups = new Map<string, LinkEntry[]>();
+  const root: Folder = { folders: new Map(), links: [] };
   for (const link of document.links) {
-    const list = groups.get(link.group) ?? [];
-    list.push(link);
-    groups.set(link.group, list);
+    let node = root;
+    for (const name of folderPath(link.group)) {
+      let child = node.folders.get(name);
+      if (child === undefined) {
+        child = { folders: new Map(), links: [] };
+        node.folders.set(name, child);
+      }
+      node = child;
+    }
+    node.links.push(link);
   }
   const lines: string[] = [
     "<!DOCTYPE NETSCAPE-Bookmark-file-1>",
@@ -322,16 +337,17 @@ export function exportBookmarks(document: LinksDocument): string {
     );
     if (link.note !== "") lines.push(`${indent}<DD>${encode(link.note)}`);
   };
-  for (const link of groups.get("") ?? []) entry(link, "    ");
-  const named = [...groups.keys()]
-    .filter((group) => group !== "")
-    .sort((a, b) => a.localeCompare(b));
-  for (const group of named) {
-    lines.push(`    <DT><H3>${encode(group)}</H3>`);
-    lines.push("    <DL><p>");
-    for (const link of groups.get(group) ?? []) entry(link, "        ");
-    lines.push("    </DL><p>");
-  }
+  const emit = (node: Folder, indent: string) => {
+    for (const link of node.links) entry(link, indent);
+    const names = [...node.folders.keys()].sort((a, b) => a.localeCompare(b));
+    for (const name of names) {
+      lines.push(`${indent}<DT><H3>${encode(name)}</H3>`);
+      lines.push(`${indent}<DL><p>`);
+      emit(node.folders.get(name) as Folder, `${indent}    `);
+      lines.push(`${indent}</DL><p>`);
+    }
+  };
+  emit(root, "    ");
   lines.push("</DL><p>", "");
   return lines.join("\n");
 }

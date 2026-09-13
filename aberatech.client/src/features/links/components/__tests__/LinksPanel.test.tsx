@@ -217,6 +217,57 @@ describe("for the owner", () => {
     expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
   });
 
+  it("edits a link in place and saves the corrected one", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Tracker" }));
+    const form = screen.getByRole("form", { name: "Edit Tracker" });
+    fireEvent.change(within(form).getByLabelText(/^title/i), {
+      target: { value: "Runway" },
+    });
+    fireEvent.change(within(form).getByLabelText(/^group/i), {
+      target: { value: "Plans / 2026" },
+    });
+    fireEvent.submit(form);
+
+    expect(screen.queryByRole("form", { name: "Edit Tracker" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Runway" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Plans / 2026" }),
+    ).toBeTruthy();
+
+    await flushSave();
+    expect(puts()).toHaveLength(1);
+    const body = lastPut();
+    expect(body.links.find((l) => l.id === "a")).toMatchObject({
+      title: "Runway",
+      url: "https://claude.ai/code/artifact/x",
+      group: "Plans / 2026",
+    });
+  });
+
+  it("refuses an edit to a bad address and keeps the form open", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Tracker" }));
+    const form = screen.getByRole("form", { name: "Edit Tracker" });
+    fireEvent.change(within(form).getByLabelText(/address/i), {
+      target: { value: "mailto:x@y" },
+    });
+    fireEvent.submit(form);
+
+    expect(screen.getByText(/not a web address/i)).toBeTruthy();
+    expect(screen.getByRole("form", { name: "Edit Tracker" })).toBeTruthy();
+    fireEvent.click(within(form).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("form", { name: "Edit Tracker" })).toBeNull();
+    await flushSave();
+    expect(puts()).toHaveLength(0);
+  });
+
   it("narrows the list to what matches", async () => {
     visit(saved);
     render(<LinksPanel />);

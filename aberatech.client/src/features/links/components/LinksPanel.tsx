@@ -1,5 +1,6 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -27,10 +28,12 @@ import {
   hostOf,
   inGroup,
   type LinksDocument,
+  type NewLink,
   normalizeUrl,
   removeLink,
   search,
   titleOf,
+  updateLink,
 } from "../core/links";
 
 const documentKey = "links";
@@ -61,6 +64,13 @@ export default function LinksPanel() {
   const [problem, setProblem] = React.useState<string | null>(null);
   const [report, setReport] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [draft, setDraft] = React.useState<NewLink>({
+    title: "",
+    url: "",
+    group: "",
+    note: "",
+  });
   const fileInput = React.useRef<HTMLInputElement | null>(null);
 
   const change = React.useCallback(
@@ -84,6 +94,32 @@ export default function LinksPanel() {
     setTitle("");
     setUrl("");
     setNote("");
+  };
+
+  const startEdit = (id: string, link: NewLink) => {
+    setEditing(id);
+    setDraft({
+      title: link.title,
+      url: link.url,
+      group: link.group ?? "",
+      note: link.note ?? "",
+    });
+  };
+
+  const saveEdit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (editing === null) return;
+    if (normalizeUrl(draft.url) === null) {
+      setProblem(
+        "That is not a web address. It needs a host, like abera.tech.",
+      );
+      return;
+    }
+    setProblem(null);
+    const id = editing;
+    const fields = draft;
+    change((current) => updateLink(current, id, fields));
+    setEditing(null);
   };
 
   const copy = async (id: string, href: string) => {
@@ -315,52 +351,124 @@ export default function LinksPanel() {
             disablePadding
             sx={{ borderTop: 1, borderColor: "divider" }}
           >
-            {inGroup(shown, heading).map((link) => (
-              <ListItem
-                key={link.id}
-                divider
-                disableGutters
-                secondaryAction={
-                  <Stack direction="row" spacing={0.5}>
-                    <IconButton
-                      size="small"
-                      aria-label={`Copy ${titleOf(link)}`}
-                      onClick={() => copy(link.id, link.url)}
-                      color={copied === link.id ? "success" : "default"}
-                    >
-                      <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      aria-label={`Remove ${titleOf(link)}`}
-                      onClick={() => change((d) => removeLink(d, link.id))}
-                    >
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                }
-                sx={{ pr: 10 }}
-              >
-                <ListItemText
-                  primary={
-                    <Link
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      underline="hover"
-                      sx={{ fontWeight: 500 }}
-                    >
-                      {titleOf(link)}
-                    </Link>
+            {inGroup(shown, heading).map((link) =>
+              editing === link.id ? (
+                <ListItem key={link.id} divider disableGutters>
+                  <Box
+                    component="form"
+                    onSubmit={saveEdit}
+                    aria-label={`Edit ${titleOf(link)}`}
+                    sx={{ display: "grid", gap: 1, width: "100%", py: 1 }}
+                  >
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <TextField
+                        label="Address"
+                        value={draft.url}
+                        onChange={(e) =>
+                          setDraft({ ...draft, url: e.target.value })
+                        }
+                        required
+                        fullWidth
+                        size="small"
+                      />
+                      <TextField
+                        label="Title"
+                        value={draft.title}
+                        onChange={(e) =>
+                          setDraft({ ...draft, title: e.target.value })
+                        }
+                        fullWidth
+                        size="small"
+                      />
+                    </Stack>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <TextField
+                        label="Group"
+                        value={draft.group ?? ""}
+                        onChange={(e) =>
+                          setDraft({ ...draft, group: e.target.value })
+                        }
+                        size="small"
+                        sx={{ minWidth: { sm: 200 } }}
+                        slotProps={{ htmlInput: { list: "links-groups" } }}
+                      />
+                      <TextField
+                        label="Note"
+                        value={draft.note ?? ""}
+                        onChange={(e) =>
+                          setDraft({ ...draft, note: e.target.value })
+                        }
+                        fullWidth
+                        size="small"
+                      />
+                      <Button type="submit" variant="contained" size="small">
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setEditing(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </Stack>
+                  </Box>
+                </ListItem>
+              ) : (
+                <ListItem
+                  key={link.id}
+                  divider
+                  disableGutters
+                  secondaryAction={
+                    <Stack direction="row" spacing={0.5}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Copy ${titleOf(link)}`}
+                        onClick={() => copy(link.id, link.url)}
+                        color={copied === link.id ? "success" : "default"}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        aria-label={`Edit ${titleOf(link)}`}
+                        onClick={() => startEdit(link.id, link)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        aria-label={`Remove ${titleOf(link)}`}
+                        onClick={() => change((d) => removeLink(d, link.id))}
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
                   }
-                  secondary={
-                    link.note
-                      ? `${hostOf(link.url)} · ${link.note}`
-                      : hostOf(link.url)
-                  }
-                />
-              </ListItem>
-            ))}
+                  sx={{ pr: 14 }}
+                >
+                  <ListItemText
+                    primary={
+                      <Link
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        underline="hover"
+                        sx={{ fontWeight: 500 }}
+                      >
+                        {titleOf(link)}
+                      </Link>
+                    }
+                    secondary={
+                      link.note
+                        ? `${hostOf(link.url)} · ${link.note}`
+                        : hostOf(link.url)
+                    }
+                  />
+                </ListItem>
+              ),
+            )}
           </List>
         </Box>
       ))}
