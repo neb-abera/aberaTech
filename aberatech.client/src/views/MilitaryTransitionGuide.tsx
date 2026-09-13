@@ -221,7 +221,7 @@ export default function MilitaryTransitionGuide(props: {
         sx={{ width: "100%" }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Terminal leve</Typography>
+          <Typography>Terminal leave</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Suspense fallback={<LoadingFallback />}>
