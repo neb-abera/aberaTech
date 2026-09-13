@@ -57,8 +57,10 @@ export const routes: PageRoute[] = [
 /**
  * The pages that are the navigation, rather than entries within it. They are
  * reachable from the app bar on every page, so sections.ts does not list them.
+ * /schedule is the bar's one button, on every page, which is why it is here
+ * and not among the projects.
  */
-export const structural: string[] = ["/", "/guides", "/projects"];
+export const structural: string[] = ["/", "/guides", "/projects", "/schedule"];
 
 /**
  * Routes deliberately absent from the navigation, and why.

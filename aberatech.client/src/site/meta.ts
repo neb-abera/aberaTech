@@ -1,4 +1,4 @@
-import { guides, projects } from "./sections";
+import { guides, primaryAction, projects } from "./sections";
 
 /**
  * What each page says about itself to a browser tab, a search result and a
@@ -42,7 +42,11 @@ const structuralMeta: Record<string, PageMeta> = {
   "/projects": {
     title: "Projects",
     description:
-      "Tools I built and run: a course planner for a graduate degree, a scheduler, a military fitness console, and a social app for dog owners.",
+      "Tools I built and run: a graduate course planner that solves prerequisites and degree rules, a military fitness console, and a social app for dog owners.",
+  },
+  [primaryAction.to]: {
+    title: primaryAction.title,
+    description: primaryAction.blurb,
   },
   "/schedule/admin": {
     title: "Queue",
