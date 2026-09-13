@@ -55,26 +55,23 @@ export const guides: Entry[] = [
 
 export const projects: Entry[] = [
   {
-    title: "Learning RF and Signal Processing",
+    title: "Graduate course planner",
+    navLabel: "Course planner",
     to: "/planner",
     blurb:
-      "Plan a Johns Hopkins Engineering for Professionals Electrical and Computer Engineering master’s degree.",
-  },
-  {
-    title: "Schedule time with me",
-    to: "/schedule",
-    blurb: "Book a time, or join the queue. Confirmed by text.",
+      "A constraint solver over the 138 courses of the Johns Hopkins electrical and computer engineering master’s: prerequisites, degree rules and the five-year clock, checked as you drag courses between terms.",
   },
   {
     title: "Military athlete console",
     to: "/fitness",
     blurb:
-      "Verified training data in, sourced predictions out. Model the dose, or price a goal against a date.",
+      "A training model for military fitness tests: verified sessions in, a predicted score out, and the cost of a goal against a date. The data is mine, so the console asks you to sign in.",
   },
   {
     title: "Facewoof",
     to: "https://facewoof.abera.tech",
-    blurb: "A play dating app for dogs.",
+    blurb:
+      "A social app for dog owners: matches by distance, packs with a shared feed, and playdates on a calendar. Live, with a demo account.",
     external: true,
   },
 ];
@@ -82,14 +79,15 @@ export const projects: Entry[] = [
 /**
  * The one action in the bar, rather than another place to browse.
  *
- * Found by path rather than by index. This was `projects[1]`, which would have
- * quietly promoted a different project to the bar's button the first time
- * anyone inserted an entry above it.
+ * Booking is reachable from every page, so it is a structural route in
+ * routes.ts and not a project: listing it beside the things I built made a
+ * calendar look like a piece of work.
  */
-const scheduling = projects.find((entry) => entry.to === "/schedule");
-if (!scheduling)
-  throw new Error("sections: /schedule is missing from projects");
-export const primaryAction: Entry = scheduling;
+export const primaryAction: Entry = {
+  title: "Schedule time with me",
+  to: "/schedule",
+  blurb: "Book a time, or join the queue. Confirmed by text.",
+};
 
 /** What to show where space is tight. */
 export const label = (entry: Entry): string => entry.navLabel ?? entry.title;
