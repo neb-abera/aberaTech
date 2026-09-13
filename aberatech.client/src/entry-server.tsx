@@ -3,6 +3,9 @@ import { prerenderToNodeStream } from "react-dom/static";
 import { StaticRouter } from "react-router";
 import Shell from "./Shell.tsx";
 
+// The head each prerendered page carries: its own title, description and
+// preview card, in place of the shell's one title for every page.
+export { headFor } from "./site/meta";
 export { prerenderedRoutes } from "./site/prerenderedRoutes";
 // The server needs the app's own list of pages to tell a real page from a
 // typo; without it every unknown path was answered with the shell and a 200.

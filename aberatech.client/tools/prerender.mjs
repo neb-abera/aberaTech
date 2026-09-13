@@ -16,17 +16,27 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
+  headFor,
   prerenderedRoutes,
   render,
   routes,
 } from "../dist-server/entry-server.js";
 
 const MARK = '<div id="root"></div>';
+// The shell's one title, which each prerendered page replaces with its own
+// head: title, description, canonical URL and preview card. spa.html keeps
+// the plain title, and App.tsx sets the right one once the page is running.
+const TITLE = /<title>[^<]*<\/title>/;
 
 const template = await readFile("dist/index.html", "utf8");
 if (!template.includes(MARK)) {
   throw new Error(
     `dist/index.html has no ${MARK} to fill; did the shell change?`,
+  );
+}
+if (!TITLE.test(template)) {
+  throw new Error(
+    "dist/index.html has no <title> to replace; did the shell change?",
   );
 }
 
@@ -51,6 +61,9 @@ for (const route of prerenderedRoutes) {
   const file =
     route === "/" ? "dist/index.html" : path.join("dist", route, "index.html");
   await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, template.replace(MARK, `<div id="root">${html}</div>`));
+  const page = template
+    .replace(TITLE, headFor(route))
+    .replace(MARK, `<div id="root">${html}</div>`);
+  await writeFile(file, page);
   process.stdout.write(`prerendered ${route} -> ${file}\n`);
 }

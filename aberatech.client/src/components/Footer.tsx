@@ -9,6 +9,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router";
+import { tagline } from "../site/meta";
 import { guides, label, projects } from "../site/sections";
 
 /**
@@ -51,8 +52,7 @@ export default function Footer() {
             Neb Abera
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Senior Computer Scientist at MITRE, specializing in secure embedded
-            systems.
+            {tagline}
           </Typography>
           <Stack direction="row" spacing={0.5} sx={{ ml: -1, mt: 0.5 }}>
             {socials.map(({ label, href, Icon }) => (

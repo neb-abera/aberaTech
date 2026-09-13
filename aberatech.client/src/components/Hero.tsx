@@ -2,6 +2,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
@@ -26,6 +27,19 @@ export default function Hero() {
           useFlexGap
           sx={{ alignItems: "center", width: { xs: "100%", sm: "70%" } }}
         >
+          {/* The same crop as LinkedIn, so the two profiles read as one
+              person. Served from /headshot.jpg rather than a hashed asset so
+              the structured data in site/meta.ts can name a stable URL. */}
+          <Avatar
+            src="/headshot.jpg"
+            alt="Neb Abera"
+            sx={{
+              width: { xs: 144, sm: 168 },
+              height: { xs: 144, sm: 168 },
+              border: "3px solid",
+              borderColor: "divider",
+            }}
+          />
           <Typography
             variant="h1"
             sx={{
