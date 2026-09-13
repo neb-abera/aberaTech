@@ -1,14 +1,42 @@
+import EmailIcon from "@mui/icons-material/Email";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { tagline } from "../site/meta";
 import { pageBackground } from "../theme/pageBackground";
+
+/**
+ * The home page: the photo, the name, one line, and the ways to reach me.
+ *
+ * This replaced three paragraphs about enjoying problem-solving, the
+ * languages I was using and what I did with free time. The line is the one
+ * LinkedIn carries; the guides and projects are one click away in the bar.
+ */
+
+const contacts = [
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/neb-abera/",
+    Icon: LinkedInIcon,
+  },
+  { label: "GitHub", href: "https://github.com/neb-abera", Icon: GitHubIcon },
+  {
+    label: "Email",
+    href: "mailto:support@alias.abera.tech",
+    Icon: EmailIcon,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/neb_abera",
+    Icon: InstagramIcon,
+  },
+];
 
 export default function Hero() {
   return (
@@ -65,80 +93,30 @@ export default function Hero() {
             </Typography>
           </Typography>
           <Typography
-            sx={{
-              textAlign: "left",
-              color: "text.primary",
-            }}
+            variant="h6"
+            component="p"
+            sx={{ textAlign: "center", color: "text.primary", fontWeight: 500 }}
           >
-            I really enjoy detail-oriented problem-solving, and I have years of
-            experience leading teams of technical professionals. I specialize in
-            building secure embedded systems. I have worked on large-scale teams
-            and have independently developed novel research projects to support
-            RF Engineering / Digital Signal Processing programs.
-          </Typography>
-          <Typography
-            sx={{
-              textAlign: "left",
-              color: "text.primary",
-            }}
-          >
-            I am currently working on projects in C++, Python, VHDL in Vivado,
-            and web development (TypeScript/React/HTML/CSS + C# using .NET).
-            When I used to have free time... I dedicated it to Mixed Martial
-            Arts, mostly Brazilian Jiu-Jitsu and Judo.
-          </Typography>
-          <Typography
-            sx={{
-              textAlign: "left",
-              color: "text.primary",
-            }}
-          >
-            I am an avid reader, and I love learning how to solve problems that
-            require an interdisciplinary approach. If you have any book
-            recommendations please send them my way!
+            {tagline}
           </Typography>
           <Stack
             direction="row"
             spacing={1}
             useFlexGap
-            sx={{ justifyContent: "left", color: "text.secondary" }}
+            sx={{ justifyContent: "center", color: "text.secondary" }}
           >
-            <IconButton
-              color="inherit"
-              size="large"
-              href="https://www.linkedin.com/in/neb-abera/"
-              aria-label="LinkedIn"
-              sx={{ alignSelf: "center" }}
-            >
-              <LinkedInIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              size="large"
-              href="https://github.com/neb-abera"
-              aria-label="GitHub"
-              sx={{ alignSelf: "center" }}
-            >
-              <GitHubIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              size="large"
-              href="https://calendar.app.google/5yRXc1xbu1S2TTjA8"
-              aria-label="Google"
-              sx={{ alignSelf: "center" }}
-            >
-              <PhoneIphoneIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              size="large"
-              href="https://www.instagram.com/neb_abera"
-              aria-label="Instagram"
-              sx={{ alignSelf: "center" }}
-            >
-              <InstagramIcon />
-            </IconButton>
+            {contacts.map(({ label, href, Icon }) => (
+              <IconButton
+                key={label}
+                color="inherit"
+                size="large"
+                href={href}
+                aria-label={label}
+                sx={{ alignSelf: "center" }}
+              >
+                <Icon />
+              </IconButton>
+            ))}
           </Stack>
         </Stack>
       </Container>
