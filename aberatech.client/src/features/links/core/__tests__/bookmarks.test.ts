@@ -212,6 +212,34 @@ describe("exportBookmarks", () => {
     expect(file).toContain("<DD>say &quot;hi&quot;");
   });
 
+  it("nests folders when a group is spelled as a path, and reads them back", () => {
+    const nested: LinksDocument = [
+      { title: "Top", url: "top.example", group: "Work" },
+      { title: "Deep", url: "deep.example", group: "Work / Tools / CLI" },
+      { title: "Sibling", url: "sib.example", group: "Work / Notes" },
+    ].reduce((d, link, i) => addLink(d, link, day, `n-${i}`), empty);
+    const out = exportBookmarks(nested);
+
+    // One Work folder, with Notes and Tools inside it and CLI inside Tools.
+    expect(out.match(/<H3>Work<\/H3>/g)).toHaveLength(1);
+    const work = out.indexOf("<H3>Work</H3>");
+    const notes = out.indexOf("<H3>Notes</H3>");
+    const tools = out.indexOf("<H3>Tools</H3>");
+    const cli = out.indexOf("<H3>CLI</H3>");
+    expect(work).toBeLessThan(notes);
+    expect(notes).toBeLessThan(tools);
+    expect(tools).toBeLessThan(cli);
+    expect(out).toContain("        <DT><H3>Tools</H3>");
+    expect(out).toContain("            <DT><H3>CLI</H3>");
+
+    const back = mergeLinks(empty, parseBookmarks(out), day);
+    expect(back.document.links.map((l) => [l.title, l.group])).toEqual([
+      ["Top", "Work"],
+      ["Sibling", "Work / Notes"],
+      ["Deep", "Work / Tools / CLI"],
+    ]);
+  });
+
   it("reads back into the same links", () => {
     const back = mergeLinks(empty, parseBookmarks(file), day);
     expect(back.added).toBe(2);
