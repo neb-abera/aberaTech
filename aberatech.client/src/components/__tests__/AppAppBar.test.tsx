@@ -103,10 +103,12 @@ describe("the account controls", () => {
       "/api/scheduling/admin/sign-in?returnUrl=%2Fguides%3Fx%3D1",
     );
     expect(screen.queryByRole("link", { name: "Links" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Plan" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
     expect(screen.getByRole("menuitem", { name: "Sign in" })).toBeTruthy();
     expect(screen.queryByRole("menuitem", { name: "Links" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Plan" })).toBeNull();
   });
 
   it("shows the owner the Links entry and a way out", async () => {
@@ -115,12 +117,18 @@ describe("the account controls", () => {
 
     const links = await screen.findByRole("link", { name: "Links" });
     expect(links.getAttribute("href")).toBe("/links");
+    expect(
+      screen.getByRole("link", { name: "Plan" }).getAttribute("href"),
+    ).toBe("/plan");
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
     expect(
       screen.getByRole("menuitem", { name: "Links" }).getAttribute("href"),
     ).toBe("/links");
+    expect(
+      screen.getByRole("menuitem", { name: "Plan" }).getAttribute("href"),
+    ).toBe("/plan");
 
     const reload = vi.fn();
     Object.defineProperty(window, "location", {
