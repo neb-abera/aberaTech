@@ -14,9 +14,13 @@ import { guides, projects } from "./sections";
 export const siteName = "Neb Abera";
 export const siteOrigin = "https://abera.tech";
 
-/** The one line under the name in the footer, and on the preview card. */
+/**
+ * The one line under the name: the footer, the home page description, the
+ * preview card and the Person record all say this and nothing more. Kept the
+ * same on LinkedIn, so the two profiles agree.
+ */
 export const tagline =
-  "Senior Computer Scientist at MITRE, specializing in secure embedded systems.";
+  "Senior Computer Scientist at MITRE. Talk to me about secure embedded systems, cryptography, RF and signal processing, and systems engineering. I’m always open to book recommendations.";
 
 export interface PageMeta {
   /** The <title>. The site name is appended to every page but the home page. */
@@ -28,7 +32,7 @@ export interface PageMeta {
 const structuralMeta: Record<string, PageMeta> = {
   "/": {
     title: siteName,
-    description: `${tagline} Guides for soldiers leaving the Army, study plans for field radio, signal processing and post-quantum cryptography, and the tools I built.`,
+    description: tagline,
   },
   "/guides": {
     title: "Guides",
