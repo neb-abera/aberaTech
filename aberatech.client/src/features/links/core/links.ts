@@ -134,6 +134,43 @@ export function addLink(
   return { version: 1, links: [...document.links, entry] };
 }
 
+/**
+ * The document with one link's fields replaced, or the same document when
+ * the new address is not one. The id, the place in the list and the day
+ * added are kept: an edit is the same bookmark, corrected.
+ */
+export function updateLink(
+  document: LinksDocument,
+  id: string,
+  fields: NewLink,
+): LinksDocument {
+  const url = normalizeUrl(fields.url);
+  if (url === null) return document;
+  if (!document.links.some((l) => l.id === id)) return document;
+  return {
+    version: 1,
+    links: document.links.map((l) =>
+      l.id === id
+        ? {
+            ...l,
+            title: fields.title.trim(),
+            url,
+            group: normalizeGroup(fields.group),
+            note: (fields.note ?? "").trim(),
+          }
+        : l,
+    ),
+  };
+}
+
+/** The folder path a group name spells: "Work / Tools" is Work, then Tools. */
+export function folderPath(group: string): string[] {
+  return group
+    .split("/")
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
+}
+
 export function removeLink(document: LinksDocument, id: string): LinksDocument {
   return { version: 1, links: document.links.filter((l) => l.id !== id) };
 }
