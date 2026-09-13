@@ -54,7 +54,7 @@ export default function TechnicalTransitionGuide(props: {
           Development. The more I learn, the more I'll update. I embedded links,
           documents, and videos. I encourage you to click on those to ensure
           that you understand the topic in its breadth and depth. This is a work
-          in progress so feel free to make send me questions, comments, and
+          in progress so feel free to send me questions, comments, and
           recommendations.{" "}
           <Link
             to="https://github.com/neb-abera/transition"

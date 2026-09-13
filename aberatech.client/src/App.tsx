@@ -1,8 +1,23 @@
-import React, { Suspense } from "react";
-import { Route, Routes } from "react-router";
+import React, { Suspense, useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router";
 import "./App.css";
 import ScrollToTop from "./components/ScrollToTop";
+import { titleFor } from "./site/meta";
 import { routes } from "./site/routes";
+
+/**
+ * The tab title follows the page. A prerendered page arrives with its title
+ * already in the head; this keeps it right after a client-side navigation,
+ * and gives the client-rendered pages (served over the plain shell) theirs.
+ * An effect, so the build-time render never touches a document.
+ */
+function DocumentTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = titleFor(pathname);
+  }, [pathname]);
+  return null;
+}
 
 // Deliberately not in site/routes.ts: that list is the site's pages, and it is
 // also what the build writes to app-routes.json for the server to answer 404
@@ -21,6 +36,7 @@ function App() {
   return (
     <div>
       <ScrollToTop />
+      <DocumentTitle />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           {routes.map(({ path, Page }) => (
