@@ -51,7 +51,7 @@ jobs:
       # password that never rotated. The token az acr login issues lives three
       # hours; this job needs it for minutes.
       - name: Azure Login
-        uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
@@ -105,7 +105,7 @@ jobs:
         # Nothing here is a secret — the client secret this replaced was a
         # two-year credential that anyone who could read it could use from
         # anywhere.
-        uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
