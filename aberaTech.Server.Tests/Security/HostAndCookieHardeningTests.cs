@@ -78,6 +78,40 @@ public sealed class HostAllowlistTests
         Assert.NotNull(shipped);
         Assert.Contains("abera.tech", shipped);
         Assert.DoesNotContain("*", shipped);
+        // No wildcard at all: *.azurecontainerapps.io is every container app
+        // on Azure, and the origin has exactly one default domain.
+        Assert.DoesNotContain(shipped, entry => entry.StartsWith('*'));
+    }
+
+    [Fact]
+    public void Outside_development_an_empty_list_refuses_to_start()
+    {
+        // Blank out what appsettings.Production.json ships, the way a lost
+        // setting or a bad override would.
+        var blanked = Enumerable.Range(0, 8).ToDictionary(index => $"HostAllowlist:Hosts:{index}", _ => (string?)"");
+        using var app = new TestApp(blanked);
+
+        var refusal = Assert.Throws<InvalidOperationException>(() => app.CreateClient());
+
+        Assert.Contains("HostAllowlist:Hosts is empty", refusal.Message);
+    }
+
+    [Fact]
+    public async Task Blank_entries_are_not_names()
+    {
+        // An entry blanked by an override must not let a request with an
+        // empty or odd Host through, nor count as a list.
+        using var app = new TestApp(new Dictionary<string, string?>
+        {
+            ["HostAllowlist:Hosts:0"] = "abera.tech",
+            ["HostAllowlist:Hosts:1"] = " ",
+            ["HostAllowlist:Hosts:2"] = "",
+            ["HostAllowlist:Hosts:3"] = ""
+        });
+        using var client = app.CreateClient();
+
+        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/", "abera.tech"));
+        Assert.Equal(HttpStatusCode.BadRequest, await GetAsync(client, "/", "localhost"));
     }
 
     private static async Task<HttpStatusCode> GetAsync(HttpClient client, string path, string host)
