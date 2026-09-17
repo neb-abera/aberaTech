@@ -69,7 +69,9 @@ public sealed class TestApp : IDisposable
             // Over the real socket; the factory records where it bound.
             ? new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false })
             {
-                BaseAddress = Factory.ClientOptions.BaseAddress
+                BaseAddress = Factory.ClientOptions.BaseAddress,
+                // The socket is 127.0.0.1; the name is one Production answers to.
+                DefaultRequestHeaders = { Host = "localhost" }
             }
             : Factory.CreateClient(new WebApplicationFactoryClientOptions
             {

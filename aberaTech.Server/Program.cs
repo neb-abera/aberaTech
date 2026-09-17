@@ -286,6 +286,10 @@ app.UseResponseCompression();
 // one place that reads it.
 app.UseClientAddress();
 
+// Only the site's own names, probes excepted. HostAllowlist.cs says why this is
+// not the framework's AllowedHosts.
+app.UseHostAllowlist();
+
 // Browser hardening headers on every response, static files included.
 //
 // The CSP names exactly what the client actually loads: MUI injects its styles

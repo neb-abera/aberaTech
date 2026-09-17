@@ -59,3 +59,16 @@ against them; none are configured yet.
 
 In Application Insights these are `traces` rows; filter on
 `customDimensions.EventId` or `customDimensions.CategoryName`.
+
+## Hardening deliberately left for the owner
+
+* **HSTS `preload`.** The header already sends `includeSubDomains`; `preload`
+  is a one-way door that makes every present and future subdomain of
+  `abera.tech` HTTPS-only in browsers' shipped lists. Add it only after
+  confirming that is true of every subdomain, then submit at hstspreload.org.
+* **CSP `report-to` / `report-uri`.** There is no report sink today, and a
+  reporting endpoint on this origin would be one more unauthenticated write.
+  Add the directive when a sink exists (Cloudflare's or a hosted collector).
+* **Host filtering** is `HostAllowlist` in `appsettings.Production.json`, not
+  the framework's `AllowedHosts`, so that `/healthz` and `/readyz` keep
+  answering a platform probe that addresses the container by IP.
