@@ -36,26 +36,36 @@ public static class FitnessReports
     /// <summary>Horizons every projection reports unless the caller names others.</summary>
     public static IReadOnlyList<double> DefaultHorizons { get; } = [0, 3, 6, 12, 18, 24];
 
-    public static async Task<SummaryDto> SummaryAsync(FitnessDbContext database, CancellationToken cancellationToken)
+    public static async Task<SummaryDto> SummaryAsync(
+        FitnessDbContext database, IClock clock, CancellationToken cancellationToken)
     {
-        var settings = await SettingsAsync(database, cancellationToken);
-        var weight = await database.BodyMetrics.OrderByDescending(m => m.Date)
-            .FirstOrDefaultAsync(cancellationToken);
+        var history = await TrainingHistory.LoadAsync(database, cancellationToken);
+        var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
+        var predictions = await database.Predictions.AsNoTracking().ToListAsync(cancellationToken);
+
+        return Summary(history, evidence, predictions, clock.GetCurrentInstant());
+    }
+
+    /// <summary>The summary, from a log that has already been read.</summary>
+    internal static SummaryDto Summary(
+        TrainingHistory history,
+        ReadinessEvidence evidence,
+        IReadOnlyList<LockedPrediction> predictions,
+        Instant now)
+    {
+        var row = history.Row;
+        var settings = SettingsOf(row);
+        var weight = evidence.LatestWeight;
 
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
-        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
-                  ?? new AthleteSettings { Id = 1 };
+        var today = now.InZone(zone).Date;
 
-        var trend = AerobicAnalysis.MonthlyTrend(
-            await SteadyRunsAsync(database, Bands(row), cancellationToken), settings.ReferenceHr);
+        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, Bands(row)), settings.ReferenceHr);
 
-        var weeks = WeeklyVolumes(await database.Activities
-            .Where(a => a.Sport == "run" || a.Sport == "ruck")
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken), zone);
+        var weeks = WeeklyVolumes(
+            history.Activities.Where(a => a.Sport == "run" || a.Sport == "ruck").ToList(), zone);
 
-        var strength = await StrengthTrendAsync(database, zone, cancellationToken);
+        var strength = StrengthTrend(evidence.Sets, zone);
 
         var highlights = Highlights.Build(
             trend,
@@ -75,9 +85,9 @@ public static class FitnessReports
                 Math.Round(p.FastSecPerKm), Math.Round(p.SlowSecPerKm)))
             .ToArray();
 
-        var (measured, sessions, lapSplit) = await MeasuredDoseAsync(database, row, cancellationToken);
-        var (tests, suggestion) = await FieldTestsAsync(database, row, today, cancellationToken);
-        var durability = await DurabilityAsync(database, row, today, cancellationToken);
+        var (measured, sessions, lapSplit) = MeasuredDose(history.Activities, row, now);
+        var (tests, suggestion) = FieldTestsIn(history.Activities, row, today);
+        var durability = DurabilityOf(history.Activities, row, today);
 
         // The anchor's age belongs with the findings it quietly distorts.
         var findings = highlights.ToList();
@@ -86,7 +96,7 @@ public static class FitnessReports
 
         // The ledger's discipline: something locked ahead of the next test,
         // and every due prediction scored.
-        var ledger = (await database.Predictions.ToListAsync(cancellationToken))
+        var ledger = predictions
             .Select(l => new LedgerEntry(l.Id, l.MadeOn, l.TargetDate, l.DistanceMeters, l.PredictedSeconds, l.ActualSeconds))
             .OrderBy(l => l.TargetDate)
             .ToArray();
@@ -106,8 +116,8 @@ public static class FitnessReports
             Dose(measured),
             Steps(SessionMix.Explain(measured, RecentWeeks, sessions, lapSplit)),
             spread,
-            await database.Activities.CountAsync(cancellationToken),
-            await ReadinessReports.BuildAsync(database, row, weight, trend, today, cancellationToken),
+            history.Activities.Count,
+            ReadinessReports.Build(history, evidence, trend, today),
             tests.Select(t => new FieldTestDto(
                 t.Kind, t.ActivityId, t.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 t.SecPerKm, t.AverageHr, t.DriftPercent, t.Indoor, t.Evidence)).ToArray(),
@@ -143,7 +153,7 @@ public static class FitnessReports
     {
         var athlete = await SnapshotAsync(database, currentYear, cancellationToken, useHistory);
         var row = athlete.Row;
-        var currentWeight = (await database.BodyMetrics.OrderByDescending(m => m.Date)
+        var currentWeight = (await database.BodyMetrics.AsNoTracking().OrderByDescending(m => m.Date)
             .FirstOrDefaultAsync(cancellationToken))?.WeightKg;
 
         var altitudePenalty = Altitude.Penalty(row.HomeAltitudeMeters);
@@ -243,7 +253,7 @@ public static class FitnessReports
             .ToArray();
 
         var goals = new List<GoalOutlookDto>();
-        foreach (var goal in await database.Goals.OrderBy(g => g.Metric).ToListAsync(cancellationToken))
+        foreach (var goal in await database.Goals.AsNoTracking().OrderBy(g => g.Metric).ToListAsync(cancellationToken))
         {
             if (GoalDistanceMeters(goal) is not { } distance) continue;
 
@@ -366,7 +376,7 @@ public static class FitnessReports
             athlete.ReclaimVdot,
             cancellationToken);
 
-        var mass = (await database.BodyMetrics.OrderByDescending(m => m.Date)
+        var mass = (await database.BodyMetrics.AsNoTracking().OrderByDescending(m => m.Date)
             .FirstOrDefaultAsync(cancellationToken))?.WeightKg;
 
         return new SolverContext(
@@ -415,17 +425,24 @@ public static class FitnessReports
     /// </param>
     internal static async Task<AthleteSnapshot> SnapshotAsync(
         FitnessDbContext database, int currentYear, CancellationToken cancellationToken,
-        bool useHistory = true)
+        bool useHistory = true) =>
+        Snapshot(
+            await TrainingHistory.LoadAsync(database, cancellationToken),
+            SystemClock.Instance.GetCurrentInstant(),
+            currentYear,
+            useHistory);
+
+    /// <summary>The same athlete, from a log that has already been read.</summary>
+    internal static AthleteSnapshot Snapshot(
+        TrainingHistory history, Instant now, int currentYear, bool useHistory = true)
     {
-        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
-                  ?? new AthleteSettings { Id = 1 };
+        var row = history.Row;
 
-        var trend = AerobicAnalysis.MonthlyTrend(
-            await SteadyRunsAsync(database, Bands(row), cancellationToken), row.ReferenceHr);
+        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, Bands(row)), row.ReferenceHr);
 
-        var (measured, sessions, _) = await MeasuredDoseAsync(database, row, cancellationToken);
+        var (measured, sessions, _) = MeasuredDose(history.Activities, row, now);
         var observations = useHistory
-            ? await ObservationsAsync(database, row, trend, cancellationToken)
+            ? Observations(history.Activities, row, trend)
             : [];
 
         var fit = ModelFit.Fit(
@@ -467,19 +484,14 @@ public static class FitnessReports
     /// respect to speed (<see cref="Vdot.SpeedElasticity"/>), computed at the
     /// athlete's own pace rather than assumed to be one.
     /// </remarks>
-    private static async Task<IReadOnlyList<FitObservation>> ObservationsAsync(
-        FitnessDbContext database,
+    private static IReadOnlyList<FitObservation> Observations(
+        IReadOnlyList<Activity> activities,
         AthleteSettings row,
-        IReadOnlyList<MonthlyAerobicPoint> trend,
-        CancellationToken cancellationToken)
+        IReadOnlyList<MonthlyAerobicPoint> trend)
     {
         if (trend.Count < ModelFit.MinimumObservations) return [];
 
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var activities = await database.Activities
-            .Include(a => a.Laps)
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken);
         var bands = Bands(row);
 
         var latest = trend[^1];
@@ -509,16 +521,12 @@ public static class FitnessReports
     }
 
     /// <summary>The week the athlete is actually training, read out of the log.</summary>
-    private static async Task<(TrainingDose Dose, int Sessions, int LapSplit)> MeasuredDoseAsync(
-        FitnessDbContext database, AthleteSettings row, CancellationToken cancellationToken)
+    private static (TrainingDose Dose, int Sessions, int LapSplit) MeasuredDose(
+        IReadOnlyList<Activity> activities, AthleteSettings row, Instant now)
     {
-        var since = SystemClock.Instance.GetCurrentInstant()
-            .Minus(Duration.FromDays(RecentWeeks * 7));
+        var since = now.Minus(Duration.FromDays(RecentWeeks * 7));
 
-        var recent = await database.Activities
-            .Include(a => a.Laps)
-            .Where(a => a.StartedAt >= since)
-            .ToListAsync(cancellationToken);
+        var recent = activities.Where(a => a.StartedAt >= since);
 
         var sessions = recent.Select(Session).ToArray();
         var lapSplit = sessions.Count(s => s.Sport == "run" && SessionMix.LapsDescribe(s));
@@ -678,17 +686,11 @@ public static class FitnessReports
     /// efforts below the lactate threshold, judged by heart rate and, where
     /// the watch recorded laps, by how evenly they were run.
     /// </summary>
-    private static async Task<IReadOnlyList<SteadyRun>> SteadyRunsAsync(
-        FitnessDbContext database, HeartRateBands bands, CancellationToken cancellationToken)
+    private static IReadOnlyList<SteadyRun> SteadyRuns(IReadOnlyList<Activity> activities, HeartRateBands bands)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var runs = await database.Activities
-            .Include(a => a.Laps)
-            .Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null)
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken);
 
-        return runs
+        return MeasuredRuns(activities)
             .Where(a => SessionMix.IsSteady(Session(a), bands))
             .Select(a => new SteadyRun(
                 a.StartedAt.InZone(zone).Date,
@@ -700,17 +702,16 @@ public static class FitnessReports
     }
 
     /// <summary>The recent load, day by day, through the same zone split the dose uses.</summary>
-    private static async Task<DurabilityReport> DurabilityAsync(
-        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
+    private static DurabilityReport DurabilityOf(
+        IReadOnlyList<Activity> activities, AthleteSettings row, LocalDate today)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var first = await database.Activities.OrderBy(a => a.StartedAt).Select(a => (Instant?)a.StartedAt).FirstOrDefaultAsync(cancellationToken);
+
+        // The log is held oldest first.
+        Instant? first = activities.Count > 0 ? activities[0].StartedAt : null;
 
         var since = today.PlusDays(-(Durability.ChronicDays + Durability.StreakLimit + 30)).AtStartOfDayInZone(zone).ToInstant();
-        var recent = await database.Activities
-            .Include(a => a.Laps)
-            .Where(a => a.StartedAt >= since)
-            .ToListAsync(cancellationToken);
+        var recent = activities.Where(a => a.StartedAt >= since);
 
         var bands = Bands(row);
         var sessions = recent
@@ -726,6 +727,10 @@ public static class FitnessReports
 
         return Durability.Build(sessions, today);
     }
+
+    /// <summary>Runs with both a distance and a heart rate: the ones a pace can be read from.</summary>
+    private static IEnumerable<Activity> MeasuredRuns(IReadOnlyList<Activity> activities) =>
+        activities.Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null);
 
     /// <summary>An activity as the classifier sees it, laps and all.</summary>
     private static LoggedSession Session(Activity activity) =>
@@ -743,17 +748,12 @@ public static class FitnessReports
     private static HeartRateBands Bands(AthleteSettings row) => new(row.ReferenceHr, row.LtHr);
 
     /// <summary>The field tests the log contains, and what they say the thresholds are.</summary>
-    private static async Task<(IReadOnlyList<FieldTest> Tests, ThresholdSuggestion? Suggestion)> FieldTestsAsync(
-        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
+    private static (IReadOnlyList<FieldTest> Tests, ThresholdSuggestion? Suggestion) FieldTestsIn(
+        IReadOnlyList<Activity> activities, AthleteSettings row, LocalDate today)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
-        var runs = await database.Activities
-            .Include(a => a.Laps)
-            .Where(a => a.Sport == "run" && a.DistanceMeters != null && a.AverageHr != null)
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken);
 
-        var candidates = runs.Select(a => new FieldTestRun(
+        var candidates = MeasuredRuns(activities).Select(a => new FieldTestRun(
             a.Id,
             a.StartedAt.InZone(zone).Date,
             a.Name,
@@ -768,11 +768,8 @@ public static class FitnessReports
         return (tests, FieldTests.Suggest(tests, bands, row.LtSecondsPerKm, today));
     }
 
-    private static async Task<SettingsDto> SettingsAsync(FitnessDbContext database, CancellationToken cancellationToken)
+    private static SettingsDto SettingsOf(AthleteSettings row)
     {
-        var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
-                  ?? new AthleteSettings { Id = 1 };
-
         return new SettingsDto(
             row.ReferenceHr,
             row.LtSecondsPerKm,
@@ -820,20 +817,15 @@ public static class FitnessReports
         return weeks;
     }
 
-    private static async Task<IReadOnlyList<E1RmDto>> StrengthTrendAsync(
-        FitnessDbContext database, DateTimeZone zone, CancellationToken cancellationToken)
+    private static IReadOnlyList<E1RmDto> StrengthTrend(IReadOnlyList<DatedSet> sets, DateTimeZone zone)
     {
-        var sets = await database.StrengthSets
-            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
-            .Where(x => x.s.WeightKg > 0 && x.s.Reps >= 1 && x.s.Reps <= OneRepMax.MaxTrustworthyReps)
-            .ToListAsync(cancellationToken);
-
         return sets
-            .GroupBy(x => (Exercise: x.s.Exercise, Date: x.StartedAt.InZone(zone).Date))
+            .Where(x => OneRepMax.IsEstimable(x.Set.WeightKg, x.Set.Reps))
+            .GroupBy(x => (Exercise: x.Set.Exercise, Date: x.StartedAt.InZone(zone).Date))
             .Select(g => new E1RmDto(
                 g.Key.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 g.Key.Exercise,
-                Math.Round(g.Max(x => OneRepMax.Epley(x.s.WeightKg, x.s.Reps)), 1)))
+                Math.Round(g.Max(x => OneRepMax.Epley(x.Set.WeightKg, x.Set.Reps)), 1)))
             .OrderBy(e => e.Date)
             .ToArray();
     }

@@ -21,10 +21,16 @@ public sealed record DigestDto(
 /// </summary>
 internal static class DigestReports
 {
-    public static async Task<DigestDto> BuildAsync(FitnessDbContext database, LocalDate today, CancellationToken cancellationToken)
+    public static async Task<DigestDto> BuildAsync(FitnessDbContext database, Instant now, CancellationToken cancellationToken)
     {
-        var summary = await FitnessReports.SummaryAsync(database, cancellationToken);
-        var outlook = await OutlookReports.BuildAsync(database, null, 1.0, today, cancellationToken);
+        // One read of the log for both halves of the page.
+        var history = await TrainingHistory.LoadAsync(database, cancellationToken);
+        var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
+        var predictions = await database.Predictions.AsNoTracking().ToListAsync(cancellationToken);
+        var today = now.InUtc().Date;
+
+        var summary = FitnessReports.Summary(history, evidence, predictions, now);
+        var outlook = OutlookReports.Build(history, evidence, null, 1.0, today, now);
         return Compose(summary, outlook, today);
     }
 

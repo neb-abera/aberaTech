@@ -48,7 +48,7 @@ public static class IngestEndpoints
     internal static async Task<IngestStatusDto> StatusAsync(
         FitnessDbContext database, bool intervalsIcuConfigured, bool hevyConfigured, CancellationToken cancellationToken)
     {
-        var states = await database.SyncStates.ToDictionaryAsync(s => s.Source, cancellationToken);
+        var states = await database.SyncStates.AsNoTracking().ToDictionaryAsync(s => s.Source, cancellationToken);
         var hevy = states.GetValueOrDefault(SyncSchedule.HevySource);
         var icu = states.GetValueOrDefault(SyncSchedule.IntervalsIcuSource);
 
