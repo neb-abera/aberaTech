@@ -82,6 +82,9 @@ public static class FitnessEndpoints
         // skipped entirely, decided by FitnessGate, never by this default.
         var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group;
 
+        // Whatever a write changed, the cached pages may have read.
+        api.EvictOnWrite();
+
         // Who am I — the one anonymous route, so the page can decide whether to
         // show a sign-in button or the dashboard. Discloses nothing but the
         // fact the feature exists, which the navigation already does.
@@ -101,7 +104,8 @@ public static class FitnessEndpoints
 
         // The week in one page, for the dashboard.
         api.MapGet("/digest", async (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
-            Results.Ok(await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken)));
+            Results.Ok(await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken)))
+            .CacheOutput(FitnessOutputCache.PolicyName);
 
         // The same page as text, for the morning brief: one bearer key, no
         // sign-in. Mapped only when a key of real length is configured, and
@@ -121,7 +125,8 @@ public static class FitnessEndpoints
         }
 
         api.MapGet("/summary", (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
-            FitnessReports.SummaryAsync(database, clock, cancellationToken));
+            FitnessReports.SummaryAsync(database, clock, cancellationToken))
+            .CacheOutput(FitnessOutputCache.PolicyName);
 
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
@@ -143,7 +148,7 @@ public static class FitnessEndpoints
 
             return Results.Ok(await OutlookReports.BuildAsync(
                 database, weeklyHours, compliance ?? 1.0, clock.GetCurrentInstant(), cancellationToken));
-        });
+        }).CacheOutput(FitnessOutputCache.PolicyName);
 
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide

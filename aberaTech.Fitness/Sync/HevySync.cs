@@ -1,6 +1,7 @@
 using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Ingest;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -13,6 +14,7 @@ public sealed class HevySync(
     FitnessDbContext database,
     HevyApiClient hevy,
     PosteriorCache cache,
+    IOutputCacheStore pages,
     IClock clock,
     ILogger<HevySync> logger)
 {
@@ -32,6 +34,10 @@ public sealed class HevySync(
             var activities = await hevy.FetchAllAsync(cancellationToken);
             var outcome = await ActivityStore.UpsertAsync(database, activities, cancellationToken);
             if (outcome.Added > 0) cache.Invalidate();
+
+            // Wider than the posterior: a workout already stored is rewritten
+            // with whatever Hevy says now, and the cached pages read its sets.
+            await pages.EvictFitnessAsync();
 
             state.LastOutcome = $"{activities.Count} workouts, {outcome.Added} new";
             await database.SaveChangesAsync(cancellationToken);
