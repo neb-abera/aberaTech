@@ -6,8 +6,9 @@ public sealed class HostAllowlistOptions
     public const string Section = "HostAllowlist";
 
     /// <summary>
-    /// Exact host names, or <c>*.suffix</c> for any subdomain. Empty means no
-    /// filtering, which is what development, compose and the tests want.
+    /// Exact host names, or <c>*.suffix</c> for any subdomain. Blank entries
+    /// are ignored. An empty list means no filtering in Development, which is
+    /// what compose and local work want, and a refusal to start anywhere else.
     /// </summary>
     public string[] Hosts { get; set; } = [];
 }
@@ -24,6 +25,11 @@ public sealed class HostAllowlistOptions
 /// filter that cannot exempt them risks a revision that never turns ready.
 /// This one answers /healthz and /readyz under any name and filters the rest.
 ///
+/// Outside Development an empty list stops the server at startup. A filter
+/// that quietly filters nothing because a setting was lost in a deploy is
+/// the failure nobody notices; a revision that will not start is the one
+/// the deploy gate catches.
+///
 /// Nothing here builds a link from the Host header that a visitor then
 /// trusts — the Twilio callback URL is configured, and Google refuses a
 /// redirect URI it was not given — so this is defence in depth against
@@ -36,11 +42,22 @@ public static class HostAllowlist
     public static IApplicationBuilder UseHostAllowlist(this WebApplication app)
     {
         var hosts = (app.Configuration.GetSection(HostAllowlistOptions.Section).Get<HostAllowlistOptions>()
-                     ?? new HostAllowlistOptions()).Hosts;
+                     ?? new HostAllowlistOptions()).Hosts
+            .Where(entry => !string.IsNullOrWhiteSpace(entry))
+            .Select(entry => entry.Trim())
+            .ToArray();
 
         if (hosts.Length == 0)
         {
-            return app;
+            if (app.Environment.IsDevelopment())
+            {
+                return app;
+            }
+
+            throw new InvalidOperationException(
+                $"{HostAllowlistOptions.Section}:Hosts is empty in the {app.Environment.EnvironmentName} environment, "
+                + "so the site would answer to any name. List the names it goes by in appsettings.Production.json, "
+                + $"or set {HostAllowlistOptions.Section}__Hosts__0, __1, ... in the environment.");
         }
 
         return app.Use((context, next) =>
