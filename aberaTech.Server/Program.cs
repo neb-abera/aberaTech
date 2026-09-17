@@ -388,6 +388,10 @@ app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
 // dead code and every page would serve the empty shell.
 app.UseRouting();
 
+// Outside the rate limiter and authentication, so their refusals pass back
+// through it. SecurityEvents.cs is the security log.
+app.UseSecurityEvents();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
