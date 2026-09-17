@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { render } from "../entry-server";
+import { heroAvatar } from "../site/meta";
 
 describe("build-time rendering", () => {
   it("renders the home page with its content, not a loading fallback", async () => {
@@ -60,6 +61,17 @@ describe("build-time rendering", () => {
     expect(html).toContain("Classical cryptography, properly");
     expect(html).toContain("FIPS 203, ML-KEM");
     expect(html).not.toContain("Loading...");
+  });
+
+  it("draws the avatar the head preloads, sized so nothing shifts when it lands", async () => {
+    const html = await render("/");
+    const img = html.match(/<img[^>]*alt="Neb Abera"[^>]*>/)?.[0] ?? "";
+
+    expect(img).toContain(heroAvatar.src);
+    expect(img).toContain('width="336"');
+    expect(img).toContain('height="336"');
+    expect(img).toMatch(/fetchpriority="high"/i);
+    expect(html).not.toContain("/headshot.jpg");
   });
 
   it("inlines the styles the markup needs", async () => {

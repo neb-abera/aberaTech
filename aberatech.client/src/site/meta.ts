@@ -1,3 +1,4 @@
+import heroAvatarUrl from "../assets/headshot-336.webp";
 import { guides, primaryAction, projects } from "./sections";
 
 /**
@@ -21,6 +22,18 @@ export const siteOrigin = "https://abera.tech";
  */
 export const tagline =
   "Senior Computer Scientist at MITRE. Talk to me about secure embedded systems, cryptography, RF and signal processing, and systems engineering. I’m always open to book recommendations.";
+
+/**
+ * The picture the home page draws: the headshot at twice the avatar's largest
+ * size. A hashed asset, unlike /headshot.jpg, which keeps its stable URL for
+ * the Person record below. Named here because two things must agree on it:
+ * the Hero that renders it and the preload that fetches it early.
+ */
+export const heroAvatar = {
+  src: heroAvatarUrl,
+  size: 336,
+  type: "image/webp",
+} as const;
 
 export interface PageMeta {
   /** The <title>. The site name is appended to every page but the home page. */
@@ -145,6 +158,14 @@ export function headFor(route: string): string {
     `<meta name="twitter:image" content="${image}" />`,
   ];
   if (route === "/") {
+    // The avatar is the largest thing in the home page's first screen. React
+    // emits a preload of its own for a high-priority image, but at the top of
+    // the body; this one is in the head, ahead of the scripts, and names the
+    // type so a browser without WebP does not fetch what it cannot draw. The
+    // file preloaded is the file Hero renders: both read heroAvatar.
+    lines.push(
+      `<link rel="preload" as="image" href="${escapeHtml(heroAvatar.src)}" type="${heroAvatar.type}" fetchpriority="high" />`,
+    );
     lines.push(
       `<script type="application/ld+json">${JSON.stringify(person)}</script>`,
     );
