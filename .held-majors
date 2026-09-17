@@ -1,0 +1,7 @@
+# Majors that cannot install beside their manifest, accepted with reasoning.
+# scripts/check-held-majors.sh reads this; the format is
+#
+#   <directory> <package> <reason>
+#
+# An entry is a debt: the check fails once the bump installs or there is no
+# newer major left, so nothing here outlives its reason. Empty today.

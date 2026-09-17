@@ -183,6 +183,20 @@ jobs:
           cache-from: type=gha,scope=clientlint
           cache-to: type=gha,scope=clientlint,mode=max
 
+      # Dependabot only opens a pull request for a bump that installs, so a
+      # major whose peer range the manifest cannot satisfy is never offered
+      # and nothing goes red (openapi-typescript sat at 6 for two years that
+      # way in two sibling repositories). A `docker run`, not a build stage:
+      # the answer depends on the registry, and a cached layer would never
+      # ask again. The self-test runs first, every time, so a check that can
+      # no longer fail is caught. A step on this job rather than a job of its
+      # own so the ruleset's required contexts stay as they are.
+      - name: No dependency is held behind a major that cannot install
+        run: |
+          set -euo pipefail
+          ./scripts/check-held-majors.sh --self-test
+          ./scripts/check-held-majors.sh
+
   scheduling-tests:
     name: Scheduling unit tests, in the container
     runs-on: ubuntu-latest
