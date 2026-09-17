@@ -140,6 +140,8 @@ export default function TerminalLeave() {
                   <Box
                     component="img"
                     src="https://www.lduhtrp.net/image-8389227-12188911"
+                    loading="lazy"
+                    decoding="async"
                     alt="DITY/Personally Procured Move Calculator - UPDATED FOR 2021"
                     sx={{
                       maxWidth: "300px",

@@ -192,6 +192,8 @@ export default function LongAfterETS() {
                   <Box
                     component="img"
                     src="https://nvf.org/wp-content/uploads/2015/03/veteran-service-officers.jpg"
+                    loading="lazy"
+                    decoding="async"
                     alt="Veteran Service Officers - List of Where to Find Help"
                     sx={{
                       maxWidth: "450px",
@@ -261,6 +263,8 @@ export default function LongAfterETS() {
                   <Box
                     component="img"
                     src="https://www.va.gov/img/design/logo/va-og-image.png"
+                    loading="lazy"
+                    decoding="async"
                     alt="Get help from a VA accredited representative or VSO | Veterans Affairs"
                     sx={{
                       maxWidth: "450px",
