@@ -19,6 +19,28 @@ hashes are computed from the shipped HTML at startup (`CspInlineScripts.cs`);
 Cloudflare's RUM beacon is allowlisted deliberately, and its real-user Core
 Web Vitals are the measurement of record.
 
+The fitness console reads the training log once per request
+(`TrainingHistory.cs`) and its reports are filters over that list, so a
+summary is six database commands however long the log is; read-only queries
+are untracked throughout. The summary, the digest and the readiness outlook
+are then held in the server's output cache (`FitnessOutputCache.cs`) until
+something is written: the middleware runs after authorization, the policy
+stores nothing for a caller who is not signed in, and no `Cache-Control` is
+added, so nothing downstream ever holds the owner's data. Tests count the
+commands and pin the payloads.
+
+Pictures are WebP at the size they are drawn and state their width and
+height; the home page preloads the avatar it actually renders, while
+`/headshot.jpg` and `og.png` keep their stable addresses for search engines
+and link previews. The server is published ReadyToRun, which roughly halves
+a cold start with the databases configured, for a larger image.
+
+Page weight is a gate, in bytes: `make budget` (and the production image job
+in CI) measures the entry script, the stylesheet, everything the home page
+fetches first, and every prerendered page against
+`scripts/page-budgets.json`, and the checker shows itself failing on an
+over-budget fixture before it is trusted to pass the build.
+
 ## How it stays current
 
 Every GitHub Action is pinned by commit SHA with a version comment, and

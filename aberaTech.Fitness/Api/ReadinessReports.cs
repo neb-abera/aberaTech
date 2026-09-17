@@ -1,7 +1,6 @@
 using System.Globalization;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace aberaTech.Fitness.Api;
@@ -31,15 +30,14 @@ internal static class ReadinessReports
     private static readonly double TwelveMiles = 12 * Vdot.MileMeters;
     private static readonly double ThirtyFivePounds = 35 / BodyMass.PoundsPerKg;
 
-    public static async Task<ReadinessDto> BuildAsync(
-        FitnessDbContext database,
-        AthleteSettings row,
-        BodyMetric? latestWeight,
+    public static ReadinessDto Build(
+        TrainingHistory history,
+        ReadinessEvidence evidence,
         IReadOnlyList<MonthlyAerobicPoint> aerobicTrend,
-        LocalDate today,
-        CancellationToken cancellationToken)
+        LocalDate today)
     {
-        var readings = await GatherAsync(database, row, latestWeight, aerobicTrend, today, cancellationToken);
+        var row = history.Row;
+        var readings = Gather(history, evidence, aerobicTrend, today);
 
         var gates = SelectionReadiness.Evaluate(readings.Measurements, row.SelectionDate)
             .Select(g => new GateDto(
@@ -74,14 +72,14 @@ internal static class ReadinessReports
     }
 
     /// <summary>Every measurement the gates score from, and every dated reading behind them.</summary>
-    internal static async Task<Readings> GatherAsync(
-        FitnessDbContext database,
-        AthleteSettings row,
-        BodyMetric? latestWeight,
+    internal static Readings Gather(
+        TrainingHistory history,
+        ReadinessEvidence evidence,
         IReadOnlyList<MonthlyAerobicPoint> aerobicTrend,
-        LocalDate today,
-        CancellationToken cancellationToken)
+        LocalDate today)
     {
+        var row = history.Row;
+        var latestWeight = evidence.LatestWeight;
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
         var since = today.PlusDays(-MeasurementWindowDays);
         var measurements = new Dictionary<string, Measurement>();
@@ -113,18 +111,18 @@ internal static class ReadinessReports
 
         // Rucks: a timed twelve-mile at the load beats any estimate; without
         // one the load-carriage model reads the run engine through the pack.
-        var rucks = await RucksAsync(database, zone, cancellationToken);
+        var rucks = Rucks(history.Activities, zone);
         var ruck = RuckReport(rucks, row, latestWeight, since, measurements);
 
         // Calisthenics: the best recent set of each movement the gates count.
-        var calisthenics = await CalisthenicsReportAsync(database, zone, since, measurements, histories, cancellationToken);
+        var calisthenics = CalisthenicsReport(evidence.Sets, zone, since, measurements, histories);
 
         // Strength: a triple, read back from the Epley estimate the trend already keeps.
-        await StrengthAsync(database, zone, latestWeight, since, measurements, histories, cancellationToken);
+        Strength(evidence.Sets, zone, latestWeight, since, measurements, histories);
 
         // Grip, as a loaded carry; and the bodyweight the athlete's own
         // standards are set against.
-        await CarriesAsync(database, zone, latestWeight, since, measurements, cancellationToken);
+        CarriesIn(evidence.Sets, zone, latestWeight, since, measurements);
         if (latestWeight is { } weighed)
         {
             measurements[SelectionReadiness.Metrics.BodyweightLb] = new Measurement(
@@ -133,11 +131,11 @@ internal static class ReadinessReports
         }
 
         // The fitness test, scored on the published tables.
-        var aftResults = await AftResultsAsync(database, row, today, cancellationToken);
+        var aftResults = evidence.AftResults.Select(r => Score(r, row, today)).ToArray();
         AftMeasurements(aftResults, since, latestWeight, measurements, histories);
 
         // Body composition, and what the selection cohort made of it.
-        var body = await BodyReportAsync(database, since, measurements, histories, cancellationToken);
+        var body = BodyReport(evidence.BodyMetrics, since, measurements, histories);
 
         return new Readings(measurements, histories, ruck, calisthenics, body, aftResults);
     }
@@ -156,16 +154,13 @@ internal static class ReadinessReports
     private static double RaceSeconds(double distanceMeters, AthleteSettings row) =>
         Altitude.AtAltitude(Vdot.MinutesFor(distanceMeters, row.StartVdot) * 60, row.HomeAltitudeMeters);
 
-    private static async Task<IReadOnlyList<(LocalDate Date, Activity Activity)>> RucksAsync(
-        FitnessDbContext database, DateTimeZone zone, CancellationToken cancellationToken)
-    {
-        var rucks = await database.Activities
+    /// <summary>The rucks in the log, which is held oldest first.</summary>
+    private static IReadOnlyList<(LocalDate Date, Activity Activity)> Rucks(
+        IReadOnlyList<Activity> activities, DateTimeZone zone) =>
+        activities
             .Where(a => a.Sport == "ruck" && a.DistanceMeters != null && a.DistanceMeters > 0 && a.DurationSeconds > 0)
-            .OrderBy(a => a.StartedAt)
-            .ToListAsync(cancellationToken);
-
-        return rucks.Select(a => (a.StartedAt.InZone(zone).Date, a)).ToArray();
-    }
+            .Select(a => (a.StartedAt.InZone(zone).Date, a))
+            .ToArray();
 
     private static RuckReportDto RuckReport(
         IReadOnlyList<(LocalDate Date, Activity Activity)> rucks,
@@ -263,20 +258,15 @@ internal static class ReadinessReports
             steps);
     }
 
-    private static async Task<CalisthenicsDto> CalisthenicsReportAsync(
-        FitnessDbContext database,
+    private static CalisthenicsDto CalisthenicsReport(
+        IReadOnlyList<DatedSet> sets,
         DateTimeZone zone,
         LocalDate since,
         Dictionary<string, Measurement> measurements,
-        Dictionary<string, List<DatedValue>> histories,
-        CancellationToken cancellationToken)
+        Dictionary<string, List<DatedValue>> histories)
     {
-        var sets = await database.StrengthSets
-            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
-            .ToListAsync(cancellationToken);
-
         var best = Calisthenics.BestPerDay(sets.Select(x => new BodyweightSet(
-            x.StartedAt.InZone(zone).Date, x.s.Exercise, x.s.Reps, x.s.DurationSeconds, x.s.WeightKg)));
+            x.StartedAt.InZone(zone).Date, x.Set.Exercise, x.Set.Reps, x.Set.DurationSeconds, x.Set.WeightKg)));
 
         var latest = new List<BestSetDto>();
         foreach (var metric in new[]
@@ -300,23 +290,18 @@ internal static class ReadinessReports
     }
 
     /// <summary>The longest farmer's carry at the athlete's own standard load, if one is logged.</summary>
-    private static async Task CarriesAsync(
-        FitnessDbContext database,
+    private static void CarriesIn(
+        IReadOnlyList<DatedSet> sets,
         DateTimeZone zone,
         BodyMetric? weight,
         LocalDate since,
-        Dictionary<string, Measurement> measurements,
-        CancellationToken cancellationToken)
+        Dictionary<string, Measurement> measurements)
     {
         if (weight is not { } w) return;
 
-        var sets = await database.StrengthSets
-            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
-            .Where(x => x.s.WeightKg > 0 && x.s.DistanceMeters != null)
-            .ToListAsync(cancellationToken);
-
         var best = Carries.Longest(
-            sets.Select(x => new LoggedCarry(x.StartedAt.InZone(zone).Date, x.s.Exercise, x.s.WeightKg, x.s.DistanceMeters)),
+            sets.Where(x => x.Set.WeightKg > 0 && x.Set.DistanceMeters != null)
+                .Select(x => new LoggedCarry(x.StartedAt.InZone(zone).Date, x.Set.Exercise, x.Set.WeightKg, x.Set.DistanceMeters)),
             w.WeightKg,
             Carries.StandardBodyweightMultiple,
             since);
@@ -329,19 +314,15 @@ internal static class ReadinessReports
             best.Date);
     }
 
-    private static async Task StrengthAsync(
-        FitnessDbContext database,
+    private static void Strength(
+        IReadOnlyList<DatedSet> all,
         DateTimeZone zone,
         BodyMetric? weight,
         LocalDate since,
         Dictionary<string, Measurement> measurements,
-        Dictionary<string, List<DatedValue>> histories,
-        CancellationToken cancellationToken)
+        Dictionary<string, List<DatedValue>> histories)
     {
-        var sets = await database.StrengthSets
-            .Join(database.Activities, s => s.ActivityId, a => a.Id, (s, a) => new { s, a.StartedAt })
-            .Where(x => x.s.WeightKg > 0 && x.s.Reps >= 1 && x.s.Reps <= OneRepMax.MaxTrustworthyReps)
-            .ToListAsync(cancellationToken);
+        var sets = all.Where(x => OneRepMax.IsEstimable(x.Set.WeightKg, x.Set.Reps)).ToArray();
 
         foreach (var (lift, reps, bodyweightMetric, poundsMetric) in new[]
                  {
@@ -355,9 +336,9 @@ internal static class ReadinessReports
             // Every day the lift was trained, its best estimate: the history a
             // forecast is drawn through.
             var byDay = sets
-                .Where(x => IsLift(x.s.Exercise, lift))
+                .Where(x => IsLift(x.Set.Exercise, lift))
                 .GroupBy(x => x.StartedAt.InZone(zone).Date)
-                .Select(g => (Date: g.Key, E1Rm: g.Max(x => OneRepMax.Epley(x.s.WeightKg, x.s.Reps))))
+                .Select(g => (Date: g.Key, E1Rm: g.Max(x => OneRepMax.Epley(x.Set.WeightKg, x.Set.Reps))))
                 .OrderBy(x => x.Date)
                 .ToArray();
 
@@ -423,16 +404,6 @@ internal static class ReadinessReports
         // standard is written for.
         return lift != "deadlift"
                || !(name.Contains("romanian") || name.Contains("stiff") || name.Contains("single leg") || name.Contains("single-leg"));
-    }
-
-    private static async Task<IReadOnlyList<AftResultDto>> AftResultsAsync(
-        FitnessDbContext database, AthleteSettings row, LocalDate today, CancellationToken cancellationToken)
-    {
-        var results = await database.AftResults
-            .OrderByDescending(r => r.Date)
-            .ToListAsync(cancellationToken);
-
-        return results.Select(r => Score(r, row, today)).ToArray();
     }
 
     /// <summary>One test scored on the athlete's band and scale, as of today.</summary>
@@ -532,15 +503,12 @@ internal static class ReadinessReports
         measurements[metric] = new Measurement(metric, value, Basis.Measured, evidence, on);
     }
 
-    private static async Task<BodyReportDto> BodyReportAsync(
-        FitnessDbContext database,
+    private static BodyReportDto BodyReport(
+        IReadOnlyList<BodyMetric> metrics,
         LocalDate since,
         Dictionary<string, Measurement> measurements,
-        Dictionary<string, List<DatedValue>> histories,
-        CancellationToken cancellationToken)
+        Dictionary<string, List<DatedValue>> histories)
     {
-        var metrics = await database.BodyMetrics.OrderBy(m => m.Date).ToListAsync(cancellationToken);
-
         foreach (var m in metrics)
         {
             Record(histories, SelectionReadiness.Metrics.BodyweightLb, m.Date, m.WeightKg * BodyMass.PoundsPerKg);

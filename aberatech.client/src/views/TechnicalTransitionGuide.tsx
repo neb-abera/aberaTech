@@ -14,7 +14,7 @@ import Typography from "@mui/material/Typography";
 import type React from "react";
 import { Suspense, useState } from "react";
 import { Link } from "react-router";
-import MachineLearningPathwayImage from "../assets/machine_learning_pathway.png";
+import MachineLearningPathwayImage from "../assets/machine_learning_pathway.webp";
 import PageShell from "../components/PageShell";
 import { guides } from "../site/sections";
 
@@ -2202,7 +2202,11 @@ export default function TechnicalTransitionGuide(props: {
               <CardMedia
                 component="img"
                 image={MachineLearningPathwayImage}
-                alt="ETS Briefing Schedule"
+                alt="A pathway through machine learning resources"
+                width={3300}
+                height={2550}
+                loading="lazy"
+                decoding="async"
                 sx={{
                   width: "100%",
                   maxWidth: 1000, // Adjust as needed
@@ -2215,7 +2219,9 @@ export default function TechnicalTransitionGuide(props: {
               />
             </Box>
 
-            {/* Modal/Fullscreen Dialog */}
+            {/* Modal/Fullscreen Dialog. Its content is mounted only while it
+                is open, and it shows the same file the page already has, so
+                opening it costs no second download. */}
             <Dialog open={open} onClose={handleClose} maxWidth="xl">
               {/* Close Button */}
               <IconButton
@@ -2243,9 +2249,13 @@ export default function TechnicalTransitionGuide(props: {
                 <CardMedia
                   component="img"
                   image={MachineLearningPathwayImage}
-                  alt="ETS Briefing Schedule"
+                  alt="A pathway through machine learning resources"
+                  width={3300}
+                  height={2550}
+                  decoding="async"
                   sx={{
                     width: "100%",
+                    height: "auto",
                     maxWidth: "90vw", // Responsive max width
                     maxHeight: "90vh",
                     borderRadius: 0, // Reset border-radius for better fullscreen display

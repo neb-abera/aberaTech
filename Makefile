@@ -39,7 +39,7 @@ export DB_PORT
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest lint fmt check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest lint fmt budget check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -96,11 +96,15 @@ fmt: ## Rewrite files to match biome
 	$(COMPOSE) build lint
 	$(COMPOSE) run --rm lint npx biome check --write .
 
-check: ## The gate CI runs: type check, unit tests, coverage, lint and format
+budget: ## Page weight: the production client build against scripts/page-budgets.json
+	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
+
+check: ## The gate CI runs: type check, unit tests, coverage, lint, format and page weight
 	./scripts/check-required-contexts.sh
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
+	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
 
 image: ## Build the production image the deploy pipeline builds
 	$(DOCKER) build --build-arg IN_DOCKER=true -t $(IMAGE) -f $(DOCKERFILE) .

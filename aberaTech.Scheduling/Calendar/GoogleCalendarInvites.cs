@@ -31,7 +31,9 @@ public sealed class GoogleCalendarInvites(
             return null;
         }
 
-        var credential = await database.HostCalendarCredentials.FirstOrDefaultAsync(cancellationToken);
+        var credential = await database.HostCalendarCredentials
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (credential is null
             || !credential.GrantedScopes.Contains(CalendarAdminEndpoints.EventsScope, StringComparison.Ordinal))
@@ -89,7 +91,9 @@ public sealed class GoogleCalendarInvites(
 
     public async Task DeleteEventAsync(string googleEventId, CancellationToken cancellationToken)
     {
-        var credential = await database.HostCalendarCredentials.FirstOrDefaultAsync(cancellationToken);
+        var credential = await database.HostCalendarCredentials
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (credential is null)
         {

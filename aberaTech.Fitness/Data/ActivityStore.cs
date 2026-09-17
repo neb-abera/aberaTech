@@ -55,6 +55,10 @@ public static class ActivityStore
                 : await database.Activities
                     .Include(a => a.Sets)
                     .Include(a => a.Laps)
+                    // Two collections in one statement multiply: every set
+                    // comes back once per lap. Tracked, because the row is
+                    // about to be rewritten.
+                    .AsSplitQuery()
                     .SingleOrDefaultAsync(
                         a => a.Source == activity.Source && a.ExternalId == activity.ExternalId,
                         cancellationToken);

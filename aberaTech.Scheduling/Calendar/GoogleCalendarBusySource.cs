@@ -45,6 +45,7 @@ public sealed class GoogleCalendarBusySource(
             }
 
             var credential = await database.Set<HostCalendarCredential>()
+                .AsNoTracking()
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (credential is null)

@@ -9,8 +9,8 @@ import { CardMedia } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import ETSScheduleImage from "../assets/ETS_briefing_schedule.jpeg";
-import G1Schedule from "../assets/g1_contact_info.png";
+import ETSScheduleImage from "../assets/ETS_briefing_schedule.webp";
+import G1Schedule from "../assets/g1_contact_info.webp";
 
 export default function NinetyToOneEightyDays() {
   return (
@@ -104,6 +104,12 @@ export default function NinetyToOneEightyDays() {
                   component="img"
                   image={ETSScheduleImage}
                   alt="ETS Briefing Schedule"
+                  // The file's own size: with height auto the browser keeps
+                  // the ratio and holds the space before the image arrives.
+                  width={375}
+                  height={500}
+                  loading="lazy"
+                  decoding="async"
                   sx={{
                     width: "100%",
                     maxWidth: 500, // Adjust width as needed
@@ -163,6 +169,10 @@ export default function NinetyToOneEightyDays() {
                   component="img"
                   image={G1Schedule}
                   alt="Fort Moore G1 Contact Information"
+                  width={860}
+                  height={353}
+                  loading="lazy"
+                  decoding="async"
                   sx={{
                     width: "100%",
                     maxWidth: 800,
@@ -583,6 +593,8 @@ export default function NinetyToOneEightyDays() {
                   <Box
                     component="img"
                     src="https://assets.recruitmilitary.com/images/rm_logo_new_large.png"
+                    loading="lazy"
+                    decoding="async"
                     alt="Veteran Job Fairs"
                     sx={{
                       maxWidth: 400, // Adjust as needed
@@ -651,6 +663,8 @@ export default function NinetyToOneEightyDays() {
                   <Box
                     component="img"
                     src="https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1.jpg"
+                    loading="lazy"
+                    decoding="async"
                     alt="Hiring Events"
                     sx={{
                       maxWidth: 800, // Adjust as needed

@@ -3,7 +3,14 @@
  * cryptography guide came to be shared as "Built by Neb using .NET".
  */
 import { describe, expect, it } from "vitest";
-import { headFor, meta, notFoundMeta, siteName, titleFor } from "../meta";
+import {
+  headFor,
+  heroAvatar,
+  meta,
+  notFoundMeta,
+  siteName,
+  titleFor,
+} from "../meta";
 import { routes } from "../routes";
 
 describe("page metadata", () => {
@@ -68,6 +75,22 @@ describe("the prerendered head", () => {
       '<link rel="canonical" href="https://abera.tech/" />',
     );
     expect(headFor("/guides")).not.toContain("application/ld+json");
+  });
+
+  it("preloads the home page's avatar, and only there", () => {
+    const home = headFor("/");
+
+    expect(home).toContain(
+      `<link rel="preload" as="image" href="${heroAvatar.src}" type="image/webp" fetchpriority="high" />`,
+    );
+    expect(heroAvatar.src).toMatch(/headshot-336.*\.webp$/);
+    expect(headFor("/guides")).not.toContain('rel="preload"');
+  });
+
+  it("still names the full-size headshot, at its stable address, in the structured data", () => {
+    // Search engines were given /headshot.jpg; the smaller avatar the page
+    // draws is a hashed file whose name changes with its bytes.
+    expect(headFor("/")).toContain('"image":"https://abera.tech/headshot.jpg"');
   });
 
   it("escapes what it puts in an attribute", () => {
