@@ -112,6 +112,7 @@ public static class AdminEndpoints
         CancellationToken cancellationToken)
     {
         var session = await database.QueueSessions
+            .AsNoTracking()
             .Include(candidate => candidate.Entries)
             .OrderByDescending(candidate => candidate.OpensAt)
             .FirstOrDefaultAsync(cancellationToken);
@@ -170,12 +171,14 @@ public static class AdminEndpoints
         CancellationToken cancellationToken)
     {
         var upcoming = await database.Outbox
+            .AsNoTracking()
             .Where(message => message.State == DeliveryState.Pending || message.State == DeliveryState.Failed)
             .OrderBy(message => message.NextAttemptAt)
             .Take(MessagesShown)
             .ToListAsync(cancellationToken);
 
         var recent = await database.Outbox
+            .AsNoTracking()
             .Where(message => message.State == DeliveryState.Sent
                               || message.State == DeliveryState.Delivered
                               || message.State == DeliveryState.DeadLettered)

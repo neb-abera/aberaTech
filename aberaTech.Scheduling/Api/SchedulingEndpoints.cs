@@ -151,6 +151,7 @@ public static class SchedulingEndpoints
         // odd one — closing it is a thing a person has to remember at the end of
         // a long afternoon.
         var session = await database.QueueSessions
+            .AsNoTracking()
             .Include(candidate => candidate.Entries)
             .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
 
@@ -185,6 +186,7 @@ public static class SchedulingEndpoints
         }
 
         var rules = await database.AvailabilityRules
+            .AsNoTracking()
             .Where(rule => rule.Active)
             .ToListAsync(cancellationToken);
 
@@ -375,7 +377,11 @@ public static class SchedulingEndpoints
         IClock clock,
         CancellationToken cancellationToken)
     {
+        // Read-only, but with identity resolution kept: the includes loop back
+        // to the entry they started from, and without it that entry would be
+        // materialised twice and stand in the queue twice.
         var entry = await database.QueueEntries
+            .AsNoTrackingWithIdentityResolution()
             .Include(record => record.Session)
             .ThenInclude(session => session!.Entries)
             .FirstOrDefaultAsync(record => record.Id == entryId, cancellationToken);
@@ -511,7 +517,10 @@ public static class SchedulingEndpoints
         // The slot must be one we actually offered. Without this the endpoint
         // would accept any instant at all, including outside working hours and
         // in the past, simply because nothing overlapped it.
-        var rules = await database.AvailabilityRules.Where(rule => rule.Active).ToListAsync(cancellationToken);
+        var rules = await database.AvailabilityRules
+            .AsNoTracking()
+            .Where(rule => rule.Active)
+            .ToListAsync(cancellationToken);
         var today = now.InZone(options.HostZone).Date;
         var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
         var busy = await busySource.GetBusyAsync(horizon, cancellationToken);

@@ -76,7 +76,9 @@ public static class CalendarAdminEndpoints
         SchedulingDbContext database,
         CancellationToken cancellationToken)
     {
-        var credential = await database.HostCalendarCredentials.FirstOrDefaultAsync(cancellationToken);
+        var credential = await database.HostCalendarCredentials
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
 
         return Results.Ok(new
         {

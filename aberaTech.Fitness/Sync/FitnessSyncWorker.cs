@@ -68,7 +68,7 @@ public sealed class FitnessSyncWorker(
         var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         var now = clock.GetCurrentInstant();
 
-        var states = await database.SyncStates.ToDictionaryAsync(s => s.Source, cancellationToken);
+        var states = await database.SyncStates.AsNoTracking().ToDictionaryAsync(s => s.Source, cancellationToken);
 
         if (scope.ServiceProvider.GetService<HevySync>() is { } hevy
             && SyncSchedule.IsDue(SyncSchedule.HevySource, states.GetValueOrDefault(SyncSchedule.HevySource)?.LastRunAt, now))

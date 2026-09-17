@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using aberaTech.Fitness.Data;
+using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace aberaTech.Fitness.Api;
@@ -51,7 +52,8 @@ public static class ProgressEndpoints
         {
             if (!IsKnownKey(key)) return Results.NotFound();
 
-            var row = await database.Documents.FindAsync([key], cancellationToken);
+            var row = await database.Documents.AsNoTracking()
+                .SingleOrDefaultAsync(document => document.Key == key, cancellationToken);
             return row is null
                 ? Results.NotFound()
                 : Results.Content(row.Json, "application/json", Encoding.UTF8);

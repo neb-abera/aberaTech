@@ -1,7 +1,6 @@
 using System.Globalization;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace aberaTech.Fitness.Api;
@@ -84,12 +83,27 @@ internal static class OutlookReports
         FitnessDbContext database,
         double? weeklyHours,
         double compliance,
-        LocalDate today,
+        Instant now,
         CancellationToken cancellationToken)
     {
-        var athlete = await FitnessReports.SnapshotAsync(database, today.Year, cancellationToken);
+        var history = await TrainingHistory.LoadAsync(database, cancellationToken);
+        var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
+
+        return Build(history, evidence, weeklyHours, compliance, now.InUtc().Date, now);
+    }
+
+    /// <summary>The outlook, from a log that has already been read.</summary>
+    internal static OutlookDto Build(
+        TrainingHistory history,
+        ReadinessEvidence evidence,
+        double? weeklyHours,
+        double compliance,
+        LocalDate today,
+        Instant now)
+    {
+        var athlete = FitnessReports.Snapshot(history, now, today.Year);
         var row = athlete.Row;
-        var weight = await database.BodyMetrics.OrderByDescending(m => m.Date).FirstOrDefaultAsync(cancellationToken);
+        var weight = evidence.LatestWeight;
 
         var p = new TrajectoryParameters(
             athlete.AnchorVdot, athlete.ReclaimVdot, athlete.Fit.RatePerMonth.Value, athlete.Fit.Responsiveness.Value);
@@ -100,7 +114,7 @@ internal static class OutlookReports
         var plan = DoseResponse.Allocate(hours, limits).Dose;
         var schedule = DoseSchedule.Constant(plan.Scale(compliance));
 
-        var readings = await ReadinessReports.GatherAsync(database, row, weight, athlete.Trend, today, cancellationToken);
+        var readings = ReadinessReports.Gather(history, evidence, athlete.Trend, today);
 
         var context = new OutlookContext(
             p,
