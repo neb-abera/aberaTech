@@ -169,10 +169,25 @@ RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD
     }'
 
 # Publish .NET server
+#
+# ReadyToRun (the csproj turns it on) compiles for one runtime identifier, and
+# that has to be the one the final stage runs on. TARGETARCH is BuildKit's name
+# for the platform this image is being built for, the same value that picked
+# the aspnet base above, so the two cannot disagree: amd64 in CI and on the
+# container app, arm64 on an Apple laptop. The base is glibc (noble), hence
+# linux- rather than linux-musl-. Framework-dependent still: the runtime comes
+# from the base image, as before.
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "aberaTech.Server/aberaTech.Server.csproj" \
-    -c $BUILD_CONFIGURATION -o /app/publish -p:SkipClientProject=true -p:RestoreLockedMode=true /p:UseAppHost=false
+ARG TARGETARCH
+RUN case "$TARGETARCH" in \
+      amd64) rid=linux-x64 ;; \
+      arm64) rid=linux-arm64 ;; \
+      *) echo "no ReadyToRun runtime identifier for TARGETARCH='$TARGETARCH'" >&2; exit 1 ;; \
+    esac && \
+    dotnet publish "aberaTech.Server/aberaTech.Server.csproj" \
+    -c $BUILD_CONFIGURATION -o /app/publish -p:PublishRuntime="$rid" \
+    -p:SkipClientProject=true -p:RestoreLockedMode=true /p:UseAppHost=false
 
 # Final production-ready stage
 FROM base AS final
