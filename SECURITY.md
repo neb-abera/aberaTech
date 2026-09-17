@@ -71,4 +71,8 @@ In Application Insights these are `traces` rows; filter on
   Add the directive when a sink exists (Cloudflare's or a hosted collector).
 * **Host filtering** is `HostAllowlist` in `appsettings.Production.json`, not
   the framework's `AllowedHosts`, so that `/healthz` and `/readyz` keep
-  answering a platform probe that addresses the container by IP.
+  answering a platform probe that addresses the container by IP. The list
+  names the container app's own default domain exactly, never
+  `*.azurecontainerapps.io`, and an empty list refuses to start outside
+  Development: recreating the app or its environment changes that domain,
+  and the list goes with it.
