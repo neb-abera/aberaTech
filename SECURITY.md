@@ -34,3 +34,28 @@ What to expect:
   vulnerable dependencies
 * OpenSSF Scorecard grades the repository's supply-chain posture weekly
 * secret scanning with push protection
+
+## Security events in the application log
+
+The server writes one structured log entry, in the category
+`aberaTech.Security`, whenever it refuses something a stranger might be
+probing (`aberaTech.Server/SecurityEvents.cs`). Each entry carries the
+resolved client address (`ClientIp`, see `ClientAddress.cs`), the `Method`,
+the `Route` *pattern* and the `Status` — and nothing else. It never carries
+a path (queue and booking paths contain the capability id), a query string,
+a header, a cookie, a key, a phone number, an email address or the
+signed-in account. The event ids are stable, so alerts can be written
+against them; none are configured yet.
+
+| EventId | Name | Level | Meaning |
+|---|---|---|---|
+| 4001 | `RateLimited` | Warning | 429: a rate limit, or the failed-guess limit on the digest key or the Twilio webhook, refused the request |
+| 4002 | `SignInRequired` | Information | 401 from a route behind Google sign-in: no session, or an expired one |
+| 4003 | `AllowlistRefused` | Warning | 403 for a signed-in caller: a Google account that is not on the allowlist (the account is not named) |
+| 4004 | `DigestKeyRejected` | Warning | 401 from `/api/fitness/digest.txt`: a missing or wrong bearer key |
+| 4005 | `WebhookSignatureRejected` | Warning | 403 from `/api/scheduling/sms-status`: a missing or wrong Twilio signature |
+| 4006 | `UnknownCapability` | Warning | 404 from a queue-place or booking route: an id nobody was given, or a stale one |
+| 4007 | `PublicWriteRefused` | Information | 400 from joining the queue or booking: input the form would not have sent |
+
+In Application Insights these are `traces` rows; filter on
+`customDimensions.EventId` or `customDimensions.CategoryName`.
