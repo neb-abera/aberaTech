@@ -1,5 +1,4 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-using System.Threading.RateLimiting;
 using aberaTech.Server;
 using aberaTech.Scheduling;
 using aberaTech.Scheduling.Api;
@@ -10,7 +9,6 @@ using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Compliance;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpOverrides;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
 using aberaTech.Fitness;
@@ -253,14 +251,6 @@ if (fitnessEnabled)
     builder.Services.AddHostedService<FitnessSyncWorker>();
 }
 
-// Rate limiting on everything a stranger can call that writes a row or causes a
-// message to be sent. The booking page is public by design, and a public form
-// wired to an SMS provider is a way to spend somebody else's money; this is the
-// second half of that defence, after restricting destinations to +1.
-//
-// Partitioned by remote address, with a queue limit of zero: excess requests are
-// rejected outright rather than held, because holding them is itself a way to
-// exhaust the server.
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser
 // regardless, but a cache MISS travels origin-to-edge as sent — and the
 // template and Facewoof both learned this the measured way. EnableForHttps is
@@ -268,45 +258,37 @@ if (fitnessEnabled)
 // compressible responses (BREACH needs both in one body).
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+builder.Services.AddSingleton(ClientAddress.Bind(builder.Configuration));
 
-    options.AddPolicy(SchedulingEndpoints.PublicWritePolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
-});
+// Every ceiling on what one visitor can ask for: RateLimits.cs for how often,
+// RequestLimits.cs for how much.
+builder.Services.AddAppRateLimits();
+builder.AddRequestLimits();
 
 var app = builder.Build();
+
+// `dotnet aberaTech.Server.dll migrate`: apply migrations as whoever the
+// connection strings name, and exit without serving. See DatabaseMigrations.
+if (DatabaseMigrations.IsRequested(args))
+{
+    Environment.ExitCode = await DatabaseMigrations.RunAsync(
+        app.Configuration, app.Services.GetRequiredService<ILoggerFactory>());
+    return;
+}
 
 app.UseResponseCompression();
 
 // Container Apps ingress terminates TLS and forwards over HTTP. Without this,
 // every request appears to come from the ingress over plain HTTP: the rate
-// limiter above partitions everyone into one shared bucket — so five booking
-// attempts a minute was the budget for the whole internet, and one hostile
-// caller could spend it — and HTTPS-dependent behaviour never engages. The
-// known-proxy allowlists are cleared because the ingress has no fixed address;
-// nothing reaches this container except through it, and ForwardedLimit stays
-// at its default of one hop, so a spoofed X-Forwarded-For prepended by a
-// caller is ignored in favour of the address the ingress itself appended.
-var forwardedOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-// Clear(), not an empty initializer: the defaults trust only loopback, an
-// empty collection initializer leaves those defaults in place, and a list
-// with entries in it means "trust only these" — cleared lists are how the
-// middleware is told the one hop in front of it has no fixed address.
-forwardedOptions.KnownIPNetworks.Clear();
-forwardedOptions.KnownProxies.Clear();
-app.UseForwardedHeaders(forwardedOptions);
+// limiter above partitions everyone into one shared bucket and
+// HTTPS-dependent behaviour never engages. How many forwarded hops to believe
+// is configuration — ClientAddress:ForwardedHops — and ClientAddress.cs is the
+// one place that reads it.
+app.UseClientAddress();
+
+// Only the site's own names, probes excepted. HostAllowlist.cs says why this is
+// not the framework's AllowedHosts.
+app.UseHostAllowlist();
 
 // Browser hardening headers on every response, static files included.
 //
@@ -410,6 +392,10 @@ app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
 // dead code and every page would serve the empty shell.
 app.UseRouting();
 
+// Outside the rate limiter and authentication, so their refusals pass back
+// through it. SecurityEvents.cs is the security log.
+app.UseSecurityEvents();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -418,6 +404,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRateLimiter();
+app.UseGuessLimits();
+app.UseRequestLimits();
 
 if (adminOptions.IsConfigured)
 {
@@ -436,19 +424,19 @@ if (fitnessEnabled)
 
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
-    // Migrate on start. Reasonable here because this deploys as a single
-    // container app revision with one writer; it would not be reasonable behind
-    // several replicas rolling independently, where two instances can race the
-    // same migration. Revisit that before scaling out, not after.
-    using (var scope = app.Services.CreateScope())
-    {
-        var database = scope.ServiceProvider.GetRequiredService<SchedulingDbContext>();
-        await database.Database.MigrateAsync();
+    // Migrate on start, unless Database:MigrateOnStart says an owner role does
+    // that as its own step (DatabaseMigrations). Reasonable here because this
+    // deploys as a single container app revision with one writer; it would not
+    // be reasonable behind several replicas rolling independently, where two
+    // instances can race the same migration. Revisit that before scaling out,
+    // not after.
+    await app.PrepareAsync<SchedulingDbContext>("scheduling");
 
-        if (app.Environment.IsDevelopment())
-        {
-            await SchedulingDevelopmentData.SeedAsync(database, schedulingOptions);
-        }
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<SchedulingDbContext>();
+        await SchedulingDevelopmentData.SeedAsync(database, schedulingOptions);
     }
 
     app.MapSchedulingEndpoints();
@@ -476,11 +464,7 @@ else
 if (fitnessEnabled)
 {
     // Same single-writer reasoning as the scheduling migration above.
-    using (var scope = app.Services.CreateScope())
-    {
-        var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        await database.Database.MigrateAsync();
-    }
+    await app.PrepareAsync<FitnessDbContext>("fitness");
 
     app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions);
 }
@@ -526,22 +510,20 @@ app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 // A subsystem that is switched off is not a failure. Only something configured
 // and unreachable is, so a deployment with no databases is still ready, exactly
 // as it is still healthy.
-app.MapGet("/readyz", async (IServiceProvider services, CancellationToken cancellationToken) =>
+//
+// The answer is shared for two seconds (ReadinessProbe.cs): the route is
+// unauthenticated and every evaluation opens database connections.
+var readiness = new ReadinessProbe(TimeSpan.FromSeconds(2), TimeProvider.System, async deadline =>
 {
-    // A hung database must not hang the probe; an unanswered check inside this
-    // budget is a failed check.
-    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-    deadline.CancelAfter(TimeSpan.FromSeconds(5));
-
     async Task<ReadinessCheck> Check<TContext>(string name, bool configured) where TContext : DbContext
     {
         if (!configured) return Readiness.NotConfigured(name);
 
         try
         {
-            using var scope = services.CreateScope();
+            using var scope = app.Services.CreateScope();
             var database = scope.ServiceProvider.GetRequiredService<TContext>();
-            return await database.Database.CanConnectAsync(deadline.Token)
+            return await database.Database.CanConnectAsync(deadline)
                 ? Readiness.Reachable(name)
                 : Readiness.Unreachable(name, "unreachable");
         }
@@ -553,12 +535,16 @@ app.MapGet("/readyz", async (IServiceProvider services, CancellationToken cancel
         }
     }
 
-    var report = Readiness.From(
+    return Readiness.From(
     [
         await Check<SchedulingDbContext>("scheduling-db", !string.IsNullOrWhiteSpace(connectionString)),
         await Check<FitnessDbContext>("fitness-db", fitnessEnabled)
     ]);
+});
 
+app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
+{
+    var report = await readiness.GetAsync(cancellationToken);
     return Results.Json(report, statusCode: report.StatusCode);
 });
 
