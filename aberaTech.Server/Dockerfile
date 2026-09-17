@@ -44,6 +44,22 @@ RUN echo "Contents of /client/dist (to verify React assets exist):" && \
     echo "Contents of /client/dist/assets:" && \
     ls -l /client/dist/assets
 
+# Page weight budgets. A leaf, like clienttest below: the production image
+# never pays for it, but it measures the very build the production image
+# ships, because it sits on top of the clientbuild stage rather than building
+# again.
+#
+# The self-test runs first, every time: it shows the checker failing on
+# fixtures that are over budget before the checker is trusted to say this
+# build is not. Node comes from nodebase, so there is no version to pin here.
+#
+#   docker build --target clientbudget -f aberaTech.Server/Dockerfile .
+#   make budget
+FROM clientbuild AS clientbudget
+COPY ["scripts/check-page-budgets.mjs", "scripts/check-page-budgets.selftest.mjs", "scripts/page-budgets.json", "/budget/"]
+RUN node /budget/check-page-budgets.selftest.mjs && \
+    node /budget/check-page-budgets.mjs /client/dist /budget/page-budgets.json
+
 # Client development server.
 #
 # Holds the dependency tree and nothing else: compose.yaml bind mounts the

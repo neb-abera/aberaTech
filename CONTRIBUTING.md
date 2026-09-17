@@ -17,6 +17,7 @@ make dev        # hot reloading dev server
 make test       # client unit tests, against the working tree
 make servertest # scheduling unit tests, against the working tree
 make lint       # biome lint and format check
+make budget     # page weight, in bytes, against scripts/page-budgets.json
 make check      # the hermetic gate CI runs, built from the Dockerfile alone
 ```
 
@@ -25,8 +26,17 @@ of this repository run side by side without colliding and `make clean` only
 takes down the copy you are standing in. `make ports` says where yours is.
 
 `make check` builds the same Dockerfile stages CI builds (`clienttest`,
-`clientlint`, `servertest`), so if it is green on your machine, CI will
-agree — both run the same containers.
+`clientlint`, `servertest`, `clientbudget`), so if it is green on your
+machine, CI will agree — both run the same containers.
+
+`make budget` fails when the production client build outgrows
+`scripts/page-budgets.json`: the entry script and stylesheet, what the home
+page fetches first, and each prerendered page, gzipped. The numbers sit about
+10% above what was measured when they were set, so ordinary work does not trip
+them and a heavy dependency or an inlined blob does. When growth is
+deliberate, raise the number in the same pull request and say why in its
+description; a new prerendered page needs a budget of its own, and the
+failure message prints the size to start from.
 
 The server tests are build-and-run gates, never timing gates: a shared machine
 makes wall-clock numbers noise. The tests that time a fit print what they
