@@ -199,6 +199,10 @@ if (fitnessEnabled)
     // development bypass needs it as much as the signed-in path does.
     builder.Services.AddSingleton<PosteriorCache>();
 
+    // And one copy of each expensive page per version of it; see
+    // FitnessOutputCache for who may be served from it and what evicts it.
+    builder.Services.AddFitnessOutputCache();
+
     // Its own data source: a different database on the same shared server, so
     // it cannot share scheduling's. Keyed, because the container can only hold
     // one unkeyed NpgsqlDataSource and scheduling already is it.
@@ -419,6 +423,15 @@ if (adminOptions.IsConfigured)
 {
     app.UseAuthentication();
     app.UseAuthorization();
+}
+
+// After authentication and authorization, never before: the cached fitness
+// pages are the owner's, and a request that is not the owner's has to be
+// turned away before the cache is asked anything. After routing as well,
+// since the policy is endpoint metadata.
+if (fitnessEnabled)
+{
+    app.UseOutputCache();
 }
 
 if (!string.IsNullOrWhiteSpace(connectionString))
