@@ -8,7 +8,7 @@ import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { tagline } from "../site/meta";
+import { heroAvatar, tagline } from "../site/meta";
 import { pageBackground } from "../theme/pageBackground";
 
 /**
@@ -56,11 +56,23 @@ export default function Hero() {
           sx={{ alignItems: "center", width: { xs: "100%", sm: "70%" } }}
         >
           {/* The same crop as LinkedIn, so the two profiles read as one
-              person. Served from /headshot.jpg rather than a hashed asset so
-              the structured data in site/meta.ts can name a stable URL. */}
+              person. /headshot.jpg stays where it is, full size under a
+              stable URL, for the structured data in site/meta.ts to name;
+              what is drawn here is that picture at twice the avatar's
+              largest size, a sixth of the bytes. It is the largest thing in
+              the first screen, so the home page preloads it (site/meta.ts)
+              and the browser is told not to queue it behind anything. */}
           <Avatar
-            src="/headshot.jpg"
+            src={heroAvatar.src}
             alt="Neb Abera"
+            slotProps={{
+              img: {
+                width: heroAvatar.size,
+                height: heroAvatar.size,
+                fetchPriority: "high",
+                decoding: "async",
+              },
+            }}
             sx={{
               width: { xs: 144, sm: 168 },
               height: { xs: 144, sm: 168 },

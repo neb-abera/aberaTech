@@ -1,6 +1,7 @@
 using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.IntervalsIcu;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -17,6 +18,7 @@ public sealed class IntervalsIcuSync(
     FitnessDbContext database,
     IntervalsIcuClient icu,
     PosteriorCache cache,
+    IOutputCacheStore pages,
     IClock clock,
     ILogger<IntervalsIcuSync> logger)
 {
@@ -83,6 +85,7 @@ public sealed class IntervalsIcuSync(
                 var outcome = await ActivityStore.UpsertAsync(database, batch, cancellationToken);
                 added = outcome.Added;
                 if (added > 0) cache.Invalidate();
+                await pages.EvictFitnessAsync();
             }
 
             state.LastOutcome = $"{fetched} seen, {added} new";

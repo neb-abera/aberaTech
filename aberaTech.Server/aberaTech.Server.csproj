@@ -11,6 +11,34 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
+  <!--
+    Publish with native code already in the assemblies (ReadyToRun), so a cold
+    container serves its first request without first JIT-compiling the whole
+    startup path. Every deploy, restart and new replica is a cold start, and
+    somebody's request is the first one. The IL stays in the assemblies and tiered
+    compilation still re-optimises the hot paths from it, so steady-state speed
+    is unchanged; the cost is a larger image.
+
+    Publish only: build, test and F5 are untouched. It needs a runtime
+    identifier, which the Dockerfile's publish stage derives from the platform
+    the image is being built for and passes as PublishRuntime. Not as -r: a
+    runtime identifier given on the command line is a global property, flows
+    into the three referenced libraries, and fails their locked-mode restore,
+    because their lock files rightly name no runtime. Set here it stays in
+    this project, and ReadyToRun compiles every assembly in the publish output
+    whichever project built it. Both identifiers are listed so this project's
+    lock file covers whichever one is asked for.
+
+    Deliberately not InvariantGlobalization: NodaTime and the formatting in
+    the fitness reports want ICU.
+  -->
+  <PropertyGroup>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(PublishRuntime)' != ''">$(PublishRuntime)</RuntimeIdentifier>
+    <SelfContained Condition="'$(PublishRuntime)' != ''">false</SelfContained>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />

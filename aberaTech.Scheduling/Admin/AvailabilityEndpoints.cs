@@ -110,7 +110,9 @@ public static class AvailabilityEndpoints
         SchedulingOptions options,
         CancellationToken cancellationToken)
     {
-        var rules = await database.AvailabilityRules.ToListAsync(cancellationToken);
+        var rules = await database.AvailabilityRules
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
         // Always seven days back, whether or not a rule exists for each. An
         // editor that only shows the days already configured gives you no way

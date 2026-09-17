@@ -82,6 +82,9 @@ public static class FitnessEndpoints
         // skipped entirely, decided by FitnessGate, never by this default.
         var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group;
 
+        // Whatever a write changed, the cached pages may have read.
+        api.EvictOnWrite();
+
         // Who am I — the one anonymous route, so the page can decide whether to
         // show a sign-in button or the dashboard. Discloses nothing but the
         // fact the feature exists, which the navigation already does.
@@ -100,28 +103,30 @@ public static class FitnessEndpoints
         });
 
         // The week in one page, for the dashboard.
-        api.MapGet("/digest", async (FitnessDbContext database, CancellationToken cancellationToken) =>
-            Results.Ok(await DigestReports.BuildAsync(database, UtcToday(), cancellationToken)));
+        api.MapGet("/digest", async (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
+            Results.Ok(await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken)))
+            .CacheOutput(FitnessOutputCache.PolicyName);
 
         // The same page as text, for the morning brief: one bearer key, no
         // sign-in. Mapped only when a key of real length is configured, and
         // compared in constant time, because a fitness log is health data.
         if (options.HasDigestKey)
         {
-            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, CancellationToken cancellationToken) =>
+            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
             {
                 if (!DigestKeyAllows(context.Request.Headers.Authorization.ToString(), options.DigestKey))
                 {
                     return Results.Unauthorized();
                 }
 
-                var digest = await DigestReports.BuildAsync(database, UtcToday(), cancellationToken);
+                var digest = await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken);
                 return Results.Text(digest.Text + "\n", "text/plain; charset=utf-8");
             });
         }
 
-        api.MapGet("/summary", (FitnessDbContext database, CancellationToken cancellationToken) =>
-            FitnessReports.SummaryAsync(database, cancellationToken));
+        api.MapGet("/summary", (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
+            FitnessReports.SummaryAsync(database, clock, cancellationToken))
+            .CacheOutput(FitnessOutputCache.PolicyName);
 
         api.MapGet("/citations", () => Results.Ok(Citations.All));
 
@@ -133,6 +138,7 @@ public static class FitnessEndpoints
         // date it is due, under a named training week.
         api.MapGet("/readiness/outlook", async (
             FitnessDbContext database,
+            IClock clock,
             double? weeklyHours,
             double? compliance,
             CancellationToken cancellationToken) =>
@@ -140,10 +146,9 @@ public static class FitnessEndpoints
             if (weeklyHours is < 0 or > 40) return Fail("weeklyHours 0-40.");
             if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
 
-            var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
             return Results.Ok(await OutlookReports.BuildAsync(
-                database, weeklyHours, compliance ?? 1.0, today, cancellationToken));
-        });
+                database, weeklyHours, compliance ?? 1.0, clock.GetCurrentInstant(), cancellationToken));
+        }).CacheOutput(FitnessOutputCache.PolicyName);
 
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide
@@ -229,7 +234,7 @@ public static class FitnessEndpoints
                 return Fail("Out-of-range goal parameters.");
             }
 
-            var settings = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+            var settings = await database.Settings.AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
                            ?? new AthleteSettings { Id = 1 };
 
             return Results.Ok(await FitnessReports.GoalAsync(
@@ -367,7 +372,7 @@ public static class FitnessEndpoints
 
             await database.SaveChangesAsync(cancellationToken);
 
-            var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
+            var row = await database.Settings.AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, cancellationToken)
                       ?? new AthleteSettings { Id = 1 };
             var today = SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
             return Results.Ok(ReadinessReports.Score(existing, row, today));
@@ -602,9 +607,6 @@ public static class FitnessEndpoints
             Encoding.UTF8.GetBytes(authorizationHeader[scheme.Length..].Trim()),
             Encoding.UTF8.GetBytes(digestKey.Trim()));
     }
-
-    private static LocalDate UtcToday() =>
-        SystemClock.Instance.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb["Etc/UTC"]).Date;
 
     private static IResult Fail(string message) =>
         Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);

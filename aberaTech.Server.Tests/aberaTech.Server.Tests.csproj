@@ -12,6 +12,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!-- The fitness endpoint tests count database commands, which only a
+         relational provider sends; SQLite is the one that needs no server. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <!-- Line-coverage collection (the "XPlat Code Coverage" collector); the
          Dockerfile's servertest stage parses the cobertura report and fails
@@ -22,6 +25,10 @@
     </PackageReference>
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Fitness\Golden\*.json" />
   </ItemGroup>
 
   <ItemGroup>

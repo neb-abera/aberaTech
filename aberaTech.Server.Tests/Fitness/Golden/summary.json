@@ -1,0 +1,3951 @@
+{
+  "settings": {
+    "referenceHr": 150,
+    "ltSecondsPerKm": 270,
+    "planMinutesPerWeek": 240,
+    "startVdot": 44,
+    "vdotMeasuredOn": "2026-05-06",
+    "currentWeightKg": 81.4,
+    "birthYear": 1992,
+    "female": false,
+    "availableHoursPerWeek": 7,
+    "sustainedWeeklyHours": 6,
+    "pastPeakDistanceMeters": 3218.688,
+    "pastPeakSeconds": 750,
+    "pastPeakYear": 2019,
+    "pastPeakWeightKg": 78,
+    "goalWeightKg": null,
+    "maxWeightAdjustmentFraction": 0.1,
+    "homeAltitudeMeters": 300,
+    "selectionDate": "2027-01-11",
+    "ltHr": 172
+  },
+  "aerobicTrend": [
+    {
+      "month": "2025-12",
+      "medianSecPerKm": 371.48,
+      "runs": 5,
+      "indoorRuns": 1
+    },
+    {
+      "month": "2026-01",
+      "medianSecPerKm": 365.295,
+      "runs": 9,
+      "indoorRuns": 1
+    },
+    {
+      "month": "2026-02",
+      "medianSecPerKm": 358.97249999999997,
+      "runs": 8,
+      "indoorRuns": 1
+    },
+    {
+      "month": "2026-03",
+      "medianSecPerKm": 350.895,
+      "runs": 9,
+      "indoorRuns": 2
+    },
+    {
+      "month": "2026-04",
+      "medianSecPerKm": 343.40250000000003,
+      "runs": 8,
+      "indoorRuns": 1
+    },
+    {
+      "month": "2026-05",
+      "medianSecPerKm": 336,
+      "runs": 9,
+      "indoorRuns": 2
+    },
+    {
+      "month": "2026-06",
+      "medianSecPerKm": 330.0375,
+      "runs": 4,
+      "indoorRuns": 0
+    }
+  ],
+  "weeklyVolume": [
+    {
+      "weekStart": "2025-12-15",
+      "minutes": 254.2
+    },
+    {
+      "weekStart": "2025-12-22",
+      "minutes": 278
+    },
+    {
+      "weekStart": "2025-12-29",
+      "minutes": 262.9
+    },
+    {
+      "weekStart": "2026-01-05",
+      "minutes": 281.7
+    },
+    {
+      "weekStart": "2026-01-12",
+      "minutes": 272.5
+    },
+    {
+      "weekStart": "2026-01-19",
+      "minutes": 242.4
+    },
+    {
+      "weekStart": "2026-01-26",
+      "minutes": 280.9
+    },
+    {
+      "weekStart": "2026-02-02",
+      "minutes": 247.5
+    },
+    {
+      "weekStart": "2026-02-09",
+      "minutes": 289.5
+    },
+    {
+      "weekStart": "2026-02-16",
+      "minutes": 260.3
+    },
+    {
+      "weekStart": "2026-02-23",
+      "minutes": 247.1
+    },
+    {
+      "weekStart": "2026-03-02",
+      "minutes": 264.8
+    },
+    {
+      "weekStart": "2026-03-09",
+      "minutes": 255.6
+    },
+    {
+      "weekStart": "2026-03-16",
+      "minutes": 277.8
+    },
+    {
+      "weekStart": "2026-03-23",
+      "minutes": 264
+    },
+    {
+      "weekStart": "2026-03-30",
+      "minutes": 231.4
+    },
+    {
+      "weekStart": "2026-04-06",
+      "minutes": 273.3
+    },
+    {
+      "weekStart": "2026-04-13",
+      "minutes": 243
+    },
+    {
+      "weekStart": "2026-04-20",
+      "minutes": 281.4
+    },
+    {
+      "weekStart": "2026-04-27",
+      "minutes": 328.7
+    },
+    {
+      "weekStart": "2026-05-04",
+      "minutes": 239
+    },
+    {
+      "weekStart": "2026-05-11",
+      "minutes": 260.3
+    },
+    {
+      "weekStart": "2026-05-18",
+      "minutes": 248.3
+    },
+    {
+      "weekStart": "2026-05-25",
+      "minutes": 265.8
+    },
+    {
+      "weekStart": "2026-06-01",
+      "minutes": 256.5
+    },
+    {
+      "weekStart": "2026-06-08",
+      "minutes": 227.1
+    }
+  ],
+  "strengthTrend": [
+    {
+      "date": "2025-12-19",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 94
+    },
+    {
+      "date": "2025-12-19",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 123.1
+    },
+    {
+      "date": "2025-12-19",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2025-12-21",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 143.8
+    },
+    {
+      "date": "2025-12-21",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2025-12-21",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 93.8
+    },
+    {
+      "date": "2025-12-21",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2025-12-26",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 95
+    },
+    {
+      "date": "2025-12-26",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 124
+    },
+    {
+      "date": "2025-12-26",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2025-12-28",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 144.7
+    },
+    {
+      "date": "2025-12-28",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2025-12-28",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 94.2
+    },
+    {
+      "date": "2025-12-28",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-01-02",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 95.9
+    },
+    {
+      "date": "2026-01-02",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 125
+    },
+    {
+      "date": "2026-01-02",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-01-04",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 145.6
+    },
+    {
+      "date": "2026-01-04",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-01-04",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 94.7
+    },
+    {
+      "date": "2026-01-04",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-01-09",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 96.8
+    },
+    {
+      "date": "2026-01-09",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 126
+    },
+    {
+      "date": "2026-01-09",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-01-11",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 146.6
+    },
+    {
+      "date": "2026-01-11",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-01-11",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 95.2
+    },
+    {
+      "date": "2026-01-11",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-01-16",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 97.7
+    },
+    {
+      "date": "2026-01-16",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 127
+    },
+    {
+      "date": "2026-01-16",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-01-18",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 147.5
+    },
+    {
+      "date": "2026-01-18",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-01-18",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 95.7
+    },
+    {
+      "date": "2026-01-18",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-01-23",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 98.6
+    },
+    {
+      "date": "2026-01-23",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 128
+    },
+    {
+      "date": "2026-01-23",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-01-25",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 148.4
+    },
+    {
+      "date": "2026-01-25",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-01-25",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 96.2
+    },
+    {
+      "date": "2026-01-25",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-01-30",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 99.6
+    },
+    {
+      "date": "2026-01-30",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 128.9
+    },
+    {
+      "date": "2026-01-30",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-02-01",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 149.3
+    },
+    {
+      "date": "2026-02-01",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-02-01",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 96.7
+    },
+    {
+      "date": "2026-02-01",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-02-06",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 100.5
+    },
+    {
+      "date": "2026-02-06",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 129.9
+    },
+    {
+      "date": "2026-02-06",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-02-08",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 150.3
+    },
+    {
+      "date": "2026-02-08",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-02-08",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 97.2
+    },
+    {
+      "date": "2026-02-08",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-02-13",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 101.4
+    },
+    {
+      "date": "2026-02-13",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 130.9
+    },
+    {
+      "date": "2026-02-13",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-02-15",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 151.2
+    },
+    {
+      "date": "2026-02-15",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-02-15",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 97.7
+    },
+    {
+      "date": "2026-02-15",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-02-20",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 102.3
+    },
+    {
+      "date": "2026-02-20",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 131.9
+    },
+    {
+      "date": "2026-02-20",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-02-22",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 152.1
+    },
+    {
+      "date": "2026-02-22",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-02-22",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 98.2
+    },
+    {
+      "date": "2026-02-22",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-02-27",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 103.3
+    },
+    {
+      "date": "2026-02-27",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 132.9
+    },
+    {
+      "date": "2026-02-27",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-03-01",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 153
+    },
+    {
+      "date": "2026-03-01",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-03-01",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 98.7
+    },
+    {
+      "date": "2026-03-01",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-03-06",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 104.2
+    },
+    {
+      "date": "2026-03-06",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 133.8
+    },
+    {
+      "date": "2026-03-06",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-03-08",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 154
+    },
+    {
+      "date": "2026-03-08",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-03-08",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 99.1
+    },
+    {
+      "date": "2026-03-08",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-03-13",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 105.1
+    },
+    {
+      "date": "2026-03-13",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 134.8
+    },
+    {
+      "date": "2026-03-13",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-03-15",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 154.9
+    },
+    {
+      "date": "2026-03-15",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-03-15",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 99.6
+    },
+    {
+      "date": "2026-03-15",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-03-20",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 106
+    },
+    {
+      "date": "2026-03-20",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 135.8
+    },
+    {
+      "date": "2026-03-20",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-03-22",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 155.8
+    },
+    {
+      "date": "2026-03-22",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-03-22",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 100.1
+    },
+    {
+      "date": "2026-03-22",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-03-27",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 107
+    },
+    {
+      "date": "2026-03-27",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 136.8
+    },
+    {
+      "date": "2026-03-27",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-03-29",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 156.7
+    },
+    {
+      "date": "2026-03-29",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-03-29",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 100.6
+    },
+    {
+      "date": "2026-03-29",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-04-03",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 107.9
+    },
+    {
+      "date": "2026-04-03",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 137.8
+    },
+    {
+      "date": "2026-04-03",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-04-05",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 157.7
+    },
+    {
+      "date": "2026-04-05",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-04-05",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 101.1
+    },
+    {
+      "date": "2026-04-05",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-04-10",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 108.8
+    },
+    {
+      "date": "2026-04-10",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 138.7
+    },
+    {
+      "date": "2026-04-10",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-04-12",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 158.6
+    },
+    {
+      "date": "2026-04-12",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-04-12",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 101.6
+    },
+    {
+      "date": "2026-04-12",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-04-17",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 109.7
+    },
+    {
+      "date": "2026-04-17",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 139.7
+    },
+    {
+      "date": "2026-04-17",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-04-19",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 159.5
+    },
+    {
+      "date": "2026-04-19",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-04-19",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 102.1
+    },
+    {
+      "date": "2026-04-19",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-04-24",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 110.7
+    },
+    {
+      "date": "2026-04-24",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 140.7
+    },
+    {
+      "date": "2026-04-24",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-04-26",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 160.4
+    },
+    {
+      "date": "2026-04-26",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-04-26",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 102.6
+    },
+    {
+      "date": "2026-04-26",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-05-01",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 111.6
+    },
+    {
+      "date": "2026-05-01",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 141.7
+    },
+    {
+      "date": "2026-05-01",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-05-03",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 161.3
+    },
+    {
+      "date": "2026-05-03",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-05-03",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 103.1
+    },
+    {
+      "date": "2026-05-03",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-05-08",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 112.5
+    },
+    {
+      "date": "2026-05-08",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 142.7
+    },
+    {
+      "date": "2026-05-08",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-05-10",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 162.3
+    },
+    {
+      "date": "2026-05-10",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-05-10",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 103.6
+    },
+    {
+      "date": "2026-05-10",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-05-15",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 113.4
+    },
+    {
+      "date": "2026-05-15",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 143.6
+    },
+    {
+      "date": "2026-05-15",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-05-17",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 163.2
+    },
+    {
+      "date": "2026-05-17",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-05-17",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 104
+    },
+    {
+      "date": "2026-05-17",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-05-22",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 114.4
+    },
+    {
+      "date": "2026-05-22",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 144.6
+    },
+    {
+      "date": "2026-05-22",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-05-24",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 164.1
+    },
+    {
+      "date": "2026-05-24",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-05-24",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 104.5
+    },
+    {
+      "date": "2026-05-24",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-05-29",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 115.3
+    },
+    {
+      "date": "2026-05-29",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 145.6
+    },
+    {
+      "date": "2026-05-29",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-05-31",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 165
+    },
+    {
+      "date": "2026-05-31",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-05-31",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 105
+    },
+    {
+      "date": "2026-05-31",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-06-05",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 116.2
+    },
+    {
+      "date": "2026-06-05",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 146.6
+    },
+    {
+      "date": "2026-06-05",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-06-07",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 166
+    },
+    {
+      "date": "2026-06-07",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-06-07",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 105.5
+    },
+    {
+      "date": "2026-06-07",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    },
+    {
+      "date": "2026-06-12",
+      "exercise": "Front Squat (Barbell)",
+      "e1RmKg": 117.1
+    },
+    {
+      "date": "2026-06-12",
+      "exercise": "Squat (Barbell)",
+      "e1RmKg": 147.6
+    },
+    {
+      "date": "2026-06-12",
+      "exercise": "Bulgarian Split Squat",
+      "e1RmKg": 32
+    },
+    {
+      "date": "2026-06-14",
+      "exercise": "Deadlift (Barbell)",
+      "e1RmKg": 166.9
+    },
+    {
+      "date": "2026-06-14",
+      "exercise": "Romanian Deadlift (Barbell)",
+      "e1RmKg": 114
+    },
+    {
+      "date": "2026-06-14",
+      "exercise": "Bench Press (Barbell)",
+      "e1RmKg": 106
+    },
+    {
+      "date": "2026-06-14",
+      "exercise": "Incline Bench Press (Dumbbell)",
+      "e1RmKg": 40
+    }
+  ],
+  "highlights": [
+    {
+      "kind": "strength-pr",
+      "headline": "Front Squat (Barbell): new estimated 1RM 117",
+      "evidence": "Previous best 116; Epley estimate from 2026-06-12.",
+      "positive": true
+    },
+    {
+      "kind": "strength-pr",
+      "headline": "Squat (Barbell): new estimated 1RM 148",
+      "evidence": "Previous best 147; Epley estimate from 2026-06-12.",
+      "positive": true
+    },
+    {
+      "kind": "strength-pr",
+      "headline": "Deadlift (Barbell): new estimated 1RM 167",
+      "evidence": "Previous best 166; Epley estimate from 2026-06-14.",
+      "positive": true
+    },
+    {
+      "kind": "strength-pr",
+      "headline": "Bench Press (Barbell): new estimated 1RM 106",
+      "evidence": "Previous best 106; Epley estimate from 2026-06-14.",
+      "positive": true
+    },
+    {
+      "kind": "durability-steady",
+      "headline": "Load carried well: 0.91\u00D7 the four-week average",
+      "evidence": "Inside the 0.8\u20131.3 band, monotony 1.4, 4 rest days in the last 7. Keep the build to this shape.",
+      "positive": true
+    }
+  ],
+  "trainingPaces": [
+    {
+      "zone": "E",
+      "name": "Easy",
+      "purpose": "aerobic base \u2014 where Zone 2 volume lives",
+      "fastSecPerKm": 325,
+      "slowSecPerKm": 389
+    },
+    {
+      "zone": "M",
+      "name": "Marathon",
+      "purpose": "steady long efforts and ruck-pace calibration",
+      "fastSecPerKm": 294,
+      "slowSecPerKm": 322
+    },
+    {
+      "zone": "T",
+      "name": "Threshold",
+      "purpose": "cruise intervals and tempo, comfortably hard",
+      "fastSecPerKm": 283,
+      "slowSecPerKm": 297
+    },
+    {
+      "zone": "I",
+      "name": "Interval",
+      "purpose": "VO2max work, 3\u20135 minute repeats",
+      "fastSecPerKm": 255,
+      "slowSecPerKm": 266
+    },
+    {
+      "zone": "R",
+      "name": "Repetition",
+      "purpose": "speed and economy \u2014 strides live here",
+      "fastSecPerKm": 236,
+      "slowSecPerKm": 245
+    }
+  ],
+  "measuredDose": {
+    "easyHours": 3.565380208333332,
+    "thresholdHours": 0,
+    "intervalHours": 0.36249999999999993,
+    "strengthHours": 1.8333333333333328,
+    "runningHours": 3.927880208333332,
+    "strain": 7.946630208333331,
+    "easyShare": 0.9077110347635029,
+    "zones": [
+      {
+        "zone": "Easy",
+        "hours": 3.565380208333332,
+        "strain": 3.565380208333332,
+        "marginalVdotPerHour": 1.5193376120951454
+      },
+      {
+        "zone": "Threshold",
+        "hours": 0,
+        "strain": 0,
+        "marginalVdotPerHour": 2.856
+      },
+      {
+        "zone": "Interval",
+        "hours": 0.36249999999999993,
+        "strain": 1.6312499999999996,
+        "marginalVdotPerHour": 1.8434446049860604
+      },
+      {
+        "zone": "Strength",
+        "hours": 1.8333333333333328,
+        "strain": 2.749999999999999,
+        "marginalVdotPerHour": 0.3175516649182959
+      }
+    ]
+  },
+  "measuredDoseSteps": [
+    {
+      "label": "Your current week, from the log",
+      "expression": "48 sessions over 8 weeks, 24 of them split lap by lap, the rest placed by average pace against your own bands",
+      "value": "3.6 h easy, 0.0 h threshold, 0.4 h interval, 1.8 h strength",
+      "citationId": "daniels-vdot"
+    }
+  ],
+  "deficiencySpread": 0.2223611111111112,
+  "activityCount": 156,
+  "readiness": {
+    "selectionDate": "2027-01-11",
+    "gates": [
+      {
+        "id": "aft-combat",
+        "name": "AFT combat standard",
+        "purpose": "The fitness test every combat specialty has to pass, and the score the recruiter sees first.",
+        "weeksBeforeSelection": 52,
+        "dueOn": "2026-01-12",
+        "status": "Pass",
+        "passed": 2,
+        "known": 2,
+        "requirements": [
+          {
+            "metric": "aft-lowest-event",
+            "label": "Lowest AFT event",
+            "comparison": "AtLeast",
+            "target": 60,
+            "unit": "pts",
+            "citationId": "army-aft-2025",
+            "status": "Pass",
+            "current": {
+              "metric": "aft-lowest-event",
+              "value": 88,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 28 pts"
+          },
+          {
+            "metric": "aft-total",
+            "label": "AFT total",
+            "comparison": "AtLeast",
+            "target": 350,
+            "unit": "pts",
+            "citationId": "army-aft-2025",
+            "status": "Pass",
+            "current": {
+              "metric": "aft-total",
+              "value": 469,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 119 pts"
+          }
+        ],
+        "untracked": []
+      },
+      {
+        "id": "sfas-day-one",
+        "name": "SFAS day-one minimums",
+        "purpose": "Under any of these on the first morning and the course is over before it starts. A year out, these should already be comfortable.",
+        "weeksBeforeSelection": 52,
+        "dueOn": "2026-01-12",
+        "status": "Pass",
+        "passed": 3,
+        "known": 3,
+        "requirements": [
+          {
+            "metric": "run-2mi",
+            "label": "Two-mile run",
+            "comparison": "AtMost",
+            "target": 912,
+            "unit": "s",
+            "citationId": "sfas-day-one",
+            "status": "Pass",
+            "current": {
+              "metric": "run-2mi",
+              "value": 900,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 0:12"
+          },
+          {
+            "metric": "hand-release-push-ups",
+            "label": "Hand-release push-ups",
+            "comparison": "AtLeast",
+            "target": 28,
+            "unit": "reps",
+            "citationId": "sfas-day-one",
+            "status": "Pass",
+            "current": {
+              "metric": "hand-release-push-ups",
+              "value": 45,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 17 reps"
+          },
+          {
+            "metric": "pull-ups",
+            "label": "Pull-ups",
+            "comparison": "AtLeast",
+            "target": 6,
+            "unit": "reps",
+            "citationId": "sfas-day-one",
+            "status": "Pass",
+            "current": {
+              "metric": "pull-ups",
+              "value": 18,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 12 reps"
+          }
+        ],
+        "untracked": []
+      },
+      {
+        "id": "selection-prep-entry",
+        "name": "Selection Prep entry test",
+        "purpose": "What Evoke expects before the final fifteen-week block; it has to be passed before that block can start.",
+        "weeksBeforeSelection": 20,
+        "dueOn": "2026-08-24",
+        "status": "Fail",
+        "passed": 5,
+        "known": 7,
+        "requirements": [
+          {
+            "metric": "run-2mi",
+            "label": "Two-mile run",
+            "comparison": "AtMost",
+            "target": 840,
+            "unit": "s",
+            "citationId": "evoke-selection-prep",
+            "status": "Fail",
+            "current": {
+              "metric": "run-2mi",
+              "value": 900,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 1:00"
+          },
+          {
+            "metric": "run-5mi",
+            "label": "Five-mile run",
+            "comparison": "AtMost",
+            "target": 2700,
+            "unit": "s",
+            "citationId": "evoke-selection-prep",
+            "status": "Pass",
+            "current": {
+              "metric": "run-5mi",
+              "value": 2198.9844000269504,
+              "basis": "Modeled",
+              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
+              "on": null
+            },
+            "gap": "clear by 8:21"
+          },
+          {
+            "metric": "ruck-12mi-35lb",
+            "label": "Twelve-mile ruck at 35 lb",
+            "comparison": "AtMost",
+            "target": 10800,
+            "unit": "s",
+            "citationId": "evoke-selection-prep",
+            "status": "Fail",
+            "current": {
+              "metric": "ruck-12mi-35lb",
+              "value": 10814.79168,
+              "basis": "Measured",
+              "evidence": "12.05-mile at 46 lb on 2026-04-29",
+              "on": "2026-04-29"
+            },
+            "gap": "short by 0:15"
+          },
+          {
+            "metric": "hand-release-push-ups",
+            "label": "Hand-release push-ups",
+            "comparison": "AtLeast",
+            "target": 40,
+            "unit": "reps",
+            "citationId": "evoke-selection-prep",
+            "status": "Pass",
+            "current": {
+              "metric": "hand-release-push-ups",
+              "value": 45,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 5 reps"
+          },
+          {
+            "metric": "pull-ups",
+            "label": "Pull-ups",
+            "comparison": "AtLeast",
+            "target": 10,
+            "unit": "reps",
+            "citationId": "evoke-selection-prep",
+            "status": "Pass",
+            "current": {
+              "metric": "pull-ups",
+              "value": 18,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 8 reps"
+          },
+          {
+            "metric": "front-squat-3rm-bw",
+            "label": "Front squat 3RM",
+            "comparison": "AtLeast",
+            "target": 1,
+            "unit": "xbw",
+            "citationId": "evoke-selection-prep",
+            "status": "Pass",
+            "current": {
+              "metric": "front-squat-3rm-bw",
+              "value": 1.308108108108108,
+              "basis": "Modeled",
+              "evidence": "235 lb for 3, from an Epley estimate of 258 lb on 2026-06-12, over 179 lb bodyweight",
+              "on": "2026-06-12"
+            },
+            "gap": "clear by 0.31\u00D7 bodyweight"
+          },
+          {
+            "metric": "deadlift-3rm-bw",
+            "label": "Deadlift 3RM",
+            "comparison": "AtLeast",
+            "target": 1.5,
+            "unit": "xbw",
+            "citationId": "evoke-selection-prep",
+            "status": "Pass",
+            "current": {
+              "metric": "deadlift-3rm-bw",
+              "value": 1.7199017199017197,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16, over 179 lb bodyweight",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 0.22\u00D7 bodyweight"
+          }
+        ],
+        "untracked": []
+      },
+      {
+        "id": "sfre-prerequisites",
+        "name": "SFRE prerequisites",
+        "purpose": "What a Guard Special Forces company publishes as the price of a seat at its readiness evaluation, the gate to an SFAS slot.",
+        "weeksBeforeSelection": 8,
+        "dueOn": "2026-11-16",
+        "status": "Fail",
+        "passed": 0,
+        "known": 4,
+        "requirements": [
+          {
+            "metric": "run-2mi",
+            "label": "Two-mile run",
+            "comparison": "AtMost",
+            "target": 822,
+            "unit": "s",
+            "citationId": "guard-sfre-prereqs",
+            "status": "Fail",
+            "current": {
+              "metric": "run-2mi",
+              "value": 900,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 1:18"
+          },
+          {
+            "metric": "push-ups",
+            "label": "Push-ups in two minutes",
+            "comparison": "AtLeast",
+            "target": 64,
+            "unit": "reps",
+            "citationId": "guard-sfre-prereqs",
+            "status": "Fail",
+            "current": {
+              "metric": "push-ups",
+              "value": 48,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-12",
+              "on": "2026-06-12"
+            },
+            "gap": "short by 16 reps"
+          },
+          {
+            "metric": "sit-ups",
+            "label": "Sit-ups in two minutes",
+            "comparison": "AtLeast",
+            "target": 72,
+            "unit": "reps",
+            "citationId": "guard-sfre-prereqs",
+            "status": "Fail",
+            "current": {
+              "metric": "sit-ups",
+              "value": 55,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-12",
+              "on": "2026-06-12"
+            },
+            "gap": "short by 17 reps"
+          },
+          {
+            "metric": "ruck-12mi-45lb",
+            "label": "Twelve-mile ruck at 45 lb dry",
+            "comparison": "AtMost",
+            "target": 10800,
+            "unit": "s",
+            "citationId": "guard-sfre-prereqs",
+            "status": "Fail",
+            "current": {
+              "metric": "ruck-12mi-45lb",
+              "value": 10814.79168,
+              "basis": "Measured",
+              "evidence": "12.05-mile at 46 lb on 2026-04-29",
+              "on": "2026-04-29"
+            },
+            "gap": "short by 0:15"
+          }
+        ],
+        "untracked": [
+          "Rope climb",
+          "100 m swim",
+          "Pull-ups (no count published)"
+        ]
+      },
+      {
+        "id": "evoke-sfas-ready",
+        "name": "Evoke coaches\u0027 SFAS-ready numbers",
+        "purpose": "Where the Selection Prep block is meant to leave you, from what Jack Kuenzle and Scott Johnston told an SFAS candidate on Evoke\u0027s forum, with the lifting numbers Kuenzle attributes to Vince Paikowski. No ruck line on purpose: the best ruckers Kuenzle ever saw never trained with a ruck and were simply the best runners, so the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
+        "weeksBeforeSelection": 4,
+        "dueOn": "2026-12-14",
+        "status": "Fail",
+        "passed": 2,
+        "known": 6,
+        "requirements": [
+          {
+            "metric": "aet-pace",
+            "label": "Aerobic-threshold pace on the flat",
+            "comparison": "AtMost",
+            "target": 480,
+            "unit": "s/mi",
+            "citationId": "evoke-sfas-ready",
+            "status": "Fail",
+            "current": {
+              "metric": "aet-pace",
+              "value": 531.1438704,
+              "basis": "Measured",
+              "evidence": "median pace at 150 bpm over 4 runs in 2026-06",
+              "on": "2026-06-01"
+            },
+            "gap": "short by 0:51/mile"
+          },
+          {
+            "metric": "run-5mi",
+            "label": "Five-mile run",
+            "comparison": "AtMost",
+            "target": 2100,
+            "unit": "s",
+            "citationId": "evoke-sfas-ready",
+            "status": "Fail",
+            "current": {
+              "metric": "run-5mi",
+              "value": 2198.9844000269504,
+              "basis": "Modeled",
+              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
+              "on": null
+            },
+            "gap": "short by 1:39"
+          },
+          {
+            "metric": "pull-ups",
+            "label": "Strict pull-ups",
+            "comparison": "AtLeast",
+            "target": 15,
+            "unit": "reps",
+            "citationId": "evoke-sfas-ready",
+            "status": "Pass",
+            "current": {
+              "metric": "pull-ups",
+              "value": 18,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 3 reps"
+          },
+          {
+            "metric": "push-ups",
+            "label": "Push-ups in two minutes",
+            "comparison": "AtLeast",
+            "target": 80,
+            "unit": "reps",
+            "citationId": "evoke-sfas-ready",
+            "status": "Fail",
+            "current": {
+              "metric": "push-ups",
+              "value": 48,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-12",
+              "on": "2026-06-12"
+            },
+            "gap": "short by 32 reps"
+          },
+          {
+            "metric": "deadlift-3rm-lb",
+            "label": "Deadlift 3RM",
+            "comparison": "AtLeast",
+            "target": 350,
+            "unit": "lb",
+            "citationId": "evoke-sfas-ready",
+            "status": "Fail",
+            "current": {
+              "metric": "deadlift-3rm-lb",
+              "value": 308.647167052,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 41 lb (19 kg)"
+          },
+          {
+            "metric": "back-squat-5rm-lb",
+            "label": "Back squat 5RM",
+            "comparison": "AtLeast",
+            "target": 250,
+            "unit": "lb",
+            "citationId": "evoke-sfas-ready",
+            "status": "Pass",
+            "current": {
+              "metric": "back-squat-5rm-lb",
+              "value": 278.84066920526396,
+              "basis": "Modeled",
+              "evidence": "279 lb for 5, from an Epley estimate of 325 lb on 2026-06-12",
+              "on": "2026-06-12"
+            },
+            "gap": "clear by 29 lb (13 kg)"
+          }
+        ],
+        "untracked": [
+          "Deadlift \u002B squat \u002B overhead press total of 750 lb"
+        ]
+      },
+      {
+        "id": "sfas-competitive",
+        "name": "Competitive at selection",
+        "purpose": "The row selected candidates sit on. The minimums get you in the door; these are what the cadre see from someone who belongs there.",
+        "weeksBeforeSelection": 0,
+        "dueOn": "2027-01-11",
+        "status": "Fail",
+        "passed": 3,
+        "known": 6,
+        "requirements": [
+          {
+            "metric": "run-2mi",
+            "label": "Two-mile run",
+            "comparison": "AtMost",
+            "target": 810,
+            "unit": "s",
+            "citationId": "sfas-day-one",
+            "status": "Fail",
+            "current": {
+              "metric": "run-2mi",
+              "value": 900,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 1:30"
+          },
+          {
+            "metric": "run-5mi",
+            "label": "Five-mile run",
+            "comparison": "AtMost",
+            "target": 2100,
+            "unit": "s",
+            "citationId": "sfas-competitive",
+            "status": "Fail",
+            "current": {
+              "metric": "run-5mi",
+              "value": 2198.9844000269504,
+              "basis": "Modeled",
+              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
+              "on": null
+            },
+            "gap": "short by 1:39"
+          },
+          {
+            "metric": "ruck-12mi-45lb",
+            "label": "Twelve-mile ruck at 45 lb",
+            "comparison": "AtMost",
+            "target": 9900,
+            "unit": "s",
+            "citationId": "sfas-competitive",
+            "status": "Fail",
+            "current": {
+              "metric": "ruck-12mi-45lb",
+              "value": 10814.79168,
+              "basis": "Measured",
+              "evidence": "12.05-mile at 46 lb on 2026-04-29",
+              "on": "2026-04-29"
+            },
+            "gap": "short by 15:15"
+          },
+          {
+            "metric": "pull-ups",
+            "label": "Pull-ups",
+            "comparison": "AtLeast",
+            "target": 12,
+            "unit": "reps",
+            "citationId": "sfas-competitive",
+            "status": "Pass",
+            "current": {
+              "metric": "pull-ups",
+              "value": 18,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 6 reps"
+          },
+          {
+            "metric": "hand-release-push-ups",
+            "label": "Hand-release push-ups",
+            "comparison": "AtLeast",
+            "target": 40,
+            "unit": "reps",
+            "citationId": "sfas-day-one",
+            "status": "Pass",
+            "current": {
+              "metric": "hand-release-push-ups",
+              "value": 45,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "clear by 5 reps"
+          },
+          {
+            "metric": "body-fat",
+            "label": "Body fat",
+            "comparison": "AtMost",
+            "target": 15,
+            "unit": "%",
+            "citationId": "farina-sfas-body",
+            "status": "Pass",
+            "current": {
+              "metric": "body-fat",
+              "value": 14.92,
+              "basis": "Measured",
+              "evidence": "weigh-in of 2026-06-15",
+              "on": "2026-06-15"
+            },
+            "gap": "clear by 0.1%"
+          }
+        ],
+        "untracked": [
+          "Land navigation, day and night",
+          "Back-to-back days under load"
+        ]
+      },
+      {
+        "id": "own-standards",
+        "name": "Your own 2027 standards",
+        "purpose": "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \u0022non-essential\u0022 are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer\u0027s carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
+        "weeksBeforeSelection": 0,
+        "dueOn": "2027-01-11",
+        "status": "Fail",
+        "passed": 1,
+        "known": 8,
+        "requirements": [
+          {
+            "metric": "farmer-carry-1.5bw-m",
+            "label": "Farmer\u0027s carry at 1.5\u00D7 bodyweight",
+            "comparison": "AtLeast",
+            "target": 100,
+            "unit": "m",
+            "citationId": "neb-fitness-goals",
+            "status": "Unknown",
+            "current": null,
+            "gap": "nothing in the log scores this yet"
+          },
+          {
+            "metric": "pull-ups",
+            "label": "Pull-ups",
+            "comparison": "AtLeast",
+            "target": 15,
+            "unit": "reps",
+            "citationId": "neb-fitness-goals",
+            "status": "Pass",
+            "current": {
+              "metric": "pull-ups",
+              "value": 18,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 3 reps"
+          },
+          {
+            "metric": "push-ups",
+            "label": "Push-ups in two minutes",
+            "comparison": "AtLeast",
+            "target": 80,
+            "unit": "reps",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "push-ups",
+              "value": 48,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-12",
+              "on": "2026-06-12"
+            },
+            "gap": "short by 32 reps"
+          },
+          {
+            "metric": "hand-release-push-ups",
+            "label": "Hand-release push-ups",
+            "comparison": "AtLeast",
+            "target": 62,
+            "unit": "reps",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "hand-release-push-ups",
+              "value": 45,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 17 reps"
+          },
+          {
+            "metric": "deadlift-3rm-lb",
+            "label": "Deadlift 3RM",
+            "comparison": "AtLeast",
+            "target": 350,
+            "unit": "lb",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "deadlift-3rm-lb",
+              "value": 308.647167052,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 41 lb (19 kg)"
+          },
+          {
+            "metric": "bench-1rm-bw",
+            "label": "Bench press 1RM",
+            "comparison": "AtLeast",
+            "target": 1.5,
+            "unit": "xbw",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "bench-1rm-bw",
+              "value": 1.3022522522522524,
+              "basis": "Modeled",
+              "evidence": "234 lb for 1, from an Epley estimate of 234 lb on 2026-06-14, over 179 lb bodyweight",
+              "on": "2026-06-14"
+            },
+            "gap": "short by 0.20\u00D7 bodyweight"
+          },
+          {
+            "metric": "front-squat-1rm-bw",
+            "label": "Front squat 1RM",
+            "comparison": "AtLeast",
+            "target": 1.5,
+            "unit": "xbw",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "front-squat-1rm-bw",
+              "value": 1.438918918918919,
+              "basis": "Modeled",
+              "evidence": "258 lb for 1, from an Epley estimate of 258 lb on 2026-06-12, over 179 lb bodyweight",
+              "on": "2026-06-12"
+            },
+            "gap": "short by 0.06\u00D7 bodyweight"
+          },
+          {
+            "metric": "bodyweight-lb",
+            "label": "Bodyweight",
+            "comparison": "AtMost",
+            "target": 170,
+            "unit": "lb",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "bodyweight-lb",
+              "value": 179.45628141452002,
+              "basis": "Measured",
+              "evidence": "weigh-in of 2026-06-15",
+              "on": "2026-06-15"
+            },
+            "gap": "short by 9 lb (4 kg)"
+          },
+          {
+            "metric": "body-fat",
+            "label": "Body fat",
+            "comparison": "AtMost",
+            "target": 10,
+            "unit": "%",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "body-fat",
+              "value": 14.92,
+              "basis": "Measured",
+              "evidence": "weigh-in of 2026-06-15",
+              "on": "2026-06-15"
+            },
+            "gap": "short by 4.9%"
+          }
+        ],
+        "untracked": []
+      }
+    ],
+    "ruck": {
+      "referenceLoadKg": 20.411656650451594,
+      "ruckEfficiency": 0.67,
+      "trend": [
+        {
+          "month": "2025-12",
+          "medianSecPerKm": 607,
+          "rucks": 2
+        },
+        {
+          "month": "2026-01",
+          "medianSecPerKm": 616,
+          "rucks": 3
+        },
+        {
+          "month": "2026-02",
+          "medianSecPerKm": 603,
+          "rucks": 3
+        },
+        {
+          "month": "2026-03",
+          "medianSecPerKm": 597,
+          "rucks": 4
+        },
+        {
+          "month": "2026-04",
+          "medianSecPerKm": 587,
+          "rucks": 4
+        },
+        {
+          "month": "2026-05",
+          "medianSecPerKm": 583,
+          "rucks": 3
+        },
+        {
+          "month": "2026-06",
+          "medianSecPerKm": 591,
+          "rucks": 1
+        }
+      ],
+      "marches": [
+        {
+          "date": "2026-06-03",
+          "distanceMeters": 10000,
+          "seconds": 6024,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 32.862712055988965
+        },
+        {
+          "date": "2026-05-27",
+          "distanceMeters": 12000,
+          "seconds": 7245.599999999999,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 34.03548480588115
+        },
+        {
+          "date": "2026-05-20",
+          "distanceMeters": 9000,
+          "seconds": 5446.8,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 34.00052193877289
+        },
+        {
+          "date": "2026-05-13",
+          "distanceMeters": 11000,
+          "seconds": 6672.6,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 32.78019433455436
+        },
+        {
+          "date": "2026-04-29",
+          "distanceMeters": 19400,
+          "seconds": 10864,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 40.2168615931548
+        },
+        {
+          "date": "2026-04-22",
+          "distanceMeters": 12000,
+          "seconds": 7329.599999999999,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 32.672240504169885
+        },
+        {
+          "date": "2026-04-15",
+          "distanceMeters": 9000,
+          "seconds": 5509.8,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 32.630884329369714
+        },
+        {
+          "date": "2026-04-08",
+          "distanceMeters": 11000,
+          "seconds": 6749.6,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 33.86912435655662
+        },
+        {
+          "date": "2026-03-25",
+          "distanceMeters": 10000,
+          "seconds": 6164,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 32.58720998633091
+        },
+        {
+          "date": "2026-03-18",
+          "distanceMeters": 12000,
+          "seconds": 7413.599999999999,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 33.76184053303517
+        },
+        {
+          "date": "2026-03-11",
+          "distanceMeters": 9000,
+          "seconds": 5572.8,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 31.33737026455273
+        },
+        {
+          "date": "2026-03-04",
+          "distanceMeters": 11000,
+          "seconds": 6826.6,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 32.51445011925127
+        },
+        {
+          "date": "2026-02-18",
+          "distanceMeters": 10000,
+          "seconds": 6234,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 31.30044908862041
+        },
+        {
+          "date": "2026-02-11",
+          "distanceMeters": 12000,
+          "seconds": 7497.599999999999,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 32.41573247621277
+        },
+        {
+          "date": "2026-02-04",
+          "distanceMeters": 9000,
+          "seconds": 5635.8,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 32.3948816506101
+        },
+        {
+          "date": "2026-01-28",
+          "distanceMeters": 11000,
+          "seconds": 6903.6,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 31.23517462084546
+        },
+        {
+          "date": "2026-01-14",
+          "distanceMeters": 10000,
+          "seconds": 6304,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 32.36107823474673
+        },
+        {
+          "date": "2026-01-07",
+          "distanceMeters": 12000,
+          "seconds": 7581.599999999999,
+          "loadKg": 16,
+          "averageHr": 143,
+          "impliedVdot": 31.144628509789726
+        },
+        {
+          "date": "2025-12-31",
+          "distanceMeters": 9000,
+          "seconds": 5698.8,
+          "loadKg": 18.5,
+          "averageHr": 143,
+          "impliedVdot": 31.115716179190077
+        },
+        {
+          "date": "2025-12-24",
+          "distanceMeters": 11000,
+          "seconds": 6980.6,
+          "loadKg": 21,
+          "averageHr": 143,
+          "impliedVdot": 32.29754402645637
+        }
+      ],
+      "predictedTwelveMileAt45Seconds": 10157.863747225267,
+      "predictedTwelveMileAt35Seconds": 9870.606222677909,
+      "rucksWithoutLoad": 6,
+      "steps": [
+        {
+          "label": "Engine available to a march",
+          "expression": "VDOT 44.0 \u00D7 0.82 sustainable for 2:49:18 \u00D7 0.67 ruck efficiency",
+          "value": "24.2 ml/kg/min",
+          "citationId": "daniels-vdot"
+        },
+        {
+          "label": "Cost of the load at that speed",
+          "expression": "1.5\u00D781 \u002B 2.0\u00D7102\u00D7(20.4/81)\u00B2 \u002B 102\u00D71.5\u00D71.90\u00B2 W",
+          "value": "687 W = 24.2 ml/kg/min",
+          "citationId": "pandolf-load-carriage"
+        },
+        {
+          "label": "Speed the two agree at",
+          "expression": "1.90 m/s under 45 lb (20.4 kg)",
+          "value": "14:06/mile, 2:49:18 for 12-mile",
+          "citationId": "sfas-competitive"
+        }
+      ]
+    },
+    "calisthenics": {
+      "latest": [
+        {
+          "date": "2026-06-14",
+          "metric": "pull-ups",
+          "value": 18
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "hand-release-push-ups",
+          "value": 37
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "push-ups",
+          "value": 48
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-06-14",
+          "metric": "plank",
+          "value": 210.33333333333334
+        }
+      ],
+      "history": [
+        {
+          "date": "2025-12-19",
+          "metric": "hand-release-push-ups",
+          "value": 30
+        },
+        {
+          "date": "2025-12-19",
+          "metric": "push-ups",
+          "value": 40
+        },
+        {
+          "date": "2025-12-19",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2025-12-21",
+          "metric": "plank",
+          "value": 152
+        },
+        {
+          "date": "2025-12-21",
+          "metric": "pull-ups",
+          "value": 12
+        },
+        {
+          "date": "2025-12-26",
+          "metric": "hand-release-push-ups",
+          "value": 30
+        },
+        {
+          "date": "2025-12-26",
+          "metric": "push-ups",
+          "value": 40
+        },
+        {
+          "date": "2025-12-26",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2025-12-28",
+          "metric": "plank",
+          "value": 154.33333333333334
+        },
+        {
+          "date": "2025-12-28",
+          "metric": "pull-ups",
+          "value": 12
+        },
+        {
+          "date": "2026-01-02",
+          "metric": "hand-release-push-ups",
+          "value": 30
+        },
+        {
+          "date": "2026-01-02",
+          "metric": "push-ups",
+          "value": 40
+        },
+        {
+          "date": "2026-01-02",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-01-04",
+          "metric": "plank",
+          "value": 156.66666666666666
+        },
+        {
+          "date": "2026-01-04",
+          "metric": "pull-ups",
+          "value": 12
+        },
+        {
+          "date": "2026-01-09",
+          "metric": "hand-release-push-ups",
+          "value": 31
+        },
+        {
+          "date": "2026-01-09",
+          "metric": "push-ups",
+          "value": 41
+        },
+        {
+          "date": "2026-01-09",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-01-11",
+          "metric": "plank",
+          "value": 159
+        },
+        {
+          "date": "2026-01-11",
+          "metric": "pull-ups",
+          "value": 12
+        },
+        {
+          "date": "2026-01-16",
+          "metric": "hand-release-push-ups",
+          "value": 31
+        },
+        {
+          "date": "2026-01-16",
+          "metric": "push-ups",
+          "value": 41
+        },
+        {
+          "date": "2026-01-16",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-01-18",
+          "metric": "plank",
+          "value": 161.33333333333334
+        },
+        {
+          "date": "2026-01-18",
+          "metric": "pull-ups",
+          "value": 13
+        },
+        {
+          "date": "2026-01-23",
+          "metric": "hand-release-push-ups",
+          "value": 31
+        },
+        {
+          "date": "2026-01-23",
+          "metric": "push-ups",
+          "value": 41
+        },
+        {
+          "date": "2026-01-23",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-01-25",
+          "metric": "plank",
+          "value": 163.66666666666666
+        },
+        {
+          "date": "2026-01-25",
+          "metric": "pull-ups",
+          "value": 13
+        },
+        {
+          "date": "2026-01-30",
+          "metric": "hand-release-push-ups",
+          "value": 31
+        },
+        {
+          "date": "2026-01-30",
+          "metric": "push-ups",
+          "value": 42
+        },
+        {
+          "date": "2026-01-30",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-02-01",
+          "metric": "plank",
+          "value": 166
+        },
+        {
+          "date": "2026-02-01",
+          "metric": "pull-ups",
+          "value": 13
+        },
+        {
+          "date": "2026-02-06",
+          "metric": "hand-release-push-ups",
+          "value": 32
+        },
+        {
+          "date": "2026-02-06",
+          "metric": "push-ups",
+          "value": 42
+        },
+        {
+          "date": "2026-02-06",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-02-08",
+          "metric": "plank",
+          "value": 168.33333333333334
+        },
+        {
+          "date": "2026-02-08",
+          "metric": "pull-ups",
+          "value": 13
+        },
+        {
+          "date": "2026-02-13",
+          "metric": "hand-release-push-ups",
+          "value": 32
+        },
+        {
+          "date": "2026-02-13",
+          "metric": "push-ups",
+          "value": 43
+        },
+        {
+          "date": "2026-02-13",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-02-15",
+          "metric": "plank",
+          "value": 170.66666666666666
+        },
+        {
+          "date": "2026-02-15",
+          "metric": "pull-ups",
+          "value": 14
+        },
+        {
+          "date": "2026-02-20",
+          "metric": "hand-release-push-ups",
+          "value": 32
+        },
+        {
+          "date": "2026-02-20",
+          "metric": "push-ups",
+          "value": 43
+        },
+        {
+          "date": "2026-02-20",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-02-22",
+          "metric": "plank",
+          "value": 173
+        },
+        {
+          "date": "2026-02-22",
+          "metric": "pull-ups",
+          "value": 14
+        },
+        {
+          "date": "2026-02-27",
+          "metric": "hand-release-push-ups",
+          "value": 32
+        },
+        {
+          "date": "2026-02-27",
+          "metric": "push-ups",
+          "value": 43
+        },
+        {
+          "date": "2026-02-27",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-03-01",
+          "metric": "plank",
+          "value": 175.33333333333334
+        },
+        {
+          "date": "2026-03-01",
+          "metric": "pull-ups",
+          "value": 14
+        },
+        {
+          "date": "2026-03-06",
+          "metric": "hand-release-push-ups",
+          "value": 33
+        },
+        {
+          "date": "2026-03-06",
+          "metric": "push-ups",
+          "value": 44
+        },
+        {
+          "date": "2026-03-06",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-03-08",
+          "metric": "plank",
+          "value": 177.66666666666666
+        },
+        {
+          "date": "2026-03-08",
+          "metric": "pull-ups",
+          "value": 14
+        },
+        {
+          "date": "2026-03-13",
+          "metric": "hand-release-push-ups",
+          "value": 33
+        },
+        {
+          "date": "2026-03-13",
+          "metric": "push-ups",
+          "value": 44
+        },
+        {
+          "date": "2026-03-13",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-03-15",
+          "metric": "plank",
+          "value": 180
+        },
+        {
+          "date": "2026-03-15",
+          "metric": "pull-ups",
+          "value": 15
+        },
+        {
+          "date": "2026-03-20",
+          "metric": "hand-release-push-ups",
+          "value": 33
+        },
+        {
+          "date": "2026-03-20",
+          "metric": "push-ups",
+          "value": 44
+        },
+        {
+          "date": "2026-03-20",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-03-22",
+          "metric": "plank",
+          "value": 182.33333333333334
+        },
+        {
+          "date": "2026-03-22",
+          "metric": "pull-ups",
+          "value": 15
+        },
+        {
+          "date": "2026-03-27",
+          "metric": "hand-release-push-ups",
+          "value": 34
+        },
+        {
+          "date": "2026-03-27",
+          "metric": "push-ups",
+          "value": 45
+        },
+        {
+          "date": "2026-03-27",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-03-29",
+          "metric": "plank",
+          "value": 184.66666666666666
+        },
+        {
+          "date": "2026-03-29",
+          "metric": "pull-ups",
+          "value": 15
+        },
+        {
+          "date": "2026-04-03",
+          "metric": "hand-release-push-ups",
+          "value": 34
+        },
+        {
+          "date": "2026-04-03",
+          "metric": "push-ups",
+          "value": 45
+        },
+        {
+          "date": "2026-04-03",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-04-05",
+          "metric": "plank",
+          "value": 187
+        },
+        {
+          "date": "2026-04-05",
+          "metric": "pull-ups",
+          "value": 15
+        },
+        {
+          "date": "2026-04-10",
+          "metric": "hand-release-push-ups",
+          "value": 34
+        },
+        {
+          "date": "2026-04-10",
+          "metric": "push-ups",
+          "value": 45
+        },
+        {
+          "date": "2026-04-10",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-04-12",
+          "metric": "plank",
+          "value": 189.33333333333334
+        },
+        {
+          "date": "2026-04-12",
+          "metric": "pull-ups",
+          "value": 15
+        },
+        {
+          "date": "2026-04-17",
+          "metric": "hand-release-push-ups",
+          "value": 34
+        },
+        {
+          "date": "2026-04-17",
+          "metric": "push-ups",
+          "value": 46
+        },
+        {
+          "date": "2026-04-17",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-04-19",
+          "metric": "plank",
+          "value": 191.66666666666666
+        },
+        {
+          "date": "2026-04-19",
+          "metric": "pull-ups",
+          "value": 16
+        },
+        {
+          "date": "2026-04-24",
+          "metric": "hand-release-push-ups",
+          "value": 35
+        },
+        {
+          "date": "2026-04-24",
+          "metric": "push-ups",
+          "value": 46
+        },
+        {
+          "date": "2026-04-24",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-04-26",
+          "metric": "plank",
+          "value": 194
+        },
+        {
+          "date": "2026-04-26",
+          "metric": "pull-ups",
+          "value": 16
+        },
+        {
+          "date": "2026-05-01",
+          "metric": "hand-release-push-ups",
+          "value": 35
+        },
+        {
+          "date": "2026-05-01",
+          "metric": "push-ups",
+          "value": 46
+        },
+        {
+          "date": "2026-05-01",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-05-03",
+          "metric": "plank",
+          "value": 196.33333333333334
+        },
+        {
+          "date": "2026-05-03",
+          "metric": "pull-ups",
+          "value": 16
+        },
+        {
+          "date": "2026-05-08",
+          "metric": "hand-release-push-ups",
+          "value": 35
+        },
+        {
+          "date": "2026-05-08",
+          "metric": "push-ups",
+          "value": 47
+        },
+        {
+          "date": "2026-05-08",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-05-10",
+          "metric": "plank",
+          "value": 198.66666666666666
+        },
+        {
+          "date": "2026-05-10",
+          "metric": "pull-ups",
+          "value": 16
+        },
+        {
+          "date": "2026-05-15",
+          "metric": "hand-release-push-ups",
+          "value": 36
+        },
+        {
+          "date": "2026-05-15",
+          "metric": "push-ups",
+          "value": 47
+        },
+        {
+          "date": "2026-05-15",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-05-17",
+          "metric": "plank",
+          "value": 201
+        },
+        {
+          "date": "2026-05-17",
+          "metric": "pull-ups",
+          "value": 17
+        },
+        {
+          "date": "2026-05-22",
+          "metric": "hand-release-push-ups",
+          "value": 36
+        },
+        {
+          "date": "2026-05-22",
+          "metric": "push-ups",
+          "value": 47
+        },
+        {
+          "date": "2026-05-22",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-05-24",
+          "metric": "plank",
+          "value": 203.33333333333334
+        },
+        {
+          "date": "2026-05-24",
+          "metric": "pull-ups",
+          "value": 17
+        },
+        {
+          "date": "2026-05-29",
+          "metric": "hand-release-push-ups",
+          "value": 36
+        },
+        {
+          "date": "2026-05-29",
+          "metric": "push-ups",
+          "value": 48
+        },
+        {
+          "date": "2026-05-29",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-05-31",
+          "metric": "plank",
+          "value": 205.66666666666666
+        },
+        {
+          "date": "2026-05-31",
+          "metric": "pull-ups",
+          "value": 17
+        },
+        {
+          "date": "2026-06-05",
+          "metric": "hand-release-push-ups",
+          "value": 36
+        },
+        {
+          "date": "2026-06-05",
+          "metric": "push-ups",
+          "value": 48
+        },
+        {
+          "date": "2026-06-05",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-06-07",
+          "metric": "plank",
+          "value": 208
+        },
+        {
+          "date": "2026-06-07",
+          "metric": "pull-ups",
+          "value": 17
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "hand-release-push-ups",
+          "value": 37
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "push-ups",
+          "value": 48
+        },
+        {
+          "date": "2026-06-12",
+          "metric": "sit-ups",
+          "value": 55
+        },
+        {
+          "date": "2026-06-14",
+          "metric": "plank",
+          "value": 210.33333333333334
+        },
+        {
+          "date": "2026-06-14",
+          "metric": "pull-ups",
+          "value": 18
+        }
+      ]
+    },
+    "body": {
+      "points": [
+        {
+          "date": "2025-12-15",
+          "weightKg": 84,
+          "bodyFatPercent": 17,
+          "leanMassKg": 69.72
+        },
+        {
+          "date": "2025-12-22",
+          "weightKg": 83.9,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2025-12-29",
+          "weightKg": 83.8,
+          "bodyFatPercent": 16.84,
+          "leanMassKg": 69.68808
+        },
+        {
+          "date": "2026-01-05",
+          "weightKg": 83.7,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-01-12",
+          "weightKg": 83.6,
+          "bodyFatPercent": 16.68,
+          "leanMassKg": 69.65552
+        },
+        {
+          "date": "2026-01-19",
+          "weightKg": 83.5,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-01-26",
+          "weightKg": 83.4,
+          "bodyFatPercent": 16.52,
+          "leanMassKg": 69.62232
+        },
+        {
+          "date": "2026-02-02",
+          "weightKg": 83.3,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-02-09",
+          "weightKg": 83.2,
+          "bodyFatPercent": 16.36,
+          "leanMassKg": 69.58848
+        },
+        {
+          "date": "2026-02-16",
+          "weightKg": 83.1,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-02-23",
+          "weightKg": 83,
+          "bodyFatPercent": 16.2,
+          "leanMassKg": 69.554
+        },
+        {
+          "date": "2026-03-02",
+          "weightKg": 82.9,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-03-09",
+          "weightKg": 82.8,
+          "bodyFatPercent": 16.04,
+          "leanMassKg": 69.51888
+        },
+        {
+          "date": "2026-03-16",
+          "weightKg": 82.7,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-03-23",
+          "weightKg": 82.6,
+          "bodyFatPercent": 15.879999999999999,
+          "leanMassKg": 69.48311999999999
+        },
+        {
+          "date": "2026-03-30",
+          "weightKg": 82.5,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-04-06",
+          "weightKg": 82.4,
+          "bodyFatPercent": 15.72,
+          "leanMassKg": 69.44672
+        },
+        {
+          "date": "2026-04-13",
+          "weightKg": 82.3,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-04-20",
+          "weightKg": 82.2,
+          "bodyFatPercent": 15.56,
+          "leanMassKg": 69.40968000000001
+        },
+        {
+          "date": "2026-04-27",
+          "weightKg": 82.1,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-05-04",
+          "weightKg": 82,
+          "bodyFatPercent": 15.4,
+          "leanMassKg": 69.372
+        },
+        {
+          "date": "2026-05-11",
+          "weightKg": 81.9,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-05-18",
+          "weightKg": 81.8,
+          "bodyFatPercent": 15.24,
+          "leanMassKg": 69.33368
+        },
+        {
+          "date": "2026-05-25",
+          "weightKg": 81.7,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-06-01",
+          "weightKg": 81.6,
+          "bodyFatPercent": 15.08,
+          "leanMassKg": 69.29472
+        },
+        {
+          "date": "2026-06-08",
+          "weightKg": 81.5,
+          "bodyFatPercent": null,
+          "leanMassKg": null
+        },
+        {
+          "date": "2026-06-15",
+          "weightKg": 81.4,
+          "bodyFatPercent": 14.92,
+          "leanMassKg": 69.25512
+        }
+      ],
+      "latestBodyFatPercent": 14.92,
+      "latestLeanMassKg": 69.25512,
+      "cohortRateByBodyFat": 0.48438545454545456,
+      "cohortRateByLeanMass": 0.5099198063157895
+    },
+    "aftResults": [
+      {
+        "id": "00000008-0000-4000-8000-000000000002",
+        "date": "2026-05-16",
+        "deadliftKg": 140,
+        "handReleasePushUps": 45,
+        "sprintDragCarrySeconds": 98,
+        "plankSeconds": 200,
+        "twoMileSeconds": 900,
+        "total": 469,
+        "lowestEvent": 88,
+        "meetsCombatStandard": true,
+        "ageBand": "32-36",
+        "ageAssumed": false,
+        "events": [
+          {
+            "event": "Deadlift",
+            "name": "3-rep max deadlift",
+            "raw": 308.647167052,
+            "points": 91
+          },
+          {
+            "event": "HandReleasePushUps",
+            "name": "Hand-release push-ups",
+            "raw": 45,
+            "points": 88
+          },
+          {
+            "event": "SprintDragCarry",
+            "name": "Sprint-drag-carry",
+            "raw": 98,
+            "points": 97
+          },
+          {
+            "event": "Plank",
+            "name": "Plank",
+            "raw": 200,
+            "points": 98
+          },
+          {
+            "event": "TwoMileRun",
+            "name": "Two-mile run",
+            "raw": 900,
+            "points": 95
+          }
+        ],
+        "steps": [
+          {
+            "label": "3-rep max deadlift",
+            "expression": "309 lb on the 32-36 band, men\u0027s/combat scale",
+            "value": "91 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Hand-release push-ups",
+            "expression": "45 reps on the 32-36 band, men\u0027s/combat scale",
+            "value": "88 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Sprint-drag-carry",
+            "expression": "1:38 on the 32-36 band, men\u0027s/combat scale",
+            "value": "97 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Plank",
+            "expression": "3:20 on the 32-36 band, men\u0027s/combat scale",
+            "value": "98 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Two-mile run",
+            "expression": "15:00 on the 32-36 band, men\u0027s/combat scale",
+            "value": "95 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Combat standard",
+            "expression": "lowest event 88 (needs 60), total 469 (needs 350)",
+            "value": "met",
+            "citationId": "army-aft-2025"
+          }
+        ]
+      },
+      {
+        "id": "00000008-0000-4000-8000-000000000001",
+        "date": "2026-01-16",
+        "deadliftKg": 120,
+        "handReleasePushUps": 38,
+        "sprintDragCarrySeconds": 105,
+        "plankSeconds": 170,
+        "twoMileSeconds": 960,
+        "total": 433,
+        "lowestEvent": 81,
+        "meetsCombatStandard": true,
+        "ageBand": "32-36",
+        "ageAssumed": false,
+        "events": [
+          {
+            "event": "Deadlift",
+            "name": "3-rep max deadlift",
+            "raw": 264.554714616,
+            "points": 83
+          },
+          {
+            "event": "HandReleasePushUps",
+            "name": "Hand-release push-ups",
+            "raw": 38,
+            "points": 81
+          },
+          {
+            "event": "SprintDragCarry",
+            "name": "Sprint-drag-carry",
+            "raw": 105,
+            "points": 92
+          },
+          {
+            "event": "Plank",
+            "name": "Plank",
+            "raw": 170,
+            "points": 89
+          },
+          {
+            "event": "TwoMileRun",
+            "name": "Two-mile run",
+            "raw": 960,
+            "points": 88
+          }
+        ],
+        "steps": [
+          {
+            "label": "3-rep max deadlift",
+            "expression": "265 lb on the 32-36 band, men\u0027s/combat scale",
+            "value": "83 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Hand-release push-ups",
+            "expression": "38 reps on the 32-36 band, men\u0027s/combat scale",
+            "value": "81 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Sprint-drag-carry",
+            "expression": "1:45 on the 32-36 band, men\u0027s/combat scale",
+            "value": "92 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Plank",
+            "expression": "2:50 on the 32-36 band, men\u0027s/combat scale",
+            "value": "89 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Two-mile run",
+            "expression": "16:00 on the 32-36 band, men\u0027s/combat scale",
+            "value": "88 points",
+            "citationId": "army-aft-2025"
+          },
+          {
+            "label": "Combat standard",
+            "expression": "lowest event 81 (needs 60), total 433 (needs 350)",
+            "value": "met",
+            "citationId": "army-aft-2025"
+          }
+        ]
+      }
+    ]
+  },
+  "fieldTests": [
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000182",
+      "date": "2025-12-15",
+      "secPerKm": 379.5,
+      "averageHr": 148,
+      "driftPercent": -0.00022603978300188938,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:20/km at 148 bpm over 63 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000177",
+      "date": "2025-12-20",
+      "secPerKm": 374.25,
+      "averageHr": 149,
+      "driftPercent": 0.0022230107635894535,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:14/km at 149 bpm over 56 min; pace-to-HR drift 0.2%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000175",
+      "date": "2025-12-22",
+      "secPerKm": 375.75,
+      "averageHr": 147,
+      "driftPercent": -0.000566311832634167,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:16/km at 147 bpm over 69 min; pace-to-HR drift -0.1%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000172",
+      "date": "2025-12-25",
+      "secPerKm": 271.9033232628399,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:32/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000170",
+      "date": "2025-12-27",
+      "secPerKm": 376.5,
+      "averageHr": 148,
+      "driftPercent": -0.0002386919680152968,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:16/km at 148 bpm over 63 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000168",
+      "date": "2025-12-29",
+      "secPerKm": 372,
+      "averageHr": 146,
+      "driftPercent": 0.00170330510713447,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 6:12/km at 146 bpm over 50 min; pace-to-HR drift 0.2%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000163",
+      "date": "2026-01-03",
+      "secPerKm": 372.75,
+      "averageHr": 147,
+      "driftPercent": -0.0005598347522248169,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:13/km at 147 bpm over 68 min; pace-to-HR drift -0.1%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000161",
+      "date": "2026-01-05",
+      "secPerKm": 374.25,
+      "averageHr": 151,
+      "driftPercent": 0.002182749410630886,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:14/km at 151 bpm over 56 min; pace-to-HR drift 0.2%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000156",
+      "date": "2026-01-10",
+      "secPerKm": 369,
+      "averageHr": 146,
+      "driftPercent": 0.0017031357322082005,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:09/km at 146 bpm over 49 min; pace-to-HR drift 0.2%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000154",
+      "date": "2026-01-12",
+      "secPerKm": 370.5,
+      "averageHr": 150,
+      "driftPercent": -0.00028281465850116933,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:10/km at 150 bpm over 62 min; pace-to-HR drift -0.0%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000149",
+      "date": "2026-01-17",
+      "secPerKm": 371.25,
+      "averageHr": 151,
+      "driftPercent": 0.002176185658149873,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:11/km at 151 bpm over 56 min; pace-to-HR drift 0.2%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000147",
+      "date": "2026-01-19",
+      "secPerKm": 366.75,
+      "averageHr": 149,
+      "driftPercent": -0.0005281071919352821,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 6:07/km at 149 bpm over 67 min; pace-to-HR drift -0.1%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000144",
+      "date": "2026-01-22",
+      "secPerKm": 269.62252846015576,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:30/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000142",
+      "date": "2026-01-24",
+      "secPerKm": 367.5,
+      "averageHr": 150,
+      "driftPercent": -0.0002960915909988605,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:08/km at 150 bpm over 61 min; pace-to-HR drift -0.0%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000140",
+      "date": "2026-01-26",
+      "secPerKm": 369,
+      "averageHr": 148,
+      "driftPercent": 0.001679963497089395,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:09/km at 148 bpm over 49 min; pace-to-HR drift 0.2%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000135",
+      "date": "2026-01-31",
+      "secPerKm": 363.75,
+      "averageHr": 149,
+      "driftPercent": -0.0005213081209769063,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:04/km at 149 bpm over 67 min; pace-to-HR drift -0.1%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000133",
+      "date": "2026-02-02",
+      "secPerKm": 365.25,
+      "averageHr": 147,
+      "driftPercent": 0.0022443513880648987,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:05/km at 147 bpm over 55 min; pace-to-HR drift 0.2%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000128",
+      "date": "2026-02-07",
+      "secPerKm": 366,
+      "averageHr": 148,
+      "driftPercent": 0.0016797936850909468,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:06/km at 148 bpm over 49 min; pace-to-HR drift 0.2%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000126",
+      "date": "2026-02-09",
+      "secPerKm": 361.5,
+      "averageHr": 146,
+      "driftPercent": -0.000286401649673361,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 6:02/km at 146 bpm over 60 min; pace-to-HR drift -0.0%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000121",
+      "date": "2026-02-14",
+      "secPerKm": 362.25,
+      "averageHr": 147,
+      "driftPercent": 0.0022374563356256736,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:02/km at 147 bpm over 54 min; pace-to-HR drift 0.2%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000119",
+      "date": "2026-02-16",
+      "secPerKm": 363.75,
+      "averageHr": 151,
+      "driftPercent": -0.000503346013252055,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:04/km at 151 bpm over 67 min; pace-to-HR drift -0.1%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000116",
+      "date": "2026-02-19",
+      "secPerKm": 267.379679144385,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:27/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000114",
+      "date": "2026-02-21",
+      "secPerKm": 358.5,
+      "averageHr": 146,
+      "driftPercent": -0.0003003523363947109,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:58/km at 146 bpm over 60 min; pace-to-HR drift -0.0%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000112",
+      "date": "2026-02-23",
+      "secPerKm": 360,
+      "averageHr": 150,
+      "driftPercent": 0.0016569023616102524,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:00/km at 150 bpm over 48 min; pace-to-HR drift 0.2%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000107",
+      "date": "2026-02-28",
+      "secPerKm": 360.75,
+      "averageHr": 151,
+      "driftPercent": -0.0004964348214359581,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 6:01/km at 151 bpm over 66 min; pace-to-HR drift -0.0%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000105",
+      "date": "2026-03-02",
+      "secPerKm": 356.25,
+      "averageHr": 149,
+      "driftPercent": 0.0021819627724350647,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 5:56/km at 149 bpm over 53 min; pace-to-HR drift 0.2%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000100",
+      "date": "2026-03-07",
+      "secPerKm": 357,
+      "averageHr": 150,
+      "driftPercent": 0.0016567263088136364,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:57/km at 150 bpm over 48 min; pace-to-HR drift 0.2%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000098",
+      "date": "2026-03-09",
+      "secPerKm": 358.5,
+      "averageHr": 148,
+      "driftPercent": -0.00031905559543746425,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:58/km at 148 bpm over 60 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000093",
+      "date": "2026-03-14",
+      "secPerKm": 353.25,
+      "averageHr": 149,
+      "driftPercent": 0.0021747147342831533,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:53/km at 149 bpm over 53 min; pace-to-HR drift 0.2%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000091",
+      "date": "2026-03-16",
+      "secPerKm": 354.75,
+      "averageHr": 147,
+      "driftPercent": -0.0005186737020843153,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:55/km at 147 bpm over 65 min; pace-to-HR drift -0.1%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000088",
+      "date": "2026-03-19",
+      "secPerKm": 265.17383618149677,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:25/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000086",
+      "date": "2026-03-21",
+      "secPerKm": 355.5,
+      "averageHr": 148,
+      "driftPercent": -0.0003332414046699041,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:56/km at 148 bpm over 59 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000084",
+      "date": "2026-03-23",
+      "secPerKm": 351,
+      "averageHr": 146,
+      "driftPercent": 0.0017020586804991872,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 5:51/km at 146 bpm over 47 min; pace-to-HR drift 0.2%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000079",
+      "date": "2026-03-28",
+      "secPerKm": 351.75,
+      "averageHr": 147,
+      "driftPercent": -0.0005114043162524305,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:52/km at 147 bpm over 64 min; pace-to-HR drift -0.1%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000077",
+      "date": "2026-03-30",
+      "secPerKm": 353.25,
+      "averageHr": 151,
+      "driftPercent": 0.0021344619156460345,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:53/km at 151 bpm over 53 min; pace-to-HR drift 0.2%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000072",
+      "date": "2026-04-04",
+      "secPerKm": 348,
+      "averageHr": 146,
+      "driftPercent": 0.0017018683393036217,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:48/km at 146 bpm over 46 min; pace-to-HR drift 0.2%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000070",
+      "date": "2026-04-06",
+      "secPerKm": 349.5,
+      "averageHr": 150,
+      "driftPercent": -0.00038054383173035316,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:50/km at 150 bpm over 58 min; pace-to-HR drift -0.0%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000065",
+      "date": "2026-04-11",
+      "secPerKm": 350.25,
+      "averageHr": 151,
+      "driftPercent": 0.0021270910159800834,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:50/km at 151 bpm over 53 min; pace-to-HR drift 0.2%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000063",
+      "date": "2026-04-13",
+      "secPerKm": 345.75,
+      "averageHr": 149,
+      "driftPercent": -0.0004780381081423238,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 5:46/km at 149 bpm over 63 min; pace-to-HR drift -0.0%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000060",
+      "date": "2026-04-16",
+      "secPerKm": 263.0040911747516,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:23/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000058",
+      "date": "2026-04-18",
+      "secPerKm": 346.5,
+      "averageHr": 150,
+      "driftPercent": -0.00039547299733643014,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:46/km at 150 bpm over 58 min; pace-to-HR drift -0.0%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000056",
+      "date": "2026-04-20",
+      "secPerKm": 348,
+      "averageHr": 148,
+      "driftPercent": 0.001678713328544127,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:48/km at 148 bpm over 46 min; pace-to-HR drift 0.2%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000051",
+      "date": "2026-04-25",
+      "secPerKm": 342.75,
+      "averageHr": 149,
+      "driftPercent": -0.00047038497608115385,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:43/km at 149 bpm over 63 min; pace-to-HR drift -0.0%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000049",
+      "date": "2026-04-27",
+      "secPerKm": 344.25,
+      "averageHr": 147,
+      "driftPercent": 0.0021935623228672013,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:44/km at 147 bpm over 52 min; pace-to-HR drift 0.2%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000044",
+      "date": "2026-05-02",
+      "secPerKm": 345,
+      "averageHr": 148,
+      "driftPercent": 0.001678522308818604,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:45/km at 148 bpm over 46 min; pace-to-HR drift 0.2%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000042",
+      "date": "2026-05-04",
+      "secPerKm": 340.5,
+      "averageHr": 146,
+      "driftPercent": -0.0003892233777291792,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 5:40/km at 146 bpm over 57 min; pace-to-HR drift -0.0%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000037",
+      "date": "2026-05-09",
+      "secPerKm": 341.25,
+      "averageHr": 147,
+      "driftPercent": 0.00218579645568851,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:41/km at 147 bpm over 51 min; pace-to-HR drift 0.2%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000035",
+      "date": "2026-05-11",
+      "secPerKm": 342.75,
+      "averageHr": 151,
+      "driftPercent": -0.0004524292531997518,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:43/km at 151 bpm over 63 min; pace-to-HR drift -0.0%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000032",
+      "date": "2026-05-14",
+      "secPerKm": 260.8695652173913,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:21/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000030",
+      "date": "2026-05-16",
+      "secPerKm": 337.5,
+      "averageHr": 146,
+      "driftPercent": -0.0004049576635170581,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:38/km at 146 bpm over 56 min; pace-to-HR drift -0.0%, inside the 5% line: 146 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000028",
+      "date": "2026-05-18",
+      "secPerKm": 339,
+      "averageHr": 150,
+      "driftPercent": 0.0016556045555109718,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:39/km at 150 bpm over 45 min; pace-to-HR drift 0.2%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000023",
+      "date": "2026-05-23",
+      "secPerKm": 339.75,
+      "averageHr": 151,
+      "driftPercent": -0.0004446420631390762,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:40/km at 151 bpm over 62 min; pace-to-HR drift -0.0%, inside the 5% line: 151 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000021",
+      "date": "2026-05-25",
+      "secPerKm": 335.25,
+      "averageHr": 149,
+      "driftPercent": 0.002128502389943584,
+      "indoor": true,
+      "evidence": "Held within 5 bpm of your AeT; 5:35/km at 149 bpm over 50 min; pace-to-HR drift 0.2%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000016",
+      "date": "2026-05-30",
+      "secPerKm": 336,
+      "averageHr": 150,
+      "driftPercent": 0.0016554059115217966,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:36/km at 150 bpm over 45 min; pace-to-HR drift 0.2%, inside the 5% line: 150 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000014",
+      "date": "2026-06-01",
+      "secPerKm": 337.5,
+      "averageHr": 148,
+      "driftPercent": -0.00042365700728696034,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:38/km at 148 bpm over 56 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000009",
+      "date": "2026-06-06",
+      "secPerKm": 332.25,
+      "averageHr": 149,
+      "driftPercent": 0.002120313517093805,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:32/km at 149 bpm over 50 min; pace-to-HR drift 0.2%, inside the 5% line: 149 bpm is at or below your AeT."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000007",
+      "date": "2026-06-08",
+      "secPerKm": 333.75,
+      "averageHr": 147,
+      "driftPercent": -0.00046504608883918307,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:34/km at 147 bpm over 61 min; pace-to-HR drift -0.0%, inside the 5% line: 147 bpm is at or below your AeT."
+    },
+    {
+      "kind": "threshold",
+      "activityId": "00000001-0000-4000-8000-000000000004",
+      "date": "2026-06-11",
+      "secPerKm": 258.7694077055779,
+      "averageHr": 175,
+      "driftPercent": null,
+      "indoor": false,
+      "evidence": "Named as a threshold test; 4:19/km at 175 bpm over the final 20 min."
+    },
+    {
+      "kind": "aet",
+      "activityId": "00000001-0000-4000-8000-000000000002",
+      "date": "2026-06-13",
+      "secPerKm": 334.5,
+      "averageHr": 148,
+      "driftPercent": -0.0004396731762722974,
+      "indoor": false,
+      "evidence": "Held within 5 bpm of your AeT; 5:34/km at 148 bpm over 56 min; pace-to-HR drift -0.0%, inside the 5% line: 148 bpm is at or below your AeT."
+    }
+  ],
+  "thresholdSuggestion": {
+    "aetHr": null,
+    "ltHr": 175,
+    "ltSecPerKm": 258.7694077055779,
+    "reason": "The 2026-06-11 threshold test held 4:19/km at 175 bpm over its final 20 minutes.",
+    "basis": "friel-lthr"
+  },
+  "durability": {
+    "acuteLoad": 7.264722222222222,
+    "chronicLoad": 7.987805555555555,
+    "acwr": 0.9094765980087703,
+    "monotony": 1.3813287017807587,
+    "weeklyStrain": 10.03496931602005,
+    "impactStreakDays": 0,
+    "restDaysLast7": 4,
+    "daysOfLog": 183,
+    "days": [
+      {
+        "date": "2026-05-19",
+        "load": 0,
+        "impact": false
+      },
+      {
+        "date": "2026-05-20",
+        "load": 1.5130000000000001,
+        "impact": true
+      },
+      {
+        "date": "2026-05-21",
+        "load": 1.9416666666666664,
+        "impact": true
+      },
+      {
+        "date": "2026-05-22",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-05-23",
+        "load": 1.0385416666666667,
+        "impact": true
+      },
+      {
+        "date": "2026-05-24",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-05-25",
+        "load": 0.8385416666666667,
+        "impact": true
+      },
+      {
+        "date": "2026-05-26",
+        "load": 0,
+        "impact": false
+      },
+      {
+        "date": "2026-05-27",
+        "load": 2.0126666666666666,
+        "impact": true
+      },
+      {
+        "date": "2026-05-28",
+        "load": 1.9416666666666664,
+        "impact": true
+      },
+      {
+        "date": "2026-05-29",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-05-30",
+        "load": 0.7466666666666666,
+        "impact": true
+      },
+      {
+        "date": "2026-05-31",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-06-01",
+        "load": 0.9375,
+        "impact": true
+      },
+      {
+        "date": "2026-06-02",
+        "load": 0,
+        "impact": false
+      },
+      {
+        "date": "2026-06-03",
+        "load": 1.6733333333333333,
+        "impact": true
+      },
+      {
+        "date": "2026-06-04",
+        "load": 1.9416666666666664,
+        "impact": true
+      },
+      {
+        "date": "2026-06-05",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-06-06",
+        "load": 0.8310416666666667,
+        "impact": true
+      },
+      {
+        "date": "2026-06-07",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-06-08",
+        "load": 1.0202083333333334,
+        "impact": true
+      },
+      {
+        "date": "2026-06-09",
+        "load": 0,
+        "impact": false
+      },
+      {
+        "date": "2026-06-10",
+        "load": 1.3355555555555556,
+        "impact": true
+      },
+      {
+        "date": "2026-06-11",
+        "load": 2.2499999999999996,
+        "impact": true
+      },
+      {
+        "date": "2026-06-12",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-06-13",
+        "load": 0.9291666666666668,
+        "impact": true
+      },
+      {
+        "date": "2026-06-14",
+        "load": 1.375,
+        "impact": false
+      },
+      {
+        "date": "2026-06-15",
+        "load": 0,
+        "impact": false
+      }
+    ],
+    "steps": [
+      {
+        "label": "Daily load",
+        "expression": "hours in each zone \u00D7 that zone\u0027s recovery cost (easy 1, threshold 2.5, interval 4.5, strength 1.5), summed per day",
+        "value": "7.3 easy-hour equivalents this week",
+        "citationId": "coggan-training-load"
+      },
+      {
+        "label": "Acute:chronic ratio",
+        "expression": "7.3 (last 7 days) \u00F7 8.0 (average week of the last 28)",
+        "value": "0.91 \u2014 safe band 0.8\u20131.3, risk climbs past 1.5",
+        "citationId": "gabbett-workload"
+      },
+      {
+        "label": "Monotony and strain",
+        "expression": "mean daily load 1.04 \u00F7 its spread 0.75; strain = weekly load \u00D7 monotony",
+        "value": "monotony 1.4, strain 10.0 \u2014 over 2.0 the week has no contrast",
+        "citationId": "foster-monotony"
+      },
+      {
+        "label": "Impact streak",
+        "expression": "days in a row with \u2265 10 min of running or rucking, back from the latest",
+        "value": "0 days; 4 rest days in the last 7",
+        "citationId": "foster-monotony"
+      }
+    ]
+  }
+}

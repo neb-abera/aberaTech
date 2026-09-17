@@ -27,6 +27,7 @@ public static class PredictionLedger
             FitnessDbContext database, CancellationToken cancellationToken) =>
         {
             var rows = await database.Predictions
+                .AsNoTracking()
                 .OrderBy(p => p.TargetDate)
                 .ToListAsync(cancellationToken);
 
