@@ -27,6 +27,12 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
+  <!-- The least-privilege grants are tested by running the checked-in script
+       itself, not a copy of it. -->
+  <ItemGroup>
+    <None Include="..\aberaTech.Postgres\Sql\least-privilege.sql" Link="Sql\least-privilege.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Fitness\Golden\*.json" />
   </ItemGroup>

@@ -14,6 +14,21 @@ public static class AdminAuth
 
     public const string SignInPath = "/api/scheduling/admin/sign-in";
 
+    public const string CookieName = "__Host-abera.admin";
+
+    /// <summary>
+    /// What the session cookie was called before it took the __Host- prefix.
+    /// A session under this name is simply no longer a session — the host
+    /// signs in again, once — and the leftover is expired when seen.
+    /// </summary>
+    private const string LegacyCookieName = "abera.admin";
+
+    /// <summary>
+    /// The rate limiting policy on the sign-in redirect. The host registers
+    /// it; named here so the route and the registration cannot drift apart.
+    /// </summary>
+    public const string SignInPolicy = "scheduling-admin-sign-in";
+
     public static IServiceCollection AddSchedulingAdminAuth(this IServiceCollection services, AdminOptions options)
     {
         services
@@ -31,9 +46,17 @@ public static class AdminAuth
             })
             .AddCookie(cookie =>
             {
-                cookie.Cookie.Name = "abera.admin";
+                // __Host-: the browser itself then refuses the cookie unless
+                // it is Secure, has Path=/ and names no Domain, so neither a
+                // sibling subdomain nor a plain-HTTP response can plant or
+                // overwrite an admin session. The three settings below are
+                // what the prefix demands; drop one and sign-in silently stops
+                // working, which AdminCookieTests pins.
+                cookie.Cookie.Name = CookieName;
                 cookie.Cookie.HttpOnly = true;
                 cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                cookie.Cookie.Path = "/";
+                cookie.Cookie.Domain = null;
 
                 // Strict, not Lax. These endpoints change state — closing a
                 // session, marking somebody a no-show — and with Lax a top level
@@ -120,7 +143,8 @@ public static class AdminAuth
                     // freshly signed in admin somewhere else.
                     RedirectUri = LocalOrDefault(returnUrl)
                 },
-                ["Google"]));
+                ["Google"]))
+            .RequireRateLimiting(SignInPolicy);
 
         routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context) =>
         {
@@ -130,6 +154,20 @@ public static class AdminAuth
 
         routes.MapGet("/api/scheduling/admin/me", (HttpContext context) =>
         {
+            // The first call the admin page makes, so the place to tidy up:
+            // otherwise the dead cookie rides along on every request until it
+            // lapses.
+            if (context.Request.Cookies.ContainsKey(LegacyCookieName))
+            {
+                context.Response.Cookies.Delete(LegacyCookieName, new CookieOptions
+                {
+                    Path = "/",
+                    Secure = true,
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict
+                });
+            }
+
             var email = context.User.FindFirstValue(ClaimTypes.Email);
 
             return Results.Ok(new

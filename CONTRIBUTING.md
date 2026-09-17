@@ -15,7 +15,8 @@ make ports      # which compose project and host ports this copy uses
 make up         # the whole site and its database
 make dev        # hot reloading dev server
 make test       # client unit tests, against the working tree
-make servertest # scheduling unit tests, against the working tree
+make servertest # server tests, against the working tree and the compose Postgres
+make dbtest     # only the tests that need Postgres
 make lint       # biome lint and format check
 make budget     # page weight, in bytes, against scripts/page-budgets.json
 make check      # the hermetic gate CI runs, built from the Dockerfile alone
@@ -27,7 +28,11 @@ takes down the copy you are standing in. `make ports` says where yours is.
 
 `make check` builds the same Dockerfile stages CI builds (`clienttest`,
 `clientlint`, `servertest`, `clientbudget`), so if it is green on your
-machine, CI will agree — both run the same containers.
+machine, CI will agree — both run the same containers. Tests marked
+`[PostgresFact]` need a real database, which a `docker build` cannot reach, so
+the hermetic stage skips them and `scripts/server-db-tests.sh` runs them
+against the compose Postgres instead — in `make check`, and in CI on the job
+that boots the compose database.
 
 `make budget` fails when the production client build outgrows
 `scripts/page-budgets.json`: the entry script and stylesheet, what the home

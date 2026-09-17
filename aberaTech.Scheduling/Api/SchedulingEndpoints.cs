@@ -313,19 +313,33 @@ public static class SchedulingEndpoints
             return Results.Conflict(new { error = "The queue is not open right now." });
         }
 
-        // Rejoining is idempotent: pressing join twice, or reopening the link on
-        // a second device, should find the same place in the line rather than
-        // taking a second one.
-        // Only meaningful when there is a number to match on. Without one the
-        // place in the queue is remembered by the browser instead.
-        var existing = phone is null
-            ? null
-            : session.Entries.FirstOrDefault(entry =>
-                entry.PhoneE164 == phone.Value.E164 && entry.State == QueueEntryState.Waiting);
-
-        if (existing is not null)
+        // A number that is already waiting in this line takes a new place like
+        // anybody else, but earns no second stream of texts.
+        //
+        // This used to find the existing entry and answer with its id, so that
+        // joining twice was idempotent. But the id is the capability to read
+        // and cancel that place, and a phone number is not a secret: anybody
+        // who knew a soldier's number could ask for it, see where they stood
+        // and remove them from the line. Any answer that differs for a number
+        // already queued — a conflict, a missing id, an id that then reads 404
+        // — still tells a stranger that this person is waiting to be seen,
+        // which is the thing the public projection exists to keep private.
+        //
+        // So the match never reaches the response. The request follows the one
+        // path, writes the one row and returns the one shape; the only thing
+        // the match decides is that this entry holds no number. The first
+        // entry keeps its texts and its place, and the browser that made it
+        // keeps working from the id it was given. What is given up is
+        // recovering a place from a second device: that person now holds two,
+        // and the host sees the same name twice. Sending the id to the number
+        // by SMS would restore it, but no message kind or link for that exists
+        // today, and each one would be another text a stranger can cause.
+        if (phone is { } repeated
+            && session.Entries.Any(entry =>
+                entry.PhoneE164 == repeated.E164 && entry.State == QueueEntryState.Waiting))
         {
-            return Results.Ok(new { id = existing.Id });
+            phone = null;
+            request = request with { SmsConsent = false };
         }
 
         var entry = new QueueEntryRecord
@@ -433,6 +447,15 @@ public static class SchedulingEndpoints
         if (entry is null)
         {
             return Results.NotFound();
+        }
+
+        if (entry.State != QueueEntryState.Waiting)
+        {
+            // Already gone, or already seen. The id outlives the visit in the
+            // visitor's browser, and it is a capability to withdraw a place in
+            // the line — not to rewrite "done" into "cancelled" afterwards.
+            // Answered like a repeat press, as the booking cancel does.
+            return Results.NoContent();
         }
 
         entry.State = QueueEntryState.Cancelled;

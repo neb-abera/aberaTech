@@ -24,6 +24,19 @@ public sealed class DatabaseOptions
     /// working unchanged.
     /// </remarks>
     public bool UseEntraAuth { get; set; }
+
+    /// <summary>
+    /// Apply pending schema migrations when the server starts.
+    /// </summary>
+    /// <remarks>
+    /// On by default, which is how this has always deployed and what a
+    /// developer machine wants. Turned off once the serving identity is a
+    /// least-privilege role that cannot run DDL: an owner role then runs
+    /// <c>dotnet aberaTech.Server.dll migrate</c> before the revision starts,
+    /// and the server refuses to boot against a schema that is behind it. See
+    /// Sql/README.md.
+    /// </remarks>
+    public bool MigrateOnStart { get; set; } = true;
 }
 
 public static class PostgresDataSource

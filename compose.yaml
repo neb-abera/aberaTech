@@ -120,8 +120,21 @@ services:
     # The timing tests report their wall clock and enforce it only when asked,
     # because a shared machine makes the number noise. Pass the flag through
     # so `ABERA_ENFORCE_TIMING=1 make servertest` profiles on a quiet box.
+    #
+    # The database-backed tests (the queue's capability rules, the rate
+    # limiter against real endpoints, the least-privilege roles) need a real
+    # Postgres, which the hermetic servertest image stage cannot reach from
+    # inside `docker build` and so skips. Here it is one service away. The
+    # superuser connection lets each test class create and drop its own
+    # database; ABERA_REQUIRE_POSTGRES turns "no database" from a skip into a
+    # failure, so this service can never pass by skipping what it exists to run.
     environment:
       ABERA_ENFORCE_TIMING: ${ABERA_ENFORCE_TIMING:-}
+      ABERA_TEST_POSTGRES: 'Host=db;Port=5432;Database=postgres;Username=scheduling;Password=scheduling'
+      ABERA_REQUIRE_POSTGRES: '1'
+    depends_on:
+      db:
+        condition: service_healthy
     # SkipClientProject: the tests reference the server project, whose SPA
     # reference would otherwise make dotnet probe for node this image lacks.
     command:
