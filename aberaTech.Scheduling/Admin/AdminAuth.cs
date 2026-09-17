@@ -14,6 +14,12 @@ public static class AdminAuth
 
     public const string SignInPath = "/api/scheduling/admin/sign-in";
 
+    /// <summary>
+    /// The rate limiting policy on the sign-in redirect. The host registers
+    /// it; named here so the route and the registration cannot drift apart.
+    /// </summary>
+    public const string SignInPolicy = "scheduling-admin-sign-in";
+
     public static IServiceCollection AddSchedulingAdminAuth(this IServiceCollection services, AdminOptions options)
     {
         services
@@ -120,7 +126,8 @@ public static class AdminAuth
                     // freshly signed in admin somewhere else.
                     RedirectUri = LocalOrDefault(returnUrl)
                 },
-                ["Google"]));
+                ["Google"]))
+            .RequireRateLimiting(SignInPolicy);
 
         routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context) =>
         {

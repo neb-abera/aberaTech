@@ -33,7 +33,18 @@ public static class SmsReceiptEndpoint
             return Results.BadRequest();
         }
 
-        var form = await context.Request.ReadFormAsync(cancellationToken);
+        IFormCollection form;
+        try
+        {
+            form = await context.Request.ReadFormAsync(cancellationToken);
+        }
+        catch (InvalidDataException)
+        {
+            // More fields, or longer ones, than the host's form limits allow —
+            // which are set from what Twilio actually sends. Not a receipt.
+            return Results.BadRequest();
+        }
+
         var parameters = form.Select(field => new KeyValuePair<string, string>(field.Key, field.Value.ToString()));
 
         // Verified against the configured public URL, not the one reconstructed

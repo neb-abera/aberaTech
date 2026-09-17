@@ -1,5 +1,4 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-using System.Threading.RateLimiting;
 using aberaTech.Server;
 using aberaTech.Scheduling;
 using aberaTech.Scheduling.Api;
@@ -252,14 +251,6 @@ if (fitnessEnabled)
     builder.Services.AddHostedService<FitnessSyncWorker>();
 }
 
-// Rate limiting on everything a stranger can call that writes a row or causes a
-// message to be sent. The booking page is public by design, and a public form
-// wired to an SMS provider is a way to spend somebody else's money; this is the
-// second half of that defence, after restricting destinations to +1.
-//
-// Partitioned by client address (ClientAddress.cs), with a queue limit of
-// zero: excess requests are rejected outright rather than held, because
-// holding them is itself a way to exhaust the server.
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser
 // regardless, but a cache MISS travels origin-to-edge as sent — and the
 // template and Facewoof both learned this the measured way. EnableForHttps is
@@ -269,20 +260,10 @@ builder.Services.AddResponseCompression(options => options.EnableForHttps = true
 
 builder.Services.AddSingleton(ClientAddress.Bind(builder.Configuration));
 
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-    options.AddPolicy(SchedulingEndpoints.PublicWritePolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            ClientAddress.PartitionKey(context),
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
-});
+// Every ceiling on what one visitor can ask for: RateLimits.cs for how often,
+// RequestLimits.cs for how much.
+builder.Services.AddAppRateLimits();
+builder.AddRequestLimits();
 
 var app = builder.Build();
 
@@ -415,6 +396,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRateLimiter();
+app.UseGuessLimits();
+app.UseRequestLimits();
 
 if (adminOptions.IsConfigured)
 {
@@ -519,22 +502,20 @@ app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 // A subsystem that is switched off is not a failure. Only something configured
 // and unreachable is, so a deployment with no databases is still ready, exactly
 // as it is still healthy.
-app.MapGet("/readyz", async (IServiceProvider services, CancellationToken cancellationToken) =>
+//
+// The answer is shared for two seconds (ReadinessProbe.cs): the route is
+// unauthenticated and every evaluation opens database connections.
+var readiness = new ReadinessProbe(TimeSpan.FromSeconds(2), TimeProvider.System, async deadline =>
 {
-    // A hung database must not hang the probe; an unanswered check inside this
-    // budget is a failed check.
-    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-    deadline.CancelAfter(TimeSpan.FromSeconds(5));
-
     async Task<ReadinessCheck> Check<TContext>(string name, bool configured) where TContext : DbContext
     {
         if (!configured) return Readiness.NotConfigured(name);
 
         try
         {
-            using var scope = services.CreateScope();
+            using var scope = app.Services.CreateScope();
             var database = scope.ServiceProvider.GetRequiredService<TContext>();
-            return await database.Database.CanConnectAsync(deadline.Token)
+            return await database.Database.CanConnectAsync(deadline)
                 ? Readiness.Reachable(name)
                 : Readiness.Unreachable(name, "unreachable");
         }
@@ -546,12 +527,16 @@ app.MapGet("/readyz", async (IServiceProvider services, CancellationToken cancel
         }
     }
 
-    var report = Readiness.From(
+    return Readiness.From(
     [
         await Check<SchedulingDbContext>("scheduling-db", !string.IsNullOrWhiteSpace(connectionString)),
         await Check<FitnessDbContext>("fitness-db", fitnessEnabled)
     ]);
+});
 
+app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
+{
+    var report = await readiness.GetAsync(cancellationToken);
     return Results.Json(report, statusCode: report.StatusCode);
 });
 
