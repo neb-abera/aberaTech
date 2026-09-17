@@ -71,14 +71,16 @@ public sealed class TestDatabase : IDisposable
 {
     private readonly string _admin;
 
-    public TestDatabase(string prefix = "t")
+    public TestDatabase(string prefix = "t", string? owner = null)
     {
         _admin = TestPostgres.AdminConnectionString
                  ?? throw new InvalidOperationException($"{TestPostgres.Variable} is not set.");
 
         // Unique per instance: test classes run in parallel against one server.
         Name = $"{prefix}_{Guid.NewGuid():N}";
-        Execute(_admin, $"CREATE DATABASE \"{Name}\"");
+        Execute(_admin, owner is null
+            ? $"CREATE DATABASE \"{Name}\""
+            : $"CREATE DATABASE \"{Name}\" OWNER \"{owner}\"");
     }
 
     public string Name { get; }

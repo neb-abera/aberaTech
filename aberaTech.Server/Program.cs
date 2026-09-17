@@ -285,6 +285,15 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// `dotnet aberaTech.Server.dll migrate`: apply migrations as whoever the
+// connection strings name, and exit without serving. See DatabaseMigrations.
+if (DatabaseMigrations.IsRequested(args))
+{
+    Environment.ExitCode = await DatabaseMigrations.RunAsync(
+        app.Configuration, app.Services.GetRequiredService<ILoggerFactory>());
+    return;
+}
+
 app.UseResponseCompression();
 
 // Container Apps ingress terminates TLS and forwards over HTTP. Without this,
@@ -436,19 +445,19 @@ if (fitnessEnabled)
 
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
-    // Migrate on start. Reasonable here because this deploys as a single
-    // container app revision with one writer; it would not be reasonable behind
-    // several replicas rolling independently, where two instances can race the
-    // same migration. Revisit that before scaling out, not after.
-    using (var scope = app.Services.CreateScope())
-    {
-        var database = scope.ServiceProvider.GetRequiredService<SchedulingDbContext>();
-        await database.Database.MigrateAsync();
+    // Migrate on start, unless Database:MigrateOnStart says an owner role does
+    // that as its own step (DatabaseMigrations). Reasonable here because this
+    // deploys as a single container app revision with one writer; it would not
+    // be reasonable behind several replicas rolling independently, where two
+    // instances can race the same migration. Revisit that before scaling out,
+    // not after.
+    await app.PrepareAsync<SchedulingDbContext>("scheduling");
 
-        if (app.Environment.IsDevelopment())
-        {
-            await SchedulingDevelopmentData.SeedAsync(database, schedulingOptions);
-        }
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<SchedulingDbContext>();
+        await SchedulingDevelopmentData.SeedAsync(database, schedulingOptions);
     }
 
     app.MapSchedulingEndpoints();
@@ -476,11 +485,7 @@ else
 if (fitnessEnabled)
 {
     // Same single-writer reasoning as the scheduling migration above.
-    using (var scope = app.Services.CreateScope())
-    {
-        var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        await database.Database.MigrateAsync();
-    }
+    await app.PrepareAsync<FitnessDbContext>("fitness");
 
     app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions);
 }
