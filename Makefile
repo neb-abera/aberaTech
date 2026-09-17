@@ -39,7 +39,7 @@ export DB_PORT
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest lint fmt budget check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -84,9 +84,12 @@ test-watch: ## Unit tests, re-run on every change
 	$(COMPOSE) build test
 	$(COMPOSE) run --rm test npm run test:watch
 
-servertest: ## Scheduling unit tests, against the working tree
+servertest: ## Server tests, against the working tree and the compose Postgres
 	$(COMPOSE) build servertest
 	$(COMPOSE) run --rm servertest
+
+dbtest: ## Only the server tests that need Postgres; CI runs this too
+	./scripts/server-db-tests.sh
 
 lint: ## biome lint and format check, against the working tree
 	$(COMPOSE) build lint
@@ -105,6 +108,7 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format and p
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
+	./scripts/server-db-tests.sh
 
 image: ## Build the production image the deploy pipeline builds
 	$(DOCKER) build --build-arg IN_DOCKER=true -t $(IMAGE) -f $(DOCKERFILE) .
