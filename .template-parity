@@ -1,0 +1,12 @@
+# Files this repository shares with modern-webapp-template and must keep
+# byte-identical to its default branch. scripts/check-template-parity.sh
+# fetches each from the template and compares on every pull request, so a
+# port that grows past the template is caught there rather than in the next
+# audit. A change to one of these lands in the template first.
+#
+# Format: one path per line; the first line names the template.
+template: neb-abera/modern-webapp-template
+scripts/check-held-majors.sh
+scripts/held-majors.mjs
+scripts/held-nuget-majors.cs
+scripts/check-template-parity.sh
