@@ -30,9 +30,10 @@ What to expect:
   pull request and weekly (`security-scan.yml`)
 * Dependabot alerts, security updates and weekly version updates across
   nuget, npm, docker and actions
-* a held-majors check on every pull request fails when a dependency's next
-  major cannot install, the one case Dependabot stays silent about (accepted
-  cases live in `.held-majors` with their reasoning)
+* a held-majors check on every pull request fails when an npm dependency's
+  next major cannot install or a NuGet dependency's next major ships no
+  framework the project can consume, the two cases Dependabot stays silent
+  about (accepted cases live in `.held-majors` with their reasoning)
 * dependency review blocks pull requests that introduce high-severity
   vulnerable dependencies
 * OpenSSF Scorecard grades the repository's supply-chain posture weekly
