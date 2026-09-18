@@ -35,11 +35,13 @@ against the compose Postgres instead — in `make check`, and in CI on the job
 that boots the compose database.
 
 `make check` also runs `scripts/check-held-majors.sh`, which fails when a
-dependency's next major cannot install beside the rest of its manifest.
-Dependabot only opens a pull request for a bump that installs, so without it
-such a pin ages with nothing red. The fix is a manifest of its own for the
-package; a case you accept goes in `.held-majors` with its reason, and the
-check tells you when that entry can be dropped.
+dependency's next major cannot be taken: an npm major that cannot install
+beside the rest of its manifest, or a NuGet major that ships no framework the
+referencing project can consume. Dependabot only offers a bump the project can
+take, so without it such a pin ages with nothing red. The fix is a manifest of
+its own for an npm package or a target framework move for a NuGet one; a case
+you accept goes in `.held-majors` with its reason, and the check tells you
+when that entry can be dropped.
 
 `make budget` fails when the production client build outgrows
 `scripts/page-budgets.json`: the entry script and stylesheet, what the home
