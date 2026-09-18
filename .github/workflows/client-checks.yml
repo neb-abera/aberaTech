@@ -357,6 +357,7 @@ jobs:
             api.github.com:443
             objects.githubusercontent.com:443
             release-assets.githubusercontent.com:443
+            raw.githubusercontent.com:443
 
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -390,3 +391,10 @@ jobs:
       # this fails when that list and the PR-gating job names drift apart.
       - name: Required contexts match the PR-gating workflows
         run: ./scripts/check-required-contexts.sh
+
+      - name: Shared files match the template
+        # The files .template-parity lists are byte-identical to
+        # modern-webapp-template's default branch, or this fails. A change
+        # to one of them lands in the template first. Reads the template's
+        # files from raw.githubusercontent.com, allowed above.
+        run: ./scripts/check-template-parity.sh
