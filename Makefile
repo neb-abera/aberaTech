@@ -108,6 +108,8 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format and p
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
+	./scripts/check-held-majors.sh --self-test
+	./scripts/check-held-majors.sh
 	./scripts/server-db-tests.sh
 
 image: ## Build the production image the deploy pipeline builds

@@ -34,6 +34,13 @@ the hermetic stage skips them and `scripts/server-db-tests.sh` runs them
 against the compose Postgres instead — in `make check`, and in CI on the job
 that boots the compose database.
 
+`make check` also runs `scripts/check-held-majors.sh`, which fails when a
+dependency's next major cannot install beside the rest of its manifest.
+Dependabot only opens a pull request for a bump that installs, so without it
+such a pin ages with nothing red. The fix is a manifest of its own for the
+package; a case you accept goes in `.held-majors` with its reason, and the
+check tells you when that entry can be dropped.
+
 `make budget` fails when the production client build outgrows
 `scripts/page-budgets.json`: the entry script and stylesheet, what the home
 page fetches first, and each prerendered page, gzipped. The numbers sit about
