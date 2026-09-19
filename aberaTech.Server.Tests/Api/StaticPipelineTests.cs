@@ -144,6 +144,28 @@ public sealed class StaticPipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task The_csp_asks_for_upgrades_over_https_and_not_over_plain_http()
+    {
+        // upgrade-insecure-requests makes the browser fetch every subresource
+        // over https. Right for every visitor, who arrives over https; wrong
+        // for the production image on the compose network, where the browser
+        // suite runs over plain http and the upgraded bundle URL answers
+        // nothing. So it hangs off the scheme, exactly as HSTS does.
+        using var plain = _factory.CreateClient();
+        using var secure = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        var overHttp = Assert.Single((await plain.GetAsync("/")).Headers.GetValues("Content-Security-Policy"));
+        var overHttps = Assert.Single((await secure.GetAsync("/")).Headers.GetValues("Content-Security-Policy"));
+
+        Assert.DoesNotContain("upgrade-insecure-requests", overHttp);
+        Assert.EndsWith("frame-ancestors 'self'", overHttp);
+        Assert.EndsWith("frame-ancestors 'self'; upgrade-insecure-requests", overHttps);
+    }
+
+    [Fact]
     public async Task The_csp_allows_the_rum_beacon_cloudflare_injects()
     {
         // Real-user metrics are opted into deliberately: Cloudflare injects

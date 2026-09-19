@@ -39,10 +39,10 @@ export DB_PORT
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget e2e check image run clean
 
 help: ## List the available targets
-	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
+	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
 		| awk -F':.*?## ' '{printf "  \033[36m%-11s\033[0m %s\n", $$1, $$2}'
 
 ports: ## Which compose project and host ports this worktree uses
@@ -102,7 +102,41 @@ fmt: ## Rewrite files to match biome
 budget: ## Page weight: the production client build against scripts/page-budgets.json
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
 
-check: ## The gate CI runs: type check, unit tests, coverage, lint, format and page weight
+# The Playwright image is derived from e2e/package.json, the way the template
+# does it: the browsers in the image and the runner in the manifest have to be
+# the same version, so Dependabot's bump of @playwright/test moves both and
+# nothing here can drift from it.
+PLAYWRIGHT_IMAGE := mcr.microsoft.com/playwright:v$(shell sed -n 's|.*"@playwright/test": "\([^"]*\)".*|\1|p' e2e/package.json)-noble
+E2E_CONTAINER    := $(subst :,-,$(IMAGE))-e2e
+
+# The suite runs on this worktree's compose network against the `app` service
+# by its app-under-test alias (compose.yaml says why not `app`), so nothing
+# leaves the box and two worktrees never test each other's build. Named
+# container rather than --rm so the traces can be copied out when it fails;
+# it is removed either way.
+e2e: ## Playwright against the production image and its database, on the compose network
+	$(COMPOSE) up -d --build --wait app
+	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1 || true
+	$(DOCKER) run --name $(E2E_CONTAINER) \
+	  --network "$$($(COMPOSE) config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1)_default" \
+	  -v $(CURDIR)/e2e:/src:ro -v $(subst :,-,$(IMAGE))-npm:/npm-cache \
+	  -e npm_config_cache=/npm-cache -e E2E_BASE_URL=http://app-under-test:8080 \
+	  -e CI="$${CI:-}" -e GITHUB_ACTIONS="$${GITHUB_ACTIONS:-}" -e GITHUB_WORKSPACE=/w \
+	  $(PLAYWRIGHT_IMAGE) bash -c 'set -e; mkdir -p /w && cp -r /src /w/e2e && cd /w/e2e; \
+	    for _ in $$(seq 1 60); do curl -sf "$$E2E_BASE_URL/healthz" > /dev/null && break; sleep 2; done; \
+	    curl -sf "$$E2E_BASE_URL/healthz" > /dev/null; \
+	    npm ci --no-audit --no-fund && npx playwright test'; \
+	status=$$?; \
+	if [ $$status -ne 0 ]; then \
+	  rm -rf e2e-test-results; \
+	  $(DOCKER) cp $(E2E_CONTAINER):/w/e2e/test-results e2e-test-results > /dev/null 2>&1 \
+	    && echo 'playwright traces copied to e2e-test-results/'; \
+	  echo '--- app logs (last 40 lines):'; $(COMPOSE) logs --no-log-prefix app 2>&1 | tail -40; \
+	fi; \
+	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1; \
+	exit $$status
+
+check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, database and browser suites
 	./scripts/check-required-contexts.sh
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
@@ -112,6 +146,7 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format and p
 	./scripts/check-held-majors.sh
 	./scripts/check-template-parity.sh
 	./scripts/server-db-tests.sh
+	$(MAKE) e2e
 
 image: ## Build the production image the deploy pipeline builds
 	$(DOCKER) build --build-arg IN_DOCKER=true -t $(IMAGE) -f $(DOCKERFILE) .

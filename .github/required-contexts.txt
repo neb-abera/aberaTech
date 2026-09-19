@@ -10,6 +10,7 @@
 #     --jq '.rules[] | select(.type=="required_status_checks")'
 #
 Compose database boots healthy
+End-to-end, in the container
 Lint and format, in the container
 Production image, in the container
 Scheduling unit tests, in the container
