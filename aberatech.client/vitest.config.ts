@@ -24,7 +24,9 @@ export default defineConfig({
       // Code files only: a bare src/** also feeds READMEs to the parser.
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.d.ts"],
-      reporter: ["text", "text-summary"],
+      // text for the log (client-checks.yml lifts the summary lines into
+      // the job summary), lcov for Codecov.
+      reporter: ["text", "text-summary", "lcov"],
       // Measured 2026-09-19: 66.7% lines, 66.6% statements, 46.1% branches,
       // 57.1% functions (1220 tests; 57.5% lines on 2026-08 when the lines
       // floor was set at 50). Each floor sits five to ten points below its
