@@ -144,6 +144,7 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
 	./scripts/check-held-majors.sh --self-test
 	./scripts/check-held-majors.sh
+	./scripts/check-template-parity.sh --self-test
 	./scripts/check-template-parity.sh
 	./scripts/server-db-tests.sh
 	$(MAKE) e2e
