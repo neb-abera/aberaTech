@@ -14,7 +14,9 @@ public static class SmsReceiptEndpoint
 
     public static IEndpointRouteBuilder MapSmsReceipts(this IEndpointRouteBuilder routes)
     {
-        routes.MapPost(Path, HandleAsync);
+        // Twilio has no session; the request signature below is its whole
+        // authorization, so the route is anonymous on purpose.
+        routes.MapPost(Path, HandleAsync).AllowAnonymous();
         return routes;
     }
 

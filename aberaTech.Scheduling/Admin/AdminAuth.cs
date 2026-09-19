@@ -144,7 +144,8 @@ public static class AdminAuth
                     RedirectUri = LocalOrDefault(returnUrl)
                 },
                 ["Google"]))
-            .RequireRateLimiting(SignInPolicy);
+            .RequireRateLimiting(SignInPolicy)
+            .AllowAnonymous();
 
         routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context) =>
         {
@@ -176,7 +177,7 @@ public static class AdminAuth
                 signedIn = context.User.Identity?.IsAuthenticated == true && options.Allows(email),
                 email = options.Allows(email) ? email : null
             });
-        });
+        }).AllowAnonymous();
 
         return routes;
     }
@@ -196,7 +197,7 @@ public static class AdminAuth
     public static IEndpointRouteBuilder MapAdminUnavailable(this IEndpointRouteBuilder routes)
     {
         routes.MapGet("/api/scheduling/admin/me", () =>
-            Results.Ok(new { configured = false, signedIn = false, email = (string?)null }));
+            Results.Ok(new { configured = false, signedIn = false, email = (string?)null })).AllowAnonymous();
 
         return routes;
     }

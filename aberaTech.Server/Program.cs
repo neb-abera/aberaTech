@@ -8,6 +8,8 @@ using aberaTech.Scheduling.Outbox;
 using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Compliance;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using aberaTech.Scheduling.Sms;
 using Microsoft.AspNetCore.RateLimiting;
@@ -56,6 +58,22 @@ builder.Services.AddSingleton(adminOptions);
 if (adminOptions.IsConfigured)
 {
     builder.Services.AddSchedulingAdminAuth(adminOptions);
+
+    // Deny by default. Every endpoint says who may call it — a policy, or an
+    // explicit AllowAnonymous — and RouteTableTests fails the build on one that
+    // says nothing. This is the runtime half of the same rule: should an
+    // endpoint ever be mapped without either, it answers as the admin surface
+    // does — 401 with no session, 403 for a Google account the allowlist does
+    // not name — rather than serving whoever finds it. "Signed in" alone would
+    // be no bar here, since anybody has a Google account. Registered here
+    // because the authorization middleware only runs when sign-in is
+    // configured; a deployment with no admin surface has no caller it could
+    // require, and its route table is entirely anonymous by the same test.
+    builder.Services.AddAuthorizationBuilder()
+        .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context => adminOptions.Allows(context.User.FindFirstValue(ClaimTypes.Email)))
+            .Build());
 }
 
 // One clock, injected everywhere, so that "now" is a dependency rather than an
@@ -333,7 +351,15 @@ app.Use(async (context, next) =>
         + "frame-src https://docs.google.com https://drive.google.com "
         + "https://www.youtube.com https://www.youtube-nocookie.com; "
         + "object-src 'none'; base-uri 'self'; form-action 'self'; "
-        + "frame-ancestors 'self'; upgrade-insecure-requests";
+        + "frame-ancestors 'self'"
+        // Only over HTTPS, like HSTS below and for the same reason. Production
+        // always is (Cloudflare, then the ingress; ClientAddress reads
+        // X-Forwarded-Proto), so every visitor gets it. Over plain HTTP — the
+        // production image on the compose network, where `make e2e` drives a
+        // real browser — the same directive makes Chromium fetch the bundle
+        // from https://app-under-test:8080, which nothing answers, and the
+        // page never boots. StaticPipelineTests pins both halves.
+        + (context.Request.IsHttps ? "; upgrade-insecure-requests" : "");
     headers["X-Content-Type-Options"] = "nosniff";
     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
@@ -399,7 +425,9 @@ app.UseSecurityEvents();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // The API explorer, Development only; anonymous because a developer's own
+    // loopback has no sign-in to require.
+    app.MapOpenApi().AllowAnonymous();
 }
 
 app.UseHttpsRedirection();
@@ -498,7 +526,7 @@ if (string.IsNullOrWhiteSpace(connectionString) || !adminOptions.IsConfigured)
 // deliberately does not touch a database. The fitness and scheduling surfaces
 // each fail closed on their own configuration, and a deployment with neither
 // database is still a healthy deployment of this app.
-app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
+app.MapGet("/healthz", () => Results.Text("ok", "text/plain")).AllowAnonymous();
 
 // Readiness, which is the other half and was missing. Liveness above answers
 // "is this process serving"; this answers "are the dependencies it was
@@ -546,7 +574,7 @@ app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
 {
     var report = await readiness.GetAsync(cancellationToken);
     return Results.Json(report, statusCode: report.StatusCode);
-});
+}).AllowAnonymous();
 
 // Before the SPA fallback, so a plain fetch of these two gets real HTML rather
 // than an empty shell. Mapped unconditionally: they must answer on any
@@ -582,7 +610,7 @@ app.MapFallback(async context =>
     await context.Response.SendFileAsync(
         app.Environment.WebRootFileProvider.GetFileInfo("spa.html"),
         context.RequestAborted);
-});
+}).AllowAnonymous();
 
 app.Run();
 
