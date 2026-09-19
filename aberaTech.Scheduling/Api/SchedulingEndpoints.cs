@@ -101,14 +101,17 @@ public static class SchedulingEndpoints
             options.HostName,
             ResolveZone(zone, options).Id,
             [],
-            null)));
+            null))).AllowAnonymous();
 
         return routes;
     }
 
     public static IEndpointRouteBuilder MapSchedulingEndpoints(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/scheduling").WithTags("Scheduling");
+        // Public by design: the booking page has no account, and the queue
+        // and booking ids are the capabilities (see the cancel handlers). Said
+        // explicitly, because every endpoint declares who may call it.
+        var group = routes.MapGroup("/api/scheduling").WithTags("Scheduling").AllowAnonymous();
 
         group.MapGet("/state", GetStateAsync);
         group.MapGet("/queue/{entryId:guid}", GetMyPlaceAsync);

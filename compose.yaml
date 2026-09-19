@@ -181,6 +181,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Chromium hard-upgrades any host named `app` to HTTPS (the entire .app
+    # TLD is HSTS-preloaded, and the bare name matches), which breaks
+    # browser-driven tests against http://app:8080 with ERR_SSL_PROTOCOL_ERROR.
+    # `make e2e` dials this alias instead; anything that is not a browser can
+    # keep using the service name.
+    networks:
+      default:
+        aliases:
+          - app-under-test
 
 volumes:
   scheduling-db:
