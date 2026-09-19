@@ -1,3 +1,8 @@
+[![Checks](https://github.com/neb-abera/aberaTech/actions/workflows/client-checks.yml/badge.svg?branch=master)](https://github.com/neb-abera/aberaTech/actions/workflows/client-checks.yml)
+[![CodeQL](https://github.com/neb-abera/aberaTech/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/neb-abera/aberaTech/security/code-scanning)
+[![codecov](https://codecov.io/gh/neb-abera/aberaTech/graph/badge.svg)](https://codecov.io/gh/neb-abera/aberaTech)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/neb-abera/aberaTech/badge)](https://scorecard.dev/viewer/?uri=github.com/neb-abera/aberaTech)
+
 # aberaTech
 
 Visit https://abera.tech for a demonstration
