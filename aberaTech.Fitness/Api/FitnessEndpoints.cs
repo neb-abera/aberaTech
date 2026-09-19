@@ -79,8 +79,11 @@ public static class FitnessEndpoints
         var group = routes.MapGroup("/api/fitness");
 
         // The Development bypass is the one case with no policy: sign-in is
-        // skipped entirely, decided by FitnessGate, never by this default.
-        var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group;
+        // skipped entirely, decided by FitnessGate, never by this default. It
+        // says so — AllowAnonymous — rather than saying nothing, because every
+        // endpoint declares who may call it (RouteTableTests) and the
+        // fallback policy closes one that does not.
+        var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group.AllowAnonymous();
 
         // Whatever a write changed, the cached pages may have read.
         api.EvictOnWrite();
@@ -100,7 +103,7 @@ public static class FitnessEndpoints
                 hevyApi = options.HasHevyApi,
                 intervalsIcu = intervalsIcu.IsConfigured
             });
-        });
+        }).AllowAnonymous();
 
         // The week in one page, for the dashboard.
         api.MapGet("/digest", async (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
@@ -121,7 +124,7 @@ public static class FitnessEndpoints
 
                 var digest = await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken);
                 return Results.Text(digest.Text + "\n", "text/plain; charset=utf-8");
-            });
+            }).AllowAnonymous(); // The bearer key above is the whole of its authorization.
         }
 
         api.MapGet("/summary", (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
@@ -155,7 +158,7 @@ public static class FitnessEndpoints
         // and the course planner are the owner's, and a visitor gets neither
         // a read nor a write.
         var progress = routes.MapGroup("/api/progress");
-        (requireOwnerSignIn ? progress.RequireAuthorization(PolicyName) : progress).MapProgressEndpoints();
+        (requireOwnerSignIn ? progress.RequireAuthorization(PolicyName) : progress.AllowAnonymous()).MapProgressEndpoints();
 
         api.MapGet("/predictions", async (
             FitnessDbContext database,
@@ -580,7 +583,7 @@ public static class FitnessEndpoints
             signedIn = false,
             hevyApi = false,
             intervalsIcu = false
-        }));
+        })).AllowAnonymous();
 
         return routes;
     }

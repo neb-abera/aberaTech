@@ -12,7 +12,9 @@
       "!**/bin",
       "!**/obj",
       "!aberatech.client/public",
-      "!**/packages.lock.json"
+      "!**/packages.lock.json",
+      "!**/test-results",
+      "!e2e-test-results"
     ]
   },
   "formatter": {

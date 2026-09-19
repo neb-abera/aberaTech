@@ -1,5 +1,5 @@
-# The gate for the whole repository: the client, its style, and the scheduling
-# feature on the server.
+# The gate for the whole repository: the client, its style, the server, and
+# the site end to end in a browser.
 #
 # Each job builds a stage of the same Dockerfile a developer builds locally with
 # `make check`, so a green run here means the code passed on the same node and
@@ -240,10 +240,12 @@ jobs:
             --progress plain \
             . 2>&1 | tee servertest-build.log
 
-      # Parses the test-runner summary and the coverage line the servertest
-      # stage prints — never re-runs tests. ANSI escapes are stripped before
-      # matching. Guarded so a missing line (e.g. a fully cached stage)
-      # degrades to no summary rather than a red job.
+      # Parses the one verdict line the servertest stage prints
+      # (scripts/check-server-tests.sh): coverage, the counts, and how many
+      # [PostgresFact] tests were deferred to the compose database — never
+      # re-runs tests. ANSI escapes are stripped before matching. Guarded so
+      # a missing line (e.g. a fully cached stage) degrades to no summary
+      # rather than a red job.
       - name: Append test totals to the job summary
         run: |
           [ -n "${GITHUB_STEP_SUMMARY:-}" ] || exit 0
@@ -251,16 +253,20 @@ jobs:
           # `|| true`: the runner shell is bash -e, and a fully cached build
           # stage replays no test output — a no-match grep must fall through
           # to the guard below, not fail the step.
-          passed=$(grep -Eo 'Passed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
-          failed=$(grep -Eo 'Failed:[[:space:]]+[0-9]+' servertest-build.clean | grep -Eo '[0-9]+' | tail -1 || true)
-          coverage=$(grep -Eo 'server line coverage: [0-9.]+%' servertest-build.clean | grep -Eo '[0-9.]+%' | tail -1 || true)
-          [ -n "${passed:-}" ] || exit 0
+          verdict=$(grep -E '^server line coverage: ' servertest-build.clean | tail -1 || true)
+          [ -n "${verdict:-}" ] || exit 0
+          field() { grep -Eo "$1" <<< "$verdict" | grep -Eo '[0-9.]+%?' | head -1 || true; }
+          passed=$(field '[0-9]+ passed')
+          failed=$(field '[0-9]+ failed')
+          skipped=$(field '[0-9]+ skipped')
+          deferred=$(field '[0-9]+ \[PostgresFact\]')
+          coverage=$(field 'coverage: [0-9.]+%')
           {
-            echo "### Scheduling: unit tests (container)"
+            echo "### Server: unit tests (container)"
             echo ""
-            echo "| Passed | Failed | Line coverage |"
-            echo "| --- | --- | --- |"
-            echo "| ${passed} | ${failed:-0} | ${coverage:-?} |"
+            echo "| Passed | Failed | Skipped | Deferred to Postgres | Line coverage |"
+            echo "| --- | --- | --- | --- | --- |"
+            echo "| ${passed:-?} | ${failed:-?} | ${skipped:-?} | ${deferred:-?} | ${coverage:-?} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   production-image:
@@ -334,6 +340,47 @@ jobs:
               exit 1
               ;;
           esac
+
+  e2e:
+    name: End-to-end, in the container
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job builds/runs containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface as
+          # refused raw-IP dials. Host-process jobs stay on block.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Exactly what `make e2e` runs locally: the production image and its
+      # database up through compose, and Playwright (in the image that matches
+      # e2e/package.json) dialling the app over the compose network. The
+      # delivery bugs that reach production are the ones nothing opened in a
+      # browser: an uncompressed bundle, a cookie on an asset, a prerendered
+      # page that is blank with JavaScript off.
+      - name: Playwright against the production image
+        run: make e2e
+
+      # When the browser suite fails, the trace is how you see what it saw.
+      - name: Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-traces
+          path: e2e-test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: App logs
+        if: always()
+        run: docker compose logs app 2>&1 | tail -40 || true
 
   # Lint the linters: the workflows and shell scripts every other gate is
   # built out of get no checks from the app toolchain, so a typo'd `if:` or

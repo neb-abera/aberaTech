@@ -279,6 +279,6 @@ internal static class FitnessSeed
     }
 
     /// <summary>Identifiers that are the same every run, so the payload is too.</summary>
-    private static Guid Id(int kind, int number) =>
+    internal static Guid Id(int kind, int number) =>
         new($"{kind:00000000}-0000-4000-8000-{number:000000000000}");
 }

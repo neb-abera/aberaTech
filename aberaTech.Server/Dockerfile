@@ -160,10 +160,23 @@ COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
 # Tests plus a line-coverage floor, enforced here so `make check` and CI gate
 # identically. coverlet.collector writes a cobertura report (generated EF
 # migrations excluded — they inflate the denominator without being testable
-# logic); the floor sits below the measured value (30.5% on 2026-08) so a
-# reasonable refactor doesn't break the build, while deleting tests or
-# landing a large untested feature does. Low on purpose: it is a ratchet to
-# raise as coverage grows, not a target. Measured 51.4% on 2026-09-08.
+# logic); the floor sits below the measured value so a reasonable refactor
+# doesn't break the build, while deleting tests or landing a large untested
+# feature does. A ratchet to raise as coverage grows, not a target: measured
+# 30.5% on 2026-08 and 51.4% on 2026-09-08 against a floor of 25; measured
+# 81.2% on 2026-09-19 (871 hermetic tests), when the floor moved to 60.
+#
+# Honest about what it did not run. There is no database inside `docker
+# build`, so the [PostgresFact] tests are excluded by their trait — the same
+# Category=Postgres filter scripts/server-db-tests.sh selects them with — and
+# counted, rather than run and left to skip themselves: a skip the gate
+# expected was cover for any skip it did not, and a stray Skip= anywhere
+# would have passed unseen behind ten expected ones. check-server-tests.sh
+# reads the runner's summary and the report, prints one line with the
+# coverage, the counts and how many tests were deferred to the compose
+# database, and fails on any skip, any failure, nothing deferred, or coverage
+# under the floor. Its self-test runs first, every time, so a checker that
+# has stopped failing is caught before it is trusted.
 #
 # SingleHit=true: coverlet's default counts every hit of every location, and
 # that counter sits inside the model-fitting loops the Fitness tests drive
@@ -174,15 +187,21 @@ COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
 # are the only thing given up, and nothing here consumes them. This stage
 # was the long pole of every pull request, at 5 to 15 minutes on the shared
 # runners, for that one default.
-ARG SERVER_COVERAGE_MIN=25
-RUN dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SingleHit=true && \
+#
+# bash with pipefail for the RUN below: the run's output is tee'd to a file
+# the checker reads, and under sh a failing `dotnet test` behind a pipe
+# would exit 0.
+COPY ["scripts/check-server-tests.sh", "/gate/"]
+ARG SERVER_COVERAGE_MIN=60
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN /gate/check-server-tests.sh --self-test && \
+    dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true \
+      --filter "Category!=Postgres" \
+      --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SingleHit=true \
+      2>&1 | tee /tmp/servertest.log && \
+    deferred="$(dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-build -p:SkipClientProject=true --list-tests --filter "Category=Postgres" | grep -c '^[[:space:]]*aberaTech\.' || true)" && \
     report="$(find aberaTech.Server.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)" && \
-    [ -n "$report" ] && \
-    rate="$(sed -n 's/.*<coverage[^>]*line-rate="\([0-9.]*\)".*/\1/p' "$report" | head -1)" && \
-    awk -v r="$rate" -v m="$SERVER_COVERAGE_MIN" 'BEGIN { \
-      printf "server line coverage: %.1f%% (minimum %d%%)\n", r * 100, m; \
-      exit (r * 100 >= m) ? 0 : 1 \
-    }'
+    /gate/check-server-tests.sh /tmp/servertest.log "$report" "$deferred" "$SERVER_COVERAGE_MIN"
 
 # Publish .NET server
 #
