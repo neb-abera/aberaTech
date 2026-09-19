@@ -19,8 +19,8 @@ public static class CompliancePages
 {
     public static IEndpointRouteBuilder MapCompliancePages(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/sms-terms", () => Results.Content(Terms, "text/html; charset=utf-8"));
-        routes.MapGet("/sms-privacy", () => Results.Content(Privacy, "text/html; charset=utf-8"));
+        routes.MapGet("/sms-terms", () => Results.Content(Terms, "text/html; charset=utf-8")).AllowAnonymous();
+        routes.MapGet("/sms-privacy", () => Results.Content(Privacy, "text/html; charset=utf-8")).AllowAnonymous();
 
         return routes;
     }
