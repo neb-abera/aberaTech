@@ -19,7 +19,8 @@ make servertest # server tests, against the working tree and the compose Postgre
 make dbtest     # only the tests that need Postgres
 make lint       # biome lint and format check
 make budget     # page weight, in bytes, against scripts/page-budgets.json
-make check      # the hermetic gate CI runs, built from the Dockerfile alone
+make e2e        # Playwright against the production image and its database
+make check      # the gate CI runs: the hermetic stages, then the database and browser suites
 ```
 
 Ports and container names are derived from the directory, so several worktrees
@@ -30,9 +31,19 @@ takes down the copy you are standing in. `make ports` says where yours is.
 `clientlint`, `servertest`, `clientbudget`), so if it is green on your
 machine, CI will agree — both run the same containers. Tests marked
 `[PostgresFact]` need a real database, which a `docker build` cannot reach, so
-the hermetic stage skips them and `scripts/server-db-tests.sh` runs them
-against the compose Postgres instead — in `make check`, and in CI on the job
-that boots the compose database.
+the hermetic stage excludes them by their trait and counts them, and
+`scripts/server-db-tests.sh` runs them against the compose Postgres instead —
+in `make check`, and in CI on the job that boots the compose database. The
+hermetic stage tolerates no skip at all: `scripts/check-server-tests.sh` reads
+the run's summary and fails on one, so a stray `Skip =` cannot hide behind the
+Postgres tests, and it proves it can fail (`--self-test`) before every run.
+
+`make e2e` is the browser's view: Playwright, in the image that matches
+`e2e/package.json`, against the production image and its database as `make
+up` runs them. It checks what no unit test can — the bundle arrives
+compressed, hashed assets are immutable and the document is not, nothing
+static sets a cookie, and every prerendered page reads with JavaScript off.
+Traces land in `e2e-test-results/` when it fails.
 
 `make check` also runs `scripts/check-held-majors.sh`, which fails when a
 dependency's next major cannot be taken: an npm major that cannot install

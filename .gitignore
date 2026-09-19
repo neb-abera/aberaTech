@@ -443,3 +443,6 @@ FodyWeavers.xsd
 # Written by scripts/worktree-env.sh: this working copy's own compose ports.
 # Per-copy by definition, so it never belongs to the repository.
 .env
+
+# Playwright traces copied out by `make e2e` when the browser suite fails
+e2e-test-results/

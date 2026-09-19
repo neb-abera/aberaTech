@@ -25,12 +25,17 @@ export default defineConfig({
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.d.ts"],
       reporter: ["text", "text-summary"],
-      // Measured 57.5% lines on 2026-08; the floor sits below that so a
-      // reasonable refactor doesn't break the build, while deleting tests or
-      // landing a large untested feature does. A ratchet to raise as
-      // coverage grows, not a target.
+      // Measured 2026-09-19: 66.7% lines, 66.6% statements, 46.1% branches,
+      // 57.1% functions (1220 tests; 57.5% lines on 2026-08 when the lines
+      // floor was set at 50). Each floor sits five to ten points below its
+      // measurement, so a reasonable refactor doesn't break the build while
+      // deleting tests or landing a large untested feature does. A ratchet
+      // to raise as coverage grows, not a target.
       thresholds: {
-        lines: 50,
+        lines: 55,
+        statements: 60,
+        branches: 40,
+        functions: 50,
       },
     },
   },

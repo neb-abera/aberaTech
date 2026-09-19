@@ -69,7 +69,8 @@ make dev        # hot reloading dev server
 make test       # unit tests, against your working tree
 make lint       # eslint and prettier, against your working tree
 make fmt        # rewrite files to match prettier
-make check      # the gate CI runs: type check, unit tests, lint and format
+make e2e        # Playwright against the production image and its database
+make check      # the gate CI runs: type check, unit tests, lint, format, page weight, e2e
 make run        # build and run the production image
 make clean      # remove this copy's containers and volumes
 ```
