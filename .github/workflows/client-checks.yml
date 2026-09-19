@@ -34,6 +34,10 @@ jobs:
   container-tests:
     name: Type check and unit tests, in the container
     runs-on: ubuntu-latest
+    # A secret cannot be used in `if:` directly, so it is routed through
+    # job-level env for the Codecov step below.
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     timeout-minutes: 30
     steps:
       - name: Harden runner
@@ -72,6 +76,7 @@ jobs:
             --target clienttest \
             --cache-from type=gha,scope=clienttest \
             --cache-to type=gha,scope=clienttest,mode=max \
+            --load --tag aberatech-clienttest \
             --progress plain \
             . 2>&1 | tee clienttest-build.log
 
@@ -98,6 +103,26 @@ jobs:
             echo "| --- | --- | --- |"
             echo "| ${tests} | ${files:-?} | ${lines:-?}% |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The lcov report the stage wrote (vitest.config.ts), lifted out of the
+      # image the build just loaded. Dashboard only: the blocking floors are
+      # vitest's own thresholds, which failed the build above if crossed, so
+      # the gate works with or without a Codecov account.
+      - name: Coverage report out of the test image
+        if: env.CODECOV_TOKEN != ''
+        run: |
+          set -euo pipefail
+          id="$(docker create aberatech-clienttest)"
+          docker cp "$id:/client/coverage/lcov.info" client-lcov.info
+          docker rm "$id" > /dev/null
+
+      - name: Upload coverage to Codecov (dashboard only, needs CODECOV_TOKEN)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: client-lcov.info
+          flags: client
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   compose-db:
     name: Compose database boots healthy
@@ -200,6 +225,10 @@ jobs:
   scheduling-tests:
     name: Scheduling unit tests, in the container
     runs-on: ubuntu-latest
+    # A secret cannot be used in `if:` directly, so it is routed through
+    # job-level env for the Codecov step below.
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     timeout-minutes: 30
     steps:
       - name: Harden runner
@@ -237,6 +266,7 @@ jobs:
             --target servertest \
             --cache-from type=gha,scope=servertest \
             --cache-to type=gha,scope=servertest,mode=max \
+            --load --tag aberatech-servertest \
             --progress plain \
             . 2>&1 | tee servertest-build.log
 
@@ -268,6 +298,30 @@ jobs:
             echo "| --- | --- | --- | --- | --- |"
             echo "| ${passed:-?} | ${failed:-?} | ${skipped:-?} | ${deferred:-?} | ${coverage:-?} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The cobertura report the stage's coverlet run wrote, lifted out of the
+      # image the build just loaded. Dashboard only: the blocking floor is
+      # SERVER_COVERAGE_MIN in the Dockerfile, checked by
+      # scripts/check-server-tests.sh before this image existed, so the gate
+      # works with or without a Codecov account.
+      - name: Coverage report out of the test image
+        if: env.CODECOV_TOKEN != ''
+        run: |
+          set -euo pipefail
+          id="$(docker create aberatech-servertest)"
+          docker cp "$id:/src/aberaTech.Server.Tests/TestResults" server-test-results
+          docker rm "$id" > /dev/null
+          report="$(find server-test-results -name coverage.cobertura.xml | head -1)"
+          [ -n "$report" ] || { echo "no cobertura report in the servertest image" >&2; exit 1; }
+          cp "$report" server-cobertura.xml
+
+      - name: Upload coverage to Codecov (dashboard only, needs CODECOV_TOKEN)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: server-cobertura.xml
+          flags: server
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   production-image:
     name: Production image, in the container

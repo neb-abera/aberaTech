@@ -1,0 +1,35 @@
+# Codecov is dashboard-only here: the BLOCKING coverage floors are in the
+# gates themselves — SERVER_COVERAGE_MIN in aberaTech.Server/Dockerfile's
+# servertest stage (scripts/check-server-tests.sh) and the vitest thresholds
+# in aberatech.client/vitest.config.ts — so the gate works with or without a
+# Codecov account. The two test jobs in client-checks.yml upload their
+# reports (flags: server, client) only when a CODECOV_TOKEN secret exists,
+# and never fail the build.
+ignore:
+  # Test code measuring itself would only inflate the number.
+  - "aberaTech.Server.Tests"
+  - "aberatech.client/src/**/__tests__"
+  - "aberatech.client/src/**/*.test.ts"
+  - "aberatech.client/src/**/*.test.tsx"
+  - "aberatech.client/src/test"
+  - "e2e"
+  # Generated EF Core migrations: excluded from the server run for the same
+  # reason (ExcludeByFile in the Dockerfile).
+  - "**/Migrations"
+
+comment:
+  require_changes: true
+
+# Informational only: these statuses annotate the dashboard and PRs without
+# ever going red — the enforced floors above are in-job.
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+        informational: true
+    patch:
+      default:
+        target: 80%
+        informational: true
