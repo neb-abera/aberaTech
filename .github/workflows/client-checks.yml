@@ -443,5 +443,11 @@ jobs:
         # The files .template-parity lists are byte-identical to
         # modern-webapp-template's default branch, or this fails. A change
         # to one of them lands in the template first. Reads the template's
-        # files from raw.githubusercontent.com, allowed above.
-        run: ./scripts/check-template-parity.sh
+        # files from raw.githubusercontent.com, allowed above. The self-test
+        # runs first, every time: it plants a drifted and a missing file
+        # against a local fixture template and must catch both, so a checker
+        # that has stopped failing is caught before it is trusted.
+        run: |
+          set -euo pipefail
+          ./scripts/check-template-parity.sh --self-test
+          ./scripts/check-template-parity.sh
