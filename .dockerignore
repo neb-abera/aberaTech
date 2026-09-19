@@ -17,6 +17,8 @@
 **/docker-compose*
 aberaTech.Server/Dockerfile
 **/node_modules
+**/test-results
+e2e-test-results
 **/npm-debug.log
 **/obj
 **/secrets.dev.yaml
