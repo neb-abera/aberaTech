@@ -123,10 +123,9 @@ export default function SixToNineMonths() {
                   >
                     Calendly{" "}
                   </Link>
-                  . Ensure you synch your accounts with video conferencing sites
-                  like Zoom.
+                  . Synch your accounts with video conferencing sites like Zoom.
                 </strong>{" "}
-                for a seamless virtual meeting experience.
+                for virtual meetings.
               </Typography>
             </Box>
           </TimelineContent>
@@ -152,7 +151,7 @@ export default function SixToNineMonths() {
               })}
             >
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
-                Schedule to turn in your CIF equipment prior to leaving for CSP.
+                Schedule to turn in your CIF equipment before leaving for CSP.
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
                 Usually, CIF will require an early turn-in memo signed by your
@@ -193,7 +192,7 @@ export default function SixToNineMonths() {
                 >
                   make coordinations to move
                 </Link>{" "}
-                prior to your CSP.{" "}
+                before your CSP.{" "}
                 <strong>
                   You need to move on or after the publication date on your
                   orders or transportation might not pay for your move.

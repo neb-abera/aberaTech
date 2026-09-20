@@ -61,25 +61,25 @@ export const levels: Record<Level, string> = {
 
 export const copy = {
   intro:
-    "A three-year plan for signal processing, from the first Fourier transform to reproducing papers. I wrote it for myself and I am working through it alongside the field radio plan and the electrical engineering master's: the radio supplies the signals, the degree supplies the proofs, and this is the practice in between.",
+    "A three-year plan for signal processing, from the first Fourier transform to reproducing papers. I am working through it alongside the field radio plan and an electrical engineering master's.",
   note: "The checklist and the gate log are mine. Signed out, the page is read-only.",
   scoring:
-    "Blocks are scored on gates, not hours. A gate is a thing built or a problem set finished, with a tolerance or a clock on it, and the block is done when the gate passes.",
+    "A block is done when its gate passes. A gate is a thing built or a problem set finished, with a tolerance or a clock on it.",
   practice:
-    "Each block lists practice that scores you as well as reading: problem sets with answers, graded courses, plots that are right or wrong. Those cannot report back here, so I write their results in the gate log: a problem set score, a time, a measured error in decibels.",
+    "Each block lists scored practice: problem sets with answers, graded courses, plots that are right or wrong. Their results go in the gate log: a score, a time, an error in decibels.",
   ideas:
-    "Eight ideas carry the whole subject; everything after is one of them applied. Each stage returns to all eight at more depth, and the second column is what owning one looks like.",
+    "Eight ideas. Each stage returns to all of them at more depth. The second column is what knowing one looks like.",
   bookshelf:
-    "Every book the blocks read from, in one place, with what it is for. Free ones are marked. The paid ones are worth a used copy of the edition named, and a library will have most of them.",
+    "Every book the blocks use, with what it is for. Free ones are marked. For the rest, a used copy of the edition named, or a library.",
 };
 
 export const rules: string[] = [
   "Look at it in both domains. Before and after every operation, plot the signal in time and in frequency. Most mistakes are visible in a plot nobody made.",
   "Never read past an exercise. A chapter whose problems are not done is a chapter not read.",
   "Build it before you trust it. Every transform, filter and estimator in the plan is written once by hand, from the definition, before a library version is allowed.",
-  "Real signals, not synthetic ones, wherever the block allows. The radio, a microphone and a sensor are the sources; the noise, drift and clipping they bring are the lesson.",
+  "Real signals wherever the block allows. The radio, a microphone and a sensor are the sources. The noise, drift and clipping they bring are the lesson.",
   "Write the derivation down. A result you cannot rederive on paper in ten minutes is a result you are borrowing.",
-  "Keep the log. A block is done when its gate passes, and the gate is scored from the log, not from how it felt.",
+  "Keep the log. A block is done when its gate passes, and the gate is scored from the log.",
 ];
 
 export const cadence: CadenceItem[] = [
@@ -119,7 +119,7 @@ export const ideas: Idea[] = [
   {
     name: "Linear time-invariant systems",
     idea: "A linear time-invariant system is its impulse response. Convolution in time is multiplication in frequency, which is filtering, echo, blur and a radio channel in one sentence.",
-    test: "Given an impulse response you sketch the frequency response by hand; given a spectrum you say what the system does to a step.",
+    test: "Given an impulse response you sketch the frequency response by hand. Given a spectrum you say what the system does to a step.",
   },
   {
     name: "Sampling and aliasing",
@@ -128,12 +128,12 @@ export const ideas: Idea[] = [
   },
   {
     name: "The time-frequency tradeoff",
-    idea: "Resolution in time and in frequency trade off; a short window locates an event and smears its frequency. Spectrograms, wavelets and filter banks are different bargains with the same limit.",
+    idea: "Resolution in time and in frequency trade off. A short window locates an event and smears its frequency. Spectrograms, wavelets and filter banks are different bargains with the same limit.",
     test: "You pick a window and its length for a given signal, say what the choice costs, and read leakage off a spectrum without being told it is there.",
   },
   {
     name: "Poles and zeros",
-    idea: "A discrete filter is a rational function of z. Zeros carve notches, poles make resonances, the pole radius decides stability, and the phase response is a design choice, not an accident.",
+    idea: "A discrete filter is a rational function of z. Zeros carve notches, poles make resonances, the pole radius decides stability, and the phase response is a design choice.",
     test: "You place poles and zeros by hand to meet a rough specification, and say whether the result is stable and what its group delay does to a pulse.",
   },
   {
@@ -148,7 +148,7 @@ export const ideas: Idea[] = [
   },
   {
     name: "It is all linear algebra",
-    idea: "Every transform is a change of basis. Fourier, cosine and wavelet bases are chosen; principal components are learned from the data. Seeing transforms as projections is what lets you invent one.",
+    idea: "Every transform is a change of basis. Fourier, cosine and wavelet bases are chosen. Principal components are learned from the data. Seeing transforms as projections is what lets you invent one.",
     test: "You write the discrete Fourier transform as a matrix, say when it is orthogonal, and derive a new transform from a property you want it to have.",
   },
 ];
@@ -158,7 +158,7 @@ const beginner: Block[] = [
     id: "maths",
     title: "The mathematics the field assumes",
     weeks: "Months 1 to 2",
-    why: "Signal processing is complex numbers, linear algebra and a little probability worn smooth. The block is short because the point is fluency, not coverage; the proofs come in the journeyman stage.",
+    why: "Signal processing is complex numbers, linear algebra and a little probability worn smooth. The block is short because the point is fluency. The proofs come in the journeyman stage.",
     tasks: [
       {
         id: "maths-complex",
@@ -174,7 +174,7 @@ const beginner: Block[] = [
       },
       {
         id: "maths-tools",
-        text: "Set up Python with NumPy, SciPy, Matplotlib and Jupyter. Generate a sine, a square wave, white noise and a chirp; plot each; save the notebook. Everything after runs in it.",
+        text: "Set up Python with NumPy, SciPy, Matplotlib and Jupyter. Generate a sine, a square wave, white noise and a chirp. Plot each and save the notebook. Everything after runs in it.",
       },
       {
         id: "maths-anki",
@@ -192,7 +192,7 @@ const beginner: Block[] = [
       {
         title: "Essence of Linear Algebra",
         url: "https://www.3blue1brown.com/topics/linear-algebra",
-        note: "Free. Sixteen short videos; the pictures the rest of the plan assumes you carry.",
+        note: "Free. Sixteen short videos. The pictures the rest of the plan assumes you carry.",
       },
       {
         title: "MIT 18.06 Linear Algebra",
@@ -202,7 +202,7 @@ const beginner: Block[] = [
       {
         title: "Introduction to Applied Linear Algebra",
         url: "https://web.stanford.edu/~boyd/vmls/",
-        note: "Free. Boyd and Vandenberghe. Vectors, matrices and least squares with the signals already in the examples; the book to keep open through the whole plan.",
+        note: "Free. Boyd and Vandenberghe. Vectors, matrices and least squares with the signals already in the examples. The book to keep open through the whole plan.",
       },
       {
         title: "Stat 110: Probability",
@@ -279,12 +279,12 @@ const beginner: Block[] = [
       {
         title: "Seeing Circles, Sines, and Signals",
         url: "https://jackschaedler.github.io/circles-sines-signals/",
-        note: "Free. Jack Schaedler. An interactive primer on the DFT; an evening, before Smith's chapter 8.",
+        note: "Free. Jack Schaedler. An interactive primer on the DFT. An evening, before Smith's chapter 8.",
       },
       {
         title: "But what is the Fourier transform? A visual introduction",
         url: "https://www.3blue1brown.com/lessons/fourier-transforms/",
-        note: "3Blue1Brown. Twenty minutes; watch it before Smith's chapter 8 and again after.",
+        note: "3Blue1Brown. Twenty minutes. Watch it before Smith's chapter 8 and again after.",
       },
       {
         title:
@@ -302,17 +302,17 @@ const beginner: Block[] = [
       {
         title: "Digital Signal Processing 1: Basic Concepts and Algorithms",
         url: "https://www.coursera.org/learn/dsp1",
-        note: "Prandoni and Vetterli, EPFL; the first of four courses. Graded quizzes and programming assignments, free to audit. Log every quiz score.",
+        note: "Prandoni and Vetterli, EPFL. The first of four courses. Graded quizzes and programming assignments, free to audit. Log every quiz score.",
       },
       {
         title: "Think DSP exercises",
         url: "https://github.com/AllenDowney/ThinkDSP",
-        note: "Every chapter ends in exercises with solution notebooks. Do them before looking; log which you got without the solution.",
+        note: "Every chapter ends in exercises with solution notebooks. Do them before looking. Log which you got without the solution.",
       },
       {
         title: "Table of Fourier transform pairs",
         url: "https://en.wikipedia.org/wiki/Fourier_transform#Tables_of_important_Fourier_transforms",
-        note: "Ten pairs from memory in ten minutes, checked against the table. Log the count right; twenty is the standard by the end of the block.",
+        note: "Ten pairs from memory in ten minutes, checked against the table. Log the count right. Twenty is the standard by the end of the block.",
       },
     ],
   },
@@ -336,7 +336,7 @@ const beginner: Block[] = [
       },
       {
         id: "filters-phase",
-        text: "Pass a square wave through a linear-phase FIR and a Butterworth IIR with the same magnitude response. Plot both outputs and the group delay of each; the ringing is the lesson.",
+        text: "Pass a square wave through a linear-phase FIR and a Butterworth IIR with the same magnitude response. Plot both outputs and the group delay of each. The ringing is the lesson.",
       },
       {
         id: "filters-biquad",
@@ -374,7 +374,7 @@ const beginner: Block[] = [
       {
         title: "Digital Signal Processing 2: Filtering",
         url: "https://www.coursera.org/learn/dsp2",
-        note: "The second EPFL course, on filters. Graded; log every quiz and assignment score.",
+        note: "The second EPFL course, on filters. Graded. Log every quiz and assignment score.",
       },
       {
         title: "fiiir: FIR filter design tool",
@@ -438,7 +438,7 @@ const journeyman: Block[] = [
       {
         title: "Schaum's Outline of Signals and Systems",
         url: "https://www.mheducation.com/highered/mhp/product/schaum-s-outline-signals-systems-fourth-edition.html",
-        note: "Hwei Hsu, fourth edition. Hundreds of solved problems; the drill book for this block and the next.",
+        note: "Hwei Hsu, fourth edition. Hundreds of solved problems. The drill book for this block and the next.",
       },
       {
         title: "Barry Van Veen: All Signal Processing",
@@ -448,19 +448,19 @@ const journeyman: Block[] = [
       {
         title: "Stanford EE261: The Fourier Transform and its Applications",
         url: "https://see.stanford.edu/Course/EE261",
-        note: "Free. Brad Osgood's lectures. The Fourier transform in more depth than either textbook, including distributions; watch after the sampling chapter.",
+        note: "Free. Brad Osgood's lectures. The Fourier transform in more depth than either textbook, including distributions. Watch after the sampling chapter.",
       },
     ],
     practice: [
       {
         title: "MIT 6.003 problem sets",
         url: "https://ocw.mit.edu/courses/6-003-signals-and-systems-fall-2011/pages/assignments/",
-        note: "Eleven sets with solutions. Score each before reading the solution; log the fraction right.",
+        note: "Eleven sets with solutions. Score each before reading the solution. Log the fraction right.",
       },
       {
         title: "MIT 6.003 exams",
         url: "https://ocw.mit.edu/courses/6-003-signals-and-systems-fall-2011/pages/exams/",
-        note: "Two quizzes and a final, with solutions. These are the gate; take them under the clock and log the percentage.",
+        note: "Two quizzes and a final, with solutions. These are the gate. Take them under the clock and log the percentage.",
       },
     ],
   },
@@ -472,7 +472,7 @@ const journeyman: Block[] = [
     tasks: [
       {
         id: "dtsp-oppenheim",
-        text: "Oppenheim and Schafer chapters 2 to 10: discrete-time signals and systems, the z-transform, sampling, transform analysis of systems, structures, filter design, the DFT, the FFT, and Fourier analysis with the DFT. The problems are long; do them anyway.",
+        text: "Oppenheim and Schafer chapters 2 to 10: discrete-time signals and systems, the z-transform, sampling, transform analysis of systems, structures, filter design, the DFT, the FFT, and Fourier analysis with the DFT. The problems are long. Do them anyway.",
       },
       {
         id: "dtsp-lectures",
@@ -484,7 +484,7 @@ const journeyman: Block[] = [
       },
       {
         id: "dtsp-parks",
-        text: "Implement the Parks-McClellan algorithm from the Remez exchange, not from a library, and reproduce the equiripple filter in the book's example to the last coefficient.",
+        text: "Implement the Parks-McClellan algorithm from the Remez exchange and reproduce the equiripple filter in the book's example to the last coefficient.",
       },
       {
         id: "dtsp-multirate",
@@ -500,7 +500,7 @@ const journeyman: Block[] = [
       },
       {
         id: "dtsp-lyons",
-        text: "Read Lyons in full now. Every chapter you found obvious is one Oppenheim taught you; every one you did not is a gap to log.",
+        text: "Read Lyons in full now. Every chapter you found obvious is one Oppenheim taught you. Every one you did not is a gap to log.",
       },
     ],
     gate: "A fixed-point IIR filter running on a microcontroller in real time, with the measured noise floor and passband within one decibel of what you predicted on paper before flashing it, and the prediction in the log before the measurement.",
@@ -546,27 +546,27 @@ const journeyman: Block[] = [
       {
         title: "MIT 6.341 problem sets",
         url: "https://ocw.mit.edu/courses/6-341-discrete-time-signal-processing-fall-2005/pages/assignments/",
-        note: "With solutions. Score each before reading the solution; log the fraction right and the time taken.",
+        note: "With solutions. Score each before reading the solution. Log the fraction right and the time taken.",
       },
       {
         title: "Cambridge Digital Signal Processing exercises",
         url: "https://www.cl.cam.ac.uk/teaching/2526/DSP/",
-        note: "Markus Kuhn's course: compact notes and short programming exercises with a radio and radar flavour. Do the exercise sheets; log the fraction right.",
+        note: "Markus Kuhn's course: compact notes and short programming exercises with a radio and radar flavour. Do the exercise sheets. Log the fraction right.",
       },
       {
         title: "Digital signal processing exercises, Rostock",
         url: "https://github.com/spatialaudio/digital-signal-processing-exercises",
-        note: "Notebooks on the DFT, filter design, spectral estimation and quantisation, runnable in the browser. Each ends in a result to check; log which matched.",
+        note: "Notebooks on the DFT, filter design, spectral estimation and quantisation, runnable in the browser. Each ends in a result to check. Log which matched.",
       },
       {
         title: "Digital Signal Processing 3: Analog vs Digital",
         url: "https://www.coursera.org/learn/dsp3",
-        note: "The third EPFL course: sampling, interpolation, multirate and quantization. Graded; log the scores.",
+        note: "The third EPFL course: sampling, interpolation, multirate and quantization. Graded. Log the scores.",
       },
       {
         title: "Digital Signal Processing 4: Applications",
         url: "https://www.coursera.org/learn/dsp4",
-        note: "The fourth EPFL course: a modem, image processing, and real-time. Graded; the modem is the bridge to the radio block.",
+        note: "The fourth EPFL course: a modem, image processing, and real-time. Graded. The modem is the bridge to the radio block.",
       },
     ],
   },
@@ -586,7 +586,7 @@ const journeyman: Block[] = [
       },
       {
         id: "noise-crlb",
-        text: "Derive the Cramér-Rao bound for the frequency of a sinusoid in white noise. Implement the maximum likelihood estimator and plot its variance against the bound across signal-to-noise ratio; find the threshold.",
+        text: "Derive the Cramér-Rao bound for the frequency of a sinusoid in white noise. Implement the maximum likelihood estimator and plot its variance against the bound across signal-to-noise ratio. Find the threshold.",
       },
       {
         id: "noise-wiener",
@@ -611,7 +611,7 @@ const journeyman: Block[] = [
         title:
           "Fundamentals of Statistical Signal Processing, Volume I: Estimation Theory",
         url: "https://www.amazon.com/Fundamentals-Statistical-Signal-Processing-Estimation/dp/0133457117",
-        note: "Steven M. Kay. The estimation book; the Cramér-Rao bound, maximum likelihood and least squares done once and properly.",
+        note: "Steven M. Kay. The estimation book. The Cramér-Rao bound, maximum likelihood and least squares done once and properly.",
       },
       {
         title:
@@ -639,17 +639,17 @@ const journeyman: Block[] = [
       {
         title: "MIT 6.011 problem sets",
         url: "https://ocw.mit.edu/courses/6-011-signals-systems-and-inference-spring-2018/pages/assignments/",
-        note: "With solutions. Score each before the solution; log the fraction right.",
+        note: "With solutions. Score each before the solution. Log the fraction right.",
       },
       {
         title: "Kalman and Bayesian Filters in Python, exercises",
         url: "https://rlabbe.github.io/Kalman-and-Bayesian-Filters-in-Python/",
-        note: "Each chapter's exercises have solutions in the notebook. Do them blind; log which needed the solution.",
+        note: "Each chapter's exercises have solutions in the notebook. Do them blind. Log which needed the solution.",
       },
       {
         title: "Cramér-Rao bound drill",
         url: "https://en.wikipedia.org/wiki/Cram%C3%A9r%E2%80%93Rao_bound",
-        note: "Derive the bound for a new parameter from memory, one a week: amplitude, phase, delay, frequency, direction. Timed; log the minutes and whether it matched the book.",
+        note: "Derive the bound for a new parameter from memory, one a week: amplitude, phase, delay, frequency, direction. Timed. Log the minutes and whether it matched the book.",
       },
     ],
   },
@@ -708,7 +708,7 @@ const journeyman: Block[] = [
       {
         title: "GNU Radio tutorials",
         url: "https://wiki.gnuradio.org/index.php/Tutorials",
-        note: "Free. The official tutorials, which are the course; the wiki is the reference.",
+        note: "Free. The official tutorials, which are the course. The wiki is the reference.",
       },
     ],
     practice: [
@@ -725,7 +725,7 @@ const journeyman: Block[] = [
       {
         title: "Bit error rate against Eb/N0",
         url: "https://en.wikipedia.org/wiki/Eb/N0",
-        note: "The theoretical curves for each modulation. Your loopback measurement against them is the score; log the gap in decibels at three points.",
+        note: "The theoretical curves for each modulation. Your loopback measurement against them is the score. Log the gap in decibels at three points.",
       },
     ],
   },
@@ -778,12 +778,12 @@ const expert: Block[] = [
       {
         title: "An Introduction to Compressive Sampling",
         url: "https://authors.library.caltech.edu/records/epx8s-y1b11",
-        note: "Free, the authors' copy. Candès and Wakin, IEEE Signal Processing Magazine, 2008. The survey that started most people; ten pages.",
+        note: "Free, the authors' copy. Candès and Wakin, IEEE Signal Processing Magazine, 2008. The survey that started most people. Ten pages.",
       },
       {
         title: "A Mathematical Introduction to Compressive Sensing",
         url: "https://link.springer.com/book/10.1007/978-0-8176-4948-7",
-        note: "Foucart and Rauhut. The theory behind the survey, with proofs; the first textbook on the subject and still the reference.",
+        note: "Foucart and Rauhut. The theory behind the survey, with proofs. The first textbook on the subject and still the reference.",
       },
       {
         title: "Linear Algebra and Learning from Data",
@@ -795,7 +795,7 @@ const expert: Block[] = [
       {
         title: "Foundations of Signal Processing exercises",
         url: "https://www.fourierandwavelets.org/",
-        note: "Solutions to selected exercises are on the site. Do a chapter's exercises before checking; log the fraction right.",
+        note: "Solutions to selected exercises are on the site. Do a chapter's exercises before checking. Log the fraction right.",
       },
       {
         title: "An Introduction to Compressive Sampling, figures",
@@ -832,7 +832,7 @@ const expert: Block[] = [
       },
       {
         id: "adaptive-haykin",
-        text: "Haykin chapters 1 to 10 and 14 to 15, Simon chapters 1 to 7 and 13 to 15, Van Trees chapters 2 to 4 and 8 to 9. Long books; the computer experiments in each are the part that counts.",
+        text: "Haykin chapters 1 to 10 and 14 to 15, Simon chapters 1 to 7 and 13 to 15, Van Trees chapters 2 to 4 and 8 to 9. Long books. The computer experiments in each are the part that counts.",
       },
     ],
     gate: "Direction of arrival on a real array you built, MUSIC against a beamformer, with the measured bearing error under two degrees on a known source and the resolution limit shown against the textbook's prediction.",
@@ -850,7 +850,7 @@ const expert: Block[] = [
       {
         title: "Optimum Array Processing",
         url: "https://www.wiley.com/en-us/Optimum+Array+Processing:+Part+IV+of+Detection,+Estimation,+and+Modulation+Theory-p-9780471463832",
-        note: "Harry L. Van Trees. Part four of Detection, Estimation and Modulation Theory; the array processing reference.",
+        note: "Harry L. Van Trees. Part four of Detection, Estimation and Modulation Theory. The array processing reference.",
       },
       {
         title: "Spectral Analysis of Signals",
@@ -872,12 +872,12 @@ const expert: Block[] = [
       {
         title: "Haykin's computer experiments",
         url: "https://www.pearson.com/en-us/subject-catalog/p/adaptive-filter-theory/P200000003309",
-        note: "Each chapter's experiments have published results. Reproduce them; log the largest gap between yours and the book's.",
+        note: "Each chapter's experiments have published results. Reproduce them. Log the largest gap between yours and the book's.",
       },
       {
         title: "Kalman and Bayesian Filters in Python, nonlinear chapters",
         url: "https://rlabbe.github.io/Kalman-and-Bayesian-Filters-in-Python/",
-        note: "Chapters 10 to 12 cover the extended, unscented and particle filters with exercises. Do them blind; log which needed the solution.",
+        note: "Chapters 10 to 12 cover the extended, unscented and particle filters with exercises. Do them blind. Log which needed the solution.",
       },
     ],
   },
@@ -948,12 +948,12 @@ const expert: Block[] = [
       {
         title: "ReScience C",
         url: "https://rescience.github.io/",
-        note: "A peer-reviewed journal of reproductions. A submission accepted there is the block's gate graded by someone else; log the review.",
+        note: "A peer-reviewed journal of reproductions. A submission accepted there is the block's gate graded by someone else. Log the review.",
       },
       {
         title: "IEEE ICASSP",
         url: "https://ieeeicassp.org/",
-        note: "The field's annual conference, each May. Attending is the reading; a workshop submission is the score. Log either.",
+        note: "The field's annual conference, each May. Attending is the reading. A workshop submission is the score. Log either.",
       },
     ],
   },
@@ -964,7 +964,7 @@ export const stages: Stage[] = [
     id: "beginner",
     title: "Beginner",
     weeks: "Months 1 to 6",
-    why: "The goal is intuition, not proofs: to read a spectrum and predict what a filter will do before running it. Everything is done in code against real signals, and the mathematics is only what the code needs.",
+    why: "The goal is intuition: to read a spectrum and predict what a filter will do before running it. Everything is done in code against real signals, and the mathematics is only what the code needs.",
     exit: "You leave when aliasing, leakage and phase distortion are things you have caused on purpose, fixed, and can explain with a plot.",
     blocks: beginner,
   },
@@ -1051,7 +1051,7 @@ export const bookshelf: Book[] = [
     level: "journeyman",
     url: "https://www.mheducation.com/highered/mhp/product/schaum-s-outline-signals-systems-fourth-edition.html",
     free: false,
-    why: "Hundreds of solved problems. The drill book, not the textbook.",
+    why: "Hundreds of solved problems. The drill book.",
   },
   {
     title: "Discrete-Time Signal Processing",
@@ -1202,7 +1202,7 @@ export const bookshelf: Book[] = [
     level: "expert",
     url: "https://www.wiley.com/en-us/Optimum+Array+Processing:+Part+IV+of+Detection,+Estimation,+and+Modulation+Theory-p-9780471463832",
     free: false,
-    why: "The array processing reference. Fourteen hundred pages; the block reads four chapters of it.",
+    why: "The array processing reference. Fourteen hundred pages. The block reads four chapters of it.",
   },
   {
     title: "Spectral Analysis of Signals",

@@ -28,7 +28,7 @@ export const guides: Entry[] = [
   {
     title: "Learning Software Development",
     to: "/technical",
-    blurb: "The path from no background to working in software development.",
+    blurb: "From no programming background to a job in software.",
   },
   {
     title: "Tactically Relevant RF Training",
@@ -42,14 +42,14 @@ export const guides: Entry[] = [
     navLabel: "Signal Processing",
     to: "/signal-processing",
     blurb:
-      "A three-year plan from the first Fourier transform to reproducing papers: the ideas, the books, and a gate at the end of every block.",
+      "A three-year plan, from the first Fourier transform to reproducing papers. Each block ends in a gate.",
   },
   {
     title: "Learning Quantum and Post-Quantum Cryptography",
     navLabel: "Quantum Cryptography",
     to: "/quantum-cryptography",
     blurb:
-      "An eighteen-month plan from the arithmetic under RSA to implementing ML-KEM from its FIPS: classical cryptography, the quantum threat, and the post-quantum transition.",
+      "An eighteen-month plan, from the arithmetic under RSA to implementing ML-KEM from its FIPS.",
   },
 ];
 
@@ -65,7 +65,7 @@ export const projects: Entry[] = [
     title: "Military athlete console",
     to: "/fitness",
     blurb:
-      "A training model for military fitness tests: verified sessions in, a predicted score out, and the cost of a goal against a date. The data is mine, so the console asks you to sign in.",
+      "A training model for military fitness tests. Sessions in, a predicted score out, and the cost of a goal by a date. The data is mine, so it asks you to sign in.",
   },
   {
     title: "Facewoof",

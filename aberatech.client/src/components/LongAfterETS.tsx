@@ -293,11 +293,10 @@ export default function LongAfterETS() {
                 </Typography>
               </Box>
               <Typography sx={{ marginTop: 2 }}>
-                You may need to fight for benefits. Don't hesitate to put up a
-                fight to get the benefits you deserve. The VA is a very
-                bureaucratic system, but you have government and
-                non-governmental support. You can reach out to organizations
-                like{" "}
+                You may need to fight for benefits. Put up a fight to get the
+                benefits you deserve. The VA is a bureaucratic system, but you
+                have government and non-governmental support. You can reach out
+                to organizations like{" "}
                 <Link
                   to="https://www.dav.org/veterans/"
                   target="_blank"

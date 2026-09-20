@@ -251,7 +251,7 @@ export default function NinetyToOneEightyDays() {
                 >
                   DS logon
                 </Link>{" "}
-                and ensure you can access the VA and{" "}
+                and check that you can access the VA and{" "}
                 <Link
                   to="https://mypay.dfas.mil/#/"
                   target="_blank"
@@ -390,7 +390,8 @@ export default function NinetyToOneEightyDays() {
                 .
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
-                A desktop is more powerful. You can save even more money by{" "}
+                A desktop has more computing power. You can save even more money
+                by{" "}
                 <Link
                   to="https://www.reddit.com/r/buildapc/wiki/index"
                   target="_blank"
@@ -398,14 +399,14 @@ export default function NinetyToOneEightyDays() {
                 >
                   building your own desktop
                 </Link>
-                . A laptop is less powerful, and usually more expensive per unit
-                of computing power, but is more portable. I recommend Apple
-                MacBooks, especially a MacBook Pro, if you want a laptop. Stay
-                away from MacBook Airs if you have any plans to use it for more
-                than typical web browsing and streaming. MacBooks are more
-                expensive than PC laptops but include better integration with
-                cell phones, a more secure environment, and are a requirement if
-                you want to do software development.
+                . A laptop has less computing power, and is usually more
+                expensive per unit of computing power, but is more portable. I
+                recommend Apple MacBooks, especially a MacBook Pro, if you want
+                a laptop. Stay away from MacBook Airs if you have any plans to
+                use it for more than typical web browsing and streaming.
+                MacBooks are more expensive than PC laptops but include better
+                integration with cell phones, a more secure environment, and are
+                a requirement if you want to do software development.
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
                 You can also start building a{" "}
@@ -437,15 +438,15 @@ export default function NinetyToOneEightyDays() {
               <Typography sx={{ marginBottom: 2 }}>
                 Our curriculum, like the rest of the software engineering
                 industry, is heavily dependent on open-source software, which
-                traditionally has not worked very well on Windows platforms. For
-                that reason, a computer running macOS or Linux is greatly
-                preferred. Windows users are required to either switch to a Mac
-                or Linux computer (preferred), or install Windows Subsystem for
-                Linux 2 (WSL2). Windows users should expect to spend extra time
-                setting up WSL, installing an Ubuntu dual boot configuration,
-                and/or running Linux via a virtual machine (via Virtual Box).
-                Please note that the minimum specs below may not be suitable for
-                running a virtual machine.
+                traditionally has not worked well on Windows platforms. For that
+                reason, a computer running macOS or Linux is greatly preferred.
+                Windows users are required to either switch to a Mac or Linux
+                computer (preferred), or install Windows Subsystem for Linux 2
+                (WSL2). Windows users should expect to spend extra time setting
+                up WSL, installing an Ubuntu dual boot configuration, and/or
+                running Linux via a virtual machine (via Virtual Box). The
+                minimum specs below may not be suitable for running a virtual
+                machine.
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
                 You should not use a computer that is actively shared with
@@ -478,7 +479,7 @@ export default function NinetyToOneEightyDays() {
                 sx={{ marginBottom: 2, paddingLeft: 3 }}
               >
                 <Typography component="li" sx={{ marginBottom: 1 }}>
-                  <strong>Highly Recommended:</strong> Mac OS X (v10.14 minimum,{" "}
+                  <strong>Recommended:</strong> Mac OS X (v10.14 minimum,{" "}
                   <Link
                     to="https://support.apple.com/en-us/HT211683"
                     target="_blank"
@@ -507,9 +508,9 @@ export default function NinetyToOneEightyDays() {
                 </Typography>
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
-                Note that Zoom and other communication apps, webcams, and
-                microphones may be buggy on Ubuntu. This is outside of the
-                control of staff as they cannot support debugging these issues.
+                Zoom and other communication apps, webcams, and microphones may
+                be buggy on Ubuntu. This is outside of the control of staff as
+                they cannot support debugging these issues.
               </Typography>
             </Box>
           </TimelineContent>

@@ -159,9 +159,8 @@ export default function TerminalLeave() {
                   DITY/Personally Procured Move Calculator - UPDATED FOR 2021
                 </Typography>
                 <Typography sx={{ marginBottom: 1 }}>
-                  A comprehensive DITY move calculator for PCS moves, allowing
-                  the user to view eligible allowances and estimate expenses and
-                  profit.
+                  A DITY move calculator for PCS moves, allowing the user to
+                  view eligible allowances and estimate expenses and profit.
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   ditymovecalculator.net
@@ -210,8 +209,7 @@ export default function TerminalLeave() {
                   medpros
                 </Link>
                 , click on "periodic health assessments," go to the "SHPE" tab,
-                and fill out a medical update (I believe it's the DD Form
-                2807-1).
+                and fill out a medical update (DD Form 2807-1).
               </Typography>
             </Box>
           </TimelineContent>

@@ -37,29 +37,29 @@ course is legal in a term.
 | `tracks.ts` | The curated tracks and their ordered scheduling. |
 | `catalog.ts`, `links.ts`, `areaColors.ts`, `format.ts` | Lookup, outbound links, colour, formatting. |
 
-Two decisions worth knowing before changing anything:
+Three decisions worth knowing before changing anything:
 
 - **A refusal has to say which refusal it is.** `PlannerModel.placementNote`
   separates "the prerequisite is missing" (the planner can insert it and the
   drop is accepted) from "the prerequisite is in the plan but sits later" and
   "moving it here would strand a dependent" (neither can be fixed by dropping,
   so the term refuses and the chip menu says why). A test asserts the
-  invariant: every term the interface offers actually accepts the course.
-- **Capacity is a preference, not a rule.** A term over the courses per term
+  invariant: every term the interface offers accepts the course.
+- **Capacity is a preference.** A term over the courses per term
   setting is flagged and allowed. Treating it as a violation once made the board
   immovable as soon as it filled up.
-- **The five year clock spans the applied ten, not the whole plan.** You can
-  take a hundred courses and still graduate on time; you cannot apply a course
-  that sits ten years out. `select.ts` exists entirely because of this: taking
-  the first ten in term order can never satisfy "at least four at the 700 level",
-  since prerequisite order puts the foundation courses first.
+- **The five year clock spans the applied ten.** You can take a hundred courses
+  and still graduate on time. You cannot apply a course that sits ten years out.
+  `select.ts` exists entirely because of this: taking the first ten in term
+  order can never satisfy "at least four at the 700 level", since prerequisite
+  order puts the foundation courses first.
 
 ## The model
 
 `PlannerModel` is mutable on purpose. A single operation touches the plan, the
 selection and the derived catalog together, and the rules read across all of
 them, so mirroring it into React state would give two copies that drift.
-`PlannerStore` wraps it and publishes a version number; `usePlanner` subscribes
+`PlannerStore` wraps it and publishes a version number. `usePlanner` subscribes
 through `useSyncExternalStore`. Mutations go through `update(m => ...)`, which
 bumps the version and re-renders.
 
@@ -85,6 +85,6 @@ can be rewritten without re-verifying the rules.
 
 ## Data
 
-`data/catalog.json` is generated from the JHU e-catalogue PDF, not hand written.
-Regenerating it is a separate offline step; the regression test is what keeps a
-bad regeneration from shipping.
+`data/catalog.json` is generated from the JHU e-catalogue PDF. Regenerating it
+is a separate offline step. The regression test keeps a bad regeneration from
+shipping.
