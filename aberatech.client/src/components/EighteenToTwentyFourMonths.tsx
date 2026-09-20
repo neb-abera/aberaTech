@@ -106,9 +106,9 @@ export default function EighteenToTwentyFourMonths() {
                 sx={{ marginBottom: 2 }}
               >
                 <strong>
-                  Ensure you have access to your TSP account, you are getting
-                  the Army matching contributions, and move your retirement to a
-                  fund you like
+                  Check that you have access to your TSP account and that you
+                  are getting the Army matching contributions, and move your
+                  retirement to a fund you like
                 </strong>
                 . The general rule of thumb is if you're young, or don't need
                 access to your retirement, invest it in "riskier" funds like the
@@ -124,7 +124,7 @@ export default function EighteenToTwentyFourMonths() {
                 around the 11-month mark, told my TAP counselor I wanted to do a
                 CSP in Chicago, and then my TAP counselor spread out my
                 appointments all the way out until the 6-month mark. My TAP
-                counselor didn't seem very familiar with CSP but said we would
+                counselor didn't seem familiar with CSP but said we would
                 discuss at a future appointment. It seemed reasonable at the
                 time since I didn't know any better. At around the 9-month mark,
                 I reached out to my installation's CSP coordinator but she said
@@ -142,7 +142,7 @@ export default function EighteenToTwentyFourMonths() {
                 recruiter that I'd lost contact with. I got the approval from
                 Northrop Grumman too late for JAG approval and I lost out on my
                 dream CSP. That didn't end up mattering though because my packet
-                had actually not been sent up to the approval authority by the
+                had not been sent up to the approval authority by the
                 bureaucracy. But that's another story. I had great Company,
                 Battalion, and Brigade commanders, along with the support of my
                 unit, so everything eventually worked out. You might not, so you
@@ -360,7 +360,7 @@ export default function EighteenToTwentyFourMonths() {
             >
               <Typography sx={{ marginBottom: 2 }}>
                 <span style={{ fontWeight: "bold" }}>
-                  You need to ensure that all of your illnesses and injuries are
+                  You need to check that all of your illnesses and injuries are
                   appropriately recorded in your medical record.
                 </span>{" "}
                 You also need to follow up with anything that's happened earlier
@@ -392,8 +392,8 @@ export default function EighteenToTwentyFourMonths() {
                 content creators, and there are plenty of resources online. The
                 VA has dedicated people to help you, veteran organizations like
                 DAV provide free help, and I'm sure you know folks who have gone
-                through the process that can help. Do not do it alone, but also
-                don't pay anyone to help.
+                through the process that can help. Do not do it alone. Do not
+                pay anyone to help.
               </Typography>
             </Box>
           </TimelineContent>
@@ -453,7 +453,7 @@ export default function EighteenToTwentyFourMonths() {
               </Typography>
 
               <Typography sx={{ marginBottom: 2 }}>
-                Here are the most highly recommended books from West Point's
+                Here are the most recommended books from West Point's
                 Association of Graduates. I recommend reading them all.
               </Typography>
 
@@ -476,7 +476,7 @@ export default function EighteenToTwentyFourMonths() {
                 >
                   What Color is Your Parachute
                 </Link>{" "}
-                by Richard Bolles – updated annually
+                by Richard Bolles, updated annually
               </Typography>
 
               <Typography sx={{ marginBottom: 1 }}>
@@ -708,7 +708,7 @@ export default function EighteenToTwentyFourMonths() {
                   passionately prioritize your transition.
                 </Typography>
                 <Typography component="li" sx={{ marginBottom: 1 }}>
-                  <strong>Do more</strong>! Get your resume reviewed
+                  <strong>Do more</strong>. Get your resume reviewed
                   iteratively, take nonchargeable leave to job conferences,{" "}
                   <strong>
                     develop your LinkedIn network, read developmental books
@@ -757,7 +757,7 @@ export default function EighteenToTwentyFourMonths() {
 
               <Typography sx={{ fontStyle: "italic", marginBottom: 2 }}>
                 "Most jobs aren't publicly advertised. Most jobs, advertised or
-                not, are filled by networking of some kind; applicants known to
+                not, are filled by networking of some kind: applicants known to
                 current employees, applicants known to someone the employee
                 knows, (and trusts), or recruiters. Few jobs are filled by
                 blindly interviewing random resumes that survived the artificial
@@ -1057,8 +1057,8 @@ export default function EighteenToTwentyFourMonths() {
                 They can be veteran-focused charities, educational institutions,
                 minority organizations, professional societies, etc. Use your
                 network to find people that know the answers to your questions.
-                You aren't the first person to do anything; find someone who has
-                done what you want to do and get their help!
+                You aren't the first person to do anything. Find someone who has
+                done what you want to do and get their help.
               </Typography>
 
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>

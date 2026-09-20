@@ -54,7 +54,7 @@ export const formulas: Formula[] = [
   },
   {
     name: "Battery",
-    formula: "Ah = A × h; h = Ah / A",
+    formula: "Ah = A × h, h = Ah / A",
     note: "Keep a third in reserve for cold and cloud.",
   },
   {
@@ -132,10 +132,10 @@ export const prowords: [string, string][] = [
   ["I SAY AGAIN", "I am repeating the transmission or the part indicated."],
   ["I SPELL", "I shall spell the next word phonetically."],
   ["FIGURES", "Numerals follow."],
-  ["WORDS TWICE", "Communication is difficult; send every phrase twice."],
-  ["CORRECTION", "An error has been made; the correct version follows."],
+  ["WORDS TWICE", "Communication is difficult. Send every phrase twice."],
+  ["CORRECTION", "An error has been made. The correct version follows."],
   ["WAIT", "I must pause for a few seconds."],
-  ["WAIT OUT", "I must pause longer than a few seconds; I will call you."],
+  ["WAIT OUT", "I must pause longer than a few seconds. I will call you."],
   ["READ BACK", "Repeat this entire transmission back to me exactly."],
   ["I READ BACK", "The following is my reply to your read back request."],
   ["RADIO CHECK", "What is my signal strength and readability?"],
