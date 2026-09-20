@@ -131,7 +131,7 @@ export default function DrillPanel({
             {count} problems across ten kinds: decibels, wavelength, dipole
             length, the off-centre feed point, Ohm's law, power budgets,
             azimuths, Zulu time, one-time pads and subnetting. The clock runs
-            from the first problem to the last. Same problems all day; new ones
+            from the first problem to the last. Same problems all day. New ones
             tomorrow.
           </Typography>
         </Box>

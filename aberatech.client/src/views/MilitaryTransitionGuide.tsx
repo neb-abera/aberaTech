@@ -61,28 +61,14 @@ export default function MilitaryTransitionGuide(props: {
         })}
       >
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          I made this guide to share the lessons I learned during my transition.
-          I embedded links, documents, and videos. Please click on those to
-          ensure that you understand the topic in its breadth and depth. This is
-          a work in progress so feel free to send me questions, comments, and
-          recommendations.
+          Lessons from my own transition, with the documents, links and videos I
+          used. A few sections carry a personal story where it shows why a step
+          matters. Most people in the system do their best inside a bureaucracy
+          that does not serve you by default. You will have to push it.
+          Questions and corrections are welcome.
         </Typography>
-
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          I included some personal stories in this guide, that you can skip over
-          if you're not interested, to illustrate the importance of some of
-          these lessons. Please don't think that I did it to attack individual
-          people in this guide. Most people do the best they can with the
-          information and tools they have. But, you can have good people stuck
-          in a bad bureaucratic system that causes unintended consequences for
-          transitioning servicemembers. You will need to get the bureaucracy to
-          work for you, not against you. Do not get discouraged by it. You need
-          to advocate for yourself, your transition is worth fighting for.
-        </Typography>
-
-        <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          If you're interested in transitioning to a technical position, I
-          recommend checking out{" "}
+          For a move into a technical job, see{" "}
           <Link
             to="https://abera.tech/technical"
             target="_blank"

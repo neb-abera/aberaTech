@@ -28,18 +28,17 @@ export interface GearItem {
 
 export const copy = {
   intro:
-    "A one-year plan for getting good at field radio: wire antennas and HF, networks, mesh, spectrum, drones and power. I wrote it for myself and I am working through it. The blocks line up with the electrical engineering courses I am taking next, so the field work and the classroom feed each other.",
+    "A one-year plan for field radio: wire antennas and HF, networks, mesh, spectrum, drones and power. I am working through it. The blocks line up with the electrical engineering courses I am taking next.",
   note: "The checklist, drill history and gate log are mine. Signed out, the page is read-only.",
-  scoring:
-    "Blocks are scored on gates and clocks, not hours. A block is done when its gate passes, timed, outdoors.",
+  scoring: "A block is done when its gate passes, timed, outdoors.",
   cards:
-    "Cards to carry until the drill makes them unnecessary. They print together with the plan template.",
+    "Cards to carry until the drill makes them unnecessary. They print with the plan template.",
   practice:
-    "Each block lists practice that scores you as well as reading. Those sites cannot report back here, so I write their results in the gate log: an exam percentage, a drill time, where a signal was heard.",
+    "Each block lists scored practice. Results go in the gate log: an exam percentage, a drill time, where a signal was heard.",
 };
 
 export const rules: string[] = [
-  "Log everything. The plan is scored on the log, not on how it felt.",
+  "Log everything. The plan is scored on the log.",
   "Outdoors beats the bench. One contact from a hilltop on battery is worth three from a desk.",
   "Every gate has a clock. If it is not timed, it is not a gate, it is a hobby.",
   "Teach it to keep it. A skill you cannot explain with a drawing is a skill you half have.",
@@ -55,7 +54,7 @@ export const cadence: CadenceItem[] = [
   {
     label: "On the air",
     detail:
-      "Two hours a week transmitting, from block two onward. Logged contacts, not listening.",
+      "Two hours a week transmitting, from block two onward. Logged contacts.",
   },
   {
     label: "Drills",
@@ -77,7 +76,7 @@ export const cadence: CadenceItem[] = [
 export const gear: GearItem[] = [
   {
     item: "Portable HF transceiver, 20 W class",
-    purpose: "Every antenna and propagation block; runs from a small battery",
+    purpose: "Every antenna and propagation block. Runs from a small battery",
     cost: "450 to 650",
   },
   {
@@ -97,7 +96,7 @@ export const gear: GearItem[] = [
   },
   {
     item: "Software-defined radio receiver (RTL-SDR) with antenna kit",
-    purpose: "Watching the spectrum; identifying and locating signals",
+    purpose: "Watching the spectrum. Identifying and locating signals",
     cost: "50",
   },
   {
@@ -117,7 +116,7 @@ export const gear: GearItem[] = [
   },
   {
     item: "Sub-250 gram quadcopter",
-    purpose: "The drone block; its links are also a target on the waterfall",
+    purpose: "The drone block. Its links are also a target on the waterfall",
     cost: "400",
   },
   {
@@ -277,7 +276,7 @@ export const plan: Block[] = [
       {
         title: "KiwiSDR public receivers",
         url: "http://kiwisdr.com/public/",
-        note: "Hundreds more remote receivers; listen for your own signal from another state.",
+        note: "Hundreds more remote receivers. Listen for your own signal from another state.",
       },
     ],
   },
@@ -339,7 +338,7 @@ export const plan: Block[] = [
       {
         title: "Jeremy's IT Lab",
         url: "https://www.youtube.com/@JeremysITLab",
-        note: "The free CCNA course with a Packet Tracer lab file for every lesson. The labs are the practice; the videos are not.",
+        note: "The free CCNA course with a Packet Tracer lab file for every lesson. The labs are the practice. The videos are not.",
       },
     ],
   },
@@ -355,7 +354,7 @@ export const plan: Block[] = [
       },
       {
         id: "mesh-server",
-        text: "Stand up a TAK server on a single-board computer or a small virtual machine and connect both devices with certificates, not passwords.",
+        text: "Stand up a TAK server on a single-board computer or a small virtual machine and connect both devices with certificates.",
       },
       {
         id: "mesh-nodes",
@@ -439,7 +438,7 @@ export const plan: Block[] = [
       {
         title: "PySDR",
         url: "https://pysdr.org/",
-        note: "A free textbook where every idea comes with Python you run against the receiver. Do every exercise; do not read past one.",
+        note: "A free textbook where every idea comes with Python you run against the receiver. Do every exercise. Do not read past one.",
       },
       {
         title: "Signal Identification Wiki",
@@ -462,7 +461,7 @@ export const plan: Block[] = [
     id: "power",
     title: "Drones and power",
     weeks: "Weeks 41 to 48",
-    why: "Small uncrewed aircraft and a power budget are part of field communications now, not next to it. The drone's links are also the most instructive thing you will ever watch on a waterfall.",
+    why: "Small uncrewed aircraft and a power budget are part of field communications now. The drone's links are also the most instructive thing you will ever watch on a waterfall.",
     tasks: [
       {
         id: "power-part107",
@@ -478,7 +477,7 @@ export const plan: Block[] = [
       },
       {
         id: "power-chemistry",
-        text: "Learn the three battery chemistries you will actually carry: charge profiles, behavior in the cold, and the rules for carrying them on aircraft.",
+        text: "Learn the three battery chemistries you will carry: charge profiles, behavior in the cold, and the rules for carrying them on aircraft.",
       },
     ],
     gate: "Seventy two hours in the field on the budget you wrote. Everything charged at the end, nothing dead in the middle.",
@@ -497,12 +496,12 @@ export const plan: Block[] = [
       {
         title: "Liftoff",
         url: "https://www.liftoff-game.com/",
-        note: "The simulator FPV pilots train in. Simulator hours count in the log like real ones; say which.",
+        note: "The simulator FPV pilots train in. Simulator hours count in the log like real ones. Say which.",
       },
       {
         title: "Velocidrone",
         url: "https://www.velocidrone.com/",
-        note: "The other simulator. Either one; pick the one that runs on your machine.",
+        note: "The other simulator. Either one. Pick the one that runs on your machine.",
       },
     ],
   },
@@ -556,7 +555,7 @@ export const plan: Block[] = [
       {
         title: "Parks on the Air",
         url: "https://parksontheair.com/",
-        note: "Scored activations. Ten contacts from the park is the standard; log the count and the time to the tenth.",
+        note: "Scored activations. Ten contacts from the park is the standard. Log the count and the time to the tenth.",
       },
       {
         title: "ARRL contests",

@@ -107,10 +107,10 @@ export default function NineToTwelveMonths() {
                   and approval system. S1s are overwhelmed with administrative
                   tasks and don't have good systems to track and process them.
                   On top of that, S1s in SFAB don't have clerks to help them
-                  out. I really feel for them. Email is not a good method for
-                  processing and tracking administrative actions. People change
-                  duty positions at every level, and requirements change all the
-                  time. S1s are good people stuck in a bad system.
+                  out. Email is not a good method for processing and tracking
+                  administrative actions. People change duty positions at every
+                  level, and requirements change all the time. S1s are good
+                  people stuck in a bad system.
                 </Typography>
 
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
@@ -199,9 +199,9 @@ export default function NineToTwelveMonths() {
                 </Typography>
 
                 <Typography sx={{ marginBottom: 2 }}>
-                  <strong>The system is very bureaucratic</strong> and it's easy
-                  for your administrative actions to fail to make it through.
-                  It's worth fighting for.{" "}
+                  <strong>The system is bureaucratic</strong> and it's easy for
+                  your administrative actions to fail to make it through. It's
+                  worth fighting for.{" "}
                   <strong>
                     Do not feel awkward or ashamed about advocating for
                     yourself.
@@ -430,18 +430,18 @@ export default function NineToTwelveMonths() {
                   do an internship.
                 </Typography>
                 <Typography sx={{ marginBottom: 2 }}>
-                  It seemed that my unit was actually okay with letting me be
-                  gone, even if the rest of my packet was not approved. What
-                  they didn't seem to like was how much I was embarrassing them
-                  by reaching out to the CG and BDE JAG about the unit messing
-                  up my transition paperwork. I was worried that if something
-                  went wrong, my unit could throw the book at me for being AWOL
-                  and pretend like it was my fault.
+                  It seemed that my unit was okay with letting me be gone, even
+                  if the rest of my packet was not approved. What they didn't
+                  seem to like was how much I was embarrassing them by reaching
+                  out to the CG and BDE JAG about the unit messing up my
+                  transition paperwork. I was worried that if something went
+                  wrong, my unit could throw the book at me for being AWOL and
+                  pretend like it was my fault.
                 </Typography>
                 <Typography sx={{ marginBottom: 2 }}>
-                  I did end up getting my CSP approved last minute, but I think
-                  my unit would have let me be gone either way since I already
-                  had a signed DA 31.
+                  I did end up getting my CSP approved last minute, but my unit
+                  would have let me be gone either way since I already had a
+                  signed DA 31.
                 </Typography>
               </Box>
             </TimelineContent>

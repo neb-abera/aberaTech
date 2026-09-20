@@ -15,10 +15,10 @@ reproduction steps where possible.
 
 What to expect:
 
-* an acknowledgement within 7 days,
+* an acknowledgement within 7 days.
 * coordinated disclosure: we ask that you keep the report private until a
   fix is deployed, and we will credit you in the advisory unless you prefer
-  otherwise,
+  otherwise.
 * a fix, or a status update explaining what is taking longer, within 90
   days of the report.
 
@@ -45,11 +45,11 @@ The server writes one structured log entry, in the category
 `aberaTech.Security`, whenever it refuses something a stranger might be
 probing (`aberaTech.Server/SecurityEvents.cs`). Each entry carries the
 resolved client address (`ClientIp`, see `ClientAddress.cs`), the `Method`,
-the `Route` *pattern* and the `Status` — and nothing else. It never carries
+the `Route` *pattern* and the `Status`, and nothing else. It never carries
 a path (queue and booking paths contain the capability id), a query string,
 a header, a cookie, a key, a phone number, an email address or the
 signed-in account. The event ids are stable, so alerts can be written
-against them; none are configured yet.
+against them. None are configured yet.
 
 | EventId | Name | Level | Meaning |
 |---|---|---|---|
@@ -61,12 +61,12 @@ against them; none are configured yet.
 | 4006 | `UnknownCapability` | Warning | 404 from a queue-place or booking route: an id nobody was given, or a stale one |
 | 4007 | `PublicWriteRefused` | Information | 400 from joining the queue or booking: input the form would not have sent |
 
-In Application Insights these are `traces` rows; filter on
+In Application Insights these are `traces` rows. Filter on
 `customDimensions.EventId` or `customDimensions.CategoryName`.
 
 ## Hardening deliberately left for the owner
 
-* **HSTS `preload`.** The header already sends `includeSubDomains`; `preload`
+* **HSTS `preload`.** The header already sends `includeSubDomains`. `preload`
   is a one-way door that makes every present and future subdomain of
   `abera.tech` HTTPS-only in browsers' shipped lists. Add it only after
   confirming that is true of every subdomain, then submit at hstspreload.org.

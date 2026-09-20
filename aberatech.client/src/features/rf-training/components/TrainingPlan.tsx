@@ -113,8 +113,8 @@ export default function TrainingPlan() {
 
       <Section title="Gear">
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.5 }}>
-          Bought block by block, not up front. Costs are rough and in US
-          dollars; used and borrowed is fine for all of it.
+          Bought block by block. Costs are rough and in US dollars. Used and
+          borrowed is fine for all of it.
         </Typography>
         <TableContainer>
           <Table size="small" aria-label="Gear list">

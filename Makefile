@@ -39,7 +39,7 @@ export DB_PORT
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget e2e check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget prose e2e check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -102,6 +102,11 @@ fmt: ## Rewrite files to match biome
 budget: ## Page weight: the production client build against scripts/page-budgets.json
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
 
+prose: ## Writing rules (.vale/styles/Abera): the Markdown, then the prerendered pages
+	./scripts/check-prose.sh --self-test
+	./scripts/check-prose.sh
+	$(DOCKER) build --target clientprose -f $(DOCKERFILE) .
+
 # The Playwright image is derived from e2e/package.json, the way the template
 # does it: the browsers in the image and the runner in the manifest have to be
 # the same version, so Dependabot's bump of @playwright/test moves both and
@@ -136,12 +141,15 @@ e2e: ## Playwright against the production image and its database, on the compose
 	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1; \
 	exit $$status
 
-check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, database and browser suites
+check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, prose, database and browser suites
 	./scripts/check-required-contexts.sh
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientbudget -f $(DOCKERFILE) .
+	$(DOCKER) build --target clientprose -f $(DOCKERFILE) .
+	./scripts/check-prose.sh --self-test
+	./scripts/check-prose.sh
 	./scripts/check-held-majors.sh --self-test
 	./scripts/check-held-majors.sh
 	./scripts/check-template-parity.sh --self-test
