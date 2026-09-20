@@ -168,10 +168,10 @@ export default function ZeroToThirtyDays() {
                 Reserve officer counselor.
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
-                Once you "hit" your Army Reserve unit's books ensure that you
-                inprocess, and request a pay action and an Army Reserve DFAS
-                account. Once you have your pay setup through the USAR it'll
-                show up in a dropdown menu on myPay.
+                Once you "hit" your Army Reserve unit's books, inprocess and
+                request a pay action and an Army Reserve DFAS account. Once you
+                have your pay setup through the USAR it'll show up in a dropdown
+                menu on myPay.
               </Typography>
             </Box>
           </TimelineContent>
@@ -244,9 +244,8 @@ export default function ZeroToThirtyDays() {
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>
                 These are two separate payments you'll receive. I put it off for
-                about 5 months, but I believe you have up to a year past your
-                ETS date. I got paid around $5k for PPM and about $500 for per
-                diem.
+                about 5 months, but you have up to a year past your ETS date. I
+                got paid around $5k for PPM and about $500 for per diem.
               </Typography>
             </Box>
           </TimelineContent>

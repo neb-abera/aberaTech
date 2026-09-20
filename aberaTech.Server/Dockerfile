@@ -4,6 +4,11 @@
 # consumer derives from this one stage so a bump moves them all together.
 FROM node:26 AS nodebase
 
+# Prose linter, for scripts/check-prose.sh. Never built into anything: the
+# stage exists so the image is a FROM line Dependabot sees and bumps, and the
+# script reads it from here rather than pinning a version of its own.
+FROM jdkato/vale:v3.22.0@sha256:0ef74c2c8331a2cc8739ecc8b4f7cc6672e61524c3697e8c8857bc86b724a28e AS vale
+
 # Base stage for .NET runtime
 # Chiseled: distroless-style, no shell, no package manager, non-root by
 # default - and none of the ~30 unfixable distro CVEs the full image carries.
@@ -59,6 +64,29 @@ FROM clientbuild AS clientbudget
 COPY ["scripts/check-page-budgets.mjs", "scripts/check-page-budgets.selftest.mjs", "scripts/page-budgets.json", "/budget/"]
 RUN node /budget/check-page-budgets.selftest.mjs && \
     node /budget/check-page-budgets.mjs /client/dist /budget/page-budgets.json
+
+# The writing rules, on the pages a reader gets. A leaf, like clientbudget:
+# it lints the prerendered HTML the production image ships, so the guides
+# are checked as read rather than as source. scripts/check-prose.sh covers
+# the Markdown; this covers the site. Same rules, same image.
+#
+# Based on the vale stage rather than on clientbuild: the vale binary is
+# linked against musl and does not run in the Debian node image, so the
+# built pages are copied in here instead.
+#
+#   docker build --target clientprose -f aberaTech.Server/Dockerfile .
+#   make prose
+FROM vale AS clientprose
+COPY --from=clientbuild /client/dist /client/dist
+COPY [".vale.ini", "/prose/.vale.ini"]
+COPY [".vale/", "/prose/.vale/"]
+# The fixtures first, every time: the failing one must fail and the clean one
+# must pass, so a rule or a config path that has stopped working is caught
+# here rather than trusted. Then the pages.
+RUN ! vale --config=/prose/.vale.ini --output=line /prose/.vale/fixtures/fails.md > /dev/null \
+    && vale --config=/prose/.vale.ini --output=line /prose/.vale/fixtures/passes.md \
+    && find /client/dist -name '*.html' ! -name spa.html -print0 \
+    | xargs -0 vale --config=/prose/.vale.ini --output=line
 
 # Client development server.
 #

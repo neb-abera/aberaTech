@@ -29,7 +29,7 @@ beforeAll(() => {
       </AppTheme>
     </MemoryRouter>,
   );
-  getComputedStyle(screen.getByText(/the target audience for this/i));
+  getComputedStyle(screen.getByText(/for people in the military/i));
   cleanup();
 }, 30_000);
 
@@ -67,7 +67,7 @@ describe("scheme-aware overrides", () => {
       </MemoryRouter>,
     );
 
-    const box = screen.getByText(/the target audience for this/i)
+    const box = screen.getByText(/for people in the military/i)
       .parentElement as HTMLElement;
     expect(getComputedStyle(box).backgroundColor).toBe(
       "var(--template-palette-background-paper)",

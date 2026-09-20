@@ -48,14 +48,10 @@ export default function TechnicalTransitionGuide(props: {
         })}
       >
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          The target audience for this are people in the military that are
-          interested in working in tech, but don't know how to program. I made
-          these guides during my transition from the Army to Software
-          Development. The more I learn, the more I'll update. I embedded links,
-          documents, and videos. I encourage you to click on those to ensure
-          that you understand the topic in its breadth and depth. This is a work
-          in progress so feel free to send me questions, comments, and
-          recommendations.{" "}
+          For people in the military who want to work in tech and do not yet
+          know how to program. I wrote these during my own move from the Army to
+          software development and update them as I learn. The links, documents
+          and videos are the substance. The full notes are at{" "}
           <Link
             to="https://github.com/neb-abera/transition"
             target="_blank"
@@ -64,12 +60,11 @@ export default function TechnicalTransitionGuide(props: {
             Everything I learned transitioning from the Army to Software
             Development
           </Link>
+          .
         </Typography>
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          There are so many incredible resources out there to help transition
-          people into tech. But, the enormity of resources can give people
-          "paralysis by analysis" as they try to decide which option to pick.
-          This document below is meant to answer questions like:
+          There are more resources than anyone can evaluate. This page picks. It
+          answers:
         </Typography>
         <List>
           <ListItem>
@@ -83,8 +78,7 @@ export default function TechnicalTransitionGuide(props: {
           </ListItem>
         </List>
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
-          Here is a good intro video from Andy Sterkowitz on some of the topics
-          I will cover below.
+          Andy Sterkowitz covers several of these topics in this video.
         </Typography>
         <CardMedia
           component="iframe"
@@ -114,13 +108,13 @@ export default function TechnicalTransitionGuide(props: {
           <Suspense fallback={<LoadingFallback />}>
             <Box sx={{ marginTop: 4 }}>
               <Typography variant="body1" gutterBottom>
-                There's really no wrong way to learn the fundamentals of
-                programming. Just pick one and stick with it. However, I
-                recommend that you focus on doing and ensure that you don't get
-                stuck in "tutorial hell." Tutorial Hell is what happens when you
-                passively watch tutorials and don't learn much, most likely
-                because you aren't learning by doing, and will iteratively start
-                and stop tutorials in perpetuity.
+                There's no wrong way to learn the fundamentals of programming.
+                Just pick one and stick with it. However, I recommend that you
+                focus on doing so that you don't get stuck in "tutorial hell."
+                Tutorial Hell is what happens when you passively watch tutorials
+                and don't learn much, most likely because you aren't learning by
+                doing, and will iteratively start and stop tutorials in
+                perpetuity.
               </Typography>
               <List>
                 <ListItem>
@@ -135,9 +129,9 @@ export default function TechnicalTransitionGuide(props: {
                           Open Source Society's Intro to Programming and Intro
                           to Computer Science
                         </Link>{" "}
-                        I think this course is a good program and what I would
-                        recommend to people with no programming experience and
-                        who don't want to pay for a course. It is free, has a
+                        This course is a good program and what I would recommend
+                        to people with no programming experience and who don't
+                        want to pay for a course. It is free, has a
                         beginner-friendly structure, is taught in Python, and
                         has a good roadmap for future topics. I disagree with
                         how OSCS requires discrete math BEFORE data structures
@@ -173,16 +167,16 @@ export default function TechnicalTransitionGuide(props: {
                         This is a good free alternative to the first course if
                         you're okay with learning JavaScript. I like it because
                         it is free, forces repetition, and has one path to
-                        completion. I think prep courses from boot camps are
-                        valuable because these companies know how to teach
-                        beginners to become software developers. They do what
-                        they know works. I also believe that the repetition they
-                        provide is essential to the learning process. This
-                        program forces you to get the repetitions in. There is
-                        some instruction, you try stuff on your own, and then
-                        there's a video to watch if you get lost and need help.
-                        It is taught in JavaScript so it's only useful if you'd
-                        like to learn or work in web development.
+                        completion. Prep courses from boot camps are valuable
+                        because these companies know how to teach beginners to
+                        become software developers. They do what they know
+                        works. I also believe that the repetition they provide
+                        is essential to the learning process. This program
+                        forces you to get the repetitions in. There is some
+                        instruction, you try stuff on your own, and then there's
+                        a video to watch if you get lost and need help. It is
+                        taught in JavaScript so it's only useful if you'd like
+                        to learn or work in web development.
                       </>
                     }
                   />
@@ -244,8 +238,8 @@ export default function TechnicalTransitionGuide(props: {
                         >
                           Harvard's CS50x
                         </Link>{" "}
-                        - An incredible but challenging course covering a
-                        variety of languages and data structures.
+                        - An incredible but challenging course covering several
+                        languages and data structures.
                       </>
                     }
                   />
@@ -295,7 +289,7 @@ export default function TechnicalTransitionGuide(props: {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 Practicing a little bit every day is better than practicing a
-                lot not very often.
+                lot infrequently.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 I recommend setting aside 5x60 minutes sessions a week. This is
@@ -308,8 +302,8 @@ export default function TechnicalTransitionGuide(props: {
                 </li>
                 <li>Compare my solution to other solutions provided</li>
                 <li>
-                  If there's a significantly better way to solve the problem,
-                  then I learn that pattern.
+                  If there's a better way to solve the problem, then I learn
+                  that pattern.
                 </li>
                 <li>
                   Redo the problem until I can do it with no documentation or
@@ -353,8 +347,8 @@ export default function TechnicalTransitionGuide(props: {
                   </Link>{" "}
                   but you'll need to finish a DSA course before you'll be able
                   to solve most of the problems. It's free. I only recommend
-                  getting a subscription if you're REALLY interested in knowing
-                  what companies focus on specific DSA problems.
+                  getting a subscription if you're interested in knowing what
+                  companies focus on specific DSA problems.
                 </li>
               </Typography>
             </Box>
@@ -438,9 +432,9 @@ export default function TechnicalTransitionGuide(props: {
                 DSA in Python, JavaScript, and C++. Structy is a paid
                 subscription by my favorite programming instructor. The website
                 has videos, guides, lets you practice DSA problems, and has
-                solutions all in one place. I found it very worth it. However,
-                there is only one problem per topic so it lacks the depth of
-                some of the other options.
+                solutions all in one place. I found it worth it. However, there
+                is only one problem per topic so it lacks the depth of some of
+                the other options.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 There are plenty of free resources online to learn DSA. You can
@@ -449,13 +443,13 @@ export default function TechnicalTransitionGuide(props: {
                 accountability, and structure of the book and course to learn.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                I think DSAs should be taught in a separate course from intro to
-                programming. I think people should be comfortable with the
-                fundamentals of programming in one language before they give
-                bandwidth to DSA.
+                DSAs should be taught in a separate course from intro to
+                programming. People should be comfortable with the fundamentals
+                of programming in one language before they give bandwidth to
+                DSA.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                If you want a follow-up DSA text, or just want a more robust
+                If you want a follow-up DSA text, or just want a more thorough
                 reference, then I recommend the{" "}
                 <Link
                   to="https://www.amazon.com/Introduction-Algorithms-fourth-Thomas-Cormen/dp/026204630X/ref=pd_lpo_3?pd_rd_i=026204630X&psc=1"
@@ -487,7 +481,7 @@ export default function TechnicalTransitionGuide(props: {
                 learning to program. That’s why no matter what route you take in
                 programming, you’ll learn the skills of a programmer. That's
                 because memorizing programming language syntax does not make you
-                a programmer; applying the problem-solving mindset is what makes
+                a programmer. Applying the problem-solving mindset is what makes
                 you a programmer.
               </Typography>
               <Typography variant="body1" gutterBottom>
@@ -560,7 +554,7 @@ export default function TechnicalTransitionGuide(props: {
                   Andy Harris has a long, but thorough, video on this topic
                 </Link>
                 . You can also search for other videos on the topic. Don't feel
-                compelled to watch the video; you can always come back to it.
+                compelled to watch the video. You can always come back to it.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 I had never read{" "}
@@ -593,7 +587,7 @@ export default function TechnicalTransitionGuide(props: {
               <Typography variant="body1" gutterBottom>
                 You need to learn how to effectively search for the answer to
                 your questions. The sum of human knowledge is at your
-                fingertips, via a phone or computer; you just need to know how
+                fingertips, via a phone or computer. You just need to know how
                 to sort and analyze relevant information. Being good at googling
                 is a skill you should develop. You should always see what the
                 best or most recommended way to do something is. Whether you’re
@@ -873,11 +867,11 @@ export default function TechnicalTransitionGuide(props: {
                   <ul>
                     <li>
                       <strong>Pros:</strong> Its syntax is similar to English,
-                      so it’s very natural to read and write in. It is very easy
-                      to create programs quickly in Python. There are a lot of
-                      job opportunities. It is very well supported. It is a
-                      growing language. It’s used in software development, data
-                      science, artificial intelligence, and cyber security.
+                      so it’s natural to read and write in. It is easy to create
+                      programs quickly in Python. There are a lot of job
+                      opportunities. It is well supported. It is a growing
+                      language. It’s used in software development, data science,
+                      artificial intelligence, and cyber security.
                     </li>
                     <li>
                       <strong>Cons:</strong> It is a high-level, interpreted,
@@ -898,8 +892,8 @@ export default function TechnicalTransitionGuide(props: {
                       to get into high-paying software engineer jobs.
                     </li>
                     <li>
-                      <strong>Cons:</strong> It isn’t really useful for anything
-                      else. You can use frameworks to create applications using
+                      <strong>Cons:</strong> It isn’t useful for anything else.
+                      You can use frameworks to create applications using
                       JavaScript, but they will be slower/worse than their
                       native counterparts.
                     </li>
@@ -928,10 +922,9 @@ export default function TechnicalTransitionGuide(props: {
                   </Typography>
                   <Typography variant="body1" gutterBottom>
                     I prefer statically typed and compiled languages that offer
-                    access to low-level operations and resource management. I
-                    think the greatest combination of languages to get the
-                    ability to do the most while knowing the least amount of
-                    languages is C++,{" "}
+                    access to low-level operations and resource management. The
+                    greatest combination of languages to get the ability to do
+                    the most while knowing the least amount of languages is C++,{" "}
                     <Link
                       to="https://dotnet.microsoft.com/en-us/languages/csharp"
                       target="_blank"
@@ -959,9 +952,9 @@ export default function TechnicalTransitionGuide(props: {
           <Suspense fallback={<LoadingFallback />}>
             <Box sx={{ marginTop: 4 }}>
               <Typography variant="body1" gutterBottom>
-                There's really no best way to learn software development. It’s a
-                wide field, with tons of sub-fields, and a lot of information.
-                Here are some important tips I’ve found:
+                There's no best way to learn software development. It’s a wide
+                field, with tons of sub-fields, and a lot of information. Here
+                are some important tips I’ve found:
               </Typography>
               <Typography variant="body1" component="ol" gutterBottom>
                 <li>
@@ -980,8 +973,8 @@ export default function TechnicalTransitionGuide(props: {
                   to sync to your calendar, and then sync both of those to a
                   video conferencing site like Zoom. That way you can
                   automatically update your calendar with important
-                  meetings/reminders and seamlessly send/receive video
-                  conferencing requests.
+                  meetings/reminders and send/receive video conferencing
+                  requests.
                 </li>
                 <li>
                   <strong>Making and sticking to a plan:</strong> It’s easy to
@@ -1089,15 +1082,14 @@ export default function TechnicalTransitionGuide(props: {
                 recommendations above when they've shown interest and seem
                 ready. The tough part of teaching kids is keeping them engaged
                 and focused on one task for a set period of time. These websites
-                try to make the learning process fun for kids. So, I think they
-                are worth a shot. But, they don't teach actual coding, so they
-                will eventually have to switch to something like the above
+                try to make the learning process fun for kids. So, they are
+                worth a shot. But, they don't teach actual coding, so they will
+                eventually have to switch to something like the above
                 recommendations. Programming involves sitting at a computer and
-                problem-solving for extended periods of time. There's really no
-                way around that, and some kids may not be into that. Teenagers
-                may be ready to just jump into the recommendations above, but
-                you can have them try the suggestions below to gauge their
-                interest.
+                problem-solving for extended periods of time. There's no way
+                around that, and some kids may not be into that. Teenagers may
+                be ready to just jump into the recommendations above, but you
+                can have them try the suggestions below to gauge their interest.
               </Typography>
               <Typography variant="body1" component="ul" gutterBottom>
                 <li>
@@ -1108,9 +1100,9 @@ export default function TechnicalTransitionGuide(props: {
                   >
                     CodeCombat
                   </Link>{" "}
-                  is a game that includes coding. It seems like a fun way to get
-                  kids interested in programming. It's free but it may bug you
-                  to upgrade periodically.
+                  is a game that includes coding. It is a fun way to get kids
+                  interested in programming. It's free but it may bug you to
+                  upgrade periodically.
                 </li>
                 <li>
                   <Link
@@ -1160,21 +1152,19 @@ export default function TechnicalTransitionGuide(props: {
                 <strong>1. Software Development:</strong> Develop and maintain
                 software products. This field is usually a money maker for
                 companies, so it is treated well by corporate leadership.
-                Software developers are typically highly paid and their roles
-                are resistant to employment downturns. However, this career
-                requires constant study and improvement to stay on top of
-                trends. Not every company has software engineers, but the field
-                is growing exponentially, and there is a significant demand for
-                talent.
+                Software developers are typically well paid and their roles are
+                resistant to employment downturns. However, this career requires
+                constant study and improvement to stay on top of trends. The
+                field is growing exponentially, and there is a significant
+                demand for talent.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>2. Information Technology:</strong> A support role that
-                ensures the electronic “plumbing” of a company, like the
-                network, remains operational. IT is often seen as a "cost"
-                depending on the company culture. In companies that do not value
-                IT, compensation may be lower. Unlike software development,
-                every company has IT needs. However, this field has somewhat
-                stagnated in recent years.
+                keeps the electronic “plumbing” of a company, like the network,
+                operational. IT is often seen as a "cost" depending on the
+                company culture. In companies that do not value IT, compensation
+                may be lower. Unlike software development, every company has IT
+                needs. However, this field has stagnated in recent years.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>3. Cybersecurity:</strong> Protecting a company's
@@ -1291,7 +1281,7 @@ export default function TechnicalTransitionGuide(props: {
                 you could stand doing, and the money will come.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                There aren’t really any certs worth their weight in software
+                There aren’t any certs worth their weight in software
                 engineering. In IT and cyber, there are certs that will help
                 since they certify the knowledge you have, but they are not a
                 replacement for it. However, certs are good for use as a study
@@ -1338,10 +1328,10 @@ export default function TechnicalTransitionGuide(props: {
                 dedicated/funded job readiness programs, plus a network to
                 market yourself through. If you're interested in Software
                 Engineering, the best thing you can do is to "grind LeetCode,"
-                publish software, and expand and utilize your network. You can
-                do the majority of your networking via LinkedIn by finding
-                veterans that are working in areas you're interested in. This is
-                a good example of a resource I used early on from{" "}
+                publish software, and expand and use your network. You can do
+                most of your networking via LinkedIn by finding veterans that
+                are working in areas you're interested in. This is a good
+                example of a resource I used early on from{" "}
                 <Link
                   to="https://kalan.io/posts/military-to-software"
                   target="_blank"
@@ -1394,8 +1384,8 @@ export default function TechnicalTransitionGuide(props: {
                 time and tens of thousands of dollars.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                However, these companies often do capital E Engineering, not
-                typical web development, which has a lower bar to entry. This
+                However, these companies often do capital E Engineering, which
+                has a higher bar to entry than typical web development. This
                 involves using STEM skills to optimize the performance of
                 manufactured products, working in enterprise-scale teams, and
                 adhering to legal and moral liabilities. They prefer STEM
@@ -1427,7 +1417,7 @@ export default function TechnicalTransitionGuide(props: {
                 <li>
                   <strong>Enterprise-scale problems:</strong> Knowing how to
                   code isn’t enough. Understanding design patterns, large-scale
-                  upgrades, testing, CI/CD, and scaling issues is crucial.
+                  upgrades, testing, CI/CD, and scaling issues is required.
                 </li>
               </Typography>
               <Typography variant="body1" gutterBottom>
@@ -1612,7 +1602,7 @@ export default function TechnicalTransitionGuide(props: {
                   self-taught folks. My critiques are that it sometimes uses
                   concepts before they're introduced, seems to pontificate on
                   some subjects unnecessarily or too early, and isn't designed
-                  to get folks quickly trained by focusing on what I think are
+                  to get folks quickly trained by focusing on what I consider
                   "fundamental."
                 </li>
                 <li>
@@ -1623,8 +1613,8 @@ export default function TechnicalTransitionGuide(props: {
                   >
                     LearnCPP.com
                   </Link>{" "}
-                  is a free resource that is very well-structured and easy to
-                  use as a quick way to practice.
+                  is a free resource that is well-structured and easy to use as
+                  a quick way to practice.
                 </li>
                 <li>
                   <Link
@@ -1634,8 +1624,8 @@ export default function TechnicalTransitionGuide(props: {
                   >
                     cppreference.com
                   </Link>{" "}
-                  is a free reference resource that is very well-structured and
-                  easy to use as a quick reference.
+                  is a free reference resource that is well-structured and easy
+                  to use as a quick reference.
                 </li>
                 <li>
                   <Link
@@ -1757,8 +1747,8 @@ export default function TechnicalTransitionGuide(props: {
                     Grokking Algorithms
                   </Link>{" "}
                   was my first introduction to DSA. Written for Python, it’s
-                  like a children’s book—a nice and comfortable introduction but
-                  not ideal as a reference or for in-depth understanding.
+                  like a children’s book, a nice and comfortable introduction
+                  but not ideal as a reference or for in-depth understanding.
                 </li>
                 <li>
                   <Link to="https://structy.net" target="_blank" rel="noopener">
@@ -1780,9 +1770,9 @@ export default function TechnicalTransitionGuide(props: {
                     Intro to Algorithms
                   </Link>{" "}
                   is a fantastic reference. If what you've found online isn't
-                  sufficient, this book likely has the answer. It delves into
-                  the mathematical and computer science underpinnings of topics
-                  at an academic level. However, I DO NOT recommend reading it
+                  sufficient, this book likely has the answer. It covers the
+                  mathematical and computer science underpinnings of topics at
+                  an academic level. However, I DO NOT recommend reading it
                   cover-to-cover or using it to learn a new topic. It’s best as
                   a reference for deeper understanding.
                 </li>
@@ -1878,8 +1868,8 @@ export default function TechnicalTransitionGuide(props: {
                     Grokking Algorithms
                   </Link>{" "}
                   was my first introduction to DSA. Written for Python, it’s
-                  like a children’s book—a nice and comfortable introduction but
-                  not ideal as a reference or for in-depth understanding.
+                  like a children’s book, a nice and comfortable introduction
+                  but not ideal as a reference or for in-depth understanding.
                 </li>
                 <li>
                   <Link to="https://structy.net" target="_blank" rel="noopener">
@@ -1901,9 +1891,9 @@ export default function TechnicalTransitionGuide(props: {
                     Intro to Algorithms
                   </Link>{" "}
                   is a fantastic reference. If what you've found online isn't
-                  sufficient, this book likely has the answer. It delves into
-                  the mathematical and computer science underpinnings of topics
-                  at an academic level. However, I DO NOT recommend reading it
+                  sufficient, this book likely has the answer. It covers the
+                  mathematical and computer science underpinnings of topics at
+                  an academic level. However, I DO NOT recommend reading it
                   cover-to-cover or using it to learn a new topic. It’s best as
                   a reference for deeper understanding.
                 </li>
@@ -1961,8 +1951,7 @@ export default function TechnicalTransitionGuide(props: {
                 >
                   pythonbooks
                 </Link>{" "}
-                to see a breakdown of highly rated books by skill level and
-                topic.
+                to see a breakdown of top-rated books by skill level and topic.
               </Typography>
               <Typography variant="body1" component="ul" gutterBottom>
                 <li>
@@ -1997,7 +1986,7 @@ export default function TechnicalTransitionGuide(props: {
                   >
                     Fluent Python
                   </Link>{" "}
-                  comes highly recommended. While I haven’t tackled it yet, it’s
+                  is widely recommended. While I haven’t tackled it yet, it’s
                   next on my list after graduating from Hack Reactor.
                 </li>
               </Typography>
@@ -2296,7 +2285,7 @@ export default function TechnicalTransitionGuide(props: {
                 others spend years attaining math maturity.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                If you're interested in working in the field, and not just
+                If you're interested in working in the field, rather than
                 learning enough to use it as a hobby or to solve some of the
                 problems you encounter in your own field, I encourage you to
                 talk to people in the industry, write down your priorities, make

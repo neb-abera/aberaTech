@@ -5,140 +5,117 @@
 
 # aberaTech
 
-Visit https://abera.tech for a demonstration
+The source of [abera.tech](https://abera.tech): a .NET 10 server, a React
+client, and the guides and tools on the site.
 
-## How it stays fast
+## Running it
 
-The public pages — home, the index pages, the guides — are rendered to real
-HTML at build time (`aberatech.client/tools/prerender.mjs` +
-`src/entry-server.tsx`) and hydrated in the browser, so first paint does not
-wait for the React bundle; the client-rendered app pages fall back to the
-empty `spa.html` shell. The server (`StaticAssetCaching.cs`) marks hashed
-`/assets` immutable for a year and every `.html` no-cache, and Cloudflare
-edge-caches the HTML under a dashboard cache rule that is safe only because
-the deploy workflow's `purge-edge-cache` job purges the zone on every merge
-to master. Routing is explicit and placed after the static-file middleware
-in `Program.cs` — left implicit, the SPA fallback swallows every
-extensionless request. The CSP is a response header whose inline-script
-hashes are computed from the shipped HTML at startup (`CspInlineScripts.cs`);
-Cloudflare's RUM beacon is allowlisted deliberately, and its real-user Core
-Web Vitals are the measurement of record.
-
-The fitness console reads the training log once per request
-(`TrainingHistory.cs`) and its reports are filters over that list, so a
-summary is six database commands however long the log is; read-only queries
-are untracked throughout. The summary, the digest and the readiness outlook
-are then held in the server's output cache (`FitnessOutputCache.cs`) until
-something is written: the middleware runs after authorization, the policy
-stores nothing for a caller who is not signed in, and no `Cache-Control` is
-added, so nothing downstream ever holds the owner's data. Tests count the
-commands and pin the payloads.
-
-Pictures are WebP at the size they are drawn and state their width and
-height; the home page preloads the avatar it actually renders, while
-`/headshot.jpg` and `og.png` keep their stable addresses for search engines
-and link previews. The server is published ReadyToRun, which roughly halves
-a cold start with the databases configured, for a larger image.
-
-Page weight is a gate, in bytes: `make budget` (and the production image job
-in CI) measures the entry script, the stylesheet, everything the home page
-fetches first, and every prerendered page against
-`scripts/page-budgets.json`, and the checker shows itself failing on an
-over-budget fixture before it is trusted to pass the build.
-
-## How it stays current
-
-Every GitHub Action is pinned by commit SHA with a version comment, and
-Dependabot bumps SHA and comment together — minor/patch grouped into one
-weekly PR per ecosystem. The `dependabot-automerge` workflow arms auto-merge
-on every Dependabot PR, majors included: red CI, not update size, is the
-review signal. It needs the repo's Allow auto-merge setting and a
-`DEPENDABOT_AUTOMERGE_TOKEN` secret (fine-grained PAT — a PAT so the merge
-still triggers the deploy, which `GITHUB_TOKEN` merges do not; expires and
-gets recreated quarterly). Scorecard, CodeQL and a Trivy image scan run as
-scheduled gates.
-
-## Development
-
-Everything runs in a container. Docker is the only thing that needs to be
-installed on your machine: there is no local node, npm or dotnet toolchain to
-set up, and no version of them to keep in step with the server.
+Docker is the only requirement.
 
 ```
 make            # list every target
-make ports      # which compose project and host ports this copy uses
-make up         # the whole site and its database
+make ports      # this copy's compose project and host ports
+make up         # the site and its database
 make queue-open # switch /schedule into queue mode
-make queue-close# switch it back to showing bookable slots
+make queue-close# switch it back to bookable slots
 make dev        # hot reloading dev server
-make test       # unit tests, against your working tree
-make lint       # eslint and prettier, against your working tree
-make fmt        # rewrite files to match prettier
+make test       # client unit tests, against the working tree
+make lint       # biome, against the working tree
+make fmt        # rewrite files to match biome
+make budget     # page weight against scripts/page-budgets.json
+make prose      # the writing rules, on the Markdown and the prerendered pages
 make e2e        # Playwright against the production image and its database
-make check      # the gate CI runs: type check, unit tests, lint, format, page weight, e2e
+make check      # the gate CI runs
 make run        # build and run the production image
 make clean      # remove this copy's containers and volumes
 ```
 
-`make ports` first, because the answer is not the same in every copy of this
-repository. Several sessions work here at once, each in its own git worktree,
-and every published port and container name is derived from the directory: one
-copy on `http://localhost:8080`, the next on `8157`, each with its own compose
-project and its own database. `make clean` takes down the copy you are standing
-in and nothing else. The main checkout keeps the numbers this file used to
-quote. Override any of them for one run — `APP_PORT=9001 make up` — or edit the
-`.env` the first `make` writes.
+`make ports` first. Ports, container names and the compose project derive
+from the directory, so two worktrees run side by side, each with its own
+database. `make clean` takes down the copy you are standing in. Override for
+one run with `APP_PORT=9001 make up`, or edit the `.env` the first `make`
+writes.
 
-`make dev`, `make test` and `make lint` bind mount the working tree, so they see
-uncommitted edits and give a fast loop.
+`make dev`, `make test` and `make lint` bind mount the working tree.
+`make check` copies it into the image, the way CI does. Run it before you
+push.
 
-`make check` deliberately does not. It builds the `clienttest` and `clientlint`
-stages of `aberaTech.Server/Dockerfile`, which copy the tree into the image, so
-it measures what a reviewer would actually get. **Run it before you push**: CI
-builds those same two stages, on the same node image, so a green `make check`
-and a green CI run mean the same thing.
+After changing a dependency, run `make clean` before `make dev`. The dev
+service keeps `node_modules` in a volume that outlives a rebuild.
 
-After changing a dependency, run `make clean` before `make dev`. The dev service
-keeps `node_modules` in an anonymous volume that outlives a rebuild otherwise.
+## How it is built
 
-### Stages in the Dockerfile
+- The public pages (home, the indexes, the guides) are prerendered to HTML
+  at build time (`aberatech.client/tools/prerender.mjs`,
+  `src/entry-server.tsx`) and hydrated in the browser. The app pages are
+  client-rendered from `spa.html`.
+- Hashed `/assets` are immutable for a year and HTML is `no-cache`
+  (`StaticAssetCaching.cs`). Cloudflare caches the HTML. The deploy workflow
+  purges the zone on every merge to master.
+- Routing is explicit and sits after the static-file middleware in
+  `Program.cs`.
+- The CSP's inline-script hashes are computed from the shipped HTML at
+  startup (`CspInlineScripts.cs`). Cloudflare RUM is allowlisted and is the
+  measurement of record.
+- The fitness console reads the training log once per request
+  (`TrainingHistory.cs`). A summary is six database commands at any log
+  length. Read-only queries are untracked. The summary, digest and readiness
+  outlook sit in the output cache (`FitnessOutputCache.cs`) until a write,
+  keyed per user, after authorization, with no `Cache-Control` added. Tests
+  count the commands and pin the payloads.
+- Images are WebP at the drawn size, with width and height. The home page
+  preloads its avatar. `/headshot.jpg` and `og.png` keep their addresses for
+  search engines and link previews.
+- The server is published ReadyToRun. Cold start roughly halved, for a
+  larger image.
+- Page weight is a gate in bytes (`make budget`). The checker fails on an
+  over-budget fixture before it is trusted to pass the build.
+- Prose is a gate (`make prose`): Vale with the rules in
+  `.vale/styles/Abera`, over the Markdown and the prerendered pages.
+
+## How it stays current
+
+GitHub Actions are pinned by commit SHA. Dependabot bumps SHA and comment
+together, minor and patch grouped weekly per ecosystem. The
+`dependabot-automerge` workflow arms auto-merge on every Dependabot PR,
+majors included. It needs Allow auto-merge and a `DEPENDABOT_AUTOMERGE_TOKEN`
+secret (a fine-grained PAT, so the merge triggers the deploy, recreated
+quarterly). Scorecard, CodeQL and a Trivy image scan run on schedule.
+
+## Stages in the Dockerfile
 
 | Stage | What it is |
 |---|---|
-| `clientbase` | the client dependency tree, installed with `npm ci` |
-| `clientbuild` | the production client bundle, copied into the final image |
+| `clientbase` | the client dependencies, `npm ci` |
+| `clientbuild` | the production bundle and the prerendered pages |
+| `clientbudget` | page weight against `scripts/page-budgets.json`. A leaf |
+| `clientprose` | the writing rules over the prerendered pages. A leaf |
 | `clientdev` | the vite dev server, source bind mounted at run time |
-| `clienttest` | `tsc -b` and the unit tests. A leaf; the production build never pays for it |
-| `clienttools` | eslint, typescript-eslint and prettier from the root package |
-| `clientlint` | `eslint .` and `prettier --check .` over the whole repository. Also a leaf |
-| `build`, `publish`, `final` | the .NET server and the deployed image |
+| `clienttest` | `tsc -b` and the unit tests. A leaf |
+| `clienttools`, `clientlint` | biome over the whole repository. A leaf |
+| `vale` | the prose linter image, read by `scripts/check-prose.sh` |
+| `build`, `servertest`, `publish`, `final` | the .NET server, its tests, and the deployed image |
 
-`clientbase`, `clientdev`, `clienttest` and `clientlint` all resolve from the
-same `NODE_IMAGE` build argument, so the tests cannot pass on a different node
-than the one that builds the artifact. Override it to try another version:
-
-```
-docker build --build-arg NODE_IMAGE=node:24 --target clienttest -f aberaTech.Server/Dockerfile .
-```
+The client stages resolve from `nodebase`, so the tests run on the node that
+builds the artifact.
 
 ### JetBrains
 
-The `make` targets work as they are from the IDE terminal, and Docker Desktop
-must be running for any of them.
+The `make` targets work from the IDE terminal. Docker Desktop must be
+running.
 
-For the IDE to resolve imports, index dependencies and run tests from the
-gutter, point it at the container rather than at a local install:
+To resolve imports and run tests from the gutter, point the IDE at the
+container:
 
-1. **Settings → Build, Execution, Deployment → Docker**, add a Docker connection
-   for Docker Desktop.
-2. **Settings → Languages & Frameworks → Node.js**, set the Node interpreter to
-   **Add → Docker Compose**, choosing `compose.yaml` and the `test` service.
-   Imports and `node_modules` then resolve from the container.
-3. **Run → Edit Configurations → Add → Docker → Docker Compose**, with
-   `compose.yaml` and service `dev`, for a one-click dev server.
+1. **Settings, Build, Execution, Deployment, Docker**: add a connection for
+   Docker Desktop.
+2. **Settings, Languages & Frameworks, Node.js**: set the interpreter to
+   **Add, Docker Compose**, with `compose.yaml` and the `test` service.
+3. **Run, Edit Configurations, Add, Docker, Docker Compose**: `compose.yaml`
+   and service `dev`, for a one-click dev server.
 
-`.idea/` is only partly gitignored, so a run configuration you want to share can
-be committed; anything machine specific stays out on its own.
+`.idea/` is partly gitignored. A run configuration worth sharing can be
+committed.
 
 ### Without make
 
@@ -147,4 +124,5 @@ docker compose up --build dev
 docker compose run --rm test
 docker build --target clienttest -f aberaTech.Server/Dockerfile .
 docker build --target clientlint -f aberaTech.Server/Dockerfile .
+docker build --target clientprose -f aberaTech.Server/Dockerfile .
 ```

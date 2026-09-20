@@ -183,7 +183,7 @@ export default function TwelveToEighteenMonths() {
                   earned leave before and/or after your CSP.
                 </Typography>
                 <Typography component="li" sx={{ marginBottom: 2 }}>
-                  Reach out and apply to companies early; you need their
+                  Reach out and apply to companies early. You need their
                   signature for your CSP packet.
                 </Typography>
               </Typography>
@@ -226,11 +226,11 @@ export default function TwelveToEighteenMonths() {
 
               <Typography sx={{ marginBottom: 2 }}>
                 The main benefit I saw from premium was being able to send
-                messages to people outside your network. I didn't really care
-                about seeing who was looking at my profile.{" "}
+                messages to people outside your network. I didn't care about
+                seeing who was looking at my profile.{" "}
                 <strong>
-                  I don't see the value of LinkedIn Premium once you've done the
-                  heavy lifting of building your network
+                  I don't see the value of LinkedIn Premium once you've built
+                  your network
                 </strong>
                 . So, I'm not going to pay for it once it expires.
               </Typography>
@@ -294,7 +294,7 @@ export default function TwelveToEighteenMonths() {
                   at completion].
                 </Typography>
                 <Typography component="li" sx={{ marginBottom: 1 }}>
-                  Requires submission of the Internship packet 1 month prior to
+                  Requires submission of the Internship packet 1 month before
                   your planned start date [for Legal and Regional Coordinator
                   approval process, at this time Legal is taking 15-30 days to
                   process packets].
@@ -346,8 +346,8 @@ export default function TwelveToEighteenMonths() {
                   week you will be interning (See example attached).
                 </Typography>
                 <Typography component="li" sx={{ marginBottom: 1 }}>
-                  Please ensure the dates on the start and end dates DA31 and
-                  Participation Memo are the same.
+                  Please check that the dates on the start and end dates DA31
+                  and Participation Memo are the same.
                 </Typography>
                 <Typography component="li" sx={{ marginBottom: 1 }}>
                   Please include in the Internship Agreement, outcome section,
@@ -358,11 +358,11 @@ export default function TwelveToEighteenMonths() {
               </Typography>
 
               <Typography sx={{ marginBottom: 2 }}>
-                Please ensure you mention in #4 of the agreement the internship
-                will lead to an interview with the company. Follow all
-                instructions provided to prevent delays with the final approval
-                process. If you have any questions or concerns, please do not
-                hesitate to contact me.
+                Please state in #4 of the agreement that the internship will
+                lead to an interview with the company. Follow all instructions
+                provided to prevent delays with the final approval process. If
+                you have any questions or concerns, please do not hesitate to
+                contact me.
               </Typography>
 
               <Typography sx={{ marginBottom: 2 }}>Warm Regards,</Typography>
@@ -630,9 +630,9 @@ export default function TwelveToEighteenMonths() {
                 >
                   Pat Tilman scholarship
                 </Link>
-                , and a variety of other resources to cover additional expenses.
-                Ensure that you understand how the GI Bill works. The TAP gives
-                a great GI Bill course and teaches you tools like the{" "}
+                , and several other resources to cover additional expenses.
+                Learn how the GI Bill works. The TAP gives a great GI Bill
+                course and teaches you tools like the{" "}
                 <Link
                   to="https://www.va.gov/education/gi-bill-comparison-tool/"
                   target="_blank"

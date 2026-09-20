@@ -75,18 +75,18 @@ export const levels: Record<Level, string> = {
 
 export const copy = {
   intro:
-    "An eighteen-month plan from the arithmetic under RSA to the lattice mathematics under ML-KEM, written for a working cryptographic engineer about to spend their days on the post-quantum transition. Classical cryptography first and properly, then enough quantum mechanics to see exactly what Shor's algorithm breaks and what it costs, then the post-quantum families to the level of implementing the standards from their FIPS documents alone and defending their parameters.",
+    "An eighteen-month plan from the arithmetic under RSA to the lattice mathematics under ML-KEM, for a cryptographic engineer working on the post-quantum transition. Classical cryptography first. Then enough quantum mechanics to see what Shor's algorithm breaks and what it costs. Then the post-quantum families, to the level of implementing the standards from their FIPS documents and defending their parameters.",
   note: "The checklist and the gate log are mine. Signed out, the page is read-only.",
   scoring:
-    "Blocks are scored on gates, not hours. A gate is an implementation that passes the published test vectors, a proof that survives a check against the book, or a written assessment someone else has read, and the block is done when the gate passes.",
+    "A block is done when its gate passes. A gate is an implementation that passes the published test vectors, a proof checked against the book, or a written assessment someone else has read.",
   practice:
-    "Each block lists practice that scores you as well as reading: challenge sites, test vectors, problem sets with answers. Those cannot report back here, so I write their results in the gate log: a set completed, a vector suite passed, a parameter estimate reproduced.",
+    "Each block lists scored practice: challenge sites, test vectors, problem sets with answers. Their results go in the gate log: a set completed, a vector suite passed, a parameter estimate reproduced.",
   ideas:
-    "Eight ideas carry the whole subject; everything after is one of them applied. Each stage returns to all eight at more depth, and the second column is what owning one looks like.",
+    "Eight ideas. Each stage returns to all of them at more depth. The second column is what knowing one looks like.",
   standards:
-    "The documents the transition is measured against, and where each stood in September 2026. Check the dates before quoting any of them: this table is a snapshot, and the additional-signature process in particular moves every few months.",
+    "The documents the transition is measured against, and where each stood in September 2026. Check the dates before quoting any of them. The additional-signature process moves every few months.",
   bookshelf:
-    "Every book the blocks read from, in one place, with what it is for. Free ones are marked, and there is one at every stage. The paid ones are worth a used copy of the edition named.",
+    "Every book the blocks use, with what it is for. Free ones are marked, one at every stage. For the rest, a used copy of the edition named.",
 };
 
 export const rules: string[] = [
@@ -94,8 +94,8 @@ export const rules: string[] = [
   "State the assumption. Every scheme rests on a hardness assumption and every proof is a reduction to it. A claim of security that does not name what it reduces to is marketing.",
   "Run every attack you read. A break described in a paper is reproduced, in Sage or Python, on a toy parameter set, before it counts as understood.",
   "Never let the arithmetic be the thing that fails. Modular inverses, the Chinese remainder theorem, polynomial multiplication in a quotient ring and the number-theoretic transform are drilled until they are reflexes.",
-  "Treat quantum-safe on a product sheet as a question, not an answer. Ask which algorithm, which parameter set, which validation, and whether the classical half of a hybrid is still there.",
-  "Keep the log. A block is done when its gate passes, and the gate is scored from the log, not from how it felt.",
+  "Treat quantum-safe on a product sheet as a question. Ask which algorithm, which parameter set, which validation, and whether the classical half of a hybrid is still there.",
+  "Keep the log. A block is done when its gate passes, and the gate is scored from the log.",
 ];
 
 export const cadence: CadenceItem[] = [
@@ -117,7 +117,7 @@ export const cadence: CadenceItem[] = [
   {
     label: "Read the field",
     detail:
-      "One paper abstract a day from the IACR ePrint listing, and the week's posts on the NIST post-quantum forum. Ten minutes; the point is to recognise names and problems, not to follow every thread.",
+      "One paper abstract a day from the IACR ePrint listing, and the week's posts on the NIST post-quantum forum. Ten minutes. The point is to recognise names and problems.",
   },
   {
     label: "Review",
@@ -129,7 +129,7 @@ export const cadence: CadenceItem[] = [
 export const ideas: Idea[] = [
   {
     name: "Security is a reduction",
-    idea: "A scheme is secure relative to a hardness assumption, and the proof is an algorithm: anyone who breaks the scheme is turned into someone who breaks the assumption. There is no other kind of security argument.",
+    idea: "A scheme is secure relative to a hardness assumption, and the proof is an algorithm: anyone who breaks the scheme is turned into someone who breaks the assumption. There is no other form of security argument.",
     test: "You write the reduction for a given scheme yourself, with the simulator and the loss stated, and can say what breaks if a hypothesis is dropped.",
   },
   {
@@ -145,7 +145,7 @@ export const ideas: Idea[] = [
   {
     name: "Information-theoretic versus computational",
     idea: "The one-time pad and quantum key distribution are secure against any computer, at the cost of a channel that must already be authenticated. Everything post-quantum is computational, secure only for as long as its assumption holds.",
-    test: "You can say which half of a deployed system is which, and what the authentication in a quantum key distribution link is actually protected by.",
+    test: "You can say which half of a deployed system is which, and what the authentication in a quantum key distribution link is protected by.",
   },
   {
     name: "Measurement disturbs, states cannot be copied",
@@ -154,7 +154,7 @@ export const ideas: Idea[] = [
   },
   {
     name: "Errors hide secrets",
-    idea: "A system of linear equations is easy; the same system with a little noise added to each equation is the learning with errors problem, and nobody knows how to solve it, quantum computer or not. Every lattice standard is this idea in a polynomial ring.",
+    idea: "A system of linear equations is easy. The same system with a little noise added to each equation is the learning with errors problem, and nobody knows how to solve it, quantum computer or not. Every lattice standard is this idea in a polynomial ring.",
     test: "You write out ML-KEM's key generation, encapsulation and decapsulation as operations on module elements, and derive the decryption failure bound from the noise sizes.",
   },
   {
@@ -164,7 +164,7 @@ export const ideas: Idea[] = [
   },
   {
     name: "The job is migration",
-    idea: "Traffic recorded today is decrypted when the machine arrives, so key exchange had to move first and signatures follow. Most of the work is finding where cryptography is, not choosing what replaces it.",
+    idea: "Traffic recorded today is decrypted when the machine arrives, so key exchange had to move first and signatures follow. Most of the work is finding where cryptography is.",
     test: "Handed a system, you produce an inventory of its cryptography, rank what is exposed to harvest-now-decrypt-later, and put each item on the published transition timeline.",
   },
 ];
@@ -191,7 +191,7 @@ export const standards: Standard[] = [
   {
     name: "FIPS 206, FN-DSA",
     what: "The compact lattice signature, from Falcon",
-    status: "Draft; final expected late 2026 or 2027",
+    status: "Draft. Final expected late 2026 or 2027",
     url: "https://csrc.nist.gov/projects/post-quantum-cryptography",
   },
   {
@@ -203,13 +203,13 @@ export const standards: Standard[] = [
   {
     name: "HQC",
     what: "A code-based key encapsulation mechanism, the backup to ML-KEM",
-    status: "Selected March 2025; draft standard pending",
+    status: "Selected March 2025. Draft standard pending",
     url: "https://csrc.nist.gov/projects/post-quantum-cryptography",
   },
   {
     name: "Additional signatures",
     what: "The second signature competition, nine candidates in round three",
-    status: "Round three since May 2026; standards not before 2028",
+    status: "Round three since May 2026. Standards not before 2028",
     url: "https://csrc.nist.gov/projects/pqc-dig-sig",
   },
   {
@@ -221,12 +221,12 @@ export const standards: Standard[] = [
   {
     name: "CNSA 2.0",
     what: "The national security systems suite and its dates, from software signing in 2025 to everything by 2035",
-    status: "In force; dates are per system class",
+    status: "In force. Dates are per system class",
     url: "https://media.defense.gov/2022/Sep/07/2003071834/-1/-1/0/CSA_CNSA_2.0_ALGORITHMS_.PDF",
   },
   {
     name: "X25519MLKEM768",
-    what: "The hybrid key exchange browsers and servers actually deploy in TLS 1.3",
+    what: "The hybrid key exchange browsers and servers deploy in TLS 1.3",
     status: "IETF draft, widely deployed",
     url: "https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/",
   },
@@ -272,7 +272,7 @@ export const stages: Stage[] = [
           {
             title: "A Computational Introduction to Number Theory and Algebra",
             url: "https://shoup.net/ntb/",
-            note: "Shoup. Free from the author. The one mathematics book for the whole plan; the chapters named in the tasks are the ones to do.",
+            note: "Shoup. Free from the author. The one mathematics book for the whole plan. The chapters named in the tasks are the ones to do.",
           },
           {
             title: "SageMath",
@@ -300,7 +300,7 @@ export const stages: Stage[] = [
           },
           {
             id: "symmetric-prf",
-            text: "Chapters 4 to 7: pseudorandom functions and permutations, modes of operation, message authentication codes, authenticated encryption and hash functions. Do the reduction exercises, not only the reading.",
+            text: "Chapters 4 to 7: pseudorandom functions and permutations, modes of operation, message authentication codes, authenticated encryption and hash functions. Do the reduction exercises.",
           },
           {
             id: "symmetric-boneh",
@@ -320,7 +320,7 @@ export const stages: Stage[] = [
           {
             title: "Introduction to Modern Cryptography",
             url: "https://www.cs.umd.edu/~jkatz/imc.html",
-            note: "Katz and Lindell, third edition. The textbook for the classical stage; its proofs are the ones to imitate.",
+            note: "Katz and Lindell, third edition. The textbook for the classical stage. Its proofs are the ones to imitate.",
           },
           {
             title: "A Graduate Course in Applied Cryptography",
@@ -330,19 +330,19 @@ export const stages: Stage[] = [
           {
             title: "Serious Cryptography",
             url: "https://nostarch.com/serious-cryptography-2nd-edition",
-            note: "Aumasson, second edition. The practitioner's view of the same material, including what actually breaks in deployed systems.",
+            note: "Aumasson, second edition. The practitioner's view of the same material, including what breaks in deployed systems.",
           },
         ],
         practice: [
           {
             title: "Cryptography I",
             url: "https://www.coursera.org/learn/crypto",
-            note: "Boneh's course. The problem sets are graded; log the score on each.",
+            note: "Boneh's course. The problem sets are graded. Log the score on each.",
           },
           {
             title: "Cryptopals",
             url: "https://cryptopals.com/",
-            note: "The challenge sets. Log the set and challenge number finished each week; the gate wants sets one to four.",
+            note: "The challenge sets. Log the set and challenge number finished each week. The gate wants sets one to four.",
           },
         ],
       },
@@ -416,7 +416,7 @@ export const stages: Stage[] = [
           },
           {
             id: "protocols-engineering",
-            text: "Real-World Cryptography, the chapters on key exchange, authenticated encryption, secure transport and hardware, for how the pieces are actually assembled and managed.",
+            text: "Real-World Cryptography, the chapters on key exchange, authenticated encryption, secure transport and hardware, for how the pieces are assembled and managed.",
           },
           {
             id: "protocols-constant-time",
@@ -470,7 +470,7 @@ export const stages: Stage[] = [
     id: "quantum",
     title: "Quantum mechanics, for a cryptographer",
     weeks: "Weeks 21 to 36",
-    why: "Enough quantum computing to derive Shor's algorithm and cost it, not to build a machine. Then quantum cryptography proper, quantum key distribution and its no-go theorems, because it is the other answer to the same threat and someone in a cryptography department will be asked to assess it.",
+    why: "Enough quantum computing to derive Shor's algorithm and cost it. Then quantum cryptography proper, quantum key distribution and its no-go theorems, because it is the other answer to the same threat and someone in a cryptography department will be asked to assess it.",
     exit: "You have a state-vector simulator of your own, Shor's algorithm running in it, a defended estimate of what a cryptographically relevant machine costs, and a two-page position on quantum key distribution against post-quantum cryptography that you would sign.",
     blocks: [
       {
@@ -505,7 +505,7 @@ export const stages: Stage[] = [
           {
             title: "Quantum Computation and Quantum Information",
             url: "https://www.cambridge.org/highereducation/books/quantum-computation-and-quantum-information/01E10196D0A682A6AEFFEA52D53BE9AE",
-            note: "Nielsen and Chuang. The standard text; chapters 1, 2, 4, 5 and later 12 are the ones the plan uses.",
+            note: "Nielsen and Chuang. The standard text. Chapters 1, 2, 4, 5 and later 12 are the ones the plan uses.",
           },
           {
             title: "Quantum Country",
@@ -522,7 +522,7 @@ export const stages: Stage[] = [
           {
             title: "Quirk",
             url: "https://algassert.com/quirk",
-            note: "A drag-and-drop circuit simulator that shows amplitudes live. Your simulator is scored against it; log the circuits matched.",
+            note: "A drag-and-drop circuit simulator that shows amplitudes live. Your simulator is scored against it. Log the circuits matched.",
           },
           {
             title: "IBM Quantum Learning",
@@ -551,7 +551,7 @@ export const stages: Stage[] = [
           },
           {
             id: "shor-grover",
-            text: "Implement Grover's search on four qubits and plot the success probability against iterations; derive the optimal count and prove the square-root bound is tight.",
+            text: "Implement Grover's search on four qubits and plot the success probability against iterations. Derive the optimal count and prove the square-root bound is tight.",
           },
           {
             id: "shor-estimates",
@@ -576,7 +576,7 @@ export const stages: Stage[] = [
             title:
               "How to factor 2048 bit RSA integers with less than a million noisy qubits",
             url: "https://arxiv.org/abs/2505.15917",
-            note: "Gidney, 2025. The twenty-fold reduction; read it for what changed and what did not.",
+            note: "Gidney, 2025. The twenty-fold reduction. Read it for what changed and what did not.",
           },
           {
             title:
@@ -589,7 +589,7 @@ export const stages: Stage[] = [
           {
             title: "IBM Quantum Learning",
             url: "https://learning.quantum.ibm.com/",
-            note: "The Shor and Grover modules have exercises with answers; log the ones finished and the scores.",
+            note: "The Shor and Grover modules have exercises with answers. Log the ones finished and the scores.",
           },
         ],
       },
@@ -625,7 +625,7 @@ export const stages: Stage[] = [
           {
             title: "Advances in quantum cryptography",
             url: "https://arxiv.org/abs/1906.01645",
-            note: "Pirandola and others, 2020. The review of the whole field; the sections on discrete-variable protocols and practical security are the ones to read closely.",
+            note: "Pirandola and others, 2020. The review of the whole field. The sections on discrete-variable protocols and practical security are the ones to read closely.",
           },
           {
             title:
@@ -679,7 +679,7 @@ export const stages: Stage[] = [
     id: "postquantum",
     title: "Post-quantum cryptography, to expert",
     weeks: "Weeks 37 to 78",
-    why: "The standards, the mathematics under them, the attacks that set their parameters, the other families kept as backups, and then the engineering of actually moving systems over. The second half of this stage is the job description; the first half is what makes the second half more than reading vendor sheets.",
+    why: "The standards, the mathematics under them, the attacks that set their parameters, the other families kept as backups, and then the engineering of moving systems over. The second half of this stage is the job description. The first half is what makes the second half more than reading vendor sheets.",
     exit: "You have implemented ML-KEM and SLH-DSA from their FIPS documents and passed the validation vectors, you have reproduced the security estimates of the standard parameter sets with the lattice estimator, you have reproduced one published break, and you have written and defended a migration assessment for a real system and given a talk on it.",
     blocks: [
       {
@@ -706,7 +706,7 @@ export const stages: Stage[] = [
           },
           {
             id: "lattices-mldsa",
-            text: "Read FIPS 204 and the draft FIPS 206 the same way and write out ML-DSA's signing loop with the reason for every rejection condition. Implementing it is optional; explaining it is not.",
+            text: "Read FIPS 204 and the draft FIPS 206 the same way and write out ML-DSA's signing loop with the reason for every rejection condition. Implementing it is optional. Explaining it is not.",
           },
           {
             id: "lattices-proof",
@@ -718,7 +718,7 @@ export const stages: Stage[] = [
           {
             title: "A Decade of Lattice Cryptography",
             url: "https://eprint.iacr.org/2015/939",
-            note: "Peikert. Free. The survey of the field up to the standards; chapters 4 and 5 are the ones to work.",
+            note: "Peikert. Free. The survey of the field up to the standards. Chapters 4 and 5 are the ones to work.",
           },
           {
             title: "The Learning with Errors Problem",
@@ -792,7 +792,7 @@ export const stages: Stage[] = [
           {
             title: "The LLL Algorithm: Survey and Applications",
             url: "https://link.springer.com/book/10.1007/978-3-642-02295-1",
-            note: "Nguyen and Vallée. The reference on lattice reduction; the first three chapters are what the block needs.",
+            note: "Nguyen and Vallée. The reference on lattice reduction. The first three chapters are what the block needs.",
           },
           {
             title: "Lattice-based Cryptography",
@@ -822,11 +822,11 @@ export const stages: Stage[] = [
         id: "families",
         title: "Hash-based, code-based, multivariate and isogeny schemes",
         weeks: "Weeks 53 to 60",
-        why: "The backups, kept because lattices might fall. Hash-based signatures rest on the least assumption there is and are already required for firmware signing; code-based encryption is the oldest post-quantum scheme and now a standard; multivariate and isogeny schemes are where the most instructive breaks happened.",
+        why: "The backups, kept because lattices might fall. Hash-based signatures rest on the least assumption there is and are already required for firmware signing. Code-based encryption is the oldest post-quantum scheme and now a standard. Multivariate and isogeny schemes are where the most instructive breaks happened.",
         tasks: [
           {
             id: "families-hash",
-            text: "Lamport, Winternitz, Merkle trees, and the stateful schemes in SP 800-208; then the hypertree and few-time signatures that make SLH-DSA stateless. Understand exactly what goes wrong if a stateful key is used twice.",
+            text: "Lamport, Winternitz, Merkle trees, and the stateful schemes in SP 800-208. Then the hypertree and few-time signatures that make SLH-DSA stateless. Understand exactly what goes wrong if a stateful key is used twice.",
           },
           {
             id: "families-slhdsa",
@@ -865,7 +865,7 @@ export const stages: Stage[] = [
           {
             title: "SPHINCS+",
             url: "https://sphincs.org/",
-            note: "The design papers behind SLH-DSA; open after your own implementation passes.",
+            note: "The design papers behind SLH-DSA. Open after your own implementation passes.",
           },
           {
             title: "Classic McEliece",
@@ -880,7 +880,7 @@ export const stages: Stage[] = [
           {
             title: "Breaking Rainbow takes a weekend on a laptop",
             url: "https://eprint.iacr.org/2022/214",
-            note: "Beullens. A finalist removed by one paper; the block reproduces it.",
+            note: "Beullens. A finalist removed by one paper. The block reproduces it.",
           },
           {
             title: "An efficient key recovery attack on SIDH",
@@ -1045,7 +1045,7 @@ export const stages: Stage[] = [
           {
             title: "Real World Crypto",
             url: "https://rwc.iacr.org/",
-            note: "The conference closest to deployment; the talks are recorded.",
+            note: "The conference closest to deployment. The talks are recorded.",
           },
           {
             title: "PQCrypto",
@@ -1147,7 +1147,7 @@ export const bookshelf: Book[] = [
     level: "quantum",
     url: "https://quantum.country/",
     free: true,
-    why: "The notation made automatic by spaced repetition. Read it before Nielsen and Chuang, not instead.",
+    why: "The notation made automatic by spaced repetition. Read it before Nielsen and Chuang.",
   },
   {
     title: "Introduction to Quantum Computing, lecture notes",

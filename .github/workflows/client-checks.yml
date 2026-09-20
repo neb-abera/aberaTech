@@ -222,6 +222,18 @@ jobs:
           ./scripts/check-held-majors.sh --self-test
           ./scripts/check-held-majors.sh
 
+      # The writing rules (.vale/styles/Abera) over every tracked Markdown
+      # file. The self-test runs first, every time: every rule must fire on
+      # a fixture that carries one violation each, and a clean fixture must
+      # pass, so a rule that has stopped matching is caught before it is
+      # trusted. The prerendered pages get the same rules in the production
+      # image job below, where the client build already exists.
+      - name: Markdown passes the writing rules
+        run: |
+          set -euo pipefail
+          ./scripts/check-prose.sh --self-test
+          ./scripts/check-prose.sh
+
   scheduling-tests:
     name: Scheduling unit tests, in the container
     runs-on: ubuntu-latest
@@ -376,6 +388,20 @@ jobs:
           context: .
           file: aberaTech.Server/Dockerfile
           target: clientbudget
+          push: false
+          load: false
+          cache-from: type=gha,scope=final
+
+      # The same writing rules, on the prerendered HTML the image ships: the
+      # guides are checked as a reader gets them, not as TypeScript strings.
+      # Sits on clientbuild like the budget stage, so it costs one cached
+      # layer lookup plus the lint.
+      - name: Prerendered pages pass the writing rules
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: aberaTech.Server/Dockerfile
+          target: clientprose
           push: false
           load: false
           cache-from: type=gha,scope=final
