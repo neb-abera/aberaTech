@@ -176,6 +176,33 @@ public sealed class RouteTableTests
         Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync("/_test/open")).StatusCode);
     }
 
+    [Theory]
+    [InlineData("/sitemap-nobody-shipped.xml")]
+    [InlineData("/openapi/v1.json")]
+    [InlineData("/.well-known/nothing.json")]
+    public async Task A_file_that_is_not_there_is_a_404_and_not_a_sign_in(string path)
+    {
+        // The fallback policy closes endpoints that say nothing. A path that
+        // matches no endpoint at all must not be closed by it: it is a 404,
+        // to a stranger and to a crawler alike.
+        using var app = App();
+        using var anonymous = app.CreateClient();
+
+        var response = await anonymous.GetAsync(path);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Security_txt_is_open_in_production()
+    {
+        using var app = App();
+        using var anonymous = app.CreateClient();
+
+        Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync(SecurityTxt.Path)).StatusCode);
+    }
+
     private static bool Names(Endpoint endpoint, string pattern) =>
         (endpoint as RouteEndpoint)?.RoutePattern.RawText == pattern;
 
