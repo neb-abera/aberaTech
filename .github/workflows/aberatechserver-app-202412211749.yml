@@ -321,7 +321,7 @@ jobs:
             local path="$1" headers
             curl --silent --show-error --max-time 20 --output /dev/null "${SITE}${path}" || true
             headers=$(curl --silent --show-error --max-time 20 --output /dev/null \
-              --dump-header - "${SITE}${path}" | tr -d '\r' | tr 'A-Z' 'a-z')
+              --dump-header - "${SITE}${path}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')
             if ! grep -q '^cache-control: no-store' <<<"${headers}"; then
               echo "::error::${SITE}${path} does not carry Cache-Control: no-store; the deployed revision is not the one this workflow built."
               failed=1
