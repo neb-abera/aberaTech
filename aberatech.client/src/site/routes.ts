@@ -52,6 +52,7 @@ export const routes: PageRoute[] = [
   },
   { path: "/links", Page: lazy(() => import("../views/Links")) },
   { path: "/plan", Page: lazy(() => import("../views/Plan")) },
+  { path: "/devbox", Page: lazy(() => import("../views/DevBox")) },
 ];
 
 /**
@@ -76,4 +77,6 @@ export const unlisted: Record<string, string> = {
     "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API; the app bar adds a Links entry only once the owner is signed in.",
   "/plan":
     "The owner's plan, a Markdown document kept on the server. Same shape as /links: a visitor gets a sign-in button, the app bar shows a Plan entry only to the signed-in owner.",
+  "/devbox":
+    "The owner's dev box: its power state, a Start button and the runbook for getting a session back from a phone. A visitor gets a sign-in button; the app bar shows a Dev box entry only to the signed-in owner.",
 };
