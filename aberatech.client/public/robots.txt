@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /api/
+Disallow: /schedule/admin
+Disallow: /links
+Disallow: /plan
+
+Sitemap: https://abera.tech/sitemap.xml
