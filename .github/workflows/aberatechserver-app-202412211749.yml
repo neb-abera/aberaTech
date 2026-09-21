@@ -34,6 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job builds and pushes containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface
+          # as refused raw-IP dials. Host-process jobs below are on block.
+          egress-policy: audit
+
       # Step 1: Checkout the Repository
       - name: Checkout Source Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,6 +105,14 @@ jobs:
     timeout-minutes: 15
     needs: build
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: the Azure CLI reaches a set of management and identity
+          # hosts that changes with the CLI version. Read this job's audit
+          # log before moving it to block with a list.
+          egress-policy: audit
+
       # Step 5: Azure CLI Login with Federated Credentials
       - name: Azure Login
         # OIDC federation, like the Facewoof deploy: GitHub mints a short-lived
@@ -221,6 +237,14 @@ jobs:
     timeout-minutes: 10
     needs: deploy
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Block: one curl to one host.
+          egress-policy: block
+          allowed-endpoints: >
+            api.cloudflare.com:443
+
       - name: Purge Cloudflare cache
         env:
           ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
@@ -248,6 +272,14 @@ jobs:
     timeout-minutes: 10
     needs: purge-edge-cache
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Block: one host, the site itself.
+          egress-policy: block
+          allowed-endpoints: >
+            abera.tech:443
+
       - name: Check the deployed site answers
         env:
           SITE: https://abera.tech
@@ -275,6 +307,34 @@ jobs:
           check /readyz 200
           check / 200
           check /fitness 200
+          check /robots.txt 200
+          check /sitemap.xml 200
+          check /.well-known/security.txt 200
+
+          # A probe answered from the edge cache is not a probe. On
+          # 2026-09-21 /healthz came back with an age of 83,725 seconds. The
+          # origin says no-store; the cache rule in the Cloudflare dashboard
+          # must exclude the probes and /api as well, because its edge TTL
+          # overrides the origin. Two fetches: the second is what a monitor
+          # sees, and it must not be a HIT.
+          probe() {
+            local path="$1" headers
+            curl --silent --show-error --max-time 20 --output /dev/null "${SITE}${path}" || true
+            headers=$(curl --silent --show-error --max-time 20 --output /dev/null \
+              --dump-header - "${SITE}${path}" | tr -d '\r' | tr 'A-Z' 'a-z')
+            if ! grep -q '^cache-control: no-store' <<<"${headers}"; then
+              echo "::error::${SITE}${path} does not carry Cache-Control: no-store; the deployed revision is not the one this workflow built."
+              failed=1
+            fi
+            if grep -q '^cf-cache-status: hit' <<<"${headers}"; then
+              echo "::error::${SITE}${path} is served from the edge cache. Exclude /healthz, /readyz and /api/* from the cache rule in the Cloudflare dashboard; a cached probe cannot see an outage."
+              failed=1
+            fi
+            echo "  ${path} -> not cached"
+          }
+
+          probe /healthz
+          probe /readyz
 
           # Mapped unconditionally and fetched by the carrier reviewing the
           # A2P campaign, so they must answer on any deployment.
