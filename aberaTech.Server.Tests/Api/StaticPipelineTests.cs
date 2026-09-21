@@ -234,4 +234,42 @@ public sealed class StaticPipelineTests : IDisposable
             "public, max-age=31536000, immutable",
             response.Headers.CacheControl?.ToString());
     }
+
+    [Fact]
+    public async Task A_file_nobody_shipped_is_a_bare_404()
+    {
+        // Not the shell with a 404, and never a sign-in: on 2026-09-21 the
+        // live site answered 401 to /robots.txt because a dotted path matched
+        // no endpoint and met the fallback authorization policy instead.
+        var response = await _factory.CreateClient().GetAsync("/robots-nobody-shipped.txt");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("", await response.Content.ReadAsStringAsync());
+    }
+
+    [Theory]
+    [InlineData("/healthz")]
+    [InlineData("/readyz")]
+    public async Task A_probe_is_never_stored(string path)
+    {
+        // /healthz once came back from the edge cache with an age of 83,725
+        // seconds. A probe that can be answered from a cache is not a probe.
+        var response = await _factory.CreateClient().GetAsync(path);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
+    }
+
+    [Fact]
+    public async Task Security_txt_says_where_to_report()
+    {
+        var response = await _factory.CreateClient().GetAsync(SecurityTxt.Path);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("text/plain", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("Contact: " + SecurityTxt.Contact, body);
+        Assert.Contains("Contact: " + SecurityTxt.Advisories, body);
+        Assert.Equal("public, max-age=86400", response.Headers.CacheControl?.ToString());
+    }
 }

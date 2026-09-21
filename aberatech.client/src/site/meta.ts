@@ -128,8 +128,14 @@ const person = {
   ],
 };
 
+/** The home page is about a person, a guide is an article, a tool is a site. */
+function ogType(route: string): "profile" | "article" | "website" {
+  if (route === "/") return "profile";
+  return guides.some((entry) => entry.to === route) ? "article" : "website";
+}
+
 /**
- * The <head> markup for one prerendered route: title, description, canonical
+ * The <head> markup for one route, prerendered or not: title, description, canonical
  * URL, and the Open Graph and Twitter tags that turn a pasted link into a
  * card. The JSON-LD script is data, not code: browsers never execute it, so
  * the content security policy's script hashes do not apply to it.
@@ -144,7 +150,7 @@ export function headFor(route: string): string {
     `<title>${title}</title>`,
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
-    `<meta property="og:type" content="${route === "/" ? "profile" : "article"}" />`,
+    `<meta property="og:type" content="${ogType(route)}" />`,
     `<meta property="og:site_name" content="${siteName}" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,

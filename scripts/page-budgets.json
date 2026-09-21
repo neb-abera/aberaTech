@@ -1,14 +1,20 @@
 {
-  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each number is about 10% above what the build measured when it was set (2026-09-17), except entry-css, which is 21 bytes and has a floor instead. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
+  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each number is about 10% above what the build measured when it was set (2026-09-17; the six shell pages with their own head, 2026-09-21), except entry-css, which is 21 bytes and has a floor instead. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
   "budgets": {
-    "entry-js": 89300,
     "entry-css": 1024,
+    "entry-js": 89300,
     "home-initial": 126100,
     "html:/": 14200,
+    "html:/fitness": 1150,
     "html:/guides": 14300,
+    "html:/links": 1050,
+    "html:/plan": 1050,
+    "html:/planner": 1200,
     "html:/projects": 14400,
     "html:/quantum-cryptography": 39900,
     "html:/rf-training": 32300,
+    "html:/schedule": 1100,
+    "html:/schedule/admin": 1050,
     "html:/signal-processing": 41200,
     "html:/technical": 35700,
     "html:/transition": 49100

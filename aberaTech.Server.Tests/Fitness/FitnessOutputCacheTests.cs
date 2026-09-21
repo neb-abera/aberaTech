@@ -66,9 +66,10 @@ public sealed class FitnessOutputCacheTests
         await client.GetAsync("/api/fitness/summary");
         var cached = await client.GetAsync("/api/fitness/summary");
 
-        // Age is the proof this answer came from the cache. Server-side only: /api carried no Cache-Control before and carries
-        // none now, so nothing downstream starts holding the owner's data.
-        Assert.Null(cached.Headers.CacheControl);
+        // Age is the proof this answer came from the cache. Server-side only:
+        // /api is no-store to a browser and the edge, so nothing downstream
+        // starts holding the owner's data.
+        Assert.Equal("no-store", cached.Headers.CacheControl?.ToString());
         Assert.NotNull(cached.Headers.Age);
         Assert.Null(cached.Content.Headers.Expires);
         Assert.False(cached.Headers.Contains("Set-Cookie"));

@@ -133,7 +133,9 @@ public sealed class ClientAddressTests
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(response.Headers.Contains("Strict-Transport-Security"));
+        Assert.Equal(
+            "max-age=31536000; includeSubDomains; preload",
+            string.Join(",", response.Headers.GetValues("Strict-Transport-Security")));
     }
 
     [Theory]

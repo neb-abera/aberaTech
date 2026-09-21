@@ -371,7 +371,7 @@ app.Use(async (context, next) =>
 
     if (context.Request.IsHttps)
     {
-        headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+        headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
     }
 
     await next();
@@ -417,6 +417,10 @@ app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
 // prerendered-page rewrite and the default-files behaviour above would both be
 // dead code and every page would serve the empty shell.
 app.UseRouting();
+
+// The probes and the API are answers, not files: never stored by a browser
+// or the edge. NoStoreResponses.cs says what an edge-cached /healthz cost.
+app.UseNoStoreResponses();
 
 // Outside the rate limiter and authentication, so their refusals pass back
 // through it. SecurityEvents.cs is the security log.
@@ -582,6 +586,10 @@ app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
 // a carrier reviewing the campaign will fetch them whatever else is switched on.
 app.MapCompliancePages();
 
+// Where to report a vulnerability, at the address scanners and researchers
+// look first. SecurityTxt.cs renders it; SECURITY.md says the same.
+app.MapSecurityTxt();
+
 // spa.html, not index.html: index.html now carries the home page's
 // prerendered markup, and a client-rendered route served over it would flash
 // the wrong page and then hydrate against DOM that contradicts it. spa.html is
@@ -594,8 +602,21 @@ app.MapCompliancePages();
 // answering 404 to everything.
 var appRoutes = AppRoutes.Load(app.Environment.WebRootPath);
 
-app.MapFallback(async context =>
+// "{*path}" rather than the parameterless overload's "{*path:nonfile}". The
+// nonfile constraint leaves a path whose last segment has a dot (a
+// /robots.txt nobody shipped, /openapi/v1.json in Production) matching no
+// endpoint at all, and a request with no endpoint meets the fallback
+// authorization policy above: on 2026-09-21 the live site answered 401 to
+// /robots.txt, /sitemap.xml and /.well-known/security.txt. A file that is
+// not in wwwroot is a 404 to everyone, and never a shell.
+app.MapFallback("{*path}", async context =>
 {
+    if (System.IO.Path.GetFileName(context.Request.Path.Value ?? "/").Contains('.'))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
     var known = appRoutes is null || appRoutes.Contains(context.Request.Path.Value ?? "/");
     context.Response.StatusCode = known ? StatusCodes.Status200OK : StatusCodes.Status404NotFound;
 

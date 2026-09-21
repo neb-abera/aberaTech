@@ -20,6 +20,7 @@ import {
   prerenderedRoutes,
   render,
   routes,
+  sitemapXml,
 } from "../dist-server/entry-server.js";
 
 const MARK = '<div id="root"></div>';
@@ -51,6 +52,22 @@ await writeFile("dist/app-routes.json", JSON.stringify(manifest, null, 2));
 process.stdout.write(
   `route manifest -> dist/app-routes.json (${manifest.length})\n`,
 );
+
+await writeFile("dist/sitemap.xml", sitemapXml());
+process.stdout.write("sitemap -> dist/sitemap.xml\n");
+
+// The client-rendered pages get the shell with their own head. They cannot
+// be prerendered (live queue state, an interactive tool, the owner's data)
+// but a link to /schedule pasted into a message used to render a card
+// carrying the home page's title, because spa.html has one head for all.
+// The root stays empty, so main.tsx renders rather than hydrates.
+for (const route of routes.map((entry) => entry.path)) {
+  if (prerenderedRoutes.includes(route)) continue;
+  const file = path.join("dist", route, "index.html");
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, template.replace(TITLE, headFor(route)));
+  process.stdout.write(`shell with its own head ${route} -> ${file}\n`);
+}
 
 for (const route of prerenderedRoutes) {
   const html = await render(route);
