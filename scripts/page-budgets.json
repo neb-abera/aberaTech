@@ -1,10 +1,11 @@
 {
-  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each number is about 10% above what the build measured when it was set (2026-09-17; the six shell pages with their own head, 2026-09-21), except entry-css, which is 21 bytes and has a floor instead. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
+  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each number is about 10% above what the build measured when it was set (2026-09-17; the seven shell pages with their own head, 2026-09-21), except entry-css, which is 21 bytes and has a floor instead. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
   "budgets": {
     "entry-css": 1024,
     "entry-js": 89300,
     "home-initial": 126100,
     "html:/": 14200,
+    "html:/devbox": 1100,
     "html:/fitness": 1150,
     "html:/guides": 14300,
     "html:/links": 1050,

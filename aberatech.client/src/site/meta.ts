@@ -73,6 +73,10 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Plan",
     description: "The owner's plan, kept on the server.",
   },
+  "/devbox": {
+    title: "Dev box",
+    description: "The owner's dev box: its state, and a button that starts it.",
+  },
 };
 
 const entryMeta = Object.fromEntries(

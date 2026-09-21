@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using aberaTech.Scheduling.Admin;
 using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Sms;
+using aberaTech.Server.DevBox;
 
 namespace aberaTech.Server;
 
@@ -53,6 +54,10 @@ public static class RateLimits
             // Each sign-in attempt mints correlation state and a redirect to
             // Google. A person does it once; ten a minute is a loop.
             options.AddPolicy(AdminAuth.SignInPolicy, context => PerMinute(context, 10));
+
+            // Each press asks Azure to start a VM that bills by the hour. The
+            // owner presses once and waits; five a minute is a stuck finger.
+            options.AddPolicy(DevBoxEndpoints.StartPolicy, context => PerMinute(context, 5));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>
