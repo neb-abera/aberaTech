@@ -38,7 +38,7 @@ public sealed class DevBoxRouteTests : IDisposable
         {
             services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
             services.AddSingleton<TokenCredential>(new FakeCredential());
-            services.AddHttpClient<DevBoxClient>().ConfigurePrimaryHttpMessageHandler(() => _azure);
+            services.AddHttpClient<IDevBoxClient, DevBoxClient>().ConfigurePrimaryHttpMessageHandler(() => _azure);
         });
     }
 

@@ -29,15 +29,17 @@ export default defineConfig({
       reporter: ["text", "text-summary", "lcov"],
       // Measured 2026-09-19: 66.7% lines, 66.6% statements, 46.1% branches,
       // 57.1% functions (1220 tests; 57.5% lines on 2026-08 when the lines
-      // floor was set at 50). Each floor sits five to ten points below its
-      // measurement, so a reasonable refactor doesn't break the build while
-      // deleting tests or landing a large untested feature does. A ratchet
-      // to raise as coverage grows, not a target.
+      // floor was set at 50). Measured 2026-09-22: 68.6% lines, 49.2%
+      // branches (58 files), when the floors moved to 62/62/44/54. Each
+      // floor sits five to ten points below its measurement, so a
+      // reasonable refactor doesn't break the build while deleting tests or
+      // landing a large untested feature does. A ratchet to raise as
+      // coverage grows, not a target.
       thresholds: {
-        lines: 55,
-        statements: 60,
-        branches: 40,
-        functions: 50,
+        lines: 62,
+        statements: 62,
+        branches: 44,
+        functions: 54,
       },
     },
   },

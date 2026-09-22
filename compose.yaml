@@ -168,6 +168,19 @@ services:
       # FitnessGate — so /fitness works out of the box.
       ConnectionStrings__Fitness: 'Host=db;Port=5432;Database=fitness;Username=scheduling;Password=scheduling'
       Fitness__DevelopmentOwner: 'true'
+      # The owner pages under `make e2e`: a sign-in that skips Google for
+      # the first allowed address, a dev box in memory, and the token the
+      # suite's fake agent reports with. All three are Development-only
+      # switches (AdminAuth.cs, DevBoxEndpoints.cs) and a test proves
+      # Production ignores them. The Google values are placeholders that
+      # satisfy "configured"; nothing is sent to Google.
+      Admin__GoogleClientId: 'development-placeholder'
+      Admin__GoogleClientSecret: 'development-placeholder'
+      Admin__AllowedEmails__0: 'owner@example.test'
+      Admin__DevelopmentSignIn: 'true'
+      DevBox__SubscriptionId: 'development'
+      DevBox__Fake: 'true'
+      DevBox__HeartbeatToken: 'development-heartbeat-token'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #
