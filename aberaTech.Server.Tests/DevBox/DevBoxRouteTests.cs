@@ -23,6 +23,7 @@ namespace aberaTech.Server.Tests.DevBox;
 public sealed class DevBoxRouteTests : IDisposable
 {
     private const string Subscription = "00000000-0000-0000-0000-00000000dead";
+    private const string HeartbeatToken = "box-token-for-tests";
 
     private readonly FakeResourceManager _azure = new();
     private readonly TestApp _app;
@@ -31,6 +32,7 @@ public sealed class DevBoxRouteTests : IDisposable
     {
         var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
         settings["DevBox:SubscriptionId"] = Subscription;
+        settings["DevBox:HeartbeatToken"] = HeartbeatToken;
 
         _app = new TestApp(settings, services =>
         {
@@ -43,7 +45,9 @@ public sealed class DevBoxRouteTests : IDisposable
     public static IEnumerable<object[]> Routes =>
     [
         ["GET", "/api/devbox/status"],
-        ["POST", "/api/devbox/start"]
+        ["POST", "/api/devbox/start"],
+        ["POST", "/api/devbox/hold"],
+        ["POST", "/api/devbox/park"]
     ];
 
     [Theory]
@@ -119,6 +123,96 @@ public sealed class DevBoxRouteTests : IDisposable
         var text = await response.Content.ReadAsStringAsync();
         Assert.Equal(nameof(HttpRequestException), text);
         Assert.DoesNotContain(Subscription, text);
+    }
+
+    [Fact]
+    public async Task The_box_reports_with_its_token_and_the_owner_sees_the_report()
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        var before = await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status");
+        Assert.False(before.GetProperty("agent").GetProperty("seen").GetBoolean());
+
+        using var report = Heartbeat(box, HeartbeatToken, new
+        {
+            remoteControl = "active", sessions = 2, load = 1.4, uptimeSeconds = 900,
+            holdUntil = (string?)null, environmentUrl = "https://claude.ai/code?environment=env_test"
+        });
+        using var answered = await box.SendAsync(report);
+        Assert.Equal(HttpStatusCode.OK, answered.StatusCode);
+
+        var after = await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status");
+        var agent = after.GetProperty("agent");
+        Assert.True(agent.GetProperty("seen").GetBoolean());
+        Assert.Equal("active", agent.GetProperty("remoteControl").GetString());
+        Assert.Equal(2, agent.GetProperty("sessions").GetInt32());
+        Assert.Equal("https://claude.ai/code?environment=env_test", agent.GetProperty("environmentUrl").GetString());
+        Assert.True(agent.GetProperty("seenSecondsAgo").GetDouble() < 5);
+    }
+
+    [Fact]
+    public async Task A_wrong_or_missing_token_is_refused_and_nothing_is_recorded()
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var wrong = await box.SendAsync(Heartbeat(box, "not-the-token", new { sessions = 1 }));
+        using var missing = await box.PostAsJsonAsync("/api/devbox/heartbeat", new { sessions = 1 });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, missing.StatusCode);
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status");
+        Assert.False(status.GetProperty("agent").GetProperty("seen").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Hold_and_park_are_queued_for_the_box_and_handed_over_once()
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var hold = await owner.PostAsJsonAsync("/api/devbox/hold", new { minutes = 120 });
+        using var park = await owner.PostAsync("/api/devbox/park", null);
+        Assert.Equal(HttpStatusCode.Accepted, hold.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, park.StatusCode);
+
+        var pending = (await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status"))
+            .GetProperty("agent").GetProperty("pending");
+        Assert.Equal(120, pending.GetProperty("holdMinutes").GetInt32());
+        Assert.True(pending.GetProperty("park").GetBoolean());
+
+        using var first = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0 }));
+        var orders = await first.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(120, orders.GetProperty("holdMinutes").GetInt32());
+        Assert.True(orders.GetProperty("park").GetBoolean());
+
+        using var second = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0 }));
+        var nothing = await second.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(JsonValueKind.Null, nothing.GetProperty("holdMinutes").ValueKind);
+        Assert.False(nothing.GetProperty("park").GetBoolean());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(721)]
+    public async Task A_hold_outside_one_working_day_is_refused(int minutes)
+    {
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var response = await owner.PostAsJsonAsync("/api/devbox/hold", new { minutes });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    private static HttpRequestMessage Heartbeat(HttpClient _, string token, object body)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/heartbeat")
+        {
+            Content = JsonContent.Create(body)
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        return request;
     }
 
     [Fact]

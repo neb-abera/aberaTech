@@ -9,31 +9,39 @@ import SignInToSee from "../../progress/components/SignInToSee";
 import {
   type DevBoxStatus,
   fetchDevBoxStatus,
+  holdDevBox,
   isInTransit,
   isParked,
   isRunning,
+  parkDevBox,
   startDevBox,
 } from "../core/api";
+import AgentPanel from "./AgentPanel";
 import Runbook from "./Runbook";
 
-/** How often to ask Azure again while the box is between states. */
+/** How often to ask again while the box is between states. */
 const pollEvery = 5000;
+
+/** How often to refresh the agent's report while the box runs. */
+const refreshEvery = 30000;
 
 type View = { status: "loading" } | DevBoxStatus;
 
 /**
- * The owner's dev box: what state it is in, a button that starts it, and
- * the runbook for getting a session back when this page is not enough.
+ * The owner's dev box: what state it is in, the buttons, what its agent
+ * reports, and the runbook for when this page is not enough.
  *
  * The box parks itself after 30 idle minutes, and at 03:00 UTC when nobody
- * is attached, and nothing wakes it. On 2026-09-21 every phone session died with it and there was no
- * way back that did not need a laptop. This page is the way back: sign in,
- * press Start, wait for "running", open Remote Control.
+ * is attached, and nothing wakes it. On 2026-09-21 every phone session died
+ * with it and there was no way back that did not need a laptop. This page
+ * is the way back: sign in, press Start, wait for "running", open the link
+ * the agent reports.
  */
 export default function DevBoxPanel() {
   const [view, setView] = React.useState<View>({ status: "loading" });
   const [starting, setStarting] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState<string | null>(null);
   const alive = React.useRef(true);
 
   const refresh = React.useCallback(async () => {
@@ -52,11 +60,13 @@ export default function DevBoxPanel() {
 
   // Keep asking while Azure is between states, and after a Start until the
   // answer is "running". A timeout chain rather than an interval, so a slow
-  // answer never overlaps the next question.
+  // answer never overlaps the next question. A running box is asked every
+  // half minute, so the agent's report stays current.
   const power = view.status === "owner" ? view.power : null;
   const waiting = starting || (power !== null && isInTransit(power));
+  const running = power !== null && isRunning(power);
   React.useEffect(() => {
-    if (!waiting) return;
+    if (!waiting && !running) return;
     let cancelled = false;
     let timer = 0;
     const tick = async () => {
@@ -64,38 +74,69 @@ export default function DevBoxPanel() {
       if (cancelled || next.status !== "owner") return;
       if (isRunning(next.power)) {
         setStarting(false);
+        timer = window.setTimeout(tick, refreshEvery);
         return;
       }
       if (starting || isInTransit(next.power)) {
         timer = window.setTimeout(tick, pollEvery);
       }
     };
-    timer = window.setTimeout(tick, pollEvery);
+    timer = window.setTimeout(tick, waiting ? pollEvery : refreshEvery);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [waiting, starting, refresh]);
+  }, [waiting, running, starting, refresh]);
+
+  const explain = (reason: "visitor" | "throttled" | "azure" | "network") =>
+    reason === "throttled"
+      ? "Too many presses. Wait a minute."
+      : reason === "visitor"
+        ? "The session expired. Reload and sign in again."
+        : reason === "azure"
+          ? "Azure refused. The fallbacks below still work."
+          : "No answer from the server. Check the connection and try again.";
 
   const start = async () => {
     setProblem(null);
+    setNotice(null);
     setStarting(true);
     const result = await startDevBox();
     if (!alive.current) return;
     if (result.ok) {
-      setView({ status: "owner", power: "starting" });
+      setView((current) =>
+        current.status === "owner"
+          ? { ...current, power: "starting" }
+          : { status: "owner", power: "starting", agent: null },
+      );
       return;
     }
     setStarting(false);
-    setProblem(
-      result.reason === "throttled"
-        ? "Too many presses. Wait a minute."
-        : result.reason === "visitor"
-          ? "The session expired. Reload and sign in again."
-          : result.reason === "azure"
-            ? "Azure refused the start. The fallbacks below still work."
-            : "No answer from the server. Check the connection and try again.",
-    );
+    setProblem(explain(result.reason));
+  };
+
+  const hold = async (minutes: number) => {
+    setProblem(null);
+    const result = await holdDevBox(minutes);
+    if (!alive.current) return;
+    if (result.ok) {
+      setNotice(
+        `Hold for ${minutes / 60} hours queued. The box picks it up within a minute.`,
+      );
+      void refresh();
+    } else setProblem(explain(result.reason));
+  };
+
+  const park = async () => {
+    if (!window.confirm("Park the dev box now? Open sessions on it end."))
+      return;
+    setProblem(null);
+    const result = await parkDevBox();
+    if (!alive.current) return;
+    if (result.ok) {
+      setNotice("Park queued. The box deallocates itself within a minute.");
+      void refresh();
+    } else setProblem(explain(result.reason));
   };
 
   if (view.status === "loading") {
@@ -131,11 +172,11 @@ export default function DevBoxPanel() {
     );
   }
 
-  const running = isRunning(view.power);
   const parked = isParked(view.power);
+  const transit = starting || isInTransit(view.power);
   const state = running
     ? { label: "Running", color: "success" as const }
-    : starting || isInTransit(view.power)
+    : transit
       ? { label: `${capitalise(view.power)}…`, color: "warning" as const }
       : { label: capitalise(view.power), color: "default" as const };
 
@@ -152,8 +193,10 @@ export default function DevBoxPanel() {
           variant={running ? "filled" : "outlined"}
           aria-label={`Power state: ${view.power}`}
         />
+        {/* Outlined once it cannot be pressed: a disabled contained button in
+            the dark theme is a pale slab with no legible text. */}
         <Button
-          variant="contained"
+          variant={parked && !starting ? "contained" : "outlined"}
           size="large"
           onClick={start}
           disabled={!parked || starting}
@@ -170,15 +213,15 @@ export default function DevBoxPanel() {
           {problem}
         </Alert>
       )}
+      {notice && (
+        <Alert severity="info" onClose={() => setNotice(null)}>
+          {notice}
+        </Alert>
+      )}
 
       {running ? (
-        <Alert severity="success">
-          Open the Claude app, Code, Remote Control, and pick <b>devbox</b>. It
-          registers about a minute after the box comes up. If it is not in the
-          list yet, look again in a minute. Pick it by name, the link changes
-          every boot.
-        </Alert>
-      ) : starting || isInTransit(view.power) ? (
+        <AgentPanel agent={view.agent} onHold={hold} onPark={park} />
+      ) : transit ? (
         <Alert severity="info">
           Azure is starting the box. This page asks again every five seconds.
           About two minutes from Start to a session.
