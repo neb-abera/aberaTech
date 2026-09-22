@@ -17,11 +17,17 @@
  */
 
 import {
+  addConflict,
   addLink,
+  type Conflict,
+  empty,
   folderPath,
+  hasTag,
   type LinkEntry,
   type LinksDocument,
   type NewLink,
+  normalizeGroup,
+  normalizeTags,
   normalizeUrl,
   urlKey,
 } from "./links";
@@ -149,6 +155,7 @@ export function parseNetscape(html: string): ImportedLink[] {
         title: textOf(aText ?? ""),
         group,
         note: "",
+        tags: normalizeTags(attribute(aAttributes, "TAGS") ?? ""),
         addedAt: isoDate(attribute(aAttributes, "ADD_DATE")),
       });
     } else if (dd !== undefined) {
@@ -185,6 +192,9 @@ export function parseJson(text: string): ImportedLink[] {
       title: typeof r.title === "string" ? r.title : "",
       group: typeof r.group === "string" ? r.group : "",
       note: typeof r.note === "string" ? r.note : "",
+      tags: Array.isArray(r.tags)
+        ? r.tags.filter((t): t is string => typeof t === "string")
+        : [],
       addedAt: typeof r.addedAt === "string" ? r.addedAt : undefined,
     });
   }
@@ -204,36 +214,46 @@ export interface MergeReport {
   document: LinksDocument;
   /** Addresses that were not here and are now. */
   added: number;
-  /** Addresses that were here and took a new title or note. */
+  /** Addresses that were here and took something without a question: an empty title or note filled, http moved to https, a tag joined. */
   updated: number;
   /** Addresses that were here and needed nothing. */
   unchanged: number;
   /** Lines that were not web addresses. */
   refused: number;
+  /** Differences recorded for the owner to settle, not counting ones already waiting. */
+  conflicts: number;
 }
 
 /**
  * The list with a file's links folded in. Matching is by address (see
- * urlKey): a match keeps its id, its group and its place in the list, takes
- * the file's title when the file has one that differs, keeps its own note
- * unless it had none, and moves from http to https when the file has the
- * https address. A new address is added under the file's folder. The same
- * address twice in one file is one link.
+ * urlKey). A match keeps its id and its place in the list. What the file
+ * says is taken without a question only where it cannot lose anything: an
+ * empty title or note is filled, http moves to https when the file has the
+ * https address, and the file's tags join the link's. A different title, a
+ * different note, or a different folder is a conflict: recorded against the
+ * link with the file's version, shown on the page, and applied only when
+ * the owner chooses it. A new address is added under the file's folder. The
+ * same address twice in one file is one link, and the second copy is a
+ * conflict if it says something different.
  */
 export function mergeLinks(
   document: LinksDocument,
   incoming: ImportedLink[],
   now: Date = new Date(),
+  source = "upload",
 ): MergeReport {
   const byKey = new Map<string, number>();
   document.links.forEach((link, index) => {
     byKey.set(urlKey(link.url), index);
   });
   const links: LinkEntry[] = document.links.slice();
+  let next: LinksDocument = { ...document, links };
   let added = 0;
   let updated = 0;
   let unchanged = 0;
   let refused = 0;
+  let conflicts = 0;
+  const seenAt = now.toISOString().slice(0, 10);
 
   for (const candidate of incoming) {
     const url = normalizeUrl(candidate.url);
@@ -244,12 +264,8 @@ export function mergeLinks(
     const key = urlKey(url);
     const index = byKey.get(key);
     if (index === undefined) {
-      const next = addLink(
-        { version: 1, links: [] },
-        { ...candidate, url },
-        now,
-      );
-      links.push(next.links[0]);
+      const one = addLink(empty, { ...candidate, url }, now);
+      links.push(one.links[0]);
       byKey.set(key, links.length - 1);
       added += 1;
       continue;
@@ -257,34 +273,64 @@ export function mergeLinks(
     const existing = links[index];
     const title = candidate.title.trim();
     const note = (candidate.note ?? "").trim();
+    const group = normalizeGroup(candidate.group);
+    const tags = normalizeTags([
+      ...existing.tags,
+      ...normalizeTags(candidate.tags),
+    ]);
     const merged: LinkEntry = {
       ...existing,
-      title: title !== "" && title !== existing.title ? title : existing.title,
+      title: existing.title === "" && title !== "" ? title : existing.title,
       note: existing.note === "" && note !== "" ? note : existing.note,
+      tags,
       url:
         existing.url.startsWith("http:") && url.startsWith("https:")
           ? url
           : existing.url,
     };
-    if (
-      merged.title === existing.title &&
-      merged.note === existing.note &&
-      merged.url === existing.url
-    ) {
-      unchanged += 1;
-    } else {
+    const theirs: Conflict["theirs"] = {};
+    if (title !== "" && merged.title !== title) theirs.title = title;
+    if (note !== "" && merged.note !== note) theirs.note = note;
+    if (group !== "" && merged.group !== group) theirs.group = group;
+
+    const changed =
+      merged.title !== existing.title ||
+      merged.note !== existing.note ||
+      merged.url !== existing.url ||
+      merged.tags.length !== existing.tags.length;
+    if (changed) {
       links[index] = merged;
       updated += 1;
+    } else {
+      unchanged += 1;
+    }
+    if (Object.keys(theirs).length > 0) {
+      const before = next.conflicts.length;
+      next = addConflict(
+        { ...next, links },
+        { linkId: existing.id, source, seenAt, theirs },
+      );
+      if (next.conflicts.length > before) conflicts += 1;
     }
   }
 
   return {
-    document: { version: 1, links },
+    document: { ...next, links },
     added,
     updated,
     unchanged,
     refused,
+    conflicts,
   };
+}
+
+/** The links carrying one tag, for a download of just those. */
+export function onlyTag(
+  document: LinksDocument,
+  tag: string | null,
+): LinksDocument {
+  if (tag === null) return document;
+  return { ...document, links: document.links.filter((l) => hasTag(l, tag)) };
 }
 
 function unixSeconds(isoDate: string): string {
@@ -332,8 +378,10 @@ export function exportBookmarks(document: LinksDocument): string {
   const entry = (link: LinkEntry, indent: string) => {
     const date = unixSeconds(link.addedAt);
     const dateAttribute = date === "" ? "" : ` ADD_DATE="${date}"`;
+    const tagsAttribute =
+      link.tags.length === 0 ? "" : ` TAGS="${encode(link.tags.join(","))}"`;
     lines.push(
-      `${indent}<DT><A HREF="${encode(link.url)}"${dateAttribute}>${encode(link.title)}</A>`,
+      `${indent}<DT><A HREF="${encode(link.url)}"${dateAttribute}${tagsAttribute}>${encode(link.title)}</A>`,
     );
     if (link.note !== "") lines.push(`${indent}<DD>${encode(link.note)}`);
   };
