@@ -69,8 +69,8 @@ In Application Insights these are `traces` rows. Filter on
 
 The gates above are the machinery. This table says which published
 control each one answers, so a reviewer with the standard in hand can
-find the evidence, and so a control with no machinery is written down as
-a deviation rather than forgotten. The application STIG is DISA's
+find the evidence. A control with no machinery is written down as a
+deviation. The application STIG is DISA's
 Application Security and Development STIG V6R4 (2025-09-09). The
 identity controls are NIST SP 800-63B. The host running the dev box is
 checked separately against the Ubuntu 24.04 STIG (see
@@ -105,8 +105,8 @@ repos-conventions, `devbox/README.md`).
 | SP 800-63B §4.2 | AAL2 for the owner | Met by the identity provider | Google with a second factor |
 
 Deviations, in order of value to close: audit events for successful
-sign-in and sign-out (4009, 4010); a written threat model; a shorter idle
-timeout if a second account is ever allowed.
+sign-in and sign-out (4009, 4010), then a written threat model, then a
+shorter idle timeout if a second account is ever allowed.
 
 ## Hardening deliberately left for the owner
 
