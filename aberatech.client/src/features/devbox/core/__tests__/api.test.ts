@@ -8,9 +8,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { respond } from "../../../../test/fakeFetch";
 import {
   fetchDevBoxStatus,
+  holdDevBox,
   isInTransit,
   isParked,
   isRunning,
+  parkDevBox,
   startDevBox,
 } from "../api";
 
@@ -32,6 +34,7 @@ describe("fetchDevBoxStatus", () => {
     expect(await fetchDevBoxStatus()).toEqual({
       status: "owner",
       power: "running",
+      agent: null,
     });
   });
 
@@ -86,6 +89,53 @@ describe("startDevBox", () => {
 
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     expect(await startDevBox()).toEqual({ ok: false, reason: "network" });
+  });
+});
+
+describe("hold and park", () => {
+  it("send the owner's orders as JSON, and report the outcome", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respond(202, {}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(await holdDevBox(120)).toEqual({ ok: true });
+    expect(await parkDevBox()).toEqual({ ok: true });
+
+    const [holdUrl, holdOptions] = fetchMock.mock.calls[0];
+    expect(holdUrl).toBe("/api/devbox/hold");
+    expect(holdOptions.method).toBe("POST");
+    expect(JSON.parse(String(holdOptions.body))).toEqual({ minutes: 120 });
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/devbox/park");
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(respond(429)));
+    expect(await holdDevBox(120)).toEqual({ ok: false, reason: "throttled" });
+  });
+
+  it("relays the agent's report with the status", async () => {
+    const agent = {
+      seen: true,
+      seenSecondsAgo: 12,
+      remoteControl: "active",
+      sessions: 1,
+      load: 0.5,
+      uptimeSeconds: 600,
+      holdUntil: null,
+      environmentUrl: "https://claude.ai/code?environment=env_x",
+      pending: { holdMinutes: null, park: false },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          respond(200, { configured: true, power: "running", agent }),
+        ),
+    );
+
+    expect(await fetchDevBoxStatus()).toEqual({
+      status: "owner",
+      power: "running",
+      agent,
+    });
   });
 });
 

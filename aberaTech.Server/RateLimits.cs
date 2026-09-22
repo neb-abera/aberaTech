@@ -36,7 +36,9 @@ public static class RateLimits
     public static readonly IReadOnlyList<GuessedRoute> GuessedRoutes =
     [
         new("/api/fitness/digest.txt", StatusCodes.Status401Unauthorized, 10),
-        new(SmsReceiptEndpoint.Path, StatusCodes.Status403Forbidden, 30)
+        new(SmsReceiptEndpoint.Path, StatusCodes.Status403Forbidden, 30),
+        // The dev box reports once a minute with a token; a wrong token is a guess.
+        new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10)
     ];
 
     public static IServiceCollection AddAppRateLimits(this IServiceCollection services) =>

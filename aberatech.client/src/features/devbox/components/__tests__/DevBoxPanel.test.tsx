@@ -21,7 +21,21 @@ import DevBoxPanel from "../DevBoxPanel";
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
-const status = (power: string) => respond(200, { configured: true, power });
+const status = (power: string, agent: unknown = null) =>
+  respond(200, { configured: true, power, agent });
+
+const reported = (over: Record<string, unknown> = {}) => ({
+  seen: true,
+  seenSecondsAgo: 20,
+  remoteControl: "active",
+  sessions: 2,
+  load: 1.25,
+  uptimeSeconds: 4200,
+  holdUntil: null,
+  environmentUrl: "https://claude.ai/code?environment=env_abc",
+  pending: { holdMinutes: null, park: false },
+  ...over,
+});
 
 const settle = async () => {
   await act(async () => {
@@ -150,6 +164,63 @@ describe("the owner", () => {
     await settle();
 
     expect(screen.getByText(/Azure did not answer/)).toBeTruthy();
-    expect(screen.getByText("If the button fails")).toBeTruthy();
+    expect(screen.getByText("If this page is down")).toBeTruthy();
+  });
+
+  it("sees the agent's report and the link into Claude", async () => {
+    mount(status("running", reported()));
+    await settle();
+
+    expect(
+      screen.getByText(/Remote Control is up with 2 sessions/),
+    ).toBeTruthy();
+    const open = screen.getByRole("link", { name: "Open devbox in Claude" });
+    expect(open.getAttribute("href")).toBe(
+      "https://claude.ai/code?environment=env_abc",
+    );
+    expect(screen.getByText(/Up 1 h 10 min, load 1.25/)).toBeTruthy();
+  });
+
+  it("is warned when the box has gone quiet", async () => {
+    mount(status("running", reported({ seenSecondsAgo: 600 })));
+    await settle();
+
+    expect(screen.getByText(/has not reported for 10 minutes/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Hold 2 h" })).toBeNull();
+  });
+
+  it("queues a hold and a park for the box", async () => {
+    // GET status, POST hold, the refresh GET, POST park, the refresh GET.
+    mount(
+      status("running", reported()),
+      respond(202, {}),
+      status("running", reported()),
+      respond(202, {}),
+      status("running", reported()),
+    );
+    await settle();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+
+    fireEvent.click(screen.getByRole("button", { name: "Hold 2 h" }));
+    await settle();
+    expect(posts()[0][0]).toBe("/api/devbox/hold");
+    expect(JSON.parse(String(posts()[0][1].body))).toEqual({ minutes: 120 });
+    expect(screen.getByText(/Hold for 2 hours queued/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Park now" }));
+    await settle();
+    expect(posts()[1][0]).toBe("/api/devbox/park");
+    expect(screen.getByText(/Park queued/)).toBeTruthy();
+  });
+
+  it("does not park without a yes", async () => {
+    mount(status("running", reported()));
+    await settle();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+
+    fireEvent.click(screen.getByRole("button", { name: "Park now" }));
+    await settle();
+
+    expect(posts()).toHaveLength(0);
   });
 });
