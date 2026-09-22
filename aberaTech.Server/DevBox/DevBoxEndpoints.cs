@@ -26,6 +26,9 @@ public static class DevBoxEndpoints
 {
     public const string StartPolicy = "devbox-start";
 
+    /// <summary>The box reports once a minute. Ten a minute per address is a loop, not the box.</summary>
+    public const string HeartbeatPolicy = "devbox-heartbeat";
+
     public const string HeartbeatPath = "/api/devbox/heartbeat";
 
     /// <summary>The longest a Hold may keep the box up: one working day.</summary>
@@ -38,7 +41,7 @@ public static class DevBoxEndpoints
             .RequireAuthorization(AdminAuth.PolicyName)
             .WithTags("Dev box");
 
-        group.MapGet("/status", async (DevBoxClient client, DevBoxAgentState agent, ILogger<DevBoxClient> logger, CancellationToken cancellationToken) =>
+        group.MapGet("/status", async (IDevBoxClient client, DevBoxAgentState agent, ILogger<DevBoxClient> logger, CancellationToken cancellationToken) =>
         {
             try
             {
@@ -52,7 +55,7 @@ public static class DevBoxEndpoints
             }
         });
 
-        group.MapPost("/start", async (DevBoxClient client, ILogger<DevBoxClient> logger, CancellationToken cancellationToken) =>
+        group.MapPost("/start", async (IDevBoxClient client, ILogger<DevBoxClient> logger, CancellationToken cancellationToken) =>
         {
             try
             {
@@ -80,9 +83,12 @@ public static class DevBoxEndpoints
                 return Results.Accepted(value: agent.Pending());
             }).RequireRateLimiting(StartPolicy);
 
-            group.MapPost("/park", (DevBoxAgentState agent) =>
+            group.MapPost("/park", (DevBoxAgentState agent, IDevBoxClient client) =>
             {
                 agent.Park();
+                // The real box parks itself on its next report. The fake one
+                // has no box behind it, so it parks now.
+                (client as FakeDevBoxClient)?.Park();
                 return Results.Accepted(value: agent.Pending());
             }).RequireRateLimiting(StartPolicy);
 
@@ -100,7 +106,7 @@ public static class DevBoxEndpoints
 
                 agent.Report(heartbeat);
                 return Results.Ok(agent.Take());
-            }).AllowAnonymous();
+            }).RequireRateLimiting(HeartbeatPolicy).AllowAnonymous();
         }
 
         return routes;

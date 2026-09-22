@@ -146,7 +146,7 @@ export function parseNetscape(html: string): ImportedLink[] {
       stack.pop();
     } else if (aAttributes !== undefined) {
       const href = attribute(aAttributes, "HREF");
-      if (href === null) continue;
+      if (href === null || href.trim() === "") continue;
       const group = stack
         .filter((name) => name !== "" && !BROWSER_ROOTS.has(name.toLowerCase()))
         .join(" / ");

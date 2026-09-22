@@ -29,6 +29,13 @@ public sealed class DevBoxOptions
 
     public bool HasHeartbeat => !string.IsNullOrWhiteSpace(HeartbeatToken);
 
+    /// <summary>
+    /// Development only: an in-memory VM in place of Azure, so the compose
+    /// app can be driven through Start, running, Hold and Park by the
+    /// Playwright suite. Ignored outside Development.
+    /// </summary>
+    public bool Fake { get; init; }
+
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(SubscriptionId)
         && !string.IsNullOrWhiteSpace(ResourceGroup)
