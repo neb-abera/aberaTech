@@ -16,7 +16,8 @@ async function signIn(page: Page, path: string) {
   // The page shows a spinner until the account probe answers, then either
   // the sign-in button or the owner's controls. Wait for one of those, not
   // for the spinner, which may not have rendered yet.
-  const settled = 'a:has-text("Sign in with Google"), button:has-text("Refresh"), button:has-text("Upload")';
+  const settled =
+    'a:has-text("Sign in with Google"), button:has-text("Refresh"), button:has-text("Upload")';
   await page.locator(settled).first().waitFor({ timeout: 15_000 });
   const button = page.getByRole("link", { name: "Sign in with Google" });
   if (await button.count()) {
@@ -27,8 +28,13 @@ async function signIn(page: Page, path: string) {
     // on a control that is only there for the owner. (/links under the
     // compose app is the owner's without a cookie: Fitness__DevelopmentOwner
     // opens the document routes, so its page shows no button.)
-    const me = await (await page.request.get("/api/scheduling/admin/me")).json();
-    expect(me.signedIn, `signed in after the button: ${JSON.stringify(me)}`).toBe(true);
+    const me = await (
+      await page.request.get("/api/scheduling/admin/me")
+    ).json();
+    expect(
+      me.signedIn,
+      `signed in after the button: ${JSON.stringify(me)}`,
+    ).toBe(true);
   }
 }
 
@@ -47,7 +53,12 @@ test.describe("/devbox", () => {
     // the reports below see only what this test queues.
     await request.post("/api/devbox/heartbeat", {
       headers: { Authorization: `Bearer ${heartbeatToken}` },
-      data: { remoteControl: "inactive", sessions: 0, load: 0, uptimeSeconds: 1 },
+      data: {
+        remoteControl: "inactive",
+        sessions: 0,
+        load: 0,
+        uptimeSeconds: 1,
+      },
     });
     await page.getByRole("button", { name: "Refresh" }).click();
     const start = page.getByRole("button", { name: "Start dev box" });
@@ -55,11 +66,15 @@ test.describe("/devbox", () => {
     await start.click();
 
     await expect(page.getByText(/Azure is starting the box/)).toBeVisible();
-    await expect(page.locator('[aria-label="Power state: running"]')).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.locator('[aria-label="Power state: running"]'),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(start).toBeDisabled();
 
     // The last report said the service was down; the page says so.
-    await expect(page.getByText(/Remote Control service is inactive/)).toBeVisible();
+    await expect(
+      page.getByText(/Remote Control service is inactive/),
+    ).toBeVisible();
 
     // The agent reports, as the box does once a minute.
     const report = await request.post("/api/devbox/heartbeat", {
@@ -77,9 +92,14 @@ test.describe("/devbox", () => {
     expect(await report.json()).toEqual({ holdMinutes: null, park: false });
 
     await page.getByRole("button", { name: "Refresh" }).click();
-    await expect(page.getByText(/Remote Control is up with 2 sessions/)).toBeVisible();
+    await expect(
+      page.getByText(/Remote Control is up with 2 sessions/),
+    ).toBeVisible();
     const open = page.getByRole("link", { name: "Open devbox in Claude" });
-    await expect(open).toHaveAttribute("href", "https://claude.ai/code?environment=env_e2e");
+    await expect(open).toHaveAttribute(
+      "href",
+      "https://claude.ai/code?environment=env_e2e",
+    );
 
     // Hold, then Park: both queued for the agent, and handed over once.
     await page.getByRole("button", { name: "Hold 2 h" }).click();
@@ -90,21 +110,36 @@ test.describe("/devbox", () => {
 
     const orders = await request.post("/api/devbox/heartbeat", {
       headers: { Authorization: `Bearer ${heartbeatToken}` },
-      data: { remoteControl: "active", sessions: 0, load: 0.1, uptimeSeconds: 200 },
+      data: {
+        remoteControl: "active",
+        sessions: 0,
+        load: 0.1,
+        uptimeSeconds: 200,
+      },
     });
     expect(await orders.json()).toEqual({ holdMinutes: 120, park: true });
     const again = await request.post("/api/devbox/heartbeat", {
       headers: { Authorization: `Bearer ${heartbeatToken}` },
-      data: { remoteControl: "active", sessions: 0, load: 0.1, uptimeSeconds: 260 },
+      data: {
+        remoteControl: "active",
+        sessions: 0,
+        load: 0.1,
+        uptimeSeconds: 260,
+      },
     });
     expect(await again.json()).toEqual({ holdMinutes: null, park: false });
 
     // The fake box parked itself on the order, as the real one does.
     await page.getByRole("button", { name: "Refresh" }).click();
-    await expect(page.locator('[aria-label="Power state: deallocated"]')).toBeVisible();
+    await expect(
+      page.locator('[aria-label="Power state: deallocated"]'),
+    ).toBeVisible();
   });
 
-  test("a wrong agent token is refused and a visitor is sent to sign in", async ({ request, browser }) => {
+  test("a wrong agent token is refused and a visitor is sent to sign in", async ({
+    request,
+    browser,
+  }) => {
     const wrong = await request.post("/api/devbox/heartbeat", {
       headers: { Authorization: "Bearer not-the-token" },
       data: { sessions: 1 },
@@ -114,7 +149,9 @@ test.describe("/devbox", () => {
     const visitor = await browser.newContext();
     const page = await visitor.newPage();
     await page.goto("/devbox");
-    await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Sign in with Google" }),
+    ).toBeVisible();
     await visitor.close();
   });
 });
@@ -148,50 +185,76 @@ test.describe("/links", () => {
   const upload = async (page: Page, name: string, body: string) => {
     await page
       .locator('input[aria-label="Bookmark file to upload"]')
-      .setInputFiles({ name, mimeType: "text/html", buffer: Buffer.from(body) });
+      .setInputFiles({
+        name,
+        mimeType: "text/html",
+        buffer: Buffer.from(body),
+      });
     return page.locator('[role="alert"]').first();
   };
 
   test.afterAll(async ({ request }) => {
     // Leave the list as it was: drop everything this suite added.
-    const doc = await (await request.get("/api/progress/links")).json().catch(() => null);
+    const doc = await (await request.get("/api/progress/links"))
+      .json()
+      .catch(() => null);
     if (!doc?.links) return;
-    const kept = doc.links.filter((l: { url: string }) => !l.url.startsWith("https://e2e.example/"));
+    const kept = doc.links.filter(
+      (l: { url: string }) => !l.url.startsWith("https://e2e.example/"),
+    );
     const ids = new Set(kept.map((l: { id: string }) => l.id));
     await request.put("/api/progress/links", {
       data: {
         version: 1,
         links: kept,
-        conflicts: (doc.conflicts ?? []).filter((c: { linkId: string }) => ids.has(c.linkId)),
+        conflicts: (doc.conflicts ?? []).filter((c: { linkId: string }) =>
+          ids.has(c.linkId),
+        ),
       },
     });
   });
 
-  test("an export keeps its folders and tags, a second one asks before changing anything", async ({ page }) => {
+  test("an export keeps its folders and tags, a second one asks before changing anything", async ({
+    page,
+  }) => {
     await signIn(page, "/links");
     await expect(page.getByRole("button", { name: "Upload" })).toBeVisible();
 
     const report = await upload(page, "first.html", first);
     await expect(report).toContainText("first.html: 3 added");
-    await expect(page.getByRole("list", { name: "Links under E2E MITRE / Crypto" })).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Links under E2E MITRE / Crypto" }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "PQC (e2e)" })).toBeVisible();
 
     const again = await upload(page, "second.html", second);
     await expect(again).toContainText("1 to resolve");
     // The title stayed; the note that was empty was filled without a question.
-    await expect(page.getByRole("link", { name: "MITRE home (e2e)" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "MITRE home (e2e)" }),
+    ).toBeVisible();
     await expect(page.getByText(/A note from the second file/)).toBeVisible();
 
-    const card = page.getByRole("region", { name: "Conflict on MITRE home (e2e)" });
+    const card = page.getByRole("region", {
+      name: "Conflict on MITRE home (e2e)",
+    });
     await expect(card).toContainText("MITRE, renamed (e2e)");
     await card.getByRole("button", { name: "Take the file's" }).click();
-    await expect(page.getByRole("link", { name: "MITRE, renamed (e2e)" })).toBeVisible();
-    await expect(page.getByRole("region", { name: /Conflict on/ })).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "MITRE, renamed (e2e)" }),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: /Conflict on/ })).toHaveCount(
+      0,
+    );
     // The save is a beat behind each change; leave once it has landed.
-    await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
-  test("a tag narrows the page and the download carries just that tag", async ({ page }) => {
+  test("a tag narrows the page and the download carries just that tag", async ({
+    page,
+  }) => {
     await signIn(page, "/links");
     const tags = page.getByRole("group", { name: "Tags" });
     await expect(tags).toBeVisible({ timeout: 15_000 });
@@ -202,14 +265,18 @@ test.describe("/links", () => {
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download" }).click();
     const file = await download;
-    expect(file.suggestedFilename()).toMatch(/^links-e2e-army-\d{4}-\d{2}-\d{2}\.html$/);
+    expect(file.suggestedFilename()).toMatch(
+      /^links-e2e-army-\d{4}-\d{2}-\d{2}\.html$/,
+    );
     const text = (await (await file.createReadStream()).toArray()).join("");
     expect(text).toContain("https://e2e.example/army");
     expect(text).not.toContain("https://e2e.example/pqc");
     expect(text).toContain('TAGS="e2e-army"');
   });
 
-  test("Email opens a mail with the file in the body where there is no share sheet", async ({ page }) => {
+  test("Email opens a mail with the file in the body where there is no share sheet", async ({
+    page,
+  }) => {
     await signIn(page, "/links");
     // Chromium on Linux has no share sheet, so the page takes the mailto
     // path. Record the address the anchor is told to open.
@@ -225,7 +292,9 @@ test.describe("/links", () => {
       };
     });
     await page.getByRole("button", { name: "Email" }).click();
-    const hrefs = await page.evaluate(() => (window as unknown as { __hrefs: string[] }).__hrefs);
+    const hrefs = await page.evaluate(
+      () => (window as unknown as { __hrefs: string[] }).__hrefs,
+    );
     expect(hrefs).toHaveLength(1);
     expect(hrefs[0]).toMatch(/^mailto:\?subject=Links%20/);
     const body = decodeURIComponent(hrefs[0].split("&body=")[1]);
