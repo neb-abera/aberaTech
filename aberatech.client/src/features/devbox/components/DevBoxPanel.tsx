@@ -25,8 +25,8 @@ type View = { status: "loading" } | DevBoxStatus;
  * The owner's dev box: what state it is in, a button that starts it, and
  * the runbook for getting a session back when this page is not enough.
  *
- * The box parks itself after 30 idle minutes and at 03:00 UTC, and nothing
- * wakes it. On 2026-09-21 every phone session died with it and there was no
+ * The box parks itself after 30 idle minutes, and at 03:00 UTC when nobody
+ * is attached, and nothing wakes it. On 2026-09-21 every phone session died with it and there was no
  * way back that did not need a laptop. This page is the way back: sign in,
  * press Start, wait for "running", open Remote Control.
  */
@@ -185,8 +185,8 @@ export default function DevBoxPanel() {
         </Alert>
       ) : (
         <Typography variant="body1" sx={{ color: "text.secondary" }}>
-          The box is parked, which is where the idle watchdog and the 03:00 UTC
-          shutdown leave it. It bills nothing but disks until it starts.
+          The box is parked, which is where the idle watchdog and the nightly
+          check leave it. It bills nothing but disks until it starts.
         </Typography>
       )}
 

@@ -77,8 +77,8 @@ export default function Runbook() {
           </ListItem>
           <ListItem disableGutters>
             <ListItemText
-              primary="03:00 UTC every day"
-              secondary="23:00 in Washington, whatever is running."
+              primary="03:00 UTC every day, unless somebody is attached"
+              secondary="23:00 in Washington. An SSH session or a Claude session still working keeps it up. A leaked container does not."
             />
           </ListItem>
           <ListItem disableGutters>
