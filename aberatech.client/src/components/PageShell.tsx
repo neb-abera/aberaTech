@@ -1,11 +1,9 @@
-import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import AppTheme from "../theme/AppTheme";
-import { pageBackground } from "../theme/pageBackground";
 import AppAppBar from "./AppAppBar";
 import Footer from "./Footer";
 
@@ -41,55 +39,53 @@ export default function PageShell({
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <AppAppBar />
-      <Box sx={pageBackground}>
-        <Container maxWidth={maxWidth}>
-          <Stack
-            spacing={1.5}
-            sx={{
-              alignItems: "center",
-              textAlign: "center",
-              // Home constrains its heading to a 70% column. At full container
-              // width the same font reads as a different treatment entirely.
-              width: { xs: "100%", sm: "70%" },
-              mx: "auto",
-              pt: { xs: 14, sm: 20 },
-              pb: { xs: 5, sm: 7 },
-            }}
-          >
-            {/* The home page's h1, so a page title carries the same weight there
+      <Container maxWidth={maxWidth}>
+        <Stack
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            textAlign: "center",
+            // Home constrains its heading to a 70% column. At full container
+            // width the same font reads as a different treatment entirely.
+            width: { xs: "100%", sm: "70%" },
+            mx: "auto",
+            pt: { xs: 14, sm: 20 },
+            pb: { xs: 5, sm: 7 },
+          }}
+        >
+          {/* The home page's h1, so a page title carries the same weight there
                 and here. Clamped from 2.25rem rather than the home page's 3rem:
                 page titles are far longer than "Neb Abera" and wrapped to three
                 lines on a phone at the larger minimum. */}
+          <Typography
+            variant="h1"
+            component="h1"
+            sx={{
+              fontWeight: 600,
+              fontSize: "clamp(2.25rem, 7vw, 3.5rem)",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            {title}
+          </Typography>
+          {intro && (
             <Typography
-              variant="h1"
-              component="h1"
-              sx={{
-                fontWeight: 600,
-                fontSize: "clamp(2.25rem, 7vw, 3.5rem)",
-                letterSpacing: "-0.5px",
-              }}
+              variant="body1"
+              sx={{ color: "text.primary", maxWidth: 680 }}
             >
-              {title}
+              {intro}
             </Typography>
-            {intro && (
-              <Typography
-                variant="body1"
-                sx={{ color: "text.primary", maxWidth: 680 }}
-              >
-                {intro}
-              </Typography>
-            )}
-            {note && (
-              <Typography
-                variant="caption"
-                sx={{ color: "text.disabled", maxWidth: 680 }}
-              >
-                {note}
-              </Typography>
-            )}
-          </Stack>
-        </Container>
-      </Box>
+          )}
+          {note && (
+            <Typography
+              variant="caption"
+              sx={{ color: "text.disabled", maxWidth: 680 }}
+            >
+              {note}
+            </Typography>
+          )}
+        </Stack>
+      </Container>
       <Container maxWidth={maxWidth} sx={{ pb: { xs: 6, sm: 10 } }}>
         {children}
       </Container>
