@@ -5,7 +5,7 @@
  * Start button posts once, the page reports "starting", keeps asking, and
  * says where to go once Azure answers "running". A refused start says why,
  * and a deployment without a subscription says so instead of offering a
- * button.
+ * button. One missed answer during a start keeps the page asking.
  */
 
 import {
@@ -165,6 +165,65 @@ describe("the owner", () => {
 
     expect(screen.getByText(/Azure did not answer/)).toBeTruthy();
     expect(screen.getByText("If this page is down")).toBeTruthy();
+  });
+
+  it("keeps asking when one poll during a start gets no answer", async () => {
+    // GET status, POST start, the poll that fails, the poll that answers.
+    mount(
+      status("deallocated"),
+      respond(202, { configured: true, power: "starting" }),
+      respond(502),
+      status("running"),
+    );
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "Start dev box" }));
+    await settle();
+
+    // First poll: nothing from Azure. The page keeps "starting" and says so.
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    await settle();
+    expect(screen.getByLabelText("Power state: starting")).toBeTruthy();
+    expect(screen.getByText(/did not answer the last check/)).toBeTruthy();
+    expect(screen.queryByText(/The fallbacks below still work/)).toBeNull();
+
+    // Second poll: running. The warning goes with it.
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    await settle();
+    expect(screen.getByLabelText("Power state: running")).toBeTruthy();
+    expect(screen.queryByText(/did not answer the last check/)).toBeNull();
+    expect(screen.getByText(/It registers about a minute/)).toBeTruthy();
+  });
+
+  it("keeps asking when a poll during a start throws", async () => {
+    mount(status("deallocated"));
+    await settle();
+    fetchMock
+      .mockResolvedValueOnce(
+        respond(202, { configured: true, power: "starting" }),
+      )
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(status("running"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Start dev box" }));
+    await settle();
+
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    await settle();
+    expect(screen.getByLabelText("Power state: starting")).toBeTruthy();
+    expect(screen.getByText(/did not answer the last check/)).toBeTruthy();
+
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    await settle();
+    expect(screen.getByLabelText("Power state: running")).toBeTruthy();
   });
 
   it("sees the agent's report and the link into Claude", async () => {
