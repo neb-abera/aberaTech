@@ -42,11 +42,24 @@ export default function DevBoxPanel() {
   const [starting, setStarting] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
+  // True after a status check got no answer while an earlier one had. The
+  // page keeps the earlier answer and says so, instead of dropping to the
+  // error view. On 2026-09-22 one missed poll during a start did exactly
+  // that: the box was running, the page said "Azure did not answer" and
+  // stopped asking.
+  const [stale, setStale] = React.useState(false);
   const alive = React.useRef(true);
 
   const refresh = React.useCallback(async () => {
     const next = await fetchDevBoxStatus();
-    if (alive.current) setView(next);
+    if (!alive.current) return next;
+    if (next.status === "error") {
+      setView((current) => (current.status === "owner" ? current : next));
+      setStale(true);
+    } else {
+      setView(next);
+      setStale(false);
+    }
     return next;
   }, []);
 
@@ -71,7 +84,13 @@ export default function DevBoxPanel() {
     let timer = 0;
     const tick = async () => {
       const next = await refresh();
-      if (cancelled || next.status !== "owner") return;
+      if (cancelled) return;
+      if (next.status === "error") {
+        // One missed answer does not end the wait. Ask again.
+        timer = window.setTimeout(tick, waiting ? pollEvery : refreshEvery);
+        return;
+      }
+      if (next.status !== "owner") return;
       if (isRunning(next.power)) {
         setStarting(false);
         timer = window.setTimeout(tick, refreshEvery);
@@ -216,6 +235,12 @@ export default function DevBoxPanel() {
       {notice && (
         <Alert severity="info" onClose={() => setNotice(null)}>
           {notice}
+        </Alert>
+      )}
+      {stale && (
+        <Alert severity="warning">
+          Azure did not answer the last check. The state above is its previous
+          answer.
         </Alert>
       )}
 
