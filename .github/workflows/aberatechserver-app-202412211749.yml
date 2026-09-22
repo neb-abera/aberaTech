@@ -12,6 +12,13 @@ on:
   # So a redeploy or a rollback does not require an empty commit.
   workflow_dispatch:
 
+# Two merges minutes apart are two deploys of the same container app, and
+# the second failed with ContainerAppOperationInProgress on 2026-09-18
+# (#169). Queue them. Never cancel one: a cancelled deploy is half a rollout.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 # The token gets exactly what the job uses: the checkout reads the repository,
 # and id-token is what azure/login exchanges for Azure credentials through the
 # app registration's federated credential — no client secret is stored
