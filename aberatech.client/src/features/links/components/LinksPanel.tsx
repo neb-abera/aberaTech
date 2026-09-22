@@ -20,22 +20,28 @@ import * as React from "react";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { exportBookmarks, mergeLinks, parseBookmarks } from "../core/bookmarks";
-import { planEmail } from "../core/email";
+import { fileNameFor, planEmail } from "../core/email";
 import {
   addLink,
+  type Conflict,
   coerce,
   GENERAL,
   groupsOf,
   hostOf,
   inGroup,
+  type LinkEntry,
   type LinksDocument,
   type NewLink,
   normalizeUrl,
   removeLink,
+  resolveConflict,
   search,
+  tagsOf,
   titleOf,
   updateLink,
+  withTag,
 } from "../core/links";
+import Conflicts from "./Conflicts";
 
 const documentKey = "links";
 
@@ -62,6 +68,10 @@ export default function LinksPanel() {
   // the common case, and the field is in plain view.
   const [group, setGroup] = React.useState("");
   const [note, setNote] = React.useState("");
+  // Kept between adds like the group, for the same reason.
+  const [tags, setTags] = React.useState("");
+  // One tag narrows the page, and Download and Email with it.
+  const [tag, setTag] = React.useState<string | null>(null);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [report, setReport] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
@@ -71,6 +81,7 @@ export default function LinksPanel() {
     url: "",
     group: "",
     note: "",
+    tags: "",
   });
   const fileInput = React.useRef<HTMLInputElement | null>(null);
 
@@ -81,6 +92,21 @@ export default function LinksPanel() {
     [set],
   );
 
+  // What the page shows: one tag's links when a tag is chosen, then the
+  // search on top. Download and Email take the same view, so "MITRE, then
+  // Download" is a file of just those.
+  const shown = React.useMemo(
+    () => search(withTag(document, tag), query),
+    [document, tag, query],
+  );
+  const narrowed = tag !== null || query.trim() !== "";
+  const groups = React.useMemo(() => groupsOf(shown), [shown]);
+  const knownGroups = React.useMemo(
+    () => groupsOf(document).filter((g) => g !== GENERAL),
+    [document],
+  );
+  const knownTags = React.useMemo(() => tagsOf(document), [document]);
+
   const add = (event: React.FormEvent) => {
     event.preventDefault();
     if (normalizeUrl(url) === null) {
@@ -90,7 +116,7 @@ export default function LinksPanel() {
       return;
     }
     setProblem(null);
-    const link = { title, url, group, note };
+    const link = { title, url, group, note, tags };
     change((current) => addLink(current, link));
     setTitle("");
     setUrl("");
@@ -104,8 +130,24 @@ export default function LinksPanel() {
       url: link.url,
       group: link.group ?? "",
       note: link.note ?? "",
+      tags: Array.isArray(link.tags) ? link.tags.join(", ") : (link.tags ?? ""),
     });
   };
+
+  const keepMine = (conflict: Conflict) =>
+    change((d) => resolveConflict(d, conflict.id, { choice: "mine" }));
+  const takeTheirs = (conflict: Conflict) =>
+    change((d) => resolveConflict(d, conflict.id, { choice: "theirs" }));
+  // Edit opens the link's own form with the file's values in it; saving
+  // the form settles every conflict on that link (see saveEdit).
+  const editConflict = (conflict: Conflict, link: LinkEntry) =>
+    startEdit(link.id, {
+      title: conflict.theirs.title ?? link.title,
+      url: link.url,
+      group: conflict.theirs.group ?? link.group,
+      note: conflict.theirs.note ?? link.note,
+      tags: link.tags,
+    });
 
   const saveEdit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -119,7 +161,13 @@ export default function LinksPanel() {
     setProblem(null);
     const id = editing;
     const fields = draft;
-    change((current) => updateLink(current, id, fields));
+    change((current) => {
+      const updated = updateLink(current, id, fields);
+      return {
+        ...updated,
+        conflicts: updated.conflicts.filter((c) => c.linkId !== id),
+      };
+    });
     setEditing(null);
   };
 
@@ -134,13 +182,13 @@ export default function LinksPanel() {
   };
 
   const download = () => {
-    const blob = new Blob([exportBookmarks(document)], {
+    const blob = new Blob([exportBookmarks(narrowed ? shown : document)], {
       type: "text/html;charset=utf-8",
     });
     const href = URL.createObjectURL(blob);
     const anchor = window.document.createElement("a");
     anchor.href = href;
-    anchor.download = `links-${new Date().toISOString().slice(0, 10)}.html`;
+    anchor.download = fileNameFor(new Date(), tag);
     anchor.click();
     URL.revokeObjectURL(href);
   };
@@ -149,7 +197,12 @@ export default function LinksPanel() {
   // browser has one, otherwise a mailto whose body is the file under
   // instructions for saving it. See core/email.ts for the ceiling.
   const email = async () => {
-    const plan = planEmail(document, new Date(), window.navigator);
+    const plan = planEmail(
+      narrowed ? shown : document,
+      new Date(),
+      window.navigator,
+      tag,
+    );
     if (plan.kind === "share") {
       try {
         await window.navigator.share({
@@ -194,23 +247,20 @@ export default function LinksPanel() {
     setProblem(null);
     // Counted against this render's copy for the message; the change itself
     // is applied to whatever the hook holds, and merging is idempotent.
-    const preview = mergeLinks(document, incoming);
-    change((current) => mergeLinks(current, incoming).document);
+    const preview = mergeLinks(document, incoming, new Date(), file.name);
+    change(
+      (current) =>
+        mergeLinks(current, incoming, new Date(), file.name).document,
+    );
     const parts = [
       `${preview.added} added`,
       `${preview.updated} updated`,
       `${preview.unchanged} already here`,
     ];
     if (preview.refused > 0) parts.push(`${preview.refused} not web addresses`);
+    if (preview.conflicts > 0) parts.push(`${preview.conflicts} to resolve`);
     setReport(`${file.name}: ${parts.join(", ")}.`);
   };
-
-  const shown = React.useMemo(() => search(document, query), [document, query]);
-  const groups = React.useMemo(() => groupsOf(shown), [shown]);
-  const knownGroups = React.useMemo(
-    () => groupsOf(document).filter((g) => g !== GENERAL),
-    [document],
-  );
 
   if (status === "loading") {
     return <CircularProgress size={28} aria-label="Loading" />;
@@ -277,6 +327,20 @@ export default function LinksPanel() {
           <datalist id="links-groups">
             {knownGroups.map((g) => (
               <option key={g} value={g} />
+            ))}
+          </datalist>
+          <TextField
+            label="Tags"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            size="small"
+            placeholder="MITRE, army"
+            sx={{ minWidth: { sm: 180 } }}
+            slotProps={{ htmlInput: { list: "links-tags" } }}
+          />
+          <datalist id="links-tags">
+            {knownTags.map((t) => (
+              <option key={t} value={t} />
             ))}
           </datalist>
           <TextField
@@ -366,6 +430,42 @@ export default function LinksPanel() {
         </Alert>
       )}
 
+      <Conflicts
+        conflicts={document.conflicts}
+        links={document.links}
+        onKeepMine={keepMine}
+        onTakeTheirs={takeTheirs}
+        onEdit={editConflict}
+      />
+
+      {knownTags.length > 0 && (
+        <Stack
+          direction="row"
+          spacing={1}
+          role="group"
+          aria-label="Tags"
+          sx={{ flexWrap: "wrap", rowGap: 1 }}
+        >
+          <Chip
+            label="All"
+            size="small"
+            color={tag === null ? "primary" : "default"}
+            variant={tag === null ? "filled" : "outlined"}
+            onClick={() => setTag(null)}
+          />
+          {knownTags.map((t) => (
+            <Chip
+              key={t}
+              label={t}
+              size="small"
+              color={tag === t ? "primary" : "default"}
+              variant={tag === t ? "filled" : "outlined"}
+              onClick={() => setTag(tag === t ? null : t)}
+            />
+          ))}
+        </Stack>
+      )}
+
       {document.links.length === 0 && (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           Nothing here yet. Paste an address above, or upload a browser's
@@ -436,6 +536,20 @@ export default function LinksPanel() {
                         slotProps={{ htmlInput: { list: "links-groups" } }}
                       />
                       <TextField
+                        label="Tags"
+                        value={
+                          Array.isArray(draft.tags)
+                            ? draft.tags.join(", ")
+                            : (draft.tags ?? "")
+                        }
+                        onChange={(e) =>
+                          setDraft({ ...draft, tags: e.target.value })
+                        }
+                        size="small"
+                        sx={{ minWidth: { sm: 180 } }}
+                        slotProps={{ htmlInput: { list: "links-tags" } }}
+                      />
+                      <TextField
                         label="Note"
                         value={draft.note ?? ""}
                         onChange={(e) =>
@@ -504,9 +618,22 @@ export default function LinksPanel() {
                       </Link>
                     }
                     secondary={
-                      link.note
-                        ? `${hostOf(link.url)} · ${link.note}`
-                        : hostOf(link.url)
+                      <>
+                        {link.note
+                          ? `${hostOf(link.url)} · ${link.note}`
+                          : hostOf(link.url)}
+                        {link.tags.map((t) => (
+                          <Chip
+                            key={t}
+                            label={t}
+                            size="small"
+                            variant="outlined"
+                            component="span"
+                            onClick={() => setTag(t)}
+                            sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
+                          />
+                        ))}
+                      </>
                     }
                   />
                 </ListItem>

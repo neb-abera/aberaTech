@@ -1,5 +1,5 @@
 import { exportBookmarks } from "./bookmarks";
-import type { LinksDocument } from "./links";
+import { type LinksDocument, slugOf } from "./links";
 
 /**
  * Emailing the list to yourself, from the page's side.
@@ -25,12 +25,15 @@ export type EmailPlan =
   | { kind: "mailto"; href: string; fileName: string }
   | { kind: "copy"; text: string; fileName: string };
 
-export function fileNameFor(date: Date): string {
-  return `links-${date.toISOString().slice(0, 10)}.html`;
+/** `links-<date>.html`, or `links-<tag>-<date>.html` for one tag's links. */
+export function fileNameFor(date: Date, tag: string | null = null): string {
+  const part = tag === null || slugOf(tag) === "" ? "" : `${slugOf(tag)}-`;
+  return `links-${part}${date.toISOString().slice(0, 10)}.html`;
 }
 
-export function subjectFor(date: Date): string {
-  return `Links ${date.toISOString().slice(0, 10)}`;
+export function subjectFor(date: Date, tag: string | null = null): string {
+  const part = tag === null || tag.trim() === "" ? "" : `${tag.trim()} `;
+  return `Links ${part}${date.toISOString().slice(0, 10)}`;
 }
 
 /** What to do with the text below the line, in the mail itself. */
@@ -78,9 +81,10 @@ export function planEmail(
   document: LinksDocument,
   date: Date,
   navigator: Pick<Navigator, "share" | "canShare"> | undefined,
+  tag: string | null = null,
 ): EmailPlan {
-  const fileName = fileNameFor(date);
-  const subject = subjectFor(date);
+  const fileName = fileNameFor(date, tag);
+  const subject = subjectFor(date, tag);
   const html = exportBookmarks(document);
   const file = new File([html], fileName, { type: "text/html" });
 
