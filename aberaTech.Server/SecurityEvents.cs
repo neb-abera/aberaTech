@@ -53,6 +53,42 @@ public static partial class SecurityEvents
     /// <summary>401 from the dev box heartbeat: a missing or wrong agent token.</summary>
     public const int AgentTokenRejected = 4008;
 
+    /// <summary>The owner's session began: the sign-in completed and the cookie was issued.</summary>
+    public const int OwnerSignedIn = 4009;
+
+    /// <summary>The owner's session ended by sign-out.</summary>
+    public const int OwnerSignedOut = 4010;
+
+    /// <summary>
+    /// Sign-in and sign-out as events. The application STIG (V-222462,
+    /// V-222464) wants a record of when a session starts and ends, with
+    /// the source address; the refusal events above never see a success.
+    /// Hooked on the cookie scheme's own events, after the scheme is
+    /// configured, so it holds whichever sign-in issued the cookie.
+    /// </summary>
+    public static IServiceCollection AddSessionAudit(this IServiceCollection services)
+    {
+        services
+            .AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(
+                Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+            .PostConfigure<ILoggerFactory>((options, loggers) =>
+            {
+                var logger = loggers.CreateLogger(Category);
+                options.Events.OnSignedIn = context =>
+                {
+                    Log.OwnerSignedIn(logger, ClientAddress.For(context.HttpContext));
+                    return Task.CompletedTask;
+                };
+                options.Events.OnSigningOut = context =>
+                {
+                    Log.OwnerSignedOut(logger, ClientAddress.For(context.HttpContext));
+                    return Task.CompletedTask;
+                };
+            });
+
+        return services;
+    }
+
     private const string DigestRoute = "/api/fitness/digest.txt";
 
     /// <summary>The routes where holding the id is the whole of the authorization.</summary>
@@ -165,5 +201,13 @@ public static partial class SecurityEvents
         [LoggerMessage(EventId = SecurityEvents.AgentTokenRejected, EventName = nameof(AgentTokenRejected), Level = LogLevel.Warning,
             Message = "Dev box agent token rejected from {ClientIp} on {Method} {Route} ({Status}).")]
         public static partial void AgentTokenRejected(ILogger logger, string clientIp, string method, string route, int status);
+
+        [LoggerMessage(EventId = SecurityEvents.OwnerSignedIn, EventName = nameof(OwnerSignedIn), Level = LogLevel.Information,
+            Message = "Owner signed in from {ClientIp}.")]
+        public static partial void OwnerSignedIn(ILogger logger, string clientIp);
+
+        [LoggerMessage(EventId = SecurityEvents.OwnerSignedOut, EventName = nameof(OwnerSignedOut), Level = LogLevel.Information,
+            Message = "Owner signed out from {ClientIp}.")]
+        public static partial void OwnerSignedOut(ILogger logger, string clientIp);
     }
 }
