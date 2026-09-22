@@ -20,6 +20,15 @@ public sealed class DevBoxOptions
 
     public string VmName { get; init; } = "devbox";
 
+    /// <summary>
+    /// The shared secret the box presents on its heartbeat. A container app
+    /// secret, never appsettings. Without it the heartbeat route is not mapped
+    /// and the page shows the power state only.
+    /// </summary>
+    public string? HeartbeatToken { get; init; }
+
+    public bool HasHeartbeat => !string.IsNullOrWhiteSpace(HeartbeatToken);
+
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(SubscriptionId)
         && !string.IsNullOrWhiteSpace(ResourceGroup)
