@@ -29,7 +29,11 @@ public static class AdminAuth
     /// </summary>
     public const string SignInPolicy = "scheduling-admin-sign-in";
 
-    public static IServiceCollection AddSchedulingAdminAuth(this IServiceCollection services, AdminOptions options)
+    /// <summary>The cookie name under the Development sign-in, where the compose app is plain http.</summary>
+    public const string DevelopmentCookieName = "abera.admin.development";
+
+    public static IServiceCollection AddSchedulingAdminAuth(
+        this IServiceCollection services, AdminOptions options, bool developmentSignIn = false)
     {
         services
             .AddAuthentication(configure =>
@@ -52,9 +56,9 @@ public static class AdminAuth
                 // overwrite an admin session. The three settings below are
                 // what the prefix demands; drop one and sign-in silently stops
                 // working, which AdminCookieTests pins.
-                cookie.Cookie.Name = CookieName;
+                cookie.Cookie.Name = developmentSignIn ? DevelopmentCookieName : CookieName;
                 cookie.Cookie.HttpOnly = true;
-                cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                cookie.Cookie.SecurePolicy = developmentSignIn ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
                 cookie.Cookie.Path = "/";
                 cookie.Cookie.Domain = null;
 
@@ -131,21 +135,42 @@ public static class AdminAuth
     }
 
     /// <summary>Sign-in and sign-out, and a way for the page to ask who it is talking to.</summary>
-    public static IEndpointRouteBuilder MapAdminAuthEndpoints(this IEndpointRouteBuilder routes, AdminOptions options)
+    public static IEndpointRouteBuilder MapAdminAuthEndpoints(
+        this IEndpointRouteBuilder routes, AdminOptions options, bool isDevelopment = false)
     {
-        routes.MapGet(SignInPath, (HttpContext context, string? returnUrl) =>
-            Results.Challenge(
-                new AuthenticationProperties
-                {
-                    // Only ever a path on this site. Echoing an arbitrary
-                    // returnUrl back into a redirect is the standard open
-                    // redirect, and an attacker would use it to bounce a
-                    // freshly signed in admin somewhere else.
-                    RedirectUri = LocalOrDefault(returnUrl)
-                },
-                ["Google"]))
-            .RequireRateLimiting(SignInPolicy)
-            .AllowAnonymous();
+        if (isDevelopment && options.DevelopmentSignIn)
+        {
+            // The compose app under `make e2e`: the same cookie the Google
+            // sign-in would issue, for the first allowed address, so the
+            // browser suite signs in by pressing the real button. Never
+            // mapped outside Development, whatever the flag says.
+            routes.MapGet(SignInPath, async (HttpContext context, string? returnUrl) =>
+            {
+                var email = options.AllowedEmails[0];
+                var identity = new ClaimsIdentity(
+                    [new Claim(ClaimTypes.Email, email), new Claim(ClaimTypes.Name, email)],
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+                await context.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+                return Results.Redirect(LocalOrDefault(returnUrl));
+            }).RequireRateLimiting(SignInPolicy).AllowAnonymous();
+        }
+        else
+        {
+            routes.MapGet(SignInPath, (HttpContext context, string? returnUrl) =>
+                Results.Challenge(
+                    new AuthenticationProperties
+                    {
+                        // Only ever a path on this site. Echoing an arbitrary
+                        // returnUrl back into a redirect is the standard open
+                        // redirect, and an attacker would use it to bounce a
+                        // freshly signed in admin somewhere else.
+                        RedirectUri = LocalOrDefault(returnUrl)
+                    },
+                    ["Google"]))
+                .RequireRateLimiting(SignInPolicy)
+                .AllowAnonymous();
+        }
 
         routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context) =>
         {

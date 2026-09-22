@@ -60,6 +60,11 @@ public static class RateLimits
             // Each press asks Azure to start a VM that bills by the hour. The
             // owner presses once and waits; five a minute is a stuck finger.
             options.AddPolicy(DevBoxEndpoints.StartPolicy, context => PerMinute(context, 5));
+
+            // The box reports once a minute with a token. The failure limit
+            // below counts wrong tokens; this one bounds a right token in a
+            // loop, or a replay of a captured one.
+            options.AddPolicy(DevBoxEndpoints.HeartbeatPolicy, context => PerMinute(context, 10));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>

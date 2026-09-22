@@ -214,6 +214,8 @@ public sealed class SecurityEventClassificationTests
     [InlineData("/api/scheduling/queue/{entryId:guid}", "DELETE", 404, false, SecurityEvents.UnknownCapability)]
     [InlineData("/api/scheduling/book/{appointmentId:guid}", "DELETE", 404, false, SecurityEvents.UnknownCapability)]
     [InlineData("/api/scheduling/book", "POST", 400, false, SecurityEvents.PublicWriteRefused)]
+    [InlineData("/api/devbox/heartbeat", "POST", 401, false, SecurityEvents.AgentTokenRejected)]
+    [InlineData("/api/devbox/heartbeat", "POST", 429, false, SecurityEvents.RateLimited)]
     public void Outcomes_that_are_events(string route, string method, int status, bool signedIn, int expected)
     {
         Assert.Equal(expected, SecurityEvents.Classify(route, method, status, signedIn));

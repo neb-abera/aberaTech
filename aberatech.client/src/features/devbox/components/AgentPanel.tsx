@@ -62,16 +62,14 @@ export default function AgentPanel({ agent, onHold, onPark }: AgentPanelProps) {
             Remote Control is up with {agent.sessions}{" "}
             {agent.sessions === 1 ? "session" : "sessions"}.{" "}
             {agent.environmentUrl ? (
-              <>
-                <Button
-                  href={agent.environmentUrl}
-                  variant="contained"
-                  size="small"
-                  sx={{ ml: 1 }}
-                >
-                  Open devbox in Claude
-                </Button>
-              </>
+              <Button
+                href={agent.environmentUrl}
+                variant="contained"
+                size="small"
+                sx={{ ml: 1 }}
+              >
+                Open devbox in Claude
+              </Button>
             ) : (
               "Open the Claude app, Code, Remote Control, and pick devbox."
             )}

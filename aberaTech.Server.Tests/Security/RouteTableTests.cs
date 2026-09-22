@@ -77,6 +77,8 @@ public sealed class RouteTableTests
         settings["IntervalsIcu:ApiKey"] = "icu-test-key";
         settings["DevBox:SubscriptionId"] = "00000000-0000-0000-0000-00000000dead";
         settings["DevBox:HeartbeatToken"] = "box-token-for-tests";
+        settings["Admin:DevelopmentSignIn"] = "true";
+        settings["DevBox:Fake"] = "true";
         return settings;
     }
 
