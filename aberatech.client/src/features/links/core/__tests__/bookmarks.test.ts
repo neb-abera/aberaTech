@@ -100,13 +100,21 @@ describe("parseBookmarks with JSON", () => {
         title: "A",
         group: "G",
         note: "n",
+        tags: [],
         addedAt: undefined,
       },
     ]);
     expect(
       parseBookmarks('[{"url":"b.example"}, {"title":"no url"}, 3]'),
     ).toEqual([
-      { url: "b.example", title: "", group: "", note: "", addedAt: undefined },
+      {
+        url: "b.example",
+        title: "",
+        group: "",
+        note: "",
+        tags: [],
+        addedAt: undefined,
+      },
     ]);
     expect(parseBookmarks("{not json")).toEqual([]);
   });
@@ -125,21 +133,60 @@ describe("mergeLinks", () => {
 
   const report = mergeLinks(here, parseNetscape(chromeExport), day);
 
-  it("adds what is new, updates what is here, and refuses what is not an address", () => {
+  it("adds what is new, updates what cannot lose, records the rest, and refuses what is not an address", () => {
     expect(report.added).toBe(2);
     expect(report.updated).toBe(1);
     expect(report.unchanged).toBe(1);
     expect(report.refused).toBe(1);
+    expect(report.conflicts).toBe(1);
     expect(report.document.links).toHaveLength(5);
   });
 
-  it("keeps a matched link's id, group and place, and takes the new title", () => {
+  it("keeps a matched link's id, group, place and title, and records the file's title to settle", () => {
     const handbook = report.document.links[1];
     expect(handbook.id).toBe("id-1");
     expect(handbook.group).toBe("Work");
-    expect(handbook.title).toBe("Handbook & guide");
-    // http became https, because the file had the https address.
+    expect(handbook.title).toBe("Old name");
+    // http became https without a question: nothing is lost by it.
     expect(handbook.url).toBe("https://www.example.org/handbook?v=2");
+    const conflict = report.document.conflicts[0];
+    expect(conflict.linkId).toBe("id-1");
+    expect(conflict.theirs).toEqual({ title: "Handbook & guide" });
+    expect(conflict.source).toBe("upload");
+    expect(conflict.seenAt).toBe("2026-09-12");
+  });
+
+  it("fills an empty title without a question", () => {
+    const untitled = addLink(
+      empty,
+      { title: "", url: "https://x.example" },
+      day,
+      "u",
+    );
+    const filled = mergeLinks(
+      untitled,
+      [{ title: "Named", url: "x.example" }],
+      day,
+    );
+    expect(filled.updated).toBe(1);
+    expect(filled.conflicts).toBe(0);
+    expect(filled.document.links[0].title).toBe("Named");
+  });
+
+  it("joins the file's tags to the link's without a question", () => {
+    const tagged = addLink(
+      empty,
+      { title: "T", url: "https://t.example", tags: ["MITRE"] },
+      day,
+      "t",
+    );
+    const joined = mergeLinks(
+      tagged,
+      [{ title: "T", url: "t.example", tags: ["mitre", "army"] }],
+      day,
+    );
+    expect(joined.updated).toBe(1);
+    expect(joined.document.links[0].tags).toEqual(["MITRE", "army"]);
   });
 
   it("does not move a link that the file has in another folder", () => {
@@ -170,23 +217,40 @@ describe("mergeLinks", () => {
       day,
     );
     expect(twice.added).toBe(1);
-    expect(twice.updated).toBe(1);
-    expect(twice.document.links[0].title).toBe("two");
+    expect(twice.updated).toBe(0);
+    expect(twice.conflicts).toBe(1);
+    expect(twice.document.links[0].title).toBe("one");
+    expect(twice.document.conflicts[0].theirs).toEqual({ title: "two" });
 
     const again = mergeLinks(report.document, parseNetscape(chromeExport), day);
     expect(again.added).toBe(0);
     expect(again.updated).toBe(0);
+    // The same file again asks nothing new.
+    expect(again.conflicts).toBe(0);
+    expect(again.document.conflicts).toHaveLength(1);
     expect(again.document.links).toHaveLength(5);
   });
 
-  it("gives a note only to a link that had none", () => {
+  it("keeps a note it has and records the file's to settle", () => {
     const withNote = mergeLinks(
       here,
       [{ title: "Kept note", url: "kept.example", note: "theirs" }],
       day,
     );
     expect(withNote.unchanged).toBe(1);
+    expect(withNote.conflicts).toBe(1);
     expect(withNote.document.links[2].note).toBe("mine");
+    expect(withNote.document.conflicts[0].theirs).toEqual({ note: "theirs" });
+  });
+
+  it("records a different folder to settle, and never moves the link itself", () => {
+    const moved = mergeLinks(
+      here,
+      [{ title: "abera.tech", url: "https://abera.tech", group: "Elsewhere" }],
+      day,
+    );
+    expect(moved.document.links[0].group).toBe("Mine");
+    expect(moved.document.conflicts[0].theirs).toEqual({ group: "Elsewhere" });
   });
 });
 
@@ -238,6 +302,19 @@ describe("exportBookmarks", () => {
       ["Sibling", "Work / Notes"],
       ["Deep", "Work / Tools / CLI"],
     ]);
+  });
+
+  it("carries tags as the TAGS attribute, and reads them back", () => {
+    const tagged = addLink(
+      empty,
+      { title: "T", url: "https://t.example", tags: ["MITRE", "army"] },
+      day,
+      "t",
+    );
+    const out = exportBookmarks(tagged);
+    expect(out).toContain('TAGS="MITRE,army"');
+    const back = parseBookmarks(out);
+    expect(back[0].tags).toEqual(["MITRE", "army"]);
   });
 
   it("reads back into the same links", () => {

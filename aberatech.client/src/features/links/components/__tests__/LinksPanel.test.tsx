@@ -60,6 +60,7 @@ const lastPut = (): LinksDocument => {
 
 const saved: LinksDocument = {
   version: 1,
+  conflicts: [],
   links: [
     {
       id: "a",
@@ -67,6 +68,7 @@ const saved: LinksDocument = {
       url: "https://claude.ai/code/artifact/x",
       group: "Plans",
       note: "",
+      tags: ["MITRE"],
       addedAt: "2026-09-12",
     },
     {
@@ -75,6 +77,7 @@ const saved: LinksDocument = {
       url: "https://www.example.org/handbook",
       group: "",
       note: "the PDF",
+      tags: [],
       addedAt: "2026-09-12",
     },
   ],
@@ -317,16 +320,23 @@ describe("for the owner", () => {
     await settle();
 
     expect(
-      screen.getByText(/bookmarks\.html: 1 added, 2 updated, 0 already here\./),
+      screen.getByText(
+        /bookmarks\.html: 1 added, 1 updated, 1 already here, 1 to resolve\./,
+      ),
     ).toBeTruthy();
-    // The tracker took the file's name but stayed under Plans; the
-    // untitled handbook got a name; the new page arrived under Reading.
+    // The tracker kept its name and stayed under Plans, with the file's
+    // name waiting to be settled; the untitled handbook got a name; the
+    // new page arrived under Reading.
     expect(
       within(screen.getByRole("list", { name: "Links under Plans" })).getByRole(
         "link",
-        { name: "Runway" },
+        { name: "Tracker" },
       ),
     ).toBeTruthy();
+    const conflict = screen.getByRole("region", {
+      name: "Conflict on Tracker",
+    });
+    expect(within(conflict).getByText("Runway")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Handbook" })).toBeTruthy();
     expect(
       within(
@@ -339,6 +349,106 @@ describe("for the owner", () => {
     const body = lastPut();
     expect(body.links).toHaveLength(3);
     expect(body.links.map((l) => l.id).slice(0, 2)).toEqual(["a", "b"]);
+    expect(body.conflicts).toHaveLength(1);
+    expect(body.conflicts[0]).toMatchObject({
+      linkId: "a",
+      source: "bookmarks.html",
+      theirs: { title: "Runway" },
+    });
+
+    // Take the file's name: the link changes, the conflict goes, both saved.
+    fireEvent.click(
+      within(conflict).getByRole("button", { name: "Take the file's" }),
+    );
+    await settle();
+    expect(screen.getByRole("link", { name: "Runway" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: /Conflict on/ })).toBeNull();
+    await flushSave();
+    expect(lastPut().conflicts).toHaveLength(0);
+  });
+
+  it("keeps mine when told to, and edits with the file's values when asked", async () => {
+    visit({
+      ...saved,
+      conflicts: [
+        {
+          id: "k1",
+          linkId: "a",
+          source: "old.html",
+          seenAt: "2026-09-22",
+          theirs: { title: "Runway", note: "from the file" },
+        },
+        {
+          id: "k2",
+          linkId: "b",
+          source: "old.html",
+          seenAt: "2026-09-22",
+          theirs: { title: "Handbook" },
+        },
+      ],
+    });
+    render(<LinksPanel />);
+    await settle();
+
+    const first = screen.getByRole("region", { name: "Conflict on Tracker" });
+    fireEvent.click(within(first).getByRole("button", { name: "Keep mine" }));
+    await settle();
+    expect(screen.getByRole("link", { name: "Tracker" })).toBeTruthy();
+    expect(
+      screen.queryByRole("region", { name: "Conflict on Tracker" }),
+    ).toBeNull();
+
+    const second = screen.getByRole("region", {
+      name: "Conflict on example.org",
+    });
+    fireEvent.click(within(second).getByRole("button", { name: "Edit" }));
+    const form = screen.getByRole("form", { name: /edit example\.org/i });
+    const title = within(form).getByLabelText("Title") as HTMLInputElement;
+    expect(title.value).toBe("Handbook");
+    fireEvent.change(title, { target: { value: "Handbook, mine" } });
+    fireEvent.submit(form);
+    await settle();
+    expect(screen.getByRole("link", { name: "Handbook, mine" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: /Conflict on/ })).toBeNull();
+
+    await flushSave();
+    expect(lastPut().conflicts).toHaveLength(0);
+  });
+
+  it("narrows to a tag, and downloads just those under the tag's name", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(
+      within(screen.getByRole("group", { name: "Tags" })).getByText("MITRE"),
+    );
+    expect(screen.getByRole("link", { name: "Tracker" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "example.org" })).toBeNull();
+
+    const blobs: Blob[] = [];
+    const names: string[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:links";
+        }),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      names.push(this.download);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    expect(names[0]).toMatch(/^links-mitre-\d{4}-\d{2}-\d{2}\.html$/);
+    const text = await blobs[0].text();
+    expect(text).toContain("claude.ai/code/artifact/x");
+    expect(text).not.toContain("example.org/handbook");
+    expect(text).toContain('TAGS="MITRE"');
   });
 
   it("refuses a file with no bookmarks in it", async () => {

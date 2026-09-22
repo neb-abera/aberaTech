@@ -5,6 +5,11 @@
  * document hook and the hook saves it; nothing here touches the network or
  * the DOM. The shape is versioned because it lives in a database row that
  * outlives any one build of the page.
+ *
+ * A link has one folder (its group, a path spelled "Work / Tools") and any
+ * number of tags. The folder is the hierarchy a browser export carries and
+ * gets back; a tag cuts across folders, so "MITRE" can hold links from
+ * several of them and be downloaded on its own.
  */
 
 export interface LinkEntry {
@@ -14,24 +19,44 @@ export interface LinkEntry {
   /** A heading the link sits under. Empty means the general list. */
   group: string;
   note: string;
+  /** Labels across folders: "MITRE", "army". Matching ignores case. */
+  tags: string[];
   /** ISO date the link was added. */
   addedAt: string;
+}
+
+/**
+ * A file said something different about a link that is already here.
+ * Nothing on the link changes until the owner chooses: keep what is here,
+ * take the file's version, or edit. Only the fields that differed are kept.
+ */
+export interface Conflict {
+  id: string;
+  linkId: string;
+  /** The file it came from. */
+  source: string;
+  /** ISO date it was noticed. */
+  seenAt: string;
+  theirs: { title?: string; note?: string; group?: string };
 }
 
 export interface LinksDocument {
   version: 1;
   links: LinkEntry[];
+  conflicts: Conflict[];
 }
 
 export const GENERAL = "General";
 
-export const empty: LinksDocument = { version: 1, links: [] };
+export const empty: LinksDocument = { version: 1, links: [], conflicts: [] };
 
 export interface NewLink {
   title: string;
   url: string;
   group?: string;
   note?: string;
+  /** Comma separated as typed, or already a list. */
+  tags?: string | string[];
   /** ISO date, when the source knows it; otherwise the day it is added. */
   addedAt?: string;
 }
@@ -97,6 +122,60 @@ export function normalizeGroup(group: string | undefined): string {
   return trimmed.toLowerCase() === GENERAL.toLowerCase() ? "" : trimmed;
 }
 
+/**
+ * Tags as typed ("MITRE, army,personal") or as a list, trimmed, without
+ * empties, and each spelling once: "Army" after "army" is the same tag and
+ * the first spelling stays.
+ */
+export function normalizeTags(tags: string | string[] | undefined): string[] {
+  const raw =
+    tags === undefined ? [] : Array.isArray(tags) ? tags : tags.split(",");
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of raw) {
+    const trimmed = tag.trim();
+    const key = trimmed.toLowerCase();
+    if (trimmed === "" || seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+  }
+  return out;
+}
+
+export function hasTag(link: Pick<LinkEntry, "tags">, tag: string): boolean {
+  const key = tag.trim().toLowerCase();
+  return link.tags.some((t) => t.toLowerCase() === key);
+}
+
+/** Every tag in use, each spelling once, alphabetically. */
+export function tagsOf(document: LinksDocument): string[] {
+  const byKey = new Map<string, string>();
+  for (const link of document.links) {
+    for (const tag of link.tags) {
+      const key = tag.toLowerCase();
+      if (!byKey.has(key)) byKey.set(key, tag);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => a.localeCompare(b));
+}
+
+/** The links carrying one tag; the whole list for no tag. */
+export function withTag(
+  document: LinksDocument,
+  tag: string | null,
+): LinksDocument {
+  if (tag === null || tag.trim() === "") return document;
+  return { ...document, links: document.links.filter((l) => hasTag(l, tag)) };
+}
+
+/** A tag as a file name part: "MITRE / Crypto" is "mitre-crypto". */
+export function slugOf(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /** The host a link points at, for the line under its title. */
 export function hostOf(url: string): string {
   try {
@@ -129,9 +208,10 @@ export function addLink(
     url,
     group: normalizeGroup(link.group),
     note: (link.note ?? "").trim(),
+    tags: normalizeTags(link.tags),
     addedAt: link.addedAt ?? now.toISOString().slice(0, 10),
   };
-  return { version: 1, links: [...document.links, entry] };
+  return { ...document, links: [...document.links, entry] };
 }
 
 /**
@@ -148,7 +228,7 @@ export function updateLink(
   if (url === null) return document;
   if (!document.links.some((l) => l.id === id)) return document;
   return {
-    version: 1,
+    ...document,
     links: document.links.map((l) =>
       l.id === id
         ? {
@@ -157,6 +237,8 @@ export function updateLink(
             url,
             group: normalizeGroup(fields.group),
             note: (fields.note ?? "").trim(),
+            tags:
+              fields.tags === undefined ? l.tags : normalizeTags(fields.tags),
           }
         : l,
     ),
@@ -171,8 +253,72 @@ export function folderPath(group: string): string[] {
     .filter((s) => s !== "");
 }
 
+/** The document without one link, and without whatever it had to resolve. */
 export function removeLink(document: LinksDocument, id: string): LinksDocument {
-  return { version: 1, links: document.links.filter((l) => l.id !== id) };
+  return {
+    ...document,
+    links: document.links.filter((l) => l.id !== id),
+    conflicts: document.conflicts.filter((c) => c.linkId !== id),
+  };
+}
+
+/**
+ * A conflict recorded, unless the same one is already waiting: the same
+ * file uploaded twice asks once. Nothing on the link changes.
+ */
+export function addConflict(
+  document: LinksDocument,
+  conflict: Omit<Conflict, "id">,
+  id: string = newId(),
+): LinksDocument {
+  const same = document.conflicts.some(
+    (c) =>
+      c.linkId === conflict.linkId &&
+      c.theirs.title === conflict.theirs.title &&
+      c.theirs.note === conflict.theirs.note &&
+      c.theirs.group === conflict.theirs.group,
+  );
+  if (same) return document;
+  return {
+    ...document,
+    conflicts: [...document.conflicts, { id, ...conflict }],
+  };
+}
+
+export type Resolution =
+  | { choice: "mine" }
+  | { choice: "theirs" }
+  | { choice: "edit"; fields: NewLink };
+
+/**
+ * One conflict settled. "mine" keeps the link as it is; "theirs" takes each
+ * field the file offered; "edit" replaces the link with what the owner
+ * typed. The conflict is gone either way, and so is any other conflict on
+ * the same link that the choice made moot.
+ */
+export function resolveConflict(
+  document: LinksDocument,
+  conflictId: string,
+  resolution: Resolution,
+): LinksDocument {
+  const conflict = document.conflicts.find((c) => c.id === conflictId);
+  if (conflict === undefined) return document;
+  let next = document;
+  const link = document.links.find((l) => l.id === conflict.linkId);
+  if (link !== undefined && resolution.choice === "theirs") {
+    next = updateLink(document, link.id, {
+      title: conflict.theirs.title ?? link.title,
+      url: link.url,
+      group: conflict.theirs.group ?? link.group,
+      note: conflict.theirs.note ?? link.note,
+    });
+  } else if (link !== undefined && resolution.choice === "edit") {
+    next = updateLink(document, link.id, resolution.fields);
+  }
+  return {
+    ...next,
+    conflicts: next.conflicts.filter((c) => c.id !== conflictId),
+  };
 }
 
 /**
@@ -199,15 +345,15 @@ export function inGroup(document: LinksDocument, group: string): LinkEntry[] {
     .reverse();
 }
 
-/** The links whose title, host, group or note contains the query. */
+/** The links whose title, host, group, tags or note contain the query. */
 export function search(document: LinksDocument, query: string): LinksDocument {
   const q = query.trim().toLowerCase();
   if (q === "") return document;
   return {
-    version: 1,
+    ...document,
     links: document.links.filter((l) =>
-      [l.title, hostOf(l.url), l.url, l.group, l.note].some((field) =>
-        field.toLowerCase().includes(q),
+      [l.title, hostOf(l.url), l.url, l.group, l.note, ...l.tags].some(
+        (field) => field.toLowerCase().includes(q),
       ),
     ),
   };
@@ -220,7 +366,7 @@ export function search(document: LinksDocument, query: string): LinksDocument {
  */
 export function coerce(value: unknown): LinksDocument {
   if (typeof value !== "object" || value === null) return empty;
-  const raw = (value as { links?: unknown }).links;
+  const raw = (value as { links?: unknown; conflicts?: unknown }).links;
   if (!Array.isArray(raw)) return empty;
   const links: LinkEntry[] = [];
   for (const item of raw) {
@@ -234,10 +380,41 @@ export function coerce(value: unknown): LinksDocument {
       url,
       group: normalizeGroup(typeof r.group === "string" ? r.group : ""),
       note: typeof r.note === "string" ? r.note : "",
+      tags: Array.isArray(r.tags)
+        ? normalizeTags(
+            r.tags.filter((t): t is string => typeof t === "string"),
+          )
+        : [],
       addedAt: typeof r.addedAt === "string" ? r.addedAt : "",
     });
   }
-  return { version: 1, links };
+  const ids = new Set(links.map((l) => l.id));
+  const conflicts: Conflict[] = [];
+  const rawConflicts = (value as { conflicts?: unknown }).conflicts;
+  if (Array.isArray(rawConflicts)) {
+    for (const item of rawConflicts) {
+      if (typeof item !== "object" || item === null) continue;
+      const r = item as Record<string, unknown>;
+      if (typeof r.linkId !== "string" || !ids.has(r.linkId)) continue;
+      const theirs =
+        typeof r.theirs === "object" && r.theirs !== null
+          ? (r.theirs as Record<string, unknown>)
+          : {};
+      const fields: Conflict["theirs"] = {};
+      if (typeof theirs.title === "string") fields.title = theirs.title;
+      if (typeof theirs.note === "string") fields.note = theirs.note;
+      if (typeof theirs.group === "string") fields.group = theirs.group;
+      if (Object.keys(fields).length === 0) continue;
+      conflicts.push({
+        id: typeof r.id === "string" && r.id !== "" ? r.id : newId(),
+        linkId: r.linkId,
+        source: typeof r.source === "string" ? r.source : "",
+        seenAt: typeof r.seenAt === "string" ? r.seenAt : "",
+        theirs: fields,
+      });
+    }
+  }
+  return { version: 1, links, conflicts };
 }
 
 function newId(): string {
