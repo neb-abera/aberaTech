@@ -20,6 +20,7 @@ import * as React from "react";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { exportBookmarks, mergeLinks, parseBookmarks } from "../core/bookmarks";
+import { planEmail } from "../core/email";
 import {
   addLink,
   coerce,
@@ -142,6 +143,40 @@ export default function LinksPanel() {
     anchor.download = `links-${new Date().toISOString().slice(0, 10)}.html`;
     anchor.click();
     URL.revokeObjectURL(href);
+  };
+
+  // Email the list to yourself: the file through the share sheet where the
+  // browser has one, otherwise a mailto whose body is the file under
+  // instructions for saving it. See core/email.ts for the ceiling.
+  const email = async () => {
+    const plan = planEmail(document, new Date(), window.navigator);
+    if (plan.kind === "share") {
+      try {
+        await window.navigator.share({
+          files: [plan.file],
+          title: plan.title,
+          text: plan.text,
+        });
+      } catch {
+        // The sheet was dismissed, or refused the file. Nothing to report.
+      }
+      return;
+    }
+    if (plan.kind === "mailto") {
+      const anchor = window.document.createElement("a");
+      anchor.href = plan.href;
+      anchor.click();
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(plan.text);
+      setProblem(null);
+      setReport(
+        `Too long for a mail body, so it is on the clipboard. Paste it into an email to yourself; the instructions at the top say how to save it as ${plan.fileName}.`,
+      );
+    } catch {
+      setProblem("Could not copy to the clipboard. Use Download instead.");
+    }
   };
 
   const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -306,6 +341,14 @@ export default function LinksPanel() {
             disabled={document.links.length === 0}
           >
             Download
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={email}
+            disabled={document.links.length === 0}
+          >
+            Email
           </Button>
           <Chip
             size="small"
