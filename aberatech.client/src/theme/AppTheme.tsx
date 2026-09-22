@@ -1,6 +1,7 @@
 import type { ThemeOptions } from "@mui/material/styles";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import * as React from "react";
+import { canvasBackground } from "./canvasBackground";
 import { dataDisplayCustomizations } from "./customizations/dataDisplay";
 import { feedbackCustomizations } from "./customizations/feedback";
 import { inputsCustomizations } from "./customizations/inputs";
@@ -37,6 +38,7 @@ export default function AppTheme(props: AppThemeProps) {
           shadows,
           shape,
           components: {
+            MuiCssBaseline: { styleOverrides: canvasBackground },
             ...inputsCustomizations,
             ...dataDisplayCustomizations,
             ...feedbackCustomizations,
