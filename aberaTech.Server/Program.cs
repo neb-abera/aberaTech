@@ -288,6 +288,8 @@ if (devBoxEnabled)
     // app's managed identity when deployed, az login locally. Registered as
     // the abstraction so the tests can hand the client a fake.
     builder.Services.AddSingleton<TokenCredential>(_ => new DefaultAzureCredential());
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton<DevBoxAgentState>();
     builder.Services.AddHttpClient<DevBoxClient>(client =>
         // Resource Manager answers a start in well under this; a hung call
         // must not hold the request open for the framework's default 100 s.
@@ -520,7 +522,7 @@ else
 
 if (devBoxEnabled)
 {
-    app.MapDevBoxEndpoints();
+    app.MapDevBoxEndpoints(devBoxOptions);
 }
 else
 {
