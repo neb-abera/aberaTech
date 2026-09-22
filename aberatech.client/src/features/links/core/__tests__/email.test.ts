@@ -20,20 +20,26 @@ const date = new Date("2026-09-22T14:00:00Z");
 
 const list = (n: number): LinksDocument => ({
   version: 1,
+  conflicts: [],
   links: Array.from({ length: n }, (_, i) => ({
     id: `id-${i}`,
     title: `Link ${i}`,
     url: `https://example.com/${i}`,
     group: "Reading",
     note: "",
+    tags: [],
     addedAt: "2026-09-01T00:00:00Z",
   })),
 });
 
 describe("the mail", () => {
-  it("is named and titled by the day", () => {
+  it("is named and titled by the day, and by the tag when there is one", () => {
     expect(fileNameFor(date)).toBe("links-2026-09-22.html");
     expect(subjectFor(date)).toBe("Links 2026-09-22");
+    expect(fileNameFor(date, "MITRE / Crypto")).toBe(
+      "links-mitre-crypto-2026-09-22.html",
+    );
+    expect(subjectFor(date, "MITRE")).toBe("Links MITRE 2026-09-22");
   });
 
   it("carries the instructions, a line, then the bookmark file", () => {
