@@ -1,5 +1,8 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using aberaTech.Server;
+using aberaTech.Server.DevBox;
+using Azure.Core;
+using Azure.Identity;
 using aberaTech.Scheduling;
 using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Data;
@@ -269,6 +272,28 @@ if (fitnessEnabled)
     builder.Services.AddHostedService<FitnessSyncWorker>();
 }
 
+// ---------------------------------------------------------------- dev box
+
+// The owner's Azure VM, started from the phone. Needs the admin sign-in (it
+// is what "owner" means here) and a subscription id. Either missing and the
+// status route answers "not configured"; nothing else is mapped.
+var devBoxOptions = builder.Configuration.GetSection(DevBoxOptions.Section).Get<DevBoxOptions>()
+                    ?? new DevBoxOptions();
+builder.Services.AddSingleton(devBoxOptions);
+var devBoxEnabled = adminOptions.IsConfigured && devBoxOptions.IsConfigured;
+
+if (devBoxEnabled)
+{
+    // The same credential shape as the Postgres connection: the container
+    // app's managed identity when deployed, az login locally. Registered as
+    // the abstraction so the tests can hand the client a fake.
+    builder.Services.AddSingleton<TokenCredential>(_ => new DefaultAzureCredential());
+    builder.Services.AddHttpClient<DevBoxClient>(client =>
+        // Resource Manager answers a start in well under this; a hung call
+        // must not hold the request open for the framework's default 100 s.
+        client.Timeout = TimeSpan.FromSeconds(20));
+}
+
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser
 // regardless, but a cache MISS travels origin-to-edge as sent — and the
 // template and Facewoof both learned this the measured way. EnableForHttps is
@@ -491,6 +516,15 @@ else
     // Deployed without a database yet. The tab is visible either way, so it has
     // to explain itself rather than break.
     app.MapSchedulingUnavailable(schedulingOptions);
+}
+
+if (devBoxEnabled)
+{
+    app.MapDevBoxEndpoints();
+}
+else
+{
+    app.MapDevBoxUnavailable();
 }
 
 if (fitnessEnabled)

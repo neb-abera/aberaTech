@@ -72,6 +72,9 @@ service keeps `node_modules` in a volume that outlives a rebuild.
   over-budget fixture before it is trusted to pass the build.
 - Prose is a gate (`make prose`): Vale with the rules in
   `.vale/styles/Abera`, over the Markdown and the prerendered pages.
+- `/devbox` starts the owner's Azure VM from a phone (`DevBoxEndpoints.cs`).
+  The container app's managed identity holds one role on that one VM: start
+  and read. `DevBox__SubscriptionId` switches it on.
 
 ## How it stays current
 

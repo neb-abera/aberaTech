@@ -104,11 +104,13 @@ describe("the account controls", () => {
     );
     expect(screen.queryByRole("link", { name: "Links" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Plan" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Dev box" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
     expect(screen.getByRole("menuitem", { name: "Sign in" })).toBeTruthy();
     expect(screen.queryByRole("menuitem", { name: "Links" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Plan" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Dev box" })).toBeNull();
   });
 
   it("shows the owner the Links entry and a way out", async () => {
@@ -120,6 +122,9 @@ describe("the account controls", () => {
     expect(
       screen.getByRole("link", { name: "Plan" }).getAttribute("href"),
     ).toBe("/plan");
+    expect(
+      screen.getByRole("link", { name: "Dev box" }).getAttribute("href"),
+    ).toBe("/devbox");
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
@@ -129,6 +134,9 @@ describe("the account controls", () => {
     expect(
       screen.getByRole("menuitem", { name: "Plan" }).getAttribute("href"),
     ).toBe("/plan");
+    expect(
+      screen.getByRole("menuitem", { name: "Dev box" }).getAttribute("href"),
+    ).toBe("/devbox");
 
     const reload = vi.fn();
     Object.defineProperty(window, "location", {
