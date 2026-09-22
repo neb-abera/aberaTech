@@ -362,6 +362,50 @@ describe("for the owner", () => {
     expect(puts()).toHaveLength(0);
   });
 
+  it("emails the list as a mailto with the file in the body when there is no share sheet", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    const hrefs: string[] = [];
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        hrefs.push(this.href);
+      });
+
+    fireEvent.click(screen.getByRole("button", { name: "Email" }));
+    await settle();
+
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(hrefs[0].startsWith("mailto:?subject=Links%20")).toBe(true);
+    const body = decodeURIComponent(hrefs[0].split("&body=")[1]);
+    expect(body).toContain("save it");
+    expect(body).toContain("<!DOCTYPE NETSCAPE-Bookmark-file-1>");
+  });
+
+  it("hands the file to the share sheet where the browser has one", async () => {
+    visit(saved);
+    render(<LinksPanel />);
+    await settle();
+
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      share,
+      canShare: () => true,
+      clipboard: window.navigator.clipboard,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Email" }));
+    await settle();
+
+    expect(share).toHaveBeenCalledTimes(1);
+    const { files, title } = share.mock.calls[0][0];
+    expect(files[0].name).toMatch(/^links-\d{4}-\d{2}-\d{2}\.html$/);
+    expect(title.startsWith("Links ")).toBe(true);
+  });
+
   it("downloads the list as a bookmark file", async () => {
     visit(saved);
     render(<LinksPanel />);
