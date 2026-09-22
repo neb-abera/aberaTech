@@ -60,7 +60,8 @@ builder.Services.AddSingleton(adminOptions);
 // queue open to whoever finds it.
 if (adminOptions.IsConfigured)
 {
-    builder.Services.AddSchedulingAdminAuth(adminOptions);
+    builder.Services.AddSchedulingAdminAuth(
+        adminOptions, builder.Environment.IsDevelopment() && adminOptions.DevelopmentSignIn);
 
     // Deny by default. Every endpoint says who may call it — a policy, or an
     // explicit AllowAnonymous — and RouteTableTests fails the build on one that
@@ -287,13 +288,23 @@ if (devBoxEnabled)
     // The same credential shape as the Postgres connection: the container
     // app's managed identity when deployed, az login locally. Registered as
     // the abstraction so the tests can hand the client a fake.
-    builder.Services.AddSingleton<TokenCredential>(_ => new DefaultAzureCredential());
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<DevBoxAgentState>();
-    builder.Services.AddHttpClient<DevBoxClient>(client =>
-        // Resource Manager answers a start in well under this; a hung call
-        // must not hold the request open for the framework's default 100 s.
-        client.Timeout = TimeSpan.FromSeconds(20));
+    if (builder.Environment.IsDevelopment() && devBoxOptions.Fake)
+    {
+        // `make e2e`: a VM in memory, so the browser suite can press Start
+        // and see Running without a subscription. Development only.
+        builder.Services.AddSingleton<FakeDevBoxClient>();
+        builder.Services.AddSingleton<IDevBoxClient>(s => s.GetRequiredService<FakeDevBoxClient>());
+    }
+    else
+    {
+        builder.Services.AddSingleton<TokenCredential>(_ => new DefaultAzureCredential());
+        builder.Services.AddHttpClient<IDevBoxClient, DevBoxClient>(client =>
+            // Resource Manager answers a start in well under this; a hung call
+            // must not hold the request open for the framework's default 100 s.
+            client.Timeout = TimeSpan.FromSeconds(20));
+    }
 }
 
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser
@@ -507,7 +518,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
     if (adminOptions.IsConfigured)
     {
-        app.MapAdminAuthEndpoints(adminOptions);
+        app.MapAdminAuthEndpoints(adminOptions, app.Environment.IsDevelopment());
         app.MapAdminEndpoints();
         app.MapAvailabilityEndpoints();
         app.MapCalendarAdminEndpoints();

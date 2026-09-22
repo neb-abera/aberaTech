@@ -23,6 +23,14 @@ public sealed class AdminOptions
     /// </remarks>
     public string[] AllowedEmails { get; set; } = [];
 
+    /// <summary>
+    /// Development only: the sign-in route issues the cookie for the first
+    /// allowed address without going to Google, so the Playwright suite can
+    /// sign in against the compose app. Outside Development the flag is
+    /// ignored and a test proves it.
+    /// </summary>
+    public bool DevelopmentSignIn { get; set; }
+
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(GoogleClientId)
         && !string.IsNullOrWhiteSpace(GoogleClientSecret)

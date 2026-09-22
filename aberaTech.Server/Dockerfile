@@ -192,7 +192,9 @@ COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
 # doesn't break the build, while deleting tests or landing a large untested
 # feature does. A ratchet to raise as coverage grows, not a target: measured
 # 30.5% on 2026-08 and 51.4% on 2026-09-08 against a floor of 25; measured
-# 81.2% on 2026-09-19 (871 hermetic tests), when the floor moved to 60.
+# 81.2% on 2026-09-19 (871 hermetic tests), when the floor moved to 60;
+# measured 81.6% lines and 67.3% branches on 2026-09-22 (899 tests), when
+# the floor moved to 75.
 #
 # Honest about what it did not run. There is no database inside `docker
 # build`, so the [PostgresFact] tests are excluded by their trait — the same
@@ -220,7 +222,7 @@ COPY aberaTech.Server.Tests ./aberaTech.Server.Tests
 # the checker reads, and under sh a failing `dotnet test` behind a pipe
 # would exit 0.
 COPY ["scripts/check-server-tests.sh", "/gate/"]
-ARG SERVER_COVERAGE_MIN=60
+ARG SERVER_COVERAGE_MIN=75
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN /gate/check-server-tests.sh --self-test && \
     dotnet test "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj" -c $BUILD_CONFIGURATION --no-restore -p:SkipClientProject=true -p:RestoreLockedMode=true \
