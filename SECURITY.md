@@ -61,6 +61,8 @@ against them. None are configured yet.
 | 4006 | `UnknownCapability` | Warning | 404 from a queue-place or booking route: an id nobody was given, or a stale one |
 | 4007 | `PublicWriteRefused` | Information | 400 from joining the queue or booking: input the form would not have sent |
 | 4008 | `AgentTokenRejected` | Warning | 401 from `/api/devbox/heartbeat`: a missing or wrong dev box agent token |
+| 4009 | `OwnerSignedIn` | Information | The owner's session began: sign-in completed and the cookie was issued |
+| 4010 | `OwnerSignedOut` | Information | The owner's session ended by sign-out |
 
 In Application Insights these are `traces` rows. Filter on
 `customDimensions.EventId` or `customDimensions.CategoryName`.
@@ -86,7 +88,7 @@ repos-conventions, `devbox/README.md`).
 | ASD V-222575, V-222576, V-222577, V-222578, V-222581, V-222583 | Session cookies: HttpOnly, Secure, hidden from scripts, destroyed on logoff, absent from URLs, random ids | Met | `__Host-abera.admin`: `HttpOnly`, `Secure`, `SameSite=Strict`, no `Domain`. Sign-out clears it. The ticket is a data-protected blob with no lookup id (`AdminAuth.cs`). `AdminRouteTests` pin the flags |
 | ASD V-222389, V-222390 | Terminate sessions after 15 minutes (users) and 10 minutes (admins) of idle time | Deviation, accepted | The owner's cookie slides on use and expires after 12 hours. One owner, second factor at the identity provider, cookie flags above. A 10-minute idle limit on a page that is edited in place is the reason the deviation is accepted. Revisit if a second account is ever allowed |
 | ASD V-222387 | Limit concurrent sessions per user | Deviation, accepted | Not enforced. The cookie is stateless. A second device is the owner's phone |
-| ASD V-222441 to V-222449, V-222462 | Audit session events, logon attempts, with time, source address and outcome | Partly met | Refusals are events 4001 to 4008 with the resolved client address, method, route pattern and status (`SecurityEvents.cs`). Shipped to Application Insights. Successful sign-in and sign-out are not events yet: a deviation, tracked |
+| ASD V-222441 to V-222449, V-222462, V-222464 | Audit session events, logon attempts, session start and end, with time, source address and outcome | Met | Refusals are events 4001 to 4008 and the owner's sign-in and sign-out are 4009 and 4010, each with the resolved client address and never the account (`SecurityEvents.cs`, `SessionAuditTests`). Shipped to Application Insights |
 | ASD V-222444 | No sensitive data in logs | Met | Events carry no path, query, header, cookie, key, phone number, email or account. `SecurityEventLoggingTests` assert what is omitted |
 | ASD V-222481, V-222482 | Off-load audit records to a central repository | Met | OpenTelemetry to Azure Monitor (`Program.cs`, `APPLICATIONINSIGHTS_CONNECTION_STRING`) |
 | ASD V-222596, V-222597 | Protect transmitted information | Met | HTTPS only at the edge. HSTS with `includeSubDomains. Preload`. `upgrade-insecure-requests` |
@@ -99,14 +101,13 @@ repos-conventions, `devbox/README.md`).
 | ASD V-222614, V-222658 | Patches current, products supported | Met | Dependabot on every ecosystem with auto-merge for non-majors. The held-majors gate (`scripts/check-held-majors.sh`) finds a bump Dependabot cannot offer. .NET and Node LTS |
 | ASD V-222645 | Application files hashed before deployment | Met | Build provenance attestation and SBOM on every deploy (`aberatechserver-app-*.yml`) |
 | ASD V-222648, V-222650 | Code review, flaws tracked | Met | Every change is a pull request with CodeQL, Trivy, ZAP, dependency review and Scorecard. Findings are issues or `.zap/rules.tsv` entries with reasons |
-| ASD V-222655 | Threat model per release | Deviation, tracked | No written threat model. The application security baseline in the abera-standards skill is the closest artefact |
+| ASD V-222655 | Threat model per release | Met | `docs/threat-model.md`: assets, entry points, trust boundaries, each threat with its answer and the gate that holds it, and the accepted risks. Reviewed with every release |
 | ASD V-222515, V-222624 | Vulnerability assessment, active testing | Met | ZAP baseline DAST on every push, Trivy on the image, CodeQL, weekly schedules |
 | SP 800-63B §7 | Session management: reauthentication, binding | Partly met | Bound to the browser by cookie. No reauthentication for sensitive operations. Starting or parking the dev box needs the session only |
 | SP 800-63B §4.2 | AAL2 for the owner | Met by the identity provider | Google with a second factor |
 
-Deviations, in order of value to close: audit events for successful
-sign-in and sign-out (4009, 4010), then a written threat model, then a
-shorter idle timeout if a second account is ever allowed.
+One deviation stays: a shorter idle timeout, if a second account is ever
+allowed. The others closed on 2026-09-22.
 
 ## Hardening deliberately left for the owner
 

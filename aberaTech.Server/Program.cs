@@ -62,6 +62,7 @@ if (adminOptions.IsConfigured)
 {
     builder.Services.AddSchedulingAdminAuth(
         adminOptions, builder.Environment.IsDevelopment() && adminOptions.DevelopmentSignIn);
+    builder.Services.AddSessionAudit();
 
     // Deny by default. Every endpoint says who may call it — a policy, or an
     // explicit AllowAnonymous — and RouteTableTests fails the build on one that
