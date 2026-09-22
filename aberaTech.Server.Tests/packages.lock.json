@@ -668,7 +668,7 @@
           "Garmin.FIT.Sdk": "[21.214.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.11, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.11, )",
-          "NodaTime": "[3.3.3, )",
+          "NodaTime": "[3.3.4, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": "[10.0.3, )",
           "aberaTech.Postgres": "[1.0.0, )"
@@ -679,6 +679,7 @@
         "dependencies": {
           "Azure.Identity": "[1.21.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.12, )",
+          "NodaTime": "[3.3.4, )",
           "Npgsql": "[10.0.3, )",
           "Npgsql.NodaTime": "[10.0.3, )"
         }
@@ -690,7 +691,7 @@
           "Microsoft.AspNetCore.DataProtection.EntityFrameworkCore": "[10.0.11, )",
           "Microsoft.EntityFrameworkCore": "[10.0.11, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.11, )",
-          "NodaTime": "[3.3.3, )",
+          "NodaTime": "[3.3.4, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": "[10.0.3, )",
           "aberaTech.Postgres": "[1.0.0, )"
@@ -800,9 +801,9 @@
       },
       "NodaTime": {
         "type": "CentralTransitive",
-        "requested": "[3.3.3, )",
-        "resolved": "3.3.3",
-        "contentHash": "EwouHZv99j5hraq34yQqvCQGDR59dynxPHlxFm2vY/sw2N2aR8cFel29ZxPqohjBWp9Qsnld7QCY+7uZ2PESGg=="
+        "requested": "[3.3.4, )",
+        "resolved": "3.3.4",
+        "contentHash": "iLaEeOFjWHVibXmHa8WOMTkZdxvzTH6b7qNYts7cBmSfttCDenguHvEJsuAQGBDPV4LSA+7c0nyt4A0AR6z6zQ=="
       },
       "Npgsql": {
         "type": "CentralTransitive",
