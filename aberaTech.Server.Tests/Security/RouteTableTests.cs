@@ -75,6 +75,7 @@ public sealed class RouteTableTests
         var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
         settings["Fitness:HevyApiKey"] = "hevy-test-key";
         settings["IntervalsIcu:ApiKey"] = "icu-test-key";
+        settings["DevBox:SubscriptionId"] = "00000000-0000-0000-0000-00000000dead";
         return settings;
     }
 
@@ -102,6 +103,7 @@ public sealed class RouteTableTests
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/fitness/ingest/intervals-icu/sync"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/scheduling/sms-status"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/scheduling/book/{appointmentId:guid}"));
+        Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/devbox/start"));
 
         Assert.Empty(EndpointAuthorization.Undeclared(endpoints));
     }

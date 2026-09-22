@@ -3,5 +3,6 @@ Disallow: /api/
 Disallow: /schedule/admin
 Disallow: /links
 Disallow: /plan
+Disallow: /devbox
 
 Sitemap: https://abera.tech/sitemap.xml
