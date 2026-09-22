@@ -50,6 +50,9 @@ public static partial class SecurityEvents
     /// <summary>400 from a public write: input the form would not have sent.</summary>
     public const int PublicWriteRefused = 4007;
 
+    /// <summary>401 from the dev box heartbeat: a missing or wrong agent token.</summary>
+    public const int AgentTokenRejected = 4008;
+
     private const string DigestRoute = "/api/fitness/digest.txt";
 
     /// <summary>The routes where holding the id is the whole of the authorization.</summary>
@@ -98,6 +101,7 @@ public static partial class SecurityEvents
     {
         StatusCodes.Status429TooManyRequests => RateLimited,
         StatusCodes.Status401Unauthorized when Is(route, DigestRoute) => DigestKeyRejected,
+        StatusCodes.Status401Unauthorized when Is(route, DevBox.DevBoxEndpoints.HeartbeatPath) => AgentTokenRejected,
         StatusCodes.Status401Unauthorized => SignInRequired,
         StatusCodes.Status403Forbidden when Is(route, SmsReceiptEndpoint.Path) => WebhookSignatureRejected,
         StatusCodes.Status403Forbidden when signedIn => AllowlistRefused,
@@ -120,6 +124,7 @@ public static partial class SecurityEvents
             case WebhookSignatureRejected: Log.WebhookSignatureRejected(logger, clientIp, method, route, status); break;
             case UnknownCapability: Log.UnknownCapability(logger, clientIp, method, route, status); break;
             case PublicWriteRefused: Log.PublicWriteRefused(logger, clientIp, method, route, status); break;
+            case AgentTokenRejected: Log.AgentTokenRejected(logger, clientIp, method, route, status); break;
         }
     }
 
@@ -156,5 +161,9 @@ public static partial class SecurityEvents
         [LoggerMessage(EventId = SecurityEvents.PublicWriteRefused, EventName = nameof(PublicWriteRefused), Level = LogLevel.Information,
             Message = "Public write refused as malformed from {ClientIp} on {Method} {Route} ({Status}).")]
         public static partial void PublicWriteRefused(ILogger logger, string clientIp, string method, string route, int status);
+
+        [LoggerMessage(EventId = SecurityEvents.AgentTokenRejected, EventName = nameof(AgentTokenRejected), Level = LogLevel.Warning,
+            Message = "Dev box agent token rejected from {ClientIp} on {Method} {Route} ({Status}).")]
+        public static partial void AgentTokenRejected(ILogger logger, string clientIp, string method, string route, int status);
     }
 }

@@ -17,7 +17,7 @@ namespace aberaTech.Server.DevBox;
 /// identity holds one custom role, "Dev box start", scoped to the one VM:
 /// start and read. It cannot deallocate, resize or touch anything else.
 /// </remarks>
-public sealed class DevBoxClient(HttpClient http, TokenCredential credential, DevBoxOptions options)
+public sealed class DevBoxClient(HttpClient http, TokenCredential credential, DevBoxOptions options) : IDevBoxClient
 {
     public const string ManagementScope = "https://management.azure.com/.default";
 
