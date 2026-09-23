@@ -1,0 +1,139 @@
+import { inflateSync } from "node:zlib";
+import { expect, test } from "@playwright/test";
+
+// Pulling a page down past its top (the rubber band on a Mac, an iPhone, or
+// Firefox) shows the browser canvas above the page, painted in the root
+// element's colour and nothing else. So the page's top row of pixels must be
+// that colour, edge to edge, or the gap shows as a band. Sampled as pixels
+// rather than read from the CSS: on 2026-09-22 the CSS said one thing and
+// Firefox showed another.
+
+type Page = import("@playwright/test").Page;
+type Rgb = [number, number, number];
+
+/** The first pixel of a PNG: signature, then chunks; IDAT inflates to a filter byte and the samples. */
+function firstPixel(png: Buffer): Rgb {
+  const idat: Buffer[] = [];
+  for (let at = 8; at < png.length; ) {
+    const length = png.readUInt32BE(at);
+    if (png.toString("ascii", at + 4, at + 8) === "IDAT") {
+      idat.push(png.subarray(at + 8, at + 8 + length));
+    }
+    at += 12 + length;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  return [raw[1], raw[2], raw[3]];
+}
+
+async function pixelAt(page: Page, x: number, y: number): Promise<Rgb> {
+  return firstPixel(
+    await page.screenshot({
+      clip: { x, y, width: 1, height: 1 },
+      scale: "css",
+    }),
+  );
+}
+
+async function canvasColour(page: Page): Promise<Rgb> {
+  const css = await page.evaluate(
+    () => getComputedStyle(document.documentElement).backgroundColor,
+  );
+  const [r, g, b] = css.match(/\d+/g)?.map(Number) ?? [];
+  return [r, g, b];
+}
+
+const near = (a: Rgb, b: Rgb) => a.every((c, i) => Math.abs(c - b[i]) <= 1);
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    await info.attach("page", {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+  }
+});
+
+const pages = ["/", "/guides", "/transition", "/schedule"];
+
+// A first visit paints dark and stays dark. The provider used to start from
+// "system" on a first visit and paint the light scheme on a light OS until a
+// correction painted dark again: a flash, caught here as the root attribute
+// changing after the first paint, in all three engines on 2026-09-23.
+for (const path of pages) {
+  test(`${path}: the scheme does not flash on a first visit`, async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const seen: string[] = [];
+      (window as unknown as { __schemes: string[] }).__schemes = seen;
+      new MutationObserver(() => {
+        seen.push(
+          document.documentElement.getAttribute("data-mui-color-scheme") ?? "",
+        );
+      }).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-mui-color-scheme"],
+      });
+    });
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // Hydrated: the bar's sign-in control only appears once the account
+    // probe has answered, which is after the provider has mounted. Then a
+    // beat for any correction effect to run.
+    await expect(
+      page.getByRole("link", { name: "Sign in", exact: true }),
+    ).toBeVisible();
+    await page.waitForTimeout(300);
+
+    const seen = await page.evaluate(
+      () => (window as unknown as { __schemes: string[] }).__schemes,
+    );
+    expect(
+      seen.filter((s) => s !== "dark"),
+      `schemes seen: ${seen}`,
+    ).toEqual([]);
+  });
+}
+
+for (const scheme of ["dark", "light"] as const) {
+  test.describe(`${scheme} scheme`, () => {
+    for (const path of pages) {
+      test(`${path}: the top edge is the canvas colour, with the glow below it`, async ({
+        page,
+      }) => {
+        await page.goto(path);
+        if (scheme === "light") {
+          await page.evaluate(() => localStorage.setItem("mui-mode", "light"));
+          await page.reload();
+        }
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-mui-color-scheme",
+          scheme,
+        );
+        await page.evaluate(() => document.fonts.ready);
+
+        const canvas = await canvasColour(page);
+        const width = page.viewportSize()?.width ?? 1280;
+        // Not the exact corners: WebKit paints the single pixel at (0,0) a
+        // shade off, and nothing else along either edge.
+        for (const x of [8, width / 4, width / 2, (3 * width) / 4, width - 8]) {
+          const top = await pixelAt(page, Math.floor(x), 0);
+          expect(
+            near(top, canvas),
+            `top edge at x=${x} is ${top}, canvas is ${canvas}`,
+          ).toBe(true);
+        }
+
+        // Under the bar, at the centre: the glow is there, so the page is
+        // not simply flat. Dark tints the blue channel up; light tints red
+        // down; either way one channel moves.
+        const glow = await pixelAt(page, Math.floor(width / 2), 110);
+        const moved = Math.max(...glow.map((c, i) => Math.abs(c - canvas[i])));
+        expect(
+          moved,
+          `no glow under the bar: ${glow} against canvas ${canvas}`,
+        ).toBeGreaterThan(8);
+      });
+    }
+  });
+}
