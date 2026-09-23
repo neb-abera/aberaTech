@@ -181,6 +181,13 @@ services:
       DevBox__SubscriptionId: 'development'
       DevBox__Fake: 'true'
       DevBox__HeartbeatToken: 'development-heartbeat-token'
+      # Start, hold and park share five calls a minute in production, and
+      # the agent's heartbeat gets ten (RateLimits.cs). The owner suite
+      # spends four of each per engine and runs on three engines back to
+      # back; against the fake box nothing bills, so both budgets are a
+      # minute's worth for all three.
+      RateLimits__DevBoxStartPerMinute: '60'
+      RateLimits__DevBoxHeartbeatPerMinute: '60'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #

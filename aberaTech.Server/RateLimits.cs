@@ -41,10 +41,16 @@ public static class RateLimits
         new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10)
     ];
 
-    public static IServiceCollection AddAppRateLimits(this IServiceCollection services) =>
+    /// <summary>The start and heartbeat budgets in production. Compose raises both for `make e2e` (compose.yaml says why).</summary>
+    public const int DefaultDevBoxStartPerMinute = 5;
+    public const int DefaultDevBoxHeartbeatPerMinute = 10;
+
+    public static IServiceCollection AddAppRateLimits(this IServiceCollection services, IConfiguration configuration) =>
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
+            var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
 
             // Everything a stranger can call that writes a row or causes a
             // message to be sent. The booking page is public by design, and a
@@ -59,12 +65,14 @@ public static class RateLimits
 
             // Each press asks Azure to start a VM that bills by the hour. The
             // owner presses once and waits; five a minute is a stuck finger.
-            options.AddPolicy(DevBoxEndpoints.StartPolicy, context => PerMinute(context, 5));
+            // Start, hold and park share the budget. The end-to-end suite
+            // spends four per engine, so compose raises it there.
+            options.AddPolicy(DevBoxEndpoints.StartPolicy, context => PerMinute(context, startPerMinute));
 
             // The box reports once a minute with a token. The failure limit
             // below counts wrong tokens; this one bounds a right token in a
             // loop, or a replay of a captured one.
-            options.AddPolicy(DevBoxEndpoints.HeartbeatPolicy, context => PerMinute(context, 10));
+            options.AddPolicy(DevBoxEndpoints.HeartbeatPolicy, context => PerMinute(context, heartbeatPerMinute));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>

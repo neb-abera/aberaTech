@@ -117,3 +117,64 @@ describe("the stored System preference", () => {
     });
   });
 });
+
+/**
+ * A first visit has nothing stored. The provider must start from the same
+ * default as Shell's InitColorSchemeScript, dark, rather than from "system":
+ * on a light OS "system" painted the light scheme for a frame before the
+ * correction above painted dark again. Seen in Chromium, Firefox and WebKit
+ * by e2e/canvas.spec.ts on 2026-09-23.
+ */
+describe("a first visit", () => {
+  beforeEach(() => {
+    resetAccountProbeForTests();
+    vi.restoreAllMocks();
+    const storage = memoryStorage();
+    vi.stubGlobal("localStorage", storage);
+    Object.defineProperty(window, "localStorage", {
+      value: storage,
+      configurable: true,
+    });
+    // A light operating system, the case that flashed.
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("light"),
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+      })),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({ signedIn: false }))),
+    );
+    document.documentElement.removeAttribute("data-mui-color-scheme");
+  });
+
+  it("paints dark and never light", async () => {
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => {
+      seen.push(
+        document.documentElement.getAttribute("data-mui-color-scheme") ?? "",
+      );
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-mui-color-scheme"],
+    });
+
+    mount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    observer.disconnect();
+
+    expect(document.documentElement.getAttribute("data-mui-color-scheme")).toBe(
+      "dark",
+    );
+    expect(seen.filter((s) => s !== "dark")).toEqual([]);
+  });
+});
