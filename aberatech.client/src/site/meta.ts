@@ -75,7 +75,8 @@ const structuralMeta: Record<string, PageMeta> = {
   },
   "/devbox": {
     title: "Dev box",
-    description: "The owner's dev box: its state, and a button that starts it.",
+    description:
+      "The owner's dev box: its state, a button that starts it, and the terminal and desktop in a browser tab.",
   },
 };
 

@@ -17,6 +17,7 @@ import {
   startDevBox,
 } from "../core/api";
 import AgentPanel from "./AgentPanel";
+import BrowserPanel from "./BrowserPanel";
 import Runbook from "./Runbook";
 
 /** How often to ask again while the box is between states. */
@@ -245,7 +246,10 @@ export default function DevBoxPanel() {
       )}
 
       {running ? (
-        <AgentPanel agent={view.agent} onHold={hold} onPark={park} />
+        <>
+          <AgentPanel agent={view.agent} onHold={hold} onPark={park} />
+          <BrowserPanel />
+        </>
       ) : transit ? (
         <Alert severity="info">
           Azure is starting the box. This page asks again every five seconds.
