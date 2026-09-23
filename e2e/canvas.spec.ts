@@ -55,6 +55,11 @@ test.afterEach(async ({ page }, info) => {
 
 const pages = ["/", "/guides", "/transition", "/schedule"];
 
+// Three engines on a four-core runner: /transition, the heaviest page, took
+// Firefox past the default 30 s on 2026-09-23. The budget is not a timing
+// gate; a slow page still passes, a wrong pixel never does.
+test.describe.configure({ timeout: 60_000 });
+
 // A first visit paints dark and stays dark. The provider used to start from
 // "system" on a first visit and paint the light scheme on a light OS until a
 // correction painted dark again: a flash, caught here as the root attribute
@@ -101,11 +106,14 @@ for (const scheme of ["dark", "light"] as const) {
       test(`${path}: the top edge is the canvas colour, with the glow below it`, async ({
         page,
       }) => {
-        await page.goto(path);
+        // The stored choice goes in before the first script runs, so the
+        // light scheme needs no second load of the page.
         if (scheme === "light") {
-          await page.evaluate(() => localStorage.setItem("mui-mode", "light"));
-          await page.reload();
+          await page.addInitScript(() =>
+            localStorage.setItem("mui-mode", "light"),
+          );
         }
+        await page.goto(path);
         await expect(page.locator("html")).toHaveAttribute(
           "data-mui-color-scheme",
           scheme,
