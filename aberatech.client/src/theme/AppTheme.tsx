@@ -52,7 +52,12 @@ export default function AppTheme(props: AppThemeProps) {
     return <React.Fragment>{children}</React.Fragment>;
   }
   return (
-    <ThemeProvider theme={theme} disableTransitionOnChange>
+    // defaultMode matches Shell's InitColorSchemeScript. Without it the
+    // provider starts from "system" on a first visit, paints the light scheme
+    // on a light OS, and the dropdown's correction paints dark again a frame
+    // later: a flash of light on every first visit, seen in all three engines
+    // by e2e/canvas.spec.ts on 2026-09-23.
+    <ThemeProvider theme={theme} defaultMode="dark" disableTransitionOnChange>
       {children}
     </ThemeProvider>
   );
