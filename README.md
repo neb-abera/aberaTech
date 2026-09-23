@@ -75,7 +75,7 @@ service keeps `node_modules` in a volume that outlives a rebuild.
 - [docs/threat-model.md](docs/threat-model.md) names the assets, the entry
   points and every threat with the gate that answers it. A new entry point
   is a row there before it is a feature.
-- `/devbox` starts the owner's Azure VM from a phone (`DevBoxEndpoints.cs`).
+- `/devbox` starts the owner's Azure VM from a phone and opens its terminal or desktop in a browser tab (`DevBoxEndpoints.cs`, `BrowserPanel.tsx`).
   The container app's managed identity holds one role on that one VM: start
   and read. `DevBox__SubscriptionId` switches it on.
 
