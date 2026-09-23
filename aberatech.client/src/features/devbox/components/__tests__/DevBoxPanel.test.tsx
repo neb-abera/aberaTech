@@ -248,6 +248,28 @@ describe("the owner", () => {
     expect(screen.queryByRole("button", { name: "Hold 2 h" })).toBeNull();
   });
 
+  it("sees the browser terminal and desktop while the box runs, whatever the agent says", async () => {
+    // Before the agent's first report: the tunnel is up as soon as the box
+    // is, so the links do not wait for it.
+    mount(status("running", null));
+    await settle();
+
+    expect(
+      screen.getByRole("link", { name: "Open terminal" }).getAttribute("href"),
+    ).toBe("https://devbox.abera.tech");
+    expect(
+      screen.getByRole("link", { name: "Open desktop" }).getAttribute("href"),
+    ).toBe("https://devbox-desktop.abera.tech");
+  });
+
+  it("is not offered the browser links while the box is parked", async () => {
+    mount(status("deallocated"));
+    await settle();
+
+    expect(screen.queryByRole("link", { name: "Open terminal" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Open desktop" })).toBeNull();
+  });
+
   it("queues a hold and a park for the box", async () => {
     // GET status, POST hold, the refresh GET, POST park, the refresh GET.
     mount(
