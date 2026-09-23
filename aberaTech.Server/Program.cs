@@ -319,7 +319,7 @@ builder.Services.AddSingleton(ClientAddress.Bind(builder.Configuration));
 
 // Every ceiling on what one visitor can ask for: RateLimits.cs for how often,
 // RequestLimits.cs for how much.
-builder.Services.AddAppRateLimits();
+builder.Services.AddAppRateLimits(builder.Configuration);
 builder.AddRequestLimits();
 
 var app = builder.Build();
