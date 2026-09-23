@@ -46,6 +46,29 @@ export default function Runbook() {
 
       <Box>
         <Typography variant="h6" component="h2" gutterBottom>
+          From a work computer, in a browser tab
+        </Typography>
+        <List dense disablePadding>
+          <Step
+            n={1}
+            primary="Start the box from this page, as above"
+            secondary="Once it says Running, two buttons appear: Open terminal and Open desktop. Direct: devbox.abera.tech and devbox-desktop.abera.tech."
+          />
+          <Step
+            n={2}
+            primary="Type an allowed address, then the PIN it receives"
+            secondary="Gmail, the army.mil address or the MITRE address. Use the one whose inbox is open on that machine, or read the Gmail PIN on the phone. The sign-in lasts 24 hours and covers both names."
+          />
+          <Step
+            n={3}
+            primary="Desktop: the VNC password. Terminal: nothing more"
+            secondary="The desktop is the same display Chrome Remote Desktop shows. The terminal signs you in as the address's local part. Both run over HTTPS on port 443 with nothing installed, which is what a locked-down network allows when Chrome Remote Desktop is blocked."
+          />
+        </List>
+      </Box>
+
+      <Box>
+        <Typography variant="h6" component="h2" gutterBottom>
           If this page is down
         </Typography>
         <List dense disablePadding>
@@ -92,13 +115,13 @@ export default function Runbook() {
           <ListItem disableGutters>
             <ListItemText
               primary="30 idle minutes"
-              secondary="No SSH session, no running container, load under 1.0, no Claude session doing work. A session waiting on you counts as idle. Hold above overrides this."
+              secondary="No SSH or browser desktop session, no running container, load under 1.0, no Claude session doing work. A session waiting on you counts as idle. Hold above overrides this."
             />
           </ListItem>
           <ListItem disableGutters>
             <ListItemText
               primary="03:00 UTC every day, unless somebody is attached"
-              secondary="23:00 in Washington. An SSH session or a Claude session still working keeps it up. A leaked container does not."
+              secondary="23:00 in Washington. An SSH session, a browser desktop session or a Claude session still working keeps it up. A leaked container does not."
             />
           </ListItem>
           <ListItem disableGutters>
