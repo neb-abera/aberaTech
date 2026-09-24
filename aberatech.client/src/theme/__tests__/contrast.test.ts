@@ -14,9 +14,11 @@ import { colorSchemes } from "../themePrimitives";
 // reaches the page as MUI's own default, and text.disabled was exactly that,
 // so each scheme is resolved through createTheme before it is measured.
 const resolved = {
-  light: createTheme({ palette: { mode: "light", ...colorSchemes.light.palette } })
+  light: createTheme({
+    palette: { mode: "light", ...colorSchemes.light.palette },
+  }).palette,
+  dark: createTheme({ palette: { mode: "dark", ...colorSchemes.dark.palette } })
     .palette,
-  dark: createTheme({ palette: { mode: "dark", ...colorSchemes.dark.palette } }).palette,
 };
 
 const AA_NORMAL_TEXT = 4.5;
