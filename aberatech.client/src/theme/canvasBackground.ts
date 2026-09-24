@@ -3,42 +3,48 @@ import type { Theme } from "@mui/material/styles";
 /**
  * The blue glow at the top of every page, painted on the browser canvas.
  *
- * Pulling a page down past its top (the rubber band on a Mac, an iPhone, or
- * Firefox) shows the browser canvas above the page. Firefox and Safari paint
- * that gap in the root element's colour and nothing else: a background image
- * on the root stops at the page's top edge. So the page's top edge has to be
- * that flat colour, or the gap shows as a band. The first attempt (PR #191)
- * extended the gradient tile above the page and looked right in Chrome,
- * which never rubber-bands, and wrong in Firefox.
+ * Pulling a page past either end (the rubber band on a Mac, an iPhone, or
+ * Firefox) shows the browser canvas beyond the page. Firefox and Safari fill
+ * that gap with the root element's background *colour* and nothing else: a
+ * background image on the root stops at the page's edge. PR #191 extended
+ * the gradient tile above the page, which Chrome drew and Firefox did not.
+ * PR #197 then made the page's top edge the flat page colour so the gap
+ * matched it, which is why pulling down showed black and the glow read as a
+ * bar across the page rather than a wash off the top edge.
  *
- * Two layers on the root element: a short fade from the page colour at the
- * top edge, over the glow. The top row of pixels is the page colour, the
- * glow appears under the bar, and the gap above the page is more of the
- * same colour. e2e/canvas.spec.ts samples the pixels.
+ * So the canvas colour is the glow colour, and the page fades out of it and
+ * back into it: blue at both edges, the page colour in between. The gap at
+ * either end is more of the same blue, whatever the browser paints there.
  *
- * The body must not paint its own colour, or it covers the glow. The colour
- * moves to the root too, so a page shorter than the viewport ends on the
- * scheme's background rather than the browser's white.
+ * Three parts on the root element: the colour, an opaque wash that carries
+ * the page colour through the middle, and the bloom over the top of it.
+ * e2e/canvas.spec.ts samples the pixels.
+ *
+ * The body must not paint its own colour, or it covers all of this.
  *
  * Dark is the site's default and the no-attribute case; light is the
  * override, so a page that has not yet run the colour-scheme script paints
  * as dark.
  */
-const glow = (colour: string) =>
+const bloom = (colour: string) =>
   `radial-gradient(ellipse 80% 40vh at 50% -15vh, ${colour}, transparent)`;
+
+/** Blue at the top edge, page colour by 320px, blue again over the last 180px. */
+const wash = (colour: string, page: string) =>
+  `linear-gradient(${colour}, ${page} 320px, ${page} calc(100% - 180px), ${colour})`;
+
+const glow = { dark: "hsl(210, 100%, 16%)", light: "hsl(210, 100%, 90%)" };
 
 export const canvasBackground = (theme: Theme) => {
   const page = theme.vars?.palette.background.default ?? "transparent";
-  const edge = `linear-gradient(${page}, transparent 72px)`;
+  const paint = (colour: string) => ({
+    backgroundColor: colour,
+    backgroundImage: `${bloom(colour)}, ${wash(colour, page)}`,
+    backgroundRepeat: "no-repeat",
+  });
   return {
-    html: {
-      backgroundColor: page,
-      backgroundImage: `${edge}, ${glow("hsl(210, 100%, 16%)")}`,
-      backgroundRepeat: "no-repeat",
-    },
-    'html[data-mui-color-scheme="light"]': {
-      backgroundImage: `${edge}, ${glow("hsl(210, 100%, 90%)")}`,
-    },
+    html: paint(glow.dark),
+    'html[data-mui-color-scheme="light"]': paint(glow.light),
     body: {
       backgroundColor: "transparent",
     },
