@@ -18,7 +18,7 @@
     "@mui/lab": "^9.0.0-beta.9",
     "@mui/material": "^9.4.0",
     "@types/react-vertical-timeline-component": "^3.3.6",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^8.4.0",
