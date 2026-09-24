@@ -188,10 +188,17 @@ export const getDesignTokens = (mode: PaletteMode) => {
       text: {
         primary: gray[800],
         secondary: gray[600],
+        // MUI's light default for disabled is black at 38%, which measures
+        // 2.67:1 on this page and fails WCAG AA for the captions that use it.
+        // gray[500] is 5.82:1 and still reads as the quietest of the three.
+        disabled: gray[500],
         warning: orange[400],
         ...(mode === "dark" && {
           primary: "hsl(0, 0%, 100%)",
           secondary: gray[400],
+          // White at 50% on the dark page is 5.31:1: MUI's dark default, kept
+          // explicitly so the light value above cannot leak into this scheme.
+          disabled: alpha("hsl(0, 0%, 100%)", 0.5),
         }),
       },
       action: {
@@ -300,6 +307,8 @@ export const colorSchemes = {
       text: {
         primary: gray[800],
         secondary: gray[600],
+        // 5.82:1 on this page. MUI's own light default is 2.67:1 and fails.
+        disabled: gray[500],
         warning: orange[400],
       },
       action: {
@@ -350,6 +359,8 @@ export const colorSchemes = {
       text: {
         primary: "hsl(0, 0%, 100%)",
         secondary: gray[400],
+        // MUI's dark default, 5.31:1, written down so it stays that.
+        disabled: alpha("hsl(0, 0%, 100%)", 0.5),
       },
       action: {
         hover: alpha(gray[600], 0.2),
