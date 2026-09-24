@@ -47,16 +47,22 @@ services:
     environment:
       IN_DOCKER: 'true'
 
+  # Runs as the user that owns this directory (HOST_UID/HOST_GID, from the
+  # Makefile and .env). As root it left root-owned coverage/ and bin/ behind,
+  # which the worktree's owner could not delete without sudo. HOME goes to
+  # /tmp because that user has no home inside the image.
   test:
     build:
       context: .
       dockerfile: aberaTech.Server/Dockerfile
       target: clientbase
+    user: "${HOST_UID:-0}:${HOST_GID:-0}"
     volumes:
       - ./aberatech.client:/client
       - /client/node_modules
     environment:
       IN_DOCKER: 'true'
+      HOME: /tmp
     command: ['npm', 'run', 'test']
 
   # Targets clienttools rather than clientlint on purpose: clientlint runs the
@@ -67,9 +73,12 @@ services:
       context: .
       dockerfile: aberaTech.Server/Dockerfile
       target: clienttools
+    user: "${HOST_UID:-0}:${HOST_GID:-0}"
     volumes:
       - .:/repo
       - /repo/node_modules
+    environment:
+      HOME: /tmp
     command: ['npx', 'biome', 'check', '.']
 
   # Postgres for the scheduling feature.
@@ -114,6 +123,11 @@ services:
       context: .
       dockerfile: aberaTech.Server/Dockerfile
       target: build
+    # As the owner of this directory, so the bin/ and obj/ trees dotnet writes
+    # into the mounted working tree can be deleted without sudo. DOTNET_CLI_HOME
+    # and NUGET_PACKAGES go to /tmp: that user has no home inside the image, and
+    # dotnet refuses to start without somewhere to write.
+    user: "${HOST_UID:-0}:${HOST_GID:-0}"
     volumes:
       - .:/src
     working_dir: /src
@@ -129,6 +143,9 @@ services:
     # database; ABERA_REQUIRE_POSTGRES turns "no database" from a skip into a
     # failure, so this service can never pass by skipping what it exists to run.
     environment:
+      HOME: /tmp
+      DOTNET_CLI_HOME: /tmp
+      NUGET_PACKAGES: /tmp/nuget
       ABERA_ENFORCE_TIMING: ${ABERA_ENFORCE_TIMING:-}
       ABERA_TEST_POSTGRES: 'Host=db;Port=5432;Database=postgres;Username=scheduling;Password=scheduling'
       ABERA_REQUIRE_POSTGRES: '1'
