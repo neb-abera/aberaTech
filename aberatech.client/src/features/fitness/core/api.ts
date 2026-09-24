@@ -355,8 +355,8 @@ export class ApiError extends Error {
   }
 }
 
-async function get<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+async function get<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new ApiError(response.status, `${url} answered ${response.status}`);
   }
@@ -404,6 +404,7 @@ export function fetchPrediction(
   targetWeightKg: number | null,
   distances: number[],
   horizons: number[],
+  signal?: AbortSignal,
 ): Promise<Prediction> {
   const query = new URLSearchParams({ compliance: String(compliance) });
   for (const [key, value] of Object.entries(plan)) {
@@ -420,7 +421,7 @@ export function fetchPrediction(
   if (horizons.length > 0) {
     query.set("horizons", horizons.join(","));
   }
-  return get<Prediction>(`/api/fitness/predictions?${query}`);
+  return get<Prediction>(`/api/fitness/predictions?${query}`, signal);
 }
 
 export function fetchFeasibility(
@@ -647,11 +648,16 @@ export interface MeasurePlan {
   steps: Step[];
 }
 
-async function post<T>(url: string, body: unknown): Promise<T> {
+async function post<T>(
+  url: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal,
   });
   if (!response.ok) {
     throw new Error(`${url} answered ${response.status}`);
@@ -665,12 +671,13 @@ export function solve(
   scenario: ScenarioRequest,
   solveFor: FactorName | null,
   targetSeconds: number | null,
+  signal?: AbortSignal,
 ): Promise<SolveResult> {
-  return post<SolveResult>("/api/fitness/solve", {
-    scenario,
-    solveFor,
-    targetSeconds,
-  });
+  return post<SolveResult>(
+    "/api/fitness/solve",
+    { scenario, solveFor, targetSeconds },
+    signal,
+  );
 }
 
 export function fetchSurface(
@@ -678,17 +685,19 @@ export function fetchSurface(
   across: FactorName,
   down: FactorName,
   targetSeconds: number | null,
+  signal?: AbortSignal,
 ): Promise<SurfaceResult> {
-  return post<SurfaceResult>("/api/fitness/surface", {
-    scenario,
-    across,
-    down,
-    targetSeconds,
-  });
+  return post<SurfaceResult>(
+    "/api/fitness/surface",
+    { scenario, across, down, targetSeconds },
+    signal,
+  );
 }
 
-export const fetchMeasurementPlan = (scenario: ScenarioRequest) =>
-  post<MeasurePlan>("/api/fitness/measure", scenario);
+export const fetchMeasurementPlan = (
+  scenario: ScenarioRequest,
+  signal?: AbortSignal,
+) => post<MeasurePlan>("/api/fitness/measure", scenario, signal);
 
 /** A prediction written down before the fact, and how it turned out. */
 export interface LockedPrediction {
@@ -920,10 +929,14 @@ export interface Outlook {
 export function fetchOutlook(
   weeklyHours: number | null,
   compliance: number,
+  signal?: AbortSignal,
 ): Promise<Outlook> {
   const query = new URLSearchParams({ compliance: String(compliance) });
   if (weeklyHours !== null) query.set("weeklyHours", String(weeklyHours));
-  return get<Outlook>(`/api/fitness/readiness/outlook?${query.toString()}`);
+  return get<Outlook>(
+    `/api/fitness/readiness/outlook?${query.toString()}`,
+    signal,
+  );
 }
 
 export interface Readiness {

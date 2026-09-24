@@ -189,4 +189,27 @@ describe("DecisionPanel", () => {
       expect(screen.getByText(/did not answer/)).toBeTruthy(),
     );
   });
+
+  /**
+   * The forecast is a model fit and a few hundred milliseconds of arithmetic
+   * on a container with one core. Dropping the answer when it arrives left the
+   * server computing every superseded question anyway, and those queue against
+   * the one the reader is waiting for. So the request is cut, not ignored.
+   */
+  it("cuts the request off when the panel goes away mid-flight", async () => {
+    const signals: (AbortSignal | undefined)[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation((_url, init) => {
+      signals.push((init as RequestInit | undefined)?.signal ?? undefined);
+      return new Promise<Response>(() => {
+        // Never settles, so the request is still in flight at unmount.
+      });
+    });
+
+    const view = render(<DecisionPanel selectionDate="2028-04-01" />);
+    await waitFor(() => expect(signals.length).toBeGreaterThan(0));
+
+    expect(signals[0]?.aborted).toBe(false);
+    view.unmount();
+    expect(signals[0]?.aborted).toBe(true);
+  });
 });

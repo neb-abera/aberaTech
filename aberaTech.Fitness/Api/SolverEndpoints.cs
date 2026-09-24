@@ -132,8 +132,8 @@ public static class SolverEndpoints
                 database, cache, DateTime.UtcNow.Year, cancellationToken, request.Scenario.UseHistory);
             var scenario = Of(request.Scenario, context);
 
-            var predicted = Solver.Predict(context, scenario);
-            var sensitivities = Solver.Sensitivities(context, scenario);
+            var predicted = Solver.Predict(context, scenario, cancellationToken: cancellationToken);
+            var sensitivities = Solver.Sensitivities(context, scenario, cancellationToken: cancellationToken);
 
             Spread? solved = null;
             double? probability = null;
@@ -141,8 +141,8 @@ public static class SolverEndpoints
 
             if (unknown is { } factor && request.TargetSeconds is { } target)
             {
-                solved = Solver.Solve(context, scenario, factor, target);
-                probability = Solver.Probability(context, scenario, target);
+                solved = Solver.Solve(context, scenario, factor, target, cancellationToken: cancellationToken);
+                probability = Solver.Probability(context, scenario, target, cancellationToken: cancellationToken);
                 steps.AddRange(Solver.Explain(context, scenario, factor, target, solved));
             }
 
@@ -151,7 +151,8 @@ public static class SolverEndpoints
             var fan = new List<BandDto>();
             for (var months = 0.0; months <= Math.Max(30, scenario.Months); months += 1.5)
             {
-                var spread = Solver.Predict(context, scenario with { Months = months }, draws: 120);
+                var spread = Solver.Predict(
+                    context, scenario with { Months = months }, draws: 120, cancellationToken: cancellationToken);
                 fan.Add(new BandDto(months, spread.Median, spread.Low, spread.High, 0));
             }
 
@@ -187,7 +188,8 @@ public static class SolverEndpoints
 
             var acrossRange = Solver.Range(context, scenario, across);
             var downRange = Solver.Range(context, scenario, down);
-            var grid = Solver.Surface(context, scenario, across, down, acrossRange, downRange, resolution);
+            var grid = Solver.Surface(
+                context, scenario, across, down, acrossRange, downRange, resolution, cancellationToken);
 
             var rows = new List<IReadOnlyList<double>>();
             for (var row = 0; row < resolution; row++)
