@@ -33,6 +33,16 @@ export APP_PORT
 export DEV_PORT
 export DB_PORT
 
+# Whatever a container writes into the bind-mounted tree is owned by the user
+# inside it. Running as root leaves bin/, obj/ and coverage/ owned by root, so
+# removing the worktree after a merge needs sudo and `repos-clean` cannot do
+# it at all. These are passed to compose, which hands them to every service
+# that mounts this directory.
+HOST_UID := $(shell id -u)
+HOST_GID := $(shell id -g)
+export HOST_UID
+export HOST_GID
+
 # The local image is tagged per worktree for the same reason: one shared
 # `abera-tech` tag is how a reader ends up running whichever session built
 # last, believing it to be theirs.

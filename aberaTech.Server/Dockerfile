@@ -271,12 +271,19 @@ WORKDIR /app
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
-# Copy the .NET publish output
-COPY --from=publish /app/publish .
+# Copy the .NET publish output, owned by the user the server runs as.
+#
+# Without the --chown, the mode travels from the build context: a developer
+# whose umask is 007 (the dev box's default) checks out appsettings.json as
+# rw-rw----, dotnet publish carries that through, and the image starts as
+# APP_UID against a file it cannot read. The container exits 139 and the
+# e2e suite reports the app as down. Ownership is the fix rather than a
+# chmod: the image should not care what umask built it.
+COPY --from=publish --chown=$APP_UID:$APP_UID /app/publish .
 
 # Copy the React app build output into the server's wwwroot folder (COPY
 # creates the directory; chiseled images have no shell for RUN steps).
-COPY --from=clientbuild /client/dist /app/wwwroot
+COPY --from=clientbuild --chown=$APP_UID:$APP_UID /client/dist /app/wwwroot
 
 # Drop privileges. The aspnet image ships an app user (APP_UID) for exactly
 # this; port 8080 needs no root to bind.
