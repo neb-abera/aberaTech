@@ -48,6 +48,15 @@ updates:
     # releases before it is offered here.
     cooldown:
       default-days: 5
+    ignore:
+      # jsdom 30.1.0 gives a focusout event a relatedTarget that MUI's
+      # FocusTrap stores and then calls .focus() on, which it does not have:
+      # "nodeToRestore.current.focus is not a function" fails every test that
+      # unmounts an open Drawer or Menu (aberaTech #190, 2026-09-24). MUI
+      # 9.4.0 is the newest and does not guard. Only this version is held, so
+      # the next jsdom release is offered and CI says whether it is fixed.
+      - dependency-name: jsdom
+        versions: ["30.1.0"]
     groups:
       # vitest and @vitest/* peer-depend on each other's exact version, so a
       # major split across two PRs cannot install in either (vitest 5, 2026-09:
