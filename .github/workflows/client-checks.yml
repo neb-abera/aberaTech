@@ -191,6 +191,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # The attribution step below reads every commit this pull request
+          # would add, and a shallow clone has no merge base to measure the
+          # range from.
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Docker Buildx
@@ -235,6 +239,21 @@ jobs:
           set -euo pipefail
           ./scripts/check-prose.sh --self-test
           ./scripts/check-prose.sh
+
+      # Nothing published under Neb's name credits an AI. The commit-msg hook
+      # and the Claude PreToolUse gate both run on the machine making the
+      # commit, so neither sees one made anywhere they are not installed. On
+      # 2026-09-24 a branch cut from a pre-rewrite master merged and put 45
+      # stripped lines back on master, which took a second rewrite and a force
+      # push past the ruleset to undo. This runs where the merge happens.
+      # A step on this job rather than a job of its own so the ruleset's
+      # required contexts stay as they are.
+      - name: No commit in this pull request credits an AI
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          ./scripts/check-attribution.sh --self-test
+          ./scripts/check-attribution.sh "origin/${GITHUB_BASE_REF}..HEAD"
 
   scheduling-tests:
     name: Scheduling unit tests, in the container
