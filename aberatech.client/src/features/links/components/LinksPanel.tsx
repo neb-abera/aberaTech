@@ -1,5 +1,7 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import DownloadIcon from "@mui/icons-material/Download";
+import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import Alert from "@mui/material/Alert";
@@ -13,6 +15,8 @@ import Link from "@mui/material/Link";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -22,18 +26,24 @@ import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { exportBookmarks, mergeLinks, parseBookmarks } from "../core/bookmarks";
 import { fileNameFor, planEmail } from "../core/email";
 import {
+  addFolder,
   addLink,
   type Conflict,
   coerce,
+  folderPath,
   GENERAL,
   groupsOf,
   hostOf,
+  inFolder,
   inGroup,
   type LinkEntry,
   type LinksDocument,
+  moveLink,
   type NewLink,
   normalizeUrl,
+  removeFolder,
   removeLink,
+  renameFolder,
   resolveConflict,
   search,
   tagsOf,
@@ -83,6 +93,15 @@ export default function LinksPanel() {
     note: "",
     tags: "",
   });
+  // Folders: one being made, one being renamed, and the link whose move
+  // menu is open. A folder is a group's name, so all three are strings.
+  const [folder, setFolder] = React.useState("");
+  const [renaming, setRenaming] = React.useState<string | null>(null);
+  const [renamed, setRenamed] = React.useState("");
+  const [moving, setMoving] = React.useState<{
+    id: string;
+    anchor: HTMLElement;
+  } | null>(null);
   const fileInput = React.useRef<HTMLInputElement | null>(null);
 
   const change = React.useCallback(
@@ -106,6 +125,12 @@ export default function LinksPanel() {
     [document],
   );
   const knownTags = React.useMemo(() => tagsOf(document), [document]);
+  // Where a link can go: the general list is always a choice, whether or
+  // not anything is in it at the moment.
+  const moveTargets = React.useMemo(
+    () => [GENERAL, ...groupsOf(document).filter((g) => g !== GENERAL)],
+    [document],
+  );
 
   const add = (event: React.FormEvent) => {
     event.preventDefault();
@@ -121,6 +146,27 @@ export default function LinksPanel() {
     setTitle("");
     setUrl("");
     setNote("");
+  };
+
+  const makeFolder = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (folder.trim() === "") return;
+    change((current) => addFolder(current, folder));
+    setFolder("");
+  };
+
+  const saveRename = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (renaming === null) return;
+    const from = renaming;
+    const to = renamed;
+    change((current) => renameFolder(current, from, to));
+    setRenaming(null);
+  };
+
+  const move = (id: string, group: string) => {
+    change((current) => moveLink(current, id, group));
+    setMoving(null);
   };
 
   const startEdit = (id: string, link: NewLink) => {
@@ -181,17 +227,30 @@ export default function LinksPanel() {
     }
   };
 
-  const download = () => {
-    const blob = new Blob([exportBookmarks(narrowed ? shown : document)], {
+  const save = (what: LinksDocument, named: string | null) => {
+    const blob = new Blob([exportBookmarks(what)], {
       type: "text/html;charset=utf-8",
     });
     const href = URL.createObjectURL(blob);
     const anchor = window.document.createElement("a");
     anchor.href = href;
-    anchor.download = fileNameFor(new Date(), tag);
+    anchor.download = fileNameFor(new Date(), named);
     anchor.click();
     URL.revokeObjectURL(href);
   };
+
+  const download = () => save(narrowed ? shown : document, tag);
+
+  // One folder as its own file, with everything inside it: the MITRE
+  // computer takes links-mitre-<date>.html and nothing else.
+  const downloadFolder = (heading: string) =>
+    save(
+      {
+        ...document,
+        links: document.links.filter((l) => inFolder(l.group, heading)),
+      },
+      heading,
+    );
 
   // Email the list to yourself: the file through the share sheet where the
   // browser has one, otherwise a mailto whose body is the file under
@@ -438,6 +497,26 @@ export default function LinksPanel() {
         onEdit={editConflict}
       />
 
+      <Box
+        component="form"
+        onSubmit={makeFolder}
+        aria-label="New folder"
+        sx={{ display: "flex", gap: 1.5, alignItems: "center" }}
+      >
+        <TextField
+          label="New folder"
+          value={folder}
+          onChange={(e) => setFolder(e.target.value)}
+          size="small"
+          placeholder="Work / Tools"
+          helperText="A slash makes a folder inside another."
+          sx={{ minWidth: { sm: 280 } }}
+        />
+        <Button type="submit" variant="outlined" size="small">
+          Make folder
+        </Button>
+      </Box>
+
       {knownTags.length > 0 && (
         <Stack
           direction="row"
@@ -479,169 +558,279 @@ export default function LinksPanel() {
         </Typography>
       )}
 
-      {groups.map((heading) => (
-        <Box key={heading}>
-          <Typography
-            variant="overline"
-            component="h2"
-            sx={{ color: "text.secondary", letterSpacing: 1 }}
-          >
-            {heading}
-          </Typography>
-          <List
-            aria-label={`Links under ${heading}`}
-            dense
-            disablePadding
-            sx={{ borderTop: 1, borderColor: "divider" }}
-          >
-            {inGroup(shown, heading).map((link) =>
-              editing === link.id ? (
-                <ListItem key={link.id} divider disableGutters>
-                  <Box
-                    component="form"
-                    onSubmit={saveEdit}
-                    aria-label={`Edit ${titleOf(link)}`}
-                    sx={{ display: "grid", gap: 1, width: "100%", py: 1 }}
-                  >
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                      <TextField
-                        label="Address"
-                        value={draft.url}
-                        onChange={(e) =>
-                          setDraft({ ...draft, url: e.target.value })
-                        }
-                        required
-                        fullWidth
-                        size="small"
-                      />
-                      <TextField
-                        label="Title"
-                        value={draft.title}
-                        onChange={(e) =>
-                          setDraft({ ...draft, title: e.target.value })
-                        }
-                        fullWidth
-                        size="small"
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                      <TextField
-                        label="Group"
-                        value={draft.group ?? ""}
-                        onChange={(e) =>
-                          setDraft({ ...draft, group: e.target.value })
-                        }
-                        size="small"
-                        sx={{ minWidth: { sm: 200 } }}
-                        slotProps={{ htmlInput: { list: "links-groups" } }}
-                      />
-                      <TextField
-                        label="Tags"
-                        value={
-                          Array.isArray(draft.tags)
-                            ? draft.tags.join(", ")
-                            : (draft.tags ?? "")
-                        }
-                        onChange={(e) =>
-                          setDraft({ ...draft, tags: e.target.value })
-                        }
-                        size="small"
-                        sx={{ minWidth: { sm: 180 } }}
-                        slotProps={{ htmlInput: { list: "links-tags" } }}
-                      />
-                      <TextField
-                        label="Note"
-                        value={draft.note ?? ""}
-                        onChange={(e) =>
-                          setDraft({ ...draft, note: e.target.value })
-                        }
-                        fullWidth
-                        size="small"
-                      />
-                      <Button type="submit" variant="contained" size="small">
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        size="small"
-                        onClick={() => setEditing(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </Stack>
-                  </Box>
-                </ListItem>
-              ) : (
-                <ListItem
-                  key={link.id}
-                  divider
-                  disableGutters
-                  secondaryAction={
-                    <Stack direction="row" spacing={0.5}>
-                      <IconButton
-                        size="small"
-                        aria-label={`Copy ${titleOf(link)}`}
-                        onClick={() => copy(link.id, link.url)}
-                        color={copied === link.id ? "success" : "default"}
-                      >
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        aria-label={`Edit ${titleOf(link)}`}
-                        onClick={() => startEdit(link.id, link)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        aria-label={`Remove ${titleOf(link)}`}
-                        onClick={() => change((d) => removeLink(d, link.id))}
-                      >
-                        <DeleteOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  }
-                  sx={{ pr: 14 }}
+      {groups.map((heading) => {
+        const held = inGroup(shown, heading);
+        // A folder with nothing in it is a place to move links to, so it is
+        // on the page. While a search or a tag is narrowing it, it is not.
+        if (held.length === 0 && (narrowed || heading === GENERAL)) return null;
+        const depth = folderPath(heading).length;
+        const leaf = depth === 0 ? heading : folderPath(heading)[depth - 1];
+        return (
+          <Box key={heading} sx={{ ml: depth > 1 ? (depth - 1) * 2 : 0 }}>
+            {renaming === heading ? (
+              <Box
+                component="form"
+                onSubmit={saveRename}
+                aria-label={`Rename ${heading}`}
+                sx={{ display: "flex", gap: 1, alignItems: "center", py: 1 }}
+              >
+                <TextField
+                  label="Folder"
+                  value={renamed}
+                  onChange={(e) => setRenamed(e.target.value)}
+                  size="small"
+                  autoFocus
+                  sx={{ minWidth: { sm: 280 } }}
+                />
+                <Button type="submit" variant="contained" size="small">
+                  Save
+                </Button>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setRenaming(null)}
                 >
-                  <ListItemText
-                    primary={
-                      <Link
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        underline="hover"
-                        sx={{ fontWeight: 500 }}
-                      >
-                        {titleOf(link)}
-                      </Link>
-                    }
-                    secondary={
-                      <>
-                        {link.note
-                          ? `${hostOf(link.url)} · ${link.note}`
-                          : hostOf(link.url)}
-                        {link.tags.map((t) => (
-                          <Chip
-                            key={t}
-                            label={t}
-                            size="small"
-                            variant="outlined"
-                            component="span"
-                            onClick={() => setTag(t)}
-                            sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
-                          />
-                        ))}
-                      </>
-                    }
-                  />
-                </ListItem>
-              ),
+                  Cancel
+                </Button>
+              </Box>
+            ) : (
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{ alignItems: "center", minHeight: 36 }}
+              >
+                <Typography
+                  variant="overline"
+                  component="h2"
+                  sx={{ color: "text.secondary", letterSpacing: 1 }}
+                >
+                  {leaf}
+                </Typography>
+                {heading !== GENERAL && (
+                  <>
+                    <IconButton
+                      size="small"
+                      aria-label={`Download folder ${heading}`}
+                      onClick={() => downloadFolder(heading)}
+                    >
+                      <DownloadIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label={`Rename folder ${heading}`}
+                      onClick={() => {
+                        setRenaming(heading);
+                        setRenamed(heading);
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label={`Remove folder ${heading}`}
+                      onClick={() => change((d) => removeFolder(d, heading))}
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
+              </Stack>
             )}
-          </List>
-        </Box>
-      ))}
+            {held.length === 0 && (
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Nothing in here yet. Move a link in, or remove the folder: its
+                links go up one level, never away.
+              </Typography>
+            )}
+            <List
+              aria-label={`Links under ${heading}`}
+              dense
+              disablePadding
+              sx={{ borderTop: 1, borderColor: "divider" }}
+            >
+              {held.map((link) =>
+                editing === link.id ? (
+                  <ListItem key={link.id} divider disableGutters>
+                    <Box
+                      component="form"
+                      onSubmit={saveEdit}
+                      aria-label={`Edit ${titleOf(link)}`}
+                      sx={{ display: "grid", gap: 1, width: "100%", py: 1 }}
+                    >
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                      >
+                        <TextField
+                          label="Address"
+                          value={draft.url}
+                          onChange={(e) =>
+                            setDraft({ ...draft, url: e.target.value })
+                          }
+                          required
+                          fullWidth
+                          size="small"
+                        />
+                        <TextField
+                          label="Title"
+                          value={draft.title}
+                          onChange={(e) =>
+                            setDraft({ ...draft, title: e.target.value })
+                          }
+                          fullWidth
+                          size="small"
+                        />
+                      </Stack>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                      >
+                        <TextField
+                          label="Group"
+                          value={draft.group ?? ""}
+                          onChange={(e) =>
+                            setDraft({ ...draft, group: e.target.value })
+                          }
+                          size="small"
+                          sx={{ minWidth: { sm: 200 } }}
+                          slotProps={{ htmlInput: { list: "links-groups" } }}
+                        />
+                        <TextField
+                          label="Tags"
+                          value={
+                            Array.isArray(draft.tags)
+                              ? draft.tags.join(", ")
+                              : (draft.tags ?? "")
+                          }
+                          onChange={(e) =>
+                            setDraft({ ...draft, tags: e.target.value })
+                          }
+                          size="small"
+                          sx={{ minWidth: { sm: 180 } }}
+                          slotProps={{ htmlInput: { list: "links-tags" } }}
+                        />
+                        <TextField
+                          label="Note"
+                          value={draft.note ?? ""}
+                          onChange={(e) =>
+                            setDraft({ ...draft, note: e.target.value })
+                          }
+                          fullWidth
+                          size="small"
+                        />
+                        <Button type="submit" variant="contained" size="small">
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setEditing(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </Stack>
+                    </Box>
+                  </ListItem>
+                ) : (
+                  <ListItem
+                    key={link.id}
+                    divider
+                    disableGutters
+                    secondaryAction={
+                      <Stack direction="row" spacing={0.5}>
+                        <IconButton
+                          size="small"
+                          aria-label={`Copy ${titleOf(link)}`}
+                          onClick={() => copy(link.id, link.url)}
+                          color={copied === link.id ? "success" : "default"}
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          aria-label={`Move ${titleOf(link)}`}
+                          onClick={(e) =>
+                            setMoving({ id: link.id, anchor: e.currentTarget })
+                          }
+                        >
+                          <DriveFileMoveOutlinedIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          aria-label={`Edit ${titleOf(link)}`}
+                          onClick={() => startEdit(link.id, link)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          aria-label={`Remove ${titleOf(link)}`}
+                          onClick={() => change((d) => removeLink(d, link.id))}
+                        >
+                          <DeleteOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    }
+                    sx={{ pr: 18 }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Link
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          underline="hover"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          {titleOf(link)}
+                        </Link>
+                      }
+                      secondary={
+                        <>
+                          {link.note
+                            ? `${hostOf(link.url)} · ${link.note}`
+                            : hostOf(link.url)}
+                          {link.tags.map((t) => (
+                            <Chip
+                              key={t}
+                              label={t}
+                              size="small"
+                              variant="outlined"
+                              component="span"
+                              onClick={() => setTag(t)}
+                              sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
+                            />
+                          ))}
+                        </>
+                      }
+                    />
+                  </ListItem>
+                ),
+              )}
+            </List>
+          </Box>
+        );
+      })}
+
+      <Menu
+        open={moving !== null}
+        anchorEl={moving?.anchor ?? null}
+        onClose={() => setMoving(null)}
+        aria-label="Move to folder"
+      >
+        {moveTargets.map((target) => (
+          <MenuItem
+            key={target}
+            onClick={() =>
+              move(moving?.id ?? "", target === GENERAL ? "" : target)
+            }
+          >
+            {target}
+          </MenuItem>
+        ))}
+      </Menu>
     </Stack>
   );
 }
