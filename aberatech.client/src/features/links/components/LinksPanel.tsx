@@ -788,10 +788,23 @@ export default function LinksPanel() {
                         </Link>
                       }
                       secondary={
-                        <>
-                          {link.note
-                            ? `${hostOf(link.url)} · ${link.note}`
-                            : hostOf(link.url)}
+                        // A row of its own, laid out across the line. The
+                        // chips are children of a block, so without this
+                        // each one stretches to the row's whole width.
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Box component="span">
+                            {link.note
+                              ? `${hostOf(link.url)} · ${link.note}`
+                              : hostOf(link.url)}
+                          </Box>
                           {link.tags.map((t) => (
                             <Chip
                               key={t}
@@ -800,10 +813,10 @@ export default function LinksPanel() {
                               variant="outlined"
                               component="span"
                               onClick={() => setTag(t)}
-                              sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
+                              sx={{ height: 20, fontSize: "0.7rem" }}
                             />
                           ))}
-                        </>
+                        </Box>
                       }
                     />
                   </ListItem>
