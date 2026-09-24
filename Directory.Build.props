@@ -8,5 +8,15 @@
        (npm, not NuGet) is not dragged in. -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+    <!-- Null safety, for the whole solution rather than per project. These
+         two lines lived in each .csproj, and aberaTech.Server was the one
+         that carried Nullable without TreatWarningsAsErrors: it had the
+         analysis and not the gate, so every nullable warning in the web
+         project was advisory. A project added later inherits both here and
+         cannot repeat that omission. Override in a .csproj only with a
+         comment saying why. -->
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
