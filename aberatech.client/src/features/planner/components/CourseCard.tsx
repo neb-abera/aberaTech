@@ -132,8 +132,8 @@ export default function CourseCard({ code, pinned, onClose }: CourseCardProps) {
               variant="caption"
               sx={{ display: "block", color: "text.secondary", mt: 0.25 }}
             >
-              That is a degree, not a course, so nothing is scheduled for it and
-              the course is not blocked.{" "}
+              That is a degree rather than a course, so nothing is scheduled for
+              it and the course is not blocked.{" "}
               {g.missing.length
                 ? `The parts of it you have not ticked are ${g.missing.join(", ")}.`
                 : "You have ticked every part of it."}

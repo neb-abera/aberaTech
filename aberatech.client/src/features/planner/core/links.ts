@@ -57,7 +57,7 @@ export function courseLinks(code: string, title: string): CourseLink[] {
       label: "Offerings",
       href: professionalsUrl(code, title),
       verified: false,
-      note: "terms, instructor and cost on ep.jhu.edu; the address is derived from the course number and title rather than measured",
+      note: "terms, instructor and cost on ep.jhu.edu. The address is derived from the course number and title rather than measured",
     },
   ];
 }

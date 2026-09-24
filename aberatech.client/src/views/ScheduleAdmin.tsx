@@ -1,17 +1,20 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
-import AppAppBar from "../components/AppAppBar";
+import SiteFrame from "../components/SiteFrame";
 import AdminPanel from "../features/scheduling/components/AdminPanel";
-import AppTheme from "../theme/AppTheme";
+
+/**
+ * The owner's view of the queue.
+ *
+ * It built its own chrome until 2026-09-24 and was the one page on the site
+ * with no footer, which is how tools/render-copy.mjs found it.
+ */
 
 export default function ScheduleAdmin(props: { disableCustomTheme?: boolean }) {
   return (
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <AppAppBar />
+    <SiteFrame {...props}>
       <Container maxWidth="md" sx={{ pt: { xs: 14, sm: 16 }, pb: 8 }}>
         <Box sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
@@ -28,6 +31,6 @@ export default function ScheduleAdmin(props: { disableCustomTheme?: boolean }) {
         <Divider sx={{ mb: 3 }} />
         <AdminPanel />
       </Container>
-    </AppTheme>
+    </SiteFrame>
   );
 }
