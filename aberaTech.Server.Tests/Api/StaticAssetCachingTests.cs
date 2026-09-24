@@ -55,6 +55,6 @@ public class StaticAssetCachingTests
     {
         Assert.Equal(
             "public, max-age=86400",
-            StaticAssetCaching.For("/fingerprint_24dp_E8EAED.png", "fingerprint_24dp_E8EAED.png"));
+            StaticAssetCaching.For("/favicon-96.png", "favicon-96.png"));
     }
 }
