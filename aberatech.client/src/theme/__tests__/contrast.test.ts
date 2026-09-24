@@ -10,9 +10,14 @@ import { createTheme } from "@mui/material/styles";
 import { describe, expect, it } from "vitest";
 import { colorSchemes } from "../themePrimitives";
 
-// The resolved palette, not the tokens: a role the tokens leave out still
-// reaches the page, as MUI's own default. text.disabled was exactly that.
-const theme = createTheme({ colorSchemes });
+// The resolved palette, not the tokens. A role the tokens leave out still
+// reaches the page as MUI's own default, and text.disabled was exactly that,
+// so each scheme is resolved through createTheme before it is measured.
+const resolved = {
+  light: createTheme({ palette: { mode: "light", ...colorSchemes.light.palette } })
+    .palette,
+  dark: createTheme({ palette: { mode: "dark", ...colorSchemes.dark.palette } }).palette,
+};
 
 const AA_NORMAL_TEXT = 4.5;
 
@@ -74,7 +79,7 @@ const contrast = (fg: string, bg: string) => {
 
 describe("scheme contrast", () => {
   for (const scheme of ["light", "dark"] as const) {
-    const palette = theme.colorSchemes[scheme].palette;
+    const palette = resolved[scheme];
     const surfaces = {
       "background.default": palette.background.default,
       "background.paper": palette.background.paper,
