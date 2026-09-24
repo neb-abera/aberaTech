@@ -213,8 +213,16 @@ public static class Solver
     }
 
     /// <summary>The predicted race time as a distribution over the posterior.</summary>
-    public static Spread Predict(SolverContext context, Scenario scenario, int draws = SolverContext.SolveDraws) =>
-        Spread.Of(context.Subsample(draws).Select(draw => (double?)Evaluate(context, draw, scenario)));
+    public static Spread Predict(
+        SolverContext context,
+        Scenario scenario,
+        int draws = SolverContext.SolveDraws,
+        CancellationToken cancellationToken = default) =>
+        Spread.Of(context.Subsample(draws).Select(draw =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return (double?)Evaluate(context, draw, scenario);
+        }));
 
     /// <summary>Whether a bigger value of a factor makes the predicted time faster.</summary>
     private static bool FasterWhenLarger(Factor factor) => factor switch
@@ -247,7 +255,8 @@ public static class Solver
         Scenario scenario,
         Factor unknown,
         double targetSeconds,
-        int draws = SolverContext.SolveDraws)
+        int draws = SolverContext.SolveDraws,
+        CancellationToken cancellationToken = default)
     {
         var (low, high) = Bracket(context, unknown);
         var better = FasterWhenLarger(unknown);
@@ -257,6 +266,8 @@ public static class Solver
         var answers = new List<double?>();
         foreach (var draw in context.Subsample(draws))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             double Achieved(double value) => Evaluate(context, draw, scenario.With(unknown, value));
 
             var best = better ? Achieved(high) : Achieved(low);
@@ -340,9 +351,14 @@ public static class Solver
     /// <summary>The chance of being at or under the target time on the date.</summary>
     public static double Probability(
         SolverContext context, Scenario scenario, double targetSeconds,
-        int draws = SolverContext.SolveDraws) =>
+        int draws = SolverContext.SolveDraws,
+        CancellationToken cancellationToken = default) =>
         Statistic.Share(
-            context.Subsample(draws).Select(draw => Evaluate(context, draw, scenario)).ToArray(),
+            context.Subsample(draws).Select(draw =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return Evaluate(context, draw, scenario);
+            }).ToArray(),
             seconds => seconds <= targetSeconds);
 
     /// <summary>
@@ -350,7 +366,10 @@ public static class Solver
     /// sorted by how much race time it moves — a tornado, in data form.
     /// </summary>
     public static IReadOnlyList<FactorSensitivity> Sensitivities(
-        SolverContext context, Scenario scenario, IReadOnlyList<Factor>? factors = null)
+        SolverContext context,
+        Scenario scenario,
+        IReadOnlyList<Factor>? factors = null,
+        CancellationToken cancellationToken = default)
     {
         // One representative draw: the tornado compares factors against each
         // other, and doing that inside one draw keeps the comparison clean.
@@ -360,6 +379,8 @@ public static class Solver
         var results = new List<FactorSensitivity>();
         foreach (var factor in factors ?? DefaultFactors(context))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var value = scenario[factor];
             if (factor == Factor.RaceMassKg && context.CurrentMassKg is null) continue;
 
@@ -395,13 +416,16 @@ public static class Solver
         Factor down,
         (double Low, double High) acrossRange,
         (double Low, double High) downRange,
-        int resolution = 32)
+        int resolution = 32,
+        CancellationToken cancellationToken = default)
     {
         var draw = Median(context);
         var grid = new double[resolution, resolution];
 
         for (var row = 0; row < resolution; row++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var y = downRange.Low + (downRange.High - downRange.Low) * row / (resolution - 1.0);
             for (var column = 0; column < resolution; column++)
             {
