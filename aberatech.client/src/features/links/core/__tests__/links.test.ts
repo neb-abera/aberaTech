@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addConflict,
+  addFolder,
   addLink,
   coerce,
   empty,
@@ -13,10 +14,14 @@ import {
   groupsOf,
   hostOf,
   inGroup,
+  moveLink,
   normalizeGroup,
   normalizeTags,
   normalizeUrl,
+  parentOf,
+  removeFolder,
   removeLink,
+  renameFolder,
   resolveConflict,
   search,
   slugOf,
@@ -350,5 +355,119 @@ describe("conflicts", () => {
     expect(back.links[0].tags).toEqual([]);
     const orphan = coerce({ ...pending, links: [] });
     expect(orphan.conflicts).toHaveLength(0);
+  });
+});
+
+describe("folders", () => {
+  const doc = [
+    { title: "one", url: "one.example", group: "Work / Tools" },
+    { title: "two", url: "two.example", group: "Work" },
+    { title: "three", url: "three.example" },
+  ].reduce((d, link, i) => addLink(d, link, day, `id-${i}`), empty);
+
+  it("spells a path the same way however it is typed", () => {
+    expect(normalizeGroup("Work/Tools")).toBe("Work / Tools");
+    expect(normalizeGroup("  Work /  Tools ")).toBe("Work / Tools");
+  });
+
+  it("names the folder above", () => {
+    expect(parentOf("Work / Tools")).toBe("Work");
+    expect(parentOf("Work")).toBe("");
+  });
+
+  it("lists a folder before what is inside it", () => {
+    expect(groupsOf(doc)).toEqual([GENERAL, "Work", "Work / Tools"]);
+  });
+
+  it("shows a folder that holds nothing yet", () => {
+    expect(groupsOf(addFolder(doc, "MITRE"))).toContain("MITRE");
+  });
+
+  it("shows the folders above one made deep", () => {
+    expect(groupsOf(addFolder(empty, "MITRE / rf / field"))).toEqual([
+      "MITRE",
+      "MITRE / rf",
+      "MITRE / rf / field",
+    ]);
+  });
+
+  it("does not make a folder that is already there", () => {
+    expect(addFolder(doc, "work").folders).toEqual([]);
+    expect(addFolder(doc, "  ").folders).toEqual([]);
+  });
+
+  it("moves one link and keeps everything else about it", () => {
+    const moved = moveLink(doc, "id-0", "MITRE");
+    const link = moved.links.find((l) => l.id === "id-0");
+    expect(link?.group).toBe("MITRE");
+    expect(link?.title).toBe("one");
+    expect(link?.addedAt).toBe("2026-09-12");
+    expect(moved.links).toHaveLength(3);
+  });
+
+  it("moves a link to the general list", () => {
+    expect(moveLink(doc, "id-1", GENERAL).links[1].group).toBe("");
+  });
+
+  it("keeps the folder a link was the last one in", () => {
+    expect(groupsOf(moveLink(doc, "id-0", "MITRE"))).toContain("Work / Tools");
+  });
+
+  it("renames a folder and everything inside it", () => {
+    const renamed = renameFolder(doc, "Work", "MITRE");
+    expect(renamed.links.map((l) => l.group)).toEqual([
+      "MITRE / Tools",
+      "MITRE",
+      "",
+    ]);
+  });
+
+  it("merges when the new name is a folder that exists", () => {
+    const merged = renameFolder(doc, "Work / Tools", "Work");
+    expect(merged.links.map((l) => l.group)).toEqual(["Work", "Work", ""]);
+  });
+
+  it("empties a folder into the general list when renamed to nothing", () => {
+    expect(renameFolder(doc, "Work", "").links.map((l) => l.group)).toEqual([
+      "Tools",
+      "",
+      "",
+    ]);
+  });
+
+  it("removing a folder lifts its links one level, never deletes them", () => {
+    const gone = removeFolder(doc, "Work / Tools");
+    expect(gone.links).toHaveLength(3);
+    expect(gone.links.map((l) => l.group)).toEqual(["Work", "Work", ""]);
+  });
+
+  it("removing a top folder lifts what was inside it to the top", () => {
+    expect(removeFolder(doc, "Work").links.map((l) => l.group)).toEqual([
+      "Tools",
+      "",
+      "",
+    ]);
+  });
+
+  it("drops an empty folder once a link sits in it", () => {
+    const made = addFolder(doc, "MITRE");
+    expect(moveLink(made, "id-2", "MITRE").folders).toEqual([]);
+  });
+
+  it("reads folders from a stored document and ignores the rest", () => {
+    const read = coerce({
+      version: 1,
+      links: [{ url: "a.example", group: "Work/Tools" }],
+      conflicts: [],
+      folders: ["MITRE", "", 7, "Work / Tools"],
+    });
+    expect(read.links[0].group).toBe("Work / Tools");
+    expect(read.folders).toEqual(["MITRE"]);
+  });
+
+  it("defaults folders to none for a document written before them", () => {
+    expect(coerce({ version: 1, links: [], conflicts: [] }).folders).toEqual(
+      [],
+    );
   });
 });

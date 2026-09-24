@@ -61,6 +61,7 @@ const lastPut = (): LinksDocument => {
 const saved: LinksDocument = {
   version: 1,
   conflicts: [],
+  folders: [],
   links: [
     {
       id: "a",
@@ -237,8 +238,13 @@ describe("for the owner", () => {
 
     expect(screen.queryByRole("form", { name: "Edit Tracker" })).toBeNull();
     expect(screen.getByRole("link", { name: "Runway" })).toBeTruthy();
+    // A heading is the folder's own name, under the folder it sits in; the
+    // whole path is the accessible name of its list.
     expect(
-      screen.getByRole("heading", { level: 2, name: "Plans / 2026" }),
+      screen.getByRole("heading", { level: 2, name: "2026" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("list", { name: "Links under Plans / 2026" }),
     ).toBeTruthy();
 
     await flushSave();
@@ -545,5 +551,96 @@ describe("for the owner", () => {
     expect(text).toContain('<A HREF="https://claude.ai/code/artifact/x"');
     expect(text).toContain("<DT><H3>Plans</H3>");
     expect(puts()).toHaveLength(0);
+  });
+});
+
+describe("folders", () => {
+  const filed: LinksDocument = {
+    version: 1,
+    conflicts: [],
+    folders: [],
+    links: [
+      {
+        id: "a",
+        title: "Spec",
+        url: "https://example.org/spec",
+        group: "Work / Tools",
+        note: "",
+        tags: [],
+        addedAt: "2026-09-12",
+      },
+      {
+        id: "b",
+        title: "Board",
+        url: "https://example.org/board",
+        group: "Work",
+        note: "",
+        tags: [],
+        addedAt: "2026-09-12",
+      },
+    ],
+  };
+
+  it("makes a folder that holds nothing yet", async () => {
+    visit(filed);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "New folder" }), {
+      target: { value: "MITRE / rf" },
+    });
+    fireEvent.submit(screen.getByRole("form", { name: "New folder" }));
+    await flushSave();
+
+    expect(lastPut().folders).toEqual(["MITRE / rf"]);
+    const headings = screen
+      .getAllByRole("heading", { level: 2 })
+      .map((h) => h.textContent);
+    expect(headings).toEqual(["MITRE", "rf", "Work", "Tools"]);
+  });
+
+  it("moves a link into another folder", async () => {
+    visit(filed);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByLabelText("Move Spec"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "General" }));
+    await flushSave();
+
+    expect(lastPut().links.find((l) => l.id === "a")?.group).toBe("");
+    // The folder it left is still a place to move links back to.
+    expect(lastPut().folders).toEqual(["Work / Tools"]);
+  });
+
+  it("renames a folder and everything inside it", async () => {
+    visit(filed);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByLabelText("Rename folder Work"));
+    fireEvent.change(screen.getByRole("textbox", { name: "Folder" }), {
+      target: { value: "MITRE" },
+    });
+    fireEvent.submit(screen.getByRole("form", { name: "Rename Work" }));
+    await flushSave();
+
+    expect(lastPut().links.map((l) => l.group)).toEqual([
+      "MITRE / Tools",
+      "MITRE",
+    ]);
+  });
+
+  it("removing a folder lifts its links, it does not delete them", async () => {
+    visit(filed);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByLabelText("Remove folder Work / Tools"));
+    await flushSave();
+
+    const put = lastPut();
+    expect(put.links).toHaveLength(2);
+    expect(put.links.map((l) => l.group)).toEqual(["Work", "Work"]);
   });
 });
