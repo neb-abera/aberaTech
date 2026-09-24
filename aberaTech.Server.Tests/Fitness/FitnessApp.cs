@@ -105,15 +105,38 @@ internal sealed class FitnessApp : IDisposable
     internal sealed class CommandCounter : DbCommandInterceptor
     {
         private int _count;
+        private int _reads;
 
         public int Count => Volatile.Read(ref _count);
 
-        public void Reset() => Interlocked.Exchange(ref _count, 0);
+        /// <summary>
+        /// The SELECTs alone. A write costs one statement per row whatever the
+        /// code does, so a test about how many times the database was asked a
+        /// question counts these and not the total. Judged on the text because
+        /// SQLite returns generated values from an INSERT, which arrives here
+        /// as a reader like any query.
+        /// </summary>
+        public int Reads => Volatile.Read(ref _reads);
+
+        private void Observe(DbCommand command)
+        {
+            Interlocked.Increment(ref _count);
+            if (command.CommandText.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            {
+                Interlocked.Increment(ref _reads);
+            }
+        }
+
+        public void Reset()
+        {
+            Interlocked.Exchange(ref _count, 0);
+            Interlocked.Exchange(ref _reads, 0);
+        }
 
         public override InterceptionResult<DbDataReader> ReaderExecuting(
             DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return result;
         }
 
@@ -121,14 +144,14 @@ internal sealed class FitnessApp : IDisposable
             DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result,
             CancellationToken cancellationToken = default)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return ValueTask.FromResult(result);
         }
 
         public override InterceptionResult<object> ScalarExecuting(
             DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return result;
         }
 
@@ -136,14 +159,14 @@ internal sealed class FitnessApp : IDisposable
             DbCommand command, CommandEventData eventData, InterceptionResult<object> result,
             CancellationToken cancellationToken = default)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return ValueTask.FromResult(result);
         }
 
         public override InterceptionResult<int> NonQueryExecuting(
             DbCommand command, CommandEventData eventData, InterceptionResult<int> result)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return result;
         }
 
@@ -151,7 +174,7 @@ internal sealed class FitnessApp : IDisposable
             DbCommand command, CommandEventData eventData, InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
-            Interlocked.Increment(ref _count);
+            Observe(command);
             return ValueTask.FromResult(result);
         }
     }
