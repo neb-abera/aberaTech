@@ -138,7 +138,7 @@ export const PREP_SOURCE: Record<
   bg_circ: {
     jhu: "EN.525.201",
     where:
-      "Linear and non-linear circuits, an admission prerequisite for the degree. EN.525.201 Circuits, Devices and Fields is the bridge course JHU runs for exactly this gap; a community college circuit analysis sequence also serves.",
+      "Linear and non-linear circuits, an admission prerequisite for the degree. EN.525.201 Circuits, Devices and Fields is the bridge course JHU runs for exactly this gap. A community college circuit analysis sequence also serves.",
   },
   bg_ugem: {
     jhu: null,
@@ -163,12 +163,12 @@ export const PREP_SOURCE: Record<
   bg_matlab: {
     jhu: "EN.525.617",
     where:
-      "EN.525.617 Computation for Engineers is the closest thing the program offers, though most courses simply assume you can drive MATLAB.",
+      "EN.525.617 Computation for Engineers is the closest thing the program offers, though most courses assume you can drive MATLAB.",
   },
   bg_ee: {
     jhu: null,
     where:
-      "A full undergraduate electrical engineering background. Several courses state this as their only prerequisite, which is not something you can schedule; treat it as the sum of the other items here.",
+      "A full undergraduate electrical engineering background. Several courses state this as their only prerequisite, which is not something you can schedule. Treat it as the sum of the other items here.",
   },
 };
 

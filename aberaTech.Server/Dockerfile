@@ -65,6 +65,14 @@ COPY ["scripts/check-page-budgets.mjs", "scripts/check-page-budgets.selftest.mjs
 RUN node /budget/check-page-budgets.selftest.mjs && \
     node /budget/check-page-budgets.mjs /client/dist /budget/page-budgets.json
 
+# Every route rendered to HTML, for the prose gate to read. A leaf: nothing
+# ships from here. The app pages (/fitness, /schedule, /links, /devbox) are
+# not prerendered into the image on purpose, so their copy was never linted;
+# tools/render-copy.mjs renders them with the same renderer for the
+# clientprose stage below.
+FROM clientbuild AS clientcopy
+RUN node tools/render-copy.mjs
+
 # The writing rules, on the pages a reader gets. A leaf, like clientbudget:
 # it lints the prerendered HTML the production image ships, so the guides
 # are checked as read rather than as source. scripts/check-prose.sh covers
@@ -78,14 +86,16 @@ RUN node /budget/check-page-budgets.selftest.mjs && \
 #   make prose
 FROM vale AS clientprose
 COPY --from=clientbuild /client/dist /client/dist
+COPY --from=clientcopy /client/dist-copy /client/dist-copy
 COPY [".vale.ini", "/prose/.vale.ini"]
 COPY [".vale/", "/prose/.vale/"]
 # The fixtures first, every time: the failing one must fail and the clean one
 # must pass, so a rule or a config path that has stopped working is caught
-# here rather than trusted. Then the pages.
+# here rather than trusted. Then the pages: the ones the image ships, and the
+# app pages rendered by clientcopy, which the image cannot ship prerendered.
 RUN ! vale --config=/prose/.vale.ini --output=line /prose/.vale/fixtures/fails.md > /dev/null \
     && vale --config=/prose/.vale.ini --output=line /prose/.vale/fixtures/passes.md \
-    && find /client/dist -name '*.html' ! -name spa.html -print0 \
+    && find /client/dist /client/dist-copy -name '*.html' ! -name spa.html -print0 \
     | xargs -0 vale --config=/prose/.vale.ini --output=line
 
 # Client development server.

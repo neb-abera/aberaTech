@@ -111,8 +111,8 @@ export default function GraduationPanel({
         <Box component="span" sx={{ fontWeight: 600 }}>
           apply
         </Box>
-        , not everything you take, so the other {audit.excluded.length} sit
-        outside it.
+        rather than everything you take, so the other {audit.excluded.length}{" "}
+        sit outside it.
       </Typography>
 
       {/* The bar is the elapsed span; the hairline is the deadline. */}
