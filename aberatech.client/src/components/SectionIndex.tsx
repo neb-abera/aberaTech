@@ -22,19 +22,33 @@ interface Props {
 export default function SectionIndex({ title, entries, ...props }: Props) {
   return (
     <PageShell {...props} title={title}>
+      {/* Wrapped and centred rather than a grid. Five guides in three columns
+          left a hole in the second row, at the right, which reads as a card
+          that failed to load. Centred, a short last row reads as the end of
+          the list. The basis is the column width the grid gave: the row's
+          gaps taken off the width, divided by the columns. */}
       <Box
         sx={{
-          display: "grid",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
           gap: 2,
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
-          },
         }}
       >
         {entries.map((entry) => (
-          <Card key={entry.to} variant="outlined" sx={{ height: "100%" }}>
+          <Card
+            key={entry.to}
+            variant="outlined"
+            sx={{
+              flexGrow: 0,
+              flexShrink: 1,
+              flexBasis: {
+                xs: "100%",
+                sm: "calc((100% - 16px) / 2)",
+                md: "calc((100% - 32px) / 3)",
+              },
+            }}
+          >
             <CardActionArea
               {...(entry.external
                 ? {
