@@ -274,6 +274,31 @@ test.describe("/links", () => {
     expect(text).toContain('TAGS="e2e-army"');
   });
 
+  test("a tag sits as a chip beside the host, not stretched across the row", async ({
+    page,
+  }) => {
+    await signIn(page, "/links");
+    const row = page
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("link", { name: "HRC (e2e)" }) })
+      .first();
+    await expect(row).toBeVisible({ timeout: 15_000 });
+    // The chip itself, not its label: a clickable MUI chip is a button, and
+    // the label inside it keeps its content width even when the chip does
+    // not. Measuring the label passed against the defect.
+    const chip = row.getByRole("button", { name: "e2e-army" });
+    await expect(chip).toBeVisible();
+
+    const chipBox = await chip.boundingBox();
+    const rowBox = await row.boundingBox();
+    if (chipBox === null || rowBox === null) throw new Error("no box");
+    // The defect this catches: the chip was a child of a block, so it grew
+    // to the whole row. A chip for a nine-character tag is under 120px on
+    // every engine, and well under a third of the row.
+    expect(chipBox.width).toBeLessThan(120);
+    expect(chipBox.width).toBeLessThan(rowBox.width / 3);
+  });
+
   test("Email opens a mail with the file in the body where there is no share sheet", async ({
     page,
   }) => {
