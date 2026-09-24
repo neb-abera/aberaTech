@@ -37,7 +37,13 @@ const socials = [
 
 export default function Footer() {
   return (
-    <Container component="footer" maxWidth="lg" sx={{ py: { xs: 5, sm: 7 } }}>
+    <Container
+      component="footer"
+      maxWidth="lg"
+      // SiteFrame makes the page a column at least a screen tall. This takes
+      // the slack, so a short page ends on the footer at the window's bottom.
+      sx={{ mt: "auto", py: { xs: 5, sm: 7 } }}
+    >
       <Divider sx={{ mb: { xs: 3, sm: 4 } }} />
       <Box
         sx={{
