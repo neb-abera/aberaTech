@@ -99,7 +99,7 @@ export default function SettingsRail({
 
       <Section
         title="Background you already have"
-        hint="An unticked subject becomes a preparation course, scheduled like any other prerequisite. An unticked admission prerequisite stays on every plan, because admission is provisional until it is done. A whole degree is not scheduled; it ticks itself once its parts are ticked."
+        hint="An unticked subject becomes a preparation course, scheduled like any other prerequisite. An unticked admission prerequisite stays on every plan, because admission is provisional until it is done. A whole degree is not scheduled. It ticks itself once its parts are ticked."
       >
         {model.data.background.map(([id, label]) => {
           const composite = isComposite(id);
@@ -162,7 +162,7 @@ export default function SettingsRail({
             label="Courses per term"
             value={model.perTerm}
             slotProps={{ htmlInput: { min: 1, max: MAX_PER_TERM } }}
-            helperText={`One to ${MAX_PER_TERM}. Over the limit is allowed on the board and flagged, never blocked.`}
+            helperText={`One to ${MAX_PER_TERM}. Over the limit is allowed on the board and flagged. It is never blocked.`}
             onChange={(e) => {
               update((m) => {
                 m.setPerTerm(Number(e.target.value));

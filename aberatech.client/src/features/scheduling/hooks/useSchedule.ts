@@ -54,7 +54,15 @@ export function useSchedule(): Schedule {
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(true);
-  const entryId = useRef<string | null>(localStorage.getItem(StorageKey));
+  // Guarded for the server renderer, which has no localStorage: the page is
+  // rendered in Node by tools/render-copy.mjs so the prose gate can read its
+  // copy, and an unguarded read threw there and rendered the error boundary
+  // instead of the page.
+  const entryId = useRef<string | null>(
+    typeof localStorage === "undefined"
+      ? null
+      : localStorage.getItem(StorageKey),
+  );
 
   // Which day's times to fetch. Null lets the server pick the first day with
   // anything free, so the page opens on a day worth looking at.

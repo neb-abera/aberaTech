@@ -11,7 +11,7 @@ export default function Fitness(props: { disableCustomTheme?: boolean }) {
     <PageShell
       {...props}
       title="Military athlete console"
-      intro="Verified training data in, sourced predictions out. Adjust the dose, the compliance and the bodyweight to see where the fitness lands — or name the goal and the date, and see what it costs."
+      intro="Verified training data in, sourced predictions out. Adjust the dose, the compliance and the bodyweight to see where the fitness lands. Or name the goal and the date, and see what it costs."
     >
       <FitnessPanel />
     </PageShell>
