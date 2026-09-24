@@ -44,11 +44,23 @@ export interface LinksDocument {
   version: 1;
   links: LinkEntry[];
   conflicts: Conflict[];
+  /**
+   * Folders that hold nothing yet. A folder is otherwise only the group its
+   * links name, so a new one would vanish on the next render before a link
+   * could be moved into it. These are the ones made by hand, kept until a
+   * link arrives or the owner removes them.
+   */
+  folders: string[];
 }
 
 export const GENERAL = "General";
 
-export const empty: LinksDocument = { version: 1, links: [], conflicts: [] };
+export const empty: LinksDocument = {
+  version: 1,
+  links: [],
+  conflicts: [],
+  folders: [],
+};
 
 export interface NewLink {
   title: string;
@@ -119,7 +131,8 @@ export function urlKey(url: string): string {
  */
 export function normalizeGroup(group: string | undefined): string {
   const trimmed = (group ?? "").trim();
-  return trimmed.toLowerCase() === GENERAL.toLowerCase() ? "" : trimmed;
+  if (trimmed.toLowerCase() === GENERAL.toLowerCase()) return "";
+  return folderPath(trimmed).join(" / ");
 }
 
 /**
@@ -253,6 +266,130 @@ export function folderPath(group: string): string[] {
     .filter((s) => s !== "");
 }
 
+/** The folder one level up, or "" for a folder at the top. */
+export function parentOf(group: string): string {
+  return folderPath(group).slice(0, -1).join(" / ");
+}
+
+/** Whether `group` is `folder` itself or something inside it. */
+export function inFolder(group: string, folder: string): boolean {
+  if (folder === "") return true;
+  const path = folderPath(group);
+  const under = folderPath(folder);
+  return (
+    path.length >= under.length &&
+    under.every((name, i) => name.toLowerCase() === path[i].toLowerCase())
+  );
+}
+
+/**
+ * A folder that exists but holds nothing yet. A name already in use, by a
+ * link's group or by another empty folder, changes nothing: the folder is
+ * already there.
+ */
+export function addFolder(
+  document: LinksDocument,
+  group: string,
+): LinksDocument {
+  const name = normalizeGroup(group);
+  if (name === "") return document;
+  if (groupsOf(document).some((g) => g.toLowerCase() === name.toLowerCase())) {
+    return document;
+  }
+  return { ...document, folders: [...document.folders, name] };
+}
+
+/**
+ * A folder renamed, with everything inside it. "Work" to "MITRE" takes
+ * "Work / Tools" to "MITRE / Tools" as well, and renaming onto a folder
+ * that already exists merges the two. A new name of nothing, or of
+ * "General", empties the folder into the general list.
+ */
+export function renameFolder(
+  document: LinksDocument,
+  from: string,
+  to: string,
+): LinksDocument {
+  const source = normalizeGroup(from);
+  if (source === "") return document;
+  const target = normalizeGroup(to);
+  const depth = folderPath(source).length;
+  const moved = (group: string): string =>
+    folderPath(target).concat(folderPath(group).slice(depth)).join(" / ");
+  return withFolders({
+    ...document,
+    links: document.links.map((l) =>
+      inFolder(l.group, source) ? { ...l, group: moved(l.group) } : l,
+    ),
+    folders: document.folders.map((f) => (inFolder(f, source) ? moved(f) : f)),
+  });
+}
+
+/**
+ * A folder gone, and its links one level up rather than deleted: removing
+ * "Work / Tools" leaves its links under "Work", and removing "Work" leaves
+ * them in the general list. Folders inside it move up the same way.
+ */
+export function removeFolder(
+  document: LinksDocument,
+  group: string,
+): LinksDocument {
+  const gone = normalizeGroup(group);
+  if (gone === "") return document;
+  return renameFolder(document, gone, parentOf(gone));
+}
+
+/**
+ * One link under a different folder. Everything else about it is kept, and
+ * the folder it left stays on the page even when it was the last link in
+ * it: emptying a folder while sorting is not a request to delete it.
+ */
+export function moveLink(
+  document: LinksDocument,
+  id: string,
+  group: string,
+): LinksDocument {
+  const link = document.links.find((l) => l.id === id);
+  if (link === undefined) return document;
+  const target = normalizeGroup(group);
+  const left = link.group;
+  return withFolders({
+    ...document,
+    links: document.links.map((l) =>
+      l.id === id ? { ...l, group: target } : l,
+    ),
+    folders: left === "" ? document.folders : [...document.folders, left],
+  });
+}
+
+/**
+ * The empty folders that are still empty. A folder a link now sits in is
+ * the link's group, so keeping it here as well would list it twice, and a
+ * name left over from a rename is not a folder at all.
+ */
+function withFolders(document: LinksDocument): LinksDocument {
+  const used = new Set<string>();
+  for (const link of document.links) {
+    for (const name of ancestry(link.group)) used.add(name.toLowerCase());
+  }
+  const seen = new Set<string>();
+  const folders: string[] = [];
+  for (const folder of document.folders) {
+    const name = normalizeGroup(folder);
+    const key = name.toLowerCase();
+    if (name === "" || used.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    folders.push(name);
+  }
+  return { ...document, folders };
+}
+
+/** A folder and every folder above it: "a / b / c" is a, a / b, a / b / c. */
+function ancestry(group: string): string[] {
+  const path = folderPath(group);
+  return path.map((_, i) => path.slice(0, i + 1).join(" / "));
+}
+
 /** The document without one link, and without whatever it had to resolve. */
 export function removeLink(document: LinksDocument, id: string): LinksDocument {
   return {
@@ -326,14 +463,32 @@ export function resolveConflict(
  * so the page's headings are stable as links come and go.
  */
 export function groupsOf(document: LinksDocument): string[] {
-  const named = new Set<string>();
+  const named = new Map<string, string>();
   let general = false;
+  const note = (group: string) => {
+    for (const name of ancestry(group)) {
+      const key = name.toLowerCase();
+      if (!named.has(key)) named.set(key, name);
+    }
+  };
   for (const link of document.links) {
     if (link.group === "") general = true;
-    else named.add(link.group);
+    else note(link.group);
   }
-  const rest = [...named].sort((a, b) => a.localeCompare(b));
+  for (const folder of document.folders) note(folder);
+  const rest = [...named.values()].sort(byPath);
   return general ? [GENERAL, ...rest] : rest;
+}
+
+/** Alphabetical a segment at a time, so a folder comes before its own. */
+function byPath(a: string, b: string): number {
+  const left = folderPath(a);
+  const right = folderPath(b);
+  for (let i = 0; i < Math.min(left.length, right.length); i += 1) {
+    const order = left[i].localeCompare(right[i]);
+    if (order !== 0) return order;
+  }
+  return left.length - right.length;
 }
 
 /** The links under one heading, newest first. */
@@ -414,7 +569,11 @@ export function coerce(value: unknown): LinksDocument {
       });
     }
   }
-  return { version: 1, links, conflicts };
+  const rawFolders = (value as { folders?: unknown }).folders;
+  const folders = Array.isArray(rawFolders)
+    ? rawFolders.filter((f): f is string => typeof f === "string")
+    : [];
+  return withFolders({ version: 1, links, conflicts, folders });
 }
 
 function newId(): string {
