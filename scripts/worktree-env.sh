@@ -45,4 +45,14 @@ cat > .env <<ENV
 APP_PORT=$((8080 + offset))
 DEV_PORT=$((3000 + offset))
 DB_PORT=$((5433 + offset))
+
+# Who the containers that mount this directory run as. Without it, compose
+# run by hand writes root-owned files into the working tree that this user
+# cannot then delete. The Makefile exports the same two values.
+#
+# No backticks in this heredoc: it is unquoted, so the shell would run what
+# is between them. A pair around a compose command ran the whole test suite
+# and wrote its output into .env.
+HOST_UID=$(id -u)
+HOST_GID=$(id -g)
 ENV
