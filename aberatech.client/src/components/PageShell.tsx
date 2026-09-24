@@ -1,11 +1,8 @@
 import Container from "@mui/material/Container";
-import CssBaseline from "@mui/material/CssBaseline";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import AppTheme from "../theme/AppTheme";
-import AppAppBar from "./AppAppBar";
-import Footer from "./Footer";
+import SiteFrame from "./SiteFrame";
 
 export interface PageShellProps {
   title: string;
@@ -36,9 +33,7 @@ export default function PageShell({
   ...props
 }: PageShellProps) {
   return (
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <AppAppBar />
+    <SiteFrame {...props}>
       <Container maxWidth={maxWidth}>
         <Stack
           spacing={1.5}
@@ -89,7 +84,6 @@ export default function PageShell({
       <Container maxWidth={maxWidth} sx={{ pb: { xs: 6, sm: 10 } }}>
         {children}
       </Container>
-      <Footer />
-    </AppTheme>
+    </SiteFrame>
   );
 }
