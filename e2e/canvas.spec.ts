@@ -1,12 +1,15 @@
 import { inflateSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
 
-// Pulling a page down past its top (the rubber band on a Mac, an iPhone, or
-// Firefox) shows the browser canvas above the page, painted in the root
-// element's colour and nothing else. So the page's top row of pixels must be
-// that colour, edge to edge, or the gap shows as a band. Sampled as pixels
-// rather than read from the CSS: on 2026-09-22 the CSS said one thing and
-// Firefox showed another.
+// Pulling a page past either end (the rubber band on a Mac, an iPhone, or
+// Firefox) shows the browser canvas beyond the page, painted in the root
+// element's colour and nothing else. That colour is the glow's blue, so the
+// gap is more blue; the page's first and last rows of pixels must be that
+// same colour, edge to edge, or the seam shows as a band. On 2026-09-22 the
+// gap was black above a blue page. On 2026-09-24 the page's edge matched a
+// black gap, which is the same defect with the blue taken out. Sampled as
+// pixels rather than read from the CSS: the CSS has said one thing and
+// Firefox shown another.
 
 type Page = import("@playwright/test").Page;
 type Rgb = [number, number, number];
@@ -103,7 +106,7 @@ for (const path of pages) {
 for (const scheme of ["dark", "light"] as const) {
   test.describe(`${scheme} scheme`, () => {
     for (const path of pages) {
-      test(`${path}: the top edge is the canvas colour, with the glow below it`, async ({
+      test(`${path}: both edges are the canvas colour, with the glow below the top`, async ({
         page,
       }) => {
         // The stored choice goes in before the first script runs, so the
@@ -121,6 +124,12 @@ for (const scheme of ["dark", "light"] as const) {
         await page.evaluate(() => document.fonts.ready);
 
         const canvas = await canvasColour(page);
+        // Blue, not the page colour: the gap past either end is the point.
+        expect(
+          canvas[2] - canvas[0],
+          `the canvas is not blue: ${canvas}`,
+        ).toBeGreaterThan(20);
+
         const width = page.viewportSize()?.width ?? 1280;
         // Not the exact corners: WebKit paints the single pixel at (0,0) a
         // shade off, and nothing else along either edge.
@@ -131,6 +140,29 @@ for (const scheme of ["dark", "light"] as const) {
             `top edge at x=${x} is ${top}, canvas is ${canvas}`,
           ).toBe(true);
         }
+
+        // The last row too: pulling up at the bottom shows the same gap.
+        const height = page.viewportSize()?.height ?? 720;
+        await page.evaluate(() =>
+          window.scrollTo(0, document.documentElement.scrollHeight),
+        );
+        await page.waitForFunction(
+          () =>
+            Math.abs(
+              window.scrollY +
+                window.innerHeight -
+                document.documentElement.scrollHeight,
+            ) <= 1,
+        );
+        for (const x of [8, width / 2, width - 8]) {
+          const bottom = await pixelAt(page, Math.floor(x), height - 1);
+          expect(
+            near(bottom, canvas),
+            `bottom edge at x=${x} is ${bottom}, canvas is ${canvas}`,
+          ).toBe(true);
+        }
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForFunction(() => window.scrollY === 0);
 
         // Under the bar, at the centre: the glow is there, so the page is
         // not simply flat. Dark tints the blue channel up; light tints red
