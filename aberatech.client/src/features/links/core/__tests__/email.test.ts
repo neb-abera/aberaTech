@@ -21,6 +21,7 @@ const date = new Date("2026-09-22T14:00:00Z");
 const list = (n: number): LinksDocument => ({
   version: 1,
   conflicts: [],
+  folders: [],
   links: Array.from({ length: n }, (_, i) => ({
     id: `id-${i}`,
     title: `Link ${i}`,
