@@ -200,8 +200,13 @@ export default function Workbench({ summary }: { summary: Summary }) {
       ? down
       : (axisChoices.find((factor) => factor !== plotAcross) ?? plotAcross);
 
+  // Aborted, not merely ignored. A solve is a few hundred milliseconds of
+  // arithmetic on the server, and a drag settles several times: dropping the
+  // answer on arrival still made the box compute every superseded one, and
+  // they queue against the ones the reader is waiting for.
   React.useEffect(() => {
     let cancelled = false;
+    const stop = new AbortController();
     const handle = window.setTimeout(() => {
       setBusy(true);
       const request = toRequest(state);
@@ -209,6 +214,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
         request,
         unknown === "RaceTime" ? null : unknown,
         unknown === "RaceTime" ? null : state.targetSeconds,
+        stop.signal,
       )
         .then((answer) => {
           if (!cancelled) {
@@ -222,17 +228,20 @@ export default function Workbench({ summary }: { summary: Summary }) {
     return () => {
       cancelled = true;
       window.clearTimeout(handle);
+      stop.abort();
     };
   }, [state, unknown]);
 
   React.useEffect(() => {
     let cancelled = false;
+    const stop = new AbortController();
     const handle = window.setTimeout(() => {
       fetchSurface(
         toRequest(state),
         plotAcross,
         plotDown,
         unknown === "RaceTime" ? null : state.targetSeconds,
+        stop.signal,
       )
         .then((grid) => !cancelled && setSurface(grid))
         .catch(() => undefined);
@@ -240,19 +249,22 @@ export default function Workbench({ summary }: { summary: Summary }) {
     return () => {
       cancelled = true;
       window.clearTimeout(handle);
+      stop.abort();
     };
   }, [state, plotAcross, plotDown, unknown]);
 
   React.useEffect(() => {
     let cancelled = false;
+    const stop = new AbortController();
     const handle = window.setTimeout(() => {
-      fetchMeasurementPlan(toRequest(state))
+      fetchMeasurementPlan(toRequest(state), stop.signal)
         .then((next) => !cancelled && setPlan(next))
         .catch(() => undefined);
     }, 600);
     return () => {
       cancelled = true;
       window.clearTimeout(handle);
+      stop.abort();
     };
   }, [state]);
 
