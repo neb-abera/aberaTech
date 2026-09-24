@@ -76,10 +76,11 @@ export default function DecisionPanel({
       return;
     }
     let cancelled = false;
+    const stop = new AbortController();
     setLoading(true);
     const handle = window.setTimeout(
       () => {
-        fetchOutlook(hours, compliance)
+        fetchOutlook(hours, compliance, stop.signal)
           .then((result) => {
             if (cancelled) return;
             setOutlook(result);
@@ -101,6 +102,7 @@ export default function DecisionPanel({
     return () => {
       cancelled = true;
       window.clearTimeout(handle);
+      stop.abort();
     };
   }, [hours, compliance]);
 

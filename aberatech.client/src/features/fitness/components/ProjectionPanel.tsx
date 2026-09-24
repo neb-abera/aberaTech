@@ -86,6 +86,7 @@ export default function ProjectionPanel({
 
   React.useEffect(() => {
     let cancelled = false;
+    const stop = new AbortController();
     const handle = window.setTimeout(() => {
       const weightKg =
         targetWeightLb !== null && targetWeightLb !== currentWeightLb
@@ -97,6 +98,7 @@ export default function ProjectionPanel({
         weightKg,
         distances,
         horizons,
+        stop.signal,
       )
         .then((result) => {
           if (!cancelled) {
@@ -113,6 +115,7 @@ export default function ProjectionPanel({
     return () => {
       cancelled = true;
       window.clearTimeout(handle);
+      stop.abort();
     };
   }, [plan, compliance, targetWeightLb, currentWeightLb, distances, horizons]);
 
