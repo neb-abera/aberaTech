@@ -8,21 +8,11 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import GuideCard from "./GuideCard";
 
 export default function ZeroToThirtyDays() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -46,18 +36,7 @@ export default function ZeroToThirtyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://myarmybenefits.us.army.mil/Benefit-Library/Federal-Benefits/Unemployment-Compensation"
@@ -89,7 +68,7 @@ export default function ZeroToThirtyDays() {
                   myarmybenefits.us.army.mil
                 </Typography>
               </Box>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -100,23 +79,12 @@ export default function ZeroToThirtyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Your last Army paycheck will be delayed about 2-3 weeks from its
                 usual payday.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -127,18 +95,7 @@ export default function ZeroToThirtyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you signed up for Reserves/Guard, make sure to do the
                 following:
@@ -173,7 +130,7 @@ export default function ZeroToThirtyDays() {
                 have your pay setup through the USAR it'll show up in a dropdown
                 menu on myPay.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -184,18 +141,7 @@ export default function ZeroToThirtyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 You have{" "}
                 <Link
@@ -215,7 +161,7 @@ export default function ZeroToThirtyDays() {
               <Typography>
                 Retirees and Reserve/Guard have different healthcare benefits.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -226,18 +172,7 @@ export default function ZeroToThirtyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 You need to send your PPM and per diem voucher back to your
                 installation transportation office.
@@ -247,10 +182,10 @@ export default function ZeroToThirtyDays() {
                 about 5 months, but you have up to a year past your ETS date. I
                 got paid around $5k for PPM and about $500 for per diem.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }
