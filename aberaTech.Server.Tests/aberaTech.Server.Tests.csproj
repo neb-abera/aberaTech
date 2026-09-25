@@ -4,6 +4,21 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
+    <!-- xunit.v3 test projects are executables: the runner is linked in. -->
+    <OutputType>Exe</OutputType>
+    <!-- dotnet test runs these through VSTest and xunit.runner.visualstudio,
+         which is what coverlet.collector, the Category trait filter and the
+         summary line scripts/check-server-tests.sh reads all work with.
+         xunit.v3 turns on Microsoft.Testing.Platform by default, and on the
+         .NET 10 SDK that refuses the VSTest path. -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <UseMicrosoftTestingPlatformRunner>false</UseMicrosoftTestingPlatformRunner>
+    <!-- xUnit1051 asks every call that takes a CancellationToken to pass
+         TestContext.Current.CancellationToken, so a cancelled run stops
+         sooner. It fired on 229 call sites when xunit.v3 arrived. It changes
+         how fast an aborted run exits, never what a test proves, so it is off
+         here rather than failing the build under TreatWarningsAsErrors. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
     <!-- The scheduling domain is the reason this project exists; warnings in it
          are the kind that hide a real defect, so they fail the build. -->
   </PropertyGroup>
@@ -21,7 +36,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
