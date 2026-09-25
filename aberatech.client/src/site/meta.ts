@@ -35,6 +35,22 @@ export const heroAvatar = {
   type: "image/webp",
 } as const;
 
+/**
+ * The third-party hosts a page draws images from. Its head preconnects to
+ * each, so the connection is open before the first image is requested. The
+ * server's img-src names the same hosts. guides.test.tsx holds this list to
+ * the images the page renders.
+ */
+export const pagePreconnects: Record<string, readonly string[]> = {
+  "/transition": [
+    "https://assets.recruitmilitary.com",
+    "https://nvf.org",
+    "https://www.hiringourheroes.org",
+    "https://www.va.gov",
+    "https://www.yceml.net",
+  ],
+};
+
 export interface PageMeta {
   /** The <title>. The site name is appended to every page but the home page. */
   title: string;
@@ -168,6 +184,9 @@ export function headFor(route: string): string {
     `<meta name="twitter:description" content="${description}" />`,
     `<meta name="twitter:image" content="${image}" />`,
   ];
+  for (const origin of pagePreconnects[route] ?? []) {
+    lines.push(`<link rel="preconnect" href="${origin}" />`);
+  }
   if (route === "/") {
     // The avatar is the largest thing in the home page's first screen. React
     // emits a preload of its own for a high-priority image, but at the top of

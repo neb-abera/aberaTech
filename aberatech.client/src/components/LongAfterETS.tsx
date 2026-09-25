@@ -8,21 +8,11 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import GuideCard from "./GuideCard";
 
 export default function LongAfterETS() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -46,18 +36,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Your first post-transition job might not be what you wanted, or
                 how you thought it was going to be. It's okay to job-hop.
@@ -78,7 +57,7 @@ export default function LongAfterETS() {
                 software engineer role as an outside hire at Amazon is rigorous,
                 but moving to another team as an employee is easier.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -89,18 +68,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Attend conferences for your chosen profession.
               </Typography>
@@ -117,7 +85,7 @@ export default function LongAfterETS() {
                   Top Conferences to Attend in 2022 by Industries | Aventri
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -128,18 +96,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 You have benefits that last long after you ETS.
               </Typography>
@@ -148,7 +105,7 @@ export default function LongAfterETS() {
                 TEC a second time if you need help transitioning to another job
                 again as long as it's 18 months between courses.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -159,18 +116,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://nvf.org/veteran-service-officers/"
@@ -191,7 +137,11 @@ export default function LongAfterETS() {
                 >
                   <Box
                     component="img"
+                    // The file's own size, measured 2026-09-26, so the space is held
+                    // before the image arrives.
                     src="https://nvf.org/wp-content/uploads/2015/03/veteran-service-officers.jpg"
+                    width={400}
+                    height={300}
                     loading="lazy"
                     decoding="async"
                     alt="Veteran Service Officers - List of Where to Find Help"
@@ -219,7 +169,7 @@ export default function LongAfterETS() {
                   nvf.org
                 </Typography>
               </Box>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -230,18 +180,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://www.va.gov/disability/get-help-filing-claim/"
@@ -262,7 +201,11 @@ export default function LongAfterETS() {
                 >
                   <Box
                     component="img"
+                    // The file's own size, measured 2026-09-26, so the space is held
+                    // before the image arrives.
                     src="https://www.va.gov/img/design/logo/va-og-image.png"
+                    width={1200}
+                    height={630}
                     loading="lazy"
                     decoding="async"
                     alt="Get help from a VA accredited representative or VSO | Veterans Affairs"
@@ -306,7 +249,7 @@ export default function LongAfterETS() {
                 </Link>{" "}
                 for help while working on your disability claim with the VA.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -317,18 +260,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography>
                 If you lose your DD214, you can request a copy from{" "}
                 <Link
@@ -340,7 +272,7 @@ export default function LongAfterETS() {
                 </Link>
                 .
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -351,18 +283,7 @@ export default function LongAfterETS() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Give back to veterans.
               </Typography>
@@ -370,10 +291,10 @@ export default function LongAfterETS() {
                 You got a lot of help along the way. Do what you can to give
                 back.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

@@ -181,21 +181,24 @@ public sealed class StaticPipelineTests : IDisposable
     }
 
     [Fact]
-    public async Task The_csp_allows_both_hops_of_the_affiliate_image_redirect()
+    public async Task The_csp_allows_the_guide_image_hosts_and_no_tracking_redirect()
     {
-        // The transition guide's DITY-calculator banner is a CJ Affiliate
-        // image: lduhtrp.net 302-redirects to yceml.net, which serves the
-        // bytes. CSP checks every hop, so dropping either host breaks the
-        // image — which happened once when the policy moved from the meta
-        // tag to this header.
+        // The transition guide draws five partner images from these hosts,
+        // and its head preconnects to the same list (pagePreconnects in
+        // site/meta.ts). The DITY calculator banner used to load through a
+        // CJ Affiliate redirect on lduhtrp.net. The page links the image on
+        // yceml.net directly, so the redirect host is gone from the policy.
         var response = await _factory.CreateClient().GetAsync("/");
 
         var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
         var imgSrc = Assert.Single(
             csp.Split("; "),
             directive => directive.StartsWith("img-src "));
-        Assert.Contains("https://www.lduhtrp.net", imgSrc);
-        Assert.Contains("https://www.yceml.net", imgSrc);
+        Assert.Equal(
+            "img-src 'self' data: https://www.va.gov https://www.yceml.net "
+            + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com",
+            imgSrc);
+        Assert.DoesNotContain("lduhtrp.net", csp);
     }
 
     [Fact]

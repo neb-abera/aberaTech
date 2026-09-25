@@ -5,23 +5,12 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import GuideCard from "./GuideCard";
 
 export default function TerminalLeave() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -45,18 +34,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 If you're a Reservist then check on the status of your ETS PAR.
                 Submit RSTs in case your orders are delayed. If you're Active
@@ -67,10 +45,10 @@ export default function TerminalLeave() {
                 Fort Moore G1 won't process installation clearance paper
                 requests until you've completed CSP.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

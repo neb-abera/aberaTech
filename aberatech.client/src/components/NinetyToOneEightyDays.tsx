@@ -11,21 +11,11 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
 import ETSScheduleImage from "../assets/ETS_briefing_schedule.webp";
 import G1Schedule from "../assets/g1_contact_info.webp";
+import GuideCard from "./GuideCard";
 
 export default function NinetyToOneEightyDays() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -49,18 +39,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Submit a request for your medical records at about the 7-8 month
                 mark.
@@ -70,7 +49,7 @@ export default function NinetyToOneEightyDays() {
                 hospital. It may take 4-8 weeks for them to process your
                 request. This is especially true for the busy summer move cycle.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -81,18 +60,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 sx={{
                   display: "flex",
@@ -134,7 +102,7 @@ export default function NinetyToOneEightyDays() {
                 At Fort Moore, you fall under the DHR, so look at the box to get
                 info on speaking to G1.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -145,18 +113,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 sx={{
                   display: "flex",
@@ -219,7 +176,7 @@ export default function NinetyToOneEightyDays() {
                   back to the field training exercise.
                 </strong>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -230,18 +187,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Set up a{" "}
                 <Link
@@ -261,7 +207,7 @@ export default function NinetyToOneEightyDays() {
                 </Link>{" "}
                 websites.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -272,18 +218,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Identify any vocational training you're interested in and apply
                 for acceptance in the program. Remember, you need to apply for
@@ -314,7 +249,7 @@ export default function NinetyToOneEightyDays() {
                   Skillbridge, or have ETSed.
                 </strong>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -325,18 +260,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Apply for the{" "}
                 <Link
@@ -351,7 +275,7 @@ export default function NinetyToOneEightyDays() {
               <Typography sx={{ marginBottom: 2 }}>
                 Upload your medical record to your claim when you get it.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -362,18 +286,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Buy a computer if you don't have one yet.
               </Typography>
@@ -512,7 +425,7 @@ export default function NinetyToOneEightyDays() {
                 be buggy on Ubuntu. This is outside of the control of staff as
                 they cannot support debugging these issues.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -523,18 +436,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Look up job conferences to attend in the upcoming months. Don't
                 forget that you can go to professional conventions or
@@ -550,7 +452,7 @@ export default function NinetyToOneEightyDays() {
                   Top Conferences to Attend in 2022 by Industries | Aventri
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -561,18 +463,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://success.recruitmilitary.com/events/schedule"
@@ -593,7 +484,11 @@ export default function NinetyToOneEightyDays() {
                 >
                   <Box
                     component="img"
+                    // The file's own size, measured 2026-09-26, so the space is held
+                    // before the image arrives.
                     src="https://assets.recruitmilitary.com/images/rm_logo_new_large.png"
+                    width={6167}
+                    height={2778}
                     loading="lazy"
                     decoding="async"
                     alt="Veteran Job Fairs"
@@ -620,7 +515,7 @@ export default function NinetyToOneEightyDays() {
                   success.recruitmilitary.com
                 </Typography>
               </Box>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -631,18 +526,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://www.hiringourheroes.org/career-services/hiring-events/"
@@ -663,7 +547,11 @@ export default function NinetyToOneEightyDays() {
                 >
                   <Box
                     component="img"
+                    // The file's own size, measured 2026-09-26, so the space is held
+                    // before the image arrives.
                     src="https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1.jpg"
+                    width={1200}
+                    height={800}
                     loading="lazy"
                     decoding="async"
                     alt="Hiring Events"
@@ -691,7 +579,7 @@ export default function NinetyToOneEightyDays() {
                   www.hiringourheroes.org
                 </Typography>
               </Box>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -702,18 +590,7 @@ export default function NinetyToOneEightyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you're interested in the Reserve/Guard, make sure to explore
                 available MOS, benefits, bonuses, and locations you're
@@ -728,10 +605,10 @@ export default function NinetyToOneEightyDays() {
                 </Link>
                 .
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

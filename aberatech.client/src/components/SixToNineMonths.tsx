@@ -5,24 +5,13 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import GuideCard from "./GuideCard";
 
 export default function SixToNineMonths() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -46,18 +35,7 @@ export default function SixToNineMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Submit a request for your medical records at about the 7-8 month
                 mark.
@@ -67,7 +45,7 @@ export default function SixToNineMonths() {
                 hospital. It may take 4-8 weeks for them to process your
                 request. This is especially true for the busy summer move cycle.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -78,18 +56,7 @@ export default function SixToNineMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 You should have an idea of prospective jobs and/or companies by
                 this point.{" "}
@@ -127,7 +94,7 @@ export default function SixToNineMonths() {
                 </strong>{" "}
                 for virtual meetings.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -138,18 +105,7 @@ export default function SixToNineMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Schedule to turn in your CIF equipment before leaving for CSP.
               </Typography>
@@ -160,7 +116,7 @@ export default function SixToNineMonths() {
                 find the item at a local surplus store and then do a second
                 turn-in when you get your installation clearing papers.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -171,18 +127,7 @@ export default function SixToNineMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If it makes financial sense, you can{" "}
                 <Link
@@ -217,10 +162,10 @@ export default function SixToNineMonths() {
                   Here is an example template.
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }
