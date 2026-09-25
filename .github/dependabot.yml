@@ -9,6 +9,16 @@
 # Packages that must move together are grouped at every update level, majors
 # included, or a major arrives as two PRs that each fail to install.
 version: 2
+
+# The Playwright browser image and the @playwright/test runner must be one
+# version (scripts/check-playwright-image.sh). They live in two ecosystems,
+# so a group of either alone would bump one and leave the other behind, and
+# each pull request would fail the check. This group bumps both in one.
+multi-ecosystem-groups:
+  playwright:
+    schedule:
+      interval: weekly
+
 updates:
   - package-ecosystem: nuget
     directory: /
@@ -72,24 +82,28 @@ updates:
           - minor
           - patch
   # The end-to-end suite's own manifest: one dev dependency, @playwright/test,
-  # whose version also names the browser image `make e2e` runs (the Makefile
-  # derives it from this file), so a bump here moves both together.
+  # bumped together with the browser image in e2e/Dockerfile.
   - package-ecosystem: npm
     directory: /e2e
-    schedule:
-      interval: weekly
+    patterns: ["@playwright/test"]
+    multi-ecosystem-group: playwright
     # A new release gets 5 days of other people finding its bugs and pulled
     # releases before it is offered here.
     cooldown:
       default-days: 5
-    groups:
-      e2e-non-major:
-        applies-to: version-updates
-        update-types:
-          - minor
-          - patch
+  # The browser image `make e2e` runs, pinned by digest in e2e/Dockerfile.
   - package-ecosystem: docker
-    directory: /aberaTech.Server
+    directory: /e2e
+    patterns: ["mcr.microsoft.com/playwright"]
+    multi-ecosystem-group: playwright
+    cooldown:
+      default-days: 5
+  # The server's Dockerfile, and the ZAP image the security scan runs
+  # (.zap/Dockerfile, read by the workflow, never built).
+  - package-ecosystem: docker
+    directories:
+      - /aberaTech.Server
+      - /.zap
     schedule:
       interval: weekly
     # A new release gets 5 days of other people finding its bugs and pulled

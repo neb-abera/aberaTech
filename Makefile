@@ -117,11 +117,12 @@ prose: ## Writing rules (.vale/styles/Abera): the Markdown, then the prerendered
 	./scripts/check-prose.sh
 	$(DOCKER) build --target clientprose -f $(DOCKERFILE) .
 
-# The Playwright image is derived from e2e/package.json, the way the template
-# does it: the browsers in the image and the runner in the manifest have to be
-# the same version, so Dependabot's bump of @playwright/test moves both and
-# nothing here can drift from it.
-PLAYWRIGHT_IMAGE := mcr.microsoft.com/playwright:v$(shell sed -n 's|.*"@playwright/test": "\([^"]*\)".*|\1|p' e2e/package.json)-noble
+# The Playwright image is the FROM line of e2e/Dockerfile, pinned by tag and
+# digest where Dependabot can bump it. The browsers in the image and the
+# runner in e2e/package.json have to be the same version: Dependabot bumps
+# both in one pull request, and scripts/check-playwright-image.sh fails first
+# when they differ.
+PLAYWRIGHT_IMAGE := $(shell sed -n 's/^FROM \([^ ]*\) AS e2e$$/\1/p' e2e/Dockerfile)
 E2E_CONTAINER    := $(subst :,-,$(IMAGE))-e2e
 
 # The suite runs on this worktree's compose network against the `app` service
@@ -130,6 +131,8 @@ E2E_CONTAINER    := $(subst :,-,$(IMAGE))-e2e
 # container rather than --rm so the traces can be copied out when it fails;
 # it is removed either way.
 e2e: ## Playwright against the production image and its database, on the compose network
+	./scripts/check-playwright-image.sh --self-test
+	./scripts/check-playwright-image.sh
 	$(COMPOSE) up -d --build --wait app
 	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1 || true
 	$(DOCKER) run --name $(E2E_CONTAINER) \
