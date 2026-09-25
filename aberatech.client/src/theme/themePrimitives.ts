@@ -426,10 +426,8 @@ export const shape = {
   borderRadius: 8,
 };
 
-// @ts-expect-error nebdebug need to research error
-const defaultShadows: Shadows = [
-  "none",
-  "var(--template-palette-baseShadow)",
-  ...defaultTheme.shadows.slice(2),
-];
+// Spreading the tuple keeps its 25-entry type, which a spread of slice(2) loses.
+const defaultShadows: Shadows = [...defaultTheme.shadows];
+defaultShadows[0] = "none";
+defaultShadows[1] = "var(--template-palette-baseShadow)";
 export const shadows = defaultShadows;
