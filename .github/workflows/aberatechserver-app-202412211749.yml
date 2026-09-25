@@ -19,16 +19,14 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
-# The token gets exactly what the job uses: the checkout reads the repository,
-# and id-token is what azure/login exchanges for Azure credentials through the
-# app registration's federated credential — no client secret is stored
-# anywhere. Without this block the workflow ran on the repository default,
-# which is broader.
+# The token gets exactly what each job uses. The default here is read-only.
+# The two jobs that sign in to Azure add id-token, which azure/login exchanges
+# for Azure credentials through the app registration's federated credential,
+# so no client secret is stored anywhere. The build job alone adds
+# attestations, for the provenance and SBOM it signs. Without this block the
+# workflow ran on the repository default, which is broader.
 permissions:
   contents: read
-  id-token: write
-  # For the provenance attestation on the pushed image.
-  attestations: write
 env:
   CONTAINER_APP_CONTAINER_NAME: aberatechserver
   CONTAINER_APP_NAME: aberatechserver-app-202412211749
@@ -40,6 +38,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+      # The provenance and SBOM attestations on the pushed image.
+      attestations: write
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -96,16 +99,27 @@ jobs:
           push-to-registry: true
 
       # SBOM of what actually shipped (the pushed image, not the source
-      # tree), kept as a build artifact so "what exactly is running" has an
-      # answer dated to the deploy that put it there.
+      # tree), signed and pushed to the registry beside the image. A workflow
+      # artifact expired after 90 days. The attestation lives as long as the
+      # image and verifies with `gh attestation verify --predicate-type
+      # https://spdx.dev/Document/v2.3`. actions/attest rather than
+      # actions/attest-sbom, whose README deprecates it for this action.
       - name: Generate SBOM of the deployed image
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}@${{ steps.push.outputs.digest }}
           format: spdx-json
           output-file: sbom.spdx.json
-          upload-artifact: true
+          upload-artifact: false
           upload-release-assets: false
+
+      - name: Attest the SBOM to the image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: sbom.spdx.json
+          push-to-registry: true
 
   deploy:
     runs-on: ubuntu-latest
