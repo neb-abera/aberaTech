@@ -59,3 +59,10 @@ test("an address the site does not have is a 404 with a page", async ({
     page.getByRole("heading", { level: 1, name: "No page at that address" }),
   ).toBeVisible();
 });
+
+test("the stock Vite logo is not served", async ({ request }) => {
+  // create-vite ships public/vite.svg and nothing here uses it. The favicon
+  // beside it is the control: a static file that ships answers 200.
+  expect((await request.get("/favicon.svg")).status()).toBe(200);
+  expect((await request.get("/vite.svg")).status()).toBe(404);
+});
