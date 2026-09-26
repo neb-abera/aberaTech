@@ -51,6 +51,8 @@ function wordCounts(html: string): string {
 }
 
 const imgTags = (html: string) => html.match(/<img\b[^>]*>/g) ?? [];
+const hostOf = (src: string | undefined) =>
+  src?.startsWith("https://") ? new URL(src).hostname : "";
 const attr = (tag: string, name: string) =>
   tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
 
@@ -185,8 +187,8 @@ describe("the transition guide's third-party images", () => {
     // 1200 by 800 and 303 KB, shown at 438 CSS pixels at most. The owner
     // serves 300, 768 and 1024 pixel copies of the same file.
     const html = await render("/transition");
-    const tag = imgTags(html).find((t) =>
-      (attr(t, "src") ?? "").includes("hiringourheroes.org"),
+    const tag = imgTags(html).find(
+      (t) => hostOf(attr(t, "src")) === "www.hiringourheroes.org",
     );
 
     expect(attr(tag ?? "", "src")).toContain("-768x512.jpg");
@@ -198,8 +200,8 @@ describe("the transition guide's third-party images", () => {
     // rm_logo_new_large.png is 6167 by 2778 and 75 KB, shown at 400 pixels
     // at most. rm_logo_new_small.png is the same logo at 2047 by 481.
     const html = await render("/transition");
-    const tag = imgTags(html).find((t) =>
-      (attr(t, "src") ?? "").includes("recruitmilitary.com"),
+    const tag = imgTags(html).find(
+      (t) => hostOf(attr(t, "src")) === "assets.recruitmilitary.com",
     );
 
     expect(attr(tag ?? "", "src")).toBe(
