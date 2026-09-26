@@ -40,7 +40,7 @@ env:
   PROJECT_NAME_FOR_DOCKER: aberatechserver
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     permissions:
       contents: read
@@ -134,7 +134,7 @@ jobs:
   # by one release, because that revision serves on the new schema until the
   # new one is ready. aberaTech.Postgres/Sql/README.md has the roles.
   migrate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     needs: build
     permissions:
@@ -189,7 +189,7 @@ jobs:
         run: az logout || true
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     needs: migrate
     permissions:
@@ -324,7 +324,7 @@ jobs:
   # added, and the assets are content-hashed so over-purging costs one cache
   # miss each, not correctness.
   purge-edge-cache:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     needs: deploy
     steps:
@@ -359,7 +359,7 @@ jobs:
   #
   # After the purge, so it reads what a visitor reads rather than a cached copy.
   smoke-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     needs: purge-edge-cache
     steps:

@@ -4,4 +4,4 @@
 # Dependabot bumps both in one pull request (the playwright group in
 # .github/dependabot.yml), and scripts/check-playwright-image.sh fails when
 # they differ.
-FROM mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 AS e2e
+FROM mcr.microsoft.com/playwright:v1.63.0-resolute@sha256:b022639ae9197f864040f92eef7b57c6d4b47db2190f77c909d8a5d902dd4b7e AS e2e

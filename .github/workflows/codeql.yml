@@ -31,7 +31,7 @@ concurrency:
 jobs:
   analyze:
     name: analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Buildless C# analysis is the slow leg; it normally finishes well inside
     # this, and a hung run should not hold the runner for six hours.
     timeout-minutes: 45
