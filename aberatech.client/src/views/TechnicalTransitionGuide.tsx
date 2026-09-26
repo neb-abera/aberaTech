@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Link } from "react-router";
 import MachineLearningPathwayImage from "../assets/machine_learning_pathway.webp";
+import DocumentFrame from "../components/DocumentFrame";
 import { cardSurface } from "../components/GuideCard";
 import GuideSection from "../components/GuideSection";
 import PageShell from "../components/PageShell";
@@ -58,17 +59,20 @@ export default function TechnicalTransitionGuide(props: {
         <Typography variant="body1" component="p" sx={{ marginBottom: 2 }}>
           Andy Sterkowitz covers several of these topics in this video.
         </Typography>
-        <CardMedia
-          component="iframe"
-          title="test"
-          src="https://www.youtube.com/embed/ueXjGMrmn8k"
-          sx={{
-            width: "100%",
-            height: "auto",
-            aspectRatio: "16/9",
-            marginBottom: 2,
-          }}
-        />
+        <GuideSection
+          id="andy-sterkowitz-video"
+          title="Video: Why 95% of Self-Taught Programmers Fail, by Andy Sterkowitz"
+        >
+          <DocumentFrame
+            title="Why 95% of Self-Taught Programmers Fail, by Andy Sterkowitz"
+            src="https://www.youtube.com/embed/ueXjGMrmn8k"
+            sx={{
+              width: "100%",
+              height: "auto",
+              aspectRatio: "16/9",
+            }}
+          />
+        </GuideSection>
       </Box>
       <Typography variant="h2" component="h2" sx={{ color: "text.primary" }}>
         My recommendation on how to learn to program
