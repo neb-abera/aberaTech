@@ -12,7 +12,14 @@ import {
   parseNetscape,
   textOf,
 } from "../bookmarks";
-import { addLink, empty, type LinksDocument } from "../links";
+import {
+  addLink,
+  empty,
+  GENERAL,
+  groupsOf,
+  inGroup,
+  type LinksDocument,
+} from "../links";
 
 const day = new Date("2026-09-12T15:00:00Z");
 
@@ -284,23 +291,24 @@ describe("exportBookmarks", () => {
     ].reduce((d, link, i) => addLink(d, link, day, `n-${i}`), empty);
     const out = exportBookmarks(nested);
 
-    // One Work folder, with Notes and Tools inside it and CLI inside Tools.
+    // One Work folder, with Tools and Notes inside it in the order they
+    // came, and CLI inside Tools.
     expect(out.match(/<H3>Work<\/H3>/g)).toHaveLength(1);
     const work = out.indexOf("<H3>Work</H3>");
-    const notes = out.indexOf("<H3>Notes</H3>");
     const tools = out.indexOf("<H3>Tools</H3>");
     const cli = out.indexOf("<H3>CLI</H3>");
-    expect(work).toBeLessThan(notes);
-    expect(notes).toBeLessThan(tools);
+    const notes = out.indexOf("<H3>Notes</H3>");
+    expect(work).toBeLessThan(tools);
     expect(tools).toBeLessThan(cli);
+    expect(cli).toBeLessThan(notes);
     expect(out).toContain("        <DT><H3>Tools</H3>");
     expect(out).toContain("            <DT><H3>CLI</H3>");
 
     const back = mergeLinks(empty, parseBookmarks(out), day);
     expect(back.document.links.map((l) => [l.title, l.group])).toEqual([
       ["Top", "Work"],
-      ["Sibling", "Work / Notes"],
       ["Deep", "Work / Tools / CLI"],
+      ["Sibling", "Work / Notes"],
     ]);
   });
 
@@ -331,6 +339,72 @@ describe("exportBookmarks", () => {
     ).toEqual([
       ["Top <one>", "https://a.example/?q=1&r=2", "", "", "2026-09-12"],
       ["Grouped", "https://b.example/", "Work", 'say "hi"', "2026-09-12"],
+    ]);
+  });
+});
+
+describe("the file's order", () => {
+  // Most used first, the way the owner keeps them in the browser. Nothing
+  // here is in alphabetical order, so a sort anywhere shows up.
+  const ordered = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<DL><p>
+    <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>
+    <DL><p>
+        <DT><A HREF="https://mail.example/">Mail</A>
+        <DT><A HREF="https://calendar.example/">Calendar</A>
+        <DT><A HREF="https://bank.example/">Bank</A>
+        <DT><H3>Work</H3>
+        <DL><p>
+            <DT><A HREF="https://tracker.example/">Tracker</A>
+            <DT><A HREF="https://docs.example/">Docs</A>
+        </DL><p>
+        <DT><H3>Army</H3>
+        <DL><p>
+            <DT><A HREF="https://ipps.example/">IPPS</A>
+            <DT><A HREF="https://akm.example/">AKM</A>
+        </DL><p>
+    </DL><p>
+</DL><p>
+`;
+  const { document } = mergeLinks(empty, parseBookmarks(ordered), day);
+  const titles = (group: string) =>
+    inGroup(document, group).map((l) => l.title);
+
+  it("keeps the top bookmark at the top of the page", () => {
+    expect(titles(GENERAL)).toEqual(["Mail", "Calendar", "Bank"]);
+    expect(titles("Work")).toEqual(["Tracker", "Docs"]);
+    expect(titles("Army")).toEqual(["IPPS", "AKM"]);
+  });
+
+  it("keeps the file's folder order", () => {
+    expect(groupsOf(document)).toEqual([GENERAL, "Work", "Army"]);
+  });
+
+  it("downloads in the same order and reads back unchanged", () => {
+    const out = exportBookmarks(document);
+    expect(out.indexOf(">Mail<")).toBeLessThan(out.indexOf(">Calendar<"));
+    expect(out.indexOf(">Calendar<")).toBeLessThan(out.indexOf(">Bank<"));
+    expect(out.indexOf("<H3>Work</H3>")).toBeLessThan(
+      out.indexOf("<H3>Army</H3>"),
+    );
+    const back = mergeLinks(empty, parseBookmarks(out), day).document;
+    expect(back.links.map((l) => l.url)).toEqual(
+      document.links.map((l) => l.url),
+    );
+    expect(groupsOf(back)).toEqual(groupsOf(document));
+  });
+
+  it("leaves links already here where they are, and adds new ones below", () => {
+    const later = ordered.replace(
+      '<DT><A HREF="https://mail.example/">Mail</A>',
+      '<DT><A HREF="https://news.example/">News</A>\n        <DT><A HREF="https://mail.example/">Mail</A>',
+    );
+    const again = mergeLinks(document, parseBookmarks(later), day).document;
+    expect(inGroup(again, GENERAL).map((l) => l.title)).toEqual([
+      "Mail",
+      "Calendar",
+      "Bank",
+      "News",
     ]);
   });
 });

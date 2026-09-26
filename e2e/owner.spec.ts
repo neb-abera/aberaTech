@@ -252,6 +252,57 @@ test.describe("/links", () => {
     });
   });
 
+  test("a file keeps its order on the page, moves stick, and the download keeps them", async ({
+    page,
+  }) => {
+    const ordered = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<DL><p>
+    <DT><H3>E2E Order</H3>
+    <DL><p>
+        <DT><A HREF="https://e2e.example/order-1">Zulu (e2e)</A>
+        <DT><A HREF="https://e2e.example/order-2">Alpha (e2e)</A>
+        <DT><A HREF="https://e2e.example/order-3">Mike (e2e)</A>
+    </DL><p>
+</DL><p>
+`;
+    const titles = () =>
+      page
+        .getByRole("list", { name: "Links under E2E Order" })
+        .getByRole("link")
+        .allTextContents();
+
+    await signIn(page, "/links");
+    await expect(page.getByRole("button", { name: "Upload" })).toBeVisible();
+    const report = await upload(page, "ordered.html", ordered);
+    await expect(report).toContainText("ordered.html: 3 added");
+    expect(await titles()).toEqual(["Zulu (e2e)", "Alpha (e2e)", "Mike (e2e)"]);
+
+    await page.getByRole("button", { name: "Move Mike (e2e) up" }).click();
+    await page.getByRole("button", { name: "Move Mike (e2e) up" }).click();
+    await expect
+      .poll(titles)
+      .toEqual(["Mike (e2e)", "Zulu (e2e)", "Alpha (e2e)"]);
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // The order is the saved one, not just what this tab remembers.
+    await page.reload();
+    await expect
+      .poll(titles, { timeout: 15_000 })
+      .toEqual(["Mike (e2e)", "Zulu (e2e)", "Alpha (e2e)"]);
+
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download", exact: true }).click();
+    const text = (
+      await (await (await download).createReadStream()).toArray()
+    ).join("");
+    const inFile = [...text.matchAll(/order-\d"[^>]*>([^<]*)</g)].map(
+      (m) => m[1],
+    );
+    expect(inFile).toEqual(["Mike (e2e)", "Zulu (e2e)", "Alpha (e2e)"]);
+  });
+
   test("a tag narrows the page and the download carries just that tag", async ({
     page,
   }) => {

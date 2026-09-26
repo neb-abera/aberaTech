@@ -22,6 +22,7 @@ import {
   type Conflict,
   empty,
   folderPath,
+  groupsOf,
   hasTag,
   type LinkEntry,
   type LinksDocument,
@@ -352,6 +353,11 @@ interface Folder {
  * group names.
  */
 export function exportBookmarks(document: LinksDocument): string {
+  // Folders go out in the page's order, so the file reads top to bottom
+  // the way the page does.
+  const rank = new Map(
+    groupsOf(document).map((g, i) => [g.toLowerCase(), i] as const),
+  );
   const root: Folder = { folders: new Map(), links: [] };
   for (const link of document.links) {
     let node = root;
@@ -385,17 +391,19 @@ export function exportBookmarks(document: LinksDocument): string {
     );
     if (link.note !== "") lines.push(`${indent}<DD>${encode(link.note)}`);
   };
-  const emit = (node: Folder, indent: string) => {
+  const emit = (node: Folder, indent: string, path: string[]) => {
     for (const link of node.links) entry(link, indent);
-    const names = [...node.folders.keys()].sort((a, b) => a.localeCompare(b));
+    const place = (name: string) =>
+      rank.get([...path, name].join(" / ").toLowerCase()) ?? 0;
+    const names = [...node.folders.keys()].sort((a, b) => place(a) - place(b));
     for (const name of names) {
       lines.push(`${indent}<DT><H3>${encode(name)}</H3>`);
       lines.push(`${indent}<DL><p>`);
-      emit(node.folders.get(name) as Folder, `${indent}    `);
+      emit(node.folders.get(name) as Folder, `${indent}    `, [...path, name]);
       lines.push(`${indent}</DL><p>`);
     }
   };
-  emit(root, "    ");
+  emit(root, "    ", []);
   lines.push("</DL><p>", "");
   return lines.join("\n");
 }
