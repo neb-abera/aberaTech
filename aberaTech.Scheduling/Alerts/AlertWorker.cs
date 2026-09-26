@@ -153,13 +153,21 @@ public sealed class CalendarAlertWorker(
     /// One pass: read the calendar if a read is due, send whatever is due,
     /// and say when to come back.
     /// </summary>
-    public async Task<Instant> TickAsync(CancellationToken cancellationToken)
+    public Task<Instant> TickAsync(CancellationToken cancellationToken) => TickAsync(readNow: false, cancellationToken);
+
+    /// <summary>
+    /// A pass that reads the calendar whether or not a read is due. For the
+    /// development calendar's reset, which moves every event at once.
+    /// </summary>
+    public Task<Instant> ReadNowAsync(CancellationToken cancellationToken) => TickAsync(readNow: true, cancellationToken);
+
+    private async Task<Instant> TickAsync(bool readNow, CancellationToken cancellationToken)
     {
         await _tick.WaitAsync(cancellationToken);
         try
         {
             var now = clock.GetCurrentInstant();
-            if (_nextRead is null || now >= _nextRead)
+            if (readNow || _nextRead is null || now >= _nextRead)
             {
                 await ReadAsync(now, cancellationToken);
                 _nextRead = now + options.Poll;

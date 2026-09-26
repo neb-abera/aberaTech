@@ -25,8 +25,15 @@ async function signIn(page: Page) {
   ).toBeVisible();
 }
 
-/** Whatever an earlier engine's run left: unmuted, nothing skipped. */
+/**
+ * Whatever an earlier engine's run left: unmuted, nothing skipped. The
+ * development calendar placed its events from the app's start, so after
+ * 3 h of uptime the standup had begun and this spec failed. The reset
+ * places them from now and has the worker read them at once.
+ */
 async function reset(page: Page) {
+  const calendar = await page.request.post("/api/alerts/fake/reset");
+  expect(calendar.status()).toBe(200);
   await page.request.post("/api/alerts/unmute");
   const status = await (await page.request.get("/api/alerts/status")).json();
   for (const alert of status.alerts ?? []) {
@@ -44,15 +51,10 @@ test.describe("/alerts", () => {
     await signIn(page);
     await reset(page);
 
-    // The worker reads the calendar within seconds of the app starting.
     const refresh = page.getByRole("button", { name: "Refresh" });
     const list = page.getByRole("list", { name: "Next alerts" });
-    await expect(async () => {
-      await refresh.click();
-      await expect(list.getByText("E2E standup")).toBeVisible({
-        timeout: 1_000,
-      });
-    }).toPass({ timeout: 30_000 });
+    await refresh.click();
+    await expect(list.getByText("E2E standup")).toBeVisible();
 
     await expect(page.getByLabel("Alert state: active")).toBeVisible();
     await expect(list.getByText("E2E review")).toBeVisible();
