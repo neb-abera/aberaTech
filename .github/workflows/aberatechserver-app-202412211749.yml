@@ -15,6 +15,10 @@ on:
 # Two merges minutes apart are two deploys of the same container app, and
 # the second failed with ContainerAppOperationInProgress on 2026-09-18
 # (#169). Queue them. Never cancel one: a cancelled deploy is half a rollout.
+# The group holds one running and one pending run, and a third run replaces
+# the pending one. That loses nothing. Runs queue in push order, so the run
+# that replaces it is for a newer commit on master, which carries the
+# replaced commit's changes. The newest commit always deploys.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
