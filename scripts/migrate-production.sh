@@ -12,9 +12,10 @@
 # through an env file that is mode 600 and deleted on exit, so it is never on
 # a command line. The container's exit code is this script's exit code.
 #
-# POSTGRES_HOST and MIGRATOR_ROLE override the server and the role. The
-# pull request that added this ran it once with a role that does not exist,
-# to prove a refused sign-in fails the step.
+# POSTGRES_HOST and MIGRATOR_ROLE override the server and the role. Pull
+# request #229 proved both paths from a GitHub runner as abera-migrator:
+# `list` named 0 pending migrations in each database, and a role that does
+# not exist failed the step with exit code 1.
 set -euo pipefail
 
 usage="usage: migrate-production.sh <image> list|apply"
