@@ -9,6 +9,7 @@ using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
 using aberaTech.Scheduling.Admin;
+using aberaTech.Scheduling.Alerts;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Compliance;
 using System.Security.Claims;
@@ -26,6 +27,7 @@ using aberaTech.Postgres;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Npgsql;
+using OpenTelemetry.Instrumentation.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -312,6 +314,50 @@ if (devBoxEnabled)
     }
 }
 
+// ---------------------------------------------------------------- calendar alerts
+
+// A Pushover message before each event on the owner's Google Calendar, read
+// from its secret iCal address. Needs the owner sign-in (for the page), the
+// scheduling database (for mute, skip and the one-send claim) and the three
+// secrets. Any missing and no worker runs; the page names what is missing.
+var alertsOptions = builder.Configuration.GetSection(AlertsOptions.Section).Get<AlertsOptions>()
+                    ?? new AlertsOptions();
+builder.Services.AddSingleton(alertsOptions);
+var alertsMissing = alertsOptions.Missing(hasDatabase: !string.IsNullOrWhiteSpace(connectionString));
+var alertsEnabled = adminOptions.IsConfigured && alertsMissing.Count == 0;
+
+if (alertsEnabled)
+{
+    // An unknown Alerts:TimeZone stops the start here rather than at the
+    // first read.
+    alertsOptions.FallbackZone();
+
+    builder.Services.AddScoped<IAlertStore, DatabaseAlertStore>();
+    builder.Services.AddCalendarAlerts();
+
+    if (builder.Environment.IsDevelopment() && alertsOptions.Fake)
+    {
+        // `make up` and `make e2e`: the calendar and Pushover in memory.
+        // Development only; AlertsRouteTests proves Production ignores it.
+        builder.Services.AddSingleton<FakeAlertServices>();
+        builder.Services.AddHttpClient<CalendarFeed>()
+            .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().CalendarHandler());
+        builder.Services.AddHttpClient<PushoverClient>()
+            .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().PushoverHandler());
+    }
+}
+
+// The calendar's address is its secret, and the path carries it. Request
+// traces record the full URL, so calls to it are left out of them. Every
+// other outgoing call is traced as before. Registered whether or not Azure
+// Monitor is on, after it, so it wraps any filter the distro sets.
+builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
+{
+    var previous = trace.FilterHttpRequestMessage;
+    trace.FilterHttpRequestMessage = request =>
+        !alertsOptions.IsCalendarRequest(request.RequestUri) && (previous?.Invoke(request) ?? true);
+});
+
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser
 // regardless, but a cache MISS travels origin-to-edge as sent — and the
 // template and Facewoof both learned this the measured way. EnableForHttps is
@@ -558,6 +604,16 @@ if (devBoxEnabled)
 else
 {
     app.MapDevBoxUnavailable();
+}
+
+if (adminOptions.IsConfigured)
+{
+    // Mapped with the names that are missing, if any: the page lists them.
+    app.MapAlertsEndpoints(alertsOptions, alertsMissing);
+}
+else
+{
+    app.MapAlertsUnavailable();
 }
 
 if (fitnessEnabled)

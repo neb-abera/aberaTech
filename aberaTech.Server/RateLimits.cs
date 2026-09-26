@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using aberaTech.Scheduling.Admin;
+using aberaTech.Scheduling.Alerts;
 using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Sms;
 using aberaTech.Server.DevBox;
@@ -51,6 +52,7 @@ public static class RateLimits
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
             var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
+            var alertsPerMinute = configuration.GetValue("RateLimits:AlertsActionsPerMinute", AlertsEndpoints.DefaultActionsPerMinute);
 
             // Everything a stranger can call that writes a row or causes a
             // message to be sent. The booking page is public by design, and a
@@ -73,6 +75,12 @@ public static class RateLimits
             // below counts wrong tokens; this one bounds a right token in a
             // loop, or a replay of a captured one.
             options.AddPolicy(DevBoxEndpoints.HeartbeatPolicy, context => PerMinute(context, heartbeatPerMinute));
+
+            // The /alerts buttons: mute, unmute, skip, undo and a test send,
+            // which costs a Pushover message. The owner presses a few times
+            // a day; ten a minute is a loop. The end-to-end suite spends
+            // more across three engines, so compose raises it there.
+            options.AddPolicy(AlertsEndpoints.ActionsPolicy, context => PerMinute(context, alertsPerMinute));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>
