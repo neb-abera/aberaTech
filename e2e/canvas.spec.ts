@@ -45,6 +45,21 @@ async function canvasColour(page: Page): Promise<Rgb> {
   return [r, g, b];
 }
 
+/**
+ * Two animation frames: the second callback runs only after the page has
+ * produced a frame. Chromium answers "Unable to capture screenshot" to a
+ * capture made before the first one, and the load event does not wait for
+ * it: a capture at commit failed 30 of 120 times, and none after this.
+ */
+async function painted(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+}
+
 const near = (a: Rgb, b: Rgb) => a.every((c, i) => Math.abs(c - b[i]) <= 1);
 
 test.afterEach(async ({ page }, info) => {
@@ -122,6 +137,7 @@ for (const scheme of ["dark", "light"] as const) {
           scheme,
         );
         await page.evaluate(() => document.fonts.ready);
+        await painted(page);
 
         const canvas = await canvasColour(page);
         // Blue, not the page colour: the gap past either end is the point.
@@ -154,6 +170,7 @@ for (const scheme of ["dark", "light"] as const) {
                 document.documentElement.scrollHeight,
             ) <= 1,
         );
+        await painted(page);
         for (const x of [8, width / 2, width - 8]) {
           const bottom = await pixelAt(page, Math.floor(x), height - 1);
           expect(
@@ -163,6 +180,7 @@ for (const scheme of ["dark", "light"] as const) {
         }
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.waitForFunction(() => window.scrollY === 0);
+        await painted(page);
 
         // Under the bar, at the centre: the glow is there, so the page is
         // not simply flat. Dark tints the blue channel up; light tints red
