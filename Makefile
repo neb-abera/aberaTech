@@ -49,7 +49,7 @@ export HOST_GID
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint fmt budget prose e2e check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -105,6 +105,17 @@ lint: ## biome lint and format check, against the working tree
 	$(COMPOSE) build lint
 	$(COMPOSE) run --rm lint
 
+# actionlint and the shellcheck it bundles come from the `actionlint` stage of
+# the Dockerfile, so the version lives in one FROM line Dependabot bumps.
+LINT_IMAGE := $(shell sed -n 's|^FROM \(rhysd/actionlint:[^ ]*\) AS actionlint$$|\1|p' $(DOCKERFILE))
+
+lint-ci: ## actionlint on the workflows and their run: blocks, shellcheck on scripts, workflow concurrency
+	@test -n "$(LINT_IMAGE)" || { echo "error: no 'FROM rhysd/actionlint:... AS actionlint' stage in $(DOCKERFILE)" >&2; exit 1; }
+	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint actionlint $(LINT_IMAGE) -color
+	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint shellcheck $(LINT_IMAGE) scripts/*.sh
+	./scripts/check-concurrency.sh --self-test
+	./scripts/check-concurrency.sh
+
 fmt: ## Rewrite files to match biome
 	$(COMPOSE) build lint
 	$(COMPOSE) run --rm lint npx biome check --write .
@@ -155,7 +166,9 @@ e2e: ## Playwright against the production image and its database, on the compose
 	exit $$status
 
 check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, prose, database and browser suites
+	./scripts/check-required-contexts.sh --self-test
 	./scripts/check-required-contexts.sh
+	$(MAKE) lint-ci
 	$(DOCKER) build --target clienttest -f $(DOCKERFILE) .
 	$(DOCKER) build --target clientlint -f $(DOCKERFILE) .
 	$(DOCKER) build --target servertest -f $(DOCKERFILE) .
