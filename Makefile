@@ -179,8 +179,8 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page
 	./scripts/check-held-majors.sh --self-test
 	./scripts/check-held-majors.sh
 	./scripts/check-dotnet-major.sh --self-test
-	./scripts/check-lts-majors.sh --self-test
-	./scripts/check-lts-majors.sh
+	./scripts/check-newest-majors.sh --self-test
+	./scripts/check-newest-majors.sh
 	./scripts/check-template-parity.sh --self-test
 	./scripts/check-template-parity.sh
 	./scripts/server-db-tests.sh

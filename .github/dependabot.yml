@@ -9,14 +9,9 @@
 # Packages that must move together are grouped at every update level, majors
 # included, or a major arrives as two PRs that each fail to install.
 #
-# LTS majors only. .NET LTS majors are even and ship every other November.
-# A Node major turns LTS in the October after its release. The ignore
-# ranges below hold back each major that is not LTS, one range per major.
-# Dependabot reads them in Bundler syntax against the version, so digest,
-# minor and patch updates of the current major still arrive.
-# scripts/check-lts-majors.sh fails when a range is missing for a major due
-# within two years, when a Node major has turned LTS and its range is still
-# here, and when @types/node and the node image drift apart.
+# The newest GA major of .NET and Node is taken, LTS or not. No ignore range
+# holds a major back. scripts/check-newest-majors.sh fails on one, and when
+# a site is 45 days behind the newest GA major.
 version: 2
 
 # The Playwright browser image and the @playwright/test runner must be one
@@ -37,28 +32,6 @@ updates:
     # releases before it is offered here.
     cooldown:
       default-days: 5
-    # The framework packages carry the runtime major.
-    ignore:
-      - dependency-name: "Microsoft.AspNetCore.*"
-        versions:
-          - ">= 11, < 12"
-          - ">= 13, < 14"
-          - ">= 15, < 16"
-      - dependency-name: "Microsoft.EntityFrameworkCore*"
-        versions:
-          - ">= 11, < 12"
-          - ">= 13, < 14"
-          - ">= 15, < 16"
-      - dependency-name: "Microsoft.Extensions.*"
-        versions:
-          - ">= 11, < 12"
-          - ">= 13, < 14"
-          - ">= 15, < 16"
-      - dependency-name: "Npgsql.EntityFrameworkCore.*"
-        versions:
-          - ">= 11, < 12"
-          - ">= 13, < 14"
-          - ">= 15, < 16"
     groups:
       nuget-non-major:
         applies-to: version-updates
@@ -98,12 +71,6 @@ updates:
       # the next jsdom release is offered and CI says whether it is fixed.
       - dependency-name: jsdom
         versions: ["30.1.0"]
-      # The node image ranges: the types follow the runtime.
-      - dependency-name: "@types/node"
-        versions:
-          - ">= 27, < 28"
-          - ">= 28, < 29"
-          - ">= 29, < 30"
     groups:
       # vitest and @vitest/* peer-depend on each other's exact version, so a
       # major split across two PRs cannot install in either (vitest 5, 2026-09:
@@ -147,17 +114,6 @@ updates:
     # releases before it is offered here.
     cooldown:
       default-days: 5
-    ignore:
-      - dependency-name: "dotnet/*"
-        versions:
-          - ">= 11, < 12"
-          - ">= 13, < 14"
-          - ">= 15, < 16"
-      - dependency-name: node
-        versions:
-          - ">= 27, < 28"
-          - ">= 28, < 29"
-          - ">= 29, < 30"
     groups:
       docker-non-major:
         applies-to: version-updates
