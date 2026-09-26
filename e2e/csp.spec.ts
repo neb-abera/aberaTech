@@ -36,17 +36,24 @@ interface Violation {
   source: string;
 }
 
+// Only the site under test answers. Every other host goes to a proxy that
+// is not there, so an embedded document or video fails at once and nothing
+// leaves the runner. The policy is the page's, so nothing outside it needs
+// to load. A proxy rather than page.route: with a route, WebKit pauses every
+// request for the test runner to decide, and a navigation that starts while
+// the last page's requests are paused fails with "WebKit encountered an
+// internal error" or never loads. It failed 18 of 960 back-to-back
+// navigations with the route and none of 960 through this proxy.
+test.use({
+  proxy: async ({ baseURL }, use) =>
+    use({
+      server: "http://127.0.0.1:9",
+      bypass: new URL(baseURL ?? "http://localhost").hostname,
+    }),
+});
+
 /** Every violation the page reports, from before its first byte runs. */
 async function listen(page: Page) {
-  // Only the site under test answers. An embedded document or video that
-  // keeps talking to its own host would hold networkidle open, and before
-  // #217 mounted them lazily that held /transition past 30 seconds. The
-  // policy is the page's, so nothing outside it needs to load.
-  const origin = new URL(test.info().project.use.baseURL ?? "").origin;
-  await page.context().route(
-    (url) => url.origin !== origin,
-    (route) => route.abort(),
-  );
   await page.addInitScript(() => {
     const seen: unknown[] = [];
     (window as unknown as { __csp: unknown[] }).__csp = seen;
@@ -66,9 +73,44 @@ async function listen(page: Page) {
   });
 }
 
+/**
+ * The page has rendered what it will render: its main landmark, the bar's
+ * account control (so the app has hydrated and the account probe has
+ * answered), and no loading placeholder or spinner. Network quiet is no such
+ * signal: WebKit under load went 500 ms without a request while it compiled
+ * the bundle, and /planner was read at "Loading..." in 13 of 15 runs on two
+ * cores. One check in the page, run every frame, so the wait ends on the
+ * frame the page is ready. It has the test's budget, as the load-state waits
+ * it replaces did. After a click that opened a menu, `hydrated` is false:
+ * the menu hides the page, so only the loading checks apply.
+ */
+async function settled(page: Page, hydrated = true) {
+  await page.waitForFunction(
+    (hydrated) => {
+      const loading =
+        document.querySelector('[role="progressbar"][aria-label^="Loading"]') ??
+        document.evaluate(
+          '//*[text()="Loading..."]',
+          document,
+          null,
+          XPathResult.FIRST_ORDERED_NODE_TYPE,
+          null,
+        ).singleNodeValue;
+      if (loading) return false;
+      if (!hydrated) return true;
+      const account = Array.from(
+        document.querySelectorAll("header a, header button"),
+      ).some((e) => ["Sign in", "Sign out"].includes(e.textContent ?? ""));
+      return account && document.querySelector("main") !== null;
+    },
+    hydrated,
+    { timeout: 0 },
+  );
+}
+
 async function visit(page: Page, path: string): Promise<Violation[]> {
   await page.goto(path);
-  await page.waitForLoadState("networkidle");
+  await settled(page);
   // Open whatever opens, so the styles of collapsed sections are inserted
   // too. Clicks only on the page's own disclosure buttons, never a link.
   for (const summary of await page.locator('[aria-expanded="false"]').all()) {
@@ -77,7 +119,7 @@ async function visit(page: Page, path: string): Promise<Violation[]> {
     if (new URL(page.url()).pathname !== path) await page.goBack();
     break;
   }
-  await page.waitForLoadState("networkidle");
+  await settled(page, false);
   return page.evaluate(
     () => (window as unknown as { __csp: Violation[] }).__csp,
   );
