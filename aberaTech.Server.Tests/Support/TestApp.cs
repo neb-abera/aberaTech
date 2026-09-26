@@ -1,7 +1,9 @@
 using aberaTech.Scheduling.Admin;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace aberaTech.Server.Tests.Support;
 
@@ -26,6 +28,19 @@ public sealed class TestApp : IDisposable
         string environment = "Production",
         bool kestrel = false)
     {
+        // What the deploy workflow does before a revision starts: the migrate
+        // step, then a server that does not migrate. Outside Development the
+        // server no longer migrates on start, so a test with a real database
+        // gets the step here unless it decides Database:MigrateOnStart itself.
+        if (environment != "Development"
+            && !settings.ContainsKey("Database:MigrateOnStart")
+            && (IsReachable(settings, "ConnectionStrings:Scheduling") || IsReachable(settings, "ConnectionStrings:Fitness")))
+        {
+            var step = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+            var exit = DatabaseMigrations.RunAsync(step, NullLoggerFactory.Instance).GetAwaiter().GetResult();
+            if (exit != 0) throw new InvalidOperationException("The migrate step failed before the test app started.");
+        }
+
         _webRoot = Directory.CreateTempSubdirectory("wwwroot-security").FullName;
         File.WriteAllText(Path.Combine(_webRoot, "index.html"), "<html>home</html>");
         File.WriteAllText(Path.Combine(_webRoot, "spa.html"), "<html>shell</html>");
@@ -74,7 +89,10 @@ public sealed class TestApp : IDisposable
     public WebApplicationFactory<Program> Factory { get; }
 
     private static bool HasReachableScheduling(IReadOnlyDictionary<string, string?> settings) =>
-        settings.TryGetValue("ConnectionStrings:Scheduling", out var value)
+        IsReachable(settings, "ConnectionStrings:Scheduling");
+
+    private static bool IsReachable(IReadOnlyDictionary<string, string?> settings, string key) =>
+        settings.TryGetValue(key, out var value)
         && !string.IsNullOrWhiteSpace(value)
         && value != Security.DatabaseMigrationsTests.Unreachable;
 

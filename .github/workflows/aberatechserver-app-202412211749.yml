@@ -121,10 +121,73 @@ jobs:
           sbom-path: sbom.spdx.json
           push-to-registry: true
 
-  deploy:
+  # The schema changes here, before a revision of the new image exists, and
+  # as abera-migrator: a user-assigned managed identity that owns the tables
+  # in `scheduling` and `fitness`. The container app's own identity has DML
+  # only and cannot run DDL, so this is the only place a migration can run.
+  # A failure stops the workflow before `deploy`, and the previous revision
+  # keeps serving on the schema it knows. Migrations stay backwards compatible
+  # by one release, because that revision serves on the new schema until the
+  # new one is ready. aberaTech.Postgres/Sql/README.md has the roles.
+  migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job pulls and runs a container, and
+          # container-side DNS bypasses harden-runner's resolver.
+          egress-policy: audit
+
+      - name: Checkout Source Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The deploy identity pulls the image the build job pushed. The
+      # migrator has no registry role, and needs none.
+      - name: Azure Login, deploy identity
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Pull the image this run pushed
+        run: |
+          az acr login --name "${CONTAINER_REGISTRY_LOGIN_SERVER%%.*}"
+          docker pull "${CONTAINER_REGISTRY_LOGIN_SERVER}/${PROJECT_NAME_FOR_DOCKER}:${GITHUB_SHA}"
+
+      # abera-migrator trusts this repository's master branch through a
+      # federated credential, in both subject formats. It holds no Azure role,
+      # so there is no subscription to select. Its one right is the Postgres
+      # role of the same name.
+      - name: Azure Login, migrator identity
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.DATABASE_MIGRATOR_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Pending migrations
+        run: ./scripts/migrate-production.sh "${CONTAINER_REGISTRY_LOGIN_SERVER}/${PROJECT_NAME_FOR_DOCKER}:${GITHUB_SHA}" list
+
+      - name: Apply migrations as abera-migrator
+        run: ./scripts/migrate-production.sh "${CONTAINER_REGISTRY_LOGIN_SERVER}/${PROJECT_NAME_FOR_DOCKER}:${GITHUB_SHA}" apply
+
+      - name: Logout from Azure
+        if: always()
+        run: az logout || true
+
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: migrate
     permissions:
       contents: read
       id-token: write
