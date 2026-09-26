@@ -138,7 +138,8 @@ export default function LongAfterETS() {
                   <Box
                     component="img"
                     // The file's own size, measured 2026-09-26, so the space is held
-                    // before the image arrives.
+                    // before the image arrives. Hot-linked: NVF's terms forbid copying
+                    // or public display of its materials (third-party-images.json).
                     src="https://nvf.org/wp-content/uploads/2015/03/veteran-service-officers.jpg"
                     width={400}
                     height={300}
@@ -202,7 +203,9 @@ export default function LongAfterETS() {
                   <Box
                     component="img"
                     // The file's own size, measured 2026-09-26, so the space is held
-                    // before the image arrives.
+                    // before the image arrives. Hot-linked: it is a replica of the VA
+                    // seal, and 38 CFR 1.9 limits where a replica may appear
+                    // (third-party-images.json).
                     src="https://www.va.gov/img/design/logo/va-og-image.png"
                     width={1200}
                     height={630}

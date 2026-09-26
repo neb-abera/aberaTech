@@ -1,0 +1,54 @@
+{
+  "about": "The licence basis of every image /transition draws from another site. guides.test.tsx fails when an image or srcset URL on the page has no record here. copied is true only where the owner's terms allow a copy on abera.tech. A hot-linked image keeps its host in the CSP img-src (aberaTech.Server/Program.cs) and in pagePreconnects (src/site/meta.ts).",
+  "images": [
+    {
+      "src": "https://www.va.gov/img/design/logo/va-og-image.png",
+      "shownIn": "LongAfterETS.tsx",
+      "owner": "U.S. Department of Veterans Affairs",
+      "terms": "https://www.law.cornell.edu/cfr/text/38/1.9",
+      "checked": "2026-09-26",
+      "copied": false,
+      "basis": "A US government work, so no copyright (17 U.S.C. 105). The image is a replica of the VA official seal. 38 CFR 1.9 lists the only uses of a replica, and a copy on a private site is not one of them. VA OIG's notice excepts the seal from the public information that may be copied: https://vaoig.gov/security-and-privacy-notices. VA serves it as its own link preview image, so it stays hot-linked."
+    },
+    {
+      "src": "https://nvf.org/wp-content/uploads/2015/03/veteran-service-officers.jpg",
+      "shownIn": "LongAfterETS.tsx",
+      "owner": "National Veterans Foundation",
+      "terms": "https://nvf.org/legal-notices/",
+      "checked": "2026-09-26",
+      "copied": false,
+      "basis": "The terms grant one copy for personal, non-commercial transitory viewing only, and forbid copying the materials or using them for any public display. Hot-linked."
+    },
+    {
+      "src": "https://assets.recruitmilitary.com/images/rm_logo_new_small.png",
+      "shownIn": "NinetyToOneEightyDays.tsx",
+      "owner": "RecruitMilitary, L.L.C.",
+      "terms": "https://recruitmilitary.com/terms-use/",
+      "checked": "2026-09-26",
+      "copied": false,
+      "basis": "The terms prohibit any copying, reproduction or display of site content, logos included, without prior written consent, and grant no licence to any trademark. Read from the Wayback Machine copy of 2026-05-13, because recruitmilitary.com answered 503 to scripted requests. Hot-linked, from the owner's 2047 by 481 file in place of the 6167 by 2778 one."
+    },
+    {
+      "src": "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-768x512.jpg",
+      "variants": [
+        "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-300x200.jpg",
+        "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-1024x683.jpg"
+      ],
+      "shownIn": "NinetyToOneEightyDays.tsx",
+      "owner": "U.S. Chamber of Commerce Foundation (Hiring Our Heroes). The file's EXIF copyright is www.uschamber.com.",
+      "terms": "https://www.uschamber.com/terms-and-conditions",
+      "checked": "2026-09-26",
+      "copied": false,
+      "basis": "The Chamber's terms forbid copying, reproducing or displaying the site without its written consent. Hot-linked, through a srcset of the 300, 768 and 1024 pixel copies the owner's WordPress already serves."
+    },
+    {
+      "src": "https://www.yceml.net/0239/12188911-1507912531843",
+      "shownIn": "ZeroToTenDays.tsx",
+      "owner": "U-Pack (ArcBest), served by CJ Affiliate as advertiser creative",
+      "terms": "https://www.upack.com/about-upack/terms-of-use",
+      "checked": "2026-09-26",
+      "copied": false,
+      "basis": "U-Pack's terms say its site content may not be reproduced, duplicated or copied, and grant no licence to its marks. The banner is creative CJ Affiliate serves for U-Pack. Hot-linked."
+    }
+  ]
+}
