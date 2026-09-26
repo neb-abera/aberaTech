@@ -1,0 +1,28 @@
+# The checks the "standard" ruleset on master requires.
+#
+# scripts/check-required-contexts.sh (the lint job and `make check`) fails
+# when these lines and the pull-request jobs of the `workflow` files
+# disagree, in either direction. Add a job to one of these workflows and
+# its name goes here in the same pull request, and in the ruleset:
+#
+#   gh api repos/neb-abera/aberaTech/rulesets/3113290 \
+#     --jq '.rules[] | select(.type=="required_status_checks")'
+#
+# workflow <path>   a workflow whose pull-request jobs gate merges
+# check <name>      a job name, as the job reports it
+workflow .github/workflows/client-checks.yml
+workflow .github/workflows/codeql.yml
+workflow .github/workflows/security-scan.yml
+check Compose database boots healthy
+check End-to-end, in the container
+check Lint and format, in the container
+check Production image, in the container
+check Scheduling unit tests, in the container
+check Type check and unit tests, in the container
+check analyze (actions)
+check analyze (csharp)
+check analyze (javascript-typescript)
+check container scan (trivy)
+check dast (ZAP baseline)
+check dependency review
+check lint (actionlint + shellcheck)
