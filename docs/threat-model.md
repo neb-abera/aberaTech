@@ -42,8 +42,9 @@ before it is a feature.
 | The agent token is guessed or replayed | Spoofing | Fixed-time compare, ten wrong tokens a minute, ten reports a minute, event 4008 | `DevBoxRouteTests`, the seeded random bodies |
 | A stolen agent token orders the box | Tampering | The reply can only hold or park. Start needs the owner's session and Azure's identity | The route table and the role scoped to one VM |
 | The site's identity does more than start a VM | Elevation | One custom role, start and read, on one resource | The role definition in repos-conventions |
-| A session cookie is stolen | Spoofing | `__Host-`, `Secure`, `HttpOnly`, `SameSite=Strict`, sign-out clears it. Events 4009 and 4010 record sign-in and sign-out with the address | `AdminRouteTests`, `SessionAuditTests` |
+| A session cookie is stolen | Spoofing | `__Host-`, `Secure`, `HttpOnly`, `SameSite=Strict`. Sign-out bumps the account's session version, so every copy of the cookie is refused after it. Events 4009 and 4010 record sign-in and sign-out with the address | `AdminRouteTests`, `SessionAuditTests`, `SessionRevocationTests` |
 | Script in a bookmark title runs in the page | Tampering | React escapes. CSP with no `unsafe-inline` for scripts. The parser is property-tested under generated input | `properties.test.ts`, ZAP on every push |
+| A bookmark address runs script when clicked | Tampering | The API refuses a links document holding any address that is not http or https. The page drops one on read | `ProgressEndpointsTests`, `FitnessRouteAuthorizationTests`, `LinksPanel.test.tsx` |
 | An upload replaces the owner's data silently | Tampering | A different title, note or folder is a conflict the owner settles | `bookmarks.test.ts`, the owner e2e |
 | A probe answered by the edge hides an outage | Denial | `no-store` on probes and `/api`, the edge rule excludes them | The deploy smoke test fails on a HIT |
 | A dependency ships a vulnerability | Tampering | Pinned digests and SHAs, locked restores, Dependabot, Trivy, CodeQL, the held-majors gate | Every pull request |

@@ -46,6 +46,46 @@ public static class ProgressEndpoints
         }
     }
 
+    /// <summary>The document whose entries the page renders as links.</summary>
+    public const string LinksKey = "links";
+
+    /// <summary>
+    /// Every bookmark in a links document is an http or https address with a
+    /// host. The page puts each one in an <c>href</c>, and a
+    /// <c>javascript:</c> or <c>data:</c> address there runs when it is
+    /// clicked. The page refuses them as they are typed. This is the check a
+    /// request that did not come from the page meets.
+    /// </summary>
+    public static bool HasOnlyWebLinks(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("links", out var links)) return true;
+        if (links.ValueKind != JsonValueKind.Array) return false;
+
+        foreach (var link in links.EnumerateArray())
+        {
+            if (link.ValueKind != JsonValueKind.Object) return false;
+            if (!link.TryGetProperty("url", out var url)) continue;
+            if (url.ValueKind != JsonValueKind.String || !IsWebAddress(url.GetString()!)) return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// An absolute http or https address with a host, spelled from its first
+    /// character. A browser strips leading spaces and control characters
+    /// before it reads the scheme, so a prefix check on the raw text is what
+    /// keeps " javascript:" out.
+    /// </summary>
+    public static bool IsWebAddress(string url) =>
+        (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+         || url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        && !url.Any(char.IsControl)
+        && Uri.TryCreate(url, UriKind.Absolute, out var parsed)
+        && (parsed.Scheme == Uri.UriSchemeHttps || parsed.Scheme == Uri.UriSchemeHttp)
+        && !string.IsNullOrEmpty(parsed.Host);
+
     public static IEndpointRouteBuilder MapProgressEndpoints(this IEndpointRouteBuilder progress)
     {
         progress.MapGet("/{key}", async (string key, FitnessDbContext database, CancellationToken cancellationToken) =>
@@ -78,6 +118,7 @@ public static class ProgressEndpoints
 
             var json = new string(buffer, 0, read);
             if (!IsJsonObject(json)) return Results.BadRequest("A document is a JSON object.");
+            if (key == LinksKey && !HasOnlyWebLinks(json)) return Results.BadRequest("A link is an http or https address.");
 
             var row = await database.Documents.FindAsync([key], cancellationToken);
             if (row is null)

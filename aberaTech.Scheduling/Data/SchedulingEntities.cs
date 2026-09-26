@@ -236,3 +236,19 @@ public class SmsOptOut
     /// <summary>How it was learned, for when somebody asks why they stopped hearing from us.</summary>
     public string Reason { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// The owner's session version. Every admin cookie carries the number that was
+/// current when it was issued, and sign-out adds one, so a copy of the cookie
+/// taken before sign-out no longer matches.
+/// </summary>
+/// <remarks>
+/// One row per account, keyed by the address in lower case. No row means
+/// version 0: an account that has never signed out.
+/// </remarks>
+public class AdminSessionVersion
+{
+    public string Email { get; set; } = string.Empty;
+
+    public int Version { get; set; }
+}

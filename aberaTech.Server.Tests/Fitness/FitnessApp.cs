@@ -70,6 +70,10 @@ internal sealed class FitnessApp : IDisposable
                 services.AddScoped<FitnessDbContext>(provider =>
                     new SqliteFitnessDbContext(provider.GetRequiredService<DbContextOptions<FitnessDbContext>>()));
 
+                // No scheduling database, so no store for the admin cookie's
+                // session version: TestApp says why this one is in memory.
+                services.AddSingleton<aberaTech.Scheduling.Admin.IAdminSessionVersions, Support.InMemoryAdminSessionVersions>();
+
                 services.RemoveAll<IClock>();
                 services.AddSingleton<IClock>(new FixedClock(Now));
             });

@@ -175,19 +175,8 @@ public sealed class FitnessOutputCacheTests
     /// own ticket format, so the request goes through the real cookie scheme
     /// and the real policy rather than a test double of either.
     /// </summary>
-    private static string SessionCookieFor(FitnessApp app, string email)
-    {
-        var options = app.Factory.Services
-            .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
-            .Get(CookieAuthenticationDefaults.AuthenticationScheme);
-
-        var identity = new ClaimsIdentity(
-            [new Claim(ClaimTypes.Email, email)], CookieAuthenticationDefaults.AuthenticationScheme);
-        var ticket = new AuthenticationTicket(
-            new ClaimsPrincipal(identity), CookieAuthenticationDefaults.AuthenticationScheme);
-
-        return $"{options.Cookie.Name}={options.TicketDataFormat.Protect(ticket)}";
-    }
+    private static string SessionCookieFor(FitnessApp app, string email) =>
+        Support.AdminSession.CookieFor(app.Factory.Services, email);
 
     private sealed record Summary(int ActivityCount);
 }

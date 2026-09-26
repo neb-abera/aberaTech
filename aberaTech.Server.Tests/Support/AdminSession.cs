@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using aberaTech.Scheduling.Admin;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,19 @@ public static class AdminSession
         var identity = new ClaimsIdentity(
             [new Claim(ClaimTypes.Email, email), new Claim(ClaimTypes.Name, "A Person")],
             CookieAuthenticationDefaults.AuthenticationScheme);
+
+        // Stamped as the sign-in would stamp it, with the account's current
+        // session version, from whichever store the host has.
+        using (var scope = services.CreateScope())
+        {
+            if (scope.ServiceProvider.GetService<IAdminSessionVersions>() is { } versions)
+            {
+                var version = versions.CurrentAsync(email, CancellationToken.None).GetAwaiter().GetResult();
+                identity.AddClaim(new Claim(
+                    AdminSessions.VersionClaim, version.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            }
+        }
+
         var ticket = new AuthenticationTicket(
             new ClaimsPrincipal(identity), CookieAuthenticationDefaults.AuthenticationScheme);
 
