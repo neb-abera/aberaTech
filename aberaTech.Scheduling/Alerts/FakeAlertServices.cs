@@ -17,21 +17,34 @@ public sealed record FakeMessage(string Title, string Message, string Priority);
 /// never does.
 /// </summary>
 /// <remarks>
-/// The calendar's events are placed relative to the moment this process
-/// started, so their keys hold still across reads and a Skip sticks.
+/// The calendar's events are placed relative to an anchor minute, so their
+/// keys hold still across reads and a Skip sticks. The anchor is the
+/// process start until <see cref="Reanchor"/> moves it to the present. The
+/// browser suite calls it first, so its events are hours ahead of the test
+/// however long the app has been up. Anchored at the start alone, the
+/// standup began 3 h after it and the suite failed from then on.
 /// </remarks>
 public sealed class FakeAlertServices(IClock clock)
 {
-    private readonly Instant _anchor = Instant.FromUnixTimeSeconds(clock.GetCurrentInstant().ToUnixTimeSeconds() / 60 * 60);
+    private readonly Lock _lock = new();
     private readonly ConcurrentQueue<FakeMessage> _sent = new();
+    private Instant _anchor = Minute(clock.GetCurrentInstant());
 
     public IReadOnlyList<FakeMessage> Sent => [.. _sent];
+
+    /// <summary>Places the calendar's events relative to the present minute.</summary>
+    public void Reanchor()
+    {
+        lock (_lock) _anchor = Minute(clock.GetCurrentInstant());
+    }
 
     public string Calendar()
     {
         static string Utc(Instant instant) => instant.ToDateTimeUtc().ToString("yyyyMMdd'T'HHmmss'Z'");
 
-        var tomorrow = _anchor.InUtc().Date.PlusDays(1);
+        Instant anchor;
+        lock (_lock) anchor = _anchor;
+        var tomorrow = anchor.InUtc().Date.PlusDays(1);
         return string.Join("\r\n",
         [
             "BEGIN:VCALENDAR",
@@ -41,8 +54,8 @@ public sealed class FakeAlertServices(IClock clock)
             "X-WR-TIMEZONE:America/New_York",
             "BEGIN:VEVENT",
             "UID:e2e-standup",
-            $"DTSTART:{Utc(_anchor + Duration.FromHours(3))}",
-            $"DTEND:{Utc(_anchor + Duration.FromHours(3.5))}",
+            $"DTSTART:{Utc(anchor + Duration.FromHours(3))}",
+            $"DTEND:{Utc(anchor + Duration.FromHours(3.5))}",
             "SUMMARY:E2E standup",
             "LOCATION:Room 4",
             "BEGIN:VALARM",
@@ -52,8 +65,8 @@ public sealed class FakeAlertServices(IClock clock)
             "END:VEVENT",
             "BEGIN:VEVENT",
             "UID:e2e-review",
-            $"DTSTART:{Utc(_anchor + Duration.FromHours(5))}",
-            $"DTEND:{Utc(_anchor + Duration.FromHours(6))}",
+            $"DTSTART:{Utc(anchor + Duration.FromHours(5))}",
+            $"DTEND:{Utc(anchor + Duration.FromHours(6))}",
             "SUMMARY:E2E review",
             "END:VEVENT",
             "BEGIN:VEVENT",
@@ -64,7 +77,7 @@ public sealed class FakeAlertServices(IClock clock)
             "END:VEVENT",
             "BEGIN:VEVENT",
             "UID:e2e-cancelled",
-            $"DTSTART:{Utc(_anchor + Duration.FromHours(6))}",
+            $"DTSTART:{Utc(anchor + Duration.FromHours(6))}",
             "SUMMARY:E2E cancelled",
             "STATUS:CANCELLED",
             "END:VEVENT",
@@ -87,6 +100,8 @@ public sealed class FakeAlertServices(IClock clock)
             Content = new StringContent("{\"status\":1,\"request\":\"development\"}", System.Text.Encoding.UTF8, "application/json")
         };
     });
+
+    private static Instant Minute(Instant instant) => Instant.FromUnixTimeSeconds(instant.ToUnixTimeSeconds() / 60 * 60);
 
     private sealed class Handler(Func<HttpRequestMessage, Task<HttpResponseMessage>> answer) : HttpMessageHandler
     {
