@@ -42,7 +42,8 @@ public static class RateLimits
         new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10)
     ];
 
-    /// <summary>The start and heartbeat budgets in production. Compose raises both for `make e2e` (compose.yaml says why).</summary>
+    /// <summary>The public-write, start and heartbeat budgets in production. Compose raises all three for `make e2e` (compose.yaml says why).</summary>
+    public const int DefaultPublicWritePerMinute = 5;
     public const int DefaultDevBoxStartPerMinute = 5;
     public const int DefaultDevBoxHeartbeatPerMinute = 10;
 
@@ -50,6 +51,7 @@ public static class RateLimits
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            var publicWritePerMinute = configuration.GetValue("RateLimits:PublicWritePerMinute", DefaultPublicWritePerMinute);
             var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
             var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
             var alertsPerMinute = configuration.GetValue("RateLimits:AlertsActionsPerMinute", AlertsEndpoints.DefaultActionsPerMinute);
@@ -59,7 +61,7 @@ public static class RateLimits
             // public form wired to an SMS provider is a way to spend somebody
             // else's money; this is the second half of that defence, after
             // restricting destinations to +1.
-            options.AddPolicy(SchedulingEndpoints.PublicWritePolicy, context => PerMinute(context, 5));
+            options.AddPolicy(SchedulingEndpoints.PublicWritePolicy, context => PerMinute(context, publicWritePerMinute));
 
             // Each sign-in attempt mints correlation state and a redirect to
             // Google. A person does it once; ten a minute is a loop.

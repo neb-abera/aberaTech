@@ -86,7 +86,7 @@ export default function DataPanel({
   // One file at a time, but every file in turn, so dropping the whole set of
   // downloads works rather than silently importing the first.
   const send = React.useCallback(
-    async (files: FileList | null) => {
+    async (files: FileList | File[] | null) => {
       const chosen = Array.from(files ?? []);
       if (chosen.length === 0) {
         return;
@@ -208,7 +208,11 @@ export default function DataPanel({
                     onChange={async (
                       event: React.ChangeEvent<HTMLInputElement>,
                     ) => {
-                      const files = event.target.files;
+                      // Copied out before the input is cleared. Clearing
+                      // empties the same FileList in place in Chromium, so
+                      // Choose files sent nothing at all; only a drop
+                      // worked. e2e/fitness.owner.spec.ts presses the button.
+                      const files = Array.from(event.target.files ?? []);
                       event.target.value = "";
                       await send(files);
                     }}

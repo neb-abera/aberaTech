@@ -1,6 +1,16 @@
 import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
+const owner = /owner\.spec\.ts$/;
+
+const visitorProjects = [
+  { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+  { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+  { name: "webkit", use: { ...devices["Desktop Safari"] } },
+  { name: "phone-chromium", use: { ...devices["Pixel 7"] } },
+  { name: "phone-webkit", use: { ...devices["iPhone 15"] } },
+].map((project) => ({ ...project, testIgnore: owner }));
+
 export default defineConfig({
   testDir: ".",
   fullyParallel: true,
@@ -16,43 +26,33 @@ export default defineConfig({
   reporter: process.env.GITHUB_ACTIONS ? [["list"], ["github"]] : "list",
   // Every browser engine, every run. Chromium alone passed a canvas fix on
   // 2026-09-22 that Firefox showed to be no fix at all. The Playwright image
-  // `make e2e` runs in ships all three.
+  // `make e2e` runs in ships all three. Two phones besides, one Chromium and
+  // one WebKit, because the bar, the booking dialog and the planner rail
+  // each have a layout of their own under 900px.
   //
-  // owner.spec.ts holds state on the server (the in-memory dev box, the
-  // agent's orders), so its three copies cannot run at once. They run as
-  // their own projects, one engine after another, after everything else.
+  // The owner specs (owner.spec.ts, *.owner.spec.ts) hold state on the
+  // server: the in-memory dev box, the queue, the owner's documents. Two
+  // engines on one of them at once would race, so they run as their own
+  // projects, one engine after another, after everything else. Within an
+  // engine the files run side by side: each owns different state.
   projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-      testIgnore: /owner/,
-    },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-      testIgnore: /owner/,
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-      testIgnore: /owner/,
-    },
+    ...visitorProjects,
     {
       name: "owner-chromium",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: /owner/,
-      dependencies: ["chromium", "firefox", "webkit"],
+      testMatch: owner,
+      dependencies: visitorProjects.map((project) => project.name),
     },
     {
       name: "owner-firefox",
       use: { ...devices["Desktop Firefox"] },
-      testMatch: /owner/,
+      testMatch: owner,
       dependencies: ["owner-chromium"],
     },
     {
       name: "owner-webkit",
       use: { ...devices["Desktop Safari"] },
-      testMatch: /owner/,
+      testMatch: owner,
       dependencies: ["owner-firefox"],
     },
   ],

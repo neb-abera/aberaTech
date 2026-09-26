@@ -214,6 +214,10 @@ services:
       Alerts__PushoverUserKey: 'development-placeholder'
       Alerts__Fake: 'true'
       RateLimits__AlertsActionsPerMinute: '120'
+      # Bookings and queue joins get five a minute per address. The suite
+      # books once in each of five browsers and joins and leaves the queue
+      # in three, all from its one container, so it gets a minute's worth.
+      RateLimits__PublicWritePerMinute: '60'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #
