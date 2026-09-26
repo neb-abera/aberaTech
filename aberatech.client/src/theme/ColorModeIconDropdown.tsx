@@ -71,6 +71,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
         onClick={handleClick}
         disableRipple
         size="small"
+        aria-label="Colour scheme"
         aria-controls={open ? "color-scheme-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
@@ -80,7 +81,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
       </IconButton>
       <Menu
         anchorEl={anchorEl}
-        id="account-menu"
+        id="color-scheme-menu"
         open={open}
         onClose={handleClose}
         onClick={handleClose}
