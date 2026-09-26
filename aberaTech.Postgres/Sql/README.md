@@ -1,22 +1,56 @@
 # Database least privilege
 
-Today one identity does everything: the container app's managed identity
-connects to `scheduling` and `fitness`, applies EF migrations at start-up, and
-then serves anonymous traffic with the same connection. It therefore owns every
-table, and a SQL injection anywhere in the app would be one with `DROP TABLE`.
+Two identities touch the `scheduling` and `fitness` databases on
+`abera-postgres`. Neither holds a password.
 
-The code supports splitting that in two, and changes nothing until you do:
+| Identity | Postgres role | Rights | Used by |
+|---|---|---|---|
+| `abera-migrator`, a user-assigned managed identity in the app's resource group | `abera-migrator` | Owns every table, sequence and the migration history. `USAGE, CREATE` on schema `public` | The `migrate` job of the deploy workflow, and nothing else |
+| The container app's system-assigned identity | `aberatechserver-app-202412211749` | `SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE, SELECT` on sequences, `SELECT` on the migration history. No `CREATE`, no `TEMPORARY`, no ownership | Serving requests |
+
+`abera-migrator` holds no Azure role. It trusts one thing: a GitHub token for
+this repository's `master` branch, through two federated credentials, one per
+subject format (`repo:neb-abera/aberaTech:ref:refs/heads/master` and
+`repo:neb-abera@29741322/aberaTech@906788580:ref:refs/heads/master`). Its
+client id is the repository variable `DATABASE_MIGRATOR_CLIENT_ID`.
+
+## How a deploy migrates
+
+The deploy workflow runs `build`, then `migrate`, then `deploy`.
+
+1. `migrate` pulls the image `build` pushed, signs in to Azure as
+   `abera-migrator`, and runs `scripts/migrate-production.sh`. The script
+   takes an Entra token for Postgres and runs the image twice:
+   `dotnet aberaTech.Server.dll migrate list` names the pending migrations,
+   then `migrate` applies them. The token reaches the container in a mode 600
+   env file and is masked in the log.
+2. `deploy` starts a revision of the same image. Outside Development
+   `Database:MigrateOnStart` is `false`, so the server only checks the
+   history. It refuses to boot against a schema that is behind it, and the
+   previous revision keeps serving.
+
+A failed `migrate` stops the run before `deploy`. The revision that is
+serving keeps its schema, because nothing was applied or the migration's own
+transaction rolled back.
+
+A migration must work with the revision before it for one release. That
+revision serves on the new schema until the new one is ready.
+
+## The pieces in code
 
 | Piece | What it is |
 |---|---|
-| `dotnet aberaTech.Server.dll migrate` | Applies pending migrations to every configured database as whoever the connection strings name, then exits. Same image, no web server. Exit code 1 on failure. |
-| `Database:MigrateOnStart` (`Database__MigrateOnStart`) | `true` by default (today's behaviour). `false` makes the server refuse to boot against a schema with pending migrations, instead of applying them. |
-| `least-privilege.sql` | Grants a runtime role `SELECT/INSERT/UPDATE/DELETE` and sequence usage, now and for future tables, and nothing else. |
+| `dotnet aberaTech.Server.dll migrate` | Applies pending migrations to every configured database as whoever the connection strings name, then exits. Exit code 1 on failure |
+| `dotnet aberaTech.Server.dll migrate list` | Names the pending migrations per database and applies nothing. It does not create the history table |
+| `Database:MigrateOnStart` | `false` by default. `true` in `appsettings.Development.json`, so `make up` and `make dev` migrate as the compose owner |
+| `least-privilege.sql` | Grants the runtime role rows and sequences, now and for tables the owner creates later, and read-only history |
 
-`DatabaseLeastPrivilegeTests` runs all three against the compose Postgres
-(`make dbtest`): migrate as an owner, apply this script, serve as the runtime
-role, and prove the runtime role is refused `CREATE`, `ALTER`, `DROP`,
-`TRUNCATE`, temp tables and writes to the migration history.
+`DatabaseLeastPrivilegeTests` runs all of it against the compose Postgres
+(`make dbtest`). It migrates as an owner, applies `least-privilege.sql`,
+serves as the runtime role, and proves that role is refused `CREATE TABLE`,
+`CREATE SCHEMA`, `ALTER TABLE`, `DROP TABLE`, `TRUNCATE`, temp tables and
+writes to the migration history. `Listing_pending_migrations_changes_nothing`
+proves `migrate list` writes nothing.
 
 ## Trying it locally
 
@@ -24,7 +58,7 @@ role, and prove the runtime role is refused `CREATE`, `ALTER`, `DROP`,
 make db
 docker compose exec -T db psql -U scheduling -d postgres \
   -c "CREATE ROLE abera_runtime LOGIN PASSWORD 'runtime'"
-make up            # migrates as `scheduling`, the owner, as it always has
+make up            # Development: migrates as `scheduling`, the owner
 for database in scheduling fitness; do
   docker compose exec -T -e PGOPTIONS="-c abera.runtime_role=abera_runtime -c abera.owner_role=scheduling" \
     db psql -U scheduling -d "$database" -v ON_ERROR_STOP=1 -f - \
@@ -35,102 +69,60 @@ done
 Then run the app with `Username=abera_runtime;Password=runtime` in both
 connection strings and `Database__MigrateOnStart=false`.
 
-## Production switch-over (owner-run)
+## How production was set up
 
-Nothing here is automated, because every step needs rights the repository
-does not and should not hold. Until the last step the app keeps running exactly
-as it does now, and each step is reversible.
+On 2026-09-26, as the Entra administrator. The admin connects with
+`az account get-access-token --resource-type oss-rdbms` as the password.
 
-Names below: `abera-postgres` is the server. **App identity** is the container
-app's existing system-assigned managed identity (it owns the tables today,
-because it created them). **Migrator identity** is new.
+```bash
+RG=aberatechserver-app-202412211749ResourceGroup
+az identity create -g "$RG" -n abera-migrator -l eastus
+az identity federated-credential create -g "$RG" --identity-name abera-migrator \
+  -n github-master --issuer https://token.actions.githubusercontent.com \
+  --subject repo:neb-abera/aberaTech:ref:refs/heads/master --audiences api://AzureADTokenExchange
+az identity federated-credential create -g "$RG" --identity-name abera-migrator \
+  -n github-master-immutable --issuer https://token.actions.githubusercontent.com \
+  --subject repo:neb-abera@29741322/aberaTech@906788580:ref:refs/heads/master --audiences api://AzureADTokenExchange
+gh variable set DATABASE_MIGRATOR_CLIENT_ID -R neb-abera/aberaTech -b "$(az identity show -g "$RG" -n abera-migrator --query clientId -o tsv)"
+```
 
-1. **Decide who the owner is.** The least disruptive choice is to leave the
-   tables with a dedicated owner role and move the app *off* it:
-   create a user-assigned managed identity `abera-migrator`, and as the Entra
-   administrator, connected to the `postgres` database:
+In the `postgres` database:
 
-   ```sql
-   SELECT * FROM pgaadauth_create_principal('abera-migrator', false, false);
-   ```
+```sql
+SELECT * FROM pgaadauth_create_principal_with_oid('abera-migrator', '<principal id>', 'service', false, false);
+```
 
-2. **Hand the schema to the migrator**, in each of `scheduling` and `fitness`,
-   connected as the current owner (the app identity's role) or the
-   administrator. `REASSIGN OWNED` moves tables, sequences and the migration
-   history in one statement. The database itself is altered separately.
+In each of `scheduling` and `fitness`, in one transaction, so the app never
+loses access to a table:
 
-   ```sql
-   GRANT "abera-migrator" TO CURRENT_USER;      -- needed to give ownership away
-   REASSIGN OWNED BY "<app identity role>" TO "abera-migrator";
-   ALTER DATABASE scheduling OWNER TO "abera-migrator";   -- and fitness
-   ```
+```sql
+BEGIN;
+GRANT "aberatechserver-app-202412211749" TO CURRENT_USER WITH INHERIT TRUE, SET TRUE;
+GRANT "abera-migrator" TO CURRENT_USER WITH INHERIT TRUE, SET TRUE;
+GRANT USAGE, CREATE ON SCHEMA public TO "abera-migrator";
+REASSIGN OWNED BY "aberatechserver-app-202412211749" TO "abera-migrator";
+GRANT "abera-migrator" TO "aberatechserver-app-202412211749";  -- until the migrate job was green
+SET abera.runtime_role = 'aberatechserver-app-202412211749';
+SET abera.owner_role = 'abera-migrator';
+\i aberaTech.Postgres/Sql/least-privilege.sql
+COMMIT;
+```
 
-   `scheduling` uses the `btree_gist` extension, already installed. Nothing
-   about it changes. A future migration that adds an extension needs it
-   allow-listed in `azure.extensions`, as now.
+After the first deploy whose `migrate` job was green:
 
-3. **Apply the grants**, once per database, connected as `abera-migrator` (or
-   the administrator with that role granted), with the app identity as the
-   runtime role:
+```sql
+REVOKE "abera-migrator" FROM "aberatechserver-app-202412211749";
+```
 
-   ```bash
-   export PGPASSWORD="$(az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv)"
-   for database in scheduling fitness; do
-     PGOPTIONS="-c abera.runtime_role=<app identity role> -c abera.owner_role=abera-migrator" \
-       psql "host=abera-postgres.postgres.database.azure.com dbname=$database user=<you> sslmode=require" \
-       -v ON_ERROR_STOP=1 -f aberaTech.Postgres/Sql/least-privilege.sql
-   done
-   ```
+## Rolling back
 
-   At this point the app identity can no longer run DDL, so **a deploy
-   carrying a new migration would fail to start** until step 4 exists. Do 3–5
-   together, between feature merges.
+Each step has its reverse. Run them newest first.
 
-4. **Give migrations somewhere to run.** A Container Apps job on the same
-   environment and image, with `abera-migrator` assigned, `args: ["migrate"]`,
-   `Database__UseEntraAuth=true`, `AZURE_CLIENT_ID` set to the migrator's
-   client id, and both connection strings with `Username=abera-migrator`. Then
-   the deploy workflow starts it before updating the app. The sketch, for the
-   `deploy` job in `.github/workflows/aberatechserver-app-202412211749.yml`,
-   ahead of "Deploy to Azure Container App". It is not added yet, because the
-   job and identity it names do not exist:
+| To undo | Run |
+|---|---|
+| The app's loss of DDL | `GRANT "abera-migrator" TO "aberatechserver-app-202412211749";` |
+| Migrations outside the app | `az containerapp update -g "$RG" -n aberatechserver-app-202412211749 --set-env-vars Database__MigrateOnStart=true`, with the grant above |
+| The `migrate` job | Revert the workflow change. The app then needs both lines above |
+| The handover | In each database, `REASSIGN OWNED BY "abera-migrator" TO "aberatechserver-app-202412211749";` then `GRANT CREATE ON SCHEMA public TO "aberatechserver-app-202412211749";` |
 
-   ```yaml
-   - name: Apply database migrations as the migrator identity
-     uses: azure/CLI@<pinned sha, as the steps around it>
-     with:
-       inlineScript: |
-         set -euo pipefail
-         az config set extension.use_dynamic_install=yes_without_prompt
-         az containerapp job update --name abera-migrate \
-           --resource-group "${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }}" \
-           --image "${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}"
-         execution=$(az containerapp job start --name abera-migrate \
-           --resource-group "${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }}" --query name -o tsv)
-         for _ in $(seq 1 40); do
-           status=$(az containerapp job execution show --name abera-migrate \
-             --resource-group "${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }}" \
-             --job-execution-name "$execution" --query properties.status -o tsv)
-           case "$status" in
-             Succeeded) exit 0 ;;
-             Failed | Stopped | Degraded) echo "::error::migration job ${status}"; exit 1 ;;
-           esac
-           sleep 15
-         done
-         echo "::error::migration job did not finish"; exit 1
-   ```
-
-   The deploy identity needs `Microsoft.App/jobs/start/action` and write on
-   that one job. It still never holds a database credential.
-
-5. **Flip the switch.** Set `Database__MigrateOnStart=false` on the container
-   app. From here a revision whose migrations were not applied fails to start
-   and the previous revision keeps serving, which the deploy workflow's
-   "Wait for the new revision to run" step reports.
-
-Rolling back is the reverse of 5, then `GRANT "abera-migrator" TO "<app
-identity role>"` so the app can migrate again.
-
-Migrations must stay backwards compatible by one release while this is in
-place: the job migrates before the new revision takes traffic, so the old
-revision serves against the new schema for a moment.
+None of these touches a row.
