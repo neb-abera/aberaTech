@@ -341,6 +341,10 @@ public sealed class AlertsRouteTests : IDisposable
 
         Assert.NotNull(production.Factory.Services.GetService<CalendarAlertWorker>());
         Assert.Null(production.Factory.Services.GetService<FakeAlertServices>());
+        var routes = production.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>().Select(endpoint => endpoint.RoutePattern.RawText).ToList();
+        Assert.Contains("/api/alerts/test", routes);
+        Assert.DoesNotContain("/api/alerts/fake/reset", routes);
     }
 
     public void Dispose() => _app.Dispose();
