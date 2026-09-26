@@ -113,6 +113,37 @@ describe("the transition guide as first delivered", () => {
   });
 });
 
+describe("the technical guide as first delivered", () => {
+  // Its opening video loaded on every visit, above every section, under the
+  // title "test". It now mounts with a section of its own.
+  it("embeds no video until its section opens", async () => {
+    const html = await render("/technical");
+
+    expect(html.match(/<iframe\b/g) ?? []).toEqual([]);
+    expect(html).not.toContain("youtube.com/embed");
+  });
+
+  it("links the closed video by its own title, so a crawler still finds it", async () => {
+    const html = await render("/technical");
+
+    expect(html).toContain(
+      'href="https://www.youtube.com/watch?v=ueXjGMrmn8k"',
+    );
+    expect(html).toContain("Why 95% of Self-Taught Programmers Fail");
+    expect(html).not.toContain('title="test"');
+  });
+});
+
+describe("the transition guide's mentoring advice", () => {
+  // Veterati, the mentoring service the guide quotes, shut down in August
+  // 2024. American Corporate Partners does the same job for free.
+  it("links a mentoring service that still operates", async () => {
+    const html = await render("/transition");
+
+    expect(html).toContain('href="https://www.acp-usa.org/"');
+  });
+});
+
 describe("what a crawler reads", () => {
   // The word counts of the prerendered guides, committed. A change that
   // drops a word from the HTML shows up here as a line lost, which is the
