@@ -70,7 +70,12 @@ export default function GateLog({
       <Typography
         variant="overline"
         component="p"
-        sx={{ color: "primary.main", lineHeight: 1.5 }}
+        // primary.main is 3.8:1 on the light paper, under WCAG AA for 12px
+        // text. primary.dark is 6.3:1 there. On dark, main is 4.6:1.
+        sx={[
+          { color: "primary.dark", lineHeight: 1.5 },
+          (theme) => theme.applyStyles("dark", { color: "primary.main" }),
+        ]}
       >
         Gate
       </Typography>

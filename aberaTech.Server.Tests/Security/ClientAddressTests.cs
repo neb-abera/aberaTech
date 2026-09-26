@@ -24,12 +24,37 @@ public sealed class ClientAddressTests
     /// <summary>The public-write budget: five a minute.</summary>
     private const int Budget = 5;
 
-    private static TestApp App(int hops = 2) => new(new Dictionary<string, string?>
+    private static TestApp App(int hops = 2, string? publicWritePerMinute = null)
     {
-        ["ConnectionStrings:Scheduling"] = DatabaseMigrationsTests.Unreachable,
-        ["Database:MigrateOnStart"] = "false",
-        ["ClientAddress:ForwardedHops"] = hops.ToString(System.Globalization.CultureInfo.InvariantCulture)
-    });
+        var settings = new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:Scheduling"] = DatabaseMigrationsTests.Unreachable,
+            ["Database:MigrateOnStart"] = "false",
+            ["ClientAddress:ForwardedHops"] = hops.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+        if (publicWritePerMinute is not null)
+        {
+            settings["RateLimits:PublicWritePerMinute"] = publicWritePerMinute;
+        }
+
+        return new(settings);
+    }
+
+    [Fact]
+    public async Task A_configured_public_write_budget_replaces_the_five()
+    {
+        // compose.yaml raises it for `make e2e`, where five browsers book and
+        // join from the one address the suite's container has.
+        using var app = App(publicWritePerMinute: "7");
+        using var client = app.CreateClient();
+
+        for (var attempt = 0; attempt < 7; attempt++)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, await JoinAsync(client, $"203.0.113.7, {EdgeA}"));
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, await JoinAsync(client, $"203.0.113.7, {EdgeA}"));
+    }
 
     [Fact]
     public async Task Two_visitors_behind_the_same_cloudflare_edge_get_a_budget_each()

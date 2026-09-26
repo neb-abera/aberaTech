@@ -18,7 +18,11 @@ export default function PlanTemplate() {
         <Typography
           variant="overline"
           component="p"
-          sx={{ color: "primary.main", lineHeight: 1.5 }}
+          // As GateLog's label: primary.dark on light (6.3:1), main on dark.
+          sx={[
+            { color: "primary.dark", lineHeight: 1.5 },
+            (theme) => theme.applyStyles("dark", { color: "primary.main" }),
+          ]}
         >
           Standard
         </Typography>

@@ -2,6 +2,7 @@
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { green, orange, red } from "../../../theme/themePrimitives";
 import type { DegreeAudit } from "../core/rules";
 import type { PlannerModel } from "../model/PlannerModel";
 
@@ -37,14 +38,16 @@ export default function StatusPills({ model, audit }: StatusPillsProps) {
   if (auto.size) pills.push(["Pulled in", auto.size, "plain"]);
   if (overCapacity) pills.push(["Over capacity", overCapacity, "warn"]);
 
-  const colour = (t: Tone) =>
-    t === "good"
-      ? "success.main"
-      : t === "bad"
-        ? "error.main"
-        : t === "warn"
-          ? "warning.main"
-          : "text.primary";
+  // The palette's main shades are for fills. As 18px text on the pill they
+  // measured 2.24:1 (light) and 3.5:1 (dark) for success, under WCAG AA's
+  // 4.5:1, so each scheme gets the shade that clears it: 5.8 to 6.1:1 on the
+  // light paper, 5.3 to 7.9:1 on the dark one.
+  const shades: Record<Tone, { light: string; dark: string }> = {
+    plain: { light: "text.primary", dark: "text.primary" },
+    good: { light: green[600], dark: green[400] },
+    bad: { light: red[400], dark: red[300] },
+    warn: { light: orange[600], dark: orange[500] },
+  };
 
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -62,7 +65,11 @@ export default function StatusPills({ model, audit }: StatusPillsProps) {
           </Typography>
           <Typography
             variant="h6"
-            sx={{ color: colour(tone), fontWeight: 600, lineHeight: 1.2 }}
+            sx={[
+              { color: shades[tone].light, fontWeight: 600, lineHeight: 1.2 },
+              (theme) =>
+                theme.applyStyles("dark", { color: shades[tone].dark }),
+            ]}
           >
             {value}
           </Typography>

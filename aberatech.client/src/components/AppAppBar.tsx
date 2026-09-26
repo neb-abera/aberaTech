@@ -18,6 +18,28 @@ import { Link, useLocation } from "react-router";
 import { signInHref, signOut, useAccount } from "../hooks/useAccount";
 import { guides, label, primaryAction, projects } from "../site/sections";
 import ColorModeIconDropdown from "../theme/ColorModeIconDropdown";
+import { brand } from "../theme/themePrimitives";
+
+/**
+ * The booking button, in the bar and at the top of the phone menu. On
+ * primary.dark rather than main: the label on main measured 3.65:1, under
+ * the 4.5:1 WCAG AA asks of 13 and 14px text. On dark it is 6.0:1, and the
+ * hover goes darker again rather than lighter. e2e/a11y.spec.ts holds it.
+ */
+const bookingButton = {
+  "&&": {
+    bgcolor: "primary.dark",
+    backgroundImage: "none",
+    color: "primary.contrastText",
+    borderColor: "primary.dark",
+    boxShadow: "none",
+    "&:hover": {
+      bgcolor: brand[900],
+      backgroundImage: "none",
+      boxShadow: "none",
+    },
+  },
+} as const;
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -164,20 +186,7 @@ export default function AppAppBar() {
               size="small"
               component={Link}
               to={primaryAction.to}
-              sx={{
-                "&&": {
-                  bgcolor: "primary.main",
-                  backgroundImage: "none",
-                  color: "primary.contrastText",
-                  borderColor: "primary.main",
-                  boxShadow: "none",
-                  "&:hover": {
-                    bgcolor: "primary.dark",
-                    backgroundImage: "none",
-                    boxShadow: "none",
-                  },
-                },
-              }}
+              sx={bookingButton}
             >
               {primaryAction.title}
             </Button>
@@ -222,7 +231,10 @@ export default function AppAppBar() {
                     justifyContent: "flex-end",
                   }}
                 >
-                  <IconButton onClick={toggleDrawer(false)}>
+                  <IconButton
+                    aria-label="Close menu"
+                    onClick={toggleDrawer(false)}
+                  >
                     <CloseRoundedIcon />
                   </IconButton>
                 </Box>
@@ -235,21 +247,7 @@ export default function AppAppBar() {
                   fullWidth
                   component={Link}
                   to={primaryAction.to}
-                  sx={{
-                    mb: 1.5,
-                    "&&": {
-                      bgcolor: "primary.main",
-                      backgroundImage: "none",
-                      color: "primary.contrastText",
-                      borderColor: "primary.main",
-                      boxShadow: "none",
-                      "&:hover": {
-                        bgcolor: "primary.dark",
-                        backgroundImage: "none",
-                        boxShadow: "none",
-                      },
-                    },
-                  }}
+                  sx={{ mb: 1.5, ...bookingButton }}
                 >
                   {primaryAction.title}
                 </Button>
