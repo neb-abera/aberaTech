@@ -125,6 +125,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
