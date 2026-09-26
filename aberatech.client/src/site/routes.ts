@@ -53,6 +53,7 @@ export const routes: PageRoute[] = [
   { path: "/links", Page: lazy(() => import("../views/Links")) },
   { path: "/plan", Page: lazy(() => import("../views/Plan")) },
   { path: "/devbox", Page: lazy(() => import("../views/DevBox")) },
+  { path: "/alerts", Page: lazy(() => import("../views/Alerts")) },
 ];
 
 /**
@@ -79,4 +80,6 @@ export const unlisted: Record<string, string> = {
     "The owner's plan, a Markdown document kept on the server. Same shape as /links: a visitor gets a sign-in button, the app bar shows a Plan entry only to the signed-in owner.",
   "/devbox":
     "The owner's dev box: its power state, a Start button, the terminal and desktop in a browser tab (devbox.abera.tech, devbox-desktop.abera.tech, behind Cloudflare Access) and the runbook for getting a session back from a phone or a locked-down work computer. A visitor gets a sign-in button; the app bar shows a Dev box entry only to the signed-in owner.",
+  "/alerts":
+    "The owner's calendar alerts: mute, skip and a test send. Same shape as /devbox: a visitor gets a sign-in button, the app bar shows an Alerts entry only to the signed-in owner.",
 };

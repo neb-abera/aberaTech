@@ -11,11 +11,14 @@ before it is a feature.
   fitness log, the owner documents (links, plan, study progress).
 - The owner's session: the Google account on the allowlist and the cookie
   that carries it.
+- The owner's calendar: its secret iCal address reads every event, and
+  the Pushover keys send to his phone.
 - The dev box: an Azure VM the site can start, and the agent channel that
   tells it to hold or park.
 - The container image and the supply chain that builds and deploys it.
 - Secrets on the container app: the Google client secret, the Twilio
-  credentials, the agent token, the Cloudflare purge token in CI.
+  credentials, the agent token, the calendar address and the Pushover keys,
+  the Cloudflare purge token in CI.
 
 ## Entry points and trust boundaries
 
@@ -28,6 +31,8 @@ before it is a feature.
 | Twilio webhook | Signed delivery receipts | Twilio |
 | The dev box agent | One heartbeat a minute with a bearer token | The box, or whoever holds the token |
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
+| The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
+| The site to Pushover | One POST per alert, priority 1 | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 
 ## Threats and answers
@@ -49,6 +54,9 @@ before it is a feature.
 | A probe answered by the edge hides an outage | Denial | `no-store` on probes and `/api`, the edge rule excludes them | The deploy smoke test fails on a HIT |
 | A dependency ships a vulnerability | Tampering | Pinned digests and SHAs, locked restores, Dependabot, Trivy, CodeQL, the held-majors gate | Every pull request |
 | The image is not what the source says | Tampering | Build provenance attestation and an SBOM on every deploy | The deploy workflow |
+| The calendar address leaks through a log or a trace | Disclosure | The HTTP clients have no request logging. Traces leave out calls to the address. Failures log the exception type only. The page lists missing setting names, never values | `CalendarAlertWorkerTests` read every log line. `AlertsRouteTests` pin the trace filter and the status body |
+| A restart or a second replica sends an alert twice | Tampering | One claim row per occurrence, keyed in Postgres, taken with `ON CONFLICT DO NOTHING` before the send | `DatabaseAlertStoreTests` with eight concurrent claims |
+| A crafted calendar hangs or crashes the worker | Denial | 20 MB read cap, 5000 occurrences per read, a limit on rules that never match. A bad read keeps the last list | Seeded random damage in `AlertPlannerTests` |
 | The runtime identity changes the schema | Elevation | Migrations run as their own step. The runtime role has DML only | `least-privilege.sql` and its test |
 
 ## Accepted, and why

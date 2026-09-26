@@ -205,6 +205,15 @@ services:
       # minute's worth for all three.
       RateLimits__DevBoxStartPerMinute: '60'
       RateLimits__DevBoxHeartbeatPerMinute: '60'
+      # /alerts with the calendar and Pushover in memory (FakeAlertServices.cs,
+      # Development only). The three values are placeholders that satisfy
+      # "configured". Nothing is sent to Google or Pushover. The owner suite
+      # presses about ten buttons per engine on three engines.
+      Alerts__CalendarIcsUrl: 'https://calendar.example.test/basic.ics'
+      Alerts__PushoverAppToken: 'development-placeholder'
+      Alerts__PushoverUserKey: 'development-placeholder'
+      Alerts__Fake: 'true'
+      RateLimits__AlertsActionsPerMinute: '120'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #

@@ -53,6 +53,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="NodaTime" />
+    <!-- The calendar alerts read the owner's Google Calendar from its iCal
+         address. Ical.Net expands recurrence, exceptions and time zones. -->
+    <PackageReference Include="Ical.Net" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
