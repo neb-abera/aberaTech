@@ -3,12 +3,22 @@ import { defineConfig, devices } from "@playwright/test";
 
 const owner = /owner\.spec\.ts$/;
 
+// The phones run the specs whose layout changes under 900px: the bar and
+// its menu, the booking calendar and dialog, and axe over every page. The
+// delivery, CSP and canvas specs test the server and the root colour, which
+// a phone viewport does not change, and would add 2 m 30 s of test time.
+const phone = /(a11y|schedule|smoke)\.spec\.ts$/;
+
 const visitorProjects = [
   { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   { name: "firefox", use: { ...devices["Desktop Firefox"] } },
   { name: "webkit", use: { ...devices["Desktop Safari"] } },
-  { name: "phone-chromium", use: { ...devices["Pixel 7"] } },
-  { name: "phone-webkit", use: { ...devices["iPhone 15"] } },
+  {
+    name: "phone-chromium",
+    use: { ...devices["Pixel 7"] },
+    testMatch: phone,
+  },
+  { name: "phone-webkit", use: { ...devices["iPhone 15"] }, testMatch: phone },
 ].map((project) => ({ ...project, testIgnore: owner }));
 
 export default defineConfig({
