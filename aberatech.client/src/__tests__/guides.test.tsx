@@ -8,6 +8,7 @@
  * byte saving that hides them from search is a loss.
  */
 import { describe, expect, it } from "vitest";
+import licences from "../components/third-party-images.json";
 import { render } from "../entry-server";
 import { headFor, pagePreconnects } from "../site/meta";
 
@@ -141,6 +142,71 @@ describe("the transition guide's mentoring advice", () => {
     const html = await render("/transition");
 
     expect(html).toContain('href="https://www.acp-usa.org/"');
+  });
+});
+
+describe("the transition guide's third-party images", () => {
+  // Every image the guide draws from another site, and the URLs its srcset
+  // offers, have a licence record: the owner, the owner's terms, the date
+  // they were read, and whether they allow a copy here.
+  const external = async () => {
+    const html = await render("/transition");
+    return imgTags(html).flatMap((tag) => [
+      ...[attr(tag, "src") ?? ""].filter((src) => src.startsWith("https://")),
+      ...(attr(tag, "srcSet") ?? "")
+        .split(",")
+        .map((candidate) => candidate.trim().split(/\s+/)[0])
+        .filter(Boolean),
+    ]);
+  };
+
+  it("records the licence basis of every one", async () => {
+    const urls = await external();
+    const recorded = licences.images.flatMap((image) => [
+      image.src,
+      ...(image.variants ?? []),
+    ]);
+
+    expect([...new Set(urls)].sort()).toEqual([...new Set(recorded)].sort());
+    for (const image of licences.images) {
+      expect(image.owner, image.src).not.toBe("");
+      expect(image.terms, image.src).toMatch(/^https:\/\//);
+      expect(image.checked, image.src).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(image.basis, image.src).not.toBe("");
+      // A hot-linked image keeps its host in the preconnects and img-src.
+      if (!image.copied)
+        expect(pagePreconnects["/transition"]).toContain(
+          new URL(image.src).origin,
+        );
+    }
+  });
+
+  it("asks for the Hiring Our Heroes photo at its display size", async () => {
+    // 1200 by 800 and 303 KB, shown at 438 CSS pixels at most. The owner
+    // serves 300, 768 and 1024 pixel copies of the same file.
+    const html = await render("/transition");
+    const tag = imgTags(html).find((t) =>
+      (attr(t, "src") ?? "").includes("hiringourheroes.org"),
+    );
+
+    expect(attr(tag ?? "", "src")).toContain("-768x512.jpg");
+    expect(attr(tag ?? "", "srcSet")).toContain("-1024x683.jpg 1024w");
+    expect(attr(tag ?? "", "sizes")).toBeTruthy();
+  });
+
+  it("draws the RecruitMilitary logo from the owner's smaller file", async () => {
+    // rm_logo_new_large.png is 6167 by 2778 and 75 KB, shown at 400 pixels
+    // at most. rm_logo_new_small.png is the same logo at 2047 by 481.
+    const html = await render("/transition");
+    const tag = imgTags(html).find((t) =>
+      (attr(t, "src") ?? "").includes("recruitmilitary.com"),
+    );
+
+    expect(attr(tag ?? "", "src")).toBe(
+      "https://assets.recruitmilitary.com/images/rm_logo_new_small.png",
+    );
+    expect(attr(tag ?? "", "width")).toBe("2047");
+    expect(attr(tag ?? "", "height")).toBe("481");
   });
 });
 
