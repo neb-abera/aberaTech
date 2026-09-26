@@ -1,5 +1,8 @@
 using System.Net;
+using aberaTech.Postgres;
 using aberaTech.Server.Tests.Support;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace aberaTech.Server.Tests.Security;
@@ -25,6 +28,17 @@ public sealed class DatabaseMigrationsTests
         Assert.Equal(requested, DatabaseMigrations.IsRequested(args));
     }
 
+    [Theory]
+    [InlineData(new[] { "migrate", "list" }, true)]
+    [InlineData(new[] { "migrate" }, false)]
+    [InlineData(new[] { "migrate", "List" }, false)]
+    [InlineData(new[] { "list" }, false)]
+    [InlineData(new[] { "list", "migrate" }, false)]
+    public void Only_migrate_list_asks_for_a_listing(string[] args, bool requested)
+    {
+        Assert.Equal(requested, DatabaseMigrations.IsListRequested(args));
+    }
+
     [Fact]
     public async Task A_server_that_does_not_migrate_boots_without_its_database_and_says_it_is_not_ready()
     {
@@ -43,8 +57,21 @@ public sealed class DatabaseMigrationsTests
     }
 
     [Fact]
-    public void Migrate_on_start_stays_the_default()
+    public void Migrate_on_start_is_a_development_convenience()
     {
-        Assert.True(new aberaTech.Postgres.DatabaseOptions().MigrateOnStart);
+        // Production is migrated by the deploy workflow's migrate job, as
+        // abera-migrator, before the revision starts. The serving identity
+        // has DML only and could not migrate if it tried.
+        Assert.False(new DatabaseOptions().MigrateOnStart);
+        Assert.False(MigrateOnStartIn("Production"));
+        Assert.True(MigrateOnStartIn("Development"));
+    }
+
+    private static bool MigrateOnStartIn(string environment)
+    {
+        using var app = new TestApp(new Dictionary<string, string?>(), environment: environment);
+        var configuration = app.Factory.Services.GetRequiredService<IConfiguration>();
+        var options = configuration.GetSection(DatabaseOptions.Section).Get<DatabaseOptions>() ?? new DatabaseOptions();
+        return options.MigrateOnStart;
     }
 }
