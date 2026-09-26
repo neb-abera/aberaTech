@@ -5,26 +5,15 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import { CardMedia } from "@mui/material";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import DocumentFrame from "./DocumentFrame";
+import GuideCard from "./GuideCard";
 import TimelineSeparatorCustom from "./TimelineSeparatorCustom.tsx";
 
 export default function TwelveToEighteenMonths() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -49,18 +38,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Once you are TAP complete, you will get a signed DD Form 2648
                 and you can use that to contact the Career Skills Program
@@ -187,7 +165,7 @@ export default function TwelveToEighteenMonths() {
                   signature for your CSP packet.
                 </Typography>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -198,18 +176,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 You can{" "}
                 <Link
@@ -234,7 +201,7 @@ export default function TwelveToEighteenMonths() {
                 </strong>
                 . So, I'm not going to pay for it once it expires.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -245,18 +212,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 [Example message from CSP administrator]
               </Typography>
@@ -378,7 +334,7 @@ export default function TwelveToEighteenMonths() {
               </Typography>
               <Typography sx={{ marginBottom: 2 }}>P: XXXX</Typography>
               <Typography sx={{ marginBottom: 2 }}>E: XXXXX</Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -389,25 +345,13 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="CSP Checklist"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/csp/CSP%20Checklist%2023%20MAR.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem></TimelineItem>
@@ -419,25 +363,13 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="CSP Individual Internship Agreement"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/csp/Agreement%20for%20Army%20CSP%20Individual%20Internship_Approved%20DoD%20SkillBridge%20Program%2020210412.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -448,25 +380,13 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="CSP Participation Memo"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/csp/CSP%20Soldier%20Participation%20Memo_IMCOM%20Form%2045_FINAL.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -477,20 +397,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Example Letter for PEBLO"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/csp/Example%20Letter%20for%20PEBLO.docx&embedded=true"
                 sx={{ width: "100%", height: "500px", marginBottom: 2 }}
@@ -540,7 +448,7 @@ export default function TwelveToEighteenMonths() {
                   at companies, and got dedicated time to work on my transition.
                 </strong>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -551,20 +459,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Internship Training Plan"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/csp/Internship%20Training%20Plan.xlsx&embedded=true"
                 sx={{ width: "100%", height: "500px", marginBottom: 2 }}
@@ -577,7 +473,7 @@ export default function TwelveToEighteenMonths() {
                 submitting the first sheet. That makes me think that's all that
                 would be required for approval.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -588,18 +484,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you are interested in education, you should apply to
                 universities and scholarships at this time.{" "}
@@ -662,7 +547,7 @@ export default function TwelveToEighteenMonths() {
                 </Link>
                 .
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -673,18 +558,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 TAP has a great course on helping you understand what career
                 fields have great opportunities, and what locations have better
@@ -700,7 +574,7 @@ export default function TwelveToEighteenMonths() {
                 willing to relocate for a job? If you are, what is the minimum
                 compensation package that makes moving worth it to you?
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -711,18 +585,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Learn the art and science of resumes.
               </Typography>
@@ -741,7 +604,7 @@ export default function TwelveToEighteenMonths() {
                 You can use the brainstorming exercise to tailor your resume to
                 highlight experiences that match the job description.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -752,20 +615,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="General Resume Guidelines"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/GeneralResumeGuidelines.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -773,7 +624,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 General resume guidelines
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -784,20 +635,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Booth Resume Template"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/Booth-Resume-Template_.doc&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -805,7 +644,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 Resume template
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -816,20 +655,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Resume Writing Guide"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/Resume_Writing_Guide_(with_Samples).pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -837,7 +664,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 Resume template
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -848,20 +675,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Resume Formatting 101 Updated"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/Resume%20Formatting%20101_Updated.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -869,7 +684,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 More resume advice
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -880,20 +695,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Action Verbs"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/actionverbs.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -901,7 +704,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 More resume advice
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -912,20 +715,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Resume Accomplishments or Bullets Builder"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/Resume_Accomplishments_or_Bullets_Builder%20(1).docx&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -933,7 +724,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 Structuring accomplishments
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -944,20 +735,8 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Resume Fix List"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/resume_help/Resume-Fix-List.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -965,7 +744,7 @@ export default function TwelveToEighteenMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 Structuring accomplishments
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -976,18 +755,7 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 UQR/REFRAD personnel need to produce the following documents:
               </Typography>
@@ -1042,7 +810,7 @@ export default function TwelveToEighteenMonths() {
                 rest of my transition if my lawyer hadn't made sure the
                 reviewer/approver prioritized it when he got back.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -1053,25 +821,13 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Example UQR Request"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/uqr/example%20UQR%20Request.docx&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -1082,25 +838,13 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Example UQR Request"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/uqr/example%20UQR%20Request.docx&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -1111,28 +855,16 @@ export default function TwelveToEighteenMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Example SHARP Memo"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/uqr/SHARP%20memo%20example.docx&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
               />
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

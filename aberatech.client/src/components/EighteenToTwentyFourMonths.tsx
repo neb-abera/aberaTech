@@ -5,26 +5,15 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import { CardMedia } from "@mui/material";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import DocumentFrame from "./DocumentFrame";
+import GuideCard from "./GuideCard";
 import TimelineSeparatorCustom from "./TimelineSeparatorCustom.tsx";
 
 export default function EighteenToTwentyFourMonths() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -49,16 +38,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-              })}
-            >
+            <GuideCard sx={{ marginBottom: 0 }}>
               <Typography
                 variant="body1"
                 component="p"
@@ -149,7 +129,7 @@ export default function EighteenToTwentyFourMonths() {
                 will need to advocate for yourself and understand requirements
                 and timelines in-depth.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -160,18 +140,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography
                 variant="body1"
                 component="p"
@@ -203,7 +172,7 @@ export default function EighteenToTwentyFourMonths() {
                 <br />
                 "best ______ quora"
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -214,18 +183,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography
                 variant="body1"
                 component="p"
@@ -245,7 +203,7 @@ export default function EighteenToTwentyFourMonths() {
                 and they will feed you the people that are related to that
                 topic.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -256,18 +214,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography
                 variant="body1"
                 component="p"
@@ -286,7 +233,7 @@ export default function EighteenToTwentyFourMonths() {
                 Paragraph 10a. "The service obligation for the CA program has
                 been removed per reference 1a, dated 13 October 2021."
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -297,20 +244,9 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-              })}
-            >
-              <CardMedia
-                component="iframe"
-                title="test"
+            <GuideCard>
+              <DocumentFrame
+                title="Your VA Transition Assistance Program (TAP): An Introduction"
                 src="https://www.youtube.com/embed/v1ybHS-Zmlg"
                 sx={{
                   width: "100%",
@@ -335,7 +271,7 @@ export default function EighteenToTwentyFourMonths() {
                   TAP Online
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -346,18 +282,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 <span style={{ fontWeight: "bold" }}>
                   You need to check that all of your illnesses and injuries are
@@ -395,7 +320,7 @@ export default function EighteenToTwentyFourMonths() {
                 through the process that can help. Do not do it alone. Do not
                 pay anyone to help.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -406,18 +331,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 You need to start thinking about important life-altering
                 questions
@@ -496,7 +410,7 @@ export default function EighteenToTwentyFourMonths() {
                 </Link>{" "}
                 by Matt Louis USMA ‘91
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -507,18 +421,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Below are some books you can read to help you{" "}
                 <strong>learn how businesses operate</strong>. This is important
@@ -573,7 +476,7 @@ export default function EighteenToTwentyFourMonths() {
                   "The Visual MBA"
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -584,18 +487,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Identify companies you want to do an internship at. Here are
                 some popular websites to find internships:
@@ -672,7 +564,7 @@ export default function EighteenToTwentyFourMonths() {
                 </Link>
                 .
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -683,18 +575,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Recommendations during TAP
               </Typography>
@@ -725,7 +606,7 @@ export default function EighteenToTwentyFourMonths() {
                   that you can be done as soon as possible.
                 </Typography>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -736,18 +617,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Develop your network as early and as often as possible.
               </Typography>
@@ -786,7 +656,7 @@ export default function EighteenToTwentyFourMonths() {
                 Below are two general transition and networking advice
                 documents.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -797,20 +667,8 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Veteran Basics"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/networking/Veteran%20Basics.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -819,7 +677,7 @@ export default function EighteenToTwentyFourMonths() {
                 This document, from a Veterati mentor, provides essential tips
                 and advice for veterans transitioning to civilian careers.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -830,20 +688,8 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="Networking Tips"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/networking/Networking_Tips.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -851,7 +697,7 @@ export default function EighteenToTwentyFourMonths() {
               <Typography variant="body1" component="p" sx={{ marginTop: 2 }}>
                 Networking tips from USMA's AOG
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -862,18 +708,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 You need to master LinkedIn before you begin your job search.
               </Typography>
@@ -912,7 +747,7 @@ export default function EighteenToTwentyFourMonths() {
                 Recruiters often post job opportunities, networking events,
                 highlight trends, give out excellent advice, etc.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -923,20 +758,9 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-              })}
-            >
-              <CardMedia
-                component="iframe"
-                title="test"
+            <GuideCard>
+              <DocumentFrame
+                title="How to find people, recruiters and hiring managers on LinkedIn"
                 src="https://www.youtube.com/embed/AbfcJMSNFDk"
                 sx={{
                   width: "100%",
@@ -952,7 +776,7 @@ export default function EighteenToTwentyFourMonths() {
               >
                 How to search on LinkedIn effectively
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -963,20 +787,8 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
-              <CardMedia
-                component="iframe"
+            <GuideCard>
+              <DocumentFrame
                 title="LinkedIn Job Search Checklist"
                 src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/networking/LinkedIn_Job_Search_Checklist.pdf&embedded=true"
                 sx={{ width: "100%", height: "500px" }}
@@ -987,7 +799,7 @@ export default function EighteenToTwentyFourMonths() {
                   how to develop a great LinkedIn profile
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -998,20 +810,9 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-              })}
-            >
-              <CardMedia
-                component="iframe"
-                title="test"
+            <GuideCard>
+              <DocumentFrame
+                title="How to use Boolean search on LinkedIn"
                 src="https://www.youtube.com/embed/fWN9FejxAkM"
                 sx={{ width: "100%", height: "auto", aspectRatio: "16/9" }}
               />
@@ -1026,7 +827,7 @@ export default function EighteenToTwentyFourMonths() {
                   here
                 </Link>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -1037,18 +838,7 @@ export default function EighteenToTwentyFourMonths() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Join organizations that will get you in contact with people that
                 want to help you.
@@ -1065,11 +855,11 @@ export default function EighteenToTwentyFourMonths() {
                 Lookup local events on sites such as Meetup.com or
                 Eventbrite.com.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         {/* nebdebug TODO add a replacement to veterati here */}
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }
