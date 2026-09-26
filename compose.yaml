@@ -218,6 +218,9 @@ services:
       # books once in each of five browsers and joins and leaves the queue
       # in three, all from its one container, so it gets a minute's worth.
       RateLimits__PublicWritePerMinute: '60'
+      # Sign-in starts get ten a minute per address. Each owner spec signs in
+      # from the suite's one container, on three engines in a row.
+      RateLimits__SignInPerMinute: '60'
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #

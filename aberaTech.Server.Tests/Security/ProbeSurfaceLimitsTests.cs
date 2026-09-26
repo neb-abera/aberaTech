@@ -80,6 +80,26 @@ public sealed class ProbeSurfaceLimitsTests
     }
 
     [Fact]
+    public async Task A_configured_sign_in_budget_replaces_the_ten()
+    {
+        // compose.yaml raises it for `make e2e`, where each owner spec
+        // signs in from the suite's one container on three engines.
+        var settings = Configured(DatabaseMigrationsTests.Unreachable);
+        settings["RateLimits:SignInPerMinute"] = "12";
+        using var app = new TestApp(
+            settings,
+            services => services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider()));
+        using var client = app.CreateClient();
+
+        for (var attempt = 0; attempt < 12; attempt++)
+        {
+            Assert.Equal(HttpStatusCode.Redirect, await SignInAsync(client, "203.0.113.7"));
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, await SignInAsync(client, "203.0.113.7"));
+    }
+
+    [Fact]
     public async Task Forged_receipts_run_out_but_only_for_whoever_forged_them()
     {
         using var app = App();

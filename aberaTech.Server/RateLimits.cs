@@ -44,6 +44,7 @@ public static class RateLimits
 
     /// <summary>The public-write, start and heartbeat budgets in production. Compose raises all three for `make e2e` (compose.yaml says why).</summary>
     public const int DefaultPublicWritePerMinute = 5;
+    public const int DefaultSignInPerMinute = 10;
     public const int DefaultDevBoxStartPerMinute = 5;
     public const int DefaultDevBoxHeartbeatPerMinute = 10;
 
@@ -52,6 +53,7 @@ public static class RateLimits
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             var publicWritePerMinute = configuration.GetValue("RateLimits:PublicWritePerMinute", DefaultPublicWritePerMinute);
+            var signInPerMinute = configuration.GetValue("RateLimits:SignInPerMinute", DefaultSignInPerMinute);
             var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
             var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
             var alertsPerMinute = configuration.GetValue("RateLimits:AlertsActionsPerMinute", AlertsEndpoints.DefaultActionsPerMinute);
@@ -65,7 +67,7 @@ public static class RateLimits
 
             // Each sign-in attempt mints correlation state and a redirect to
             // Google. A person does it once; ten a minute is a loop.
-            options.AddPolicy(AdminAuth.SignInPolicy, context => PerMinute(context, 10));
+            options.AddPolicy(AdminAuth.SignInPolicy, context => PerMinute(context, signInPerMinute));
 
             // Each press asks Azure to start a VM that bills by the hour. The
             // owner presses once and waits; five a minute is a stuck finger.
