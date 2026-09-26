@@ -75,6 +75,18 @@ public static class PostgresDataSource
             builder.ConnectionStringBuilder.MaxPoolSize = 10;
         }
 
+        // Npgsql prefers GSS encryption by default, so every physical
+        // connection first tries to load libgssapi_krb5. The chiseled image
+        // has no such library, and each boot logged "Error:
+        // libgssapi_krb5.so.2: cannot open shared object file" twice. Azure
+        // Database for PostgreSQL offers no GSS encryption. TLS is the
+        // transport. A connection string that names a mode keeps it.
+        if (!connectionString.Contains("GSS Encryption Mode", StringComparison.OrdinalIgnoreCase)
+            && !connectionString.Contains("GssEncryptionMode", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
+        }
+
         builder.UseNodaTime();
         builder.UseLoggerFactory(loggers);
 
