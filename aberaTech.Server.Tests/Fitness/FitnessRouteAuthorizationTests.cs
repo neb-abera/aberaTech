@@ -38,12 +38,12 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
 
     private readonly FitnessApp _app = new(SignInRequired);
 
-    public async Task InitializeAsync() => await _app.SeedAsync(FitnessSeed.AthleteAsync);
+    public async ValueTask InitializeAsync() => await _app.SeedAsync(FitnessSeed.AthleteAsync);
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         _app.Dispose();
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>Every route the fitness surface maps, with a real id where one is taken.</summary>

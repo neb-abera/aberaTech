@@ -18,6 +18,13 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request makes the running analysis obsolete. A newer
+# push to the default branch does not: cancelling it would leave a merge
+# commit with no analysis.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   analyze:
     name: analyze (${{ matrix.language }})

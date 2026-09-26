@@ -1,7 +1,7 @@
+using System.Runtime.CompilerServices;
 using Npgsql;
 using Xunit;
-using Xunit.Abstractions;
-using Xunit.Sdk;
+using Xunit.v3;
 
 namespace aberaTech.Server.Tests.Support;
 
@@ -45,10 +45,14 @@ public static class TestPostgres
 /// Carries the trait <c>Category=Postgres</c>, which is how
 /// scripts/server-db-tests.sh selects exactly these.
 /// </remarks>
-[TraitDiscoverer("aberaTech.Server.Tests.Support.PostgresTraitDiscoverer", "aberaTech.Server.Tests")]
 public sealed class PostgresFactAttribute : FactAttribute, ITraitAttribute
 {
-    public PostgresFactAttribute()
+    // The caller's file and line pass through so the runner reports each test
+    // at its own source location, as a plain [Fact] does.
+    public PostgresFactAttribute(
+        [CallerFilePath] string? sourceFilePath = null,
+        [CallerLineNumber] int sourceLineNumber = -1)
+        : base(sourceFilePath, sourceLineNumber)
     {
         // Where the database is promised (compose, CI) the test runs and fails
         // on its own if the connection is missing, so a misconfigured job
@@ -58,11 +62,8 @@ public sealed class PostgresFactAttribute : FactAttribute, ITraitAttribute
             Skip = $"Needs Postgres: set {TestPostgres.Variable} (the compose servertest service does).";
         }
     }
-}
 
-public sealed class PostgresTraitDiscoverer : ITraitDiscoverer
-{
-    public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute) =>
+    public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits() =>
         [new KeyValuePair<string, string>("Category", "Postgres")];
 }
 

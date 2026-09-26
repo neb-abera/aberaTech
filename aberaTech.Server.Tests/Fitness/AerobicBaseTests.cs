@@ -1,6 +1,5 @@
 using aberaTech.Fitness.Domain;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace aberaTech.Server.Tests.Fitness;
 

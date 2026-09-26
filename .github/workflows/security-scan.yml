@@ -155,10 +155,15 @@ jobs:
 
       - name: ZAP baseline scan
         # An attacker's-eye scan of the running production image. Accepted
-        # findings live in .zap/rules.tsv with their reasoning.
+        # findings live in .zap/rules.tsv with their reasoning. The image is
+        # the FROM line of .zap/Dockerfile, pinned by tag and digest where
+        # Dependabot can bump it.
         run: |
+          set -euo pipefail
+          image="$(sed -n 's/^FROM \([^ ]*\) AS zap$/\1/p' .zap/Dockerfile)"
+          [ -n "$image" ] || { echo "::error::no 'FROM <image> AS zap' line in .zap/Dockerfile"; exit 1; }
           docker run --rm --network host -v "$PWD/.zap":/zap/wrk:ro \
-            -t ghcr.io/zaproxy/zaproxy:stable \
+            -t "$image" \
             zap-baseline.py -t http://localhost:8080 -c rules.tsv
 
       - name: App logs
