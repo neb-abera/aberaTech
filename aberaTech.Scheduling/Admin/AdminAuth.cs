@@ -3,6 +3,7 @@ using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 
 namespace aberaTech.Scheduling.Admin;
@@ -72,6 +73,12 @@ public static class AdminAuth
 
                 cookie.ExpireTimeSpan = TimeSpan.FromHours(12);
                 cookie.SlidingExpiration = true;
+
+                // Sign-out ends the session on the server as well as in the
+                // browser. Each ticket carries the account's session version
+                // and every request checks it (AdminSessions.cs).
+                cookie.Events.OnSigningIn = AdminSessions.StampAsync;
+                cookie.Events.OnValidatePrincipal = AdminSessions.ValidateAsync;
 
                 // An API, so both failure modes are status codes rather than
                 // redirects to a page a fetch() cannot render. 401 means "sign
@@ -172,8 +179,15 @@ public static class AdminAuth
                 .AllowAnonymous();
         }
 
-        routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context) =>
+        routes.MapPost("/api/scheduling/admin/sign-out", async (HttpContext context, [FromServices] IAdminSessionVersions sessions) =>
         {
+            // First the server's record, so every copy of the cookie is dead,
+            // then the browser's copy.
+            if (context.User.FindFirstValue(ClaimTypes.Email) is { } email)
+            {
+                await sessions.RevokeAsync(email, context.RequestAborted);
+            }
+
             await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Results.NoContent();
         }).RequireAuthorization(PolicyName);

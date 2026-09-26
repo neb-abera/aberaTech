@@ -35,6 +35,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<SmsOptOut> SmsOptOuts => Set<SmsOptOut>();
 
+    public DbSet<AdminSessionVersion> AdminSessions => Set<AdminSessionVersion>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -97,6 +99,13 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // One row per number. Recording the same opt-out twice would make
             // "is this number suppressed" a question about row counts.
             entity.HasIndex(optOut => optOut.PhoneE164).IsUnique();
+        });
+
+        builder.Entity<AdminSessionVersion>(entity =>
+        {
+            // The key is the lookup: one indexed read per signed-in request.
+            entity.HasKey(session => session.Email);
+            entity.Property(session => session.Email).HasMaxLength(320);
         });
 
         builder.Entity<HostCalendarCredential>(entity =>

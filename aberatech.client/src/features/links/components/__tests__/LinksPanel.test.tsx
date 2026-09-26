@@ -136,6 +136,36 @@ describe("for the owner", () => {
     expect(puts()).toHaveLength(0);
   });
 
+  it("drops a stored address that is not a web address instead of linking it", async () => {
+    // The server refuses these on save. A row that reached the database
+    // before it did is dropped as the document is read (coerce), so no
+    // href on the page can run script.
+    visit({
+      ...saved,
+      links: [
+        {
+          id: "x",
+          title: "Looks harmless",
+          url: "javascript:alert(document.cookie)",
+          group: "",
+          note: "",
+          tags: [],
+          addedAt: "2026-09-12",
+        },
+      ],
+    });
+    render(<LinksPanel />);
+    await settle();
+
+    expect(screen.queryByText("Looks harmless")).toBeNull();
+    const hrefs = Array.from(document.querySelectorAll("[href]"), (element) =>
+      element.getAttribute("href"),
+    );
+    expect(hrefs.some((href) => /^\s*javascript:/i.test(href ?? ""))).toBe(
+      false,
+    );
+  });
+
   it("adds a link and saves it a beat later", async () => {
     visit(null);
     render(<LinksPanel />);

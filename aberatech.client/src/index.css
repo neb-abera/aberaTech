@@ -1,0 +1,7 @@
+/* Set by AppTheme for one tick while the colour scheme changes, so the
+   switch repaints at once. MUI's own version writes an inline <style>,
+   which the CSP refuses. */
+html.scheme-switching * {
+  /* biome-ignore lint/complexity/noImportantStyles: it has to beat the transitions MUI sets inline on an element, as MUI's own rule does */
+  transition: none !important;
+}

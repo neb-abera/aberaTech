@@ -1,5 +1,9 @@
 import type { ThemeOptions } from "@mui/material/styles";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {
+  createTheme,
+  ThemeProvider,
+  useColorScheme,
+} from "@mui/material/styles";
 import * as React from "react";
 import { canvasBackground } from "./canvasBackground";
 import { dataDisplayCustomizations } from "./customizations/dataDisplay";
@@ -16,6 +20,40 @@ interface AppThemeProps {
    */
   disableCustomTheme?: boolean;
   themeComponents?: ThemeOptions["components"];
+}
+
+/** On the root for one tick while the scheme changes; index.css holds the rule. */
+export const SWITCHING_CLASS = "scheme-switching";
+
+/**
+ * What MUI's disableTransitionOnChange does, without its inline <style>: the
+ * CSP allows no style element with text it has not hashed, and that one is
+ * written at run time. A class on the root for one tick, and a rule in the
+ * page's own stylesheet, turn every transition off while the colours change,
+ * so the switch repaints at once instead of animating each surface.
+ */
+function SchemeSwitchWithoutTransitions() {
+  const { colorScheme } = useColorScheme();
+  const previous = React.useRef(colorScheme);
+  React.useEffect(() => {
+    if (previous.current === colorScheme) return;
+    const first = previous.current === undefined;
+    previous.current = colorScheme;
+    if (first) return;
+    const root = document.documentElement;
+    root.classList.add(SWITCHING_CLASS);
+    // Style is recalculated with transitions off before the class goes.
+    window.getComputedStyle(document.body);
+    const timer = window.setTimeout(
+      () => root.classList.remove(SWITCHING_CLASS),
+      1,
+    );
+    return () => {
+      window.clearTimeout(timer);
+      root.classList.remove(SWITCHING_CLASS);
+    };
+  }, [colorScheme]);
+  return null;
 }
 
 export default function AppTheme(props: AppThemeProps) {
@@ -57,7 +95,8 @@ export default function AppTheme(props: AppThemeProps) {
     // on a light OS, and the dropdown's correction paints dark again a frame
     // later: a flash of light on every first visit, seen in all three engines
     // by e2e/canvas.spec.ts on 2026-09-23.
-    <ThemeProvider theme={theme} defaultMode="dark" disableTransitionOnChange>
+    <ThemeProvider theme={theme} defaultMode="dark">
+      <SchemeSwitchWithoutTransitions />
       {children}
     </ThemeProvider>
   );

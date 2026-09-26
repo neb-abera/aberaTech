@@ -432,6 +432,57 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         Assert.Equal("{\"notes\":\"second\"}", await read.Content.ReadAsStringAsync());
     }
 
+    [Theory]
+    [InlineData("javascript:alert(document.cookie)")]
+    [InlineData("JavaScript:alert(1)")]
+    [InlineData(" javascript:alert(1)")]
+    [InlineData("data:text/html,<script>alert(1)</script>")]
+    [InlineData("vbscript:msgbox(1)")]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("/relative/path")]
+    [InlineData("https://")]
+    public async Task A_bookmark_that_is_not_a_web_address_is_refused_and_not_stored(string url)
+    {
+        using var owner = Owner_();
+        var safe = LinksDocument("https://abera.tech/");
+        Assert.Equal(HttpStatusCode.NoContent, (await owner.PutAsync("/api/progress/links", Json(safe))).StatusCode);
+
+        using var refused = await owner.PutAsync("/api/progress/links", Json(LinksDocument(url)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        using var read = await owner.GetAsync("/api/progress/links");
+        Assert.Equal(safe, await read.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task A_bookmark_whose_address_is_not_text_is_refused()
+    {
+        using var owner = Owner_();
+
+        using var refused = await owner.PutAsync(
+            "/api/progress/links",
+            Json("{\"version\":1,\"links\":[{\"id\":\"a\",\"url\":{\"href\":\"javascript:alert(1)\"}}]}"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+    }
+
+    [Fact]
+    public async Task Web_addresses_are_stored()
+    {
+        using var owner = Owner_();
+        var document = "{\"version\":1,\"links\":["
+                       + "{\"id\":\"a\",\"url\":\"https://abera.tech/links?x=1#top\"},"
+                       + "{\"id\":\"b\",\"url\":\"http://localhost:5173/\"}"
+                       + "],\"conflicts\":[],\"folders\":[]}";
+
+        Assert.Equal(HttpStatusCode.NoContent, (await owner.PutAsync("/api/progress/links", Json(document))).StatusCode);
+    }
+
+    private static string LinksDocument(string url) =>
+        "{\"version\":1,\"links\":[{\"id\":\"a\",\"title\":\"A\",\"url\":"
+        + System.Text.Json.JsonSerializer.Serialize(url)
+        + ",\"group\":\"\",\"note\":\"\",\"tags\":[],\"addedAt\":\"2026-09-26\"}],\"conflicts\":[],\"folders\":[]}";
+
     [Fact]
     public async Task A_prediction_is_locked_scored_and_struck_from_the_ledger()
     {
