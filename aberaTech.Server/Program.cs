@@ -119,6 +119,10 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
     if (adminOptions.IsConfigured)
     {
+        // The session version each admin cookie is checked against. Without
+        // the database there is none, and every admin cookie is refused.
+        builder.Services.AddScoped<IAdminSessionVersions, DatabaseAdminSessionVersions>();
+
         // Keys in the database, so the encrypted refresh token survives a
         // restart. Without this the container regenerates its key ring on every
         // deploy and the stored token becomes permanently unreadable.
@@ -349,8 +353,8 @@ app.UseHostAllowlist();
 
 // Browser hardening headers on every response, static files included.
 //
-// The CSP names exactly what the client actually loads: MUI injects its styles
-// as inline <style> elements, the guides embed Google Docs and YouTube players
+// The CSP names exactly what the client actually loads: MUI's styles go in
+// <style> elements allowed by hash (CspInlineStyles.cs), the guides embed Google Docs and YouTube players
 // in iframes, and a handful of partner logos load from their own hosts.
 // Everything else — scripts above all — is same-origin only.
 // The prerendered pages carry MUI's color-scheme bootstrap as an inline
@@ -368,6 +372,19 @@ if (shippedShell.Exists && shippedShell.PhysicalPath is not null)
     }
 }
 
+// The style elements, the same way: every shipped page's, by hash, plus the
+// empty element emotion fills at run time. CspInlineStyles.cs says why that
+// is enough.
+var inlineStyleHashes = " " + CspInlineStyles.EmptyElement;
+if (app.Environment.WebRootPath is { } webRootPath && Directory.Exists(webRootPath))
+{
+    var hashes = CspInlineStyles.HashesUnder(webRootPath);
+    if (hashes.Count > 0)
+    {
+        inlineStyleHashes += " " + string.Join(' ', hashes);
+    }
+}
+
 app.Use(async (context, next) =>
 {
     var headers = context.Response.Headers;
@@ -378,7 +395,10 @@ app.Use(async (context, next) =>
         // real-user Core Web Vitals. It loads from static.cloudflareinsights
         // and reports to cloudflareinsights (connect-src below).
         + $"script-src 'self' https://static.cloudflareinsights.com{inlineScriptHashes}; "
-        + "style-src 'self' 'unsafe-inline'; "
+        + $"style-src 'self'{inlineStyleHashes}; "
+        // Style attributes: React's style prop in the prerendered markup.
+        // The standard's one allowance, for attributes alone.
+        + "style-src-attr 'unsafe-inline'; "
         // The transition guide's partner images. yceml.net serves the DITY
         // calculator banner, which used to load through a CJ Affiliate
         // redirect on lduhtrp.net. The page links the image directly now.

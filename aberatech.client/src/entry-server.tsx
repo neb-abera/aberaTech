@@ -3,6 +3,8 @@ import { prerenderToNodeStream } from "react-dom/static";
 import { StaticRouter } from "react-router";
 import Shell from "./Shell.tsx";
 
+// The render's style elements, gathered into the head for the CSP to hash.
+export { hoistStyles } from "./site/emotionStyles";
 // The head each prerendered page carries: its own title, description and
 // preview card, in place of the shell's one title for every page.
 export { headFor } from "./site/meta";
@@ -20,9 +22,9 @@ export { sitemapXml } from "./site/sitemap";
  * prerenderToNodeStream (rather than renderToString) is what makes the lazy
  * routes work: it waits for every suspended chunk to resolve, so the output is
  * the page, not the Suspense fallback. Emotion inlines each component's styles
- * beside it during the render, which is what makes the first paint styled; on
- * the client, emotion collects those tags into the head before React compares
- * markup, so hydration does not see them.
+ * beside it during the render, which is what makes the first paint styled.
+ * tools/prerender.mjs then gathers them into the head (hoistStyles), where
+ * emotion's client cache would have moved them anyway.
  */
 function page(url: string) {
   return (

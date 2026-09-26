@@ -54,8 +54,10 @@ service keeps `node_modules` in a volume that outlives a rebuild.
   purges the zone on every merge to master.
 - Routing is explicit and sits after the static-file middleware in
   `Program.cs`.
-- The CSP's inline-script hashes are computed from the shipped HTML at
-  startup (`CspInlineScripts.cs`). Cloudflare RUM is allowlisted and is the
+- The CSP's inline-script and style-element hashes are computed from the
+  shipped HTML at startup (`CspInlineScripts.cs`, `CspInlineStyles.cs`).
+  `tools/prerender.mjs` gathers each page's MUI styles into its head, so a
+  page needs three hashes instead of 94. Cloudflare RUM is allowlisted and is the
   measurement of record.
 - The fitness console reads the training log once per request
   (`TrainingHistory.cs`). A summary is six database commands at any log
