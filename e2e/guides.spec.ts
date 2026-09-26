@@ -176,3 +176,20 @@ test("/technical loads the video when its section opens", async ({ page }) => {
     "https://www.youtube.com/embed/ueXjGMrmn8k",
   );
 });
+
+// The Hiring Our Heroes photo is 1200 px and 303 KB at the owner's address,
+// shown at 438 px at most. Every engine picks a smaller copy from its srcset.
+test("/transition asks for the hiring events photo at its display size", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/transition");
+  await openSection(page, "90 to 180 days before ETS");
+
+  const photo = page.getByRole("img", { name: "Hiring Events" });
+  await photo.scrollIntoViewIfNeeded();
+
+  await expect
+    .poll(() => photo.evaluate((img: HTMLImageElement) => img.currentSrc))
+    .toMatch(/-(768x512|1024x683)\.jpg$/);
+});

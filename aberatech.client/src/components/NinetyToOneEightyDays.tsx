@@ -484,11 +484,12 @@ export default function NinetyToOneEightyDays() {
                 >
                   <Box
                     component="img"
-                    // The file's own size, measured 2026-09-26, so the space is held
-                    // before the image arrives.
-                    src="https://assets.recruitmilitary.com/images/rm_logo_new_large.png"
-                    width={6167}
-                    height={2778}
+                    // Hot-linked: RecruitMilitary's terms forbid copying its logo
+                    // (third-party-images.json). The owner's 2047 by 481 file, 12 KB,
+                    // in place of the 6167 by 2778 one at 75 KB. Shown at 400 px.
+                    src="https://assets.recruitmilitary.com/images/rm_logo_new_small.png"
+                    width={2047}
+                    height={481}
                     loading="lazy"
                     decoding="async"
                     alt="Veteran Job Fairs"
@@ -547,9 +548,18 @@ export default function NinetyToOneEightyDays() {
                 >
                   <Box
                     component="img"
-                    // The file's own size, measured 2026-09-26, so the space is held
-                    // before the image arrives.
-                    src="https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1.jpg"
+                    // Hot-linked: the U.S. Chamber's terms forbid copying its images
+                    // (third-party-images.json). The 1200 px original is 303 KB and
+                    // shows at 438 px at most, so the srcset offers the smaller
+                    // copies the owner's WordPress serves: 21, 82 and 130 KB.
+                    src="https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-768x512.jpg"
+                    srcSet={[
+                      "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-300x200.jpg 300w",
+                      "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-768x512.jpg 768w",
+                      "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-1024x683.jpg 1024w",
+                    ].join(", ")}
+                    // 222 px wide up to a 768 px viewport, 438 px above it.
+                    sizes="(max-width: 767px) 222px, 438px"
                     width={1200}
                     height={800}
                     loading="lazy"

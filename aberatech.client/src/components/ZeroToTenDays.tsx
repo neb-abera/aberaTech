@@ -110,7 +110,9 @@ export default function TerminalLeave() {
                     // The image itself, without the CJ Affiliate tracking redirect
                     // (www.lduhtrp.net) it used to load through.
                     // The file's own size, measured 2026-09-26, so the space is held
-                    // before the image arrives.
+                    // before the image arrives. Hot-linked: U-Pack's banner, served by
+                    // CJ Affiliate, and U-Pack's terms forbid copying it
+                    // (third-party-images.json).
                     src="https://www.yceml.net/0239/12188911-1507912531843"
                     width={250}
                     height={250}
