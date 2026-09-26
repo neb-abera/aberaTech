@@ -128,6 +128,38 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task Listing_pending_migrations_changes_nothing()
+    {
+        // `migrate list` is the dry run the deploy workflow can run as the
+        // migrator: it reads the history and writes nothing, not even the
+        // history table a first migration would create.
+        var scheduling = $"--ConnectionStrings:Scheduling={_scheduling!.ConnectionStringFor(Owner, Password)}";
+        var fitness = $"--ConnectionStrings:Fitness={_fitness!.ConnectionStringFor(Owner, Password)}";
+
+        Assert.Equal(0, await RunServerAsync("migrate", "list", scheduling, fitness));
+        foreach (var database in new[] { _scheduling, _fitness })
+        {
+            Assert.Equal(0, TablesIn(database.ConnectionStringFor(Owner, Password)));
+        }
+
+        Assert.Equal(0, await RunServerAsync("migrate", scheduling, fitness));
+        var migrated = TablesIn(_scheduling.ConnectionStringFor(Owner, Password));
+        Assert.True(migrated > 0);
+
+        Assert.Equal(0, await RunServerAsync("migrate", "list", scheduling, fitness));
+        Assert.Equal(migrated, TablesIn(_scheduling.ConnectionStringFor(Owner, Password)));
+    }
+
+    private static long TablesIn(string connectionString)
+    {
+        using var connection = new NpgsqlConnection(connectionString);
+        connection.Open();
+        using var command = new NpgsqlCommand(
+            "SELECT count(*) FROM pg_tables WHERE schemaname = 'public'", connection);
+        return (long)command.ExecuteScalar()!;
+    }
+
+    [PostgresFact]
     public void With_migrate_on_start_off_the_app_refuses_to_serve_a_schema_it_does_not_match()
     {
         // An unmigrated database and a runtime that may not migrate it: the

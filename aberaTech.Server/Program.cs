@@ -375,11 +375,14 @@ builder.AddRequestLimits();
 var app = builder.Build();
 
 // `dotnet aberaTech.Server.dll migrate`: apply migrations as whoever the
-// connection strings name, and exit without serving. See DatabaseMigrations.
+// connection strings name, and exit without serving. `migrate list` names the
+// pending ones and applies nothing. See DatabaseMigrations.
 if (DatabaseMigrations.IsRequested(args))
 {
     Environment.ExitCode = await DatabaseMigrations.RunAsync(
-        app.Configuration, app.Services.GetRequiredService<ILoggerFactory>());
+        app.Configuration,
+        app.Services.GetRequiredService<ILoggerFactory>(),
+        listOnly: DatabaseMigrations.IsListRequested(args));
     return;
 }
 
@@ -560,12 +563,10 @@ if (fitnessEnabled)
 
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
-    // Migrate on start, unless Database:MigrateOnStart says an owner role does
-    // that as its own step (DatabaseMigrations). Reasonable here because this
-    // deploys as a single container app revision with one writer; it would not
-    // be reasonable behind several replicas rolling independently, where two
-    // instances can race the same migration. Revisit that before scaling out,
-    // not after.
+    // In Production the deploy workflow has already migrated, as
+    // abera-migrator, and this only refuses a schema that is behind the code.
+    // Development migrates here (Database:MigrateOnStart in
+    // appsettings.Development.json). See DatabaseMigrations.
     await app.PrepareAsync<SchedulingDbContext>("scheduling");
 
     if (app.Environment.IsDevelopment())
