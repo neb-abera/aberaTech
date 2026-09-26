@@ -94,6 +94,25 @@ public static class AlertsEndpoints
                 : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
         }).RequireRateLimiting(ActionsPolicy);
 
+        // Only where Program.cs registered the development calendar:
+        // Development with Alerts:Fake set. The browser suite calls it
+        // first, so the calendar's events are hours ahead of the test.
+        if (routes.ServiceProvider.GetService<FakeAlertServices>() is not null)
+        {
+            group.MapPost("/fake/reset", async (
+                FakeAlertServices fake,
+                CalendarAlertWorker worker,
+                AlertsStatus status,
+                IAlertStore store,
+                IClock clock,
+                CancellationToken cancellationToken) =>
+            {
+                fake.Reanchor();
+                await worker.ReadNowAsync(cancellationToken);
+                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            }).RequireRateLimiting(ActionsPolicy);
+        }
+
         return routes;
     }
 

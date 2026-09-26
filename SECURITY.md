@@ -80,7 +80,7 @@ repos-conventions, `devbox/README.md`).
 
 | Control | Requirement | Here | Evidence |
 |---|---|---|---|
-| ASD V-222425, V-222426 | Enforce approved authorizations per object | Met | Every endpoint declares its policy or `AllowAnonymous`. `RouteTableTests` fails the build on one that declares nothing. Owner documents and the fitness console are per-user |
+| ASD V-222425, V-222426 | Enforce approved authorizations per object | Met | Every endpoint declares its policy or `AllowAnonymous`. `RouteTableTests` fails the build on one that declares nothing. Owner documents and the fitness console are per-user. The development calendar reset, `POST /api/alerts/fake/reset`, is mapped only in Development with `Alerts:Fake` set and needs the owner (`AlertsRouteTests`, `DevelopmentCalendarTests`) |
 | ASD V-222430 | Execute without excessive permissions | Met | Non-root chiseled image. The runtime database role has DML only (`aberaTech.Postgres/Sql`). The container app's identity holds one custom role on one VM (`DevBox/`) |
 | ASD V-222432, V-222433 | Lock out after three invalid logons in 15 minutes | Not applicable | There is no password. Sign-in is Google OIDC. Google enforces its own lockout. The sign-in start is rate limited (10 a minute per address, `RateLimits.cs`) |
 | ASD V-222536 to V-222548 | Password composition and lifetime | Not applicable | No passwords are stored or checked by this application (SP 800-63B §5.1.1 does not apply. The verifier is Google) |
