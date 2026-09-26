@@ -9,14 +9,19 @@ import { openAsOwner } from "./owner-session";
 
 test.describe.configure({ mode: "serial" });
 
-const phone = "(202) 555-0147";
-const e164 = "+12025550147";
+// A number per engine, so the Messages card shows this engine's text and
+// not the one the engine before it left. A rerun on the same database adds
+// a second, which is why the check below takes the first.
+const engines = ["owner-chromium", "owner-firefox", "owner-webkit"];
+const line = (project: string) => 47 + Math.max(0, engines.indexOf(project));
 
 test("the owner opens a queue, a visitor joins with texts, the owner works the line and closes it", async ({
   page,
   browser,
 }, info) => {
   const session = `E2E queue ${info.project.name}`;
+  const phone = `(202) 555-01${line(info.project.name)}`;
+  const e164 = `+120255501${line(info.project.name)}`;
   await openAsOwner(page, "/schedule/admin", "text=Signed in as");
 
   // A run that failed halfway leaves its queue open. Close it first.
@@ -57,9 +62,11 @@ test("the owner opens a queue, a visitor joins with texts, the owner works the l
       .filter({ has: page.getByRole("button", { name: "Start" }) })
       .last();
     await expect(entry).toContainText(e164);
-    await expect(page.getByText(`Queue welcome · ${e164}`)).toBeVisible({
-      timeout: 15_000,
-    });
+    await expect(page.getByText(`Queue welcome · ${e164}`).first()).toBeVisible(
+      {
+        timeout: 15_000,
+      },
+    );
 
     await entry.getByRole("button", { name: "Start" }).click();
     await expect(page.getByText(/with E2E Visitor now/)).toBeVisible();
