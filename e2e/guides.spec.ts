@@ -13,6 +13,27 @@ const isEmbed = (request: Request) =>
 const summary = (page: import("@playwright/test").Page, name: string) =>
   page.getByRole("button", { name, exact: true });
 
+/**
+ * Open a section and wait until it reports open. A click that lands before
+ * the page hydrates reaches the prerendered button, which has no handler yet,
+ * and is lost: 2 runs in 24 of the documents test failed that way on
+ * 2026-09-26. So the click repeats until the section says it is open, and
+ * never once it has.
+ */
+async function openSection(
+  page: import("@playwright/test").Page,
+  name: string,
+) {
+  const button = summary(page, name);
+  await expect(async () => {
+    if ((await button.getAttribute("aria-expanded")) !== "true")
+      await button.click();
+    await expect(button).toHaveAttribute("aria-expanded", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+
 test("/transition requests no embedded document until a section opens", async ({
   page,
 }) => {
@@ -24,11 +45,7 @@ test("/transition requests no embedded document until a section opens", async ({
   await page.goto("/transition");
   // A section with no frames opening proves the page has hydrated, so any
   // frame the script would mount has had its chance to.
-  await summary(page, "Terminal leave").click();
-  await expect(summary(page, "Terminal leave")).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
+  await openSection(page, "Terminal leave");
 
   await expect(page.locator("iframe")).toHaveCount(0);
   expect(embeds).toEqual([]);
@@ -42,7 +59,7 @@ test("/transition loads a section's documents when it opens", async ({
     (request) => new URL(request.url()).hostname === "docs.google.com",
   );
 
-  await summary(page, "12 to 18 Months before ETS").click();
+  await openSection(page, "12 to 18 Months before ETS");
   const frame = page.locator('iframe[title="CSP Checklist"]');
   await frame.scrollIntoViewIfNeeded();
 
@@ -77,8 +94,8 @@ test("/transition opens the section the address names", async ({ page }) => {
 test("/transition keeps more than one section open", async ({ page }) => {
   await page.goto("/transition");
 
-  await summary(page, "Terminal leave").click();
-  await summary(page, "Long after ETS").click();
+  await openSection(page, "Terminal leave");
+  await openSection(page, "Long after ETS");
 
   await expect(summary(page, "Terminal leave")).toHaveAttribute(
     "aria-expanded",
@@ -113,7 +130,7 @@ test("/technical opens the section the address names, and keeps others open", as
   await expect(languages).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator('[id="programming-languages"]')).toBeInViewport();
 
-  await summary(page, "How can kids learn to program").click();
+  await openSection(page, "How can kids learn to program");
   await expect(languages).toHaveAttribute("aria-expanded", "true");
   await expect(summary(page, "How can kids learn to program")).toHaveAttribute(
     "aria-expanded",
