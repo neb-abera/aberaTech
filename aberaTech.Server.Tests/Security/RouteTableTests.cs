@@ -79,6 +79,9 @@ public sealed class RouteTableTests
         settings["DevBox:HeartbeatToken"] = "box-token-for-tests";
         settings["Admin:DevelopmentSignIn"] = "true";
         settings["DevBox:Fake"] = "true";
+        settings["Alerts:CalendarIcsUrl"] = "https://calendar.example.test/basic.ics";
+        settings["Alerts:PushoverAppToken"] = "app-token-for-tests";
+        settings["Alerts:PushoverUserKey"] = "user-key-for-tests";
         return settings;
     }
 
@@ -108,6 +111,7 @@ public sealed class RouteTableTests
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/scheduling/book/{appointmentId:guid}"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/devbox/start"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/devbox/heartbeat"));
+        Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/test"));
 
         Assert.Empty(EndpointAuthorization.Undeclared(endpoints));
     }

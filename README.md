@@ -81,6 +81,40 @@ service keeps `node_modules` in a volume that outlives a rebuild.
   The container app's managed identity holds one role on that one VM: start
   and read. `DevBox__SubscriptionId` switches it on.
 
+- `/alerts` sends one Pushover message, priority 1, before each event on
+  the owner's Google Calendar (`aberaTech.Scheduling/Alerts/`). The worker
+  reads the secret iCal address every 5 minutes and sends each alert at its
+  own time. The alert time is the event's earliest popup reminder, or 10
+  minutes before the start. All-day, cancelled and declined events are
+  skipped. Text and "06:00 tomorrow" use the calendar's own zone
+  (`X-WR-TIMEZONE`, then `Alerts__TimeZone`, then UTC). Mute, Skip and a
+  one-send claim per occurrence are rows in the scheduling database.
+
+### Calendar alerts: switching them on
+
+Run these on the devbox as neb, or anywhere `az` is signed in. Put the
+values between the quotes. Secret names are at most 20 characters.
+
+```bash
+app=aberatechserver-app-202412211749
+group=aberatechserver-app-202412211749ResourceGroup
+
+az containerapp secret set -n "$app" -g "$group" --secrets \
+  alerts-calendar-ics='<secret address in iCal format>' \
+  alerts-pushover-app='<Pushover application API token>' \
+  alerts-pushover-user='<Pushover user key>'
+
+az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
+  --set-env-vars \
+  Alerts__CalendarIcsUrl=secretref:alerts-calendar-ics \
+  Alerts__PushoverAppToken=secretref:alerts-pushover-app \
+  Alerts__PushoverUserKey=secretref:alerts-pushover-user \
+  Alerts__TimeZone=Asia/Amman
+```
+
+The update starts a new revision. `/alerts` then lists the next alerts and
+the time of the last calendar read. Send test alert proves the keys.
+
 ## How it stays current
 
 GitHub Actions are pinned by commit SHA. Dependabot bumps SHA and comment

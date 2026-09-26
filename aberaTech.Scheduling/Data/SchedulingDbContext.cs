@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using aberaTech.Scheduling.Alerts;
 using aberaTech.Scheduling.Outbox;
 
 namespace aberaTech.Scheduling.Data;
@@ -36,6 +37,13 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     public DbSet<SmsOptOut> SmsOptOuts => Set<SmsOptOut>();
 
     public DbSet<AdminSessionVersion> AdminSessions => Set<AdminSessionVersion>();
+
+    /// <summary>The calendar alerts' mute switch, skips and send claims. Alerts/AlertRecords.cs.</summary>
+    public DbSet<AlertMuteRecord> AlertMutes => Set<AlertMuteRecord>();
+
+    public DbSet<AlertSkipRecord> AlertSkips => Set<AlertSkipRecord>();
+
+    public DbSet<AlertDeliveryRecord> AlertDeliveries => Set<AlertDeliveryRecord>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -119,6 +127,27 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // than the token and grows if the protection payload format ever
             // changes, and a truncating column would corrupt it silently.
             entity.Property(credential => credential.ProtectedRefreshToken).IsRequired();
+        });
+
+        builder.Entity<AlertMuteRecord>(entity =>
+        {
+            entity.HasKey(mute => mute.Id);
+            entity.Property(mute => mute.Id).ValueGeneratedNever();
+        });
+
+        builder.Entity<AlertSkipRecord>(entity =>
+        {
+            entity.HasKey(skip => skip.OccurrenceKey);
+            entity.Property(skip => skip.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
+        });
+
+        builder.Entity<AlertDeliveryRecord>(entity =>
+        {
+            // The key is the dedupe: one row per occurrence, ever.
+            entity.HasKey(delivery => delivery.OccurrenceKey);
+            entity.Property(delivery => delivery.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
+            entity.Property(delivery => delivery.Outcome).HasMaxLength(64).IsRequired();
+            entity.HasIndex(delivery => delivery.ClaimedAt);
         });
 
         builder.Entity<OutboxMessage>(entity =>

@@ -89,6 +89,10 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Plan",
     description: "The owner's plan, kept on the server.",
   },
+  "/alerts": {
+    title: "Alerts",
+    description: "The owner's calendar alerts: mute, skip and a test send.",
+  },
   "/devbox": {
     title: "Dev box",
     description:

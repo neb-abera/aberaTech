@@ -103,8 +103,9 @@ export default function AppAppBar() {
               >
                 Projects
               </Button>
-              {/* Three more items, for the owner only: the bookmark list, the
-                  plan and the dev box are reached by address by everyone else. */}
+              {/* Four more items, for the owner only: the bookmark list, the
+                  plan, the dev box and the alerts are reached by address by
+                  everyone else. */}
               {signedIn && (
                 <>
                   <Button
@@ -133,6 +134,15 @@ export default function AppAppBar() {
                     to="/devbox"
                   >
                     Dev box
+                  </Button>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    component={Link}
+                    to="/alerts"
+                  >
+                    Alerts
                   </Button>
                 </>
               )}
@@ -262,6 +272,11 @@ export default function AppAppBar() {
                   {signedIn && (
                     <MenuItem component={Link} to="/devbox">
                       Dev box
+                    </MenuItem>
+                  )}
+                  {signedIn && (
+                    <MenuItem component={Link} to="/alerts">
+                      Alerts
                     </MenuItem>
                   )}
                   <Divider sx={{ my: 1 }} />
