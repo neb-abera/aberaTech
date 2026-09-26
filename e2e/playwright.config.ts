@@ -1,7 +1,8 @@
 import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
-const owner = /owner\.spec\.ts$/;
+// owner.spec.ts, owner-alerts.spec.ts and every *.owner.spec.ts.
+const owner = /owner.*\.spec\.ts$/;
 
 // The phones run the specs whose layout changes under 900px: the bar and
 // its menu, the booking calendar and dialog, and axe over every page. The
@@ -40,7 +41,7 @@ export default defineConfig({
   // one WebKit, because the bar, the booking dialog and the planner rail
   // each have a layout of their own under 900px.
   //
-  // The owner specs (owner.spec.ts, *.owner.spec.ts) hold state on the
+  // The owner specs (any file named for the owner) hold state on the
   // server: the in-memory dev box, the queue, the owner's documents. Two
   // engines on one of them at once would race, so they run as their own
   // projects, one engine after another, after everything else. Within an
