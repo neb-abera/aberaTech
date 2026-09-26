@@ -5,8 +5,8 @@ Two identities touch the `scheduling` and `fitness` databases on
 
 | Identity | Postgres role | Rights | Used by |
 |---|---|---|---|
-| `abera-migrator`, a user-assigned managed identity in the app's resource group | `abera-migrator` | Owns every table, sequence and the migration history. `USAGE, CREATE` on schema `public` | The `migrate` job of the deploy workflow, and nothing else |
-| The container app's system-assigned identity | `aberatechserver-app-202412211749` | `SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE, SELECT` on sequences, `SELECT` on the migration history. No `CREATE`, no `TEMPORARY`, no ownership | Serving requests |
+| `abera-migrator`, a user-assigned managed identity in the app's resource group | `abera-migrator` | Owns both databases, every table, sequence and the migration history. `USAGE, CREATE` on schema `public` | The `migrate` job of the deploy workflow, and nothing else |
+| The container app's system-assigned identity | `aberatechserver-app-202412211749` | `CONNECT` on each database. `SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE, SELECT` on sequences, `SELECT` on the migration history. No `CREATE`, no `TEMPORARY`, no ownership | Serving requests |
 
 `abera-migrator` holds no Azure role. It trusts one thing: a GitHub token for
 this repository's `master` branch, through two federated credentials, one per
@@ -114,12 +114,48 @@ After the first deploy whose `migrate` job was green:
 REVOKE "abera-migrator" FROM "aberatechserver-app-202412211749";
 ```
 
+On 2026-09-26, as the gmail Entra administrator role, in `postgres`, in one
+transaction. It ran first with `ROLLBACK` in place of `COMMIT`, with the
+rollback below applied inside it, and the owners, database privileges and
+memberships came back identical.
+
+```sql
+BEGIN;
+ALTER DATABASE scheduling OWNER TO "abera-migrator";
+ALTER DATABASE fitness OWNER TO "abera-migrator";
+REVOKE "abera-migrator" FROM CURRENT_USER;
+REVOKE "aberatechserver-app-202412211749" FROM CURRENT_USER;
+COMMIT;
+```
+
+Before it, `facewoofadmin`, Facewoof's server administrator, owned both
+databases. Nothing in Facewoof connects to them. The owner change keeps the
+database privileges: `PUBLIC` and the app have `CONNECT` and nothing else, so
+`TEMPORARY` stays revoked, and `abera-migrator` gets the owner's `CREATE`
+and `TEMPORARY`. The two memberships were `ADMIN` only, with `INHERIT` and
+`SET` off, made when the admin role created each role. Neither admin role
+needs them: membership in `azure_pg_admin` lets either one grant these roles
+and change these databases, which the dry run showed with no `ADMIN` held.
+
+The same day, as the gmail admin role, in `scheduling`, a leftover default
+grant came out. Tables that role created would have given the app `TRUNCATE`,
+`REFERENCES` and `TRIGGER`. It had created none.
+
+```sql
+ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public
+  REVOKE ALL ON TABLES FROM "aberatechserver-app-202412211749";
+ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public
+  REVOKE ALL ON SEQUENCES FROM "aberatechserver-app-202412211749";
+```
+
 ## Rolling back
 
 Each step has its reverse. Run them newest first.
 
 | To undo | Run |
 |---|---|
+| The leftover default grant | As the gmail admin role, in `scheduling`: `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLES TO "aberatechserver-app-202412211749";` and `... GRANT SELECT, UPDATE, USAGE ON SEQUENCES TO "aberatechserver-app-202412211749";` |
+| The database owner and the admin memberships | As the gmail admin role, in `postgres`: `ALTER DATABASE scheduling OWNER TO facewoofadmin;`, `ALTER DATABASE fitness OWNER TO facewoofadmin;`, then `GRANT "abera-migrator" TO CURRENT_USER WITH ADMIN TRUE, INHERIT FALSE, SET FALSE;` and the same for `"aberatechserver-app-202412211749"` |
 | The app's loss of DDL | `GRANT "abera-migrator" TO "aberatechserver-app-202412211749";` |
 | Migrations outside the app | `az containerapp update -g "$RG" -n aberatechserver-app-202412211749 --set-env-vars Database__MigrateOnStart=true`, with the grant above |
 | The `migrate` job | Revert the workflow change. The app then needs both lines above |
