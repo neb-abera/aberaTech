@@ -60,6 +60,41 @@ public sealed class ProgressEndpointsTests : IDisposable
         Assert.Equal(accepted, ProgressEndpoints.IsJsonObject(body));
     }
 
+    [Theory]
+    [InlineData("https://abera.tech/", true)]
+    [InlineData("HTTPS://ABERA.TECH/", true)]
+    [InlineData("http://localhost:5173/links?x=1#top", true)]
+    [InlineData("javascript:alert(1)", false)]
+    [InlineData("jAvAsCrIpT:alert(1)", false)]
+    [InlineData(" https://abera.tech/", false)]
+    [InlineData("\u0000javascript:alert(1)", false)]
+    [InlineData("https://abera.tech/\n", false)]
+    [InlineData("java\tscript:alert(1)", false)]
+    [InlineData("data:text/html;base64,PHNjcmlwdD4=", false)]
+    [InlineData("mailto:someone@example.com", false)]
+    [InlineData("//abera.tech/", false)]
+    [InlineData("abera.tech", false)]
+    [InlineData("https://", false)]
+    [InlineData("", false)]
+    public void A_link_is_a_web_address(string url, bool accepted)
+    {
+        Assert.Equal(accepted, ProgressEndpoints.IsWebAddress(url));
+    }
+
+    [Theory]
+    [InlineData("{}", true)]
+    [InlineData("{\"version\":1,\"links\":[],\"folders\":[]}", true)]
+    [InlineData("{\"links\":[{\"id\":\"a\",\"url\":\"https://abera.tech/\"}]}", true)]
+    [InlineData("{\"links\":[{\"id\":\"a\",\"url\":\"javascript:alert(1)\"}]}", false)]
+    [InlineData("{\"links\":[{\"url\":\"https://a.test/\"},{\"url\":\"data:,x\"}]}", false)]
+    [InlineData("{\"links\":[{\"url\":7}]}", false)]
+    [InlineData("{\"links\":[\"javascript:alert(1)\"]}", false)]
+    [InlineData("{\"links\":{\"url\":\"javascript:alert(1)\"}}", false)]
+    public void A_links_document_holds_web_addresses_only(string json, bool accepted)
+    {
+        Assert.Equal(accepted, ProgressEndpoints.HasOnlyWebLinks(json));
+    }
+
     [Fact]
     public void The_cap_is_a_quarter_megabyte()
     {

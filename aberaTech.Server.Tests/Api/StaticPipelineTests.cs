@@ -31,7 +31,9 @@ public sealed class StaticPipelineTests : IDisposable
             Path.Combine(_webRoot, "index.html"),
             "<html><script>bootstrap()</script>prerendered home</html>");
         File.WriteAllText(Path.Combine(_webRoot, "spa.html"), "<html>empty shell</html>");
-        File.WriteAllText(Path.Combine(_webRoot, "transition", "index.html"), "<html>prerendered guide</html>");
+        File.WriteAllText(
+            Path.Combine(_webRoot, "transition", "index.html"),
+            "<html><head><style data-emotion=\"css abc\">.css-abc{color:red}</style></head>prerendered guide</html>");
         File.WriteAllText(Path.Combine(_webRoot, "assets", "index-abc123.js"), "console.log('app')");
 
         _factory = new WebApplicationFactory<Program>()
@@ -142,6 +144,28 @@ public sealed class StaticPipelineTests : IDisposable
             directive => directive.StartsWith("script-src "));
         Assert.Contains("'sha256-", scriptSrc);
     }
+
+    [Fact]
+    public async Task The_csp_allows_the_style_elements_the_pages_were_baked_with_and_no_others()
+    {
+        // The guide's style element, found by the startup scan of every
+        // shipped page (not only index.html), and the empty element emotion
+        // creates at run time and fills through the CSSOM. Nothing inline
+        // beyond those two.
+        var response = await _factory.CreateClient().GetAsync("/");
+
+        var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        var directives = csp.Split("; ");
+        var styleSrc = Assert.Single(directives, directive => directive.StartsWith("style-src "));
+        Assert.Contains("'self'", styleSrc);
+        Assert.DoesNotContain("'unsafe-inline'", styleSrc);
+        Assert.Contains($"'sha256-{Sha256Of(".css-abc{color:red}")}'", styleSrc);
+        Assert.Contains($"'sha256-{Sha256Of("")}'", styleSrc);
+        Assert.Contains("style-src-attr 'unsafe-inline'", directives);
+    }
+
+    private static string Sha256Of(string content) =>
+        Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content)));
 
     [Fact]
     public async Task The_csp_asks_for_upgrades_over_https_and_not_over_plain_http()

@@ -17,6 +17,7 @@ import path from "node:path";
 import process from "node:process";
 import {
   headFor,
+  hoistStyles,
   prerenderedRoutes,
   render,
   routes,
@@ -78,9 +79,14 @@ for (const route of prerenderedRoutes) {
   const file =
     route === "/" ? "dist/index.html" : path.join("dist", route, "index.html");
   await mkdir(path.dirname(file), { recursive: true });
+  // The render's style elements go into the head, so the CSP can allow them
+  // by hash (CspInlineStyles.cs). Replacer functions, because CSS can hold a
+  // "$" that a replacement string would read as a pattern.
+  const { markup, styles } = hoistStyles(html);
   const page = template
-    .replace(TITLE, headFor(route))
-    .replace(MARK, `<div id="root">${html}</div>`);
+    .replace(TITLE, () => headFor(route))
+    .replace("</head>", () => `${styles}</head>`)
+    .replace(MARK, () => `<div id="root">${markup}</div>`);
   await writeFile(file, page);
   process.stdout.write(`prerendered ${route} -> ${file}\n`);
 }

@@ -181,12 +181,12 @@ public sealed class AdminCookieTests : IDisposable
             .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
             .Get(CookieAuthenticationDefaults.AuthenticationScheme);
 
-    private string Session() =>
-        Options().TicketDataFormat.Protect(new AuthenticationTicket(
-            new ClaimsPrincipal(new ClaimsIdentity(
-                [new Claim(ClaimTypes.Email, "owner@example.test")],
-                CookieAuthenticationDefaults.AuthenticationScheme)),
-            CookieAuthenticationDefaults.AuthenticationScheme));
+    /// <summary>The owner's ticket, without the cookie name, so a test can send it under either name.</summary>
+    private string Session()
+    {
+        var cookie = AdminSession.CookieFor(_app.Factory.Services, "owner@example.test");
+        return cookie[(cookie.IndexOf('=') + 1)..];
+    }
 
     public void Dispose() => _app.Dispose();
 }

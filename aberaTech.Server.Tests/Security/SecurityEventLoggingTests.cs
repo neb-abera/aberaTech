@@ -97,18 +97,11 @@ public sealed class SecurityEventLoggingTests : IDisposable
         // Anybody with a Google account can complete the sign-in; the
         // allowlist is what refuses them. That refusal is worth knowing
         // about. Whose account it was is not the log's business.
-        var cookies = _app.Factory.Services
-            .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
-            .Get(CookieAuthenticationDefaults.AuthenticationScheme);
-
-        var session = cookies.TicketDataFormat.Protect(new AuthenticationTicket(
-            new ClaimsPrincipal(new ClaimsIdentity(
-                [new Claim(ClaimTypes.Email, StrangerEmail), new Claim(ClaimTypes.Name, "A Stranger")],
-                CookieAuthenticationDefaults.AuthenticationScheme)),
-            CookieAuthenticationDefaults.AuthenticationScheme));
+        var cookie = AdminSession.CookieFor(_app.Factory.Services, StrangerEmail);
+        var session = cookie[(cookie.IndexOf('=') + 1)..];
 
         using var request = Request(HttpMethod.Get, "/api/scheduling/admin/queue");
-        request.Headers.Add("Cookie", $"{cookies.Cookie.Name}={session}");
+        request.Headers.Add("Cookie", cookie);
 
         Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(request)).StatusCode);
 

@@ -1,3 +1,4 @@
+using aberaTech.Scheduling.Admin;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +45,15 @@ public sealed class TestApp : IDisposable
             builder.ConfigureServices(collection =>
             {
                 collection.AddTransient<IStartupFilter, RemoteAddressStartupFilter>();
+
+                // No database the test can reach, so the admin cookie's
+                // session version lives in memory. A test with the compose
+                // Postgres keeps the store the server registers.
+                if (!HasReachableScheduling(settings))
+                {
+                    collection.AddSingleton<IAdminSessionVersions, InMemoryAdminSessionVersions>();
+                }
+
                 services?.Invoke(collection);
             });
         });
@@ -62,6 +72,11 @@ public sealed class TestApp : IDisposable
     }
 
     public WebApplicationFactory<Program> Factory { get; }
+
+    private static bool HasReachableScheduling(IReadOnlyDictionary<string, string?> settings) =>
+        settings.TryGetValue("ConnectionStrings:Scheduling", out var value)
+        && !string.IsNullOrWhiteSpace(value)
+        && value != Security.DatabaseMigrationsTests.Unreachable;
 
     /// <summary>A client that follows nothing and remembers nothing, like curl.</summary>
     public HttpClient CreateClient() =>
