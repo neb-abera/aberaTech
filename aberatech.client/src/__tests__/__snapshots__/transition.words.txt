@@ -1,4 +1,4 @@
-8816 words
+8841 words
 1 "Closed
 1 "Most
 1 "No"
@@ -172,7 +172,7 @@
 1 Airs
 1 Alternative:
 2 Amazon
-1 American
+2 American
 4 An
 1 And
 2 Apple
@@ -266,6 +266,7 @@
 1 Computer
 2 Conferences
 1 Coordinator
+1 Corporate
 1 Correct
 1 Costco
 1 Course
@@ -347,7 +348,7 @@
 3 GB
 3 GI
 2 General
-5 Get
+6 Get
 2 GitHub
 1 Give
 1 Glassdoor
@@ -511,6 +512,7 @@
 1 Parachute
 1 Paragraph
 3 Participation
+1 Partners
 1 Pat
 2 People
 1 Perez
@@ -733,7 +735,7 @@
 1 [include
 1 [not
 2 ______
-172 a
+176 a
 2 ability
 8 able
 29 about
@@ -762,6 +764,7 @@
 1 actions
 1 actions.
 1 activating
+1 active-duty
 2 actively
 2 add
 1 add-ons
@@ -805,7 +808,7 @@
 1 among
 2 amount
 45 an
-194 and
+195 and
 3 and/or
 1 annual
 1 annually
@@ -1019,7 +1022,7 @@
 8 companies
 2 companies,
 3 companies.
-8 company
+9 company
 3 company's
 4 company,
 1 company-hosted
@@ -1320,7 +1323,7 @@
 1 follow-up
 1 following
 1 following:
-132 for
+134 for
 3 for.
 1 forge
 2 forget
@@ -1329,8 +1332,9 @@
 1 forward
 7 found
 3 free
+1 free.
 2 friend
-43 from
+44 from
 1 fruitlessly
 1 full
 1 full-time
@@ -1633,10 +1637,12 @@
 1 meetings.
 1 member
 1 members
+1 members,
 2 memo
 1 memos
-1 mentor
+2 mentor
 1 mentor,
+1 mentor.
 1 menu
 3 message
 1 messages
@@ -1796,6 +1802,7 @@
 4 paid
 1 paid.
 1 painful.
+1 pairs
 1 paper
 1 papers
 1 papers.
@@ -2085,7 +2092,7 @@
 1 seriously
 1 serve
 1 served,
-3 service
+4 service
 1 service,
 1 service.
 1 session
@@ -2143,6 +2150,7 @@
 1 spend
 1 spent
 1 spot
+1 spouses
 1 spread
 1 spread.
 2 squeaky
@@ -2305,7 +2313,7 @@
 1 transition/terminal
 1 transition?
 1 transitional
-4 transitioning
+5 transitioning
 1 translate
 5 transportation
 1 transportation.
@@ -2376,7 +2384,7 @@
 2 veteran
 1 veteran-focused
 2 veteran.
-1 veterans
+2 veterans
 1 veterans,
 1 veterans.
 3 via
@@ -2435,7 +2443,7 @@
 48 will
 3 willing
 3 window
-47 with
+48 with
 1 with.
 4 within
 3 without
@@ -2461,6 +2469,7 @@
 1 www.hiringourheroes.org
 1 www.va.gov
 1 year
+1 year,
 2 years
 1 years,
 1 yet,
