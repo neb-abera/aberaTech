@@ -70,6 +70,7 @@ test.describe.configure({ timeout: 60_000 });
 for (const path of pages) {
   test(`${path}: the scheme does not flash on a first visit`, async ({
     page,
+    isMobile,
   }) => {
     await page.addInitScript(() => {
       const seen: string[] = [];
@@ -83,14 +84,21 @@ for (const path of pages) {
         attributeFilter: ["data-mui-color-scheme"],
       });
     });
+    // Hydrated: the account probe is sent once the provider has mounted,
+    // and the bar's sign-in control appears when it answers. On a phone
+    // that control is inside the closed menu, so the answer itself is the
+    // signal. Then a beat for any correction effect to run.
+    const probe = page.waitForResponse("**/api/scheduling/admin/me");
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    // Hydrated: the bar's sign-in control only appears once the account
-    // probe has answered, which is after the provider has mounted. Then a
-    // beat for any correction effect to run.
-    await expect(
-      page.getByRole("link", { name: "Sign in", exact: true }),
-    ).toBeVisible();
+    await probe;
+    if (!isMobile) {
+      // 15 s: under three engines and a loaded runner the probe has taken
+      // Firefox past the default 5 s on /transition.
+      await expect(
+        page.getByRole("link", { name: "Sign in", exact: true }),
+      ).toBeVisible({ timeout: 15_000 });
+    }
     await page.waitForTimeout(300);
 
     const seen = await page.evaluate(

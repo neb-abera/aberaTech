@@ -39,10 +39,19 @@ Postgres tests, and it proves it can fail (`--self-test`) before every run.
 
 `make e2e` is the browser's view: Playwright, in the image that matches
 `e2e/package.json`, against the production image and its database as `make
-up` runs them. It checks what no unit test can: the bundle arrives
+up` runs them. It runs on desktop Chromium, Firefox and WebKit, and on a
+Chromium phone and a WebKit phone. It books a time, joins and works the
+queue, and drives the planner, the study plans and the fitness console the
+way their users do. Compose configures no SMS provider, so every text goes to
+the logging sender. It checks what no unit test can: the bundle arrives
 compressed, hashed assets are immutable and the document is not, nothing
 static sets a cookie, and every prerendered page reads with JavaScript off.
 Traces land in `e2e-test-results/` when it fails.
+
+`e2e/a11y.spec.ts` runs axe over every route in `/app-routes.json`, in both
+colour schemes, and fails on a serious or critical violation. A violation that
+needs a design decision goes in `e2e/a11y-allowlist.json` with the route, the
+rule and the reason. An entry that no longer fires fails as well.
 
 `make check` also runs `scripts/check-held-majors.sh`, which fails when a
 dependency's next major cannot be taken: an npm major that cannot install
