@@ -25,6 +25,7 @@ import {
   resolveConflict,
   search,
   slugOf,
+  swapLinks,
   tagsOf,
   titleOf,
   updateLink,
@@ -110,17 +111,26 @@ describe("headings", () => {
     { title: "four", url: "four.example", group: "Work" },
   ].reduce((d, link, i) => addLink(d, link, day, `id-${i}`), empty);
 
-  it("puts the general list first and the rest in order", () => {
-    expect(groupsOf(doc)).toEqual([GENERAL, "Admin", "Work"]);
+  it("puts the general list first and the rest in the order they came", () => {
+    expect(groupsOf(doc)).toEqual([GENERAL, "Work", "Admin"]);
   });
 
-  it("lists a heading's links newest first", () => {
-    expect(inGroup(doc, "Work").map((l) => l.title)).toEqual(["four", "one"]);
+  it("puts each folder straight after the one it sits in", () => {
+    const nested = [
+      { title: "a", url: "a.example", group: "Work" },
+      { title: "b", url: "b.example", group: "Admin" },
+      { title: "c", url: "c.example", group: "Work / Tools" },
+    ].reduce((d, link, i) => addLink(d, link, day, `n-${i}`), empty);
+    expect(groupsOf(nested)).toEqual(["Work", "Work / Tools", "Admin"]);
+  });
+
+  it("lists a heading's links in the order they came", () => {
+    expect(inGroup(doc, "Work").map((l) => l.title)).toEqual(["one", "four"]);
     expect(inGroup(doc, GENERAL).map((l) => l.title)).toEqual(["two"]);
   });
 
   it("omits the general heading when every link is grouped", () => {
-    expect(groupsOf(removeLink(doc, "id-1"))).toEqual(["Admin", "Work"]);
+    expect(groupsOf(removeLink(doc, "id-1"))).toEqual(["Work", "Admin"]);
   });
 
   it("files a group typed as General under the general list, not a second heading", () => {
@@ -130,10 +140,10 @@ describe("headings", () => {
       day,
       "id-4",
     );
-    expect(groupsOf(typed)).toEqual([GENERAL, "Admin", "Work"]);
+    expect(groupsOf(typed)).toEqual([GENERAL, "Work", "Admin"]);
     expect(inGroup(typed, GENERAL).map((l) => l.title)).toEqual([
-      "five",
       "two",
+      "five",
     ]);
     expect(normalizeGroup("General")).toBe("");
     expect(normalizeGroup(" Work ")).toBe("Work");
@@ -406,7 +416,14 @@ describe("folders", () => {
   });
 
   it("moves a link to the general list", () => {
-    expect(moveLink(doc, "id-1", GENERAL).links[1].group).toBe("");
+    const moved = moveLink(doc, "id-1", GENERAL);
+    expect(moved.links.find((l) => l.id === "id-1")?.group).toBe("");
+  });
+
+  it("puts a moved link at the bottom of the folder it goes to", () => {
+    const moved = moveLink(doc, "id-0", "Work");
+    const work = inGroup(moved, "Work");
+    expect(work[work.length - 1].id).toBe("id-0");
   });
 
   it("keeps the folder a link was the last one in", () => {
@@ -469,5 +486,27 @@ describe("folders", () => {
     expect(coerce({ version: 1, links: [], conflicts: [] }).folders).toEqual(
       [],
     );
+  });
+});
+
+describe("swapLinks", () => {
+  const doc = [
+    { title: "one", url: "one.example", group: "Work" },
+    { title: "two", url: "two.example" },
+    { title: "three", url: "three.example", group: "Work" },
+  ].reduce((d, link, i) => addLink(d, link, day, `id-${i}`), empty);
+
+  it("trades two links' places and leaves the rest where they are", () => {
+    const swapped = swapLinks(doc, "id-2", "id-0");
+    expect(swapped.links.map((l) => l.id)).toEqual(["id-2", "id-1", "id-0"]);
+    expect(inGroup(swapped, "Work").map((l) => l.title)).toEqual([
+      "three",
+      "one",
+    ]);
+  });
+
+  it("changes nothing when either link is not there", () => {
+    expect(swapLinks(doc, "id-0", "zzz")).toBe(doc);
+    expect(swapLinks(doc, "zzz", "id-0")).toBe(doc);
   });
 });

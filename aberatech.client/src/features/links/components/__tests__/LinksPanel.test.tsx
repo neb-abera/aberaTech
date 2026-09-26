@@ -584,6 +584,102 @@ describe("for the owner", () => {
   });
 });
 
+describe("order", () => {
+  const ranked: LinksDocument = {
+    version: 1,
+    conflicts: [],
+    folders: [],
+    links: ["Mail", "Calendar", "Bank"].map((title) => ({
+      id: title,
+      title,
+      url: `https://${title.toLowerCase()}.example/`,
+      group: "",
+      note: "",
+      tags: [],
+      addedAt: "2026-09-12",
+    })),
+  };
+
+  const rows = () =>
+    within(screen.getByRole("list", { name: "Links under General" }))
+      .getAllByRole("link")
+      .map((a) => a.textContent);
+
+  it("shows the links in the order they are kept", async () => {
+    visit(ranked);
+    render(<LinksPanel />);
+    await settle();
+
+    expect(rows()).toEqual(["Mail", "Calendar", "Bank"]);
+  });
+
+  it("moves a link up and down, and saves the new order", async () => {
+    visit(ranked);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByLabelText("Move Bank up"));
+    await flushSave();
+    expect(rows()).toEqual(["Mail", "Bank", "Calendar"]);
+    expect(lastPut().links.map((l) => l.id)).toEqual([
+      "Mail",
+      "Bank",
+      "Calendar",
+    ]);
+
+    fireEvent.click(screen.getByLabelText("Move Mail down"));
+    await flushSave();
+    expect(lastPut().links.map((l) => l.id)).toEqual([
+      "Bank",
+      "Mail",
+      "Calendar",
+    ]);
+  });
+
+  it("downloads in the order set on the page", async () => {
+    visit(ranked);
+    render(<LinksPanel />);
+    await settle();
+
+    fireEvent.click(screen.getByLabelText("Move Bank up"));
+    fireEvent.click(screen.getByLabelText("Move Bank up"));
+    expect(rows()).toEqual(["Bank", "Mail", "Calendar"]);
+
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:links";
+        }),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    fireEvent.click(screen.getByRole("button", { name: "Download" }));
+
+    const text = await blobs[0].text();
+    const titles = [...text.matchAll(/<A [^>]*>([^<]*)<\/A>/g)].map(
+      (m) => m[1],
+    );
+    expect(titles).toEqual(["Bank", "Mail", "Calendar"]);
+  });
+
+  it("offers no move past the top or the bottom", async () => {
+    visit(ranked);
+    render(<LinksPanel />);
+    await settle();
+
+    expect(
+      (screen.getByLabelText("Move Mail up") as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByLabelText("Move Bank down") as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+});
+
 describe("folders", () => {
   const filed: LinksDocument = {
     version: 1,
@@ -626,7 +722,8 @@ describe("folders", () => {
     const headings = screen
       .getAllByRole("heading", { level: 2 })
       .map((h) => h.textContent);
-    expect(headings).toEqual(["MITRE", "rf", "Work", "Tools"]);
+    // A new folder goes below the ones already here, as in a browser.
+    expect(headings).toEqual(["Work", "Tools", "MITRE", "rf"]);
   });
 
   it("moves a link into another folder", async () => {

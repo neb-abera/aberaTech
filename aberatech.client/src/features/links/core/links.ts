@@ -340,9 +340,10 @@ export function removeFolder(
 }
 
 /**
- * One link under a different folder. Everything else about it is kept, and
- * the folder it left stays on the page even when it was the last link in
- * it: emptying a folder while sorting is not a request to delete it.
+ * One link under a different folder, at the bottom of it, as a browser
+ * files a bookmark dropped on a folder. Everything else about it is kept,
+ * and the folder it left stays on the page even when it was the last link
+ * in it: emptying a folder while sorting is not a request to delete it.
  */
 export function moveLink(
   document: LinksDocument,
@@ -355,9 +356,10 @@ export function moveLink(
   const left = link.group;
   return withFolders({
     ...document,
-    links: document.links.map((l) =>
-      l.id === id ? { ...l, group: target } : l,
-    ),
+    links: [
+      ...document.links.filter((l) => l.id !== id),
+      { ...link, group: target },
+    ],
     folders: left === "" ? document.folders : [...document.folders, left],
   });
 }
@@ -388,6 +390,24 @@ function withFolders(document: LinksDocument): LinksDocument {
 function ancestry(group: string): string[] {
   const path = folderPath(group);
   return path.map((_, i) => path.slice(0, i + 1).join(" / "));
+}
+
+/**
+ * Two links trade places in the list and everything else stays put. The
+ * page moves a link up or down by swapping it with the one it shows above
+ * or below, which works the same while a search hides the links between.
+ */
+export function swapLinks(
+  document: LinksDocument,
+  id: string,
+  otherId: string,
+): LinksDocument {
+  const from = document.links.findIndex((l) => l.id === id);
+  const to = document.links.findIndex((l) => l.id === otherId);
+  if (from === -1 || to === -1) return document;
+  const links = document.links.slice();
+  [links[from], links[to]] = [links[to], links[from]];
+  return { ...document, links };
 }
 
 /** The document without one link, and without whatever it had to resolve. */
@@ -459,8 +479,10 @@ export function resolveConflict(
 }
 
 /**
- * The groups in use, the general list first and the rest alphabetically,
- * so the page's headings are stable as links come and go.
+ * The groups in use, the general list first and the rest in the order the
+ * list reaches them, each folder straight after the one it sits in. An
+ * uploaded file's folders keep the file's order, and a new folder goes
+ * below the ones already here.
  */
 export function groupsOf(document: LinksDocument): string[] {
   const named = new Map<string, string>();
@@ -476,28 +498,29 @@ export function groupsOf(document: LinksDocument): string[] {
     else note(link.group);
   }
   for (const folder of document.folders) note(folder);
-  const rest = [...named.values()].sort(byPath);
+  const inside = new Map<string, string[]>();
+  for (const name of named.values()) {
+    const parent = parentOf(name).toLowerCase();
+    inside.set(parent, [...(inside.get(parent) ?? []), name]);
+  }
+  const rest: string[] = [];
+  const walk = (parent: string) => {
+    for (const name of inside.get(parent) ?? []) {
+      rest.push(name);
+      walk(name.toLowerCase());
+    }
+  };
+  walk("");
   return general ? [GENERAL, ...rest] : rest;
 }
 
-/** Alphabetical a segment at a time, so a folder comes before its own. */
-function byPath(a: string, b: string): number {
-  const left = folderPath(a);
-  const right = folderPath(b);
-  for (let i = 0; i < Math.min(left.length, right.length); i += 1) {
-    const order = left[i].localeCompare(right[i]);
-    if (order !== 0) return order;
-  }
-  return left.length - right.length;
-}
-
-/** The links under one heading, newest first. */
+/**
+ * The links under one heading in the list's order: a file's order as it
+ * came, links added here below it, and whatever the owner moved up or down.
+ */
 export function inGroup(document: LinksDocument, group: string): LinkEntry[] {
   const key = group === GENERAL ? "" : group;
-  return document.links
-    .filter((l) => l.group === key)
-    .slice()
-    .reverse();
+  return document.links.filter((l) => l.group === key);
 }
 
 /** The links whose title, host, group, tags or note contain the query. */
