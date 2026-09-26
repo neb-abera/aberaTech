@@ -1,3 +1,5 @@
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -46,6 +48,7 @@ import {
   renameFolder,
   resolveConflict,
   search,
+  swapLinks,
   tagsOf,
   titleOf,
   updateLink,
@@ -649,7 +652,7 @@ export default function LinksPanel() {
               disablePadding
               sx={{ borderTop: 1, borderColor: "divider" }}
             >
-              {held.map((link) =>
+              {held.map((link, index) =>
                 editing === link.id ? (
                   <ListItem key={link.id} divider disableGutters>
                     <Box
@@ -742,6 +745,30 @@ export default function LinksPanel() {
                       <Stack direction="row" spacing={0.5}>
                         <IconButton
                           size="small"
+                          aria-label={`Move ${titleOf(link)} up`}
+                          disabled={index === 0}
+                          onClick={() =>
+                            change((d) =>
+                              swapLinks(d, link.id, held[index - 1].id),
+                            )
+                          }
+                        >
+                          <ArrowUpwardIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          aria-label={`Move ${titleOf(link)} down`}
+                          disabled={index === held.length - 1}
+                          onClick={() =>
+                            change((d) =>
+                              swapLinks(d, link.id, held[index + 1].id),
+                            )
+                          }
+                        >
+                          <ArrowDownwardIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
                           aria-label={`Copy ${titleOf(link)}`}
                           onClick={() => copy(link.id, link.url)}
                           color={copied === link.id ? "success" : "default"}
@@ -773,7 +800,7 @@ export default function LinksPanel() {
                         </IconButton>
                       </Stack>
                     }
-                    sx={{ pr: 18 }}
+                    sx={{ pr: 26 }}
                   >
                     <ListItemText
                       primary={
