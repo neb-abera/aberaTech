@@ -228,6 +228,19 @@ jobs:
           ./scripts/check-held-majors.sh --self-test
           ./scripts/check-held-majors.sh
 
+      # Every Dependabot PR auto-merges, majors included, so the ignore
+      # ranges are all that keeps an STS .NET major or a Node major before
+      # its LTS date out. It reads nodejs.org/dist/index.json: exit 2 is an
+      # outage, not a finding. The monthly dotnet-major-upgrade workflow
+      # takes the same LTS-only view, and its self-test runs here because
+      # nobody watches that workflow.
+      - name: Only LTS majors of .NET and Node are offered
+        run: |
+          set -euo pipefail
+          ./scripts/check-dotnet-major.sh --self-test
+          ./scripts/check-lts-majors.sh --self-test
+          ./scripts/check-lts-majors.sh
+
       # The writing rules (.vale/styles/Abera) over every tracked Markdown
       # file. The self-test runs first, every time: every rule must fire on
       # a fixture that carries one violation each, and a clean fixture must
