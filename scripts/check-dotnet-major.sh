@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# check-dotnet-major.sh — detect a newer GA .NET major and rewrite every
+# check-dotnet-major.sh — detect a newer LTS .NET major and rewrite every
 # version site that must move in lockstep with it:
 #
 #   1. <TargetFramework> in every .csproj
@@ -16,6 +16,15 @@
 # jump. Run monthly by .github/workflows/dotnet-major-upgrade.yml, and safe
 # to run locally: it only edits files, never commits.
 #
+# Only an LTS major is taken: the releases index marks each channel
+# "release-type" lts or sts, and an STS major (the odd ones) gets 18 months
+# of support. .github/dependabot.yml holds the STS majors back in the same
+# way, checked by scripts/check-lts-majors.sh.
+#
+#   scripts/check-dotnet-major.sh              run the check
+#   scripts/check-dotnet-major.sh --self-test  prove the channel choice on
+#                                              planted release indexes
+#
 # Environment:
 #   SUMMARY_FILE  optional path; a Markdown summary (used as the PR body)
 #                 is written there.
@@ -30,26 +39,53 @@ SUMMARY_FILE="${SUMMARY_FILE:-/dev/null}"
 
 replace() { perl -pi -e "$2" "$1"; }
 
+# latest_lts: the newest active or maintenance LTS channel of a releases
+# index on stdin, or nothing.
+latest_lts() {
+  jq -r '
+    ."releases-index"
+    | map(select(."release-type" == "lts" and (."support-phase" == "active" or ."support-phase" == "maintenance")))
+    | max_by(."channel-version" | split(".") | map(tonumber))
+    | ."channel-version" // empty'
+}
+
+if [ "${1:-}" = --self-test ]; then
+  failed=0
+  expect() { # expect <channel> <label> <index>
+    local got
+    got="$(latest_lts <<< "$3")"
+    if [ "$got" = "$1" ]; then
+      echo "self-test: ok: $2"
+    else
+      echo "self-test FAILED: $2: wanted \"$1\", got \"$got\"" >&2
+      failed=1
+    fi
+  }
+  expect 10.0 "an STS major ahead of the current LTS is not taken" \
+    '{"releases-index":[{"channel-version":"11.0","release-type":"sts","support-phase":"active"},{"channel-version":"10.0","release-type":"lts","support-phase":"active"}]}'
+  expect 12.0 "the newest LTS is taken past a newer STS, and a preview is skipped" \
+    '{"releases-index":[{"channel-version":"14.0","release-type":"lts","support-phase":"preview"},{"channel-version":"13.0","release-type":"sts","support-phase":"active"},{"channel-version":"12.0","release-type":"lts","support-phase":"active"}]}'
+  expect "" "an index with no LTS release gives nothing, so the run fails" \
+    '{"releases-index":[{"channel-version":"11.0","release-type":"sts","support-phase":"active"}]}'
+  exit "$failed"
+fi
+
 current="$(sed -n 's/.*<TargetFramework>net\([0-9][0-9.]*\)<.*/\1/p' aberaTech.Server/aberaTech.Server.csproj)"
 [ -n "$current" ] || { echo "error: could not read TargetFramework" >&2; exit 1; }
 
-latest="$(curl -fsSL "$RELEASES_INDEX_URL" | jq -r '
-  ."releases-index"
-  | map(select(."support-phase" == "active" or ."support-phase" == "maintenance"))
-  | max_by(."channel-version" | split(".") | map(tonumber))
-  | ."channel-version"')"
-[ -n "$latest" ] && [ "$latest" != "null" ] || { echo "error: could not determine latest GA .NET version" >&2; exit 1; }
+latest="$(curl -fsSL "$RELEASES_INDEX_URL" | latest_lts)"
+[ -n "$latest" ] || { echo "error: could not determine the latest LTS .NET version" >&2; exit 1; }
 
 cur_major="${current%%.*}"
 new_major="${latest%%.*}"
 
 if [ "$new_major" -le "$cur_major" ]; then
-  echo "net${current} is the latest GA major (index says ${latest}); nothing to do."
-  echo "Already on the latest GA .NET major (net${current})." > "$SUMMARY_FILE"
+  echo "net${current} is the latest LTS major (index says ${latest}); nothing to do."
+  echo "Already on the latest LTS .NET major (net${current})." > "$SUMMARY_FILE"
   exit 0
 fi
 
-echo "GA .NET ${latest} is out; currently on net${current}. Rewriting the lockstep sites."
+echo "LTS .NET ${latest} is out; currently on net${current}. Rewriting the lockstep sites."
 
 projects="$(git ls-files '*.csproj')"
 for p in $projects; do
@@ -77,7 +113,7 @@ while read -r pkg; do
 done < <(sed -n "s/.*PackageVersion Include=\"\([^\"]*\)\" Version=\"${cur_major}\..*/\1/p" "$versions" | sort -u)
 
 {
-  echo "Moves the repo from **net${current}** to **net${latest}**, the latest GA .NET major."
+  echo "Moves the repo from **net${current}** to **net${latest}**, the latest LTS .NET major."
   echo
   echo "Every lockstep site moves together:"
   echo
