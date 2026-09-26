@@ -858,7 +858,31 @@ export default function EighteenToTwentyFourMonths() {
             </GuideCard>
           </TimelineContent>
         </TimelineItem>
-        {/* nebdebug TODO add a replacement to veterati here */}
+        <TimelineItem>
+          <TimelineSeparator>
+            <TimelineDot color="primary">
+              <CircleIcon />
+            </TimelineDot>
+          </TimelineSeparator>
+          <TimelineContent>
+            <GuideCard>
+              <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
+                Get a mentor.
+              </Typography>
+              <Typography sx={{ marginBottom: 2 }}>
+                <Link
+                  to="https://www.acp-usa.org/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  American Corporate Partners
+                </Link>{" "}
+                pairs transitioning service members, veterans and active-duty
+                spouses with a mentor from a company for a year, for free.
+              </Typography>
+            </GuideCard>
+          </TimelineContent>
+        </TimelineItem>
       </Timeline>
     </GuideCard>
   );

@@ -137,3 +137,42 @@ test("/technical opens the section the address names, and keeps others open", as
     "true",
   );
 });
+
+// The opening video on /technical loaded on every visit. It now mounts with
+// its section, and the thumbnails and player scripts come with it.
+const youtubeHosts =
+  /(^|\.)(youtube\.com|youtube-nocookie\.com|ytimg\.com|googlevideo\.com)$/;
+
+test("/technical requests nothing from YouTube until its video section opens", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (youtubeHosts.test(new URL(request.url()).hostname))
+      requests.push(request.url());
+  });
+
+  await page.goto("/technical");
+  // A section with no frames opening proves the page has hydrated.
+  await openSection(page, "How can kids learn to program");
+
+  await expect(page.locator("iframe")).toHaveCount(0);
+  expect(requests).toEqual([]);
+});
+
+test("/technical loads the video when its section opens", async ({ page }) => {
+  await page.goto("/technical");
+
+  await openSection(
+    page,
+    "Video: Why 95% of Self-Taught Programmers Fail, by Andy Sterkowitz",
+  );
+  const frame = page.locator(
+    'iframe[title="Why 95% of Self-Taught Programmers Fail, by Andy Sterkowitz"]',
+  );
+
+  await expect(frame).toHaveAttribute(
+    "src",
+    "https://www.youtube.com/embed/ueXjGMrmn8k",
+  );
+});
