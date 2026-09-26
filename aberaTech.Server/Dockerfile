@@ -18,7 +18,7 @@ FROM rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fe
 # Base stage for .NET runtime
 # Chiseled: distroless-style, no shell, no package manager, non-root by
 # default - and none of the ~30 unfixable distro CVEs the full image carries.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled@sha256:9651fa59abcdf177c30392cb44a820605ca5d618429ab37acbf6e7c644510b02 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-resolute-chiseled@sha256:99a0fe6f3e933a3d170aa38d8be4237125b72c644a9229889ee842628cbaf845 AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
@@ -159,7 +159,7 @@ RUN npx biome check .
 # rather than flattened into /src: the server references aberaTech.Scheduling by
 # relative path, and a flattened layout silently resolves that reference to
 # nothing.
-FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-resolute@sha256:d818bb3014d94172e93820d985130135870bd1760f02588a61263a85c966860e AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
@@ -255,7 +255,7 @@ RUN /gate/check-server-tests.sh --self-test && \
 # that has to be the one the final stage runs on. TARGETARCH is BuildKit's name
 # for the platform this image is being built for, the same value that picked
 # the aspnet base above, so the two cannot disagree: amd64 in CI and on the
-# container app, arm64 on an Apple laptop. The base is glibc (noble), hence
+# container app, arm64 on an Apple laptop. The base is glibc (resolute), hence
 # linux- rather than linux-musl-. Framework-dependent still: the runtime comes
 # from the base image, as before.
 FROM build AS publish

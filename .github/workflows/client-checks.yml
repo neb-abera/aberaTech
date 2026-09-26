@@ -38,7 +38,7 @@ concurrency:
 jobs:
   container-tests:
     name: Type check and unit tests, in the container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # A secret cannot be used in `if:` directly, so it is routed through
     # job-level env for the Codecov step below.
     env:
@@ -131,7 +131,7 @@ jobs:
 
   compose-db:
     name: Compose database boots healthy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Harden runner
@@ -180,7 +180,7 @@ jobs:
 
   style:
     name: Lint and format, in the container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     steps:
       - name: Harden runner
@@ -273,7 +273,7 @@ jobs:
 
   scheduling-tests:
     name: Scheduling unit tests, in the container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # A secret cannot be used in `if:` directly, so it is routed through
     # job-level env for the Codecov step below.
     env:
@@ -374,7 +374,7 @@ jobs:
 
   production-image:
     name: Production image, in the container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
       - name: Harden runner
@@ -460,7 +460,7 @@ jobs:
 
   e2e:
     name: End-to-end, in the container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Harden runner
@@ -508,7 +508,7 @@ jobs:
   # place their version is written, and `make lint-ci` runs them there.
   lint:
     name: lint (actionlint + shellcheck)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - name: Harden runner
