@@ -81,14 +81,14 @@ with `ABERA_ENFORCE_TIMING=1 make servertest`.
   workflow lint from `Checks`, the three CodeQL `analyze` legs, the trivy
   container scan, the ZAP baseline scan and dependency review. A failing
   check is the review: fix it rather than working around it. The
-  required list is mirrored in `.github/required-contexts.txt`, and
+  required list is mirrored in `.github/required-checks`, and
   `scripts/check-required-contexts.sh` fails CI if it drifts from the
   workflows.
 
 ## Licensing
 
 By contributing you agree that your contributions are licensed under the
-repository's [license](LICENSE.txt) (inbound = outbound). There is no CLA.
+repository's [license](LICENSE) (inbound = outbound). There is no CLA.
 
 ## Security issues
 
