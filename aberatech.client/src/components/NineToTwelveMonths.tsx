@@ -5,25 +5,14 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineItem, { timelineItemClasses } from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import GuideCard from "./GuideCard";
 import TimelineSeparatorCustom from "./TimelineSeparatorCustom.tsx";
 
 export default function NineToTwelveMonths() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -49,19 +38,7 @@ export default function NineToTwelveMonths() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent>
-              <Box
-                sx={(theme) => ({
-                  p: 2,
-                  border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                  backgroundColor: (theme.vars || theme).palette.background
-                    .paper,
-                  color: (theme.vars || theme).palette.text.primary,
-                  boxShadow: theme.shadows[1],
-                  width: "100%",
-                  marginBottom: 2,
-                  textAlign: "left",
-                })}
-              >
+              <GuideCard>
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                   Retirement & UQR/REFRAD packets can be sent up through your
                   chain of command at 12 months until ETS.
@@ -214,7 +191,7 @@ export default function NineToTwelveMonths() {
                 <Typography sx={{ marginBottom: 2 }}>
                   "hungry mouths don't get fed"
                 </Typography>
-              </Box>
+              </GuideCard>
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>
@@ -225,19 +202,7 @@ export default function NineToTwelveMonths() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent>
-              <Box
-                sx={(theme) => ({
-                  p: 2,
-                  border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                  backgroundColor: (theme.vars || theme).palette.background
-                    .paper,
-                  color: (theme.vars || theme).palette.text.primary,
-                  boxShadow: theme.shadows[1],
-                  width: "100%",
-                  marginBottom: 2,
-                  textAlign: "left",
-                })}
-              >
+              <GuideCard>
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                   Submit your signed and completed CSP packet to your
                   installation coordinator several months before your CSP start
@@ -251,7 +216,7 @@ export default function NineToTwelveMonths() {
                   Your CSP coordinator will inform you when your CSP has been
                   approved.
                 </Typography>
-              </Box>
+              </GuideCard>
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>
@@ -262,19 +227,7 @@ export default function NineToTwelveMonths() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent>
-              <Box
-                sx={(theme) => ({
-                  p: 2,
-                  border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                  backgroundColor: (theme.vars || theme).palette.background
-                    .paper,
-                  color: (theme.vars || theme).palette.text.primary,
-                  boxShadow: theme.shadows[1],
-                  width: "100%",
-                  marginBottom: 2,
-                  textAlign: "left",
-                })}
-              >
+              <GuideCard>
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                   Do not take no for an answer if your CSP, retirement/UQR, or
                   other transition documents get "disapproved."
@@ -372,7 +325,7 @@ export default function NineToTwelveMonths() {
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                   You earned these benefits, now go get them.
                 </Typography>
-              </Box>
+              </GuideCard>
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>
@@ -383,19 +336,7 @@ export default function NineToTwelveMonths() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent>
-              <Box
-                sx={(theme) => ({
-                  p: 2,
-                  border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                  backgroundColor: (theme.vars || theme).palette.background
-                    .paper,
-                  color: (theme.vars || theme).palette.text.primary,
-                  boxShadow: theme.shadows[1],
-                  width: "100%",
-                  marginBottom: 2,
-                  textAlign: "left",
-                })}
-              >
+              <GuideCard>
                 <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                   If your CSP packet gets mismanaged, you might find yourself in
                   a position where your DA 31, authorizing administrative
@@ -443,11 +384,11 @@ export default function NineToTwelveMonths() {
                   would have let me be gone either way since I already had a
                   signed DA 31.
                 </Typography>
-              </Box>
+              </GuideCard>
             </TimelineContent>
           </TimelineItem>
         </TimelineContent>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

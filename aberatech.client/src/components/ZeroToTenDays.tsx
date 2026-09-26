@@ -8,21 +8,11 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import GuideCard from "./GuideCard";
 
 export default function TerminalLeave() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -46,18 +36,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 Upload your Personally Procured Move (PPM) to{" "}
                 <Link
@@ -96,7 +75,7 @@ export default function TerminalLeave() {
                   must move it.
                 </strong>
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -107,18 +86,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 component="a"
                 href="https://ditymovecalculator.net/"
@@ -139,7 +107,13 @@ export default function TerminalLeave() {
                 >
                   <Box
                     component="img"
-                    src="https://www.lduhtrp.net/image-8389227-12188911"
+                    // The image itself, without the CJ Affiliate tracking redirect
+                    // (www.lduhtrp.net) it used to load through.
+                    // The file's own size, measured 2026-09-26, so the space is held
+                    // before the image arrives.
+                    src="https://www.yceml.net/0239/12188911-1507912531843"
+                    width={250}
+                    height={250}
                     loading="lazy"
                     decoding="async"
                     alt="DITY/Personally Procured Move Calculator - UPDATED FOR 2021"
@@ -166,7 +140,7 @@ export default function TerminalLeave() {
                   ditymovecalculator.net
                 </Typography>
               </Box>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -177,18 +151,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Clear your installation and out-process the Army.{" "}
                 <strong>
@@ -211,7 +174,7 @@ export default function TerminalLeave() {
                 , click on "periodic health assessments," go to the "SHPE" tab,
                 and fill out a medical update (DD Form 2807-1).
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -222,18 +185,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Make sure your final pay sheet at finance is accurate before you
                 sign. For example, make sure that you're{" "}
@@ -246,7 +198,7 @@ export default function TerminalLeave() {
                 </Link>{" "}
                 you want.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -257,18 +209,7 @@ export default function TerminalLeave() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Don't forget that you'll need lodging and transportation if
                 you've already moved away from your installation. Costco
@@ -283,10 +224,10 @@ export default function TerminalLeave() {
                 . You can save money by staying with a friend or even staying in
                 your car.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

@@ -8,21 +8,12 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import DocumentFrame from "./DocumentFrame";
+import GuideCard from "./GuideCard";
 
 export default function ThirtyToNinetyDays() {
   return (
-    <Box
-      sx={(theme) => ({
-        p: 2,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
-        backgroundColor: (theme.vars || theme).palette.background.paper,
-        color: (theme.vars || theme).palette.text.primary,
-        boxShadow: theme.shadows[1],
-        width: "100%",
-        marginBottom: 2,
-        textAlign: "left",
-      })}
-    >
+    <GuideCard>
       <Typography
         variant="h2"
         component="h2"
@@ -46,18 +37,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you're an Army Reservist then you should submit a PAR on
                 IPPS-A for separation orders at least 90 days out. If you've met
@@ -127,7 +107,7 @@ export default function ThirtyToNinetyDays() {
                 to get inside info on things like the culture of a company, or
                 what to expect for compensation.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -138,18 +118,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Box
                 sx={{
                   display: "flex",
@@ -157,17 +126,17 @@ export default function ThirtyToNinetyDays() {
                   marginBottom: 2,
                 }}
               >
-                <iframe
+                <DocumentFrame
                   title="Interview Tips"
                   src="https://docs.google.com/viewer?url=https://raw.githubusercontent.com/neb-abera/transition/main/networking/Interview_Tips.pdf&embedded=true"
-                  style={{
+                  sx={{
                     width: "100%",
-                    maxWidth: "800px", // Adjust width as needed
-                    height: "741px", // Adjust height as needed
+                    maxWidth: "800px",
+                    height: "741px",
                     borderRadius: "8px",
                     boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                    border: "none", // Replaces frameBorder="0"
-                    overflow: "hidden", // Replaces scrolling="no"
+                    border: "none",
+                    overflow: "hidden",
                   }}
                 />
               </Box>
@@ -177,7 +146,7 @@ export default function ThirtyToNinetyDays() {
                 applicants until they're 30-90 days out from their availability
                 date.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -188,18 +157,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ fontWeight: "bold", marginBottom: 2 }}>
                 If you haven't already, apply for the GI Bill and VET TEC.
               </Typography>
@@ -217,7 +175,7 @@ export default function ThirtyToNinetyDays() {
                 VA COE the weekend after the course deadline for registration.
                 That cost me about a two-month delay in finding employment.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -228,18 +186,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you chose to do VET TEC,{" "}
                 <Link
@@ -260,7 +207,7 @@ export default function ThirtyToNinetyDays() {
                 Going remote will give you less BAH than in person. But, going
                 remote will allow you to be anywhere you want to be.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -271,18 +218,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 If you haven't moved yet, 60-90 days out is the minimum amount
                 of time you need to start planning for your move. Schedule a
@@ -306,7 +242,7 @@ export default function ThirtyToNinetyDays() {
                 </Link>{" "}
                 to break leases.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
         <TimelineItem>
@@ -317,18 +253,7 @@ export default function ThirtyToNinetyDays() {
             <TimelineConnector />
           </TimelineSeparator>
           <TimelineContent>
-            <Box
-              sx={(theme) => ({
-                p: 2,
-                border: `1px solid ${(theme.vars || theme).palette.divider}`,
-                backgroundColor: (theme.vars || theme).palette.background.paper,
-                color: (theme.vars || theme).palette.text.primary,
-                boxShadow: theme.shadows[1],
-                width: "100%",
-                marginBottom: 2,
-                textAlign: "left",
-              })}
-            >
+            <GuideCard>
               <Typography sx={{ marginBottom: 2 }}>
                 Apply for{" "}
                 <Link
@@ -346,10 +271,10 @@ export default function ThirtyToNinetyDays() {
                 veterans, minorities, and women into high-paying jobs at tech
                 companies.
               </Typography>
-            </Box>
+            </GuideCard>
           </TimelineContent>
         </TimelineItem>
       </Timeline>
-    </Box>
+    </GuideCard>
   );
 }

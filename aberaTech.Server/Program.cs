@@ -379,11 +379,10 @@ app.Use(async (context, next) =>
         // and reports to cloudflareinsights (connect-src below).
         + $"script-src 'self' https://static.cloudflareinsights.com{inlineScriptHashes}; "
         + "style-src 'self' 'unsafe-inline'; "
-        // lduhtrp.net (CJ Affiliate) 302-redirects to yceml.net, which serves
-        // the actual image bytes; CSP checks every hop, so both hosts must be
-        // listed.
-        + "img-src 'self' data: https://www.va.gov https://www.lduhtrp.net "
-        + "https://www.yceml.net "
+        // The transition guide's partner images. yceml.net serves the DITY
+        // calculator banner, which used to load through a CJ Affiliate
+        // redirect on lduhtrp.net. The page links the image directly now.
+        + "img-src 'self' data: https://www.va.gov https://www.yceml.net "
         + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com; "
         + "font-src 'self' data:; "
         + "connect-src 'self' https://cloudflareinsights.com; "
