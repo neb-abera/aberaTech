@@ -104,6 +104,13 @@ public static class ActivityStore
     }
 
     /// <summary>Copy an incoming record over the row it identifies.</summary>
+    /// <remarks>
+    /// The laps and sets added here carry no id. EF Core generates Guid keys,
+    /// and a new entity it finds through a tracked row's collection with the
+    /// key already set is taken for an existing row and updated, which
+    /// matches nothing and fails the whole save. Left empty, the key is
+    /// generated and the row inserted.
+    /// </remarks>
     private static void Overwrite(Activity existing, Activity activity)
     {
         existing.StartedAt = activity.StartedAt;
@@ -129,7 +136,6 @@ public static class ActivityStore
             {
                 existing.Laps.Add(new Lap
                 {
-                    Id = Guid.NewGuid(),
                     ActivityId = existing.Id,
                     Index = lap.Index,
                     DistanceMeters = lap.DistanceMeters,
@@ -144,7 +150,6 @@ public static class ActivityStore
         {
             existing.Sets.Add(new StrengthSet
             {
-                Id = Guid.NewGuid(),
                 ActivityId = existing.Id,
                 Exercise = set.Exercise,
                 SetIndex = set.SetIndex,
