@@ -34,8 +34,9 @@ check() {
   esac
   tag="${image%%@*}"
   tag="${tag##*:}"
-  if [ "$tag" != "v${version}-noble" ]; then
-    echo "error: image tag $tag does not match @playwright/test ${version} (want v${version}-noble)" >&2
+  # v<version>-<Ubuntu codename>: the codename may move, the version may not.
+  if ! [[ "$tag" =~ ^v${version//./\\.}-[a-z]+$ ]]; then
+    echo "error: image tag $tag does not match @playwright/test ${version} (want v${version}-<codename>)" >&2
     return 1
   fi
   echo "playwright image matches @playwright/test ${version}"
@@ -53,23 +54,24 @@ self_test() {
     printf 'FROM %s\n' "$2" > "$tmp/$1/Dockerfile"
     printf '{ "devDependencies": { "@playwright/test": "%s" } }\n' "$3" > "$tmp/$1/package.json"
   }
-  fixture match "mcr.microsoft.com/playwright:v1.2.3-noble@$digest AS e2e" 1.2.3
-  fixture drift "mcr.microsoft.com/playwright:v1.2.4-noble@$digest AS e2e" 1.2.3
-  fixture nodigest "mcr.microsoft.com/playwright:v1.2.3-noble AS e2e" 1.2.3
-  fixture nostage "mcr.microsoft.com/playwright:v1.2.3-noble@$digest" 1.2.3
+  fixture match "mcr.microsoft.com/playwright:v1.2.3-resolute@$digest AS e2e" 1.2.3
+  fixture drift "mcr.microsoft.com/playwright:v1.2.4-resolute@$digest AS e2e" 1.2.3
+  fixture prefix "mcr.microsoft.com/playwright:v1.2.30-resolute@$digest AS e2e" 1.2.3
+  fixture nodigest "mcr.microsoft.com/playwright:v1.2.3-resolute AS e2e" 1.2.3
+  fixture nostage "mcr.microsoft.com/playwright:v1.2.3-resolute@$digest" 1.2.3
 
   if ! check "$tmp/match" > /dev/null 2>&1; then
     echo "self-test: the matching pair failed" >&2
     status=1
   fi
-  for bad in drift nodigest nostage; do
+  for bad in drift prefix nodigest nostage; do
     if check "$tmp/$bad" > /dev/null 2>&1; then
       echo "self-test: the $bad fixture passed" >&2
       status=1
     fi
   done
   if [ "$status" -eq 0 ]; then
-    echo "check-playwright-image self-test: 4 of 4 verdicts correct"
+    echo "check-playwright-image self-test: 5 of 5 verdicts correct"
   fi
   return "$status"
 }
