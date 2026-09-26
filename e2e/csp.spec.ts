@@ -112,8 +112,12 @@ async function visit(page: Page, path: string): Promise<Violation[]> {
   await page.goto(path);
   await settled(page);
   // Open whatever opens, so the styles of collapsed sections are inserted
-  // too. Clicks only on the page's own disclosure buttons, never a link.
-  for (const summary of await page.locator('[aria-expanded="false"]').all()) {
+  // too. Clicks only on the page's own disclosure controls, never a link:
+  // a guide's closed sections and anything else that says it is collapsed.
+  const closed = page.locator(
+    'details:not([open]) > summary, [aria-expanded="false"]',
+  );
+  for (const summary of await closed.all()) {
     if (!(await summary.isVisible())) continue;
     await summary.click().catch(() => undefined);
     if (new URL(page.url()).pathname !== path) await page.goBack();
