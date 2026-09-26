@@ -29,3 +29,4 @@ scripts/check-prose.sh
 scripts/check-attribution.sh
 scripts/check-required-contexts.sh
 LICENSE
+.github/PULL_REQUEST_TEMPLATE.md
