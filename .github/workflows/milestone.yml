@@ -1,0 +1,105 @@
+# Tags the commit production runs as a milestone, with a GitHub Release.
+#
+# The tag is vYYYY.MM.DD, or vYYYY.MM.DD.N for the Nth that day (UTC).
+# scripts/check-version.sh --next computes it from the existing tags. A site
+# publishes nothing anyone builds on, so a date says more than a SemVer
+# number would. The commit is the newest one the deploy workflow put into
+# production, never the tip of the branch. The release notes are the text
+# given here, the deploy run and the previous tag as the rollback point.
+#
+#   gh workflow run milestone.yml -f notes="What this milestone is"
+#   gh workflow run milestone.yml -f notes="..." -f dry_run=true
+#
+# Dispatch-only. It gates nothing, so it has no pull_request trigger and is
+# outside .github/required-checks.
+name: milestone
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: What this milestone is. It opens the release notes.
+        required: true
+        type: string
+      dry_run:
+        description: Print the tag and the notes, and create nothing
+        type: boolean
+        default: false
+
+# Nothing at the workflow level: the write grant lives on the one job
+# (Scorecard Token-Permissions).
+permissions: {}
+
+jobs:
+  milestone:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tag the deployed commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SERVER: ${{ github.server_url }}
+          DEPLOY: aberatechserver-app-202412211749.yml
+          NOTES: ${{ inputs.notes }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          scripts/check-version.sh
+          branch="$(gh api "repos/$REPO" --jq .default_branch)"
+
+          # The newest deploy run on the default branch in which a job
+          # succeeded. A run whose deploy job was skipped (its checks
+          # failed) can still conclude success, and deployed nothing.
+          deployed=""
+          while read -r id sha; do
+            if [ "$(gh run view -R "$REPO" "$id" --json jobs --jq '[.jobs[] | select(.conclusion == "success")] | length')" -gt 0 ]; then
+              deployed="$id $sha"
+              break
+            fi
+          done < <(gh run list -R "$REPO" --workflow "$DEPLOY" --branch "$branch" --status success --limit 20 \
+                     --json databaseId,headSha,event --jq '.[] | select(.event != "pull_request") | "\(.databaseId) \(.headSha)"')
+          [ -n "$deployed" ] || { echo "::error::no successful $DEPLOY run on $branch in the last 20"; exit 1; }
+          run_id="${deployed% *}"
+          sha="${deployed#* }"
+
+          tags="$(gh api --paginate "repos/$REPO/git/matching-refs/tags/v" --jq '.[].ref' | sed 's#^refs/tags/##')"
+          tag="$(printf '%s\n' "$tags" | scripts/check-version.sh --next)"
+          scripts/check-version.sh --tag "$tag"
+
+          previous="$(printf '%s\n' "$tags" | sed '/^$/d' | sort -V | tail -n 1)"
+          rollback="none"
+          if [ -n "$previous" ]; then
+            previous_sha="$(gh api "repos/$REPO/commits/$previous" --jq .sha)"
+            if [ "$previous_sha" = "$sha" ]; then
+              echo "::error::$sha is already tagged $previous"
+              exit 1
+            fi
+            rollback="$previous (${previous_sha:0:7})"
+          fi
+
+          body="$(printf '%s\n\nDeployed commit: %s, by %s/%s/actions/runs/%s.\n\nRollback point: %s.\n' \
+            "$NOTES" "$sha" "$SERVER" "$REPO" "$run_id" "$rollback")"
+          echo "tag: $tag"
+          echo "commit: $sha"
+          printf '%s\n' "$body"
+          if [ "$DRY_RUN" = true ]; then
+            echo "dry run: nothing created"
+            exit 0
+          fi
+          gh release create "$tag" -R "$REPO" --target "$sha" --title "Release $tag" --notes "$body"

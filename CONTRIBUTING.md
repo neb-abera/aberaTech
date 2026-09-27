@@ -94,6 +94,20 @@ with `ABERA_ENFORCE_TIMING=1 make servertest`.
   `scripts/check-required-contexts.sh` fails CI if it drifts from the
   workflows.
 
+## Versions
+
+The site publishes nothing anyone builds on, so it has no SemVer number.
+Every manifest says 0.0.0, and `scripts/check-version.sh` holds them there.
+A deploy worth rolling back to gets a date tag, `vYYYY.MM.DD`, from the
+milestone workflow:
+
+```bash
+gh workflow run milestone.yml -f notes="What this milestone is"
+```
+
+It tags the commit production runs and names the previous tag as the
+rollback point. The v1 and v2 tags from before 2026-09-27 stay as they are.
+
 ## Licensing
 
 By contributing you agree that your contributions are licensed under the
