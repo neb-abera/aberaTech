@@ -13,12 +13,11 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { alpha } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import type { DragEvent, MouseEvent } from "react";
 import { useState } from "react";
-import { courseColor } from "../core/areaColors";
+import { courseColorVar } from "../core/areaColors";
 import { shortCode } from "../core/format";
 import type { PlannerModel } from "../model/PlannerModel";
 import { usePlannerContext } from "./PlannerContext";
@@ -53,7 +52,7 @@ export default function CourseChip({
   const isBroken = ctx.broken.has(code);
   const isNeeded = ctx.needed.has(code);
   const isFocus = model.focus === code;
-  const colour = courseColor(course.areas, model.areas, ctx.mode);
+  const colour = courseColorVar(course.areas, model.areas);
 
   const borderColour = isBroken
     ? "error.main"
@@ -115,7 +114,7 @@ export default function CourseChip({
           borderColor: borderColour,
           borderWidth: isBroken || isFocus || isNeeded ? 2 : 1,
           borderStyle: blocked ? "dashed" : "solid",
-          backgroundColor: alpha(colour, ctx.mode === "dark" ? 0.16 : 0.09),
+          backgroundColor: `color-mix(in srgb, ${colour} var(--planner-chip-tint), transparent)`,
           cursor: canDrag ? "grab" : "pointer",
           opacity: blocked && !rescuable ? 0.62 : 1,
           userSelect: "none",
