@@ -89,16 +89,24 @@ describe("the prerendered head", () => {
     expect(headFor("/guides")).not.toContain('rel="preload"');
   });
 
-  it("starts the /links document request from the head, and only there", () => {
+  it("starts each owner page's first request from the head, and only there", () => {
     // The request the page would otherwise send only after its bundle has
     // run and rendered. A script, not a fetch preload: WebKit never hands a
     // preloaded response to fetch(), so Safari asked twice.
-    expect(headFor("/links")).toContain(
-      `<script>${earlyRequestScript("/api/progress/links")}</script>`,
-    );
-    expect(headFor("/links")).not.toContain('rel="preload"');
+    const first: Record<string, string> = {
+      "/links": "/api/progress/links",
+      "/plan": "/api/progress/plan",
+      "/devbox": "/api/devbox/status",
+      "/alerts": "/api/alerts/status",
+    };
+    for (const [path, request] of Object.entries(first)) {
+      expect(headFor(path)).toContain(
+        `<script>${earlyRequestScript(request)}</script>`,
+      );
+      expect(headFor(path)).not.toContain('rel="preload"');
+    }
     for (const path of Object.keys(meta)) {
-      if (path === "/links") continue;
+      if (path in first) continue;
       expect(headFor(path)).not.toContain("__earlyRequest");
     }
   });

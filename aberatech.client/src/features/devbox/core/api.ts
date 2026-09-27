@@ -8,6 +8,8 @@
  * that would do nothing.
  */
 
+import { requestJson } from "../../../site/earlyRequest";
+
 /** What the box's agent last reported, as the status route relays it. */
 export type AgentReport =
   | { seen: false }
@@ -33,12 +35,12 @@ export type StartResult =
   | { ok: true }
   | { ok: false; reason: "visitor" | "throttled" | "azure" | "network" };
 
+/** The first thing the page asks. The head script asks it first (site/earlyRequest.ts). */
+export const devBoxStatusUrl = "/api/devbox/status";
+
 export async function fetchDevBoxStatus(): Promise<DevBoxStatus> {
   try {
-    const response = await fetch("/api/devbox/status", {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    });
+    const response = await requestJson(devBoxStatusUrl);
     if (response.status === 401 || response.status === 403)
       return { status: "visitor" };
     if (!response.ok) return { status: "error" };
