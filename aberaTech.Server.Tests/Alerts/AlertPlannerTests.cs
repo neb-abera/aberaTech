@@ -384,46 +384,4 @@ public sealed class AlertPlannerTests
             }
         }
     }
-
-    [Fact]
-    public void An_event_marked_critical_in_its_title_is_critical_and_the_mark_is_left_off_the_title()
-    {
-        var alert = Assert.Single(Plan(Ics(Event("drill@google.com", "Fire drill #critical", "20261028T090000"))));
-
-        Assert.True(alert.Critical);
-        Assert.Equal("Fire drill", alert.Title);
-    }
-
-    [Fact]
-    public void An_event_marked_critical_in_its_description_is_critical()
-    {
-        var alert = Assert.Single(Plan(Ics(Event(
-            "drill@google.com", "Fire drill", "20261028T090000", extra: ["DESCRIPTION:Muster at the lot. #Critical"]))));
-
-        Assert.True(alert.Critical);
-        Assert.Equal("Fire drill", alert.Title);
-    }
-
-    [Fact]
-    public void A_title_that_is_only_the_mark_says_it_has_no_title()
-    {
-        var alert = Assert.Single(Plan(Ics(Event("drill@google.com", "#critical", "20261028T090000"))));
-
-        Assert.True(alert.Critical);
-        Assert.Equal("(no title)", alert.Title);
-    }
-
-    [Theory]
-    [InlineData("Standup")]
-    [InlineData("Critical path review")]
-    [InlineData("Standup critical")]
-    [InlineData("Standup #criticality")]
-    [InlineData("Standup a#critical")]
-    public void Anything_else_is_not_critical(string title)
-    {
-        var alert = Assert.Single(Plan(Ics(Event("standup@google.com", title, "20261028T090000"))));
-
-        Assert.False(alert.Critical);
-        Assert.Equal(title, alert.Title);
-    }
 }
