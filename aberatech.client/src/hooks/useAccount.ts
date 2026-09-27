@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { requestJson } from "../site/earlyRequest";
 
 /**
  * Whether the visitor is signed in.
@@ -18,11 +19,14 @@ import { useEffect, useState } from "react";
  * wrong in that direction costs a preference rather than access to anything.
  */
 
+/** Who is signed in. /schedule/admin asks it first, from the head (site/earlyRequest.ts). */
+export const accountUrl = "/api/scheduling/admin/me";
+
 let probe: Promise<boolean> | null = null;
 
 async function fetchSignedIn(): Promise<boolean> {
   try {
-    const response = await fetch("/api/scheduling/admin/me");
+    const response = await requestJson(accountUrl);
     if (!response.ok) return false;
 
     const body = (await response.json()) as { signedIn?: boolean };

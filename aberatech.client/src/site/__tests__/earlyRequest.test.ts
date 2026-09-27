@@ -45,6 +45,35 @@ describe("earlyRequestScript", () => {
     await expect(failure).rejects.toThrow("offline");
   });
 
+  it("adds the viewer's zone the way the schedule page writes it", () => {
+    // useSchedule asks /api/scheduling/state?zone=… through URLSearchParams.
+    // The head script must build the same address, or the page asks twice.
+    for (const zone of [
+      "America/New_York",
+      "Asia/Amman",
+      "America/Argentina/Buenos_Aires",
+      "Etc/GMT+5",
+      "America/Port-au-Prince",
+    ]) {
+      const fetch = vi.fn(() => Promise.resolve(new Response("{}")));
+      const scope: { __earlyRequest?: { url: string } } = {};
+      const fakeIntl = {
+        DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: zone }) }),
+      };
+
+      new Function(
+        "window",
+        "fetch",
+        "Intl",
+        earlyRequestScript("/api/scheduling/state", { zone: true }),
+      )(scope, fetch, fakeIntl);
+
+      const expected = `/api/scheduling/state?${new URLSearchParams({ zone })}`;
+      expect(scope.__earlyRequest?.url).toBe(expected);
+      expect(fetch).toHaveBeenCalledWith(expected, init);
+    }
+  });
+
   it("cannot close its own script element", () => {
     expect(earlyRequestScript("/a</script><b>")).not.toContain("</script>");
   });
@@ -65,6 +94,19 @@ describe("requestJson", () => {
     // A second load (the page shown again) is a new question.
     await requestJson("/api/progress/links");
     expect(fetch).toHaveBeenCalledWith("/api/progress/links", init);
+  });
+
+  it("passes a signal on to the network", async () => {
+    const fetch = vi.fn(() => Promise.resolve(new Response("late")));
+    vi.stubGlobal("fetch", fetch);
+    const { signal } = new AbortController();
+
+    await requestJson("/api/scheduling/state?zone=UTC", signal);
+
+    expect(fetch).toHaveBeenCalledWith("/api/scheduling/state?zone=UTC", {
+      ...init,
+      signal,
+    });
   });
 
   it("leaves a head request for another address alone", async () => {

@@ -94,15 +94,17 @@ describe("the prerendered head", () => {
     // run and rendered. A script, not a fetch preload: WebKit never hands a
     // preloaded response to fetch(), so Safari asked twice.
     const first: Record<string, string> = {
-      "/links": "/api/progress/links",
-      "/plan": "/api/progress/plan",
-      "/devbox": "/api/devbox/status",
-      "/alerts": "/api/alerts/status",
+      "/links": earlyRequestScript("/api/progress/links"),
+      "/plan": earlyRequestScript("/api/progress/plan"),
+      "/devbox": earlyRequestScript("/api/devbox/status"),
+      "/alerts": earlyRequestScript("/api/alerts/status"),
+      "/fitness": earlyRequestScript("/api/fitness/me"),
+      "/schedule/admin": earlyRequestScript("/api/scheduling/admin/me"),
+      "/planner": earlyRequestScript("/api/progress/planner"),
+      "/schedule": earlyRequestScript("/api/scheduling/state", { zone: true }),
     };
-    for (const [path, request] of Object.entries(first)) {
-      expect(headFor(path)).toContain(
-        `<script>${earlyRequestScript(request)}</script>`,
-      );
+    for (const [path, script] of Object.entries(first)) {
+      expect(headFor(path)).toContain(`<script>${script}</script>`);
       expect(headFor(path)).not.toContain('rel="preload"');
     }
     for (const path of Object.keys(meta)) {

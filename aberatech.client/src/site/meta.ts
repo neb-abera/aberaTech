@@ -1,9 +1,13 @@
 import heroAvatarUrl from "../assets/headshot-336.webp";
 import { alertsStatusUrl } from "../features/alerts/core/api";
 import { devBoxStatusUrl } from "../features/devbox/core/api";
+import { fitnessMeUrl } from "../features/fitness/core/api";
 import { linksDocumentKey } from "../features/links/core/links";
 import { planDocumentKey } from "../features/plan/core/document";
+import { plannerDocumentKey } from "../features/planner/core/document";
 import { documentUrl } from "../features/progress/core/documents";
+import { scheduleStateUrl } from "../features/scheduling/hooks/useSchedule";
+import { accountUrl } from "../hooks/useAccount";
 import { earlyRequestScript } from "./earlyRequest";
 import { guides, primaryAction, projects } from "./sections";
 
@@ -64,11 +68,16 @@ export const pagePreconnects: Record<string, readonly string[]> = {
  * earlyRequest.ts hands the head's answer to the page's own fetch, so it
  * is still one request.
  */
-export const pageRequests: Record<string, string> = {
-  "/links": documentUrl(linksDocumentKey),
-  "/plan": documentUrl(planDocumentKey),
-  "/devbox": devBoxStatusUrl,
-  "/alerts": alertsStatusUrl,
+export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
+  "/links": { url: documentUrl(linksDocumentKey) },
+  "/plan": { url: documentUrl(planDocumentKey) },
+  "/devbox": { url: devBoxStatusUrl },
+  "/alerts": { url: alertsStatusUrl },
+  "/fitness": { url: fitnessMeUrl },
+  "/schedule/admin": { url: accountUrl },
+  "/planner": { url: documentUrl(plannerDocumentKey) },
+  // The schedule asks for its day in the viewer's zone.
+  "/schedule": { url: scheduleStateUrl, zone: true },
 };
 
 export interface PageMeta {
@@ -213,7 +222,9 @@ export function headFor(route: string): string {
   }
   const request = pageRequests[route];
   if (request !== undefined) {
-    lines.push(`<script>${earlyRequestScript(request)}</script>`);
+    lines.push(
+      `<script>${earlyRequestScript(request.url, { zone: request.zone })}</script>`,
+    );
   }
   if (route === "/") {
     // The avatar is the largest thing in the home page's first screen. React

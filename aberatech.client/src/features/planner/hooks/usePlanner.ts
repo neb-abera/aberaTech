@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { CatalogData } from "../core/catalog";
+import { plannerDocumentKey } from "../core/document";
 import { Tracks } from "../core/tracks";
 import type { RawCatalog, RawTracks } from "../core/types";
 import rawCatalog from "../data/catalog.json";
@@ -25,7 +26,7 @@ export interface Planner {
   saving: boolean;
 }
 
-export const documentKey = "planner";
+export const documentKey = plannerDocumentKey;
 
 function createStore(): PlannerStore {
   const data = new CatalogData(rawCatalog as unknown as RawCatalog);

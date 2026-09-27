@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { requestJson } from "../../../site/earlyRequest";
 import { viewerZone } from "../core/format";
 import type {
   BookingConfirmation,
@@ -16,6 +17,9 @@ import type {
  * That is a real recurring cost to buy an improvement nobody can perceive here.
  */
 const PollMs = 15_000;
+
+/** The page's first question, which the head asks first with the viewer's zone (site/earlyRequest.ts). */
+export const scheduleStateUrl = "/api/scheduling/state";
 
 /**
  * Where this browser remembers its place in the line.
@@ -74,9 +78,10 @@ export function useSchedule(): Schedule {
         const query = new URLSearchParams({ zone: viewerZone() });
         if (date !== null) query.set("date", date);
 
-        const response = await fetch(`/api/scheduling/state?${query}`, {
+        const response = await requestJson(
+          `${scheduleStateUrl}?${query}`,
           signal,
-        });
+        );
         if (!response.ok)
           throw new Error(`The schedule is unavailable (${response.status}).`);
         setState((await response.json()) as ScheduleState);
