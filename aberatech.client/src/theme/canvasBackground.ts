@@ -16,6 +16,14 @@ import type { Theme } from "@mui/material/styles";
  * back into it: blue at both edges, the page colour in between. The gap at
  * either end is more of the same blue, whatever the browser paints there.
  *
+ * The colours and sizes match the glow before PR #191, which sat on the hero
+ * box: `ellipse 80% 50% at 50% -20%` of hsl(210, 100%, 16%) over a 647px box
+ * on the home page. Its top edge measured rgb(2, 27, 53) at the centre and
+ * the page colour 100px down the gutters. hsl(210, 100%, 10%) is rgb(0, 26,
+ * 51), and the wash reaches the page colour by 96px. The mean luminance of
+ * the top 90px is 0.0151 against the old 0.0149. At 16% across the whole
+ * edge and 320px deep it was 0.0229.
+ *
  * Three parts on the root element: the colour, an opaque wash that carries
  * the page colour through the middle, and the bloom over the top of it.
  * e2e/canvas.spec.ts samples the pixels.
@@ -27,13 +35,13 @@ import type { Theme } from "@mui/material/styles";
  * as dark.
  */
 const bloom = (colour: string) =>
-  `radial-gradient(ellipse 80% 40vh at 50% -15vh, ${colour}, transparent)`;
+  `radial-gradient(ellipse 80% 325px at 50% -130px, ${colour}, transparent)`;
 
-/** Blue at the top edge, page colour by 320px, blue again over the last 180px. */
+/** Blue at the top edge, page colour by 96px, blue again over the last 120px. */
 const wash = (colour: string, page: string) =>
-  `linear-gradient(${colour}, ${page} 320px, ${page} calc(100% - 180px), ${colour})`;
+  `linear-gradient(${colour}, ${page} 96px, ${page} calc(100% - 120px), ${colour})`;
 
-const glow = { dark: "hsl(210, 100%, 16%)", light: "hsl(210, 100%, 90%)" };
+const glow = { dark: "hsl(210, 100%, 10%)", light: "hsl(210, 100%, 94%)" };
 
 export const canvasBackground = (theme: Theme) => {
   const page = theme.vars?.palette.background.default ?? "transparent";
