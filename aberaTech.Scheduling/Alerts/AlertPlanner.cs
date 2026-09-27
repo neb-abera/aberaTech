@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Ical.Net;
 using IcalCalendar = Ical.Net.Calendar;
 using Ical.Net.CalendarComponents;
@@ -23,13 +24,18 @@ public enum AlertSource
 
 /// <summary>One occurrence of one event, and when its one alert goes off.</summary>
 /// <param name="Key">The event's UID and this occurrence's start. The dedupe and skip key.</param>
+/// <param name="Critical">
+/// The event says <see cref="AlertPlanner.CriticalMark"/> in its title or
+/// description, and its alert goes at high priority.
+/// </param>
 public sealed record PlannedAlert(
     string Key,
     string Title,
     string? Location,
     Instant StartsAt,
     Instant AlertAt,
-    AlertSource Source);
+    AlertSource Source,
+    bool Critical = false);
 
 /// <summary>
 /// One read of the calendar: the alerts in the window, and the calendar's
@@ -53,10 +59,22 @@ public sealed class CalendarFeedException(string message, Exception? inner = nul
 /// One alert per occurrence. Of the event's popup and sound reminders the
 /// earliest is the alert. Mail reminders are ignored: they are for the
 /// inbox, not the phone. With no usable reminder the alert is the default
-/// lead before the start.
+/// lead before the start. An event marked #critical is flagged for high
+/// priority, and every other event goes at normal priority.
 /// </remarks>
-public static class AlertPlanner
+public static partial class AlertPlanner
 {
+    /// <summary>
+    /// The word that makes an event's alert loud. Google's iCal feed carries
+    /// no tags or colours, so the mark is text, in the title or the
+    /// description. It is left off the title the phone shows.
+    /// </summary>
+    public const string CriticalMark = "#critical";
+
+    /// <summary>The mark as a word of its own: not "#criticality", not "a#critical", any case.</summary>
+    [GeneratedRegex(@"(?<![\w#])#critical(?!\w)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex Mark();
+
     /// <summary>The longest key stored. A longer one is replaced by its hash.</summary>
     public const int MaxKeyLength = 200;
 
@@ -152,13 +170,18 @@ public static class AlertPlanner
         var eventZone = ZoneOf(startTime) ?? zone;
         var reminder = EarliestReminder(calendarEvent, start, end, eventZone);
 
+        var summary = calendarEvent.Summary ?? "";
+        var critical = Mark().IsMatch(summary) || Mark().IsMatch(calendarEvent.Description ?? "");
+        var title = string.Join(' ', Mark().Replace(summary, " ").Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
         return new PlannedAlert(
             Key(calendarEvent.Uid, start),
-            string.IsNullOrWhiteSpace(calendarEvent.Summary) ? "(no title)" : calendarEvent.Summary.Trim(),
+            title.Length == 0 ? "(no title)" : title,
             string.IsNullOrWhiteSpace(calendarEvent.Location) ? null : calendarEvent.Location.Trim(),
             start,
             reminder ?? start - options.DefaultLead,
-            reminder is null ? AlertSource.DefaultLead : AlertSource.Reminder);
+            reminder is null ? AlertSource.DefaultLead : AlertSource.Reminder,
+            critical);
     }
 
     private static Instant? EarliestReminder(CalendarEvent calendarEvent, Instant start, Instant end, DateTimeZone zone)

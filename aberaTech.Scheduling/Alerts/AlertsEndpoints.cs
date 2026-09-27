@@ -166,7 +166,8 @@ public static class AlertsEndpoints
                         alert.AlertAt.ToDateTimeOffset(),
                         alert.Source == AlertSource.Reminder ? "reminder" : "default",
                         skipped.Contains(alert.Key),
-                        mutedUntil is { } muted && alert.AlertAt < muted))
+                        mutedUntil is { } muted && alert.AlertAt < muted,
+                        alert.Critical))
             ]);
     }
 
@@ -197,5 +198,6 @@ public static class AlertsEndpoints
         DateTimeOffset AlertAt,
         string Source,
         bool Skipped,
-        bool Muted);
+        bool Muted,
+        bool Critical);
 }
