@@ -18,6 +18,8 @@ export interface AlertItem {
   source: "reminder" | "default";
   skipped: boolean;
   muted: boolean;
+  /** Marked #critical in the calendar: sent at high priority. */
+  critical: boolean;
 }
 
 export interface LastSend {
@@ -91,7 +93,7 @@ export function unskipAlert(key: string): Promise<ActionResult> {
   return post("/api/alerts/unskip", { key });
 }
 
-/** One priority 1 message to the phone, whatever the mute says. */
+/** One high-priority message to the phone, as a #critical event gets, whatever the mute says. */
 export async function sendTestAlert(): Promise<ActionResult> {
   const result = await post("/api/alerts/test");
   return result.ok ? { ok: true } : result;

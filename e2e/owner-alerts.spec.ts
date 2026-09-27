@@ -58,6 +58,14 @@ test.describe("/alerts", () => {
 
     await expect(page.getByLabel("Alert state: active")).toBeVisible();
     await expect(list.getByText("E2E review")).toBeVisible();
+    // The development calendar marks the review #critical: it is flagged,
+    // and the mark itself is left off the title.
+    const review = list.getByRole("listitem").filter({ hasText: "E2E review" });
+    await expect(review.getByText("Critical", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("#critical", { exact: false }).first(),
+    ).toBeVisible();
+    await expect(list.getByText("E2E review #critical")).toHaveCount(0);
     await expect(list.getByText("Room 4")).toBeVisible();
     // All-day and cancelled events do not alert.
     await expect(page.getByText("E2E holiday")).toHaveCount(0);

@@ -29,6 +29,7 @@ const standup = {
   source: "reminder",
   skipped: false,
   muted: false,
+  critical: false,
 };
 
 const review = {
@@ -40,6 +41,7 @@ const review = {
   source: "default",
   skipped: false,
   muted: false,
+  critical: true,
 };
 
 const state = (over: Record<string, unknown> = {}) => ({
@@ -155,6 +157,19 @@ describe("the owner", () => {
     expect(items[0].textContent).toContain("Room 1");
     expect(items[0].textContent).toContain("the event's reminder");
     expect(items[1].textContent).toContain("10 minutes before, the default");
+  });
+
+  it("marks the alerts that will be loud and says how to mark one", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    const list = screen.getByRole("list", { name: "Next alerts" });
+    const [plain, loud] = within(list).getAllByRole("listitem");
+    expect(within(loud).getByText("Critical")).toBeTruthy();
+    expect(within(plain).queryByText("Critical")).toBeNull();
+    expect(
+      screen.getByText(/#critical in its title or description/),
+    ).toBeTruthy();
   });
 
   it("mutes for an hour and shows until when", async () => {
