@@ -102,6 +102,14 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
+      - name: read the scanner versions from the Dockerfile
+        id: pins
+        run: |
+          trivy=$(sed -nE 's/^FROM aquasec\/trivy:v?([^@]+)@.* AS trivy$/\1/p' aberaTech.Server/Dockerfile)
+          syft=$(sed -nE 's/^FROM anchore\/syft:(v[^@]+)@.* AS syft$/\1/p' aberaTech.Server/Dockerfile)
+          if [ -z "$trivy" ] || [ -z "$syft" ]; then echo "no trivy or syft FROM line in aberaTech.Server/Dockerfile"; exit 1; fi
+          { echo "trivy=v$trivy"; echo "syft=$syft"; } >> "$GITHUB_OUTPUT"
+
       # SBOM of what actually shipped (the pushed image, not the source
       # tree), signed and pushed to the registry beside the image. A workflow
       # artifact expired after 90 days. The attestation lives as long as the
@@ -111,6 +119,7 @@ jobs:
       - name: Generate SBOM of the deployed image
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
+          syft-version: ${{ steps.pins.outputs.syft }}
           image: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}@${{ steps.push.outputs.digest }}
           format: spdx-json
           output-file: sbom.spdx.json
