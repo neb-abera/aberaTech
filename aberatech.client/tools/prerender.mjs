@@ -57,10 +57,11 @@ process.stdout.write(
 await writeFile("dist/sitemap.xml", sitemapXml());
 process.stdout.write("sitemap -> dist/sitemap.xml\n");
 
-// The client-rendered pages get the shell with their own head. They cannot
-// be prerendered (live queue state, an interactive tool, the owner's data)
-// but a link to /schedule pasted into a message used to render a card
-// carrying the home page's title, because spa.html has one head for all.
+// A client-rendered page gets the shell with its own head. None is left
+// since /planner was baked on 2026-09-28, and a page added to routes.ts but
+// not to prerenderedRoutes.ts lands here. A link to /schedule pasted into a
+// message used to render a card carrying the home page's title, because
+// spa.html has one head for all.
 // The root stays empty, so main.tsx renders rather than hydrates.
 for (const route of routes.map((entry) => entry.path)) {
   if (prerenderedRoutes.includes(route)) continue;

@@ -33,6 +33,7 @@ const prerendered: Record<string, string> = {
   "/schedule": "Schedule time with me",
   "/schedule/admin": "Run the queue",
   "/fitness": "Military athlete console",
+  "/planner": "Graduate course planner",
 };
 
 async function loadHome(page: Page) {
@@ -167,14 +168,15 @@ for (const [path, api] of Object.entries(firstRequest)) {
   });
 }
 
-test("a page that is not prerendered ships the empty shell, not another page", async ({
+test("a path the app does not know gets the empty shell, not another page", async ({
   request,
 }) => {
-  // The shell for client-rendered routes must leave the root empty. Serving
-  // the home page's baked markup there would flash the wrong page and then
-  // hydrate against DOM that contradicts it.
-  const response = await request.get("/planner");
+  // Every page is prerendered, so the fallback's spa.html now serves only
+  // the paths nobody shipped. Its root must stay empty. Serving the home
+  // page's baked markup there would flash the wrong page and then hydrate
+  // against DOM that contradicts it.
+  const response = await request.get("/definitely-not-a-page");
 
-  expect(response.status()).toBe(200);
+  expect(response.status()).toBe(404);
   expect(await response.text()).toMatch(/<div id="root"><\/div>/);
 });

@@ -25,6 +25,9 @@ interface AppThemeProps {
 /** On the root for one tick while the scheme changes; index.css holds the rule. */
 export const SWITCHING_CLASS = "scheme-switching";
 
+/** The scheme a first visit gets, before anybody chooses. */
+export const DEFAULT_COLOR_SCHEME = "dark";
+
 /**
  * What MUI's disableTransitionOnChange does, without its inline <style>: the
  * CSP allows no style element with text it has not hashed, and that one is
@@ -90,7 +93,7 @@ export default function AppTheme(props: AppThemeProps) {
           // Dark unless somebody chooses otherwise. Without this the provider
           // follows the operating system, so half of all first visits would
           // arrive light — and the site is designed dark first.
-          defaultColorScheme: "dark",
+          defaultColorScheme: DEFAULT_COLOR_SCHEME,
           typography,
           shadows,
           shape,
@@ -114,7 +117,7 @@ export default function AppTheme(props: AppThemeProps) {
     // on a light OS, and the dropdown's correction paints dark again a frame
     // later: a flash of light on every first visit, seen in all three engines
     // by e2e/canvas.spec.ts on 2026-09-23.
-    <ThemeProvider theme={theme} defaultMode="dark">
+    <ThemeProvider theme={theme} defaultMode={DEFAULT_COLOR_SCHEME}>
       <SchemeSwitchWithoutTransitions />
       <CanvasFollowsScroll />
       {children}

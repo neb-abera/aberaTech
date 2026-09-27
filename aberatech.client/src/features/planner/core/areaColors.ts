@@ -43,3 +43,38 @@ export function courseColor(
 }
 
 export const AREA_NAMES = Object.keys(SLOTS);
+
+/**
+ * The same colours as CSS custom properties, so the stylesheet carries both
+ * schemes and the browser picks one. A colour chosen in script would be the
+ * server's guess in the prerendered page and could change at hydration.
+ */
+function slotIndex(area: string | undefined): number {
+  const index = area ? AREA_NAMES.indexOf(area) : -1;
+  return index === -1 ? 0 : index;
+}
+
+export function areaColorVar(area: string | undefined): string {
+  return `var(--planner-area-${slotIndex(area)})`;
+}
+
+export function courseColorVar(areas: string[], active: Set<string>): string {
+  return areaColorVar(areas.find((a) => active.has(a)) ?? areas[0]);
+}
+
+/** How strongly a chip is tinted with its colour, per scheme. */
+export const CHIP_TINT: Record<ThemeMode, string> = {
+  light: "9%",
+  dark: "16%",
+};
+
+/** The custom properties behind areaColorVar, for one scheme. */
+export function areaColorVariables(mode: ThemeMode): Record<string, string> {
+  return Object.fromEntries([
+    ...AREA_NAMES.map((name, index) => [
+      `--planner-area-${index}`,
+      areaColor(name, mode),
+    ]),
+    ["--planner-chip-tint", CHIP_TINT[mode]],
+  ]);
+}
