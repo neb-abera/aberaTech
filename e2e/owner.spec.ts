@@ -214,6 +214,27 @@ test.describe("/links", () => {
     });
   });
 
+  test("the list is asked for once, by the head, and the frame is there before it", async ({
+    page,
+  }) => {
+    // The head preloads /api/progress/links and the page's own fetch takes
+    // that answer. A preload the engine does not reuse shows up here as a
+    // second request.
+    const asked: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/progress/links")
+        asked.push(request.method());
+    });
+    await signIn(page, "/links");
+    await page.getByRole("button", { name: "Upload" }).waitFor();
+    expect(asked).toEqual(["GET"]);
+
+    // Prerendered: the title and intro are in the document itself.
+    const html = await (await page.request.get("/links")).text();
+    expect(html).toContain("One list, kept on the server");
+    expect(html).toContain('as="fetch"');
+  });
+
   test("an export keeps its folders and tags, a second one asks before changing anything", async ({
     page,
   }) => {

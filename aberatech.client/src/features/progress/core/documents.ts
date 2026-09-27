@@ -12,9 +12,12 @@ export type Loaded<T> =
   | { status: "owner"; value: T | null }
   | { status: "error" };
 
+/** Where one document lives. The head's preload for /links names it too. */
+export const documentUrl = (key: string): string => `/api/progress/${key}`;
+
 export async function loadDocument<T>(key: string): Promise<Loaded<T>> {
   try {
-    const response = await fetch(`/api/progress/${key}`, {
+    const response = await fetch(documentUrl(key), {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
     });
@@ -41,7 +44,7 @@ export async function saveDocument(
   keepalive = false,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`/api/progress/${key}`, {
+    const response = await fetch(documentUrl(key), {
       method: "PUT",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },

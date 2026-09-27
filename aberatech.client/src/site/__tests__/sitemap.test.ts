@@ -19,9 +19,12 @@ describe("sitemap", () => {
     }
   });
 
-  it("includes every prerendered page", () => {
+  it("includes every prerendered page but the unlisted ones", () => {
+    // /links is prerendered for its first paint, not for a search engine:
+    // what it bakes is a title and a spinner.
     const listed = sitemapRoutes();
     for (const path of prerenderedRoutes) {
+      if (path in unlisted) continue;
       expect(listed).toContain(path);
     }
   });

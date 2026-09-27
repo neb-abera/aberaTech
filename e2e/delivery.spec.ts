@@ -26,6 +26,7 @@ const prerendered: Record<string, string> = {
   "/rf-training": "Tactically Relevant RF Training",
   "/signal-processing": "Learning Signal Processing",
   "/quantum-cryptography": "Learning Quantum and Post-Quantum Cryptography",
+  "/links": "Links",
 };
 
 async function loadHome(page: Page) {

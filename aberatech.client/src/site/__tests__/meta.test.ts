@@ -87,6 +87,20 @@ describe("the prerendered head", () => {
     expect(headFor("/guides")).not.toContain('rel="preload"');
   });
 
+  it("starts the /links document request from the head, and only there", () => {
+    // The request the page would otherwise send only after its bundle has
+    // run and rendered. crossorigin with no value is same-origin
+    // credentials, which is what loadDocument's fetch uses: a preload that
+    // differs from the fetch in mode or credentials is fetched twice.
+    expect(headFor("/links")).toContain(
+      '<link rel="preload" href="/api/progress/links" as="fetch" crossorigin />',
+    );
+    for (const path of Object.keys(meta)) {
+      if (path === "/links") continue;
+      expect(headFor(path)).not.toContain('as="fetch"');
+    }
+  });
+
   it("still names the full-size headshot, at its stable address, in the structured data", () => {
     // Search engines were given /headshot.jpg; the smaller avatar the page
     // draws is a hashed file whose name changes with its bytes.
