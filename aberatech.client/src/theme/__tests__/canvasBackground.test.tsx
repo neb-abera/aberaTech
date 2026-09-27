@@ -9,11 +9,21 @@
  */
 
 import CssBaseline from "@mui/material/CssBaseline";
-import { cleanup, render } from "@testing-library/react";
+import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import AppTheme from "../AppTheme";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+});
+
+function scrollTo(y: number) {
+  Object.defineProperty(window, "scrollY", { value: y, configurable: true });
+  act(() => {
+    window.dispatchEvent(new Event("scroll"));
+  });
+}
 
 // jsdom sometimes reports the hsl colours as rgb.
 const dark = /hsl\(210, 100%, 10%\)|rgb\(0, 2[56], 51\)/;
@@ -51,6 +61,29 @@ describe("canvas background", () => {
     const wash = image.slice(image.indexOf("linear-gradient("));
     expect(wash.slice("linear-gradient(".length)).toMatch(dark);
     expect(wash.endsWith(`, ${page} 96px)`)).toBe(true);
+  });
+
+  it("paints the canvas in the page colour once the page has scrolled, and the glow at the top", () => {
+    mount();
+    const page = "var(--template-palette-background-default)";
+
+    scrollTo(400);
+    expect(document.documentElement.hasAttribute("data-scrolled")).toBe(true);
+    expect(root().backgroundColor).toBe(page);
+
+    scrollTo(0);
+    expect(document.documentElement.hasAttribute("data-scrolled")).toBe(false);
+    expect(root().backgroundColor).toMatch(dark);
+  });
+
+  it("keeps the page colour past the bottom in the light scheme too", () => {
+    mount();
+    document.documentElement.setAttribute("data-mui-color-scheme", "light");
+    scrollTo(400);
+    const colour = root().backgroundColor;
+    document.documentElement.removeAttribute("data-mui-color-scheme");
+
+    expect(colour).toBe("var(--template-palette-background-default)");
   });
 
   it("leaves the body transparent so it does not cover the glow", () => {
