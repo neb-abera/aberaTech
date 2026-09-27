@@ -16,8 +16,8 @@ import AppTheme from "../AppTheme";
 afterEach(cleanup);
 
 // jsdom sometimes reports the hsl colours as rgb.
-const dark = /hsl\(210, 100%, 16%\)|rgb\(0, 41, 82\)/;
-const light = /hsl\(210, 100%, 90%\)|rgb\(204, 230, 255\)/;
+const dark = /hsl\(210, 100%, 10%\)|rgb\(0, 2[56], 51\)/;
+const light = /hsl\(210, 100%, 94%\)|rgb\(224, 240, 255\)/;
 
 function mount() {
   render(
@@ -46,13 +46,13 @@ describe("canvas background", () => {
     // The bloom is the first layer, the wash under it. The wash is opaque:
     // the canvas colour shows only in the gap past the page's edges.
     expect(
-      image.startsWith("radial-gradient(ellipse 80% 40vh at 50% -15vh,"),
+      image.startsWith("radial-gradient(ellipse 80% 325px at 50% -130px,"),
     ).toBe(true);
     const wash = image.slice(image.indexOf("linear-gradient("));
     expect(wash.slice("linear-gradient(".length)).toMatch(dark);
-    expect(wash).toContain(`${page} 320px, ${page} calc(100% - 180px)`);
+    expect(wash).toContain(`${page} 96px, ${page} calc(100% - 120px)`);
     expect(wash).toMatch(
-      /calc\(100% - 180px\), (hsl\(210, 100%, 16%\)|rgb\(0, 41, 82\))\)$/,
+      /calc\(100% - 120px\), (hsl\(210, 100%, 10%\)|rgb\(0, 2[56], 51\))\)$/,
     );
   });
 
