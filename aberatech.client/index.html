@@ -2,11 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- The SVG is the source; favicon-96.png is the same file rasterised for
-         anything that will not take an SVG. The old icon was a light grey
-         glyph on transparent and vanished on a light tab strip. -->
+    <!-- The SVG is the source and picks its colour from the browser theme.
+         The PNGs are the same file rasterised, one per theme, for anything
+         that will not take an SVG. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96-dark.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neb Abera</title>
     <!--

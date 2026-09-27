@@ -66,3 +66,14 @@ test("the stock Vite logo is not served", async ({ request }) => {
   expect((await request.get("/favicon.svg")).status()).toBe(200);
   expect((await request.get("/vite.svg")).status()).toBe(404);
 });
+
+test("the favicon is transparent and follows the browser theme", async ({
+  request,
+}) => {
+  // A background shape hides the tab behind the icon. A single fill vanishes
+  // on one of the two tab strips.
+  const svg = await (await request.get("/favicon.svg")).text();
+  expect(svg).not.toContain("<rect");
+  expect(svg).toContain("prefers-color-scheme: dark");
+  expect((await request.get("/favicon-96-dark.png")).status()).toBe(200);
+});
