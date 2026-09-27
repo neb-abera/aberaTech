@@ -40,6 +40,9 @@ describe("build-time rendering", () => {
   });
 
   for (const [path, title] of [
+    ["/schedule", "Schedule time with me"],
+    ["/schedule/admin", "Run the queue"],
+    ["/fitness", "Military athlete console"],
     ["/plan", "Plan"],
     ["/devbox", "Dev box"],
     ["/alerts", "Alerts"],
@@ -48,7 +51,7 @@ describe("build-time rendering", () => {
       const html = await render(path);
 
       expect(html).toContain(`>${title}</h1>`);
-      expect(html).toContain('aria-label="Loading"');
+      expect(html).toMatch(/aria-label="Loading/);
       expect(html).not.toContain("Sign in with Google");
       expect(html).not.toContain("Loading...");
     });

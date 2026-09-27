@@ -22,18 +22,36 @@ const init: RequestInit = {
   headers: { Accept: "application/json" },
 };
 
-/** The head script for one address. Its promise is caught, so a failure is not logged as uncaught before the page takes it. */
-export function earlyRequestScript(url: string): string {
-  const address = JSON.stringify(url).replace(/</g, "\\u003c");
-  return `window.__earlyRequest={url:${address},response:fetch(${address},${JSON.stringify(init)})};window.__earlyRequest.response.catch(function(){});`;
+/**
+ * The head script for one address. Its promise is caught, so a failure is
+ * not logged as uncaught before the page takes it. With `zone`, the address
+ * carries the viewer's zone as the schedule page writes it:
+ * `?zone=America%2FNew_York`, which is what URLSearchParams makes of it.
+ */
+export function earlyRequestScript(
+  url: string,
+  options: { zone?: boolean } = {},
+): string {
+  const path = JSON.stringify(url).replace(/</g, "\\u003c");
+  const address = options.zone
+    ? `${path}+"?zone="+encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC")`
+    : path;
+  return `(function(u){window.__earlyRequest={url:u,response:fetch(u,${JSON.stringify(init)})};window.__earlyRequest.response.catch(function(){});})(${address});`;
 }
 
-/** A GET for JSON: the head's answer the first time, if it asked for this address. */
-export function requestJson(url: string): Promise<Response> {
+/**
+ * A GET for JSON: the head's answer the first time, if it asked for this
+ * address. The head's request cannot take a signal, so an abort only
+ * reaches the ones this sends.
+ */
+export function requestJson(
+  url: string,
+  signal?: AbortSignal,
+): Promise<Response> {
   const early = globalThis.__earlyRequest;
   if (early?.url === url) {
     globalThis.__earlyRequest = undefined;
     return early.response;
   }
-  return fetch(url, init);
+  return fetch(url, signal ? { ...init, signal } : init);
 }

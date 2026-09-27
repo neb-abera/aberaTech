@@ -30,6 +30,9 @@ const prerendered: Record<string, string> = {
   "/plan": "Plan",
   "/devbox": "Dev box",
   "/alerts": "Alerts",
+  "/schedule": "Schedule time with me",
+  "/schedule/admin": "Run the queue",
+  "/fitness": "Military athlete console",
 };
 
 async function loadHome(page: Page) {
@@ -142,6 +145,9 @@ const firstRequest: Record<string, string> = {
   "/plan": "/api/progress/plan",
   "/devbox": "/api/devbox/status",
   "/alerts": "/api/alerts/status",
+  "/schedule": "/api/scheduling/state",
+  "/fitness": "/api/fitness/me",
+  "/planner": "/api/progress/planner",
 };
 
 for (const [path, api] of Object.entries(firstRequest)) {
@@ -150,7 +156,11 @@ for (const [path, api] of Object.entries(firstRequest)) {
     page.on("request", (request) => {
       if (new URL(request.url()).pathname === api) asked.push(request.method());
     });
+    const answered = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === api,
+    );
     await page.goto(path);
+    await answered;
     await expect(page.getByLabel("Loading")).toHaveCount(0);
 
     expect(asked).toEqual(["GET"]);
@@ -163,7 +173,7 @@ test("a page that is not prerendered ships the empty shell, not another page", a
   // The shell for client-rendered routes must leave the root empty. Serving
   // the home page's baked markup there would flash the wrong page and then
   // hydrate against DOM that contradicts it.
-  const response = await request.get("/schedule");
+  const response = await request.get("/planner");
 
   expect(response.status()).toBe(200);
   expect(await response.text()).toMatch(/<div id="root"><\/div>/);
