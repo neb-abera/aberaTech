@@ -12,9 +12,11 @@ import type { Theme } from "@mui/material/styles";
  * matched it, which is why pulling down showed black and the glow read as a
  * bar across the page rather than a wash off the top edge.
  *
- * So the canvas colour is the glow colour, and the page fades out of it and
- * back into it: blue at both edges, the page colour in between. The gap at
- * either end is more of the same blue, whatever the browser paints there.
+ * So the canvas colour is the glow colour, and the page fades out of it into
+ * the page colour and stays there. The gap past the top is more of the same
+ * blue. The page ends in the page colour: until 2026-09-27 the wash came back
+ * to blue over the last 120px, a band at the bottom of every page that none
+ * of GitHub, Vercel or Linear has.
  *
  * The colours and sizes match the glow before PR #191, which sat on the hero
  * box: `ellipse 80% 50% at 50% -20%` of hsl(210, 100%, 16%) over a 647px box
@@ -37,9 +39,9 @@ import type { Theme } from "@mui/material/styles";
 const bloom = (colour: string) =>
   `radial-gradient(ellipse 80% 325px at 50% -130px, ${colour}, transparent)`;
 
-/** Blue at the top edge, page colour by 96px, blue again over the last 120px. */
+/** Blue at the top edge, the page colour from 96px to the end. */
 const wash = (colour: string, page: string) =>
-  `linear-gradient(${colour}, ${page} 96px, ${page} calc(100% - 120px), ${colour})`;
+  `linear-gradient(${colour}, ${page} 96px)`;
 
 const glow = { dark: "hsl(210, 100%, 10%)", light: "hsl(210, 100%, 94%)" };
 
@@ -48,6 +50,10 @@ export const canvasBackground = (theme: Theme) => {
   const paint = (colour: string) => ({
     backgroundColor: colour,
     backgroundImage: `${bloom(colour)}, ${wash(colour, page)}`,
+    // A root box of fractional height (1185.55px on /guides) ends inside the
+    // last row of pixels, and WebKit blends the canvas blue into it. The wash
+    // runs 1px past the box so the last row is the page colour.
+    backgroundSize: "auto, 100% calc(100% + 1px)",
     backgroundRepeat: "no-repeat",
   });
   return {

@@ -4,8 +4,9 @@ import { expect, test } from "@playwright/test";
 // Pulling a page past either end (the rubber band on a Mac, an iPhone, or
 // Firefox) shows the browser canvas beyond the page, painted in the root
 // element's colour and nothing else. That colour is the glow's blue, so the
-// gap is more blue; the page's first and last rows of pixels must be that
-// same colour, edge to edge, or the seam shows as a band. On 2026-09-22 the
+// gap is more blue; the page's first row of pixels must be that same colour,
+// edge to edge, or the seam shows as a band. The last row is the page colour:
+// until 2026-09-27 a blue band ran across the bottom of every page. On 2026-09-22 the
 // gap was black above a blue page. On 2026-09-24 the page's edge matched a
 // black gap, which is the same defect with the blue taken out. Sampled as
 // pixels rather than read from the CSS: the CSS has said one thing and
@@ -121,7 +122,7 @@ for (const path of pages) {
 for (const scheme of ["dark", "light"] as const) {
   test.describe(`${scheme} scheme`, () => {
     for (const path of pages) {
-      test(`${path}: both edges are the canvas colour, with the glow below the top`, async ({
+      test(`${path}: the top edge is the canvas colour, the bottom edge the page colour`, async ({
         page,
       }) => {
         // The stored choice goes in before the first script runs, so the
@@ -157,7 +158,17 @@ for (const scheme of ["dark", "light"] as const) {
           ).toBe(true);
         }
 
-        // The last row too: pulling up at the bottom shows the same gap.
+        // The last row is the page colour: no band at the bottom.
+        const pageColour = await page.evaluate(() => {
+          const probe = document.createElement("div");
+          probe.style.backgroundColor =
+            "var(--template-palette-background-default)";
+          document.body.append(probe);
+          const css = getComputedStyle(probe).backgroundColor;
+          probe.remove();
+          return css;
+        });
+        const [pr, pg, pb] = pageColour.match(/\d+/g)?.map(Number) ?? [];
         const height = page.viewportSize()?.height ?? 720;
         await page.evaluate(() =>
           window.scrollTo(0, document.documentElement.scrollHeight),
@@ -174,8 +185,8 @@ for (const scheme of ["dark", "light"] as const) {
         for (const x of [8, width / 2, width - 8]) {
           const bottom = await pixelAt(page, Math.floor(x), height - 1);
           expect(
-            near(bottom, canvas),
-            `bottom edge at x=${x} is ${bottom}, canvas is ${canvas}`,
+            near(bottom, [pr, pg, pb]),
+            `bottom edge at x=${x} is ${bottom}, page colour is ${pageColour}`,
           ).toBe(true);
         }
         await page.evaluate(() => window.scrollTo(0, 0));
