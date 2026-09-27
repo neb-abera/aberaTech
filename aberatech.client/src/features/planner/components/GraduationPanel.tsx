@@ -110,7 +110,7 @@ export default function GraduationPanel({
         degree. The clock spans the courses you{" "}
         <Box component="span" sx={{ fontWeight: 600 }}>
           apply
-        </Box>
+        </Box>{" "}
         rather than everything you take, so the other {audit.excluded.length}{" "}
         sit outside it.
       </Typography>
