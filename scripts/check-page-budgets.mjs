@@ -23,7 +23,16 @@
  *
  * A prerendered page with no budget fails, and so does a budget for a page
  * that is no longer built, so the list cannot quietly fall out of step with
- * the site. A file the head names that is not in the build fails too: that
+ * the site.
+ *
+ * A budget with too much headroom fails too. Each budget may sit at most 10%
+ * above what the build measures, rounded up: ceil(measured * 1.10). A page
+ * that shrinks takes its budget down in the same pull request, so the room
+ * it freed cannot be spent later without anyone deciding to. An entry listed
+ * under "floors" in the budgets file may sit at its floor instead, for a file
+ * so small that 10% of it is a few bytes. The rule is the same for images,
+ * which are counted as they are: an image that shrinks lowers the budget
+ * that holds it. A file the head names that is not in the build fails too: that
  * is a preload pointing at nothing.
  *
  * Run by the clientbudget stage of aberaTech.Server/Dockerfile, after
@@ -44,7 +53,13 @@ if (!distArg || !budgetsArg) {
 }
 
 const dist = path.resolve(distArg);
-const { budgets } = JSON.parse(readFileSync(budgetsArg, "utf8"));
+const { budgets, floors = {} } = JSON.parse(readFileSync(budgetsArg, "utf8"));
+
+/**
+ * The most a budget may be: 10% above the measured size, rounded up. In whole
+ * numbers, because 100 * 1.1 is 110.00000000000001 in floating point.
+ */
+const ceilingFor = (actual) => Math.ceil((actual * 11) / 10);
 
 const COMPRESSIBLE = new Set([".html", ".js", ".css", ".json", ".svg"]);
 
@@ -57,6 +72,7 @@ function weigh(file) {
 }
 
 const failures = [];
+const lower = [];
 const rows = [];
 
 function check(name, files) {
@@ -83,6 +99,13 @@ function check(name, files) {
   if (actual > budget) {
     failures.push(
       `${name}: ${named} is ${actual} bytes, over its budget of ${budget} by ${actual - budget}`,
+    );
+    return;
+  }
+  const ceiling = Math.max(ceilingFor(actual), floors[name] ?? 0);
+  if (budget > ceiling) {
+    lower.push(
+      `${name}: ${named} is ${actual} bytes and its budget of ${budget} leaves more than 10% headroom; set it to ${ceiling}`,
     );
   }
 }
@@ -143,6 +166,14 @@ for (const page of built) {
   check(`html:${page.route}`, [page.file]);
 }
 
+for (const name of Object.keys(floors)) {
+  if (!(name in budgets)) {
+    failures.push(
+      `${name}: has a floor but no budget; remove it from floors in ${budgetsArg}`,
+    );
+  }
+}
+
 for (const name of Object.keys(budgets)) {
   if (
     name.startsWith("html:") &&
@@ -170,7 +201,16 @@ if (failures.length > 0) {
   process.stderr.write(
     "\nIf the growth is deliberate, raise the number in scripts/page-budgets.json in the same pull request and say why there.\n",
   );
-  process.exit(1);
 }
+if (lower.length > 0) {
+  process.stderr.write(
+    `\npage budgets: ${lower.length} with more headroom than 10%\n`,
+  );
+  for (const entry of lower) process.stderr.write(`  ${entry}\n`);
+  process.stderr.write(
+    "\nThe build got smaller. Lower each number in scripts/page-budgets.json to the one printed, in this same pull request.\n",
+  );
+}
+if (failures.length > 0 || lower.length > 0) process.exit(1);
 
 process.stdout.write("page budgets: all within budget\n");
