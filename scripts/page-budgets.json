@@ -1,24 +1,27 @@
 {
-  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each number is about 10% above what the build measured when it was set (2026-09-17; the seven shell pages with their own head, 2026-09-21), except entry-css, which is 21 bytes and has a floor instead. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
+  "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each budget sits at most 10% above what the build measures, rounded up: ceil(measured * 1.10). A budget above that fails the check, which prints the number to set, so a pull request that makes a page smaller lowers its budget in the same pull request. The rule dates from 2026-09-28, when every budget it flagged was lowered to its number. An entry under floors may sit at its floor instead: entry-css is 71 bytes, and 10% of that is 8 bytes. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request.",
+  "floors": {
+    "entry-css": 1024
+  },
   "budgets": {
     "entry-css": 1024,
     "entry-js": 89300,
     "home-initial": 126100,
-    "html:/": 14200,
-    "html:/alerts": 13900,
-    "html:/devbox": 13900,
-    "html:/fitness": 14100,
-    "html:/guides": 14300,
-    "html:/links": 13900,
-    "html:/plan": 13900,
-    "html:/planner": 36563,
-    "html:/projects": 14400,
-    "html:/quantum-cryptography": 39900,
-    "html:/rf-training": 32300,
-    "html:/schedule": 14200,
-    "html:/schedule/admin": 14000,
-    "html:/signal-processing": 41200,
-    "html:/technical": 35700,
-    "html:/transition": 49100
+    "html:/": 13791,
+    "html:/alerts": 13197,
+    "html:/devbox": 13229,
+    "html:/fitness": 13392,
+    "html:/guides": 13930,
+    "html:/links": 13258,
+    "html:/plan": 13180,
+    "html:/planner": 35917,
+    "html:/projects": 14106,
+    "html:/quantum-cryptography": 37746,
+    "html:/rf-training": 29950,
+    "html:/schedule": 13452,
+    "html:/schedule/admin": 13242,
+    "html:/signal-processing": 38585,
+    "html:/technical": 32420,
+    "html:/transition": 45165
   }
 }
