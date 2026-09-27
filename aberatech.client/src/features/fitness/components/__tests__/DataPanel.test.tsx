@@ -67,9 +67,12 @@ function stubFetch(
   vi.stubGlobal(
     "fetch",
     vi.fn((input: RequestInfo, init?: RequestInit) => {
+      // A jsdom File is not a body the Node Request can read. From jsdom
+      // 30.1 the constructor throws on it. The upload tests assert the route
+      // and the method, so a File body is left off the record.
       const request = new Request(
         typeof input === "string" ? `http://localhost${input}` : input,
-        init,
+        init?.body instanceof File ? { ...init, body: undefined } : init,
       );
       calls.push(request);
       if (request.url.endsWith("/api/fitness/ingest")) {
