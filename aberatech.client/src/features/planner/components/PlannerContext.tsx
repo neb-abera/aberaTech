@@ -8,8 +8,6 @@ import type { PlannerModel } from "../model/PlannerModel";
 export interface PlannerContextValue {
   model: PlannerModel;
   update: (fn: (model: PlannerModel) => void) => void;
-  /** Light or dark, read once at the top so chips do not each ask the theme. */
-  mode: "light" | "dark";
   /** Course being dragged, or null. */
   drag: string | null;
   setDrag: (code: string | null) => void;
