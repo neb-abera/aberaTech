@@ -26,7 +26,13 @@ const visitorRoutes = [
   "/definitely-not-a-page",
 ];
 
-const ownerRoutes = ["/devbox", "/schedule/admin", "/links", "/plan"];
+const ownerRoutes = [
+  "/devbox",
+  "/schedule/admin",
+  "/links",
+  "/plan",
+  "/alerts",
+];
 
 interface Violation {
   directive: string;
