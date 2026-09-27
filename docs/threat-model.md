@@ -32,7 +32,7 @@ before it is a feature.
 | The dev box agent | One heartbeat a minute with a bearer token | The box, or whoever holds the token |
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
-| The site to Pushover | One POST per alert, priority 0, or 2 for an event marked #critical | Pushover |
+| The site to Pushover | One POST per alert, priority 2 | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 
 ## Threats and answers
