@@ -81,8 +81,10 @@ service keeps `node_modules` in a volume that outlives a rebuild.
   The container app's managed identity holds one role on that one VM: start
   and read. `DevBox__SubscriptionId` switches it on.
 
-- `/alerts` sends one Pushover message, priority 1, before each event on
-  the owner's Google Calendar (`aberaTech.Scheduling/Alerts/`). The worker
+- `/alerts` sends one Pushover message before each event on the owner's
+  Google Calendar (`aberaTech.Scheduling/Alerts/`). An event with
+  `#critical` in its title or description goes at high priority (1), and
+  every other event at normal priority (0). The worker
   reads the secret iCal address every 5 minutes and sends each alert at its
   own time. The alert time is the event's earliest popup reminder, or 10
   minutes before the start. All-day, cancelled and declined events are

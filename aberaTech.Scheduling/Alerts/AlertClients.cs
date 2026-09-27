@@ -54,9 +54,9 @@ public sealed record PushoverResult(bool Ok, string? Error)
 }
 
 /// <summary>
-/// One Pushover message, priority 1: high, one sound, no repeats. Never
-/// priority 2, which repeats until acknowledged, so the request carries no
-/// retry or expire field.
+/// One Pushover message, at normal priority or at high: one sound, no
+/// repeats. Never priority 2, which repeats until acknowledged, so the
+/// request carries no retry or expire field.
 /// </summary>
 /// <remarks>
 /// A send that failed before Pushover took it (a 5xx, or no connection) is
@@ -68,14 +68,22 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
 {
     public const string Endpoint = "https://api.pushover.net/1/messages.json";
 
-    /// <summary>High: bypasses quiet hours, one sound. See pushover.net/api#priority.</summary>
-    public const int Priority = 1;
+    /// <summary>
+    /// High: bypasses Pushover's quiet hours, one sound. With the app's
+    /// "Critical Alerts for high-priority" setting on, an iPhone plays it
+    /// through the silent switch and Focus too. For an event marked
+    /// #critical, and for the test button. See pushover.net/api#priority.
+    /// </summary>
+    public const int HighPriority = 1;
+
+    /// <summary>Normal: the phone's own sound settings, Pushover's quiet hours and the silent switch all apply.</summary>
+    public const int NormalPriority = 0;
 
     public const int MaxTitle = 250;
 
     public const int MaxMessage = 1024;
 
-    public async Task<PushoverResult> SendAsync(string title, string message, CancellationToken cancellationToken)
+    public async Task<PushoverResult> SendAsync(string title, string message, int priority, CancellationToken cancellationToken)
     {
         for (var attempt = 1; ; attempt++)
         {
@@ -88,7 +96,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
                     ["user"] = options.PushoverUserKey ?? "",
                     ["title"] = AlertText.Title(title),
                     ["message"] = message.Length <= MaxMessage ? message : message[..MaxMessage],
-                    ["priority"] = Priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ["priority"] = priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 });
                 using var response = await http.PostAsync(Endpoint, content, cancellationToken);
 

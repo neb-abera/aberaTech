@@ -86,7 +86,10 @@ public sealed class AlertDispatcher(
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var result = await pushover.SendAsync(
-            alert.Title, AlertText.Message(alert, status.Snapshot().Zone), cancellationToken);
+            alert.Title,
+            AlertText.Message(alert, status.Snapshot().Zone),
+            alert.Critical ? PushoverClient.HighPriority : PushoverClient.NormalPriority,
+            cancellationToken);
 
         var done = clock.GetCurrentInstant();
         await store.RecordOutcomeAsync(alert.Key, result.Outcome, done, cancellationToken);
@@ -104,7 +107,11 @@ public sealed class AlertDispatcher(
         return DeliveryOutcome.Failed;
     }
 
-    /// <summary>The page's test button. Not deduplicated and not muted: pressing it is the owner asking.</summary>
+    /// <summary>
+    /// The page's test button. Not deduplicated and not muted: pressing it is
+    /// the owner asking. High priority, so it sounds the way a #critical
+    /// event will.
+    /// </summary>
     public async Task<PushoverResult> SendTestAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
@@ -112,7 +119,7 @@ public sealed class AlertDispatcher(
         var now = clock.GetCurrentInstant();
 
         var result = await pushover.SendAsync(
-            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone), cancellationToken);
+            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone), PushoverClient.HighPriority, cancellationToken);
 
         status.Sent(new LastSend(clock.GetCurrentInstant(), "Test alert", result.Outcome));
         if (!result.Ok) logger.LogWarning("Test alert failed ({Failure}).", result.Error);

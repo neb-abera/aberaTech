@@ -11,7 +11,8 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The send path, driven tick by tick on a clock the test moves: one
-/// Pushover message at the alert time, priority 1, never a second one for
+/// Pushover message at the alert time, high priority only for an event
+/// marked #critical and normal otherwise, never a second one for
 /// the same occurrence, and none while muted or skipped. Pushover and the
 /// calendar are handlers that record what they were asked.
 /// </summary>
@@ -38,7 +39,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public async Task One_priority_one_message_goes_at_the_reminder_time_without_waiting_for_the_next_read()
+    public async Task One_message_goes_at_the_reminder_time_without_waiting_for_the_next_read()
     {
         var box = New();
 
@@ -62,7 +63,9 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         var sent = Assert.Single(box.Pushover.Requests);
         Assert.Equal(HttpMethod.Post, sent.Method);
         Assert.Equal(PushoverClient.Endpoint, sent.Url.ToString());
-        Assert.Equal("1", sent.Form["priority"]);
+        // Not marked #critical: normal priority, which the phone's silent
+        // switch and Focus hold back.
+        Assert.Equal("0", sent.Form["priority"]);
         Assert.Equal(AppToken, sent.Form["token"]);
         Assert.Equal(UserKey, sent.Form["user"]);
         Assert.Equal("Standup", sent.Form["title"]);
@@ -248,6 +251,22 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             Assert.DoesNotContain("Standup", entry.Everything);
         });
         Assert.Equal(nameof(HttpRequestException), box.Status.Snapshot().LastFetchError);
+    }
+
+    [Fact]
+    public async Task An_event_marked_critical_goes_at_high_priority_without_the_mark()
+    {
+        var box = New(Ics(Event(
+            "standup@google.com", "Standup #critical", "20261028T090000", "20261028T093000", "Room 1",
+            alarms: [Popup("-PT15M")])));
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("Standup", sent.Form["title"]);
     }
 
     [Fact]
