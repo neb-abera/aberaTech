@@ -5,7 +5,7 @@
 
 # aberaTech
 
-The source of [abera.tech](https://abera.tech): a .NET 10 server, a React
+The source of [abera.tech](https://abera.tech): a .NET 11 server, a React
 client, and the guides and tools on the site.
 
 ## Running it

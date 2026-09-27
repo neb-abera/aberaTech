@@ -2,12 +2,12 @@
 # server. A named stage rather than an ARG deliberately: Dependabot cannot see
 # an image behind ARG indirection, but it watches a literal FROM, and every
 # consumer derives from this one stage so a bump moves them all together.
-FROM node:26@sha256:fa271c47a5d81dc321f4a45be01362f5b3de7559edc7e76b8c4089be1e50d866 AS nodebase
+FROM node:26@sha256:a723b54c35a76e947095a20a67d39585bb09c862e6b1adeb8a9f518f95e34fb0 AS nodebase
 
 # Prose linter, for scripts/check-prose.sh. Never built into anything: the
 # stage exists so the image is a FROM line Dependabot sees and bumps, and the
 # script reads it from here rather than pinning a version of its own.
-FROM jdkato/vale:v3.22.0@sha256:0ef74c2c8331a2cc8739ecc8b4f7cc6672e61524c3697e8c8857bc86b724a28e AS vale
+FROM jdkato/vale:v3.23.0@sha256:d87d6355dc8992f92ec39c4c862a388e56e30302a771fd4512c02660fb25cdf3 AS vale
 
 # The scanners CI runs, for their versions only: trivy-action and
 # sbom-action take a version input, and these FROM lines are what
@@ -24,7 +24,7 @@ FROM rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fe
 # Base stage for .NET runtime
 # Chiseled: distroless-style, no shell, no package manager, non-root by
 # default - and none of the ~30 unfixable distro CVEs the full image carries.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-resolute-chiseled@sha256:99a0fe6f3e933a3d170aa38d8be4237125b72c644a9229889ee842628cbaf845 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled@sha256:ec752d908262db3ed7fe5cd7baad2dc97373c0bd390456a50bda8aaa866fc93d AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
@@ -165,7 +165,7 @@ RUN npx biome check .
 # rather than flattened into /src: the server references aberaTech.Scheduling by
 # relative path, and a flattened layout silently resolves that reference to
 # nothing.
-FROM mcr.microsoft.com/dotnet/sdk:10.0-resolute@sha256:d818bb3014d94172e93820d985130135870bd1760f02588a61263a85c966860e AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute@sha256:ab11199f8a0cded1d667111a0d4f0906567c3a17348a7181f9781d12cc5eb6f9 AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER

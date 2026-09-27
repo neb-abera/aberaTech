@@ -134,7 +134,7 @@ public sealed class OutboxDispatcher(
         // it, and without it two replicas either send the same message twice or
         // serialise behind each other.
         var claimed = await database.Outbox
-            .FromSqlInterpolated(
+            .FromSql(
                 $"""
                  SELECT * FROM "Outbox"
                  WHERE "State" IN ({(int)DeliveryState.Pending}, {(int)DeliveryState.Failed})
