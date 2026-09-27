@@ -28,6 +28,17 @@ describe("build-time rendering", () => {
     expect(html).not.toContain("Loading...");
   });
 
+  it("renders the frame of /links around its spinner, and no list", async () => {
+    // The owner's list is never in the build: the page is prerendered for
+    // its title and intro, and the list arrives from the API after load.
+    const html = await render("/links");
+
+    expect(html).toContain("One list, kept on the server");
+    expect(html).toContain('aria-label="Loading"');
+    expect(html).not.toContain("Sign in with Google");
+    expect(html).not.toContain("Loading...");
+  });
+
   it("renders the training plan without a browser", async () => {
     // The plan loads its ticks from the server in an effect. Read at render
     // time that would throw here and mismatch on hydration; read in an

@@ -29,8 +29,15 @@ describe("prerenderedRoutes", () => {
     expect(prerenderedRoutes).not.toContain("/schedule/admin");
     expect(prerenderedRoutes).not.toContain("/planner");
     expect(prerenderedRoutes).not.toContain("/fitness");
-    expect(prerenderedRoutes).not.toContain("/links");
     expect(prerenderedRoutes).not.toContain("/plan");
+  });
+
+  it("bakes the frame of /links, whose first render holds no data", () => {
+    // The list loads in an effect and the first render is always the
+    // spinner, so the baked page is the title, the intro and the spinner:
+    // nothing that can go stale. Before this the page was blank until the
+    // bundle ran, then "Loading...", then the frame, then the list.
+    expect(prerenderedRoutes).toContain("/links");
   });
 
   it("never names an external URL", () => {

@@ -40,6 +40,7 @@ import {
   inGroup,
   type LinkEntry,
   type LinksDocument,
+  linksDocumentKey,
   moveLink,
   type NewLink,
   normalizeUrl,
@@ -56,8 +57,6 @@ import {
 } from "../core/links";
 import Conflicts from "./Conflicts";
 
-const documentKey = "links";
-
 /**
  * The bookmark list, from the owner's chair and from a visitor's.
  *
@@ -72,7 +71,7 @@ const documentKey = "links";
  */
 export default function LinksPanel() {
   const { status, value, set, saving, failed } =
-    useOwnerDocument<LinksDocument>(documentKey);
+    useOwnerDocument<LinksDocument>(linksDocumentKey);
   const document = React.useMemo(() => coerce(value), [value]);
   const [query, setQuery] = React.useState("");
   const [title, setTitle] = React.useState("");

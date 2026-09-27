@@ -12,12 +12,14 @@ export type Loaded<T> =
   | { status: "owner"; value: T | null }
   | { status: "error" };
 
+import { requestJson } from "../../../site/earlyRequest";
+
+/** Where one document lives. The head script on /links asks for it too. */
+export const documentUrl = (key: string): string => `/api/progress/${key}`;
+
 export async function loadDocument<T>(key: string): Promise<Loaded<T>> {
   try {
-    const response = await fetch(`/api/progress/${key}`, {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    });
+    const response = await requestJson(documentUrl(key));
     if (response.status === 401 || response.status === 403)
       return { status: "visitor" };
     if (response.status === 404) return { status: "owner", value: null };
@@ -41,7 +43,7 @@ export async function saveDocument(
   keepalive = false,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`/api/progress/${key}`, {
+    const response = await fetch(documentUrl(key), {
       method: "PUT",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
