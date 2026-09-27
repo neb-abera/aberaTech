@@ -33,7 +33,7 @@ public sealed class DatabaseAdminSessionVersions(SchedulingDbContext database) :
         // One statement, so two sign-outs at once both count and neither
         // fails on the key.
         var key = AdminSessions.Key(email);
-        await database.Database.ExecuteSqlInterpolatedAsync(
+        await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AdminSessions" ("Email", "Version") VALUES ({key}, 1)
              ON CONFLICT ("Email") DO UPDATE SET "Version" = "AdminSessions"."Version" + 1

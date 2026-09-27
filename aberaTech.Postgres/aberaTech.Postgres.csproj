@@ -7,13 +7,12 @@
     than being copied into each feature library and drifting apart.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="NodaTime" VersionOverride="3.3.4" />
     <PackageReference Include="Npgsql" />
     <PackageReference Include="Npgsql.NodaTime" />
