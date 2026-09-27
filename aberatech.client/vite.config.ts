@@ -89,6 +89,9 @@ const clientConfig = {
   build: {
     outDir: "dist",
     assetsDir: "assets",
+    // Which chunks each view imports, for tools/prerender.mjs to name in
+    // the page's head. The prerender deletes it once read.
+    manifest: true,
     rollupOptions: {
       output: {
         entryFileNames: "assets/[name]-[hash].js",

@@ -47,7 +47,7 @@ async function loadHome(page: Page) {
 const pathOf = (res: Response) => new URL(res.url()).pathname;
 const isAsset = (res: Response) => pathOf(res).startsWith("/assets/");
 
-test("the bundle and stylesheet are served compressed", async ({ page }) => {
+test("the bundle is served compressed", async ({ page }) => {
   const responses = await loadHome(page);
 
   const compressible = responses.filter(
@@ -179,4 +179,76 @@ test("a path the app does not know gets the empty shell, not another page", asyn
 
   expect(response.status()).toBe(404);
   expect(await response.text()).toMatch(/<div id="root"><\/div>/);
+});
+
+// The critical path of a prerendered page. A stylesheet link holds first
+// paint until it arrives, and a script the page asks for only after the
+// entry has run starts a second wave of requests. So every page carries its
+// few style rules inline and names every script it loads in its own HTML,
+// where the browser starts all of them at once.
+const firstLoad = Object.keys(prerendered);
+
+const linked = (html: string, pattern: RegExp) =>
+  [...html.matchAll(pattern)].map(
+    (match) => new URL(match[1], "http://x").pathname,
+  );
+
+for (const path of firstLoad) {
+  test(`${path} has no render-blocking stylesheet`, async ({ request }) => {
+    const html = await (await request.get(path)).text();
+
+    expect(html).not.toMatch(/<link[^>]*rel="stylesheet"/);
+  });
+
+  test(`${path} names every script it loads in its HTML`, async ({ page }) => {
+    const scripts: string[] = [];
+    // By path rather than resourceType: Firefox reports a dynamic import
+    // as "other", and a filter on "script" passed it unseen.
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (pathname.endsWith(".js")) scripts.push(pathname);
+    });
+    const response = await page.goto(path);
+    // Loaded means the page's own chunk has run: React has attached its
+    // fiber to the heading. Firefox reports the network idle before the
+    // entry has run at all, so idle alone would pass an empty list.
+    await page.waitForFunction(() => {
+      const heading = document.querySelector("h1");
+      return (
+        heading !== null &&
+        Object.keys(heading).some((key) => key.startsWith("__reactFiber"))
+      );
+    });
+    await page.waitForLoadState("networkidle");
+    const html = (await response?.text()) ?? "";
+    const named = new Set([
+      ...linked(html, /<script[^>]*\ssrc="([^"]+)"/g),
+      ...linked(html, /<link[^>]*rel="modulepreload"[^>]*href="([^"]+)"/g),
+      ...linked(html, /<link[^>]*href="([^"]+)"[^>]*rel="modulepreload"/g),
+    ]);
+
+    expect(scripts.length).toBeGreaterThan(0);
+    expect(scripts.filter((script) => !named.has(script))).toEqual([]);
+  });
+}
+
+test("switching the colour scheme holds transitions off", async ({ page }) => {
+  // AppTheme sets this class on the root for one tick while the scheme
+  // changes. The rule it relies on lives in index.html's head, allowed by
+  // the CSP by its hash. A CSP refusal or a lost rule shows here as
+  // elements still carrying a transition.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  const transitioning = (on: boolean) =>
+    page.evaluate((add) => {
+      document.documentElement.classList.toggle("scheme-switching", add);
+      return [...document.querySelectorAll("body *")].filter((element) =>
+        getComputedStyle(element)
+          .transitionDuration.split(",")
+          .some((duration) => Number.parseFloat(duration) > 0),
+      ).length;
+    }, on);
+
+  expect(await transitioning(false)).toBeGreaterThan(0);
+  expect(await transitioning(true)).toBe(0);
 });

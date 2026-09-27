@@ -3,8 +3,8 @@
  * Switching between light and dark repaints without animating every colour
  * transition on the page, and does it without an inline style element. MUI's
  * own disableTransitionOnChange writes a <style> with text into the head,
- * which the CSP refuses (e2e/csp.spec.ts). The page's stylesheet holds the
- * rule instead, and the switch toggles a class on the root for one tick.
+ * which the CSP refuses (e2e/csp.spec.ts). A style element in index.html,
+ * allowed by its hash, holds the rule instead, and the switch toggles a class on the root for one tick.
  */
 
 import { useColorScheme } from "@mui/material/styles";

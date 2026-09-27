@@ -23,7 +23,7 @@ interface AppThemeProps {
   themeComponents?: ThemeOptions["components"];
 }
 
-/** On the root for one tick while the scheme changes; index.css holds the rule. */
+/** On the root for one tick while the scheme changes; index.html holds the rule. */
 export const SWITCHING_CLASS = "scheme-switching";
 
 /** The scheme a first visit gets, before anybody chooses. */
@@ -33,7 +33,7 @@ export const DEFAULT_COLOR_SCHEME = "dark";
  * What MUI's disableTransitionOnChange does, without its inline <style>: the
  * CSP allows no style element with text it has not hashed, and that one is
  * written at run time. A class on the root for one tick, and a rule in the
- * page's own stylesheet, turn every transition off while the colours change,
+ * page's head, turn every transition off while the colours change,
  * so the switch repaints at once instead of animating each surface.
  */
 function SchemeSwitchWithoutTransitions() {
