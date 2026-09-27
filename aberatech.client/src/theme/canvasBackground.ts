@@ -12,11 +12,19 @@ import type { Theme } from "@mui/material/styles";
  * matched it, which is why pulling down showed black and the glow read as a
  * bar across the page rather than a wash off the top edge.
  *
- * So the canvas colour is the glow colour, and the page fades out of it into
- * the page colour and stays there. The gap past the top is more of the same
- * blue. The page ends in the page colour: until 2026-09-27 the wash came back
- * to blue over the last 120px, a band at the bottom of every page that none
- * of GitHub, Vercel or Linear has.
+ * So the canvas colour follows the scroll position. At the top it is the
+ * glow colour, and the page fades out of it into the page colour and stays
+ * there. Once the page has scrolled, the canvas is the page colour, so the
+ * gap past the bottom matches the page above it. A pull only shows the end
+ * the reader is already at, so the switch is never on screen. Linear, Vercel
+ * and GitHub paint the canvas in the page colour at both ends. None of them
+ * has a coloured top edge, so one colour serves them. Until 2026-09-27 the
+ * wash here came back to blue over the last 120px, and after that the gap
+ * past the bottom was blue under a near-black page.
+ *
+ * AppTheme sets `data-scrolled` on the root while scrollY is above 0. Safari
+ * reports a negative scrollY during a pull at the top and one past the end
+ * during a pull at the bottom, so a short page gets the right colour too.
  *
  * The colours and sizes match the glow before PR #191, which sat on the hero
  * box: `ellipse 80% 50% at 50% -20%` of hsl(210, 100%, 16%) over a 647px box
@@ -43,6 +51,9 @@ const bloom = (colour: string) =>
 const wash = (colour: string, page: string) =>
   `linear-gradient(${colour}, ${page} 96px)`;
 
+/** On the root while the page is scrolled away from its top. */
+export const SCROLLED = "data-scrolled";
+
 const glow = { dark: "hsl(210, 100%, 10%)", light: "hsl(210, 100%, 94%)" };
 
 export const canvasBackground = (theme: Theme) => {
@@ -59,6 +70,8 @@ export const canvasBackground = (theme: Theme) => {
   return {
     html: paint(glow.dark),
     'html[data-mui-color-scheme="light"]': paint(glow.light),
+    // After the scheme rule, at the same specificity, so it wins in both.
+    [`html[${SCROLLED}]`]: { backgroundColor: page },
     body: {
       backgroundColor: "transparent",
     },

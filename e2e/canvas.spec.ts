@@ -3,10 +3,11 @@ import { expect, test } from "@playwright/test";
 
 // Pulling a page past either end (the rubber band on a Mac, an iPhone, or
 // Firefox) shows the browser canvas beyond the page, painted in the root
-// element's colour and nothing else. That colour is the glow's blue, so the
-// gap is more blue; the page's first row of pixels must be that same colour,
-// edge to edge, or the seam shows as a band. The last row is the page colour:
-// until 2026-09-27 a blue band ran across the bottom of every page. On 2026-09-22 the
+// element's colour and nothing else. At the top that colour is the glow's
+// blue, and the page's first row of pixels must be that same colour, edge to
+// edge, or the seam shows as a band. At the bottom it is the page colour, and
+// so is the last row. On 2026-09-27 the last row was the page colour and the
+// canvas below it still blue: the test checked the row and not the gap. On 2026-09-22 the
 // gap was black above a blue page. On 2026-09-24 the page's edge matched a
 // black gap, which is the same defect with the blue taken out. Sampled as
 // pixels rather than read from the CSS: the CSS has said one thing and
@@ -181,7 +182,16 @@ for (const scheme of ["dark", "light"] as const) {
                 document.documentElement.scrollHeight,
             ) <= 1,
         );
+        await page.waitForFunction(() =>
+          document.documentElement.hasAttribute("data-scrolled"),
+        );
         await painted(page);
+        // The gap past the bottom is the canvas: it must be the page colour.
+        const below = await canvasColour(page);
+        expect(
+          near(below, [pr, pg, pb]),
+          `the canvas past the bottom is ${below}, page colour is ${pageColour}`,
+        ).toBe(true);
         for (const x of [8, width / 2, width - 8]) {
           const bottom = await pixelAt(page, Math.floor(x), height - 1);
           expect(
@@ -190,8 +200,13 @@ for (const scheme of ["dark", "light"] as const) {
           ).toBe(true);
         }
         await page.evaluate(() => window.scrollTo(0, 0));
-        await page.waitForFunction(() => window.scrollY === 0);
+        await page.waitForFunction(
+          () =>
+            window.scrollY === 0 &&
+            !document.documentElement.hasAttribute("data-scrolled"),
+        );
         await painted(page);
+        expect(await canvasColour(page)).toEqual(canvas);
 
         // Under the bar, at the centre: the glow is there, so the page is
         // not simply flat. Dark tints the blue channel up; light tints red

@@ -5,7 +5,7 @@ import {
   useColorScheme,
 } from "@mui/material/styles";
 import * as React from "react";
-import { canvasBackground } from "./canvasBackground";
+import { canvasBackground, SCROLLED } from "./canvasBackground";
 import { dataDisplayCustomizations } from "./customizations/dataDisplay";
 import { feedbackCustomizations } from "./customizations/feedback";
 import { inputsCustomizations } from "./customizations/inputs";
@@ -56,6 +56,25 @@ function SchemeSwitchWithoutTransitions() {
   return null;
 }
 
+/**
+ * Marks the root while the page is scrolled away from its top, so the canvas
+ * past the bottom is the page colour and the canvas past the top is the
+ * glow. canvasBackground.ts holds the colours.
+ */
+function CanvasFollowsScroll() {
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const mark = () => root.toggleAttribute(SCROLLED, window.scrollY > 0);
+    mark();
+    window.addEventListener("scroll", mark, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", mark);
+      root.removeAttribute(SCROLLED);
+    };
+  }, []);
+  return null;
+}
+
 export default function AppTheme(props: AppThemeProps) {
   const { children, disableCustomTheme, themeComponents } = props;
   const theme = React.useMemo(() => {
@@ -97,6 +116,7 @@ export default function AppTheme(props: AppThemeProps) {
     // by e2e/canvas.spec.ts on 2026-09-23.
     <ThemeProvider theme={theme} defaultMode="dark">
       <SchemeSwitchWithoutTransitions />
+      <CanvasFollowsScroll />
       {children}
     </ThemeProvider>
   );
