@@ -149,6 +149,11 @@ services:
       ABERA_ENFORCE_TIMING: ${ABERA_ENFORCE_TIMING:-}
       ABERA_TEST_POSTGRES: 'Host=db;Port=5432;Database=postgres;Username=scheduling;Password=scheduling'
       ABERA_REQUIRE_POSTGRES: '1'
+    # An init process as PID 1, so dotnet is not. As PID 1 it inherits every
+    # orphaned build and test process, and on .NET 11.0.0-rc.1 its child
+    # reaper fails fast on one it did not start ("Error while reaping child.
+    # errno = 10", exit 139 after all 36 tests passed, aberaTech #249).
+    init: true
     depends_on:
       db:
         condition: service_healthy
