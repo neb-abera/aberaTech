@@ -45,7 +45,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     {
         // An upsert in one statement, so two presses on two replicas cannot
         // both insert the row.
-        await database.Database.ExecuteSqlInterpolatedAsync(
+        await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertMutes" ("Id", "MutedUntil", "UpdatedAt")
              VALUES ({AlertMuteRecord.SingleId}, {until}, {now})
@@ -63,7 +63,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
 
     public async Task SkipAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken)
     {
-        await database.Database.ExecuteSqlInterpolatedAsync(
+        await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertSkips" ("OccurrenceKey", "StartsAt", "CreatedAt")
              VALUES ({key}, {startsAt}, {now})
@@ -79,7 +79,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     {
         // The primary key does the deciding. A read-then-insert would let two
         // replicas both read "not sent" and both send.
-        var inserted = await database.Database.ExecuteSqlInterpolatedAsync(
+        var inserted = await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertDeliveries" ("OccurrenceKey", "StartsAt", "ClaimedAt", "Outcome")
              VALUES ({key}, {startsAt}, {now}, 'claimed')
