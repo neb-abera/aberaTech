@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
  * The blue glow is the canvas background, not a box inside the page, and the
- * canvas colour is the glow colour, so pulling the page past either end shows
- * blue. On 2026-09-22 that gap was a near-black band above a blue page, and
+ * canvas colour is the glow colour, so pulling the page past the top shows
+ * blue. The page ends in the page colour, with no band at the bottom. On 2026-09-22 that gap was a near-black band above a blue page, and
  * on 2026-09-24 it was black again with the glow cut into a bar across the
  * page. e2e/canvas.spec.ts proves the pixels; this locks in the styles that
  * produce them.
@@ -38,7 +38,7 @@ describe("canvas background", () => {
     expect(root().backgroundColor).toMatch(dark);
   });
 
-  it("starts and ends the wash on the glow colour, with the page colour between", () => {
+  it("starts the wash on the glow colour and ends it on the page colour", () => {
     mount();
 
     const page = "var(--template-palette-background-default)";
@@ -50,10 +50,7 @@ describe("canvas background", () => {
     ).toBe(true);
     const wash = image.slice(image.indexOf("linear-gradient("));
     expect(wash.slice("linear-gradient(".length)).toMatch(dark);
-    expect(wash).toContain(`${page} 96px, ${page} calc(100% - 120px)`);
-    expect(wash).toMatch(
-      /calc\(100% - 120px\), (hsl\(210, 100%, 10%\)|rgb\(0, 2[56], 51\))\)$/,
-    );
+    expect(wash.endsWith(`, ${page} 96px)`)).toBe(true);
   });
 
   it("leaves the body transparent so it does not cover the glow", () => {
