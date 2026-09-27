@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { type ComponentType, type LazyExoticComponent, lazy } from "react";
 
 /**
@@ -19,41 +20,41 @@ type PageProps = { disableCustomTheme?: boolean };
 export interface PageRoute {
   /** The path, spelled exactly as sections.ts spells it in a link. */
   path: string;
+  /**
+   * The file in src/views that renders it, without the extension.
+   * tools/prerender.mjs finds the view's chunks in the build manifest by
+   * this name and names them in the page's head.
+   */
+  view: string;
   Page: LazyExoticComponent<ComponentType<PageProps>>;
 }
 
+type View = { default: ComponentType<PageProps> };
+const views = import.meta.glob<View>("../views/*.tsx");
+
+function page(path: string, view: string): PageRoute {
+  const load = views[`../views/${view}.tsx`];
+  if (!load) throw new Error(`${path}: there is no src/views/${view}.tsx`);
+  return { path, view, Page: lazy(load) };
+}
+
 export const routes: PageRoute[] = [
-  { path: "/", Page: lazy(() => import("../views/Home")) },
-  { path: "/guides", Page: lazy(() => import("../views/Guides")) },
-  { path: "/projects", Page: lazy(() => import("../views/Projects")) },
-  {
-    path: "/transition",
-    Page: lazy(() => import("../views/MilitaryTransitionGuide")),
-  },
-  {
-    path: "/technical",
-    Page: lazy(() => import("../views/TechnicalTransitionGuide")),
-  },
-  { path: "/rf-training", Page: lazy(() => import("../views/RfTraining")) },
-  {
-    path: "/signal-processing",
-    Page: lazy(() => import("../views/SignalProcessing")),
-  },
-  {
-    path: "/quantum-cryptography",
-    Page: lazy(() => import("../views/QuantumCryptography")),
-  },
-  { path: "/planner", Page: lazy(() => import("../views/CoursePlanner")) },
-  { path: "/schedule", Page: lazy(() => import("../views/ScheduleTime")) },
-  { path: "/fitness", Page: lazy(() => import("../views/Fitness")) },
-  {
-    path: "/schedule/admin",
-    Page: lazy(() => import("../views/ScheduleAdmin")),
-  },
-  { path: "/links", Page: lazy(() => import("../views/Links")) },
-  { path: "/plan", Page: lazy(() => import("../views/Plan")) },
-  { path: "/devbox", Page: lazy(() => import("../views/DevBox")) },
-  { path: "/alerts", Page: lazy(() => import("../views/Alerts")) },
+  page("/", "Home"),
+  page("/guides", "Guides"),
+  page("/projects", "Projects"),
+  page("/transition", "MilitaryTransitionGuide"),
+  page("/technical", "TechnicalTransitionGuide"),
+  page("/rf-training", "RfTraining"),
+  page("/signal-processing", "SignalProcessing"),
+  page("/quantum-cryptography", "QuantumCryptography"),
+  page("/planner", "CoursePlanner"),
+  page("/schedule", "ScheduleTime"),
+  page("/fitness", "Fitness"),
+  page("/schedule/admin", "ScheduleAdmin"),
+  page("/links", "Links"),
+  page("/plan", "Plan"),
+  page("/devbox", "DevBox"),
+  page("/alerts", "Alerts"),
 ];
 
 /**

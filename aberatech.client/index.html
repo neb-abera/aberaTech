@@ -12,6 +12,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neb Abera</title>
     <!--
+      Set by AppTheme for one tick while the colour scheme changes, so the
+      switch repaints at once. It beats the transitions MUI sets inline, as
+      MUI's own rule does. Inline here because a stylesheet link for 51
+      bytes held first paint for a whole request. The CSP allows it by the
+      hash of its text (CspInlineStyles.cs).
+    -->
+    <style>
+      /* biome-ignore lint/complexity/noImportantStyles: it has to beat the transitions MUI sets inline */
+      html.scheme-switching * { transition: none !important; }
+    </style>
+    <!--
       Prefetch pages when a link looks likely to be used (hover/press), so
       navigating between the prerendered pages is near-instant. The API routes
       are excluded: speculating a GET against the scheduling API would be a

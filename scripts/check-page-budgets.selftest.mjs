@@ -43,7 +43,12 @@ function noise(length) {
   return out.slice(0, length);
 }
 
-function site({ scriptBytes = 200, guideBytes = 200, preload = true } = {}) {
+function site({
+  scriptBytes = 200,
+  guideBytes = 200,
+  preload = true,
+  stylesheet = true,
+} = {}) {
   const root = mkdtempSync(path.join(os.tmpdir(), "page-budgets-"));
   const dist = path.join(root, "dist");
   mkdirSync(path.join(dist, "assets"), { recursive: true });
@@ -51,7 +56,9 @@ function site({ scriptBytes = 200, guideBytes = 200, preload = true } = {}) {
 
   const head = [
     '<script type="module" crossorigin src="/assets/index-fixture.js"></script>',
-    '<link rel="stylesheet" crossorigin href="/assets/index-fixture.css">',
+    stylesheet
+      ? '<link rel="stylesheet" crossorigin href="/assets/index-fixture.css">'
+      : "",
     preload
       ? '<link rel="preload" as="image" href="/assets/avatar-fixture.webp" type="image/webp" />'
       : '<link rel="preload" as="image" href="/assets/gone-fixture.webp" type="image/webp" />',
@@ -86,16 +93,17 @@ function weigh(file) {
 /**
  * The fixture's sizes, as the checker will measure them, and budgets set
  * exactly at the ratchet's edge: ceil(measured * 1.1). entry-css has a floor
- * of 1000, as the real stylesheet has one.
+ * of 1000, as a stylesheet that small would need.
  */
-const measured = (() => {
-  const { root, dist } = site();
+function measure(options) {
+  const { root, dist } = site(options);
   const at = (file) => weigh(path.join(dist, file));
   const js = at("assets/index-fixture.js");
-  const css = at("assets/index-fixture.css");
+  const css =
+    options?.stylesheet === false ? 0 : at("assets/index-fixture.css");
   const sizes = {
     "entry-js": js,
-    "entry-css": css,
+    ...(css > 0 ? { "entry-css": css } : {}),
     "home-initial":
       at("index.html") + js + css + at("assets/avatar-fixture.webp"),
     "html:/": at("index.html"),
@@ -103,8 +111,16 @@ const measured = (() => {
   };
   rmSync(root, { recursive: true, force: true });
   return sizes;
-})();
+}
+const measured = measure();
 const edge = (bytes) => Math.ceil((bytes * 11) / 10);
+/** Budgets at the edge for the fixture that links no stylesheet. */
+const bare = Object.fromEntries(
+  Object.entries(measure({ stylesheet: false })).map(([name, bytes]) => [
+    name,
+    edge(bytes),
+  ]),
+);
 const floors = { "entry-css": 1000 };
 const roomy = {
   ...Object.fromEntries(
@@ -190,6 +206,21 @@ const cases = [
     site: { preload: false },
     exit: 1,
     says: "assets/gone-fixture.webp is named by index.html but is not in the build",
+  },
+  {
+    name: "a build that links no stylesheet passes without its budget",
+    site: { stylesheet: false },
+    budgets: bare,
+    floors: {},
+    exit: 0,
+    says: "all within",
+  },
+  {
+    name: "a stylesheet budget with no stylesheet linked fails",
+    site: { stylesheet: false },
+    budgets: { ...bare, "entry-css": 1000 },
+    exit: 1,
+    says: "entry-css: has a budget but index.html links no stylesheet",
   },
 ];
 
