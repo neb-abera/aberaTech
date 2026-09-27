@@ -407,14 +407,13 @@ app.UseHostAllowlist();
 // in iframes, and a handful of partner logos load from their own hosts.
 // Everything else — scripts above all — is same-origin only.
 // The prerendered pages carry MUI's color-scheme bootstrap as an inline
-// script (it must run before first paint), so the policy allows exactly that
-// script by hash, read from the shipped HTML at startup. Every prerendered
-// page bakes the same script, so index.html speaks for all of them.
+// script (it must run before first paint), and /links a script that starts
+// its API request from the head. The policy allows exactly those scripts by
+// hash, read from every shipped page at startup.
 var inlineScriptHashes = "";
-var shippedShell = app.Environment.WebRootFileProvider.GetFileInfo("/index.html");
-if (shippedShell.Exists && shippedShell.PhysicalPath is not null)
+if (app.Environment.WebRootPath is { } scriptRoot && Directory.Exists(scriptRoot))
 {
-    var hashes = CspInlineScripts.HashesIn(File.ReadAllText(shippedShell.PhysicalPath));
+    var hashes = CspInlineScripts.HashesUnder(scriptRoot);
     if (hashes.Count > 0)
     {
         inlineScriptHashes = " " + string.Join(' ', hashes);

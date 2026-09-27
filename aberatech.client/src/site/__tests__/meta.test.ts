@@ -2,7 +2,9 @@
  * Every page names itself. One title across the whole site is how the
  * cryptography guide came to be shared as "Built by Neb using .NET".
  */
+
 import { describe, expect, it } from "vitest";
+import { earlyRequestScript } from "../earlyRequest";
 import {
   headFor,
   heroAvatar,
@@ -85,6 +87,20 @@ describe("the prerendered head", () => {
     );
     expect(heroAvatar.src).toMatch(/headshot-336.*\.webp$/);
     expect(headFor("/guides")).not.toContain('rel="preload"');
+  });
+
+  it("starts the /links document request from the head, and only there", () => {
+    // The request the page would otherwise send only after its bundle has
+    // run and rendered. A script, not a fetch preload: WebKit never hands a
+    // preloaded response to fetch(), so Safari asked twice.
+    expect(headFor("/links")).toContain(
+      `<script>${earlyRequestScript("/api/progress/links")}</script>`,
+    );
+    expect(headFor("/links")).not.toContain('rel="preload"');
+    for (const path of Object.keys(meta)) {
+      if (path === "/links") continue;
+      expect(headFor(path)).not.toContain("__earlyRequest");
+    }
   });
 
   it("still names the full-size headshot, at its stable address, in the structured data", () => {

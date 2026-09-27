@@ -55,6 +55,9 @@ export interface LinksDocument {
 
 export const GENERAL = "General";
 
+/** The key the list is saved under, and so the address the page loads. */
+export const linksDocumentKey = "links";
+
 export const empty: LinksDocument = {
   version: 1,
   links: [],

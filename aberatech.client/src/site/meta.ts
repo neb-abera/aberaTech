@@ -1,4 +1,7 @@
 import heroAvatarUrl from "../assets/headshot-336.webp";
+import { linksDocumentKey } from "../features/links/core/links";
+import { documentUrl } from "../features/progress/core/documents";
+import { earlyRequestScript } from "./earlyRequest";
 import { guides, primaryAction, projects } from "./sections";
 
 /**
@@ -49,6 +52,17 @@ export const pagePreconnects: Record<string, readonly string[]> = {
     "https://www.va.gov",
     "https://www.yceml.net",
   ],
+};
+
+/**
+ * The API request a page makes as soon as it runs, started from its head
+ * instead. /links sent it only after the bundle had loaded and rendered:
+ * 810 ms into a warm load from Amman, with the answer at 920 to 1,750 ms.
+ * earlyRequest.ts hands the head's answer to the page's own fetch, so it
+ * is still one request.
+ */
+export const pageRequests: Record<string, string> = {
+  "/links": documentUrl(linksDocumentKey),
 };
 
 export interface PageMeta {
@@ -190,6 +204,10 @@ export function headFor(route: string): string {
   ];
   for (const origin of pagePreconnects[route] ?? []) {
     lines.push(`<link rel="preconnect" href="${origin}" />`);
+  }
+  const request = pageRequests[route];
+  if (request !== undefined) {
+    lines.push(`<script>${earlyRequestScript(request)}</script>`);
   }
   if (route === "/") {
     // The avatar is the largest thing in the home page's first screen. React
