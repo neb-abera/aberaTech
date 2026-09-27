@@ -54,10 +54,11 @@ public sealed record PushoverResult(bool Ok, string? Error)
 }
 
 /// <summary>
-/// One Pushover message, at normal priority or at emergency. Normal sounds
-/// once. Emergency sounds again every <see cref="RetrySeconds"/> until the
-/// owner acknowledges it in the Pushover app, for at most 50 sounds or
-/// <see cref="ExpireSeconds"/>, whichever comes first.
+/// One Pushover message at emergency priority. It sounds again every
+/// <see cref="RetrySeconds"/> until the owner acknowledges it in the
+/// Pushover app, for at most 50 sounds or <see cref="ExpireSeconds"/>,
+/// whichever comes first. Repeating until acknowledged is the point of the
+/// feature: a single sound is missed.
 /// </summary>
 /// <remarks>
 /// A send that failed before Pushover took it (a 5xx, or no connection) is
@@ -72,8 +73,8 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// <summary>
     /// Emergency: bypasses Pushover's quiet hours and repeats until
     /// acknowledged. With the app's Critical Alerts setting on, an iPhone
-    /// plays it through the silent switch and Focus too. For an event marked
-    /// #critical, and for the test button. See pushover.net/api#priority.
+    /// plays it through the silent switch and Focus too. Every alert and the
+    /// test button. See pushover.net/api#priority.
     /// </summary>
     public const int EmergencyPriority = 2;
 
@@ -86,35 +87,27 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// </summary>
     public const int ExpireSeconds = 10800;
 
-    /// <summary>Normal: the phone's own sound settings, Pushover's quiet hours and the silent switch all apply.</summary>
-    public const int NormalPriority = 0;
-
     public const int MaxTitle = 250;
 
     public const int MaxMessage = 1024;
 
-    public async Task<PushoverResult> SendAsync(string title, string message, int priority, CancellationToken cancellationToken)
+    public async Task<PushoverResult> SendAsync(string title, string message, CancellationToken cancellationToken)
     {
         for (var attempt = 1; ; attempt++)
         {
             var last = attempt == 2;
             try
             {
-                var fields = new Dictionary<string, string>
+                using var content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["token"] = options.PushoverAppToken ?? "",
                     ["user"] = options.PushoverUserKey ?? "",
                     ["title"] = AlertText.Title(title),
                     ["message"] = message.Length <= MaxMessage ? message : message[..MaxMessage],
-                    ["priority"] = priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                };
-                if (priority == EmergencyPriority)
-                {
-                    fields["retry"] = RetrySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    fields["expire"] = ExpireSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                }
-
-                using var content = new FormUrlEncodedContent(fields);
+                    ["priority"] = EmergencyPriority.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["retry"] = RetrySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["expire"] = ExpireSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                });
                 using var response = await http.PostAsync(Endpoint, content, cancellationToken);
 
                 if (response.IsSuccessStatusCode) return new PushoverResult(true, null);

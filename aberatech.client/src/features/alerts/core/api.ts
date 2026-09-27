@@ -20,8 +20,6 @@ export interface AlertItem {
   source: "reminder" | "default";
   skipped: boolean;
   muted: boolean;
-  /** Marked #critical in the calendar: repeats until acknowledged in Pushover. */
-  critical: boolean;
 }
 
 export interface LastSend {
@@ -95,7 +93,7 @@ export function unskipAlert(key: string): Promise<ActionResult> {
   return post("/api/alerts/unskip", { key });
 }
 
-/** One emergency message to the phone, as a #critical event gets, whatever the mute says. */
+/** One message to the phone that repeats until acknowledged, as an event's alert does, whatever the mute says. */
 export async function sendTestAlert(): Promise<ActionResult> {
   const result = await post("/api/alerts/test");
   return result.ok ? { ok: true } : result;
