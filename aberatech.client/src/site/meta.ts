@@ -1,5 +1,8 @@
 import heroAvatarUrl from "../assets/headshot-336.webp";
+import { alertsStatusUrl } from "../features/alerts/core/api";
+import { devBoxStatusUrl } from "../features/devbox/core/api";
 import { linksDocumentKey } from "../features/links/core/links";
+import { planDocumentKey } from "../features/plan/core/document";
 import { documentUrl } from "../features/progress/core/documents";
 import { earlyRequestScript } from "./earlyRequest";
 import { guides, primaryAction, projects } from "./sections";
@@ -63,6 +66,9 @@ export const pagePreconnects: Record<string, readonly string[]> = {
  */
 export const pageRequests: Record<string, string> = {
   "/links": documentUrl(linksDocumentKey),
+  "/plan": documentUrl(planDocumentKey),
+  "/devbox": devBoxStatusUrl,
+  "/alerts": alertsStatusUrl,
 };
 
 export interface PageMeta {

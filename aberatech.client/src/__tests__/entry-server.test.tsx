@@ -39,6 +39,21 @@ describe("build-time rendering", () => {
     expect(html).not.toContain("Loading...");
   });
 
+  for (const [path, title] of [
+    ["/plan", "Plan"],
+    ["/devbox", "Dev box"],
+    ["/alerts", "Alerts"],
+  ]) {
+    it(`renders the frame of ${path} around its spinner, and nothing of the owner's`, async () => {
+      const html = await render(path);
+
+      expect(html).toContain(`>${title}</h1>`);
+      expect(html).toContain('aria-label="Loading"');
+      expect(html).not.toContain("Sign in with Google");
+      expect(html).not.toContain("Loading...");
+    });
+  }
+
   it("renders the training plan without a browser", async () => {
     // The plan loads its ticks from the server in an effect. Read at render
     // time that would throw here and mismatch on hydration; read in an

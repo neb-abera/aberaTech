@@ -9,9 +9,8 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
+import { planDocumentKey } from "../core/document";
 import Markdown from "./Markdown";
-
-const documentKey = "plan";
 
 export interface PlanDocument {
   version: 1;
@@ -39,7 +38,7 @@ function coerce(value: unknown): PlanDocument {
  */
 export default function PlanPanel() {
   const { status, value, set, saving, failed } =
-    useOwnerDocument<PlanDocument>(documentKey);
+    useOwnerDocument<PlanDocument>(planDocumentKey);
   const document = React.useMemo(() => coerce(value), [value]);
   const [editing, setEditing] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);

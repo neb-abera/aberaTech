@@ -7,6 +7,8 @@
  * answers `configured: false` with the names it lacks, never the values.
  */
 
+import { requestJson } from "../../../site/earlyRequest";
+
 export interface AlertItem {
   /** The event's UID and the occurrence's start: what Skip sends back. */
   key: string;
@@ -55,12 +57,12 @@ export type ActionResult =
 
 type StateBody = AlertsState & { configured?: boolean; missing?: string[] };
 
+/** The first thing the page asks. The head script asks it first (site/earlyRequest.ts). */
+export const alertsStatusUrl = "/api/alerts/status";
+
 export async function fetchAlerts(): Promise<AlertsView> {
   try {
-    const response = await fetch("/api/alerts/status", {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    });
+    const response = await requestJson(alertsStatusUrl);
     if (response.status === 401 || response.status === 403)
       return { status: "visitor" };
     if (!response.ok) return { status: "error" };

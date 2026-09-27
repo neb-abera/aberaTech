@@ -29,7 +29,6 @@ describe("prerenderedRoutes", () => {
     expect(prerenderedRoutes).not.toContain("/schedule/admin");
     expect(prerenderedRoutes).not.toContain("/planner");
     expect(prerenderedRoutes).not.toContain("/fitness");
-    expect(prerenderedRoutes).not.toContain("/plan");
   });
 
   it("bakes the frame of /links, whose first render holds no data", () => {
@@ -38,6 +37,14 @@ describe("prerenderedRoutes", () => {
     // nothing that can go stale. Before this the page was blank until the
     // bundle ran, then "Loading...", then the frame, then the list.
     expect(prerenderedRoutes).toContain("/links");
+  });
+
+  it("bakes the other owner pages the same way", () => {
+    // /plan, /devbox and /alerts start in a loading state that renders the
+    // spinner alone, and load in an effect, as /links does.
+    expect(prerenderedRoutes).toContain("/plan");
+    expect(prerenderedRoutes).toContain("/devbox");
+    expect(prerenderedRoutes).toContain("/alerts");
   });
 
   it("never names an external URL", () => {

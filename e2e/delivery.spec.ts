@@ -27,6 +27,9 @@ const prerendered: Record<string, string> = {
   "/signal-processing": "Learning Signal Processing",
   "/quantum-cryptography": "Learning Quantum and Post-Quantum Cryptography",
   "/links": "Links",
+  "/plan": "Plan",
+  "/devbox": "Dev box",
+  "/alerts": "Alerts",
 };
 
 async function loadHome(page: Page) {
@@ -128,6 +131,29 @@ for (const [path, heading] of Object.entries(prerendered)) {
     ).toBeVisible();
 
     await context.close();
+  });
+}
+
+// The owner's pages start their first API request from a script in the
+// head, and the page's own fetch takes that answer. An engine that asked
+// again (WebKit did, for a fetch preload) shows up here as a second GET.
+const firstRequest: Record<string, string> = {
+  "/links": "/api/progress/links",
+  "/plan": "/api/progress/plan",
+  "/devbox": "/api/devbox/status",
+  "/alerts": "/api/alerts/status",
+};
+
+for (const [path, api] of Object.entries(firstRequest)) {
+  test(`${path} asks for ${api} once, from the head`, async ({ page }) => {
+    const asked: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === api) asked.push(request.method());
+    });
+    await page.goto(path);
+    await expect(page.getByLabel("Loading")).toHaveCount(0);
+
+    expect(asked).toEqual(["GET"]);
   });
 }
 
