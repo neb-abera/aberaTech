@@ -231,6 +231,9 @@ test("/transition keeps an open section's card inside the section", async ({
 }) => {
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.goto("/transition");
+  // Hydration replaces the card's parent, and boundingBox read null on
+  // 2026-09-27 when it measured the one being replaced.
+  await hydrated(page);
   await openSection(page, "terminal-leave");
 
   const opened = section(page, "terminal-leave");
