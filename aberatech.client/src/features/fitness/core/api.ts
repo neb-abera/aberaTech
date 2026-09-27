@@ -4,6 +4,8 @@
  * account", and both are states the page renders rather than errors it throws.
  */
 
+import { requestJson } from "../../../site/earlyRequest";
+
 export interface FitnessMe {
   configured: boolean;
   signedIn: boolean;
@@ -363,7 +365,19 @@ async function get<T>(url: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T;
 }
 
-export const fetchMe = () => get<FitnessMe>("/api/fitness/me");
+/** The console's first question, which the head asks first (site/earlyRequest.ts). */
+export const fitnessMeUrl = "/api/fitness/me";
+
+export async function fetchMe(): Promise<FitnessMe> {
+  const response = await requestJson(fitnessMeUrl);
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `${fitnessMeUrl} answered ${response.status}`,
+    );
+  }
+  return (await response.json()) as FitnessMe;
+}
 
 export const fetchSummary = () => get<Summary>("/api/fitness/summary");
 

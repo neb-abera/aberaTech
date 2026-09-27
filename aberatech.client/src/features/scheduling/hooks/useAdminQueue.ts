@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { accountUrl } from "../../../hooks/useAccount";
+import { requestJson } from "../../../site/earlyRequest";
 import type { AdminMessages } from "../core/messages";
 
 export interface AdminEntry {
@@ -60,7 +62,7 @@ export function useAdminQueue(): Admin {
 
   const refresh = useCallback(async () => {
     try {
-      const who = await fetch("/api/scheduling/admin/me");
+      const who = await requestJson(accountUrl);
 
       if (!who.ok) {
         // The admin surface is not configured on this deployment at all.
