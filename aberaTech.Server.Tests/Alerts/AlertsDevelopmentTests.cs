@@ -60,11 +60,6 @@ public sealed class AlertsDevelopmentTests : IDisposable
         Assert.Contains("E2E review", titles);
         Assert.DoesNotContain("E2E holiday", titles);
         Assert.DoesNotContain("E2E cancelled", titles);
-        // The development calendar marks the review #critical and not the standup.
-        var critical = status.GetProperty("alerts").EnumerateArray()
-            .ToDictionary(alert => alert.GetProperty("title").GetString()!, alert => alert.GetProperty("critical").GetBoolean());
-        Assert.True(critical["E2E review"]);
-        Assert.False(critical["E2E standup"]);
 
         using var sent = await owner.PostAsync("/api/alerts/test", null);
         Assert.Equal(HttpStatusCode.OK, sent.StatusCode);

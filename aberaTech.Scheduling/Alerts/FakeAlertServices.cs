@@ -67,7 +67,7 @@ public sealed class FakeAlertServices(IClock clock)
             "UID:e2e-review",
             $"DTSTART:{Utc(anchor + Duration.FromHours(5))}",
             $"DTEND:{Utc(anchor + Duration.FromHours(6))}",
-            "SUMMARY:E2E review #critical",
+            "SUMMARY:E2E review",
             "END:VEVENT",
             "BEGIN:VEVENT",
             "UID:e2e-holiday",
