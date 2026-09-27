@@ -227,13 +227,14 @@ export default function AlertsPanel() {
       </Box>
 
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-        One Pushover message per event: one sound, no repeats. An event with
-        #critical in its title or description goes at high priority, which
-        sounds through quiet hours. With the Pushover app's Critical Alerts for
-        high-priority setting on, an iPhone also plays it through the silent
-        switch and Focus. Every other event goes at normal priority. Mute and
-        Skip are checked just before each send. Times are in {state.timeZone},
-        the calendar's own zone.
+        One Pushover message per event. An event with #critical in its title or
+        description goes at emergency priority: it sounds through quiet hours
+        and again every minute until you acknowledge it in the Pushover app, for
+        up to 50 minutes. With the Pushover app's Critical Alerts setting on, an
+        iPhone also plays it through the silent switch and Focus. Every other
+        event sounds once, at normal priority. Mute and Skip are checked just
+        before each send. Times are in {state.timeZone}, the calendar's own
+        zone.
       </Typography>
     </Stack>
   );

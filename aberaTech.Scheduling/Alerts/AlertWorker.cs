@@ -88,7 +88,7 @@ public sealed class AlertDispatcher(
         var result = await pushover.SendAsync(
             alert.Title,
             AlertText.Message(alert, status.Snapshot().Zone),
-            alert.Critical ? PushoverClient.HighPriority : PushoverClient.NormalPriority,
+            alert.Critical ? PushoverClient.EmergencyPriority : PushoverClient.NormalPriority,
             cancellationToken);
 
         var done = clock.GetCurrentInstant();
@@ -109,7 +109,7 @@ public sealed class AlertDispatcher(
 
     /// <summary>
     /// The page's test button. Not deduplicated and not muted: pressing it is
-    /// the owner asking. High priority, so it sounds the way a #critical
+    /// the owner asking. Emergency priority, so it repeats the way a #critical
     /// event will.
     /// </summary>
     public async Task<PushoverResult> SendTestAsync(CancellationToken cancellationToken)
@@ -119,7 +119,7 @@ public sealed class AlertDispatcher(
         var now = clock.GetCurrentInstant();
 
         var result = await pushover.SendAsync(
-            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone), PushoverClient.HighPriority, cancellationToken);
+            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone), PushoverClient.EmergencyPriority, cancellationToken);
 
         status.Sent(new LastSend(clock.GetCurrentInstant(), "Test alert", result.Outcome));
         if (!result.Ok) logger.LogWarning("Test alert failed ({Failure}).", result.Error);

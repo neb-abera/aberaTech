@@ -54,9 +54,10 @@ public sealed record PushoverResult(bool Ok, string? Error)
 }
 
 /// <summary>
-/// One Pushover message, at normal priority or at high: one sound, no
-/// repeats. Never priority 2, which repeats until acknowledged, so the
-/// request carries no retry or expire field.
+/// One Pushover message, at normal priority or at emergency. Normal sounds
+/// once. Emergency sounds again every <see cref="RetrySeconds"/> until the
+/// owner acknowledges it in the Pushover app, for at most 50 sounds or
+/// <see cref="ExpireSeconds"/>, whichever comes first.
 /// </summary>
 /// <remarks>
 /// A send that failed before Pushover took it (a 5xx, or no connection) is
@@ -69,12 +70,21 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     public const string Endpoint = "https://api.pushover.net/1/messages.json";
 
     /// <summary>
-    /// High: bypasses Pushover's quiet hours, one sound. With the app's
-    /// "Critical Alerts for high-priority" setting on, an iPhone plays it
-    /// through the silent switch and Focus too. For an event marked
+    /// Emergency: bypasses Pushover's quiet hours and repeats until
+    /// acknowledged. With the app's Critical Alerts setting on, an iPhone
+    /// plays it through the silent switch and Focus too. For an event marked
     /// #critical, and for the test button. See pushover.net/api#priority.
     /// </summary>
-    public const int HighPriority = 1;
+    public const int EmergencyPriority = 2;
+
+    /// <summary>Seconds between the sounds of an emergency message. Pushover's floor is 30.</summary>
+    public const int RetrySeconds = 60;
+
+    /// <summary>
+    /// When an unacknowledged emergency message stops: 3 hours, Pushover's
+    /// ceiling. Its 50-sound cap ends it first, 50 minutes in at 60 seconds.
+    /// </summary>
+    public const int ExpireSeconds = 10800;
 
     /// <summary>Normal: the phone's own sound settings, Pushover's quiet hours and the silent switch all apply.</summary>
     public const int NormalPriority = 0;
@@ -90,14 +100,21 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
             var last = attempt == 2;
             try
             {
-                using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+                var fields = new Dictionary<string, string>
                 {
                     ["token"] = options.PushoverAppToken ?? "",
                     ["user"] = options.PushoverUserKey ?? "",
                     ["title"] = AlertText.Title(title),
                     ["message"] = message.Length <= MaxMessage ? message : message[..MaxMessage],
                     ["priority"] = priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                });
+                };
+                if (priority == EmergencyPriority)
+                {
+                    fields["retry"] = RetrySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    fields["expire"] = ExpireSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                using var content = new FormUrlEncodedContent(fields);
                 using var response = await http.PostAsync(Endpoint, content, cancellationToken);
 
                 if (response.IsSuccessStatusCode) return new PushoverResult(true, null);

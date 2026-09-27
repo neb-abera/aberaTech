@@ -236,7 +236,7 @@ public sealed class AlertsRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task The_test_button_sends_one_priority_one_message()
+    public async Task The_test_button_sends_one_emergency_message_that_repeats_until_acknowledged()
     {
         using var owner = Owner();
 
@@ -244,7 +244,9 @@ public sealed class AlertsRouteTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var sent = Assert.Single(_pushover.Requests);
-        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("60", sent.Form["retry"]);
+        Assert.Equal("10800", sent.Form["expire"]);
         Assert.Equal("Test alert", sent.Form["title"]);
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         Assert.Equal("sent", status.GetProperty("lastSend").GetProperty("outcome").GetString());

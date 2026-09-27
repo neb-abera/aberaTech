@@ -22,7 +22,7 @@ public static class AlertText
             PushoverClient.MaxMessage);
 
     public static string TestMessage(Instant now, DateTimeZone zone) =>
-        $"Sent from abera.tech at {When(now, zone)}. Priority 1: one sound, no repeats.";
+        $"Sent from abera.tech at {When(now, zone)}. Priority 2: it repeats every minute until you acknowledge it in Pushover.";
 
     private static string Cut(string text, int limit) => text.Length <= limit ? text : text[..limit];
 }
