@@ -217,9 +217,9 @@ test.describe("/links", () => {
   test("the list is asked for once, by the head, and the frame is there before it", async ({
     page,
   }) => {
-    // The head preloads /api/progress/links and the page's own fetch takes
-    // that answer. A preload the engine does not reuse shows up here as a
-    // second request.
+    // A script in the head asks for /api/progress/links and the page's own
+    // fetch takes that answer. WebKit ignored a fetch preload and asked
+    // again, which showed up here as a second request.
     const asked: string[] = [];
     page.on("request", (request) => {
       if (new URL(request.url()).pathname === "/api/progress/links")
@@ -232,7 +232,7 @@ test.describe("/links", () => {
     // Prerendered: the title and intro are in the document itself.
     const html = await (await page.request.get("/links")).text();
     expect(html).toContain("One list, kept on the server");
-    expect(html).toContain('as="fetch"');
+    expect(html).toContain("__earlyRequest");
   });
 
   test("an export keeps its folders and tags, a second one asks before changing anything", async ({

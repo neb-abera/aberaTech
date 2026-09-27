@@ -50,6 +50,31 @@ public class CspInlineScriptsTests
     }
 
     [Fact]
+    public void Every_shipped_page_is_read()
+    {
+        // /links carries a script of its own in its head, which starts its
+        // API request. Reading index.html alone blocked it.
+        var root = Directory.CreateTempSubdirectory("csp-scripts").FullName;
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "links"));
+            File.WriteAllText(Path.Combine(root, "index.html"), "<script>a()</script>");
+            File.WriteAllText(Path.Combine(root, "links", "index.html"), "<script>a()</script><script>b()</script>");
+            File.WriteAllText(Path.Combine(root, "notes.txt"), "<script>c()</script>");
+
+            var hashes = CspInlineScripts.HashesUnder(root);
+
+            Assert.Equal(
+                new[] { $"'sha256-{Sha256Of("a()")}'", $"'sha256-{Sha256Of("b()")}'" }.Order(StringComparer.Ordinal),
+                hashes.Order(StringComparer.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Html_without_inline_scripts_yields_nothing()
     {
         Assert.Empty(CspInlineScripts.HashesIn("<html><body>plain</body></html>"));

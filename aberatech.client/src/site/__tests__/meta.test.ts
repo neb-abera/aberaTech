@@ -2,7 +2,9 @@
  * Every page names itself. One title across the whole site is how the
  * cryptography guide came to be shared as "Built by Neb using .NET".
  */
+
 import { describe, expect, it } from "vitest";
+import { earlyRequestScript } from "../earlyRequest";
 import {
   headFor,
   heroAvatar,
@@ -89,15 +91,15 @@ describe("the prerendered head", () => {
 
   it("starts the /links document request from the head, and only there", () => {
     // The request the page would otherwise send only after its bundle has
-    // run and rendered. crossorigin with no value is same-origin
-    // credentials, which is what loadDocument's fetch uses: a preload that
-    // differs from the fetch in mode or credentials is fetched twice.
+    // run and rendered. A script, not a fetch preload: WebKit never hands a
+    // preloaded response to fetch(), so Safari asked twice.
     expect(headFor("/links")).toContain(
-      '<link rel="preload" href="/api/progress/links" as="fetch" crossorigin />',
+      `<script>${earlyRequestScript("/api/progress/links")}</script>`,
     );
+    expect(headFor("/links")).not.toContain('rel="preload"');
     for (const path of Object.keys(meta)) {
       if (path === "/links") continue;
-      expect(headFor(path)).not.toContain('as="fetch"');
+      expect(headFor(path)).not.toContain("__earlyRequest");
     }
   });
 

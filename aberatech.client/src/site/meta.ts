@@ -1,6 +1,7 @@
 import heroAvatarUrl from "../assets/headshot-336.webp";
 import { linksDocumentKey } from "../features/links/core/links";
 import { documentUrl } from "../features/progress/core/documents";
+import { earlyRequestScript } from "./earlyRequest";
 import { guides, primaryAction, projects } from "./sections";
 
 /**
@@ -57,11 +58,10 @@ export const pagePreconnects: Record<string, readonly string[]> = {
  * The API request a page makes as soon as it runs, started from its head
  * instead. /links sent it only after the bundle had loaded and rendered:
  * 810 ms into a warm load from Amman, with the answer at 920 to 1,750 ms.
- * From the head it starts with the document and lands before the render.
- * The browser hands the preloaded answer to the page's own fetch, so it is
- * still one request.
+ * earlyRequest.ts hands the head's answer to the page's own fetch, so it
+ * is still one request.
  */
-export const pageDocuments: Record<string, string> = {
+export const pageRequests: Record<string, string> = {
   "/links": documentUrl(linksDocumentKey),
 };
 
@@ -205,14 +205,9 @@ export function headFor(route: string): string {
   for (const origin of pagePreconnects[route] ?? []) {
     lines.push(`<link rel="preconnect" href="${origin}" />`);
   }
-  const document = pageDocuments[route];
-  if (document !== undefined) {
-    // No value on crossorigin means same-origin credentials, which is what
-    // loadDocument's fetch sends. A preload that differs from the fetch in
-    // mode or credentials is not reused, and the page asks twice.
-    lines.push(
-      `<link rel="preload" href="${escapeHtml(document)}" as="fetch" crossorigin />`,
-    );
+  const request = pageRequests[route];
+  if (request !== undefined) {
+    lines.push(`<script>${earlyRequestScript(request)}</script>`);
   }
   if (route === "/") {
     // The avatar is the largest thing in the home page's first screen. React
