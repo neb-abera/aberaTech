@@ -12,6 +12,7 @@ import { inputsCustomizations } from "./customizations/inputs";
 import { navigationCustomizations } from "./customizations/navigation";
 import { surfacesCustomizations } from "./customizations/surfaces";
 import { colorSchemes, shadows, shape, typography } from "./themePrimitives";
+import { skipThemeVar, withSkippedVars } from "./themeVars";
 
 interface AppThemeProps {
   children: React.ReactNode;
@@ -83,30 +84,33 @@ export default function AppTheme(props: AppThemeProps) {
   const theme = React.useMemo(() => {
     return disableCustomTheme
       ? {}
-      : createTheme({
-          // For more details about CSS variables configuration, see https://mui.com/material-ui/customization/css-theme-variables/configuration/
-          cssVariables: {
-            colorSchemeSelector: "data-mui-color-scheme",
-            cssVarPrefix: "template",
-          },
-          colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
-          // Dark unless somebody chooses otherwise. Without this the provider
-          // follows the operating system, so half of all first visits would
-          // arrive light — and the site is designed dark first.
-          defaultColorScheme: DEFAULT_COLOR_SCHEME,
-          typography,
-          shadows,
-          shape,
-          components: {
-            MuiCssBaseline: { styleOverrides: canvasBackground },
-            ...inputsCustomizations,
-            ...dataDisplayCustomizations,
-            ...feedbackCustomizations,
-            ...navigationCustomizations,
-            ...surfacesCustomizations,
-            ...themeComponents,
-          },
-        });
+      : withSkippedVars(
+          createTheme({
+            // For more details about CSS variables configuration, see https://mui.com/material-ui/customization/css-theme-variables/configuration/
+            cssVariables: {
+              colorSchemeSelector: "data-mui-color-scheme",
+              cssVarPrefix: "template",
+              shouldSkipGeneratingVar: skipThemeVar,
+            },
+            colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
+            // Dark unless somebody chooses otherwise. Without this the provider
+            // follows the operating system, so half of all first visits would
+            // arrive light — and the site is designed dark first.
+            defaultColorScheme: DEFAULT_COLOR_SCHEME,
+            typography,
+            shadows,
+            shape,
+            components: {
+              MuiCssBaseline: { styleOverrides: canvasBackground },
+              ...inputsCustomizations,
+              ...dataDisplayCustomizations,
+              ...feedbackCustomizations,
+              ...navigationCustomizations,
+              ...surfacesCustomizations,
+              ...themeComponents,
+            },
+          }),
+        );
   }, [disableCustomTheme, themeComponents]);
   if (disableCustomTheme) {
     return <React.Fragment>{children}</React.Fragment>;
