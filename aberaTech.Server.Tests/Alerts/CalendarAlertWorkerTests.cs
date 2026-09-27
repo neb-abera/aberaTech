@@ -11,7 +11,7 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The send path, driven tick by tick on a clock the test moves: one
-/// Pushover message at the alert time, high priority only for an event
+/// Pushover message at the alert time, emergency priority only for an event
 /// marked #critical and normal otherwise, never a second one for
 /// the same occurrence, and none while muted or skipped. Pushover and the
 /// calendar are handlers that record what they were asked.
@@ -66,6 +66,8 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         // Not marked #critical: normal priority, which the phone's silent
         // switch and Focus hold back.
         Assert.Equal("0", sent.Form["priority"]);
+        Assert.False(sent.Form.ContainsKey("retry"));
+        Assert.False(sent.Form.ContainsKey("expire"));
         Assert.Equal(AppToken, sent.Form["token"]);
         Assert.Equal(UserKey, sent.Form["user"]);
         Assert.Equal("Standup", sent.Form["title"]);
@@ -254,7 +256,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public async Task An_event_marked_critical_goes_at_high_priority_without_the_mark()
+    public async Task An_event_marked_critical_repeats_until_acknowledged_without_the_mark()
     {
         var box = New(Ics(Event(
             "standup@google.com", "Standup #critical", "20261028T090000", "20261028T093000", "Room 1",
@@ -265,12 +267,14 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         await box.Worker.TickAsync(CancellationToken.None);
 
         var sent = Assert.Single(box.Pushover.Requests);
-        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("60", sent.Form["retry"]);
+        Assert.Equal("10800", sent.Form["expire"]);
         Assert.Equal("Standup", sent.Form["title"]);
     }
 
     [Fact]
-    public async Task The_test_alert_is_one_priority_one_message_in_the_calendars_zone_and_ignores_mute()
+    public async Task The_test_alert_is_one_emergency_message_in_the_calendars_zone_and_ignores_mute()
     {
         var box = New();
         await box.Worker.TickAsync(CancellationToken.None);
@@ -280,7 +284,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         Assert.True(result.Ok);
         var sent = Assert.Single(box.Pushover.Requests);
-        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("2", sent.Form["priority"]);
         Assert.Equal("Test alert", sent.Form["title"]);
         Assert.Contains("8:00 AM EDT", sent.Form["message"]);
     }

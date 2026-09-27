@@ -20,7 +20,7 @@ export interface AlertItem {
   source: "reminder" | "default";
   skipped: boolean;
   muted: boolean;
-  /** Marked #critical in the calendar: sent at high priority. */
+  /** Marked #critical in the calendar: repeats until acknowledged in Pushover. */
   critical: boolean;
 }
 
@@ -95,7 +95,7 @@ export function unskipAlert(key: string): Promise<ActionResult> {
   return post("/api/alerts/unskip", { key });
 }
 
-/** One high-priority message to the phone, as a #critical event gets, whatever the mute says. */
+/** One emergency message to the phone, as a #critical event gets, whatever the mute says. */
 export async function sendTestAlert(): Promise<ActionResult> {
   const result = await post("/api/alerts/test");
   return result.ok ? { ok: true } : result;
