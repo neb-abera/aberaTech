@@ -14,7 +14,7 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { areaColor } from "../core/areaColors";
+import { areaColorVar } from "../core/areaColors";
 import {
   ADMISSION,
   holdsBackground,
@@ -28,7 +28,6 @@ import TrackPicker from "./TrackPicker";
 
 export interface SettingsRailProps {
   model: PlannerModel;
-  mode: "light" | "dark";
   update: (fn: (model: PlannerModel) => void) => void;
 }
 
@@ -36,11 +35,7 @@ const START_OPTIONS = [2027, 2028, 2029].flatMap((y) =>
   ["Spring", "Summer", "Fall"].map((t) => `${t} ${y}`),
 );
 
-export default function SettingsRail({
-  model,
-  mode,
-  update,
-}: SettingsRailProps) {
+export default function SettingsRail({ model, update }: SettingsRailProps) {
   return (
     <Stack spacing={2.5}>
       <Section title="Recommended tracks">
@@ -62,7 +57,7 @@ export default function SettingsRail({
           <AreaToggle
             key={name}
             name={name}
-            colour={areaColor(name, mode)}
+            colour={areaColorVar(name)}
             count={
               model.data.areas[name].filter((c) => model.data.get(c)).length
             }
@@ -81,7 +76,7 @@ export default function SettingsRail({
           <AreaToggle
             key={name}
             name={name.replace(" (transcript)", "")}
-            colour={areaColor("Computer Engineering", mode)}
+            colour={areaColorVar("Computer Engineering")}
             count={
               model.data.concentrations[name].filter((c) => model.data.get(c))
                 .length
