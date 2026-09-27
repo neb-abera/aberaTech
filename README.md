@@ -83,8 +83,10 @@ service keeps `node_modules` in a volume that outlives a rebuild.
 
 - `/alerts` sends one Pushover message before each event on the owner's
   Google Calendar (`aberaTech.Scheduling/Alerts/`). An event with
-  `#critical` in its title or description goes at high priority (1), and
-  every other event at normal priority (0). The worker
+  `#critical` in its title or description goes at emergency priority (2),
+  which repeats every 60 seconds until acknowledged in the Pushover app,
+  up to Pushover's cap of 50 sounds. Every other event goes at normal
+  priority (0). The worker
   reads the secret iCal address every 5 minutes and sends each alert at its
   own time. The alert time is the event's earliest popup reminder, or 10
   minutes before the start. All-day, cancelled and declined events are

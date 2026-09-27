@@ -26,7 +26,7 @@ public enum AlertSource
 /// <param name="Key">The event's UID and this occurrence's start. The dedupe and skip key.</param>
 /// <param name="Critical">
 /// The event says <see cref="AlertPlanner.CriticalMark"/> in its title or
-/// description, and its alert goes at high priority.
+/// description, and its alert repeats until acknowledged.
 /// </param>
 public sealed record PlannedAlert(
     string Key,
@@ -59,7 +59,7 @@ public sealed class CalendarFeedException(string message, Exception? inner = nul
 /// One alert per occurrence. Of the event's popup and sound reminders the
 /// earliest is the alert. Mail reminders are ignored: they are for the
 /// inbox, not the phone. With no usable reminder the alert is the default
-/// lead before the start. An event marked #critical is flagged for high
+/// lead before the start. An event marked #critical is flagged for emergency
 /// priority, and every other event goes at normal priority.
 /// </remarks>
 public static partial class AlertPlanner
