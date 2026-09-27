@@ -77,3 +77,20 @@ test("the favicon is transparent and follows the browser theme", async ({
   expect(svg).toContain("prefers-color-scheme: dark");
   expect((await request.get("/favicon-96-dark.png")).status()).toBe(200);
 });
+
+test("the home screen icon and /favicon.ico are served", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    "/apple-touch-icon.png",
+  );
+  const touch = await request.get("/apple-touch-icon.png");
+  expect(touch.status()).toBe(200);
+  expect(touch.headers()["content-type"]).toBe("image/png");
+  const ico = await request.get("/favicon.ico");
+  expect(ico.status()).toBe(200);
+  expect(ico.headers()["content-type"]).toBe("image/x-icon");
+});
