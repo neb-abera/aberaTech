@@ -64,11 +64,13 @@ when that entry can be dropped.
 
 `make budget` fails when the production client build outgrows
 `scripts/page-budgets.json`: the entry script and stylesheet, what the home
-page fetches first, and each prerendered page, gzipped. The numbers sit about
-10% above what was measured when they were set, so ordinary work does not trip
-them and a heavy dependency or an inlined blob does. When growth is
-deliberate, raise the number in the same pull request and say why in its
-description. A new prerendered page needs a budget of its own, and the
+page fetches first, and each prerendered page, gzipped. Each number sits at
+most 10% above what the build measures, so ordinary work does not trip them
+and a heavy dependency or an inlined blob does. It also fails when a budget
+sits more than 10% above the build: a change that makes a page smaller lowers
+its budget in the same pull request, to the number the failure prints. When
+growth is deliberate, raise the number in the same pull request and say why in
+its description. A new prerendered page needs a budget of its own, and the
 failure message prints the size to start from.
 
 The server tests are build-and-run gates: a shared machine makes wall-clock
