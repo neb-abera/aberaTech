@@ -10,6 +10,7 @@
     "@lhci/cli": {
       "lighthouse": "$lighthouse"
     },
-    "tmp": "0.2.7"
+    "tmp": "0.2.7",
+    "uuid": "14.0.0"
   }
 }

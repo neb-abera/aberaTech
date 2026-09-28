@@ -10,6 +10,7 @@
   "overrides": {
     "@lhci/server": {
       "lighthouse": "$lighthouse"
-    }
+    },
+    "uuid": "14.0.0"
   }
 }
