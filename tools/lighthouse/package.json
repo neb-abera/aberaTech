@@ -1,0 +1,14 @@
+{
+  "name": "aberatech-lighthouse",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@lhci/cli": "0.15.1",
+    "lighthouse": "13.5.0"
+  },
+  "overrides": {
+    "@lhci/cli": {
+      "lighthouse": "$lighthouse"
+    }
+  }
+}
