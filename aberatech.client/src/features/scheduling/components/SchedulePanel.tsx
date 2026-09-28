@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -30,8 +31,16 @@ export default function SchedulePanel() {
     selectDate,
   } = useSchedule();
 
+  // A screen of room while the schedule loads. With the spinner alone the
+  // footer drew 215 px from the top of a phone, and the slots then pushed it
+  // down: a layout shift of 0.55 (Lighthouse, 2026-09-28). Below the window,
+  // the footer's move is not a shift. The loaded page is taller than this.
   if (loading) {
-    return <CircularProgress size={28} aria-label="Loading the schedule" />;
+    return (
+      <Box sx={{ minHeight: "100dvh" }}>
+        <CircularProgress size={28} aria-label="Loading the schedule" />
+      </Box>
+    );
   }
 
   if (error || !state) {
