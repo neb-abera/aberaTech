@@ -9,6 +9,7 @@
   "overrides": {
     "@lhci/cli": {
       "lighthouse": "$lighthouse"
-    }
+    },
+    "tmp": "0.2.7"
   }
 }

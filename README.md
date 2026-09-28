@@ -25,6 +25,7 @@ make fmt        # rewrite files to match biome
 make budget     # page weight against scripts/page-budgets.json
 make prose      # the writing rules, on the Markdown and the prerendered pages
 make e2e        # Playwright against the production image and its database
+make lighthouse # Lighthouse against the production image, docs/lighthouse.md
 make check      # the gate CI runs
 make run        # build and run the production image
 make clean      # remove this copy's containers and volumes
@@ -42,6 +43,11 @@ push.
 
 After changing a dependency, run `make clean` before `make dev`. The dev
 service keeps `node_modules` in a volume that outlives a rebuild.
+
+Lighthouse runs on every pull request and every night against the live
+site. The history is on the
+[Lighthouse CI server](https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io/app/projects/abera.tech-production)
+(docs/lighthouse.md).
 
 ## How it is built
 
