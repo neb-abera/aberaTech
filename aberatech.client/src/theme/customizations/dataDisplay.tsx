@@ -4,7 +4,7 @@ import { iconButtonClasses } from "@mui/material/IconButton";
 import { svgIconClasses } from "@mui/material/SvgIcon";
 import { alpha, type Components, type Theme } from "@mui/material/styles";
 import { typographyClasses } from "@mui/material/Typography";
-import { gray, green, red } from "../themePrimitives";
+import { brand, gray, green, red } from "../themePrimitives";
 
 export const dataDisplayCustomizations: Components<Theme> = {
   MuiList: {
@@ -102,7 +102,34 @@ export const dataDisplayCustomizations: Components<Theme> = {
         [`& .${chipClasses.label}`]: {
           fontWeight: 600,
         },
+        // MUI fades a disabled chip to 38% opacity: its text measured 1.6:1
+        // to 2.7:1 on /alerts. A dashed border marks it instead, and the
+        // label takes the disabled text colour, 5.8:1 light and 5.3:1 dark.
+        [`&.${chipClasses.disabled}`]: {
+          opacity: 1,
+          borderStyle: "dashed",
+          backgroundColor: "transparent",
+          [`& .${chipClasses.label}`]: {
+            color: (theme.vars || theme).palette.text.disabled,
+          },
+        },
         variants: [
+          {
+            // MUI's selected chip is brand[50] on brand[400]: 3.65:1.
+            // brand[700] under the same text is 6.0:1.
+            props: {
+              color: "primary",
+              variant: "filled",
+            },
+            style: {
+              borderColor: brand[700],
+              backgroundColor: brand[700],
+              color: brand[50],
+              [`&.${chipClasses.clickable}:hover`]: {
+                backgroundColor: brand[800],
+              },
+            },
+          },
           {
             props: {
               color: "default",
