@@ -21,7 +21,16 @@ export interface AlertItem {
   source: "reminder" | "default";
   skipped: boolean;
   muted: boolean;
+  /** Marked #critical in the calendar. The mark is left off the title. */
+  critical: boolean;
+  /** What this occurrence will send. */
+  type: AlertType;
+  /** "set" on this page, "critical" from the calendar's mark, or "default". */
+  typeFrom: "set" | "critical" | "default";
 }
+
+/** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
+export type AlertType = "none" | "notification" | "alarm";
 
 export interface LastSend {
   at: string;
@@ -31,7 +40,7 @@ export interface LastSend {
 
 /** What the alerts run on: the configuration's values until the owner saves. */
 export interface AlertSettings {
-  /** 0 normal, 1 high, 2 emergency. */
+  /** The alarm's priority: 0 normal, 1 high, 2 emergency. */
   priority: 0 | 1 | 2;
   /** Seconds between sounds. Priority 2 only. */
   repeatSeconds: number;
@@ -46,6 +55,12 @@ export interface AlertSettings {
   /** The zone when the calendar names none. "" is UTC. */
   timeZone: string;
   ownerEmails: string[];
+  /** A notification's priority: 0 normal, 1 high. It sounds once. */
+  notificationPriority: 0 | 1;
+  /** A notification's Pushover sound, or "" for the phone's own default. */
+  notificationSound: string;
+  /** What an unmarked event with no choice sends. */
+  defaultType: "none" | "notification";
 }
 
 export interface Bound {
@@ -140,14 +155,31 @@ export function unskipAlert(key: string): Promise<ActionResult> {
   return post("/api/alerts/unskip", { key });
 }
 
-/** One message to the phone, sent the way an event's alert is, whatever the mute says. */
+/** One alarm to the phone, with the alarm settings, whatever the mute says. */
 export async function sendTestAlert(): Promise<ActionResult> {
   const result = await post("/api/alerts/test");
   return result.ok ? { ok: true } : result;
 }
 
+/** One notification to the phone, with the notification settings, whatever the mute says. */
+export async function sendTestNotification(): Promise<ActionResult> {
+  const result = await post("/api/alerts/test-notification");
+  return result.ok ? { ok: true } : result;
+}
+
 /**
- * One listed alert's own text, titled "Test: ", with the saved settings.
+ * The type for a listed alert's event, every occurrence of it. "default"
+ * drops the choice: the event follows its #critical mark and the default.
+ */
+export function setEventType(
+  key: string,
+  type: AlertType | "default",
+): Promise<ActionResult> {
+  return send("PUT", "/api/alerts/event-type", { key, type });
+}
+
+/**
+ * One listed alert's own text, titled "Test: ", sent as its type.
  * Claims nothing, so the real alert still goes at its time.
  */
 export async function sendEventTest(key: string): Promise<ActionResult> {

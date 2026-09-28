@@ -30,6 +30,9 @@ const standup = {
   source: "reminder",
   skipped: false,
   muted: false,
+  critical: true,
+  type: "alarm",
+  typeFrom: "critical",
 };
 
 const review = {
@@ -41,6 +44,9 @@ const review = {
   source: "default",
   skipped: false,
   muted: false,
+  critical: false,
+  type: "none",
+  typeFrom: "default",
 };
 
 const state = (over: Record<string, unknown> = {}) => ({
@@ -166,13 +172,149 @@ describe("the owner", () => {
     );
   });
 
-  it("says every alert repeats until acknowledged", async () => {
+  it("says what an alarm, a notification and an unmarked event each do", async () => {
     mount(respond(200, state()));
     await settle();
 
+    const paragraph = screen.getByText(
+      /again every minute until you acknowledge it in the Pushover app, for up to 50 minutes/,
+    );
+    expect(paragraph.textContent).toContain(
+      "An alarm is one Pushover message.",
+    );
+    expect(paragraph.textContent).toContain(
+      "A notification is one message with one sound, as the phone's Pushover settings allow.",
+    );
+    expect(paragraph.textContent).toContain(
+      "An event with no mark and no type set here sends nothing.",
+    );
+
+    cleanup();
+    mount(
+      respond(
+        200,
+        state({
+          settings: {
+            ...settings,
+            notificationPriority: 1,
+            defaultType: "notification",
+          },
+        }),
+      ),
+    );
+    await settle();
     expect(
       screen.getByText(
-        /again every minute until you acknowledge it in the Pushover app, for up to 50 minutes/,
+        /A notification is one message with one sound, through Pushover's quiet hours\. An event with no mark and no type set here sends a notification\./,
+      ),
+    ).toBeTruthy();
+  });
+
+  it("marks the alarms Critical and says where each alert's type came from", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    const list = screen.getByRole("list", { name: "Next alerts" });
+    const [loud, quiet] = within(list).getAllByRole("listitem");
+    expect(within(loud).getByText("Critical")).toBeTruthy();
+    expect(within(quiet).queryByText("Critical")).toBeNull();
+    expect(loud.textContent).toContain(
+      "Alarm: from #critical in the calendar. The alarm settings apply.",
+    );
+    expect(quiet.textContent).toContain(
+      "Sends nothing: the default for unmarked events. Send test is off until you choose Notification or Alarm.",
+    );
+    const at = "Review at Wed, Oct 28, 2:00 PM EDT";
+    expect(
+      screen
+        .getByRole("button", { name: `Set ${at} to None` })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByRole("button", { name: `Set ${at} to Alarm` })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
+    // An event that sends nothing has nothing to test.
+    expect(
+      screen
+        .getByRole("button", { name: `Send test of ${at}` })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole("button", {
+          name: "Send test of Standup at Wed, Oct 28, 9:00 AM EDT",
+        })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+    expect(
+      screen.queryByRole("button", { name: `Use the default type for ${at}` }),
+    ).toBeNull();
+  });
+
+  it("sets an event's type, then offers the default back", async () => {
+    const chosen = { ...review, type: "notification", typeFrom: "set" };
+    mount(
+      respond(200, state()),
+      respond(200, state({ alerts: [standup, chosen] })),
+      respond(200, state()),
+    );
+    await settle();
+    const at = "Review at Wed, Oct 28, 2:00 PM EDT";
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Set ${at} to Notification` }),
+    );
+    await settle();
+
+    const puts = () =>
+      fetchMock.mock.calls
+        .filter(([, init]) => init?.method === "PUT")
+        .map(([url, init]) => [url, JSON.parse(init.body)]);
+    expect(puts()).toEqual([
+      ["/api/alerts/event-type", { key: review.key, type: "notification" }],
+    ]);
+    expect(
+      screen.getByText("Review is set to Notification, every occurrence."),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Notification: set here. The notification settings apply.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: `Send test of ${at}` })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Use the default type for ${at}` }),
+    );
+    await settle();
+    expect(puts()[1]).toEqual([
+      "/api/alerts/event-type",
+      { key: review.key, type: "default" },
+    ]);
+    expect(
+      screen.getByText("Review follows the calendar and the default again."),
+    ).toBeTruthy();
+  });
+
+  it("sends a test notification and says so", async () => {
+    mount(respond(200, state()), respond(200, { sent: true }));
+    await settle();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Send test notification" }),
+    );
+    await settle();
+
+    expect(posts()).toEqual([["/api/alerts/test-notification", undefined]]);
+    expect(
+      screen.getByText(
+        "Test notification sent. Check the phone for one sound.",
       ),
     ).toBeTruthy();
   });
@@ -341,7 +483,8 @@ describe("the owner", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
     await settle();
-    expect(screen.getByText(/Test alert sent/)).toBeTruthy();
+    expect(posts()[0]).toEqual(["/api/alerts/test", undefined]);
+    expect(screen.getByText(/Test alert sent as an alarm/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
     await settle();
@@ -444,7 +587,7 @@ describe("the owner", () => {
     ]);
     expect(
       screen.getByText(
-        'Test of Standup sent, titled "Test: Standup", with the saved settings.',
+        'Test of Standup sent, titled "Test: Standup", as an alarm.',
       ),
     ).toBeTruthy();
 
@@ -464,7 +607,17 @@ describe("the owner", () => {
     });
     const text = how.textContent ?? "";
     expect(text).toContain(
-      "Every event with a start time in the next 48 hours alerts. Nothing needs marking.",
+      "Every event with a start time in the next 48 hours is planned and listed above.",
+    );
+    expect(text).toContain(
+      "has #critical as a word of its own, in any case. The mark is left off the title the phone shows.",
+    );
+    expect(text).toContain(
+      "Every other event sends nothing, the default for unmarked events under Settings.",
+    );
+    expect(text).toContain("The choice holds for every occurrence");
+    expect(text).toContain(
+      "None: nothing is sent. The event is still listed above.",
     );
     expect(text).toContain("All-day events are left out.");
     expect(text).toContain(
@@ -483,7 +636,12 @@ describe("the owner", () => {
       respond(
         200,
         state({
-          settings: { ...settings, includeAllDay: true, lookaheadHours: 1 },
+          settings: {
+            ...settings,
+            includeAllDay: true,
+            lookaheadHours: 1,
+            defaultType: "notification",
+          },
         }),
       ),
     );
@@ -491,7 +649,8 @@ describe("the owner", () => {
     const on =
       screen.getByRole("region", { name: "How events become alarms" })
         .textContent ?? "";
-    expect(on).toContain("in the next 1 hour alerts");
+    expect(on).toContain("in the next 1 hour is planned");
+    expect(on).toContain("Every other event gets one notification");
     expect(on).toContain("All-day events alert too");
   });
 

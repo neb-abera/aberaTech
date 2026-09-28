@@ -88,6 +88,38 @@ internal sealed class InMemoryAlertStore : IAlertStore
     }
 
     public Task PruneAsync(Instant before, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private readonly Dictionary<string, string> _types = [];
+
+    /// <summary>The event ids each read reported as in the feed, newest last.</summary>
+    public List<IReadOnlyCollection<string>> Seen { get; } = [];
+
+    public Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>(_types));
+    }
+
+    public Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_types.GetValueOrDefault(eventId));
+    }
+
+    public Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (type is null) _types.Remove(eventId);
+            else _types[eventId] = type;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task SeenEventsAsync(IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken)
+    {
+        lock (_lock) Seen.Add(eventIds);
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>

@@ -5,8 +5,9 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
-/// settings, and Mute, Unmute, Skip, Save settings and two test sends. Plain
-/// JSON over HTTPS, so it works from a locked-down work computer.
+/// settings, and Mute, Unmute, Skip, each event's type, Save settings and
+/// three test sends. Plain JSON over HTTPS, so it works from a locked-down
+/// work computer.
 /// </summary>
 /// <remarks>
 /// Owner only, behind the same policy as /devbox and the queue. The actions
@@ -104,7 +105,10 @@ public static class AlertsEndpoints
                 request.LookaheadHours,
                 request.IncludeAllDay,
                 request.TimeZone,
-                request.OwnerEmails);
+                request.OwnerEmails,
+                request.NotificationPriority,
+                request.NotificationSound,
+                request.DefaultType);
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
             var settings = new AlertSettings(
@@ -117,7 +121,10 @@ public static class AlertsEndpoints
                 request.LookaheadHours!.Value,
                 request.IncludeAllDay!.Value,
                 request.TimeZone!.Trim(),
-                [.. request.OwnerEmails!.Select(email => email!.Trim())]);
+                [.. request.OwnerEmails!.Select(email => email!.Trim())],
+                request.NotificationPriority!.Value,
+                request.NotificationSound!,
+                request.DefaultType!);
             await store.SaveSettingsAsync(settings, clock.GetCurrentInstant(), cancellationToken);
 
             // This replica plans with the new values now. The others read
@@ -126,13 +133,36 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
+        // One event's type, kept under its UID so it holds for every
+        // occurrence. "default" drops the choice. Only an event on the list:
+        // a choice is for an event the owner can see.
+        group.MapPut("/event-type", async (
+            EventTypeRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
-            var result = await dispatcher.SendTestAsync(cancellationToken);
-            return result.Ok
-                ? Results.Ok(new { sent = true })
-                : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
+            var errors = new Dictionary<string, string[]>();
+            if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
+            if (request.Type is not { } type || (type != AlertTypes.Default && !AlertTypes.Choices.Contains(type)))
+            {
+                errors["type"] = ["\"none\", \"notification\", \"alarm\" or \"default\"."];
+            }
+
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+
+            var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
+            if (alert is null) return Results.NotFound();
+
+            await store.SetEventTypeAsync(
+                alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
+            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
+
+        // Send test alert: an alarm, with the alarm settings.
+        group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
+            Answer(await dispatcher.SendTestAsync(AlertTypes.Alarm, cancellationToken))).RequireRateLimiting(ActionsPolicy);
+
+        // Send test notification: one sound, with the notification settings.
+        group.MapPost("/test-notification", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
+            Answer(await dispatcher.SendTestAsync(AlertTypes.Notification, cancellationToken))).RequireRateLimiting(ActionsPolicy);
 
         // One listed alert, as its real send would go but titled as a test.
         // Claims nothing and ignores mute and skip: pressing it is the owner
@@ -145,10 +175,10 @@ public static class AlertsEndpoints
             var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
             if (alert is null) return Results.NotFound();
 
-            var result = await dispatcher.SendEventTestAsync(alert, cancellationToken);
-            return result.Ok
-                ? Results.Ok(new { sent = true })
-                : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
+            // An event whose type is none sends nothing, so there is nothing to test.
+            return await dispatcher.SendEventTestAsync(alert, cancellationToken) is { } result
+                ? Answer(result)
+                : Results.Text("This event sends nothing.", "text/plain", statusCode: StatusCodes.Status409Conflict);
         }).RequireRateLimiting(ActionsPolicy);
 
         // Only where Program.cs registered the development calendar:
@@ -207,6 +237,11 @@ public static class AlertsEndpoints
         return routes;
     }
 
+    private static IResult Answer(PushoverResult result) =>
+        result.Ok
+            ? Results.Ok(new { sent = true })
+            : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
+
     private static bool Valid(string? key) =>
         !string.IsNullOrWhiteSpace(key) && key.Length <= AlertPlanner.MaxKeyLength;
 
@@ -218,6 +253,7 @@ public static class AlertsEndpoints
         var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
         var mutedUntil = await store.MutedUntilAsync(cancellationToken) is { } until && until > now ? until : (Instant?)null;
         var skipped = await store.SkippedAsync(cancellationToken);
+        var chosen = await store.EventTypesAsync(cancellationToken);
 
         return new AlertsState(
             Configured: true,
@@ -234,7 +270,10 @@ public static class AlertsEndpoints
                 settings.LookaheadHours,
                 settings.IncludeAllDay,
                 settings.TimeZone,
-                settings.OwnerEmails),
+                settings.OwnerEmails,
+                settings.NotificationPriority,
+                settings.NotificationSound,
+                settings.DefaultType),
             Bounds: SettingsBounds.Instance,
             MutedUntil: mutedUntil?.ToDateTimeOffset(),
             LastFetchAt: snapshot.LastFetchAt?.ToDateTimeOffset(),
@@ -248,21 +287,31 @@ public static class AlertsEndpoints
                 .. snapshot.Plan
                     .Where(alert => alert.StartsAt > now)
                     .Take(Listed)
-                    .Select(alert => new AlertView(
-                        alert.Key,
-                        alert.Title,
-                        alert.Location,
-                        alert.StartsAt.ToDateTimeOffset(),
-                        alert.AlertAt.ToDateTimeOffset(),
-                        alert.Source == AlertSource.Reminder ? "reminder" : "default",
-                        skipped.Contains(alert.Key),
-                        mutedUntil is { } muted && alert.AlertAt < muted))
+                    .Select(alert =>
+                    {
+                        var type = AlertTypes.Resolve(alert, chosen.GetValueOrDefault(alert.EventId), settings);
+                        return new AlertView(
+                            alert.Key,
+                            alert.Title,
+                            alert.Location,
+                            alert.StartsAt.ToDateTimeOffset(),
+                            alert.AlertAt.ToDateTimeOffset(),
+                            alert.Source == AlertSource.Reminder ? "reminder" : "default",
+                            skipped.Contains(alert.Key),
+                            mutedUntil is { } muted && alert.AlertAt < muted,
+                            alert.Critical,
+                            type.Type,
+                            type.From);
+                    })
             ]);
     }
 
     public sealed record MuteRequest(string? Until);
 
     public sealed record SkipRequest(string? Key);
+
+    /// <summary>A listed alert's key and the type for its event: none, notification, alarm, or default to drop the choice.</summary>
+    public sealed record EventTypeRequest(string? Key, string? Type);
 
     /// <summary>The settings form. Every field is required: the page sends the whole form.</summary>
     public sealed record SettingsRequest(
@@ -275,7 +324,10 @@ public static class AlertsEndpoints
         int? LookaheadHours,
         bool? IncludeAllDay,
         string? TimeZone,
-        IReadOnlyList<string?>? OwnerEmails);
+        IReadOnlyList<string?>? OwnerEmails,
+        int? NotificationPriority,
+        string? NotificationSound,
+        string? DefaultType);
 
     /// <summary>
     /// The page's whole state. Lists its fields: the settings in force, and
@@ -306,7 +358,10 @@ public static class AlertsEndpoints
         int LookaheadHours,
         bool IncludeAllDay,
         string TimeZone,
-        IReadOnlyList<string> OwnerEmails);
+        IReadOnlyList<string> OwnerEmails,
+        int NotificationPriority,
+        string NotificationSound,
+        string DefaultType);
 
     public sealed record Bound(int Min, int Max);
 
@@ -342,5 +397,8 @@ public static class AlertsEndpoints
         DateTimeOffset AlertAt,
         string Source,
         bool Skipped,
-        bool Muted);
+        bool Muted,
+        bool Critical,
+        string Type,
+        string TypeFrom);
 }

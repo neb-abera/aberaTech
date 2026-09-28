@@ -47,6 +47,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertSettingsRecord> AlertSettings => Set<AlertSettingsRecord>();
 
+    public DbSet<AlertEventTypeRecord> AlertEventTypes => Set<AlertEventTypeRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -144,6 +146,20 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(settings => settings.Sound).HasMaxLength(32).IsRequired();
             entity.Property(settings => settings.TimeZone).HasMaxLength(Alerts.AlertSettings.MaxTimeZoneLength).IsRequired();
             entity.Property(settings => settings.OwnerEmails).IsRequired();
+            entity.Property(settings => settings.NotificationSound).HasMaxLength(32).IsRequired();
+            // A row saved before the column existed sends nothing for an
+            // unmarked event: the migration fills it with "none".
+            entity.Property(settings => settings.DefaultType).HasMaxLength(AlertTypes.MaxLength).IsRequired()
+                .HasDefaultValue(AlertTypes.None);
+        });
+
+        builder.Entity<AlertEventTypeRecord>(entity =>
+        {
+            entity.HasKey(choice => choice.EventId);
+            entity.Property(choice => choice.EventId).HasMaxLength(AlertPlanner.MaxKeyLength);
+            entity.Property(choice => choice.Type).HasMaxLength(AlertTypes.MaxLength).IsRequired();
+            // The prune deletes by it.
+            entity.HasIndex(choice => choice.LastSeenAt);
         });
 
         builder.Entity<AlertSkipRecord>(entity =>

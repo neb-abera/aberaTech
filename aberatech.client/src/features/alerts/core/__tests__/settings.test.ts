@@ -56,6 +56,21 @@ suite("describe", () => {
       "Times are in Asia/Amman, the calendar's own zone.",
     );
   });
+
+  it("says what a notification and an unmarked event do", () => {
+    expect(describe(settings, 50, "UTC")).toContain(
+      "A notification is one message with one sound, as the phone's Pushover settings allow. An event with no mark and no type set here sends nothing.",
+    );
+    expect(
+      describe(
+        { ...settings, notificationPriority: 1, defaultType: "notification" },
+        50,
+        "UTC",
+      ),
+    ).toContain(
+      "A notification is one message with one sound, through Pushover's quiet hours. An event with no mark and no type set here sends a notification.",
+    );
+  });
 });
 
 suite("count", () => {
