@@ -16,15 +16,19 @@
 
 // The mark React writes where a Suspense boundary gave up on the server.
 const CLIENT_RENDERED = "<!--$!-->";
-const INVISIBLE =
-  /<(script|style|template)\b[^>]*>[\s\S]*?<\/\1[^>]*>|<!--[\s\S]*?-->/gi;
+// One token at a time: an invisible block (script, style, template or
+// comment), a tag, or the text between tags. Only the text counts. The
+// markup is read, never rewritten, so nothing here sanitises it.
+const TOKEN =
+  /<(script|style|template)\b[^>]*>[\s\S]*?<\/\1[^>]*>|<!--[\s\S]*?-->|<[^>]*>|[^<]+/gi;
 const H1 = /<h1\b[^>]*>([\s\S]*?)<\/h1[^>]*>/gi;
 
 function text(html: string): string {
-  return html
-    .replace(INVISIBLE, "")
-    .replace(/<[^>]*>/g, "")
-    .trim();
+  let found = "";
+  for (const [token] of html.matchAll(TOKEN)) {
+    if (!token.startsWith("<")) found += token;
+  }
+  return found.trim();
 }
 
 function message(error: unknown): string {
