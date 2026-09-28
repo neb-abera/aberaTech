@@ -550,26 +550,32 @@ jobs:
         with:
           persist-credentials: false
 
-      # The image the lighthouse-server workflow deploys. It must start, answer
-      # /healthz, refuse the API without the password, refuse to start with
-      # no password at all, and create its database with 64 KB pages.
+      # The image the lighthouse-server workflow deploys. Its gate passes its
+      # tests. It must start, answer /healthz, refuse the API without the
+      # password and without a password prompt, send a browser to Google
+      # sign-in, refuse to start with no password at all, and create its
+      # database with 64 KB pages.
       - name: Lighthouse CI server image builds and starts
         run: |
           set -euo pipefail
           docker build --file tools/lhci-server/Dockerfile --tag lhci-server-ci tools/lhci-server
+          docker run --rm -v "$PWD/tools/lhci-server:/t:ro" -w /t lhci-server-ci node --test gate.test.mjs
           if docker run --rm lhci-server-ci; then
             echo "::error::the server started without LHCI_BASIC_AUTH_PASSWORD"
             exit 1
           fi
           docker run -d --name lhci-server-ci -e LHCI_DATABASE_PATH=/tmp/lhci.db \
             -e LHCI_BASIC_AUTH_PASSWORD="$(openssl rand -hex 24)" lhci-server-ci
+          # probe <path> <status> [accept]: the status, and never a
+          # WWW-Authenticate header, which would make a browser prompt.
           probe() {
             docker exec lhci-server-ci node -e \
-              "fetch('http://127.0.0.1:9001$1').then(r => process.exit(r.status === $2 ? 0 : 1), () => process.exit(1))"
+              "fetch('http://127.0.0.1:9001$1', {redirect: 'manual', headers: {accept: '${3:-*/*}'}}).then(r => process.exit(r.status === $2 && !r.headers.has('www-authenticate') ? 0 : 1), () => process.exit(1))"
           }
           for _ in $(seq 1 30); do probe /healthz 200 && break; sleep 1; done
           probe /healthz 200
           probe /v1/projects 401
+          probe /app/projects 302 text/html
           # 64 KB pages, which the cost estimate in docs/lighthouse.md counts on.
           docker exec lhci-server-ci node -e \
             "new (require('/app/node_modules/sqlite3').Database)('/tmp/lhci.db').get('PRAGMA page_size', (e, r) => process.exit(r && r.page_size === 65536 ? 0 : 1))"

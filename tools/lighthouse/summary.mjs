@@ -161,7 +161,7 @@ async function report(mediansPath) {
     "",
     table(current, base),
     "",
-    `[Compare on the Lighthouse CI server](${compareUrl}) · [all builds](${projectUrl}). The server asks for the \`lhci\` basic auth password (docs/lighthouse.md).`,
+    `[Compare on the Lighthouse CI server](${compareUrl}) · [all builds](${projectUrl}). Sign in with Google (docs/lighthouse.md).`,
   ];
   return lines.join("\n");
 }

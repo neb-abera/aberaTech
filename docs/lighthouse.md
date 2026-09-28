@@ -11,12 +11,28 @@ Server: https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io
 - [abera.tech production](https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io/app/projects/abera.tech-production):
   the nightly runs.
 
-The server asks for a username and password. The username is `lhci`. The
-password is a container app secret. On the dev box as neb:
+The scores and timings of every run are also on GitHub, with no sign-in:
+a comment on each pull request, and the summary of each Checks and
+Lighthouse nightly run. The server adds the history, the full reports and
+the side-by-side compare.
+
+A browser signs in with Google. The accounts allowed are the container app
+secret `allowed-emails`. Any other Google account gets 403. The workflows
+upload with the basic auth password, user `lhci`, in the secret
+`basic-auth-password`. `tools/lhci-server/gate.mjs` decides both. The
+container app's built-in authentication runs the Google sign-in in
+AllowAnonymous mode, so an upload with the password and no Google session
+still reaches the server. The OAuth client is "Lighthouse CI server" in
+Google Auth Platform, project `cogent-spirit-398103`.
+
+To allow another account, on the dev box as neb:
 
 ```
-az containerapp secret show -g aberatechserver-app-202412211749ResourceGroup \
-  -n abera-lhci --secret-name basic-auth-password --query value -o tsv
+az containerapp secret set -g aberatechserver-app-202412211749ResourceGroup \
+  -n abera-lhci --secrets allowed-emails=first@example.com,second@example.com
+az containerapp revision restart -g aberatechserver-app-202412211749ResourceGroup \
+  -n abera-lhci --revision "$(az containerapp show -g aberatechserver-app-202412211749ResourceGroup \
+  -n abera-lhci --query properties.latestRevisionName -o tsv)"
 ```
 
 ## What runs
