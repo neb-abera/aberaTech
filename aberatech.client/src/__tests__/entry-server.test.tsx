@@ -6,9 +6,18 @@
  * anything that reaches for one at render time (rather than in an effect)
  * should fail here rather than in the Docker build.
  */
+import { Suspense } from "react";
 import { describe, expect, it } from "vitest";
-import { render } from "../entry-server";
+import { render, renderTree } from "../entry-server";
 import { heroAvatar } from "../site/meta";
+import { checkPage } from "../site/prerenderCheck";
+import { prerenderedRoutes } from "../site/prerenderedRoutes";
+
+function Broken(): never {
+  throw new TypeError(
+    "Cannot read properties of undefined (reading 'replace')",
+  );
+}
 
 describe("build-time rendering", () => {
   it("renders the home page with its content, not a loading fallback", async () => {
@@ -138,4 +147,36 @@ describe("build-time rendering", () => {
 
     expect(html).toContain("data-mui-color-scheme");
   });
+
+  it("fails a render whose component throws inside a boundary, naming the route", async () => {
+    // React writes such a boundary for the browser to render again and
+    // renderToString reports nothing. On 2026-09-28 that shipped every page
+    // with an empty root and a green build.
+    await expect(
+      renderTree("/broken", () => (
+        <main>
+          <h1>Title</h1>
+          <Suspense fallback={<p>Loading...</p>}>
+            <Broken />
+          </Suspense>
+        </main>
+      )),
+    ).rejects.toThrow(
+      /prerender \/broken: React reported 1 error while rendering: Cannot read properties of undefined/,
+    );
+  });
+
+  it("fails a render whose component throws outside every boundary", async () => {
+    await expect(renderTree("/broken", () => <Broken />)).rejects.toThrow(
+      /prerender \/broken: React reported 1 error/,
+    );
+  });
+
+  for (const route of prerenderedRoutes) {
+    it(`renders ${route} with text and an h1, as the build requires`, async () => {
+      const html = await render(route);
+
+      expect(() => checkPage(route, html)).not.toThrow();
+    });
+  }
 });
