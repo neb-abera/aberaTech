@@ -8,9 +8,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { bounds, settings } from "../../../../test/alertsFixtures";
 import { respond } from "../../../../test/fakeFetch";
 import {
+  acknowledgeAlert,
   fetchAlerts,
+  formatClock,
   formatWhen,
+  listDevices,
   muteAlerts,
+  pairDevice,
+  revokeDevice,
   saveAlertSettings,
   sendEventTest,
   sendTestAlert,
@@ -284,5 +289,99 @@ describe("formatWhen", () => {
     expect(formatWhen("2026-10-28T13:00:00Z", "Not/AZone")).toBe(
       "Wed, Oct 28, 1:00 PM UTC",
     );
+  });
+});
+
+const text = (status: number, body: string) => ({
+  ...respond(status),
+  text: async () => body,
+});
+
+describe("the phone and the ring", () => {
+  it("acknowledges as the browser in a JSON body and answers with the state", async () => {
+    const fetchMock = stub(respond(200, state));
+
+    const { configured: _, ...rest } = state;
+    expect(await acknowledgeAlert("k|1", "browser")).toEqual({
+      ok: true,
+      state: rest,
+    });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/alerts/ack");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual({ key: "k|1", via: "browser" });
+  });
+
+  it("lists the phones, and a 401 or 403 is a visitor", async () => {
+    stub(
+      respond(200, [{ id: "a", name: "P", createdAt: "x", lastSeenAt: null }]),
+    );
+    expect(await listDevices()).toEqual({
+      ok: true,
+      devices: [{ id: "a", name: "P", createdAt: "x", lastSeenAt: null }],
+    });
+    stub(respond(403));
+    expect(await listDevices()).toEqual({ ok: false, reason: "visitor" });
+    stub(respond(500));
+    expect(await listDevices()).toEqual({ ok: false, reason: "refused" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    expect(await listDevices()).toEqual({ ok: false, reason: "network" });
+  });
+
+  it("pairs with the name in the body, never the query, and reads each refusal", async () => {
+    const device = {
+      id: "a",
+      name: "P",
+      createdAt: "x",
+      token: "aat_t",
+      pairUrl: "aberaalarms://pair#token=aat_t",
+    };
+    const fetchMock = stub(respond(201, device));
+    expect(await pairDevice("P")).toEqual({ ok: true, device });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/alerts/devices");
+    expect(JSON.parse(init.body)).toEqual({ name: "P" });
+
+    stub(text(409, "At most 5 phones. Revoke one first."));
+    expect(await pairDevice("P")).toEqual({
+      ok: false,
+      reason: "full",
+      detail: "At most 5 phones. Revoke one first.",
+    });
+    for (const [status, reason] of [
+      [400, "invalid"],
+      [401, "visitor"],
+      [429, "throttled"],
+      [500, "refused"],
+    ] as const) {
+      stub(respond(status));
+      expect(await pairDevice("P")).toEqual({ ok: false, reason });
+    }
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    expect(await pairDevice("P")).toEqual({ ok: false, reason: "network" });
+  });
+
+  it("revokes by id, and a phone already gone counts as revoked", async () => {
+    const fetchMock = stub(respond(204));
+    expect(await revokeDevice("a b")).toEqual({ ok: true });
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/alerts/devices/a%20b");
+    expect(fetchMock.mock.calls[0][1].method).toBe("DELETE");
+    stub(respond(404));
+    expect(await revokeDevice("a")).toEqual({ ok: true });
+    stub(respond(429));
+    expect(await revokeDevice("a")).toEqual({ ok: false, reason: "throttled" });
+    stub(respond(401));
+    expect(await revokeDevice("a")).toEqual({ ok: false, reason: "visitor" });
+    stub(respond(500));
+    expect(await revokeDevice("a")).toEqual({ ok: false, reason: "refused" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    expect(await revokeDevice("a")).toEqual({ ok: false, reason: "network" });
+  });
+
+  it("writes a time of day on a 24-hour clock in the zone given", () => {
+    expect(formatClock("2026-10-28T17:52:00Z", "America/New_York")).toBe(
+      "13:52",
+    );
+    expect(formatClock("2026-10-28T17:52:00Z", "Not/AZone")).toBe("17:52");
   });
 });

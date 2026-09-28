@@ -98,7 +98,7 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     {
         var first = new AlertSettings(0, 45, 20, "", 15, 3, 24, true, "", []);
         var second = new AlertSettings(
-            2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification");
+            2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification", 240);
 
         await using (var context = Context())
         {
@@ -224,6 +224,93 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         Assert.Equal(["recent@google.com", "still-there@google.com"], rows.Select(row => row.EventId));
         Assert.Equal(Now, rows[1].LastSeenAt);
         Assert.Equal(longAgo, rows[1].UpdatedAt);
+    }
+
+    [PostgresFact]
+    public async Task An_acknowledgement_is_one_row_per_occurrence_and_the_first_one_stands()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.False(await store.IsAcknowledgedAsync("k", CancellationToken.None));
+            Assert.True(await store.AcknowledgeAsync("k", Start, "phone", Now, CancellationToken.None));
+            Assert.False(await store.AcknowledgeAsync("k", Start, "browser", Now + Duration.FromMinutes(1), CancellationToken.None));
+        }
+
+        await using var restarted = Context();
+        var again = new DatabaseAlertStore(restarted);
+        Assert.True(await again.IsAcknowledgedAsync("k", CancellationToken.None));
+        Assert.Equal(new AlertAcknowledgement(Now, "phone"), (await again.AcknowledgementsAsync(CancellationToken.None))["k"]);
+        Assert.Equal(1, await restarted.AlertAcknowledgements.CountAsync());
+    }
+
+    [PostgresFact]
+    public async Task Two_acknowledgements_at_the_same_moment_store_one_and_only_one_is_first()
+    {
+        var contexts = Enumerable.Range(0, 6).Select(_ => Context()).ToList();
+        try
+        {
+            var firsts = await Task.WhenAll(contexts.Select(context =>
+                new DatabaseAlertStore(context).AcknowledgeAsync("k", Start, "phone", Now, CancellationToken.None)));
+            Assert.Equal(1, firsts.Count(first => first));
+        }
+        finally
+        {
+            foreach (var context in contexts) await context.DisposeAsync();
+        }
+    }
+
+    [PostgresFact]
+    public async Task The_receipt_is_kept_with_the_outcome_and_one_that_is_not_letters_and_digits_is_dropped()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.TryClaimAsync("a", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("a", "sent", Now, CancellationToken.None, "abcdefghij0123456789abcdefghij");
+            await store.TryClaimAsync("b", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("b", "sent", Now, CancellationToken.None, "../../x");
+        }
+
+        await using var check = Context();
+        var store2 = new DatabaseAlertStore(check);
+        Assert.Equal(new AlertDelivery(Start, "sent", "abcdefghij0123456789abcdefghij"), await store2.DeliveryAsync("a", CancellationToken.None));
+        Assert.Null((await store2.DeliveryAsync("b", CancellationToken.None))!.Receipt);
+        Assert.Null(await store2.DeliveryAsync("never", CancellationToken.None));
+    }
+
+    [PostgresFact]
+    public async Task Pruning_forgets_old_acknowledgements_with_the_claims_and_skips()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.AcknowledgeAsync("old", Start - Duration.FromDays(30), "phone", Now - Duration.FromDays(30), CancellationToken.None);
+            await store.AcknowledgeAsync("new", Start, "browser", Now, CancellationToken.None);
+
+            await store.PruneAsync(Now - Duration.FromDays(14), CancellationToken.None);
+        }
+
+        await using var check = Context();
+        Assert.Equal(["new"], await check.AlertAcknowledgements.Select(row => row.OccurrenceKey).ToListAsync());
+    }
+
+    [PostgresFact]
+    public async Task A_row_saved_before_the_backup_delay_existed_reads_back_with_no_delay()
+    {
+        await using (var context = Context())
+        {
+            await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                     "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
+                     "NotificationPriority", "NotificationSound", "DefaultType", "UpdatedAt")
+                 VALUES (1, 2, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, 0, '', 'none', {Now})
+                 """);
+        }
+
+        await using var check = Context();
+        Assert.Equal(0, (await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None))!.BackupDelaySeconds);
     }
 
     public void Dispose() => _database?.Dispose();

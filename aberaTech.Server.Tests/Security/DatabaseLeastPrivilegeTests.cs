@@ -97,6 +97,17 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
                 Open = true
             });
             await database.SaveChangesAsync();
+
+            // Pairing a phone takes an advisory lock in a transaction, and an
+            // acknowledgement is an upsert: both as the runtime role.
+            var devices = new aberaTech.Scheduling.Alerts.DatabaseAlertDeviceStore(database);
+            var phone = Guid.NewGuid();
+            Assert.NotNull(await devices.CreateAsync(
+                phone, "Least privilege", aberaTech.Scheduling.Alerts.AlertDeviceTokens.Hash("aat_x"), now, CancellationToken.None));
+            await devices.TouchAsync(phone, now, now, CancellationToken.None);
+            Assert.True(await devices.RevokeAsync(phone, CancellationToken.None));
+            Assert.True(await new aberaTech.Scheduling.Alerts.DatabaseAlertStore(database)
+                .AcknowledgeAsync("k", now, "phone", now, CancellationToken.None));
         }
 
         var joined = await client.PostAsJsonAsync("/api/scheduling/queue", new { name = "Private Snuffy" });

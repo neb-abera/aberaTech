@@ -101,7 +101,11 @@ site. The history is on the
   settings' zone, then UTC). Mute, Skip, the settings, each event's type
   and a one-send claim per occurrence are rows in the scheduling database.
   A failed calendar read is a red banner at the top of the page, with the
-  error and the time of the last good read.
+  error and the time of the last good read. Phones paired on the page
+  (the Abera Alarms iPhone app) ring every alarm themselves, and
+  Acknowledge on the phone or the page stops Pushover's repeats. Ring in
+  this browser rings a due alarm in an open tab, for a computer where
+  nothing can be installed.
 
 ### Calendar alerts: switching them on
 
@@ -198,6 +202,7 @@ every other replica reads it at the start of its next pass.
 | Alert for all-day events | off | |
 | Time zone | blank, UTC | a time zone database name |
 | Your addresses | none | up to 10 |
+| Pushover backup after | 0 s | 0 to 900 s. An alarm's Pushover message waits this long, so a paired phone rings first. It is not sent if the alarm is acknowledged by then, and never later than 1 minute before the start |
 
 Pushover stops an emergency message after 50 sounds, so the stop is the
 smaller of the limit and 50 × the repeat. At 60 s that is 50 min. The page

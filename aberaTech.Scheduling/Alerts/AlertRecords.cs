@@ -59,6 +59,9 @@ public class AlertSettingsRecord
     /// <summary>What an unmarked event with no choice sends: "none" or "notification".</summary>
     public string DefaultType { get; set; } = AlertTypes.None;
 
+    /// <summary>How long after an alarm's time Pushover follows, so a paired phone rings first. 0 sends at once.</summary>
+    public int BackupDelaySeconds { get; set; }
+
     public Instant UpdatedAt { get; set; }
 }
 
@@ -109,4 +112,42 @@ public class AlertDeliveryRecord
     public string Outcome { get; set; } = "claimed";
 
     public Instant? CompletedAt { get; set; }
+
+    /// <summary>
+    /// Pushover's receipt for an emergency message, which repeats until
+    /// acknowledged. An acknowledgement on /alerts or a paired phone cancels
+    /// the repeats with it. Null for any other priority.
+    /// </summary>
+    public string? Receipt { get; set; }
+}
+
+/// <summary>
+/// A phone paired on /alerts. Its token is shown once, when it is made.
+/// The server keeps the SHA-256 of the token and never the token.
+/// </summary>
+public class AlertDeviceRecord
+{
+    public Guid Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public byte[] TokenHash { get; set; } = [];
+
+    public Instant CreatedAt { get; set; }
+
+    /// <summary>The last request the token made, written at most once a minute.</summary>
+    public Instant? LastSeenAt { get; set; }
+}
+
+/// <summary>One occurrence the owner acknowledged, on a paired phone or in a browser. The first acknowledgement stands.</summary>
+public class AlertAcknowledgementRecord
+{
+    public string OccurrenceKey { get; set; } = string.Empty;
+
+    public Instant StartsAt { get; set; }
+
+    public Instant AcknowledgedAt { get; set; }
+
+    /// <summary>"phone" or "browser".</summary>
+    public string Via { get; set; } = string.Empty;
 }

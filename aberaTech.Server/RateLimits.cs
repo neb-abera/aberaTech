@@ -42,6 +42,15 @@ public static class RateLimits
         new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10)
     ];
 
+    /// <summary>
+    /// Wrong bearer tokens a minute, per address, on any /api/alerts route.
+    /// A paired phone presents a right one. A browser presents none and is
+    /// never counted.
+    /// </summary>
+    public const int AlertsDeviceTokenFailures = 10;
+
+    private const string AlertsRoutes = "/api/alerts/";
+
     /// <summary>The public-write, start and heartbeat budgets in production. Compose raises all three for `make e2e` (compose.yaml says why).</summary>
     public const int DefaultPublicWritePerMinute = 5;
     public const int DefaultSignInPerMinute = 10;
@@ -96,6 +105,11 @@ public static class RateLimits
                 RateLimitPartition.GetFixedWindowLimiter(key, _ => Window(route.Failures)))),
             StringComparer.OrdinalIgnoreCase);
 
+        // The phones' tokens: one budget across every /api/alerts route,
+        // counted only for a request that presented a bearer token.
+        var bearerFailures = (FailureStatus: StatusCodes.Status401Unauthorized, Limiter: PartitionedRateLimiter.Create<string, string>(key =>
+            RateLimitPartition.GetFixedWindowLimiter(key, _ => Window(AlertsDeviceTokenFailures))));
+
         return app.Use(async (context, next) =>
         {
             // The pattern the endpoint was mapped with, not the request path:
@@ -103,7 +117,18 @@ public static class RateLimits
             // compared paths itself would be one that "/x/" walks around.
             var pattern = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText;
 
-            if (pattern is null || !limiters.TryGetValue(pattern, out var guarded))
+            var guarded = default((int FailureStatus, PartitionedRateLimiter<string> Limiter));
+            if (pattern is not null && limiters.TryGetValue(pattern, out var route))
+            {
+                guarded = route;
+            }
+            else if (pattern is not null
+                     && pattern.StartsWith(AlertsRoutes, StringComparison.OrdinalIgnoreCase)
+                     && context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                guarded = bearerFailures;
+            }
+            else
             {
                 await next();
                 return;
