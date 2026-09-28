@@ -165,7 +165,7 @@ RUN npx biome check .
 # rather than flattened into /src: the server references aberaTech.Scheduling by
 # relative path, and a flattened layout silently resolves that reference to
 # nothing.
-FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute@sha256:ab11199f8a0cded1d667111a0d4f0906567c3a17348a7181f9781d12cc5eb6f9 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute@sha256:1293c84938eecaa93b84d80b561af43007ec3bc356f46d1192a2ca278f5840a1 AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
