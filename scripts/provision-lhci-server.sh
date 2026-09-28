@@ -101,9 +101,9 @@ fi
 # The whole app in one document, so a second run converges on it.
 # mountOptions: nobrl, because SQLite's byte-range locks fail on SMB without
 # it, and the owner and modes of the node user (uid 1000), since the app
-# runs as that user. cooldownPeriod 60 rather than the default 300: a
-# replica is billed until it scales in, and the cost estimate in
-# docs/lighthouse.md counts 120 s a wake.
+# runs as that user. cooldownPeriod 30 rather than the default 300: a
+# replica is billed until it scales in, and the cost bound in
+# docs/lighthouse.md counts 110 s a wake.
 umask 077
 cat > "$work/app.yaml" <<YAML
 location: $LOCATION
@@ -154,7 +154,7 @@ properties:
     scale:
       minReplicas: 0
       maxReplicas: 1
-      cooldownPeriod: 60
+      cooldownPeriod: 30
       rules:
         - name: http
           http:

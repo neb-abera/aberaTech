@@ -446,3 +446,6 @@ FodyWeavers.xsd
 
 # Playwright traces copied out by `make e2e` when the browser suite fails
 e2e-test-results/
+
+# Reports and summary.md from make lighthouse
+lighthouse-results/

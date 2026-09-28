@@ -23,8 +23,7 @@
  * LHCI_BUILD_CONTEXT__CURRENT_BRANCH and LHCI_BASE_BRANCH. Both read
  * LHCI_TITLE, the heading, and LHCI_TABLE_NOTE, what the numbers are.
  */
-import { rmSync, writeFileSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import process from "node:process";
 import {
   byRoute,
@@ -66,7 +65,8 @@ export function computeMedians(dir, { medianRunOnly, ofMedianRun }) {
   return out;
 }
 
-const round = (key, v) => (key === "cls" ? v.toFixed(3) : String(Math.round(v)));
+const round = (key, v) =>
+  key === "cls" ? v.toFixed(3) : String(Math.round(v));
 
 function cell(key, unit, current, base) {
   if (!Number.isFinite(current)) return "n/a";
@@ -99,8 +99,12 @@ function heading(current) {
 
 async function api(path) {
   const server = process.env.LHCI_SERVER_BASE_URL;
-  const auth = Buffer.from(`lhci:${process.env.LHCI_BASIC_AUTH__PASSWORD ?? ""}`).toString("base64");
-  const response = await fetch(`${server}${path}`, { headers: { authorization: `Basic ${auth}` } });
+  const auth = Buffer.from(
+    `lhci:${process.env.LHCI_BASIC_AUTH__PASSWORD ?? ""}`,
+  ).toString("base64");
+  const response = await fetch(`${server}${path}`, {
+    headers: { authorization: `Basic ${auth}` },
+  });
   if (!response.ok) throw new Error(`GET ${path}: ${response.status}`);
   return response.json();
 }
@@ -123,7 +127,8 @@ async function report(mediansPath) {
   const [build] = await api(
     `/v1/projects/${project.id}/builds?${q({ hash, branch, limit: 1 })}`,
   );
-  if (!build) throw new Error(`build ${hash} on ${branch} is not on the server`);
+  if (!build)
+    throw new Error(`build ${hash} on ${branch} is not on the server`);
 
   const candidates = await api(
     `/v1/projects/${project.id}/builds?${q({ branch: baseBranch, lifecycle: "sealed", limit: 2 })}`,
@@ -131,7 +136,9 @@ async function report(mediansPath) {
   const baseBuild = candidates.find((b) => b.id !== build.id);
   let base;
   if (baseBuild) {
-    const runs = await api(`/v1/projects/${project.id}/builds/${baseBuild.id}/runs`);
+    const runs = await api(
+      `/v1/projects/${project.id}/builds/${baseBuild.id}/runs`,
+    );
     const byUrl = new Map();
     for (const run of runs) {
       const lhr = JSON.parse(run.lhr);
@@ -139,7 +146,9 @@ async function report(mediansPath) {
       if (!byUrl.has(route)) byUrl.set(route, []);
       byUrl.get(route).push(lhr);
     }
-    base = Object.fromEntries([...byUrl].map(([route, lhrs]) => [route, medians(lhrs)]));
+    base = Object.fromEntries(
+      [...byUrl].map(([route, lhrs]) => [route, medians(lhrs)]),
+    );
   }
 
   const projectUrl = `${server}/app/projects/${slug}`;
@@ -164,7 +173,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const medianRunOnly = args.includes("--median-run-only");
       const ofMedianRun = args.includes("--of-median-run");
       const [dir, out] = args.filter((a) => !a.startsWith("--"));
-      if (!dir || !out) throw new Error("usage: summary.mjs medians <dir> <out.json> [--median-run-only] [--of-median-run]");
+      if (!dir || !out)
+        throw new Error(
+          "usage: summary.mjs medians <dir> <out.json> [--median-run-only] [--of-median-run]",
+        );
       const result = computeMedians(dir, { medianRunOnly, ofMedianRun });
       writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
     } else if (command === "table") {

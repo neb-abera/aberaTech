@@ -36,13 +36,7 @@
  */
 import { readFileSync } from "node:fs";
 import process from "node:process";
-import {
-  allowed,
-  byRoute,
-  median,
-  pageBytes,
-  readReports,
-} from "./lhr.mjs";
+import { allowed, byRoute, median, pageBytes, readReports } from "./lhr.mjs";
 
 export const MAX_CHAIN_LENGTH = 3;
 export const MAX_CLS = 0.01;
@@ -63,7 +57,9 @@ function audit(lhr, id, findings, where) {
 }
 
 const items = (a) =>
-  (a?.details?.items ?? []).filter((i) => !allowed(i.url ?? i.sourceLocation?.url));
+  (a?.details?.items ?? []).filter(
+    (i) => !allowed(i.url ?? i.sourceLocation?.url),
+  );
 
 /** Each chain as a list of URLs, root first, allowed requests cut out. */
 export function chains(tree, prefix = []) {
@@ -93,14 +89,19 @@ export function checkReport(lhr, where) {
     return findings;
   }
 
-  for (const i of items(audit(lhr, "render-blocking-insight", findings, where))) {
+  for (const i of items(
+    audit(lhr, "render-blocking-insight", findings, where),
+  )) {
     findings.push(`${where}: render-blocking request ${i.url}`);
   }
 
   const tree = audit(lhr, "network-dependency-tree-insight", findings, where);
   if (tree) {
     const found = networkTree(tree);
-    if (!found) findings.push(`${where}: network-dependency-tree-insight has no network tree`);
+    if (!found)
+      findings.push(
+        `${where}: network-dependency-tree-insight has no network tree`,
+      );
     for (const chain of chains(found)) {
       if (chain.length > MAX_CHAIN_LENGTH) {
         findings.push(
@@ -112,12 +113,16 @@ export function checkReport(lhr, where) {
 
   const cls = audit(lhr, "cumulative-layout-shift", findings, where);
   if (cls && !(cls.numericValue < MAX_CLS)) {
-    findings.push(`${where}: cumulative layout shift ${cls.numericValue}, not below ${MAX_CLS}`);
+    findings.push(
+      `${where}: cumulative layout shift ${cls.numericValue}, not below ${MAX_CLS}`,
+    );
   }
 
   for (const id of ["unsized-images", "image-delivery-insight"]) {
     for (const i of items(audit(lhr, id, findings, where))) {
-      findings.push(`${where}: ${id} lists ${i.url ?? i.node?.snippet ?? JSON.stringify(i)}`);
+      findings.push(
+        `${where}: ${id} lists ${i.url ?? i.node?.snippet ?? JSON.stringify(i)}`,
+      );
     }
   }
 
@@ -126,14 +131,19 @@ export function checkReport(lhr, where) {
     findings.push(`${where}: console error from ${from}: ${i.description}`);
   }
 
-  for (const i of audit(lhr, "inspector-issues", findings, where)?.details?.items ?? []) {
+  for (const i of audit(lhr, "inspector-issues", findings, where)?.details
+    ?.items ?? []) {
     if (/content security policy/i.test(i.issueType ?? "")) {
-      const urls = (i.subItems?.items ?? []).map((s) => s.url ?? s.directive).join(", ");
+      const urls = (i.subItems?.items ?? [])
+        .map((s) => s.url ?? s.directive)
+        .join(", ");
       findings.push(`${where}: CSP violation ${urls}`);
     }
   }
 
-  if (!audit(lhr, "network-requests", findings, where)?.details?.items?.length) {
+  if (
+    !audit(lhr, "network-requests", findings, where)?.details?.items?.length
+  ) {
     findings.push(`${where}: network-requests lists no request`);
   }
   return findings;
@@ -150,11 +160,15 @@ export function checkBytes(groups, budgetsFile, { live }) {
     const budget = budgets[name];
     rows.push({ name, actual, budget });
     if (typeof budget !== "number") {
-      findings.push(`${name}: no budget in page-budgets.json (the page moved ${actual} bytes)`);
+      findings.push(
+        `${name}: no budget in page-budgets.json (the page moved ${actual} bytes)`,
+      );
       continue;
     }
     if (actual > budget) {
-      findings.push(`${name}: ${actual} bytes, over its budget of ${budget} by ${actual - budget}`);
+      findings.push(
+        `${name}: ${actual} bytes, over its budget of ${budget} by ${actual - budget}`,
+      );
       continue;
     }
     const ceiling = Math.max(ceilingFor(actual), floors[name] ?? 0);
@@ -194,7 +208,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const live = args.includes("--live");
   const [budgetsPath, ...dirs] = args.filter((a) => a !== "--live");
   if (!budgetsPath || dirs.length === 0) {
-    process.stderr.write("usage: gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live]\n");
+    process.stderr.write(
+      "usage: gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live]\n",
+    );
     process.exit(2);
   }
   let result;
@@ -205,11 +221,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(2);
   }
   for (const row of result.rows) {
-    process.stdout.write(`${row.name}  ${row.actual} / ${row.budget ?? "none"} bytes\n`);
+    process.stdout.write(
+      `${row.name}  ${row.actual} / ${row.budget ?? "none"} bytes\n`,
+    );
   }
-  process.stdout.write(`${result.runs} reports, ${result.routes.length} routes checked\n`);
+  process.stdout.write(
+    `${result.runs} reports, ${result.routes.length} routes checked\n`,
+  );
   if (result.findings.length > 0) {
-    process.stderr.write(`\nlighthouse gate: ${result.findings.length} findings\n`);
+    process.stderr.write(
+      `\nlighthouse gate: ${result.findings.length} findings\n`,
+    );
     for (const f of result.findings) process.stderr.write(`  ${f}\n`);
     process.exit(1);
   }
