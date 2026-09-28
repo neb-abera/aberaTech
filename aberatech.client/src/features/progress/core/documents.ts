@@ -17,8 +17,17 @@ import { requestJson } from "../../../site/earlyRequest";
 /** Where one document lives. The head script on /links asks for it too. */
 export const documentUrl = (key: string): string => `/api/progress/${key}`;
 
-export async function loadDocument<T>(key: string): Promise<Loaded<T>> {
+/**
+ * With `signedIn`, the page asks that first, and a no is the visitor's
+ * answer with no request for the document. The server would refuse that
+ * request with a 401, and every browser logs a 4xx as a console error.
+ */
+export async function loadDocument<T>(
+  key: string,
+  signedIn?: () => Promise<boolean>,
+): Promise<Loaded<T>> {
   try {
+    if (signedIn && !(await signedIn())) return { status: "visitor" };
     const response = await requestJson(documentUrl(key));
     if (response.status === 401 || response.status === 403)
       return { status: "visitor" };

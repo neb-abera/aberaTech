@@ -55,6 +55,32 @@ describe("loadDocument", () => {
     expect(await loadDocument("rf-training")).toEqual({ status: "error" });
   });
 
+  it("asks nothing of the document when the probe says signed out", async () => {
+    const fetchMock = respond(401);
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await loadDocument("planner", async () => false)).toEqual({
+      status: "visitor",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("asks for the document once the probe says signed in", async () => {
+    const fetchMock = respond(200, { a: 1 });
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await loadDocument("planner", async () => true)).toEqual({
+      status: "owner",
+      value: { a: 1 },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a probe that throws as an error", async () => {
+    vi.stubGlobal("fetch", respond(200, {}));
+    expect(
+      await loadDocument("planner", () => Promise.reject(new Error("offline"))),
+    ).toEqual({ status: "error" });
+  });
+
   it("asks with the session cookie and for JSON", async () => {
     const fetchMock = respond(404);
     vi.stubGlobal("fetch", fetchMock);
