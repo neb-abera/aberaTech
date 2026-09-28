@@ -114,6 +114,8 @@ public sealed class RouteTableTests
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/test"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/test-event"));
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/settings"));
+        Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/test-notification"));
+        Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/event-type"));
 
         Assert.Empty(EndpointAuthorization.Undeclared(endpoints));
     }

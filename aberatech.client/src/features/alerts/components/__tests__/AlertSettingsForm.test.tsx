@@ -206,6 +206,77 @@ describe("the settings form", () => {
     expect(input("Repeat every").value).toBe("5");
   });
 
+  it("keeps alarms, notifications and unmarked events in their own sections", () => {
+    mount({
+      notificationPriority: 1,
+      notificationSound: "siren",
+      defaultType: "notification",
+    });
+
+    for (const heading of [
+      "Alarms: events marked #critical or set to Alarm",
+      "Notifications: events set to Notification",
+      "Calendar",
+    ])
+      expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
+    const pressed = (name: string) =>
+      screen.getByRole("button", { name }).getAttribute("aria-pressed");
+    expect(pressed("Notification priority High")).toBe("true");
+    expect(pressed("Notification priority Normal")).toBe("false");
+    expect(pressed("Unmarked events: Notification")).toBe("true");
+    expect(pressed("Unmarked events: None")).toBe("false");
+    expect(
+      (screen.getByLabelText("Notification sound") as HTMLSelectElement).value,
+    ).toBe("siren");
+    // The alarm's own chips are untouched by the notification's.
+    expect(pressed("Emergency")).toBe("true");
+  });
+
+  it("sends the notification settings and the default for unmarked events with the rest of the form", async () => {
+    const { saver } = mount();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Notification priority High" }),
+    );
+    fireEvent.change(screen.getByLabelText("Notification sound"), {
+      target: { value: "siren" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Unmarked events: Notification" }),
+    );
+    fireEvent.click(saveButton());
+    await flush();
+
+    expect(saver).toHaveBeenCalledWith({
+      ...settings,
+      notificationPriority: 1,
+      notificationSound: "siren",
+      defaultType: "notification",
+    });
+  });
+
+  it("shows a refused notification field beside it", async () => {
+    mount({}, async () => ({
+      ok: false,
+      reason: "invalid",
+      errors: {
+        notificationPriority: ["0 or 1."],
+        notificationSound: ["Not a Pushover sound."],
+        defaultType: ['"none" or "notification".'],
+      },
+    }));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Unmarked events: Notification" }),
+    );
+    fireEvent.click(saveButton());
+    await flush();
+
+    expect(screen.getByText("0 or 1.")).toBeTruthy();
+    expect(screen.getByText("Not a Pushover sound.")).toBeTruthy();
+    expect(screen.getByText('"none" or "notification".')).toBeTruthy();
+  });
+
   it("sends a cleared number as nothing, for the server to name", async () => {
     const { saver } = mount();
 

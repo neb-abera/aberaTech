@@ -82,4 +82,8 @@ internal static class Feeds
     /// <summary>A plain event on one morning: 09:00 to 09:30 New York time on Wednesday 28 October 2026.</summary>
     public static string Standup(params string[] alarms) =>
         Ics(Event("standup@google.com", "Standup", "20261028T090000", "20261028T093000", "Room 1", alarms: alarms));
+
+    /// <summary>The same standup marked #critical, so it is an alarm.</summary>
+    public static string CriticalStandup(params string[] alarms) =>
+        Ics(Event("standup@google.com", "Standup #critical", "20261028T090000", "20261028T093000", "Room 1", alarms: alarms));
 }

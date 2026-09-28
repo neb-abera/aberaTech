@@ -1,4 +1,5 @@
 using aberaTech.Scheduling.Alerts;
+using NodaTime;
 using Xunit;
 
 namespace aberaTech.Server.Tests.Alerts;
@@ -15,7 +16,11 @@ public sealed class AlertSettingsTests
     {
         var settings = AlertSettings.Defaults(new AlertsOptions());
 
-        Assert.Equal(new PushoverDelivery(2, 60, 10800, null), settings.Delivery);
+        Assert.Equal(new PushoverDelivery(2, 60, 10800, null), settings.AlarmDelivery);
+        // Unmarked events send nothing until the owner says otherwise. A
+        // notification, once chosen, is priority 0 with the phone's sound.
+        Assert.Equal(AlertTypes.None, settings.DefaultType);
+        Assert.Equal(new PushoverDelivery(0, null, null, null), settings.NotificationDelivery);
         Assert.Equal(10, settings.DefaultLeadMinutes);
         Assert.Equal(5, settings.PollMinutes);
         Assert.Equal(48, settings.LookaheadHours);
@@ -36,10 +41,13 @@ public sealed class AlertSettingsTests
             DefaultLeadMinutes = -3,
             PollMinutes = 0,
             LookaheadHours = 10_000,
-            OwnerEmails = [" neb@work.example ", " "]
+            OwnerEmails = [" neb@work.example ", " "],
+            NotificationPriority = 2,
+            NotificationSound = "foghorn",
+            DefaultType = "alarm"
         });
 
-        Assert.Equal(new AlertSettings(2, 30, 180, "", 0, 1, 336, false, "", settings.OwnerEmails), settings);
+        Assert.Equal(new AlertSettings(2, 30, 180, "", 0, 1, 336, false, "", settings.OwnerEmails, 1, "", AlertTypes.None), settings);
         Assert.Equal(["neb@work.example"], settings.OwnerEmails);
     }
 
@@ -50,7 +58,43 @@ public sealed class AlertSettingsTests
     {
         var settings = AlertSettings.Defaults(new AlertsOptions()) with { Priority = priority, Sound = "bike" };
 
-        Assert.Equal(new PushoverDelivery(priority, null, null, "bike"), settings.Delivery);
+        Assert.Equal(new PushoverDelivery(priority, null, null, "bike"), settings.AlarmDelivery);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void A_notification_sounds_once_at_its_own_priority_and_sound_whatever_the_alarm_says(int priority)
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with
+        {
+            NotificationPriority = priority,
+            NotificationSound = "bike",
+            RepeatSeconds = 30,
+            Sound = "siren"
+        };
+
+        Assert.Equal(new PushoverDelivery(priority, null, null, "bike"), settings.NotificationDelivery);
+        Assert.Equal(settings.NotificationDelivery, settings.DeliveryFor(AlertTypes.Notification));
+        Assert.Equal(settings.AlarmDelivery, settings.DeliveryFor(AlertTypes.Alarm));
+        Assert.Null(settings.DeliveryFor(AlertTypes.None));
+    }
+
+    [Fact]
+    public void The_page_choice_wins_then_the_critical_mark_then_the_default()
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions());
+        var plain = new PlannedAlert("k", "Standup", null, Instant.MinValue, Instant.MinValue, AlertSource.Reminder, "standup");
+        var marked = plain with { Critical = true };
+
+        Assert.Equal(new EffectiveType(AlertTypes.None, "default"), AlertTypes.Resolve(plain, null, settings));
+        Assert.Equal(
+            new EffectiveType(AlertTypes.Notification, "default"),
+            AlertTypes.Resolve(plain, null, settings with { DefaultType = AlertTypes.Notification }));
+        Assert.Equal(new EffectiveType(AlertTypes.Alarm, "critical"), AlertTypes.Resolve(marked, null, settings));
+        Assert.Equal(new EffectiveType(AlertTypes.Notification, "set"), AlertTypes.Resolve(marked, AlertTypes.Notification, settings));
+        Assert.Equal(new EffectiveType(AlertTypes.None, "set"), AlertTypes.Resolve(marked, AlertTypes.None, settings));
+        Assert.Equal(new EffectiveType(AlertTypes.Alarm, "set"), AlertTypes.Resolve(plain, AlertTypes.Alarm, settings));
     }
 
     [Theory]
@@ -87,6 +131,9 @@ public sealed class AlertSettingsTests
         var settings = AlertSettings.Defaults(new AlertsOptions());
 
         Assert.Equal(settings.PlanKey, (settings with { Priority = 0, RepeatSeconds = 300, Sound = "bike", PollMinutes = 1 }).PlanKey);
+        Assert.Equal(
+            settings.PlanKey,
+            (settings with { NotificationPriority = 1, NotificationSound = "bike", DefaultType = AlertTypes.Notification }).PlanKey);
         Assert.NotEqual(settings.PlanKey, (settings with { DefaultLeadMinutes = 11 }).PlanKey);
         Assert.NotEqual(settings.PlanKey, (settings with { LookaheadHours = 49 }).PlanKey);
         Assert.NotEqual(settings.PlanKey, (settings with { IncludeAllDay = true }).PlanKey);

@@ -60,13 +60,20 @@ public enum DeliveryOutcome
     Skipped,
     Muted,
     AlreadyClaimed,
-    Started
+    Started,
+
+    /// <summary>
+    /// The event's type is none. Nothing is claimed or recorded, so a
+    /// change to Notification or Alarm before the start still sends.
+    /// </summary>
+    Off
 }
 
 /// <summary>
 /// Sends one due alert, after the checks that must be read at that moment
-/// rather than at the last calendar read: skipped, muted, already claimed.
-/// The settings are read then too, so a save changes the next send.
+/// rather than at the last calendar read: skipped, muted, the event's type,
+/// already claimed. The settings are read then too, so a save changes the
+/// next send.
 /// </summary>
 public sealed class AlertDispatcher(
     IServiceScopeFactory scopes,
@@ -85,13 +92,15 @@ public sealed class AlertDispatcher(
         if (await store.IsSkippedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Skipped;
         if (await store.MutedUntilAsync(cancellationToken) is { } until && until > now) return DeliveryOutcome.Muted;
         var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+        var type = AlertTypes.Resolve(alert, await store.EventTypeAsync(alert.EventId, cancellationToken), settings);
+        if (settings.DeliveryFor(type.Type) is not { } delivery) return DeliveryOutcome.Off;
         if (!await store.TryClaimAsync(alert.Key, alert.StartsAt, now, cancellationToken)) return DeliveryOutcome.AlreadyClaimed;
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var result = await pushover.SendAsync(
             alert.Title,
             AlertText.Message(alert, status.Snapshot().Zone),
-            settings.Delivery,
+            delivery,
             cancellationToken);
 
         var done = clock.GetCurrentInstant();
@@ -111,41 +120,48 @@ public sealed class AlertDispatcher(
     }
 
     /// <summary>
-    /// The page's test button. Not deduplicated and not muted: pressing it is
-    /// the owner asking. It goes with the saved priority, repeat and sound,
-    /// so it shows what an event's alert will do.
+    /// The page's two test buttons: Send test alert goes as an alarm, Send
+    /// test notification as a notification. Not deduplicated and not muted:
+    /// pressing one is the owner asking. Each goes with the saved settings
+    /// for its type, so it shows what an event of that type will do.
     /// </summary>
-    public async Task<PushoverResult> SendTestAsync(CancellationToken cancellationToken)
+    public async Task<PushoverResult> SendTestAsync(string type, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var settings = await AlertSettings.CurrentAsync(
             scope.ServiceProvider.GetRequiredService<IAlertStore>(), options, cancellationToken);
+        var delivery = settings.DeliveryFor(type)
+                       ?? throw new ArgumentOutOfRangeException(nameof(type), type, "A test is an alarm or a notification.");
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var now = clock.GetCurrentInstant();
+        var name = AlertText.TestName(type);
 
         var result = await pushover.SendAsync(
-            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone, settings), settings.Delivery, cancellationToken);
+            name, AlertText.TestMessage(now, status.Snapshot().Zone, type, delivery), delivery, cancellationToken);
 
-        status.Sent(new LastSend(clock.GetCurrentInstant(), "Test alert", result.Outcome));
-        if (!result.Ok) logger.LogWarning("Test alert failed ({Failure}).", result.Error);
+        status.Sent(new LastSend(clock.GetCurrentInstant(), name, result.Outcome));
+        if (!result.Ok) logger.LogWarning("{Test} failed ({Failure}).", name, result.Error);
         return result;
     }
 
     /// <summary>
-    /// Send test on one listed alert: that event's own text with the saved
-    /// settings, titled "Test: ". Nothing is claimed and mute and skip are
-    /// not read, so the real alert still goes at its time.
+    /// Send test on one listed alert: that event's own text, sent as its
+    /// type with that type's saved settings, titled "Test: ". Null when the
+    /// type is none: there is nothing to test. Nothing is claimed and mute
+    /// and skip are not read, so the real alert still goes at its time.
     /// </summary>
-    public async Task<PushoverResult> SendEventTestAsync(PlannedAlert alert, CancellationToken cancellationToken)
+    public async Task<PushoverResult?> SendEventTestAsync(PlannedAlert alert, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
-        var settings = await AlertSettings.CurrentAsync(
-            scope.ServiceProvider.GetRequiredService<IAlertStore>(), options, cancellationToken);
+        var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
+        var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+        var type = AlertTypes.Resolve(alert, await store.EventTypeAsync(alert.EventId, cancellationToken), settings);
+        if (settings.DeliveryFor(type.Type) is not { } delivery) return null;
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var title = AlertText.TestTitle(alert.Title);
 
         var result = await pushover.SendAsync(
-            title, AlertText.Message(alert, status.Snapshot().Zone), settings.Delivery, cancellationToken);
+            title, AlertText.Message(alert, status.Snapshot().Zone), delivery, cancellationToken);
 
         status.Sent(new LastSend(clock.GetCurrentInstant(), title, result.Outcome));
         if (!result.Ok) logger.LogWarning("Test of the alert for an event starting at {StartsAt} failed ({Failure}).", alert.StartsAt, result.Error);
@@ -181,6 +197,13 @@ public sealed class CalendarAlertWorker(
 
     /// <summary>Claims and skips for events this long past are forgotten.</summary>
     public static readonly Duration KeepFor = Duration.FromDays(14);
+
+    /// <summary>
+    /// A type chosen for an event that has not been in the feed for this long
+    /// is forgotten. Long enough that a feed read that briefly drops an event
+    /// does not lose the choice. Short enough that deleted events do not pile up.
+    /// </summary>
+    public static readonly Duration KeepChoicesFor = Duration.FromDays(60);
 
     private readonly SemaphoreSlim _tick = new(1, 1);
     private readonly HashSet<string> _handled = new(StringComparer.Ordinal);
@@ -222,8 +245,9 @@ public sealed class CalendarAlertWorker(
 
                 try
                 {
-                    await dispatcher.DeliverAsync(alert, cancellationToken);
-                    _handled.Add(alert.Key);
+                    // An event set to send nothing is asked again next pass:
+                    // switched on before its start, it still goes.
+                    if (await dispatcher.DeliverAsync(alert, cancellationToken) != DeliveryOutcome.Off) _handled.Add(alert.Key);
                 }
                 catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                 {
@@ -300,10 +324,11 @@ public sealed class CalendarAlertWorker(
     {
         _plannedWith = settings.PlanKey;
         await using var scope = scopes.CreateAsyncScope();
+        CalendarPlan plan;
         try
         {
             var ics = await scope.ServiceProvider.GetRequiredService<CalendarFeed>().FetchAsync(cancellationToken);
-            var plan = AlertPlanner.Plan(ics, now, settings);
+            plan = AlertPlanner.Plan(ics, now, settings);
             status.Planned(plan, now);
 
             var keys = plan.Alerts.Select(alert => alert.Key).ToHashSet(StringComparer.Ordinal);
@@ -321,7 +346,9 @@ public sealed class CalendarAlertWorker(
 
         try
         {
-            await scope.ServiceProvider.GetRequiredService<IAlertStore>().PruneAsync(now - KeepFor, cancellationToken);
+            var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
+            await store.PruneAsync(now - KeepFor, cancellationToken);
+            await store.SeenEventsAsync(plan.EventIds, now, now - KeepChoicesFor, cancellationToken);
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {

@@ -10,6 +10,11 @@ namespace aberaTech.Scheduling.Alerts;
 /// effect without a deploy, on every replica.
 /// </summary>
 /// <remarks>
+/// Priority, RepeatSeconds, StopAfterMinutes and Sound are the alarm's:
+/// an event marked #critical, or set to Alarm on the page. The three
+/// Notification fields are for an event set to Notification, and
+/// DefaultType says what an event with neither sends.
+///
 /// The three secrets are not here. They stay container secrets: typed into
 /// a web form they would pass through the browser and the database.
 /// </remarks>
@@ -23,7 +28,10 @@ public sealed record AlertSettings(
     int LookaheadHours,
     bool IncludeAllDay,
     string TimeZone,
-    IReadOnlyList<string> OwnerEmails)
+    IReadOnlyList<string> OwnerEmails,
+    int NotificationPriority = 0,
+    string NotificationSound = "",
+    string DefaultType = AlertTypes.None)
 {
     public const int MinPriority = 0;
     public const int MaxPriority = PushoverClient.EmergencyPriority;
@@ -40,6 +48,7 @@ public sealed record AlertSettings(
     public const int MaxOwnerEmails = 10;
     public const int MaxEmailLength = 254;
     public const int MaxTimeZoneLength = 64;
+    public const int MaxNotificationPriority = 1;
 
     /// <summary>The configuration's values, pulled inside the bounds. What runs until the owner saves.</summary>
     public static AlertSettings Defaults(AlertsOptions options) => new(
@@ -52,7 +61,10 @@ public sealed record AlertSettings(
         Math.Clamp(options.LookaheadHours, MinLookaheadHours, MaxLookaheadHours),
         options.IncludeAllDay,
         options.TimeZone?.Trim() ?? "",
-        [.. options.OwnerEmails.Select(email => email.Trim()).Where(email => email.Length > 0)]);
+        [.. options.OwnerEmails.Select(email => email.Trim()).Where(email => email.Length > 0)],
+        Math.Clamp(options.NotificationPriority, MinPriority, MaxNotificationPriority),
+        PushoverClient.Sounds.Contains(options.NotificationSound ?? "") ? options.NotificationSound! : "",
+        AlertTypes.Defaults.Contains(options.DefaultType ?? "") ? options.DefaultType! : AlertTypes.None);
 
     /// <summary>The saved row, or the configuration's values when nothing is saved.</summary>
     public static async Task<AlertSettings> CurrentAsync(
@@ -71,12 +83,27 @@ public sealed record AlertSettings(
     /// </summary>
     public int EffectiveStopSeconds => Math.Min(StopAfterMinutes * 60, PushoverClient.MaxEmergencySounds * RepeatSeconds);
 
-    /// <summary>What the send path asks Pushover for. Retry and expire go only with priority 2.</summary>
-    public PushoverDelivery Delivery => new(
+    /// <summary>What an alarm asks Pushover for. Retry and expire go only with priority 2.</summary>
+    public PushoverDelivery AlarmDelivery => new(
         Priority,
         Priority == PushoverClient.EmergencyPriority ? RepeatSeconds : null,
         Priority == PushoverClient.EmergencyPriority ? StopAfterMinutes * 60 : null,
         Sound.Length == 0 ? null : Sound);
+
+    /// <summary>What a notification asks Pushover for: one sound, never a retry or an expiry.</summary>
+    public PushoverDelivery NotificationDelivery => new(
+        NotificationPriority,
+        null,
+        null,
+        NotificationSound.Length == 0 ? null : NotificationSound);
+
+    /// <summary>How an alert of this type is sent. Null for <see cref="AlertTypes.None"/>: nothing goes.</summary>
+    public PushoverDelivery? DeliveryFor(string type) => type switch
+    {
+        AlertTypes.Alarm => AlarmDelivery,
+        AlertTypes.Notification => NotificationDelivery,
+        _ => null
+    };
 
     /// <summary>The zone when the feed names none. Blank is UTC. A saved name was checked on save.</summary>
     public DateTimeZone FallbackZone() =>
@@ -103,7 +130,10 @@ public sealed record AlertSettings(
         int? lookaheadHours,
         bool? includeAllDay,
         string? timeZone,
-        IReadOnlyList<string?>? ownerEmails)
+        IReadOnlyList<string?>? ownerEmails,
+        int? notificationPriority,
+        string? notificationSound,
+        string? defaultType)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -126,6 +156,18 @@ public sealed record AlertSettings(
         else if (sound.Length > 0 && !PushoverClient.Sounds.Contains(sound)) errors["sound"] = ["Not a Pushover sound."];
 
         if (includeAllDay is null) errors["includeAllDay"] = ["Required."];
+
+        if (notificationPriority is null) errors["notificationPriority"] = ["Required."];
+        else if (notificationPriority is < MinPriority or > MaxNotificationPriority) errors["notificationPriority"] = ["0 or 1."];
+
+        if (notificationSound is null) errors["notificationSound"] = ["Required."];
+        else if (notificationSound.Length > 0 && !PushoverClient.Sounds.Contains(notificationSound))
+        {
+            errors["notificationSound"] = ["Not a Pushover sound."];
+        }
+
+        if (defaultType is null) errors["defaultType"] = ["Required."];
+        else if (!AlertTypes.Defaults.Contains(defaultType)) errors["defaultType"] = ["\"none\" or \"notification\"."];
 
         if (timeZone is null) errors["timeZone"] = ["Required."];
         else if (timeZone.Trim() is { Length: > 0 } zone

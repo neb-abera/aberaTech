@@ -90,13 +90,16 @@ site. The history is on the
   and read. `DevBox__SubscriptionId` switches it on.
 
 - `/alerts` sends one Pushover message before each event on the owner's
-  Google Calendar (`aberaTech.Scheduling/Alerts/`). The worker reads the
+  Google Calendar that is an alarm or a notification
+  (`aberaTech.Scheduling/Alerts/`). An event marked `#critical` is an
+  alarm. Any event's type can be set on the page. Every other event sends
+  nothing by default. The worker reads the
   secret iCal address and sends each alert at its own time. The alert time
   is the event's earliest popup reminder, or the default lead before the
   start. Cancelled and declined events are skipped. Text and "06:00
   tomorrow" use the calendar's own zone (`X-WR-TIMEZONE`, then the
-  settings' zone, then UTC). Mute, Skip, the settings and a one-send claim
-  per occurrence are rows in the scheduling database.
+  settings' zone, then UTC). Mute, Skip, the settings, each event's type
+  and a one-send claim per occurrence are rows in the scheduling database.
   A failed calendar read is a red banner at the top of the page, with the
   error and the time of the last good read.
 
@@ -123,10 +126,11 @@ az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
 ```
 
 The update starts a new revision. `/alerts` then lists the next alerts and
-the time of the last calendar read. Send test alert proves the keys.
-Send test on a listed alert sends that event's own text, titled
-`Test: <title>`, with the saved settings. It claims nothing and ignores
-Mute and Skip, so the real alert still goes at its time.
+the time of the last calendar read. Send test alert proves the keys with
+an alarm. Send test notification sends one notification. Send test on a
+listed alert sends that event's own text, titled `Test: <title>`, as the
+event's type. It is off for an event that sends nothing. It claims nothing
+and ignores Mute and Skip, so the real alert still goes at its time.
 
 A red banner saying the calendar cannot be read with `HTTP 404` means
 Google does not know the address. Copy the secret address in iCal format
@@ -134,11 +138,31 @@ again and set `alerts-calendar-ics` with the first command above.
 
 ### Calendar alerts: which events alert
 
-Every timed event that starts inside the look-ahead window alerts. Nothing
-needs marking. All-day events are left out unless the setting is on.
-Cancelled events and invitations the owner declined are left out. The
-alert goes at the event's earliest popup notification, else the default
-lead before the start (`AlertPlanner.cs`).
+Each event has one of three types (`AlertTypes.cs`):
+
+| Type | Sends |
+|---|---|
+| Alarm | one message with the alarm settings. At priority 2 it repeats until acknowledged |
+| Notification | one message at the notification priority and sound. Never a retry or an expiry |
+| None | nothing. The event is still listed on the page |
+
+The type comes from the first of these that applies:
+
+1. The type set on the page. Each listed alert has None, Notification and
+   Alarm. The choice is kept under the event's UID, so it holds for every
+   occurrence of a repeating event. Use default removes it. A choice for an
+   event missing from the feed for 60 days is deleted.
+2. `#critical` in the title or description, as a word of its own, in any
+   case: an alarm. `#criticality` and `a#critical` do not count. The mark
+   is left off the title shown and sent (`AlertPlanner.cs`).
+3. The default for unmarked events under Settings: None unless changed.
+
+Every timed event that starts inside the look-ahead window is planned and
+listed. All-day events are left out unless the setting is on. Cancelled
+events and invitations the owner declined are left out. The alert goes at
+the event's earliest popup notification, else the default lead before the
+start (`AlertPlanner.cs`). An event set to None is asked again at every
+pass until it starts, so switching it on after its alert time still sends.
 
 Google Calendar's menus, from support.google.com/calendar/answer/37242:
 
@@ -161,10 +185,13 @@ every other replica reads it at the start of its next pass.
 
 | Setting | Default | Bounds |
 |---|---|---|
-| Priority | 2, emergency | 0 normal, 1 high (through quiet hours), 2 emergency (repeats until acknowledged) |
-| Repeat every | 60 s | 30 to 10800 s. Priority 2 only |
-| Stop after | 180 min | 1 to 180 min. Priority 2 only |
-| Sound | the phone's default | one of Pushover's 23 built-in sounds |
+| Alarm priority | 2, emergency | 0 normal, 1 high (through quiet hours), 2 emergency (repeats until acknowledged) |
+| Alarm repeat every | 60 s | 30 to 10800 s. Priority 2 only |
+| Alarm stop after | 180 min | 1 to 180 min. Priority 2 only |
+| Alarm sound | the phone's default | one of Pushover's 23 built-in sounds |
+| Notification priority | 0, normal | 0 normal, 1 high |
+| Notification sound | the phone's default | one of Pushover's 23 built-in sounds |
+| Events with no mark and no type set here | None | None or Notification |
 | Default lead | 10 min | 0 to 1440 min |
 | Check calendar every | 5 min | 1 to 60 min |
 | Look ahead | 48 h | 1 to 336 h |
