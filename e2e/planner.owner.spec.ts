@@ -2,10 +2,12 @@ import { expect, test } from "@playwright/test";
 
 // /planner as its owner uses it: pick a track, watch the board and the
 // rules follow, and find the choice still there after a reload because it
-// was saved to the account. Under `make e2e` the document routes answer as
-// the owner without a cookie (compose.yaml, Fitness__DevelopmentOwner),
-// so the plan saved here is the one plan on the server. The test puts the
-// default track back before it ends.
+// was saved to the account. The page asks for the plan only once the
+// account probe says the owner is signed in, so the test signs in first,
+// by the Development sign-in under `make e2e` (compose.yaml,
+// Admin__DevelopmentSignIn). The document routes answer as the owner
+// (Fitness__DevelopmentOwner), so the plan saved here is the one plan on
+// the server. The test puts the default track back before it ends.
 
 const initial = "Signal processing and RF, balanced";
 const other = "Receiver systems, in ten";
@@ -13,7 +15,8 @@ const other = "Receiver systems, in ten";
 test("choosing a track rebuilds the plan and is still chosen after a reload", async ({
   page,
 }) => {
-  await page.goto("/planner");
+  await page.goto("/api/scheduling/admin/sign-in?returnUrl=%2Fplanner");
+  await page.waitForURL("**/planner");
   const saved = page.getByText("Saved to your account");
   await expect(saved).toBeVisible({ timeout: 15_000 });
 

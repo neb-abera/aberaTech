@@ -38,6 +38,16 @@ async function fetchSignedIn(): Promise<boolean> {
 }
 
 /**
+ * The same answer outside React: the one request the app bar also waits on.
+ * A page that must not ask a visitor's browser for the owner's things asks
+ * this first (usePlanner.ts).
+ */
+export function accountSignedIn(): Promise<boolean> {
+  probe ??= fetchSignedIn();
+  return probe;
+}
+
+/**
  * `resolved` distinguishes "not signed in" from "no answer yet". Anything
  * destructive that keys on being signed out — demoting a stored System
  * preference, say — must wait for it: acting on the placeholder "no" while
@@ -50,8 +60,7 @@ export function useAccount(): { signedIn: boolean; resolved: boolean } {
   useEffect(() => {
     let cancelled = false;
 
-    probe ??= fetchSignedIn();
-    void probe.then((value) => {
+    void accountSignedIn().then((value) => {
       if (!cancelled) setState({ signedIn: value, resolved: true });
     });
 

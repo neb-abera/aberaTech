@@ -122,3 +122,47 @@ test("hydration keeps the prerendered board, with no error and no shift", async 
   expect(await layout(page)).toEqual(before);
   await live.close();
 });
+
+test("a visitor's board asks for no saved plan and logs no error", async ({
+  browser,
+}, testInfo) => {
+  // A fresh context carries no cookie. The owner's plan is behind sign-in,
+  // so asking for it answers 401 in production, and every browser logs a
+  // 4xx as a console error (Lighthouse did, on every run). The page asks
+  // who is signed in first, and a visitor never asks for the plan.
+  const context = await browser.newContext(device(testInfo));
+  const page = await context.newPage();
+  const errors: string[] = [];
+  const refused: string[] = [];
+  const asked: string[] = [];
+  page.on("console", (message) => {
+    // Chromium ignores COOP on the suite's plain http origin and says so.
+    // Production is https. Lighthouse marks the origin secure instead
+    // (tools/lighthouse/lighthouserc.cjs).
+    const text = message.text();
+    if (/^The Cross-Origin-Opener-Policy header has been ignored/.test(text))
+      return;
+    if (message.type() === "error") errors.push(text);
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith("/api/progress/")) asked.push(path);
+  });
+  page.on("response", (response) => {
+    const path = new URL(response.url()).pathname;
+    if (path.startsWith("/api/") && response.status() >= 400)
+      refused.push(`${response.status()} ${path}`);
+  });
+
+  await page.goto("/planner");
+  await expect(
+    page.getByText("Changes stay in this tab and are not saved."),
+  ).toBeAttached();
+  await expectBoard(page);
+
+  expect(refused).toEqual([]);
+  expect(asked).toEqual([]);
+  expect(errors).toEqual([]);
+  await context.close();
+});

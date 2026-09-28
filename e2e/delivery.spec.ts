@@ -148,7 +148,7 @@ const firstRequest: Record<string, string> = {
   "/alerts": "/api/alerts/status",
   "/schedule": "/api/scheduling/state",
   "/fitness": "/api/fitness/me",
-  "/planner": "/api/progress/planner",
+  "/planner": "/api/scheduling/admin/me",
 };
 
 for (const [path, api] of Object.entries(firstRequest)) {

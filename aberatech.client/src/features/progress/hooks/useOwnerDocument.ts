@@ -39,6 +39,7 @@ export interface OwnerDocument<T> {
 export function useOwnerDocument<T>(
   key: string,
   debounceMs = 800,
+  signedIn?: () => Promise<boolean>,
 ): OwnerDocument<T> {
   const [status, setStatus] = useState<OwnerStatus>("loading");
   const [value, setValue] = useState<T | null>(null);
@@ -53,12 +54,12 @@ export function useOwnerDocument<T>(
 
   const load = useCallback(async () => {
     const before = changes.current;
-    const loaded = await loadDocument<T>(key);
+    const loaded = await loadDocument<T>(key, signedIn);
     if (!mounted.current || changes.current !== before) return;
     statusRef.current = loaded.status;
     setStatus(loaded.status);
     if (loaded.status === "owner") setValue(loaded.value);
-  }, [key]);
+  }, [key, signedIn]);
 
   useEffect(() => {
     mounted.current = true;
