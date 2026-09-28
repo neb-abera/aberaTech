@@ -160,9 +160,6 @@ Accepted:
   dev box does not have.
 * `@lhci/server` 0.15.1 (June 2025) is the newest release. Its express 4 and
   sequelize 6 come with it.
-* `uuid` 8, through sequelize 6 in the server, has a moderate advisory for
-  a buffer the caller passes in (GHSA-w5hq-g745-h8pq). Sequelize never
-  passes one. No release of sequelize 6 moves off it.
 
 ## Hardening deliberately left for the owner
 
