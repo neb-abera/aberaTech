@@ -26,6 +26,42 @@ test.beforeEach(async ({ request }) => {
   expect(state.mode, "an open queue replaces the slots").toBe("slots");
 });
 
+// The panel holds a screen of room while the schedule loads. With the
+// spinner alone the footer drew 215 px from the top of a phone, and the
+// slots then pushed it down: a layout shift of 0.55 in Lighthouse on
+// 2026-09-28 (components/SchedulePanel.tsx). The state request is held so
+// the loading state can be measured, then let go.
+test("the footer stays below the window while the schedule loads", async ({
+  page,
+}) => {
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/scheduling/state**", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/schedule", { waitUntil: "domcontentloaded" });
+  const height = page.viewportSize()?.height ?? 0;
+  const footerTop = async () =>
+    (await page.locator("footer").boundingBox())?.y ?? 0;
+
+  await expect(
+    page.getByRole("progressbar", { name: "Loading the schedule" }),
+  ).toBeVisible();
+  expect(await footerTop(), `window ${height}`).toBeGreaterThanOrEqual(height);
+
+  release();
+  await expect(
+    page
+      .locator("button:not([disabled])")
+      .filter({ hasText: /^\d{1,2}$/ })
+      .first(),
+  ).toBeVisible({ timeout: 15_000 });
+  expect(await footerTop(), `window ${height}`).toBeGreaterThanOrEqual(height);
+});
+
 /** A full day: the second one offered, since the first may be today. */
 async function openDay(page: Page) {
   await page.goto("/schedule");
