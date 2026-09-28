@@ -1,13 +1,17 @@
+import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { prerenderToNodeStream } from "react-dom/static";
 import { StaticRouter } from "react-router";
 import Shell from "./Shell.tsx";
+import { checkErrors } from "./site/prerenderCheck";
 
 // The render's style elements, gathered into the head for the CSP to hash.
 export { hoistStyles } from "./site/emotionStyles";
 // The head each prerendered page carries: its own title, description and
 // preview card, in place of the shell's one title for every page.
 export { headFor } from "./site/meta";
+// What a page must hold before the build writes it.
+export { checkPage } from "./site/prerenderCheck";
 export { prerenderedRoutes } from "./site/prerenderedRoutes";
 // The server needs the app's own list of pages to tell a real page from a
 // typo; without it every unknown path was answered with the shell and a 200.
@@ -34,7 +38,22 @@ function page(url: string) {
   );
 }
 
-export async function render(url: string): Promise<string> {
+export function render(url: string): Promise<string> {
+  return renderTree(url, () => page(url));
+}
+
+/**
+ * render, for any tree. Throws, naming the route, when React reports an
+ * error. A component that throws inside a Suspense boundary does not fail a
+ * server render: React writes the boundary for the browser to render again,
+ * and renderToString's own error handler does nothing. On 2026-09-28 that
+ * shipped 16 pages with no content and a green build. The prerender pass
+ * reports every such error, so its handler collects them.
+ */
+export async function renderTree(
+  url: string,
+  tree: () => ReactNode,
+): Promise<string> {
   // Two passes with two APIs, each covering the other's blind spot.
   //
   // The first pass exists only to load the route's React.lazy chunk:
@@ -47,10 +66,22 @@ export async function render(url: string): Promise<string> {
   // loading would come out as the fallback. With the lazy cache warmed by the
   // first pass, nothing suspends, and the output is the plain HTML a static
   // file should be.
-  const warmup = await prerenderToNodeStream(page(url));
-  // The prelude is a Node Readable at run time; react-dom types it as a web
-  // ReadableStream, which has no resume().
-  (warmup.prelude as unknown as { resume(): void }).resume(); // Drain; unused.
+  const errors: unknown[] = [];
+  try {
+    const warmup = await prerenderToNodeStream(tree(), {
+      onError: (error) => {
+        errors.push(error);
+      },
+    });
+    // The prelude is a Node Readable at run time; react-dom types it as a
+    // web ReadableStream, which has no resume().
+    (warmup.prelude as unknown as { resume(): void }).resume(); // Drain; unused.
+  } catch (error) {
+    // An error outside every boundary rejects the render. It has reached
+    // onError already, unless React failed before rendering at all.
+    if (!errors.includes(error)) errors.push(error);
+  }
+  checkErrors(url, errors);
 
-  return renderToString(page(url));
+  return renderToString(tree());
 }

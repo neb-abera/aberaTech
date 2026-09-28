@@ -16,6 +16,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
+  checkPage,
   headFor,
   hoistStyles,
   prerenderedRoutes,
@@ -116,10 +117,11 @@ for (const route of routes.map((entry) => entry.path)) {
 }
 
 for (const route of prerenderedRoutes) {
+  // Both throw, naming the route: render on an error React reported,
+  // checkPage on a page with no text or no h1. A broken page stops the build
+  // here rather than shipping an empty root.
   const html = await render(route);
-  if (html.trim() === "") {
-    throw new Error(`route ${route} rendered to nothing`);
-  }
+  checkPage(route, html);
 
   const file =
     route === "/" ? "dist/index.html" : path.join("dist", route, "index.html");
