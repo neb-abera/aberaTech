@@ -14,14 +14,18 @@ import { byRoute } from "./lhr.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const BEACON = "https://static.cloudflareinsights.com/beacon.min.js/v1";
-const EMAIL = "https://abera.tech/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js";
+const EMAIL =
+  "https://abera.tech/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js";
 
 function clean(route = "/") {
   const url = `https://abera.tech${route}`;
   return {
     requestedUrl: url,
     audits: {
-      "render-blocking-insight": { score: 1, details: { type: "table", items: [] } },
+      "render-blocking-insight": {
+        score: 1,
+        details: { type: "table", items: [] },
+      },
       "network-dependency-tree-insight": {
         score: 1,
         details: {
@@ -37,14 +41,18 @@ function clean(route = "/") {
                     children: {
                       b: {
                         url: "https://abera.tech/assets/index.js",
-                        children: { c: { url: "https://abera.tech/api/me", children: {} } },
+                        children: {
+                          c: { url: "https://abera.tech/api/me", children: {} },
+                        },
                       },
                       d: {
                         url: BEACON,
                         children: {
                           e: {
                             url: "https://abera.tech/cdn-cgi/rum?",
-                            children: { f: { url: "https://abera.tech/x", children: {} } },
+                            children: {
+                              f: { url: "https://abera.tech/x", children: {} },
+                            },
                           },
                         },
                       },
@@ -63,7 +71,11 @@ function clean(route = "/") {
         score: 1,
         details: {
           items: [
-            { source: "exception", description: "beacon", sourceLocation: { url: BEACON } },
+            {
+              source: "exception",
+              description: "beacon",
+              sourceLocation: { url: BEACON },
+            },
           ],
         },
       },
@@ -83,24 +95,36 @@ function clean(route = "/") {
 
 const plants = {
   "render-blocking request": (l) => {
-    l.audits["render-blocking-insight"].details.items.push({ url: "https://abera.tech/a.css" });
+    l.audits["render-blocking-insight"].details.items.push({
+      url: "https://abera.tech/a.css",
+    });
   },
   "request chain of 4": (l) => {
-    const c = l.audits["network-dependency-tree-insight"].details.items[0].value.chains.a.children.b
-      .children.c;
-    c.children = { g: { url: "https://abera.tech/assets/late.js", children: {} } };
+    const c =
+      l.audits["network-dependency-tree-insight"].details.items[0].value.chains
+        .a.children.b.children.c;
+    c.children = {
+      g: { url: "https://abera.tech/assets/late.js", children: {} },
+    };
   },
   "cumulative layout shift": (l) => {
     l.audits["cumulative-layout-shift"].numericValue = 0.01;
   },
   "unsized-images lists": (l) => {
-    l.audits["unsized-images"].details.items.push({ url: "https://abera.tech/a.png" });
+    l.audits["unsized-images"].details.items.push({
+      url: "https://abera.tech/a.png",
+    });
   },
   "image-delivery-insight lists": (l) => {
-    l.audits["image-delivery-insight"].details.items.push({ url: "https://abera.tech/b.png" });
+    l.audits["image-delivery-insight"].details.items.push({
+      url: "https://abera.tech/b.png",
+    });
   },
   "console error": (l) => {
-    l.audits["errors-in-console"].details.items.push({ source: "network", description: "404" });
+    l.audits["errors-in-console"].details.items.push({
+      source: "network",
+      description: "404",
+    });
   },
   "CSP violation": (l) => {
     l.audits["inspector-issues"].details.items.push({
@@ -112,7 +136,10 @@ const plants = {
     delete l.audits["cumulative-layout-shift"];
   },
   "render-blocking-insight errored": (l) => {
-    l.audits["render-blocking-insight"] = { scoreDisplayMode: "error", errorMessage: "x" };
+    l.audits["render-blocking-insight"] = {
+      scoreDisplayMode: "error",
+      errorMessage: "x",
+    };
   },
   "Lighthouse failed": (l) => {
     l.runtimeError = { message: "NO_FCP" };
@@ -126,28 +153,39 @@ const fail = (message) => {
 };
 
 const cleanFindings = checkReport(clean(), "clean");
-if (cleanFindings.length > 0) fail(`a clean report has findings: ${cleanFindings.join("; ")}`);
+if (cleanFindings.length > 0)
+  fail(`a clean report has findings: ${cleanFindings.join("; ")}`);
 
 for (const [expected, plant] of Object.entries(plants)) {
   const lhr = clean();
   plant(lhr);
   const findings = checkReport(lhr, "planted");
   if (!findings.some((f) => f.includes(expected))) {
-    fail(`planted "${expected}" was not found (got: ${findings.join("; ") || "nothing"})`);
+    fail(
+      `planted "${expected}" was not found (got: ${findings.join("; ") || "nothing"})`,
+    );
   }
 }
 
 // Bytes: 1000 counted, the beacon and the email script not.
 const groups = byRoute([["x", clean()]]);
 const bytes = (budget, live, floors = {}) =>
-  checkBytes(groups, { budgets: budget === undefined ? {} : { "lighthouse:/": budget }, floors }, { live })
-    .findings;
-if (bytes(1100, false).length > 0) fail(`1000 bytes against 1100 failed: ${bytes(1100, false)}`);
-if (!bytes(999, false).some((f) => f.includes("over its budget"))) fail("999 did not fail as over");
-if (!bytes(1101, false).some((f) => f.includes("set it to 1100"))) fail("1101 did not ask for 1100");
+  checkBytes(
+    groups,
+    { budgets: budget === undefined ? {} : { "lighthouse:/": budget }, floors },
+    { live },
+  ).findings;
+if (bytes(1100, false).length > 0)
+  fail(`1000 bytes against 1100 failed: ${bytes(1100, false)}`);
+if (!bytes(999, false).some((f) => f.includes("over its budget")))
+  fail("999 did not fail as over");
+if (!bytes(1101, false).some((f) => f.includes("set it to 1100")))
+  fail("1101 did not ask for 1100");
 if (bytes(1101, true).length > 0) fail("--live applied the headroom rule");
-if (bytes(1500, false, { "lighthouse:/": 1500 }).length > 0) fail("a floor was not honoured");
-if (!bytes(undefined, false).some((f) => f.includes("no budget"))) fail("a missing budget passed");
+if (bytes(1500, false, { "lighthouse:/": 1500 }).length > 0)
+  fail("a floor was not honoured");
+if (!bytes(undefined, false).some((f) => f.includes("no budget")))
+  fail("a missing budget passed");
 
 // The CLI: exit 0 clean, 1 on a finding, 2 on no reports.
 const dir = mkdtempSync(path.join(tmpdir(), "gate-"));
@@ -162,11 +200,14 @@ const bad = clean();
 plants["render-blocking request"](bad);
 writeFileSync(path.join(planted, "lhr-1.json"), JSON.stringify(bad));
 const cli = (...args) =>
-  spawnSync(process.execPath, [path.join(here, "gate.mjs"), budgets, ...args], { encoding: "utf8" })
-    .status;
+  spawnSync(process.execPath, [path.join(here, "gate.mjs"), budgets, ...args], {
+    encoding: "utf8",
+  }).status;
 if (cli(reports) !== 0) fail("the CLI failed a clean directory");
-if (cli(reports, planted) !== 1) fail("the CLI passed a planted render-blocking request");
-if (cli(empty) !== 2) fail("the CLI did not exit 2 on a directory with no reports");
+if (cli(reports, planted) !== 1)
+  fail("the CLI passed a planted render-blocking request");
+if (cli(empty) !== 2)
+  fail("the CLI did not exit 2 on a directory with no reports");
 
 if (failed > 0) {
   process.stderr.write(`gate self-test: ${failed} failures\n`);

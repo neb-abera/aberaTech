@@ -33,7 +33,8 @@ export CHROME_PATH
 
 work=/tmp/lighthouse
 rm -rf "$work"
-cp -r /src "$work"
+mkdir -p "$work"
+tar -C /src --exclude=node_modules -cf - . | tar -C "$work" -xf -
 cd "$work" || exit 1
 npm ci --no-audit --no-fund > /dev/null || exit 1
 lhci="$work/node_modules/.bin/lhci"
@@ -44,7 +45,7 @@ for _ in $(seq 1 60); do
 done
 curl -sf "$LHCI_BASE_URL/healthz" > /dev/null || { echo "$LHCI_BASE_URL/healthz does not answer" >&2; exit 1; }
 
-rm -rf /out/devtools /out/simulate /out/summary.md
+rm -rf /out/devtools /out/simulate /out/summary.md /out/gate.txt
 status=0
 
 # DevTools throttling first: the numbers the tables lead with. Lighthouse's
@@ -63,7 +64,14 @@ done
 live=()
 [ "$LHCI_MODE" = live ] && live=(--live)
 node gate.selftest.mjs || exit 1
-node gate.mjs /budgets.json /out/devtools/.lighthouseci /out/simulate/.lighthouseci "${live[@]}" || status=1
+node gate.mjs /budgets.json /out/devtools/.lighthouseci /out/simulate/.lighthouseci "${live[@]}" \
+  2>&1 | tee /out/gate.txt
+[ "${PIPESTATUS[0]}" = 0 ] || status=1
+if [ "$status" = 0 ]; then
+  gate_line="The gate passed: no render-blocking request, no request chain over 3, CLS below 0.01, images sized and in modern formats, no console error, no CSP violation, page bytes within budget."
+else
+  gate_line="The gate failed. Findings, from the job log:"$'\n\n```\n'"$(grep '^  ' /out/gate.txt | head -40)"$'\n```'
+fi
 
 keep=(--median-run-only)
 [ "${LHCI_KEEP_ALL_RUNS:-}" = 1 ] && keep=()
@@ -79,6 +87,10 @@ if [ -z "${LHCI_TOKEN:-}" ]; then
     exit 1
   fi
   {
+    echo "### Lighthouse"
+    echo
+    echo "$gate_line"
+    echo
     LHCI_TITLE="Lighthouse, DevTools throttling" LHCI_TABLE_NOTE="$devtools_note" node summary.mjs table /out/devtools.json
     echo
     LHCI_TITLE="Lighthouse, simulated throttling" LHCI_TABLE_NOTE="$simulate_note" node summary.mjs table /out/simulate.json
@@ -99,6 +111,10 @@ for method in devtools simulate; do
 done
 
 {
+  echo "### Lighthouse"
+  echo
+  echo "$gate_line"
+  echo
   LHCI_TITLE="Lighthouse, DevTools throttling" LHCI_TABLE_NOTE="$devtools_note" \
     node summary.mjs report /out/devtools.json || exit 1
   echo
