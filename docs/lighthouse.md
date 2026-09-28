@@ -103,8 +103,14 @@ are deleted after 14 days, production builds after 90
   asks for, past two high advisories (GHSA-ph9p-34f9-6g65,
   GHSA-7c78-jf6q-g5cm).
 
+- Both pin `uuid` to 14.0.0 over the 8 that `@lhci/cli` and sequelize ask
+  for, past a moderate advisory with no fix in 8 (GHSA-w5hq-g745-h8pq).
+  `uuid` 14 is an ES module. Node 24 and 26 load it through `require`, and
+  an upload from the Playwright image's Node 24 to the server on Node 26
+  worked with it on 2026-09-28.
+
 Dependabot bumps `lighthouse` as a direct dependency. It does not bump an
-override. Check `tmp` when `@lhci/cli` moves.
+override. Check `tmp` and `uuid` when `@lhci/cli` or `@lhci/server` moves.
 
 ## The server
 
@@ -138,6 +144,10 @@ keeps a deleted share, with its snapshots, 7 days.
 
 To restore, on the dev box as neb: find the snapshot, download the file, check it,
 and upload it over the live one while the app is scaled to zero.
+
+Drilled on 2026-09-28: the snapshot of 03:31 UTC downloaded, passed
+`integrity_check`, and held all 12 builds. The upload over the live file
+has not been run.
 
 ```
 rg=aberatechserver-app-202412211749ResourceGroup
