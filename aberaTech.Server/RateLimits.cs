@@ -80,8 +80,8 @@ public static class RateLimits
             // loop, or a replay of a captured one.
             options.AddPolicy(DevBoxEndpoints.HeartbeatPolicy, context => PerMinute(context, heartbeatPerMinute));
 
-            // The /alerts buttons: mute, unmute, skip, undo and a test send,
-            // which costs a Pushover message. The owner presses a few times
+            // The /alerts buttons: mute, unmute, skip, undo, save and the two
+            // test sends. A test send costs a Pushover message. The owner presses a few times
             // a day; ten a minute is a loop. The end-to-end suite spends
             // more across three engines, so compose raises it there.
             options.AddPolicy(AlertsEndpoints.ActionsPolicy, context => PerMinute(context, alertsPerMinute));

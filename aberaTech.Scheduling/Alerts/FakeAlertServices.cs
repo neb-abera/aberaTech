@@ -30,13 +30,28 @@ public sealed class FakeAlertServices(IClock clock)
     private readonly Lock _lock = new();
     private readonly ConcurrentQueue<FakeMessage> _sent = new();
     private Instant _anchor = Minute(clock.GetCurrentInstant());
+    private bool _failing;
 
     public IReadOnlyList<FakeMessage> Sent => [.. _sent];
 
-    /// <summary>Places the calendar's events relative to the present minute.</summary>
+    /// <summary>Places the calendar's events relative to the present minute, and ends <see cref="Fail"/>.</summary>
     public void Reanchor()
     {
-        lock (_lock) _anchor = Minute(clock.GetCurrentInstant());
+        lock (_lock)
+        {
+            _anchor = Minute(clock.GetCurrentInstant());
+            _failing = false;
+        }
+    }
+
+    /// <summary>
+    /// The calendar answers 404 until the next <see cref="Reanchor"/>, as
+    /// Google does for a wrong secret address. For the page's failed-read
+    /// banner in the browser suite.
+    /// </summary>
+    public void Fail()
+    {
+        lock (_lock) _failing = true;
     }
 
     public string Calendar()
@@ -87,10 +102,17 @@ public sealed class FakeAlertServices(IClock clock)
         ]);
     }
 
-    public HttpMessageHandler CalendarHandler() => new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+    public HttpMessageHandler CalendarHandler() => new Handler(_ =>
     {
-        Content = new StringContent(Calendar(), System.Text.Encoding.UTF8, "text/calendar")
-    }));
+        bool failing;
+        lock (_lock) failing = _failing;
+        return Task.FromResult(failing
+            ? new HttpResponseMessage(HttpStatusCode.NotFound)
+            : new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Calendar(), System.Text.Encoding.UTF8, "text/calendar")
+            });
+    });
 
     public HttpMessageHandler PushoverHandler() => new Handler(async request =>
     {

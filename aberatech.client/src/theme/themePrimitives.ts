@@ -204,9 +204,15 @@ export const getDesignTokens = (mode: PaletteMode) => {
       action: {
         hover: alpha(gray[200], 0.2),
         selected: `${alpha(gray[200], 0.3)}`,
+        // MUI's disabled control text, black at 26% and white at 30%,
+        // measured 1.9:1 and 2.7:1 on /alerts. These are text.disabled.
+        disabled: gray[500],
+        disabledBackground: gray[100],
         ...(mode === "dark" && {
           hover: alpha(gray[600], 0.2),
           selected: alpha(gray[600], 0.3),
+          disabled: alpha("hsl(0, 0%, 100%)", 0.5),
+          disabledBackground: gray[800],
         }),
       },
     },
@@ -314,6 +320,9 @@ export const colorSchemes = {
       action: {
         hover: alpha(gray[200], 0.2),
         selected: `${alpha(gray[200], 0.3)}`,
+        // text.disabled: 5.8:1. MUI's black at 26% measured 1.9:1.
+        disabled: gray[500],
+        disabledBackground: gray[100],
       },
       baseShadow:
         "hsla(220, 30%, 5%, 0.07) 0px 4px 16px 0px, hsla(220, 25%, 10%, 0.07) 0px 8px 16px -5px",
@@ -365,6 +374,9 @@ export const colorSchemes = {
       action: {
         hover: alpha(gray[600], 0.2),
         selected: alpha(gray[600], 0.3),
+        // text.disabled: 5.3:1. MUI's white at 30% measured 2.7:1.
+        disabled: alpha("hsl(0, 0%, 100%)", 0.5),
+        disabledBackground: gray[800],
       },
       baseShadow:
         "hsla(220, 30%, 5%, 0.7) 0px 4px 16px 0px, hsla(220, 25%, 10%, 0.8) 0px 8px 16px -5px",

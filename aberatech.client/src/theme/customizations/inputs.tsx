@@ -1,6 +1,7 @@
 import CheckBoxOutlineBlankRoundedIcon from "@mui/icons-material/CheckBoxOutlineBlankRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import { buttonClasses } from "@mui/material/Button";
 import { outlinedInputClasses } from "@mui/material/OutlinedInput";
 import { svgIconClasses } from "@mui/material/SvgIcon";
 import { alpha, type Components, type Theme } from "@mui/material/styles";
@@ -72,6 +73,16 @@ export const inputsCustomizations: Components<Theme> = {
               "&:active": {
                 backgroundColor: gray[800],
               },
+              // MUI keeps the gradient under a disabled button and fades the
+              // text to 26% black, 1.8:1. Plain gray[100] under gray[500]
+              // is 5.1:1.
+              [`&.${buttonClasses.disabled}`]: {
+                color: gray[500],
+                backgroundColor: gray[100],
+                backgroundImage: "none",
+                boxShadow: "none",
+                borderColor: gray[200],
+              },
               ...theme.applyStyles("dark", {
                 color: "black",
                 backgroundColor: gray[50],
@@ -85,6 +96,15 @@ export const inputsCustomizations: Components<Theme> = {
                 },
                 "&:active": {
                   backgroundColor: gray[400],
+                },
+                // White at 30% on the light gradient could not be read.
+                // White at 50% on gray[800] is 5.2:1.
+                [`&.${buttonClasses.disabled}`]: {
+                  color: alpha("hsl(0, 0%, 100%)", 0.5),
+                  backgroundColor: gray[800],
+                  backgroundImage: "none",
+                  boxShadow: "none",
+                  borderColor: gray[700],
                 },
               }),
             },

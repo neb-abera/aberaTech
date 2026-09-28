@@ -16,7 +16,13 @@ import {
   type SettingsBounds,
   saveAlertSettings,
 } from "../core/api";
-import { stopWork } from "../core/settings";
+import {
+  count,
+  isNonstop,
+  longSounds,
+  nonstop,
+  stopWork,
+} from "../core/settings";
 
 const priorities = [
   {
@@ -200,6 +206,19 @@ export default function AlertSettingsForm({
     />
   );
 
+  /** The helper under a field: what it does at the typed value, or its bounds while it is blank. */
+  const explain = (
+    text: string,
+    unit: string,
+    bound: { min: number; max: number },
+    say: (value: string) => string,
+  ) => {
+    const value = number(text);
+    return Number.isInteger(value) && value >= bound.min && value <= bound.max
+      ? say(count(value, unit))
+      : `${bound.min} to ${bound.max} ${unit}s.`;
+  };
+
   const repeat = number(shown.repeatSeconds);
   const stop = number(shown.stopAfterMinutes);
   const work =
@@ -296,11 +315,44 @@ export default function AlertSettingsForm({
                 onClick={() => edit({ repeatSeconds: `${preset.seconds}` })}
               />
             ))}
+            <Chip
+              size="small"
+              label="Nonstop"
+              aria-pressed={isNonstop(shown.priority, repeat, shown.sound)}
+              color={
+                isNonstop(shown.priority, repeat, shown.sound)
+                  ? "primary"
+                  : "default"
+              }
+              variant={
+                isNonstop(shown.priority, repeat, shown.sound)
+                  ? "filled"
+                  : "outlined"
+              }
+              onClick={() =>
+                edit({
+                  priority: nonstop.priority,
+                  repeatSeconds: `${nonstop.repeatSeconds}`,
+                  sound: nonstop.sound,
+                })
+              }
+            />
           </Stack>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {emergency
               ? work
               : "Repeat and stop apply to Emergency only. This priority sounds once."}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Pushover repeats no faster than every {bounds.repeatSeconds.min} s,
+            so 1 s and 5 s cannot be sent. A long sound plays into the gap. iOS
+            plays a notification sound for up to 30 s, the length of the{" "}
+            {bounds.repeatSeconds.min} s repeat. Nonstop sets Emergency,{" "}
+            {nonstop.repeatSeconds} s and {nonstop.sound}, one of Pushover's{" "}
+            {longSounds.length} long sounds. Pushover stops after{" "}
+            {bounds.maxEmergencySounds} repeats: {bounds.maxEmergencySounds} ×{" "}
+            {nonstop.repeatSeconds} s ={" "}
+            {(bounds.maxEmergencySounds * nonstop.repeatSeconds) / 60} min.
           </Typography>
         </Stack>
 
@@ -311,14 +363,19 @@ export default function AlertSettingsForm({
           value={shown.sound}
           onChange={(event) => edit({ sound: event.target.value })}
           error={Boolean(error("sound"))}
-          helperText={error("sound") ?? "Pushover's built-in sounds."}
+          helperText={
+            error("sound") ??
+            "Pushover's built-in sounds. A long one plays for longer than one chime."
+          }
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ width: "14rem", maxWidth: "100%" }}
         >
           <option value="">Phone's default</option>
           {bounds.sounds.map((sound) => (
             <option key={sound} value={sound}>
-              {sound}
+              {(longSounds as readonly string[]).includes(sound)
+                ? `${sound} (long)`
+                : sound}
             </option>
           ))}
         </TextField>
@@ -334,21 +391,39 @@ export default function AlertSettingsForm({
             "Default lead",
             "min",
             bounds.defaultLeadMinutes,
-            "Before an event with no reminder of its own.",
+            explain(
+              shown.defaultLeadMinutes,
+              "minute",
+              bounds.defaultLeadMinutes,
+              (lead) =>
+                `An event with no notification of its own alerts ${lead} before it starts.`,
+            ),
           )}
           {numberField(
             "pollMinutes",
-            "Read the calendar every",
+            "Check calendar every",
             "min",
             bounds.pollMinutes,
-            `${bounds.pollMinutes.min} to ${bounds.pollMinutes.max} minutes`,
+            explain(
+              shown.pollMinutes,
+              "minute",
+              bounds.pollMinutes,
+              (poll) =>
+                `The server reads the calendar every ${poll}. A new or moved event shows up within ${poll}.`,
+            ),
           )}
           {numberField(
             "lookaheadHours",
             "Look ahead",
             "h",
             bounds.lookaheadHours,
-            `${bounds.lookaheadHours.min} to ${bounds.lookaheadHours.max} hours`,
+            explain(
+              shown.lookaheadHours,
+              "hour",
+              bounds.lookaheadHours,
+              (hours) =>
+                `Events that start in the next ${hours} are planned and listed above.`,
+            ),
           )}
         </Stack>
 
