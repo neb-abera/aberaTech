@@ -76,11 +76,10 @@ export default function HowEventsAlert({
           time or click Add notification.
         </li>
         <li>
-          Google does not say whether the secret address carries the calendar's
-          default notifications. Each alert above says where its time came from.
-          An event that shows the default lead has no notification in the feed.
-          Set the default lead to the same minutes as the calendar's default,
-          and every event alerts on time either way.
+          The secret address carries only notifications set on the event itself.
+          The calendar's default notifications are not in it. Set the default
+          lead to the same minutes as the calendar's default, and every event
+          alerts at that time. Each alert above says where its time came from.
         </li>
       </Box>
     </Box>
