@@ -22,20 +22,18 @@ public static partial class CspInlineScripts
     [GeneratedRegex("""<script(?<attrs>[^>]*)>(?<content>.*?)</script>""", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
     private static partial Regex ScriptElement();
 
+    /// <summary>A JSON data block, which the browser never runs and CSP never checks.</summary>
+    [GeneratedRegex("""\btype\s*=\s*["']?application/(?:ld\+)?json\b""", RegexOptions.IgnoreCase)]
+    private static partial Regex DataBlockType();
+
     public static IReadOnlyList<string> HashesIn(string html) =>
         ScriptElement()
             .Matches(html)
             .Where(match => !match.Groups["attrs"].Value.Contains("src", StringComparison.OrdinalIgnoreCase))
+            .Where(match => !DataBlockType().IsMatch(match.Groups["attrs"].Value))
             .Select(match => match.Groups["content"].Value)
             .Distinct()
             .Select(content =>
                 $"'sha256-{Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(content)))}'")
-            .ToList();
-
-    /// <summary>Every inline script on every page under the web root, once each.</summary>
-    public static IReadOnlyList<string> HashesUnder(string webRoot) =>
-        Directory.EnumerateFiles(webRoot, "*.html", SearchOption.AllDirectories)
-            .SelectMany(file => HashesIn(File.ReadAllText(file)))
-            .Distinct()
             .ToList();
 }

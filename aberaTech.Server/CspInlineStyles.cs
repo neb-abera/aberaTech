@@ -34,13 +34,6 @@ public static partial class CspInlineStyles
             .Select(Hash)
             .ToList();
 
-    /// <summary>Every style element on every page under the web root, once each.</summary>
-    public static IReadOnlyList<string> HashesUnder(string webRoot) =>
-        Directory.EnumerateFiles(webRoot, "*.html", SearchOption.AllDirectories)
-            .SelectMany(file => HashesIn(File.ReadAllText(file)))
-            .Distinct()
-            .ToList();
-
     private static string Hash(string content) =>
         $"'sha256-{Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(content)))}'";
 }
