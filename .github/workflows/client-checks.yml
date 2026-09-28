@@ -551,8 +551,8 @@ jobs:
           persist-credentials: false
 
       # The image the lighthouse-server workflow deploys. It must start, answer
-      # /healthz, refuse the API without the password, and refuse to start
-      # with no password at all.
+      # /healthz, refuse the API without the password, refuse to start with
+      # no password at all, and create its database with 64 KB pages.
       - name: Lighthouse CI server image builds and starts
         run: |
           set -euo pipefail
@@ -570,6 +570,9 @@ jobs:
           for _ in $(seq 1 30); do probe /healthz 200 && break; sleep 1; done
           probe /healthz 200
           probe /v1/projects 401
+          # 64 KB pages, which the cost estimate in docs/lighthouse.md counts on.
+          docker exec lhci-server-ci node -e \
+            "new (require('/app/node_modules/sqlite3').Database)('/tmp/lhci.db').get('PRAGMA page_size', (e, r) => process.exit(r && r.page_size === 65536 ? 0 : 1))"
           docker rm -f lhci-server-ci > /dev/null
 
       - name: Lighthouse against the production image
