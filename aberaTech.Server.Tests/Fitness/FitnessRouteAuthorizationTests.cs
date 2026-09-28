@@ -77,7 +77,9 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         ["POST", $"/api/fitness/predictions/locked/{FitnessSeed.Id(9, 2)}/actual"],
         ["DELETE", $"/api/fitness/predictions/locked/{FitnessSeed.Id(9, 1)}"],
         ["GET", "/api/progress/plan"],
-        ["PUT", "/api/progress/plan"]
+        ["PUT", "/api/progress/plan"],
+        ["GET", "/api/progress/planner"],
+        ["PUT", "/api/progress/planner"]
     ];
 
     [Theory]

@@ -6,7 +6,6 @@ import { devBoxStatusUrl } from "../features/devbox/core/api";
 import { fitnessMeUrl } from "../features/fitness/core/api";
 import { linksDocumentKey } from "../features/links/core/links";
 import { planDocumentKey } from "../features/plan/core/document";
-import { plannerDocumentKey } from "../features/planner/core/document";
 import { documentUrl } from "../features/progress/core/documents";
 import { scheduleStateUrl } from "../features/scheduling/hooks/useSchedule";
 import { accountUrl } from "../hooks/useAccount";
@@ -83,7 +82,8 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   "/alerts": { url: alertsStatusUrl },
   "/fitness": { url: fitnessMeUrl },
   "/schedule/admin": { url: accountUrl },
-  "/planner": { url: documentUrl(plannerDocumentKey) },
+  // Who is asking comes first on /planner: a visitor never asks for the plan.
+  "/planner": { url: accountUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };

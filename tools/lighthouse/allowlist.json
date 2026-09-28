@@ -1,11 +1,4 @@
 {
   "about": "Console errors the Lighthouse gate accepts (gate.mjs), each with its reason. An entry that matches nothing fails the gate. route is the page, path the address the error names, pattern a regular expression over the message.",
-  "console": [
-    {
-      "route": "/planner",
-      "path": "/api/progress/planner",
-      "pattern": "status of (401|404)",
-      "reason": "The planner asks for the owner's saved plan on every load. A visitor gets 401 and an owner with no plan 404, and the page reads both as answers (features/progress/core/documents.ts). Chrome logs any 4xx as a console error. Answering without an error status changes the API's contract for owner documents, which is Neb's decision. Remove this entry when that lands."
-    }
-  ]
+  "console": []
 }
