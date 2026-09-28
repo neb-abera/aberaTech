@@ -1,5 +1,6 @@
 /** Wiring the planner store into React, and the owner's saved plan into the store. */
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { accountSignedIn } from "../../../hooks/useAccount";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { CatalogData } from "../core/catalog";
 import { plannerDocumentKey } from "../core/document";
@@ -50,8 +51,12 @@ export function usePlanner(): Planner {
     store.getVersion,
     store.getVersion,
   );
-  const { status, value, set, saving } =
-    useOwnerDocument<PlannerSnapshot>(documentKey);
+  // /planner is public. Only a signed-in owner's browser asks for the plan.
+  const { status, value, set, saving } = useOwnerDocument<PlannerSnapshot>(
+    documentKey,
+    undefined,
+    accountSignedIn,
+  );
 
   // Restore exactly once, when the document first arrives; the version that
   // restore bumps must not itself be saved back as a change.
