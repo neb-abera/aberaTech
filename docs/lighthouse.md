@@ -35,6 +35,10 @@ Each run collects 5 runs of `/`, `/guides`, `/planner`, `/schedule` and
 device, twice: under DevTools throttling and under simulated throttling.
 Chromium is the one in the Playwright image `e2e/Dockerfile` pins.
 
+In a pull request the site is plain HTTP, so Chrome is told to treat that
+one origin as secure. Otherwise it ignores Cross-Origin-Opener-Policy and
+logs a console error that abera.tech over HTTPS never shows.
+
 ## The gate
 
 `tools/lighthouse/gate.mjs` fails the job on findings that do not depend on
@@ -45,13 +49,16 @@ timing, in every run:
   document, what it names, and what those fetch
 - cumulative layout shift of 0.01 or more
 - an item in `unsized-images` or `image-delivery-insight`
-- an item in `errors-in-console`
+- an item in `errors-in-console`, except the entries in
+  `tools/lighthouse/allowlist.json`, each with its reason. An entry that
+  matches nothing fails, so it goes when its cause goes.
 - a Content Security Policy issue in `inspector-issues`
 - the median bytes a route transfers above its `lighthouse:<route>` budget
   in `scripts/page-budgets.json`, or a budget more than 10% above them. That
-  is the rule `scripts/check-page-budgets.mjs` applies to the build. The
-  nightly run checks only the upper bound, since Cloudflare compresses
-  differently.
+  is the rule `scripts/check-page-budgets.mjs` applies to the build. A
+  budget is set 5% above the measurement, since response headers move a
+  network count by a few bytes between runs. The nightly run checks only
+  the upper bound, since Cloudflare compresses differently.
 
 A report with an error, or missing one of these audits, fails too.
 Cloudflare's email obfuscation script and its Web Analytics beacon are left

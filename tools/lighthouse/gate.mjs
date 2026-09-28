@@ -2,7 +2,7 @@
 /**
  * gate.mjs — fail on the Lighthouse findings that do not depend on timing.
  *
- *   node gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live]
+ *   node gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live] [--allowlist=<file>]
  *
  * Every run of every route in every directory is checked. run.sh passes
  * two: the runs under DevTools throttling and the simulated ones. Timings (FCP, LCP, TBT, Speed Index,
@@ -15,7 +15,9 @@
  *                     what those fetch
  *   cls               cumulative layout shift below 0.01
  *   images            unsized-images and image-delivery-insight list nothing
- *   console           errors-in-console lists nothing
+ *   console           errors-in-console lists nothing but the entries in
+ *                     allowlist.json, each with its reason. An entry that
+ *                     matches nothing fails, so it cannot outlive its cause.
  *   csp               inspector-issues lists no Content Security Policy issue
  *   bytes             the median bytes transferred, in the first directory,
  *                     are within the route's
@@ -36,7 +38,14 @@
  */
 import { readFileSync } from "node:fs";
 import process from "node:process";
-import { allowed, byRoute, median, pageBytes, readReports } from "./lhr.mjs";
+import {
+  allowed,
+  byRoute,
+  median,
+  pageBytes,
+  readReports,
+  routeOf,
+} from "./lhr.mjs";
 
 export const MAX_CHAIN_LENGTH = 3;
 export const MAX_CLS = 0.01;
@@ -81,8 +90,25 @@ function networkTree(a) {
   return undefined;
 }
 
+/**
+ * Whether an allowlist entry covers a console error: same route, same
+ * address path, and the message matches. Marks the entry used.
+ */
+function allowedConsole(allow, lhr, item) {
+  const url = item.sourceLocation?.url;
+  if (!url) return false;
+  const entry = (allow.console ?? []).find(
+    (e) =>
+      e.route === routeOf(lhr) &&
+      new URL(url).pathname === e.path &&
+      new RegExp(e.pattern).test(item.description ?? ""),
+  );
+  if (entry) entry.used = true;
+  return Boolean(entry);
+}
+
 /** Findings for one report. */
-export function checkReport(lhr, where) {
+export function checkReport(lhr, where, allow = {}) {
   const findings = [];
   if (lhr.runtimeError) {
     findings.push(`${where}: Lighthouse failed: ${lhr.runtimeError.message}`);
@@ -127,6 +153,7 @@ export function checkReport(lhr, where) {
   }
 
   for (const i of items(audit(lhr, "errors-in-console", findings, where))) {
+    if (allowedConsole(allow, lhr, i)) continue;
     const from = i.sourceLocation?.url ?? i.source ?? "?";
     findings.push(`${where}: console error from ${from}: ${i.description}`);
   }
@@ -181,7 +208,7 @@ export function checkBytes(groups, budgetsFile, { live }) {
   return { findings, rows };
 }
 
-export function gate(budgetsPath, dirs, { live }) {
+export function gate(budgetsPath, dirs, { live, allow }) {
   const findings = [];
   let first;
   let runs = 0;
@@ -193,8 +220,17 @@ export function gate(budgetsPath, dirs, { live }) {
     first ??= groups;
     for (const [route, entries] of groups) {
       entries.forEach(([, lhr], i) => {
-        findings.push(...checkReport(lhr, `${dir} ${route} run ${i + 1}`));
+        findings.push(
+          ...checkReport(lhr, `${dir} ${route} run ${i + 1}`, allow),
+        );
       });
+    }
+  }
+  for (const e of allow.console ?? []) {
+    if (!e.used) {
+      findings.push(
+        `allowlist.json: the console entry for ${e.route} ${e.path} matched nothing; remove it`,
+      );
     }
   }
   const budgetsFile = JSON.parse(readFileSync(budgetsPath, "utf8"));
@@ -206,16 +242,20 @@ export function gate(budgetsPath, dirs, { live }) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const live = args.includes("--live");
-  const [budgetsPath, ...dirs] = args.filter((a) => a !== "--live");
+  const allowlistPath =
+    args.find((a) => a.startsWith("--allowlist="))?.slice(12) ??
+    new URL("./allowlist.json", import.meta.url);
+  const [budgetsPath, ...dirs] = args.filter((a) => !a.startsWith("--"));
   if (!budgetsPath || dirs.length === 0) {
     process.stderr.write(
-      "usage: gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live]\n",
+      "usage: gate.mjs <page-budgets.json> <.lighthouseci dir>... [--live] [--allowlist=<file>]\n",
     );
     process.exit(2);
   }
   let result;
   try {
-    result = gate(budgetsPath, dirs, { live });
+    const allow = JSON.parse(readFileSync(allowlistPath, "utf8"));
+    result = gate(budgetsPath, dirs, { live, allow });
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     process.exit(2);
@@ -229,10 +269,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     `${result.runs} reports, ${result.routes.length} routes checked\n`,
   );
   if (result.findings.length > 0) {
-    process.stderr.write(
-      `\nlighthouse gate: ${result.findings.length} findings\n`,
-    );
-    for (const f of result.findings) process.stderr.write(`  ${f}\n`);
+    // One line per finding, with the runs it appeared in.
+    const grouped = new Map();
+    for (const f of result.findings) {
+      const run = f.match(/ run (\d+):/)?.[1];
+      const key = f.replace(/ run \d+:/, ":");
+      if (!grouped.has(key)) grouped.set(key, []);
+      if (run) grouped.get(key).push(run);
+    }
+    process.stderr.write(`\nlighthouse gate: ${grouped.size} findings\n`);
+    for (const [key, runs] of grouped) {
+      const text = key.length > 300 ? `${key.slice(0, 300)}...` : key;
+      const where = runs.length ? ` (runs ${runs.join(", ")})` : "";
+      process.stderr.write(`  ${text}${where}\n`);
+    }
     process.exit(1);
   }
 }

@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { checkBytes, checkReport } from "./gate.mjs";
+import { checkBytes, checkReport, gate } from "./gate.mjs";
 import { byRoute } from "./lhr.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -167,6 +167,40 @@ for (const [expected, plant] of Object.entries(plants)) {
   }
 }
 
+// The console allowlist: an entry covers its route, path and message only,
+// and an entry that covers nothing is a finding.
+const withError = (description) => {
+  const lhr = clean();
+  lhr.audits["errors-in-console"].details.items.push({
+    source: "network",
+    description,
+    sourceLocation: { url: "https://abera.tech/api/progress/planner" },
+  });
+  return lhr;
+};
+const entry = () => ({
+  route: "/",
+  path: "/api/progress/planner",
+  pattern: "status of 401",
+  reason: "self-test",
+});
+const allowOne = { console: [entry()] };
+if (
+  checkReport(withError("a status of 401 ()"), "allowed", allowOne).length > 0
+)
+  fail("an allowlisted console error was reported");
+if (!allowOne.console[0].used)
+  fail("a matching allowlist entry was not marked used");
+if (
+  checkReport(withError("a status of 500 ()"), "other", { console: [entry()] })
+    .length !== 1
+)
+  fail("a console error the allowlist does not name passed");
+const other = withError("a status of 401 ()");
+other.requestedUrl = "https://abera.tech/guides";
+if (checkReport(other, "other route", { console: [entry()] }).length !== 1)
+  fail("an allowlist entry covered another route");
+
 // Bytes: 1000 counted, the beacon and the email script not.
 const groups = byRoute([["x", clean()]]);
 const bytes = (budget, live, floors = {}) =>
@@ -190,6 +224,10 @@ if (!bytes(undefined, false).some((f) => f.includes("no budget")))
 // The CLI: exit 0 clean, 1 on a finding, 2 on no reports.
 const dir = mkdtempSync(path.join(tmpdir(), "gate-"));
 const budgets = path.join(dir, "budgets.json");
+const emptyAllow = path.join(dir, "allow-empty.json");
+const staleAllow = path.join(dir, "allow-stale.json");
+writeFileSync(emptyAllow, JSON.stringify({ console: [] }));
+writeFileSync(staleAllow, JSON.stringify({ console: [entry()] }));
 writeFileSync(budgets, JSON.stringify({ budgets: { "lighthouse:/": 1100 } }));
 const reports = path.join(dir, "clean");
 const planted = path.join(dir, "planted");
@@ -199,20 +237,25 @@ writeFileSync(path.join(reports, "lhr-1.json"), JSON.stringify(clean()));
 const bad = clean();
 plants["render-blocking request"](bad);
 writeFileSync(path.join(planted, "lhr-1.json"), JSON.stringify(bad));
-const cli = (...args) =>
-  spawnSync(process.execPath, [path.join(here, "gate.mjs"), budgets, ...args], {
-    encoding: "utf8",
-  }).status;
-if (cli(reports) !== 0) fail("the CLI failed a clean directory");
-if (cli(reports, planted) !== 1)
+const cli = (allowlist, ...args) =>
+  spawnSync(
+    process.execPath,
+    [path.join(here, "gate.mjs"), budgets, `--allowlist=${allowlist}`, ...args],
+    { encoding: "utf8" },
+  ).status;
+if (cli(emptyAllow, reports) !== 0) fail("the CLI failed a clean directory");
+if (cli(emptyAllow, reports, planted) !== 1)
   fail("the CLI passed a planted render-blocking request");
-if (cli(empty) !== 2)
+if (cli(staleAllow, reports) !== 1)
+  fail("the CLI passed an allowlist entry that matched nothing");
+if (cli(emptyAllow, empty) !== 2)
   fail("the CLI did not exit 2 on a directory with no reports");
+if (typeof gate !== "function") fail("gate is not exported");
 
 if (failed > 0) {
   process.stderr.write(`gate self-test: ${failed} failures\n`);
   process.exit(1);
 }
 process.stdout.write(
-  `gate self-test: ${Object.keys(plants).length} planted defects caught, byte rules and exit codes hold\n`,
+  `gate self-test: ${Object.keys(plants).length} planted defects caught, the allowlist, byte rules and exit codes hold\n`,
 );

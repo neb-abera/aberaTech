@@ -24,7 +24,19 @@ module.exports = {
         // both methods.
         formFactor: "mobile",
         throttlingMethod,
-        chromeFlags: "--headless=new --no-sandbox",
+        // In a pull request the site is plain HTTP on the compose network.
+        // Chrome then ignores Cross-Origin-Opener-Policy and logs a console
+        // error about it, which abera.tech over HTTPS never does. Treating
+        // that one origin as secure makes the run see what production sees.
+        chromeFlags: [
+          "--headless=new",
+          "--no-sandbox",
+          ...(new URL(base).protocol === "http:"
+            ? [
+                `--unsafely-treat-insecure-origin-as-secure=${new URL(base).origin}`,
+              ]
+            : []),
+        ].join(" "),
         // The thumbnails and the full page screenshot are 156 KB of a
         // 483 KB report. The server stores every report it is sent.
         disableFullPageScreenshot: true,
