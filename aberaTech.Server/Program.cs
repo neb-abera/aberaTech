@@ -402,70 +402,17 @@ app.UseHostAllowlist();
 
 // Browser hardening headers on every response, static files included.
 //
-// The CSP names exactly what the client actually loads: MUI's styles go in
-// <style> elements allowed by hash (CspInlineStyles.cs), the guides embed Google Docs and YouTube players
-// in iframes, and a handful of partner logos load from their own hosts.
-// Everything else — scripts above all — is same-origin only.
-// The prerendered pages carry MUI's color-scheme bootstrap as an inline
-// script (it must run before first paint), and /links a script that starts
-// its API request from the head. The policy allows exactly those scripts by
-// hash, read from every shipped page at startup.
-var inlineScriptHashes = "";
-if (app.Environment.WebRootPath is { } scriptRoot && Directory.Exists(scriptRoot))
-{
-    var hashes = CspInlineScripts.HashesUnder(scriptRoot);
-    if (hashes.Count > 0)
-    {
-        inlineScriptHashes = " " + string.Join(' ', hashes);
-    }
-}
-
-// The style elements, the same way: every shipped page's, by hash, plus the
-// empty element emotion fills at run time. CspInlineStyles.cs says why that
-// is enough.
-var inlineStyleHashes = " " + CspInlineStyles.EmptyElement;
-if (app.Environment.WebRootPath is { } webRootPath && Directory.Exists(webRootPath))
-{
-    var hashes = CspInlineStyles.HashesUnder(webRootPath);
-    if (hashes.Count > 0)
-    {
-        inlineStyleHashes += " " + string.Join(' ', hashes);
-    }
-}
+// The CSP is each page's own: ContentSecurityPolicy.cs hashes every shipped
+// HTML file and every page the server renders, once, at startup. This sets
+// the policy for the path as requested. The static file middleware and the
+// SPA fallback set it again for the file they actually send, after the
+// rewrites below have chosen it.
+var contentSecurityPolicy = ContentSecurityPolicy.Load(app.Environment.WebRootPath, CompliancePages.Pages);
 
 app.Use(async (context, next) =>
 {
     var headers = context.Response.Headers;
-    headers["Content-Security-Policy"] =
-        "default-src 'self'; "
-        // The one third-party script: Cloudflare's RUM beacon, injected by
-        // the CDN into every HTML response and opted into deliberately for
-        // real-user Core Web Vitals. It loads from static.cloudflareinsights
-        // and reports to cloudflareinsights (connect-src below).
-        + $"script-src 'self' https://static.cloudflareinsights.com{inlineScriptHashes}; "
-        + $"style-src 'self'{inlineStyleHashes}; "
-        // Style attributes: React's style prop in the prerendered markup.
-        // The standard's one allowance, for attributes alone.
-        + "style-src-attr 'unsafe-inline'; "
-        // The transition guide's partner images. yceml.net serves the DITY
-        // calculator banner, which used to load through a CJ Affiliate
-        // redirect on lduhtrp.net. The page links the image directly now.
-        + "img-src 'self' data: https://www.va.gov https://www.yceml.net "
-        + "https://www.hiringourheroes.org https://nvf.org https://assets.recruitmilitary.com; "
-        + "font-src 'self' data:; "
-        + "connect-src 'self' https://cloudflareinsights.com; "
-        + "frame-src https://docs.google.com https://drive.google.com "
-        + "https://www.youtube.com https://www.youtube-nocookie.com; "
-        + "object-src 'none'; base-uri 'self'; form-action 'self'; "
-        + "frame-ancestors 'self'"
-        // Only over HTTPS, like HSTS below and for the same reason. Production
-        // always is (Cloudflare, then the ingress; ClientAddress reads
-        // X-Forwarded-Proto), so every visitor gets it. Over plain HTTP — the
-        // production image on the compose network, where `make e2e` drives a
-        // real browser — the same directive makes Chromium fetch the bundle
-        // from https://app-under-test:8080, which nothing answers, and the
-        // page never boots. StaticPipelineTests pins both halves.
-        + (context.Request.IsHttps ? "; upgrade-insecure-requests" : "");
+    headers["Content-Security-Policy"] = contentSecurityPolicy.ForPath(context.Request.Path.Value, context.Request.IsHttps);
     headers["X-Content-Type-Options"] = "nosniff";
     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
@@ -510,8 +457,12 @@ app.UseDefaultFiles(); // Serves 'index.html' automatically for root requests.
 var staticFileOptions = new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
+    {
         ctx.Context.Response.Headers.CacheControl =
-            StaticAssetCaching.For(ctx.Context.Request.Path, ctx.File.Name)
+            StaticAssetCaching.For(ctx.Context.Request.Path, ctx.File.Name);
+        ctx.Context.Response.Headers.ContentSecurityPolicy =
+            contentSecurityPolicy.ForPath(ctx.Context.Request.Path.Value, ctx.Context.Request.IsHttps);
+    }
 };
 
 app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
@@ -747,6 +698,8 @@ app.MapFallback("{*path}", async context =>
     // stable URL on every deploy, so it always revalidates.
     context.Response.Headers.CacheControl = StaticAssetCaching.For(context.Request.Path, "spa.html");
     context.Response.ContentType = "text/html; charset=utf-8";
+    context.Response.Headers.ContentSecurityPolicy =
+        contentSecurityPolicy.ForPath("/spa.html", context.Request.IsHttps);
 
     // The environment's provider, not staticFileOptions': that object leaves
     // FileProvider null and the middleware fills it in from the web root at
