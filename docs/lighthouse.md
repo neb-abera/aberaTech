@@ -117,6 +117,8 @@ override. Check `tmp` when `@lhci/cli` moves.
 - Storage: SQLite on the Azure Files share `lhci` in the storage account
   `aberatechlhci`, mounted at `/data` with `nobrl` so SQLite's locks work
   over SMB. SMB 3.1.1 with AES-GCM only.
+  The server moves the file to 64 KB pages at start, since every page
+  written to the share is a billed operation.
 - Deploys: the lighthouse-server workflow, on a merge that changes
   `tools/lhci-server`. The Lighthouse job builds and starts the image on
   every pull request first.
@@ -154,35 +156,39 @@ az containerapp update -g $rg -n abera-lhci --max-replicas 1
 ## Cost
 
 Neb approved the server at an estimate of about $0 a month. Checked on
-2026-09-28 against the invoices and the price list, the bound is $0.89 a
-month and the likely figure about half that.
+2026-09-28 against the invoices, the price list and measured uploads, the
+bound is $0.94 a month.
 
 The Container Apps free grant is 180,000 vCPU seconds and 360,000 GiB
 seconds a month for the subscription. The site and Facewoof each keep one
 replica of 0.5 vCPU running, 1,296,000 vCPU seconds a month each, so the
 grant is spent before this app starts. August 2026 billed the site 1,163,158
 vCPU seconds and 2,326,493 GiB seconds, at the list rates: $0.000024 a vCPU
-second active, $0.000003 idle, $0.000003 a GiB second.
+second active, $0.000003 idle, $0.000003 a GiB second. No Requests meter was
+billed, so the site's requests sit inside the free 2 million.
 
 | Item | Arithmetic | A month |
 |---|---|---|
 | Replica time | 610 wakes × 110 s × (0.25 vCPU × $0.000024 + 0.5 GiB × $0.000003) | $0.50 |
-| File operations | 610 × 250 × $0.015 per 10,000 | $0.23 |
+| File operations, pull requests | 371 × (203 × $0.015 + 108 × $0.0015) per 10,000 | $0.12 |
+| File operations, master and nightly | 239 × (454 × $0.015 + 195 × $0.0015) per 10,000 | $0.17 |
 | Stored reports | (0.55 + 0.92 + 0.88) GB × $0.06 | $0.14 |
-| Requests | 610 × 60 × $0.40 per million | $0.01 |
 | Snapshot | under 0.1 GB changed a day × $0.06 | $0.01 |
 | Image | 80 MB inside the registry's included 10 GB | $0 |
-| Total | | $0.89 |
+| Total | | $0.94 |
 
 - 610 wakes: 371 pull request runs and 208 master runs of Checks in the 31
   days to 2026-09-28, and 31 nights, each counted as its own wake.
 - 110 s a wake: a 7 s cold start (measured), about 45 s of uploads and
-  reads, 30 s of cooldown and up to 30 s until the scaler polls. All of it
-  counted at the active rate. The cooldown is billed at the idle rate when
-  the replica is idle.
-- 250 file operations a wake: two builds of 30 reports took 227 (measured
-  on 2026-09-28 from the share's Transactions metric), each priced as a
-  write.
+  reads, 30 s of cooldown and up to 30 s until the scaler polls, all at the
+  active rate. The Replicas metric showed 1 or 2 one-minute buckets a wake
+  on 2026-09-28. The cooldown is billed at the idle rate when the replica is
+  idle, so the real figure is lower.
+- File operations, measured on 2026-09-28 from the share's Transactions
+  metric: a pull request's 10 reports took 203 writes (Write, Create,
+  Flush) and 108 others, and 30 reports took 454 and 195. Each write is
+  priced as a write, each other as a read. That is after moving SQLite to
+  64 KB pages. At 4 KB pages 10 reports took 272 writes.
 - Stored reports: pull requests 371 × 14/30 × 10 × 315 KB, master 208 ×
   14/30 × 30 × 315 KB, production 31 × 3 × 30 × 315 KB.
 
