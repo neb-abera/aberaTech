@@ -1,0 +1,55 @@
+/**
+ * The words and arithmetic the settings form and the page's summary share,
+ * so the two cannot disagree about what a saved setting does.
+ */
+
+import type { AlertSettings } from "./api";
+
+/** "minute", "2 minutes", "45 seconds": the gap between two sounds. */
+export function every(seconds: number): string {
+  if (seconds === 60) return "minute";
+  if (seconds % 60 === 0) return `${seconds / 60} minutes`;
+  return `${seconds} seconds`;
+}
+
+function minutes(value: number): string {
+  return Number.isInteger(value) ? `${value}` : value.toFixed(1);
+}
+
+/**
+ * When an unacknowledged emergency message stops, with the working:
+ * Pushover sounds it at most `maxSounds` times, so the stop is the smaller
+ * of the owner's limit and `maxSounds` × the repeat.
+ */
+export function stopWork(
+  repeatSeconds: number,
+  stopAfterMinutes: number,
+  maxSounds: number,
+): { minutes: number; text: string } {
+  const capped = (maxSounds * repeatSeconds) / 60;
+  const sounds = `${maxSounds} sounds × ${repeatSeconds} s = ${minutes(capped)} min`;
+  if (capped < stopAfterMinutes)
+    return {
+      minutes: capped,
+      text: `Stops after ${minutes(capped)} min: ${sounds}, before the ${stopAfterMinutes} min limit.`,
+    };
+  return {
+    minutes: stopAfterMinutes,
+    text: `Stops after ${stopAfterMinutes} min: the limit comes before ${sounds}.`,
+  };
+}
+
+/** What one alert does under the saved settings, for the page's closing paragraph. */
+export function describe(
+  settings: AlertSettings,
+  maxSounds: number,
+  timeZone: string,
+): string {
+  const how =
+    settings.priority === 2
+      ? `One Pushover message per event. It sounds through quiet hours and again every ${every(settings.repeatSeconds)} until you acknowledge it in the Pushover app, for up to ${minutes(stopWork(settings.repeatSeconds, settings.stopAfterMinutes, maxSounds).minutes)} minutes. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`
+      : settings.priority === 1
+        ? "One Pushover message per event, with one sound that plays through Pushover's quiet hours."
+        : "One Pushover message per event, with one sound. The phone's Pushover settings decide how it plays.";
+  return `${how} Mute and Skip are checked just before each send. Times are in ${timeZone}, the calendar's own zone.`;
+}

@@ -1,6 +1,7 @@
 /**
  * The calendar alerts, from the page's side: one read of the state, and
- * five buttons that each answer with the state the server stored.
+ * the buttons and the settings form, which each answer with the state the
+ * server stored.
  *
  * A 401 or 403 is the answer "you are a visitor", not an error, and the
  * page shows the sign-in button on it. A deployment missing a secret
@@ -28,11 +29,49 @@ export interface LastSend {
   outcome: string;
 }
 
+/** What the alerts run on: the configuration's values until the owner saves. */
+export interface AlertSettings {
+  /** 0 normal, 1 high, 2 emergency. */
+  priority: 0 | 1 | 2;
+  /** Seconds between sounds. Priority 2 only. */
+  repeatSeconds: number;
+  /** When an unacknowledged message stops. Priority 2 only. */
+  stopAfterMinutes: number;
+  /** A Pushover sound name, or "" for the phone's own default. */
+  sound: string;
+  defaultLeadMinutes: number;
+  pollMinutes: number;
+  lookaheadHours: number;
+  includeAllDay: boolean;
+  /** The zone when the calendar names none. "" is UTC. */
+  timeZone: string;
+  ownerEmails: string[];
+}
+
+export interface Bound {
+  min: number;
+  max: number;
+}
+
+/** What the form's inputs accept. The server checks the same numbers. */
+export interface SettingsBounds {
+  repeatSeconds: Bound;
+  stopAfterMinutes: Bound;
+  defaultLeadMinutes: Bound;
+  pollMinutes: Bound;
+  lookaheadHours: Bound;
+  maxOwnerEmails: number;
+  maxEmergencySounds: number;
+  sounds: string[];
+}
+
 export interface AlertsState {
   /** The calendar's own zone, which every time on the page is written in. */
   timeZone: string;
   pollMinutes: number;
   defaultLeadMinutes: number;
+  settings: AlertSettings;
+  bounds: SettingsBounds;
   mutedUntil: string | null;
   lastFetchAt: string | null;
   lastFetchError: string | null;
@@ -51,8 +90,16 @@ export type ActionResult =
   | { ok: true; state?: AlertsState }
   | {
       ok: false;
-      reason: "visitor" | "throttled" | "refused" | "network" | "pushover";
+      reason:
+        | "visitor"
+        | "throttled"
+        | "refused"
+        | "network"
+        | "pushover"
+        | "invalid";
       detail?: string;
+      /** For "invalid": the server's message for each field it refused. */
+      errors?: Record<string, string[]>;
     };
 
 type StateBody = AlertsState & { configured?: boolean; missing?: string[] };
@@ -93,16 +140,31 @@ export function unskipAlert(key: string): Promise<ActionResult> {
   return post("/api/alerts/unskip", { key });
 }
 
-/** One message to the phone that repeats until acknowledged, as an event's alert does, whatever the mute says. */
+/** One message to the phone, sent the way an event's alert is, whatever the mute says. */
 export async function sendTestAlert(): Promise<ActionResult> {
   const result = await post("/api/alerts/test");
   return result.ok ? { ok: true } : result;
 }
 
-async function post(path: string, body?: unknown): Promise<ActionResult> {
+/** The whole form. A refused field comes back in `errors`, keyed by its name. */
+export function saveAlertSettings(
+  settings: AlertSettings,
+): Promise<ActionResult> {
+  return send("PUT", "/api/alerts/settings", settings);
+}
+
+function post(path: string, body?: unknown): Promise<ActionResult> {
+  return send("POST", path, body);
+}
+
+async function send(
+  method: "POST" | "PUT",
+  path: string,
+  body?: unknown,
+): Promise<ActionResult> {
   try {
     const response = await fetch(path, {
-      method: "POST",
+      method,
       credentials: "same-origin",
       ...(body === undefined
         ? {}
@@ -120,6 +182,16 @@ async function post(path: string, body?: unknown): Promise<ActionResult> {
         reason: "pushover",
         detail: (await response.text()).slice(0, 200),
       };
+    if (
+      response.status === 400 &&
+      response.headers.get("content-type")?.includes("json")
+    ) {
+      const problem = (await response.json()) as {
+        errors?: Record<string, string[]>;
+      };
+      if (problem.errors)
+        return { ok: false, reason: "invalid", errors: problem.errors };
+    }
     if (!response.ok) return { ok: false, reason: "refused" };
     const answer = (await response.json()) as StateBody | { sent: boolean };
     return "alerts" in answer

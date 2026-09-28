@@ -1,5 +1,3 @@
-using NodaTime;
-
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
@@ -10,6 +8,9 @@ namespace aberaTech.Scheduling.Alerts;
 /// secret references: the calendar's secret iCal address and the two
 /// Pushover keys. Any of them missing and the feature is off: no worker
 /// runs, and the owner page lists the missing names. Never the values.
+///
+/// The rest are defaults. Once the owner saves the form on /alerts, the
+/// saved row replaces them (<see cref="AlertSettings"/>).
 /// </remarks>
 public sealed class AlertsOptions
 {
@@ -35,6 +36,18 @@ public sealed class AlertsOptions
 
     /// <summary>All-day events are skipped unless this is set.</summary>
     public bool IncludeAllDay { get; init; }
+
+    /// <summary>Pushover priority: 0 normal, 1 high, 2 emergency. See pushover.net/api#priority.</summary>
+    public int Priority { get; init; } = PushoverClient.EmergencyPriority;
+
+    /// <summary>Seconds between the sounds of an emergency message. Pushover's floor is 30.</summary>
+    public int RepeatSeconds { get; init; } = 60;
+
+    /// <summary>When an unacknowledged emergency message stops: 180 minutes, Pushover's ceiling.</summary>
+    public int StopAfterMinutes { get; init; } = 180;
+
+    /// <summary>A Pushover sound name. Empty is the phone's own Pushover default.</summary>
+    public string? Sound { get; init; }
 
     /// <summary>
     /// The zone for the alert text and for "06:00 tomorrow" when the feed
@@ -75,19 +88,6 @@ public sealed class AlertsOptions
         if (string.IsNullOrWhiteSpace(PushoverUserKey)) missing.Add("Alerts__PushoverUserKey");
         return missing;
     }
-
-    public Duration Poll => Duration.FromMinutes(Math.Clamp(PollMinutes, 1, 60));
-
-    public Duration DefaultLead => Duration.FromMinutes(Math.Clamp(DefaultLeadMinutes, 0, 24 * 60));
-
-    public Duration Lookahead => Duration.FromHours(Math.Clamp(LookaheadHours, 1, 24 * 14));
-
-    /// <summary>The fallback zone. A name the time zone database does not know stops the start.</summary>
-    public DateTimeZone FallbackZone() =>
-        string.IsNullOrWhiteSpace(TimeZone)
-            ? DateTimeZone.Utc
-            : DateTimeZoneProviders.Tzdb.GetZoneOrNull(TimeZone)
-              ?? throw new InvalidOperationException($"Alerts:TimeZone '{TimeZone}' is not a time zone database name.");
 
     /// <summary>
     /// Whether a request goes to the calendar's secret address. The secret

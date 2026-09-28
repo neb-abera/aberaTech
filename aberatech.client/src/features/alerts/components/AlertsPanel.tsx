@@ -20,6 +20,8 @@ import {
   unmuteAlerts,
   unskipAlert,
 } from "../core/api";
+import { describe, every } from "../core/settings";
+import AlertSettingsForm from "./AlertSettingsForm";
 
 /** How often the page asks again on its own. */
 const refreshEvery = 60_000;
@@ -160,9 +162,10 @@ export default function AlertsPanel() {
           variant="contained"
           disabled={busy}
           onClick={() =>
-            void act(
-              sendTestAlert,
-              () => "Test alert sent. Check the phone for one sound.",
+            void act(sendTestAlert, () =>
+              state.settings.priority === 2
+                ? `Test alert sent. The phone sounds every ${every(state.settings.repeatSeconds)} until you acknowledge it.`
+                : "Test alert sent. Check the phone for one sound.",
             )
           }
         >
@@ -227,13 +230,20 @@ export default function AlertsPanel() {
       </Box>
 
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-        One Pushover message per event. It sounds through quiet hours and again
-        every minute until you acknowledge it in the Pushover app, for up to 50
-        minutes. With the Pushover app's Critical Alerts setting on, an iPhone
-        also plays it through the silent switch and Focus. Mute and Skip are
-        checked just before each send. Times are in {state.timeZone}, the
-        calendar's own zone.
+        {describe(
+          state.settings,
+          state.bounds.maxEmergencySounds,
+          state.timeZone,
+        )}
       </Typography>
+
+      <AlertSettingsForm
+        settings={state.settings}
+        bounds={state.bounds}
+        onSaved={(saved) => {
+          if (alive.current) setView({ status: "owner", state: saved });
+        }}
+      />
     </Stack>
   );
 }

@@ -6,7 +6,8 @@ using NodaTime;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>One message the fake Pushover took.</summary>
-public sealed record FakeMessage(string Title, string Message, string Priority);
+/// <remarks>Retry, expire and sound are null when the request left them out.</remarks>
+public sealed record FakeMessage(string Title, string Message, string Priority, string? Retry, string? Expire, string? Sound);
 
 /// <summary>
 /// Development only: a calendar and a Pushover that live in this process,
@@ -94,7 +95,16 @@ public sealed class FakeAlertServices(IClock clock)
     public HttpMessageHandler PushoverHandler() => new Handler(async request =>
     {
         var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync());
-        _sent.Enqueue(new FakeMessage(form["title"].ToString(), form["message"].ToString(), form["priority"].ToString()));
+        static string? Field(Dictionary<string, Microsoft.Extensions.Primitives.StringValues> form, string name) =>
+            form.TryGetValue(name, out var value) ? value.ToString() : null;
+
+        _sent.Enqueue(new FakeMessage(
+            form["title"].ToString(),
+            form["message"].ToString(),
+            form["priority"].ToString(),
+            Field(form, "retry"),
+            Field(form, "expire"),
+            Field(form, "sound")));
         return new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("{\"status\":1,\"request\":\"development\"}", System.Text.Encoding.UTF8, "application/json")

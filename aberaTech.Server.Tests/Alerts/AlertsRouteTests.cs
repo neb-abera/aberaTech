@@ -90,7 +90,8 @@ public sealed class AlertsRouteTests : IDisposable
         ["POST", "/api/alerts/unmute"],
         ["POST", "/api/alerts/skip"],
         ["POST", "/api/alerts/unskip"],
-        ["POST", "/api/alerts/test"]
+        ["POST", "/api/alerts/test"],
+        ["PUT", "/api/alerts/settings"]
     ];
 
     private HttpClient Owner() => _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
@@ -106,6 +107,7 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Empty(_pushover.Requests);
         Assert.Null(await _store.MutedUntilAsync(CancellationToken.None));
+        Assert.Null(await _store.SettingsAsync(CancellationToken.None));
     }
 
     [Theory]
@@ -118,6 +120,7 @@ public sealed class AlertsRouteTests : IDisposable
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Empty(_pushover.Requests);
+        Assert.Null(await _store.SettingsAsync(CancellationToken.None));
     }
 
     [Fact]
@@ -251,6 +254,177 @@ public sealed class AlertsRouteTests : IDisposable
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         Assert.Equal("sent", status.GetProperty("lastSend").GetProperty("outcome").GetString());
         Assert.Equal("Test alert", status.GetProperty("lastSend").GetProperty("title").GetString());
+    }
+
+    /// <summary>The form as the page sends it, at the configuration's defaults, with the changes given.</summary>
+    internal static Dictionary<string, object?> Form(params (string Field, object? Value)[] changes)
+    {
+        var form = new Dictionary<string, object?>
+        {
+            ["priority"] = 2,
+            ["repeatSeconds"] = 60,
+            ["stopAfterMinutes"] = 180,
+            ["sound"] = "",
+            ["defaultLeadMinutes"] = 10,
+            ["pollMinutes"] = 5,
+            ["lookaheadHours"] = 48,
+            ["includeAllDay"] = false,
+            ["timeZone"] = "",
+            ["ownerEmails"] = Array.Empty<string>()
+        };
+        foreach (var (field, value) in changes) form[field] = value;
+        return form;
+    }
+
+    [Fact]
+    public async Task The_status_carries_the_settings_in_force_and_the_bounds_the_form_needs()
+    {
+        using var owner = Owner();
+
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+
+        var settings = status.GetProperty("settings");
+        Assert.Equal(2, settings.GetProperty("priority").GetInt32());
+        Assert.Equal(60, settings.GetProperty("repeatSeconds").GetInt32());
+        Assert.Equal(180, settings.GetProperty("stopAfterMinutes").GetInt32());
+        Assert.Equal("", settings.GetProperty("sound").GetString());
+        Assert.Equal(10, settings.GetProperty("defaultLeadMinutes").GetInt32());
+        Assert.Equal(5, settings.GetProperty("pollMinutes").GetInt32());
+        Assert.Equal(48, settings.GetProperty("lookaheadHours").GetInt32());
+        Assert.False(settings.GetProperty("includeAllDay").GetBoolean());
+        Assert.Equal("", settings.GetProperty("timeZone").GetString());
+        Assert.Empty(settings.GetProperty("ownerEmails").EnumerateArray());
+
+        var bounds = status.GetProperty("bounds");
+        Assert.Equal(30, bounds.GetProperty("repeatSeconds").GetProperty("min").GetInt32());
+        Assert.Equal(10800, bounds.GetProperty("repeatSeconds").GetProperty("max").GetInt32());
+        Assert.Equal(180, bounds.GetProperty("stopAfterMinutes").GetProperty("max").GetInt32());
+        Assert.Equal(336, bounds.GetProperty("lookaheadHours").GetProperty("max").GetInt32());
+        Assert.Equal(50, bounds.GetProperty("maxEmergencySounds").GetInt32());
+        Assert.Equal(10, bounds.GetProperty("maxOwnerEmails").GetInt32());
+        Assert.Equal(23, bounds.GetProperty("sounds").GetArrayLength());
+    }
+
+    public static IEnumerable<object?[]> OutOfBounds =>
+    [
+        ["priority", -1],
+        ["priority", 3],
+        ["priority", null],
+        ["repeatSeconds", 29],
+        ["repeatSeconds", 10801],
+        ["stopAfterMinutes", 0],
+        ["stopAfterMinutes", 181],
+        ["sound", "foghorn"],
+        ["sound", null],
+        ["defaultLeadMinutes", -1],
+        ["defaultLeadMinutes", 1441],
+        ["pollMinutes", 0],
+        ["pollMinutes", 61],
+        ["lookaheadHours", 0],
+        ["lookaheadHours", 337],
+        ["includeAllDay", null],
+        ["timeZone", "Mars/Olympus_Mons"],
+        ["timeZone", null],
+        ["ownerEmails", new[] { "not an address" }],
+        ["ownerEmails", new[] { "" }],
+        ["ownerEmails", Enumerable.Range(0, 11).Select(n => $"owner{n}@example.test").ToArray()],
+        ["ownerEmails", null]
+    ];
+
+    [Theory]
+    [MemberData(nameof(OutOfBounds))]
+    public async Task A_setting_outside_its_bounds_is_refused_by_name_and_nothing_is_saved(string field, object? value)
+    {
+        using var owner = Owner();
+
+        using var response = await owner.PutAsJsonAsync("/api/alerts/settings", Form((field, value)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var errors = problem.GetProperty("errors");
+        Assert.True(errors.TryGetProperty(field, out var messages), $"no error for {field}: {errors}");
+        Assert.NotEmpty(messages.EnumerateArray());
+        Assert.Single(errors.EnumerateObject());
+        Assert.Null(await _store.SettingsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Every_bound_itself_is_accepted()
+    {
+        using var owner = Owner();
+
+        using var low = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("priority", 0), ("repeatSeconds", 30), ("stopAfterMinutes", 1), ("defaultLeadMinutes", 0),
+            ("pollMinutes", 1), ("lookaheadHours", 1), ("sound", "none")));
+        using var high = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("priority", 2), ("repeatSeconds", 10800), ("stopAfterMinutes", 180), ("defaultLeadMinutes", 1440),
+            ("pollMinutes", 60), ("lookaheadHours", 336), ("sound", "pushover"),
+            ("ownerEmails", Enumerable.Range(0, 10).Select(n => $"owner{n}@example.test").ToArray())));
+
+        Assert.Equal(HttpStatusCode.OK, low.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, high.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_valid_save_is_stored_answers_with_the_state_and_comes_back_in_the_status()
+    {
+        using var owner = Owner();
+
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("priority", 1), ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"),
+            ("pollMinutes", 2), ("lookaheadHours", 72), ("includeAllDay", true), ("timeZone", " Asia/Amman "),
+            ("ownerEmails", new[] { " neb@work.example " })));
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var answer = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("settings");
+        Assert.Equal(1, answer.GetProperty("priority").GetInt32());
+        var stored = (await _store.SettingsAsync(CancellationToken.None))!;
+        Assert.Equal(["neb@work.example"], stored.OwnerEmails);
+        Assert.Equal(
+            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails), stored);
+
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+        var settings = status.GetProperty("settings");
+        Assert.Equal(120, settings.GetProperty("repeatSeconds").GetInt32());
+        Assert.Equal(30, settings.GetProperty("stopAfterMinutes").GetInt32());
+        Assert.Equal("siren", settings.GetProperty("sound").GetString());
+        Assert.Equal(72, settings.GetProperty("lookaheadHours").GetInt32());
+        Assert.True(settings.GetProperty("includeAllDay").GetBoolean());
+        Assert.Equal("Asia/Amman", settings.GetProperty("timeZone").GetString());
+        Assert.Equal("neb@work.example", settings.GetProperty("ownerEmails")[0].GetString());
+        Assert.Equal(2, status.GetProperty("pollMinutes").GetInt32());
+    }
+
+    [Fact]
+    public async Task A_new_lead_moves_the_planned_alert_in_the_answer_to_the_save()
+    {
+        using var owner = Owner();
+
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("defaultLeadMinutes", 30)));
+
+        // The review has no reminder of its own: 14:00 New York, 18:00 UTC.
+        var state = await saved.Content.ReadFromJsonAsync<JsonElement>();
+        var alerts = state.GetProperty("alerts").EnumerateArray().ToList();
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 17, 30).ToDateTimeOffset(), alerts[1].GetProperty("alertAt").GetDateTimeOffset());
+        Assert.Equal(30, state.GetProperty("defaultLeadMinutes").GetInt32());
+    }
+
+    [Fact]
+    public async Task The_test_button_follows_the_saved_settings()
+    {
+        using var owner = Owner();
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "tugboat")));
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+
+        using var response = await owner.PostAsync("/api/alerts/test", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("120", sent.Form["retry"]);
+        Assert.Equal("1800", sent.Form["expire"]);
+        Assert.Equal("tugboat", sent.Form["sound"]);
     }
 
     [Fact]

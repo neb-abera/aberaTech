@@ -15,6 +15,7 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { bounds, settings } from "../../../../test/alertsFixtures";
 import { respond } from "../../../../test/fakeFetch";
 import AlertsPanel from "../AlertsPanel";
 
@@ -47,6 +48,8 @@ const state = (over: Record<string, unknown> = {}) => ({
   timeZone: "America/New_York",
   pollMinutes: 5,
   defaultLeadMinutes: 10,
+  settings,
+  bounds,
   mutedUntil: null,
   lastFetchAt: "2026-10-28T12:00:00+00:00",
   lastFetchError: null,
@@ -162,7 +165,59 @@ describe("the owner", () => {
     await settle();
 
     expect(
-      screen.getByText(/again every minute until you acknowledge it/),
+      screen.getByText(
+        /again every minute until you acknowledge it in the Pushover app, for up to 50 minutes/,
+      ),
+    ).toBeTruthy();
+  });
+
+  it("describes what the saved settings do, not a fixed priority", async () => {
+    mount(
+      respond(
+        200,
+        state({
+          settings: { ...settings, repeatSeconds: 120, stopAfterMinutes: 30 },
+        }),
+      ),
+    );
+    await settle();
+    expect(
+      screen.getByText(/again every 2 minutes .* for up to 30 minutes/),
+    ).toBeTruthy();
+
+    cleanup();
+    mount(respond(200, state({ settings: { ...settings, priority: 0 } })));
+    await settle();
+    expect(
+      screen.getByText(/with one sound\. The phone's Pushover/),
+    ).toBeTruthy();
+    expect(
+      screen.queryByText(/until you acknowledge it in the Pushover app/),
+    ).toBeNull();
+  });
+
+  it("saves the settings, then shows what the server stored", async () => {
+    mount(
+      respond(200, state()),
+      respond(
+        200,
+        state({
+          settings: { ...settings, priority: 1 },
+        }),
+      ),
+    );
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "High" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
+    await settle();
+
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === "PUT");
+    expect(put?.[0]).toBe("/api/alerts/settings");
+    expect(JSON.parse(put?.[1].body)).toEqual({ ...settings, priority: 1 });
+    expect(screen.getByText("Settings saved.")).toBeTruthy();
+    expect(
+      screen.getByText(/plays through Pushover's quiet hours/),
     ).toBeTruthy();
   });
 

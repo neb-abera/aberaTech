@@ -6,10 +6,16 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// What the send path and the page share across restarts and replicas:
-/// the mute switch, the skipped occurrences, and one claim per occurrence.
+/// the mute switch, the skipped occurrences, one claim per occurrence, and
+/// the owner's settings.
 /// </summary>
 public interface IAlertStore
 {
+    /// <summary>The saved settings. Null when the owner has never saved.</summary>
+    Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken);
+
+    Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken);
+
     Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken);
 
     /// <summary>Null unmutes.</summary>
@@ -35,6 +41,53 @@ public interface IAlertStore
 /// <summary>The store in the scheduling database, which the site already has.</summary>
 public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertStore
 {
+    public async Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken)
+    {
+        var row = await database.AlertSettings.AsNoTracking()
+            .FirstOrDefaultAsync(settings => settings.Id == AlertSettingsRecord.SingleId, cancellationToken);
+
+        return row is null
+            ? null
+            : new AlertSettings(
+                row.Priority,
+                row.RepeatSeconds,
+                row.StopAfterMinutes,
+                row.Sound,
+                row.DefaultLeadMinutes,
+                row.PollMinutes,
+                row.LookaheadHours,
+                row.IncludeAllDay,
+                row.TimeZone,
+                row.OwnerEmails);
+    }
+
+    public async Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)
+    {
+        // One statement, like the mute: two saves on two replicas cannot both insert.
+        var emails = settings.OwnerEmails.ToArray();
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                 "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails", "UpdatedAt")
+             VALUES ({AlertSettingsRecord.SingleId}, {settings.Priority}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
+                 {settings.Sound}, {settings.DefaultLeadMinutes}, {settings.PollMinutes}, {settings.LookaheadHours},
+                 {settings.IncludeAllDay}, {settings.TimeZone}, {emails}, {now})
+             ON CONFLICT ("Id") DO UPDATE SET
+                 "Priority" = EXCLUDED."Priority",
+                 "RepeatSeconds" = EXCLUDED."RepeatSeconds",
+                 "StopAfterMinutes" = EXCLUDED."StopAfterMinutes",
+                 "Sound" = EXCLUDED."Sound",
+                 "DefaultLeadMinutes" = EXCLUDED."DefaultLeadMinutes",
+                 "PollMinutes" = EXCLUDED."PollMinutes",
+                 "LookaheadHours" = EXCLUDED."LookaheadHours",
+                 "IncludeAllDay" = EXCLUDED."IncludeAllDay",
+                 "TimeZone" = EXCLUDED."TimeZone",
+                 "OwnerEmails" = EXCLUDED."OwnerEmails",
+                 "UpdatedAt" = EXCLUDED."UpdatedAt"
+             """,
+            cancellationToken);
+    }
+
     public async Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken) =>
         await database.AlertMutes.AsNoTracking()
             .Where(mute => mute.Id == AlertMuteRecord.SingleId)

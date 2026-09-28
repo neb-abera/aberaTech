@@ -9,8 +9,8 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The rules the send path leans on, held by Postgres itself: one claim per
-/// occurrence however many replicas ask at once, and mute and skip that
-/// survive a restart because they are rows.
+/// occurrence however many replicas ask at once, and mute, skip and the
+/// settings that survive a restart because they are rows.
 /// </summary>
 public sealed class DatabaseAlertStoreTests : IDisposable
 {
@@ -91,6 +91,29 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         await using var cleared = Context();
         Assert.Null(await new DatabaseAlertStore(cleared).MutedUntilAsync(CancellationToken.None));
         Assert.Equal(1, await cleared.AlertMutes.CountAsync());
+    }
+
+    [PostgresFact]
+    public async Task Settings_are_one_row_that_a_new_process_reads_back_whole()
+    {
+        var first = new AlertSettings(0, 45, 20, "", 15, 3, 24, true, "", []);
+        var second = new AlertSettings(2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"]);
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.Null(await store.SettingsAsync(CancellationToken.None));
+            await store.SaveSettingsAsync(first, Now, CancellationToken.None);
+            await store.SaveSettingsAsync(second, Now + Duration.FromMinutes(1), CancellationToken.None);
+        }
+
+        await using var restarted = Context();
+        var read = await new DatabaseAlertStore(restarted).SettingsAsync(CancellationToken.None);
+        Assert.NotNull(read);
+        Assert.Equal(second with { OwnerEmails = read.OwnerEmails }, read);
+        Assert.Equal(["neb@work.example", "neb@home.example"], read.OwnerEmails);
+        Assert.Equal(1, await restarted.AlertSettings.CountAsync());
+        Assert.Equal(Now + Duration.FromMinutes(1), (await restarted.AlertSettings.SingleAsync()).UpdatedAt);
     }
 
     [PostgresFact]
