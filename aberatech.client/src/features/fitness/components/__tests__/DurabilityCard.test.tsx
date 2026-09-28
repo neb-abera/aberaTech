@@ -6,8 +6,10 @@ import DurabilityCard from "../DurabilityCard";
 
 afterEach(cleanup);
 
+// 28 consecutive days, as the API returns them: one entry per date, which
+// the chart uses as its key.
 const days = Array.from({ length: 28 }, (_, i) => ({
-  date: `2026-08-${String(11 + (i % 20)).padStart(2, "0")}`,
+  date: new Date(Date.UTC(2026, 7, 11 + i)).toISOString().slice(0, 10),
   load: i % 7 === 6 ? 0 : 1 + (i % 3) * 0.5,
   impact: i % 7 !== 6,
 }));
