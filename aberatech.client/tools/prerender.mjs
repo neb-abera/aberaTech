@@ -12,7 +12,7 @@
  * markup, and a client-rendered route like /schedule served over it would
  * flash the wrong page and then hydrate against DOM that contradicts it.
  */
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
@@ -42,6 +42,47 @@ if (!TITLE.test(template)) {
   );
 }
 
+// Each page names in its head every chunk its view imports, directly or
+// through another chunk. Without them the browser learns of a chunk only
+// once the entry has downloaded and run, one full wave of requests later.
+// Chunks the entry imports are left out: Vite has named them already.
+//
+// A view's own lazy imports count too. The render above waits for every
+// one it reaches, so the page arrives with their markup, and hydration
+// needs their code. The transition guide loads its eleven sections so.
+// Another view is never followed: that is a different page.
+const MANIFEST = "dist/.vite/manifest.json";
+const chunks = JSON.parse(await readFile(MANIFEST, "utf8"));
+await rm("dist/.vite", { recursive: true });
+
+function closure(key, lazy, found = new Set()) {
+  if (found.has(key)) return found;
+  if (!chunks[key]) throw new Error(`${key} is not in ${MANIFEST}`);
+  found.add(key);
+  const next = [
+    ...(chunks[key].imports ?? []),
+    ...(lazy ? (chunks[key].dynamicImports ?? []) : []),
+  ];
+  for (const imported of next) {
+    if (!imported.startsWith("src/views/")) closure(imported, lazy, found);
+  }
+  return found;
+}
+
+const entry = closure("index.html", false);
+
+function preloadsFor(route) {
+  const view = routes.find((entry) => entry.path === route)?.view;
+  if (!view) throw new Error(`route ${route} has no view in site/routes.ts`);
+  return [...closure(`src/views/${view}.tsx`, true)]
+    .filter((key) => !entry.has(key))
+    .map(
+      (key) =>
+        `<link rel="modulepreload" crossorigin href="/${chunks[key].file}">`,
+    )
+    .join("");
+}
+
 await writeFile("dist/spa.html", template);
 process.stdout.write("kept empty shell -> dist/spa.html\n");
 
@@ -67,7 +108,10 @@ for (const route of routes.map((entry) => entry.path)) {
   if (prerenderedRoutes.includes(route)) continue;
   const file = path.join("dist", route, "index.html");
   await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, template.replace(TITLE, headFor(route)));
+  const page = template
+    .replace(TITLE, () => headFor(route))
+    .replace("</head>", () => `${preloadsFor(route)}</head>`);
+  await writeFile(file, page);
   process.stdout.write(`shell with its own head ${route} -> ${file}\n`);
 }
 
@@ -86,7 +130,7 @@ for (const route of prerenderedRoutes) {
   const { markup, styles } = hoistStyles(html);
   const page = template
     .replace(TITLE, () => headFor(route))
-    .replace("</head>", () => `${styles}</head>`)
+    .replace("</head>", () => `${preloadsFor(route)}${styles}</head>`)
     .replace(MARK, () => `<div id="root">${markup}</div>`);
   await writeFile(file, page);
   process.stdout.write(`prerendered ${route} -> ${file}\n`);
