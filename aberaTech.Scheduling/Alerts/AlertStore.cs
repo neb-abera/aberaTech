@@ -4,6 +4,12 @@ using NodaTime;
 
 namespace aberaTech.Scheduling.Alerts;
 
+/// <summary>Who acknowledged one occurrence, and when.</summary>
+public sealed record AlertAcknowledgement(Instant At, string Via);
+
+/// <summary>The claim on one occurrence's send: its start, how it went, and Pushover's receipt for an emergency message.</summary>
+public sealed record AlertDelivery(Instant StartsAt, string Outcome, string? Receipt);
+
 /// <summary>
 /// What the send path and the page share across restarts and replicas:
 /// the mute switch, the skipped occurrences, one claim per occurrence, the
@@ -32,9 +38,21 @@ public interface IAlertStore
     /// <summary>True for exactly one caller per key, ever, whatever process it runs in.</summary>
     Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken);
 
-    Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken);
+    /// <param name="receipt">Pushover's receipt for an emergency message, kept so an acknowledgement can cancel its repeats.</param>
+    Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null);
 
-    /// <summary>Forgets claims and skips from before <paramref name="before"/>. The feed never plans those again.</summary>
+    /// <summary>The claim on one occurrence, or null when nothing was ever claimed for it.</summary>
+    Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken);
+
+    /// <summary>Every acknowledged occurrence, by key.</summary>
+    Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken);
+
+    Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken);
+
+    /// <summary>True for the first acknowledgement of a key. A second one changes nothing and is false.</summary>
+    Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken);
+
+    /// <summary>Forgets claims, skips and acknowledgements from before <paramref name="before"/>. The feed never plans those again.</summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
 
     /// <summary>Every event the owner chose a type for, by event id.</summary>
@@ -76,7 +94,8 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                 row.OwnerEmails,
                 row.NotificationPriority,
                 row.NotificationSound,
-                row.DefaultType);
+                row.DefaultType,
+                row.BackupDelaySeconds);
     }
 
     public async Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)
@@ -87,11 +106,12 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             $"""
              INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
                  "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
-                 "NotificationPriority", "NotificationSound", "DefaultType", "UpdatedAt")
+                 "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
              VALUES ({AlertSettingsRecord.SingleId}, {settings.Priority}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
                  {settings.Sound}, {settings.DefaultLeadMinutes}, {settings.PollMinutes}, {settings.LookaheadHours},
                  {settings.IncludeAllDay}, {settings.TimeZone}, {emails},
-                 {settings.NotificationPriority}, {settings.NotificationSound}, {settings.DefaultType}, {now})
+                 {settings.NotificationPriority}, {settings.NotificationSound}, {settings.DefaultType},
+                 {settings.BackupDelaySeconds}, {now})
              ON CONFLICT ("Id") DO UPDATE SET
                  "Priority" = EXCLUDED."Priority",
                  "RepeatSeconds" = EXCLUDED."RepeatSeconds",
@@ -106,6 +126,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                  "NotificationPriority" = EXCLUDED."NotificationPriority",
                  "NotificationSound" = EXCLUDED."NotificationSound",
                  "DefaultType" = EXCLUDED."DefaultType",
+                 "BackupDelaySeconds" = EXCLUDED."BackupDelaySeconds",
                  "UpdatedAt" = EXCLUDED."UpdatedAt"
              """,
             cancellationToken);
@@ -166,20 +187,59 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         return inserted == 1;
     }
 
-    public async Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken)
+    public async Task RecordOutcomeAsync(
+        string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null)
     {
         var text = outcome.Length <= 64 ? outcome : outcome[..64];
+        var kept = PushoverClient.IsReceipt(receipt) ? receipt : null;
         await database.AlertDeliveries
             .Where(delivery => delivery.OccurrenceKey == key)
             .ExecuteUpdateAsync(
-                set => set.SetProperty(delivery => delivery.Outcome, text).SetProperty(delivery => delivery.CompletedAt, now),
+                set => set
+                    .SetProperty(delivery => delivery.Outcome, text)
+                    .SetProperty(delivery => delivery.CompletedAt, now)
+                    .SetProperty(delivery => delivery.Receipt, kept),
                 cancellationToken);
+    }
+
+    public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken) =>
+        database.AlertDeliveries.AsNoTracking()
+            .Where(delivery => delivery.OccurrenceKey == key)
+            .Select(delivery => new AlertDelivery(delivery.StartsAt, delivery.Outcome, delivery.Receipt))
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken) =>
+        await database.AlertAcknowledgements.AsNoTracking()
+            .ToDictionaryAsync(
+                row => row.OccurrenceKey,
+                row => new AlertAcknowledgement(row.AcknowledgedAt, row.Via),
+                StringComparer.Ordinal,
+                cancellationToken);
+
+    public Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken) =>
+        database.AlertAcknowledgements.AsNoTracking().AnyAsync(row => row.OccurrenceKey == key, cancellationToken);
+
+    public async Task<bool> AcknowledgeAsync(
+        string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken)
+    {
+        // The key decides, like the claim: the phone and a browser pressing
+        // at once record one acknowledgement, and only the first cancels.
+        var inserted = await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertAcknowledgements" ("OccurrenceKey", "StartsAt", "AcknowledgedAt", "Via")
+             VALUES ({key}, {startsAt}, {now}, {via})
+             ON CONFLICT ("OccurrenceKey") DO NOTHING
+             """,
+            cancellationToken);
+
+        return inserted == 1;
     }
 
     public async Task PruneAsync(Instant before, CancellationToken cancellationToken)
     {
         await database.AlertDeliveries.Where(delivery => delivery.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertSkips.Where(skip => skip.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertAcknowledgements.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>

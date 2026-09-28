@@ -150,4 +150,48 @@ public sealed class AlertSettingsTests
     {
         Assert.Equal(expected, AlertText.Every(seconds));
     }
+
+    private static readonly Instant Start = Instant.FromUtc(2026, 10, 28, 13, 0);
+
+    private static PlannedAlert Alert(Duration lead) =>
+        new("k", "Standup", null, Start, Start - lead, AlertSource.Reminder, "standup", Critical: true);
+
+    [Fact]
+    public void The_backup_delay_defaults_to_zero_and_an_alarm_then_goes_at_its_own_time()
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions());
+
+        Assert.Equal(0, settings.BackupDelaySeconds);
+        Assert.Equal(Start - Duration.FromMinutes(15), settings.PushoverAt(Alert(Duration.FromMinutes(15)), AlertTypes.Alarm));
+    }
+
+    [Theory]
+    [InlineData(-5, 0)]
+    [InlineData(300, 300)]
+    [InlineData(5000, 900)]
+    public void A_configured_backup_delay_is_pulled_inside_0_to_900(int configured, int expected)
+    {
+        Assert.Equal(expected, AlertSettings.Defaults(new AlertsOptions { BackupDelaySeconds = configured }).BackupDelaySeconds);
+    }
+
+    [Fact]
+    public void An_alarm_waits_the_backup_delay_and_a_notification_does_not()
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with { BackupDelaySeconds = 300 };
+        var alert = Alert(Duration.FromMinutes(15));
+
+        Assert.Equal(alert.AlertAt + Duration.FromMinutes(5), settings.PushoverAt(alert, AlertTypes.Alarm));
+        Assert.Equal(alert.AlertAt, settings.PushoverAt(alert, AlertTypes.Notification));
+    }
+
+    [Fact]
+    public void A_backup_that_would_land_inside_the_last_minute_goes_one_minute_before_the_start()
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with { BackupDelaySeconds = 900 };
+
+        // Alert at 08:55, start 09:00: the backup goes at 08:59, not 09:10.
+        Assert.Equal(Start - Duration.FromMinutes(1), settings.PushoverAt(Alert(Duration.FromMinutes(5)), AlertTypes.Alarm));
+        // An alert already inside the last minute is not moved earlier.
+        Assert.Equal(Start - Duration.FromSeconds(30), settings.PushoverAt(Alert(Duration.FromSeconds(30)), AlertTypes.Alarm));
+    }
 }

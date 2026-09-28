@@ -66,6 +66,10 @@ if (adminOptions.IsConfigured)
         adminOptions, builder.Environment.IsDevelopment() && adminOptions.DevelopmentSignIn);
     builder.Services.AddSessionAudit();
 
+    // /api/alerts: the owner's cookie, or a paired phone's token on the
+    // routes a phone needs. AlertsAuth.cs.
+    builder.Services.AddAlertsDeviceAuth(adminOptions);
+
     // Deny by default. Every endpoint says who may call it — a policy, or an
     // explicit AllowAnonymous — and RouteTableTests fails the build on one that
     // says nothing. This is the runtime half of the same rule: should an
@@ -333,6 +337,7 @@ if (alertsEnabled)
     AlertSettings.Defaults(alertsOptions).FallbackZone();
 
     builder.Services.AddScoped<IAlertStore, DatabaseAlertStore>();
+    builder.Services.AddScoped<IAlertDeviceStore, DatabaseAlertDeviceStore>();
     builder.Services.AddCalendarAlerts();
 
     if (builder.Environment.IsDevelopment() && alertsOptions.Fake)

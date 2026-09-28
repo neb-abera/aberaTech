@@ -86,6 +86,7 @@ interface Draft {
   notificationPriority: 0 | 1;
   notificationSound: string;
   defaultType: "none" | "notification";
+  backupDelaySeconds: string;
 }
 
 function toDraft(settings: AlertSettings): Draft {
@@ -96,6 +97,7 @@ function toDraft(settings: AlertSettings): Draft {
     defaultLeadMinutes: `${settings.defaultLeadMinutes}`,
     pollMinutes: `${settings.pollMinutes}`,
     lookaheadHours: `${settings.lookaheadHours}`,
+    backupDelaySeconds: `${settings.backupDelaySeconds}`,
     ownerEmails: settings.ownerEmails.join(", "),
   };
 }
@@ -122,6 +124,7 @@ function fromDraft(draft: Draft): AlertSettings {
     notificationPriority: draft.notificationPriority,
     notificationSound: draft.notificationSound,
     defaultType: draft.defaultType,
+    backupDelaySeconds: number(draft.backupDelaySeconds),
   };
 }
 
@@ -139,7 +142,8 @@ function same(a: AlertSettings, b: AlertSettings): boolean {
     a.ownerEmails.join(",") === b.ownerEmails.join(",") &&
     a.notificationPriority === b.notificationPriority &&
     a.notificationSound === b.notificationSound &&
-    a.defaultType === b.defaultType
+    a.defaultType === b.defaultType &&
+    a.backupDelaySeconds === b.backupDelaySeconds
   );
 }
 
@@ -390,6 +394,22 @@ export default function AlertSettingsForm({
             {(bounds.maxEmergencySounds * nonstop.repeatSeconds) / 60} min.
           </Typography>
         </Stack>
+
+        {numberField(
+          "backupDelaySeconds",
+          "Pushover backup after",
+          "s",
+          bounds.backupDelaySeconds,
+          explain(
+            shown.backupDelaySeconds,
+            "second",
+            bounds.backupDelaySeconds,
+            (delay) =>
+              delay.startsWith("0 ")
+                ? "Pushover sends at the alarm's time, with the paired phones."
+                : `A paired phone rings first. Pushover follows ${delay} later if nobody acknowledged it, and no later than 1 minute before the start.`,
+          ),
+        )}
 
         <TextField
           select

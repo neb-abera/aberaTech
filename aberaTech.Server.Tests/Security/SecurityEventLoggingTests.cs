@@ -215,6 +215,24 @@ public sealed class SecurityEventClassificationTests
     }
 
     [Theory]
+    [InlineData("/api/alerts/status", "GET", 401, false, SecurityEvents.AlertsDeviceTokenRejected)]
+    [InlineData("/api/alerts/ack", "POST", 401, false, SecurityEvents.AlertsDeviceTokenRejected)]
+    [InlineData("/api/alerts/settings", "PUT", 403, true, SecurityEvents.AlertsDeviceRefused)]
+    [InlineData("/api/alerts/status", "GET", 429, false, SecurityEvents.RateLimited)]
+    public void A_bearer_token_on_alerts_has_its_own_events(string route, string method, int status, bool signedIn, int expected)
+    {
+        Assert.Equal(expected, SecurityEvents.Classify(route, method, status, signedIn, bearer: true));
+    }
+
+    [Theory]
+    [InlineData("/api/alerts/status", "GET", 401, false, SecurityEvents.SignInRequired)]
+    [InlineData("/api/alerts/settings", "PUT", 403, true, SecurityEvents.AllowlistRefused)]
+    public void The_owners_browser_on_alerts_keeps_the_sign_in_events(string route, string method, int status, bool signedIn, int expected)
+    {
+        Assert.Equal(expected, SecurityEvents.Classify(route, method, status, signedIn, bearer: false));
+    }
+
+    [Theory]
     // A full queue and a slot somebody else took are the site working.
     [InlineData("/api/scheduling/queue", "POST", 409, false)]
     [InlineData("/api/scheduling/book", "POST", 409, false)]

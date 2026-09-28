@@ -409,4 +409,34 @@ describe("the settings form", () => {
       screen.getAllByText(/Pushover keys stay container secrets/),
     ).toHaveLength(1);
   });
+
+  it("sends the backup delay with the form and explains it at the value typed", async () => {
+    const { saver } = mount();
+    const delay = input("Pushover backup after");
+    expect(delay.value).toBe("0");
+    expect(delay.min).toBe("0");
+    expect(delay.max).toBe("900");
+    expect(
+      screen.getByText(
+        "Pushover sends at the alarm's time, with the paired phones.",
+      ),
+    ).toBeTruthy();
+
+    fireEvent.change(delay, { target: { value: "120" } });
+    expect(
+      screen.getByText(
+        "A paired phone rings first. Pushover follows 120 seconds later if nobody acknowledged it, and no later than 1 minute before the start.",
+      ),
+    ).toBeTruthy();
+    fireEvent.change(delay, { target: { value: "901" } });
+    expect(screen.getByText("0 to 900 seconds.")).toBeTruthy();
+    fireEvent.change(delay, { target: { value: "120" } });
+    fireEvent.click(saveButton());
+    await flush();
+
+    expect(saver).toHaveBeenCalledWith({
+      ...settings,
+      backupDelaySeconds: 120,
+    });
+  });
 });
