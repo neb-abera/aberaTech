@@ -330,7 +330,7 @@ if (alertsEnabled)
 {
     // An unknown Alerts:TimeZone stops the start here rather than at the
     // first read.
-    alertsOptions.FallbackZone();
+    AlertSettings.Defaults(alertsOptions).FallbackZone();
 
     builder.Services.AddScoped<IAlertStore, DatabaseAlertStore>();
     builder.Services.AddCalendarAlerts();

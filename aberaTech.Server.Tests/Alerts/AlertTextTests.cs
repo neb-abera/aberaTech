@@ -40,6 +40,19 @@ public sealed class AlertTextTests
         Assert.Equal(PushoverClient.MaxMessage, AlertText.Message(alert, NewYork).Length);
     }
 
+    [Theory]
+    [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
+    [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]
+    [InlineData(2, "Priority 2: it repeats every minute until you acknowledge it in Pushover.")]
+    public void The_test_message_says_what_the_saved_priority_does(int priority, string expected)
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with { Priority = priority };
+
+        var text = AlertText.TestMessage(Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, settings);
+
+        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct. {expected}", text);
+    }
+
     [Fact]
     public void Mute_for_an_hour_is_sixty_minutes_from_now()
     {

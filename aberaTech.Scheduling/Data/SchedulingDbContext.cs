@@ -38,12 +38,14 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AdminSessionVersion> AdminSessions => Set<AdminSessionVersion>();
 
-    /// <summary>The calendar alerts' mute switch, skips and send claims. Alerts/AlertRecords.cs.</summary>
+    /// <summary>The calendar alerts' mute switch, skips, send claims and settings. Alerts/AlertRecords.cs.</summary>
     public DbSet<AlertMuteRecord> AlertMutes => Set<AlertMuteRecord>();
 
     public DbSet<AlertSkipRecord> AlertSkips => Set<AlertSkipRecord>();
 
     public DbSet<AlertDeliveryRecord> AlertDeliveries => Set<AlertDeliveryRecord>();
+
+    public DbSet<AlertSettingsRecord> AlertSettings => Set<AlertSettingsRecord>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -133,6 +135,15 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
         {
             entity.HasKey(mute => mute.Id);
             entity.Property(mute => mute.Id).ValueGeneratedNever();
+        });
+
+        builder.Entity<AlertSettingsRecord>(entity =>
+        {
+            entity.HasKey(settings => settings.Id);
+            entity.Property(settings => settings.Id).ValueGeneratedNever();
+            entity.Property(settings => settings.Sound).HasMaxLength(32).IsRequired();
+            entity.Property(settings => settings.TimeZone).HasMaxLength(Alerts.AlertSettings.MaxTimeZoneLength).IsRequired();
+            entity.Property(settings => settings.OwnerEmails).IsRequired();
         });
 
         builder.Entity<AlertSkipRecord>(entity =>

@@ -21,8 +21,22 @@ public static class AlertText
                 : $"Starts {When(alert.StartsAt, zone)}\n{alert.Location}",
             PushoverClient.MaxMessage);
 
-    public static string TestMessage(Instant now, DateTimeZone zone) =>
-        $"Sent from abera.tech at {When(now, zone)}. Priority 2: it repeats every minute until you acknowledge it in Pushover.";
+    public static string TestMessage(Instant now, DateTimeZone zone, AlertSettings settings) =>
+        $"Sent from abera.tech at {When(now, zone)}. " + settings.Priority switch
+        {
+            PushoverClient.EmergencyPriority =>
+                $"Priority 2: it repeats every {Every(settings.RepeatSeconds)} until you acknowledge it in Pushover.",
+            1 => "Priority 1: one sound, through Pushover's quiet hours.",
+            _ => "Priority 0: one sound, as the phone's Pushover settings allow."
+        };
+
+    /// <summary>"minute", "2 minutes", "45 seconds": the gap between two sounds.</summary>
+    public static string Every(int seconds) => seconds switch
+    {
+        60 => "minute",
+        _ when seconds % 60 == 0 => $"{seconds / 60} minutes",
+        _ => $"{seconds} seconds"
+    };
 
     private static string Cut(string text, int limit) => text.Length <= limit ? text : text[..limit];
 }

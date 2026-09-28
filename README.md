@@ -84,15 +84,13 @@ service keeps `node_modules` in a volume that outlives a rebuild.
   and read. `DevBox__SubscriptionId` switches it on.
 
 - `/alerts` sends one Pushover message before each event on the owner's
-  Google Calendar (`aberaTech.Scheduling/Alerts/`). Every message goes at
-  emergency priority (2): it repeats every 60 seconds until acknowledged
-  in the Pushover app, up to Pushover's cap of 50 sounds. The worker
-  reads the secret iCal address every 5 minutes and sends each alert at its
-  own time. The alert time is the event's earliest popup reminder, or 10
-  minutes before the start. All-day, cancelled and declined events are
-  skipped. Text and "06:00 tomorrow" use the calendar's own zone
-  (`X-WR-TIMEZONE`, then `Alerts__TimeZone`, then UTC). Mute, Skip and a
-  one-send claim per occurrence are rows in the scheduling database.
+  Google Calendar (`aberaTech.Scheduling/Alerts/`). The worker reads the
+  secret iCal address and sends each alert at its own time. The alert time
+  is the event's earliest popup reminder, or the default lead before the
+  start. Cancelled and declined events are skipped. Text and "06:00
+  tomorrow" use the calendar's own zone (`X-WR-TIMEZONE`, then the
+  settings' zone, then UTC). Mute, Skip, the settings and a one-send claim
+  per occurrence are rows in the scheduling database.
 
 ### Calendar alerts: switching them on
 
@@ -118,6 +116,34 @@ az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
 
 The update starts a new revision. `/alerts` then lists the next alerts and
 the time of the last calendar read. Send test alert proves the keys.
+
+### Calendar alerts: settings
+
+The Settings section on `/alerts` changes these without a deploy. Save
+stores one row. The replica that took the save plans with it at once, and
+every other replica reads it at the start of its next pass.
+
+| Setting | Default | Bounds |
+|---|---|---|
+| Priority | 2, emergency | 0 normal, 1 high (through quiet hours), 2 emergency (repeats until acknowledged) |
+| Repeat every | 60 s | 30 to 10800 s. Priority 2 only |
+| Stop after | 180 min | 1 to 180 min. Priority 2 only |
+| Sound | the phone's default | one of Pushover's 23 built-in sounds |
+| Default lead | 10 min | 0 to 1440 min |
+| Read the calendar every | 5 min | 1 to 60 min |
+| Look ahead | 48 h | 1 to 336 h |
+| Alert for all-day events | off | |
+| Time zone | blank, UTC | a time zone database name |
+| Your addresses | none | up to 10 |
+
+Pushover stops an emergency message after 50 sounds, so the stop is the
+smaller of the limit and 50 × the repeat. At 60 s that is 50 min. The page
+shows the arithmetic. Until the first save the defaults come from the
+`Alerts__` settings of the same names (`AlertsOptions.cs`).
+
+The calendar address and the two Pushover keys are not on the page. They
+stay container secrets, because a key typed into a web form passes through
+the browser and the database.
 
 ## How it stays current
 

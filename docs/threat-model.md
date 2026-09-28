@@ -32,7 +32,7 @@ before it is a feature.
 | The dev box agent | One heartbeat a minute with a bearer token | The box, or whoever holds the token |
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
-| The site to Pushover | One POST per alert, priority 2 | Pushover |
+| The site to Pushover | One POST per alert, at the saved priority | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 
 ## Threats and answers
@@ -55,6 +55,7 @@ before it is a feature.
 | A dependency ships a vulnerability | Tampering | Pinned digests and SHAs, locked restores, Dependabot, Trivy, CodeQL, the held-majors gate | Every pull request |
 | The image is not what the source says | Tampering | Build provenance attestation and an SBOM on every deploy | The deploy workflow |
 | The calendar address leaks through a log or a trace | Disclosure | The HTTP clients have no request logging. Traces leave out calls to the address. Failures log the exception type only. The page lists missing setting names, never values | `CalendarAlertWorkerTests` read every log line. `AlertsRouteTests` pin the trace filter and the status body |
+| A stranger changes the alert settings, or a bad value silences the alerts | Tampering | `PUT /api/alerts/settings` needs the owner, shares the alerts' rate limit, and checks every field against its bound before one row is written. The secrets are not settings, so the route cannot read or change them | `AlertsRouteTests`: 401 and 403 on the route, 400 naming the field for each bound, `RouteTableTests` |
 | A restart or a second replica sends an alert twice | Tampering | One claim row per occurrence, keyed in Postgres, taken with `ON CONFLICT DO NOTHING` before the send | `DatabaseAlertStoreTests` with eight concurrent claims |
 | A crafted calendar hangs or crashes the worker | Denial | 20 MB read cap, 5000 occurrences per read, a limit on rules that never match. A bad read keeps the last list | Seeded random damage in `AlertPlannerTests` |
 | The runtime identity changes the schema | Elevation | Migrations run as their own step. The runtime role has DML only | `least-privilege.sql` and its test |

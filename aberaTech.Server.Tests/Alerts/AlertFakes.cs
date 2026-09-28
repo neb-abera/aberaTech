@@ -14,8 +14,8 @@ internal sealed class FakeClock(Instant now) : IClock
 }
 
 /// <summary>
-/// The store's rules, in memory: one claim per key ever, and mute and skip
-/// as plain values. The Postgres store is held to the same rules by
+/// The store's rules, in memory: one claim per key ever, and mute, skip
+/// and the settings as plain values. The Postgres store is held to the same rules by
 /// DatabaseAlertStoreTests; this one lets the send logic be tested without
 /// a database.
 /// </summary>
@@ -25,6 +25,18 @@ internal sealed class InMemoryAlertStore : IAlertStore
     private readonly Dictionary<string, string> _claims = [];
     private readonly Dictionary<string, Instant> _skips = [];
     private Instant? _mutedUntil;
+    private AlertSettings? _settings;
+
+    public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_settings);
+    }
+
+    public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock) _settings = settings;
+        return Task.CompletedTask;
+    }
 
     public IReadOnlyDictionary<string, string> Claims
     {
