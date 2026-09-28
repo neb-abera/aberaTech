@@ -34,6 +34,7 @@ before it is a feature.
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
 | The site to Pushover | One POST per alert, at the saved priority | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
+| Internet to the Lighthouse CI server | Report uploads with a build token, dashboard reads, both behind basic auth, over TLS | CI, the nightly run, the owner, or whoever holds the password |
 
 ## Threats and answers
 
@@ -59,6 +60,7 @@ before it is a feature.
 | A restart or a second replica sends an alert twice | Tampering | One claim row per occurrence, keyed in Postgres, taken with `ON CONFLICT DO NOTHING` before the send | `DatabaseAlertStoreTests` with eight concurrent claims |
 | A crafted calendar hangs or crashes the worker | Denial | 20 MB read cap, 5000 occurrences per read, a limit on rules that never match. A bad read keeps the last list | Seeded random damage in `AlertPlannerTests` |
 | The runtime identity changes the schema | Elevation | Migrations run as their own step. The runtime role has DML only | `least-privilege.sql` and its test |
+| A stranger reads or writes the Lighthouse CI server | Spoofing | Basic auth on everything but `/healthz`, a 48-character random password, HTTPS only. The server refuses to start without the password | The Lighthouse job starts the image and requires 401 without it |
 
 ## Accepted, and why
 

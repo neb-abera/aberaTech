@@ -14,7 +14,8 @@
       "!aberatech.client/public",
       "!**/packages.lock.json",
       "!**/test-results",
-      "!e2e-test-results"
+      "!e2e-test-results",
+      "!lighthouse-results"
     ]
   },
   "formatter": {
