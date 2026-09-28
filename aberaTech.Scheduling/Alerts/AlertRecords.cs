@@ -18,6 +18,41 @@ public class AlertMuteRecord
     public Instant UpdatedAt { get; set; }
 }
 
+/// <summary>
+/// The owner's saved settings. One row, id 1, like the mute switch. No row
+/// means the configuration's values (<see cref="AlertSettings.Defaults"/>).
+/// </summary>
+public class AlertSettingsRecord
+{
+    public const int SingleId = 1;
+
+    public int Id { get; set; } = SingleId;
+
+    public int Priority { get; set; }
+
+    public int RepeatSeconds { get; set; }
+
+    public int StopAfterMinutes { get; set; }
+
+    /// <summary>Empty is the phone's own Pushover default.</summary>
+    public string Sound { get; set; } = string.Empty;
+
+    public int DefaultLeadMinutes { get; set; }
+
+    public int PollMinutes { get; set; }
+
+    public int LookaheadHours { get; set; }
+
+    public bool IncludeAllDay { get; set; }
+
+    /// <summary>Empty is UTC.</summary>
+    public string TimeZone { get; set; } = string.Empty;
+
+    public string[] OwnerEmails { get; set; } = [];
+
+    public Instant UpdatedAt { get; set; }
+}
+
 /// <summary>One occurrence the owner pressed Skip on.</summary>
 public class AlertSkipRecord
 {

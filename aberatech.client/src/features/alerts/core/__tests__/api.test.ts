@@ -5,11 +5,13 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { bounds, settings } from "../../../../test/alertsFixtures";
 import { respond } from "../../../../test/fakeFetch";
 import {
   fetchAlerts,
   formatWhen,
   muteAlerts,
+  saveAlertSettings,
   sendTestAlert,
   skipAlert,
   unmuteAlerts,
@@ -25,6 +27,8 @@ const state = {
   timeZone: "America/New_York",
   pollMinutes: 5,
   defaultLeadMinutes: 10,
+  settings,
+  bounds,
   mutedUntil: null,
   lastFetchAt: "2026-10-28T12:00:00+00:00",
   lastFetchError: null,
@@ -141,6 +145,65 @@ describe("the buttons", () => {
 
     stub(respond(200, { sent: true }));
     expect(await sendTestAlert()).toEqual({ ok: true });
+  });
+});
+
+describe("saveAlertSettings", () => {
+  it("puts the whole form and hands back the stored state", async () => {
+    const saved = { ...settings, priority: 1 as const, sound: "siren" };
+    const fetchMock = stub(respond(200, { ...state, settings: saved }));
+
+    const result = await saveAlertSettings(saved);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/alerts/settings");
+    expect(init.method).toBe("PUT");
+    expect(init.headers).toEqual({ "Content-Type": "application/json" });
+    expect(JSON.parse(init.body)).toEqual(saved);
+    expect(result.ok && result.state?.settings).toEqual(saved);
+  });
+
+  it("hands back the server's message for each refused field", async () => {
+    stub(
+      respond(400, {
+        title: "One or more validation errors occurred.",
+        errors: { repeatSeconds: ["Between 30 and 10800 seconds."] },
+      }),
+    );
+
+    expect(await saveAlertSettings({ ...settings, repeatSeconds: 5 })).toEqual({
+      ok: false,
+      reason: "invalid",
+      errors: { repeatSeconds: ["Between 30 and 10800 seconds."] },
+    });
+  });
+
+  it("treats a 400 without field errors as a refusal", async () => {
+    stub({ ...respond(400), json: async () => ({}) });
+    expect(await saveAlertSettings(settings)).toEqual({
+      ok: false,
+      reason: "refused",
+    });
+
+    stub({ ...respond(400), headers: { get: () => "text/plain" } });
+    expect(await saveAlertSettings(settings)).toEqual({
+      ok: false,
+      reason: "refused",
+    });
+  });
+
+  it("says when the presses ran out or the session ended", async () => {
+    stub(respond(429));
+    expect(await saveAlertSettings(settings)).toEqual({
+      ok: false,
+      reason: "throttled",
+    });
+
+    stub(respond(403));
+    expect(await saveAlertSettings(settings)).toEqual({
+      ok: false,
+      reason: "visitor",
+    });
   });
 });
 

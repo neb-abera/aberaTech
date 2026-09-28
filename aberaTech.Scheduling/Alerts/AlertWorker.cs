@@ -23,7 +23,7 @@ public sealed record AlertsSnapshot(
 public sealed class AlertsStatus(AlertsOptions options)
 {
     private readonly Lock _lock = new();
-    private AlertsSnapshot _snapshot = new([], options.FallbackZone(), null, null, null, null);
+    private AlertsSnapshot _snapshot = new([], AlertSettings.Defaults(options).FallbackZone(), null, null, null, null);
 
     public AlertsSnapshot Snapshot()
     {
@@ -66,10 +66,12 @@ public enum DeliveryOutcome
 /// <summary>
 /// Sends one due alert, after the checks that must be read at that moment
 /// rather than at the last calendar read: skipped, muted, already claimed.
+/// The settings are read then too, so a save changes the next send.
 /// </summary>
 public sealed class AlertDispatcher(
     IServiceScopeFactory scopes,
     AlertsStatus status,
+    AlertsOptions options,
     IClock clock,
     ILogger<AlertDispatcher> logger)
 {
@@ -82,12 +84,14 @@ public sealed class AlertDispatcher(
         if (alert.StartsAt <= now) return DeliveryOutcome.Started;
         if (await store.IsSkippedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Skipped;
         if (await store.MutedUntilAsync(cancellationToken) is { } until && until > now) return DeliveryOutcome.Muted;
+        var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
         if (!await store.TryClaimAsync(alert.Key, alert.StartsAt, now, cancellationToken)) return DeliveryOutcome.AlreadyClaimed;
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var result = await pushover.SendAsync(
             alert.Title,
             AlertText.Message(alert, status.Snapshot().Zone),
+            settings.Delivery,
             cancellationToken);
 
         var done = clock.GetCurrentInstant();
@@ -108,16 +112,19 @@ public sealed class AlertDispatcher(
 
     /// <summary>
     /// The page's test button. Not deduplicated and not muted: pressing it is
-    /// the owner asking. It repeats the way an event's alert will.
+    /// the owner asking. It goes with the saved priority, repeat and sound,
+    /// so it shows what an event's alert will do.
     /// </summary>
     public async Task<PushoverResult> SendTestAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
+        var settings = await AlertSettings.CurrentAsync(
+            scope.ServiceProvider.GetRequiredService<IAlertStore>(), options, cancellationToken);
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
         var now = clock.GetCurrentInstant();
 
         var result = await pushover.SendAsync(
-            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone), cancellationToken);
+            "Test alert", AlertText.TestMessage(now, status.Snapshot().Zone, settings), settings.Delivery, cancellationToken);
 
         status.Sent(new LastSend(clock.GetCurrentInstant(), "Test alert", result.Outcome));
         if (!result.Ok) logger.LogWarning("Test alert failed ({Failure}).", result.Error);
@@ -126,11 +133,15 @@ public sealed class AlertDispatcher(
 }
 
 /// <summary>
-/// Reads the calendar every <see cref="AlertsOptions.PollMinutes"/> and sends
+/// Reads the calendar every <see cref="AlertSettings.PollMinutes"/> and sends
 /// each alert at its own time from the list in memory. A reminder at 08:47
 /// goes at 08:47, not at the next read.
 /// </summary>
 /// <remarks>
+/// The settings are read at the start of every pass. A saved change to
+/// what the plan depends on (lead, look-ahead, all-day, zone, addresses)
+/// reads the calendar again in that pass, on every replica.
+///
 /// Every replica runs this. The claim in <see cref="IAlertStore"/> decides
 /// which one sends, so two replicas, or one restarted mid-minute, send once.
 /// An alert whose time passed while the process was down still goes if the
@@ -152,7 +163,9 @@ public sealed class CalendarAlertWorker(
 
     private readonly SemaphoreSlim _tick = new(1, 1);
     private readonly HashSet<string> _handled = new(StringComparer.Ordinal);
-    private Instant? _nextRead;
+    private Instant? _lastRead;
+    private string? _plannedWith;
+    private AlertSettings _settings = AlertSettings.Defaults(options);
 
     /// <summary>
     /// One pass: read the calendar if a read is due, send whatever is due,
@@ -172,10 +185,11 @@ public sealed class CalendarAlertWorker(
         try
         {
             var now = clock.GetCurrentInstant();
-            if (readNow || _nextRead is null || now >= _nextRead)
+            var settings = await SettingsAsync(cancellationToken);
+            if (readNow || _lastRead is null || now >= _lastRead + settings.Poll || _plannedWith != settings.PlanKey)
             {
-                await ReadAsync(now, cancellationToken);
-                _nextRead = now + options.Poll;
+                await ReadAsync(now, settings, cancellationToken);
+                _lastRead = now;
             }
 
             Instant? retry = null;
@@ -200,7 +214,7 @@ public sealed class CalendarAlertWorker(
             }
 
             now = clock.GetCurrentInstant();
-            var next = _nextRead.Value;
+            var next = _lastRead.Value + settings.Poll;
             foreach (var alert in plan)
             {
                 if (alert.AlertAt > now && alert.AlertAt < next && !_handled.Contains(alert.Key)) next = alert.AlertAt;
@@ -231,7 +245,7 @@ public sealed class CalendarAlertWorker(
 
             var wait = next - clock.GetCurrentInstant();
             if (wait < Duration.Zero) wait = Duration.Zero;
-            if (wait > options.Poll) wait = options.Poll;
+            if (wait > _settings.Poll) wait = _settings.Poll;
 
             try
             {
@@ -244,13 +258,31 @@ public sealed class CalendarAlertWorker(
         }
     }
 
-    private async Task ReadAsync(Instant now, CancellationToken cancellationToken)
+    /// <summary>The saved settings, or the last ones read when the database does not answer.</summary>
+    private async Task<AlertSettings> SettingsAsync(CancellationToken cancellationToken)
     {
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            _settings = await AlertSettings.CurrentAsync(
+                scope.ServiceProvider.GetRequiredService<IAlertStore>(), options, cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Reading the alert settings failed ({Failure}). The last ones stay in use.", exception.GetType().Name);
+        }
+
+        return _settings;
+    }
+
+    private async Task ReadAsync(Instant now, AlertSettings settings, CancellationToken cancellationToken)
+    {
+        _plannedWith = settings.PlanKey;
         await using var scope = scopes.CreateAsyncScope();
         try
         {
             var ics = await scope.ServiceProvider.GetRequiredService<CalendarFeed>().FetchAsync(cancellationToken);
-            var plan = AlertPlanner.Plan(ics, now, options);
+            var plan = AlertPlanner.Plan(ics, now, settings);
             status.Planned(plan, now);
 
             var keys = plan.Alerts.Select(alert => alert.Key).ToHashSet(StringComparer.Ordinal);
