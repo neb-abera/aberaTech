@@ -49,6 +49,11 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertEventTypeRecord> AlertEventTypes => Set<AlertEventTypeRecord>();
 
+    /// <summary>The phones paired on /alerts, by the hash of their tokens.</summary>
+    public DbSet<AlertDeviceRecord> AlertDevices => Set<AlertDeviceRecord>();
+
+    public DbSet<AlertAcknowledgementRecord> AlertAcknowledgements => Set<AlertAcknowledgementRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -162,6 +167,23 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasIndex(choice => choice.LastSeenAt);
         });
 
+        builder.Entity<AlertDeviceRecord>(entity =>
+        {
+            entity.HasKey(device => device.Id);
+            entity.Property(device => device.Id).ValueGeneratedNever();
+            entity.Property(device => device.Name).HasMaxLength(AlertDeviceTokens.MaxNameLength).IsRequired();
+            entity.Property(device => device.TokenHash).IsRequired();
+            // Every request with a token looks it up by its hash.
+            entity.HasIndex(device => device.TokenHash).IsUnique();
+        });
+
+        builder.Entity<AlertAcknowledgementRecord>(entity =>
+        {
+            entity.HasKey(acknowledgement => acknowledgement.OccurrenceKey);
+            entity.Property(acknowledgement => acknowledgement.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
+            entity.Property(acknowledgement => acknowledgement.Via).HasMaxLength(16).IsRequired();
+        });
+
         builder.Entity<AlertSkipRecord>(entity =>
         {
             entity.HasKey(skip => skip.OccurrenceKey);
@@ -174,6 +196,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasKey(delivery => delivery.OccurrenceKey);
             entity.Property(delivery => delivery.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
             entity.Property(delivery => delivery.Outcome).HasMaxLength(64).IsRequired();
+            entity.Property(delivery => delivery.Receipt).HasMaxLength(PushoverClient.MaxReceiptLength);
             entity.HasIndex(delivery => delivery.ClaimedAt);
         });
 

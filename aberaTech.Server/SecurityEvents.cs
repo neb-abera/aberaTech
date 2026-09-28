@@ -59,6 +59,12 @@ public static partial class SecurityEvents
     /// <summary>The owner's session ended by sign-out.</summary>
     public const int OwnerSignedOut = 4010;
 
+    /// <summary>401 from /api/alerts to a bearer token: malformed, unknown or revoked. Never the token.</summary>
+    public const int AlertsDeviceTokenRejected = 4011;
+
+    /// <summary>403 from /api/alerts to a paired phone's token, on a route that is the owner's alone.</summary>
+    public const int AlertsDeviceRefused = 4012;
+
     /// <summary>
     /// Sign-in and sign-out as events. The application STIG (V-222462,
     /// V-222464) wants a record of when a session starts and ends, with
@@ -124,8 +130,10 @@ public static partial class SecurityEvents
             if ((context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText is not { } route) return;
 
             var signedIn = context.User.Identity?.IsAuthenticated == true;
+            var bearer = context.Request.Headers.Authorization.ToString()
+                .StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
 
-            if (Classify(route, context.Request.Method, status, signedIn) is { } eventId)
+            if (Classify(route, context.Request.Method, status, signedIn, bearer) is { } eventId)
             {
                 Write(logger, eventId, ClientAddress.For(context), context.Request.Method, route, status);
             }
@@ -133,9 +141,12 @@ public static partial class SecurityEvents
     }
 
     /// <summary>Which event, if any, an outcome is. Pure, so the table is testable on its own.</summary>
-    public static int? Classify(string route, string method, int status, bool signedIn) => status switch
+    /// <param name="bearer">The request carried <c>Authorization: Bearer</c>.</param>
+    public static int? Classify(string route, string method, int status, bool signedIn, bool bearer = false) => status switch
     {
         StatusCodes.Status429TooManyRequests => RateLimited,
+        StatusCodes.Status401Unauthorized when bearer && IsAlerts(route) => AlertsDeviceTokenRejected,
+        StatusCodes.Status403Forbidden when bearer && IsAlerts(route) => AlertsDeviceRefused,
         StatusCodes.Status401Unauthorized when Is(route, DigestRoute) => DigestKeyRejected,
         StatusCodes.Status401Unauthorized when Is(route, DevBox.DevBoxEndpoints.HeartbeatPath) => AgentTokenRejected,
         StatusCodes.Status401Unauthorized => SignInRequired,
@@ -145,6 +156,10 @@ public static partial class SecurityEvents
         StatusCodes.Status400BadRequest when PublicWriteRoutes.Contains(route) && HttpMethods.IsPost(method) => PublicWriteRefused,
         _ => null
     };
+
+    private static bool IsAlerts(string route) => route.StartsWith(AlertsRoutes, StringComparison.OrdinalIgnoreCase);
+
+    private const string AlertsRoutes = "/api/alerts/";
 
     private static bool Is(string route, string expected) =>
         string.Equals(route, expected, StringComparison.OrdinalIgnoreCase);
@@ -161,6 +176,8 @@ public static partial class SecurityEvents
             case UnknownCapability: Log.UnknownCapability(logger, clientIp, method, route, status); break;
             case PublicWriteRefused: Log.PublicWriteRefused(logger, clientIp, method, route, status); break;
             case AgentTokenRejected: Log.AgentTokenRejected(logger, clientIp, method, route, status); break;
+            case AlertsDeviceTokenRejected: Log.AlertsDeviceTokenRejected(logger, clientIp, method, route, status); break;
+            case AlertsDeviceRefused: Log.AlertsDeviceRefused(logger, clientIp, method, route, status); break;
         }
     }
 
@@ -201,6 +218,14 @@ public static partial class SecurityEvents
         [LoggerMessage(EventId = SecurityEvents.AgentTokenRejected, EventName = nameof(AgentTokenRejected), Level = LogLevel.Warning,
             Message = "Dev box agent token rejected from {ClientIp} on {Method} {Route} ({Status}).")]
         public static partial void AgentTokenRejected(ILogger logger, string clientIp, string method, string route, int status);
+
+        [LoggerMessage(EventId = SecurityEvents.AlertsDeviceTokenRejected, EventName = nameof(AlertsDeviceTokenRejected), Level = LogLevel.Warning,
+            Message = "Alerts device token rejected from {ClientIp} on {Method} {Route} ({Status}).")]
+        public static partial void AlertsDeviceTokenRejected(ILogger logger, string clientIp, string method, string route, int status);
+
+        [LoggerMessage(EventId = SecurityEvents.AlertsDeviceRefused, EventName = nameof(AlertsDeviceRefused), Level = LogLevel.Warning,
+            Message = "A paired phone was refused an owner-only route from {ClientIp} on {Method} {Route} ({Status}).")]
+        public static partial void AlertsDeviceRefused(ILogger logger, string clientIp, string method, string route, int status);
 
         [LoggerMessage(EventId = SecurityEvents.OwnerSignedIn, EventName = nameof(OwnerSignedIn), Level = LogLevel.Information,
             Message = "Owner signed in from {ClientIp}.")]

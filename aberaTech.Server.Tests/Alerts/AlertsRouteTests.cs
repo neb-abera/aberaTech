@@ -74,6 +74,7 @@ public sealed class AlertsRouteTests : IDisposable
         services.RemoveAll<IHostedService>();
         services.AddSingleton<IClock>(_clock);
         services.AddSingleton<IAlertStore>(_store);
+        services.AddSingleton<IAlertDeviceStore>(new InMemoryAlertDeviceStore());
         services.AddSingleton(new AlertsOptions
         {
             CalendarIcsUrl = settings.GetValueOrDefault("Alerts:CalendarIcsUrl"),
@@ -96,7 +97,11 @@ public sealed class AlertsRouteTests : IDisposable
         ["POST", "/api/alerts/test-event"],
         ["POST", "/api/alerts/test-notification"],
         ["PUT", "/api/alerts/event-type"],
-        ["PUT", "/api/alerts/settings"]
+        ["PUT", "/api/alerts/settings"],
+        ["POST", "/api/alerts/ack"],
+        ["GET", "/api/alerts/devices"],
+        ["POST", "/api/alerts/devices"],
+        ["DELETE", "/api/alerts/devices/0b9c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10"]
     ];
 
     private HttpClient Owner() => _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
@@ -533,7 +538,8 @@ public sealed class AlertsRouteTests : IDisposable
             ["ownerEmails"] = Array.Empty<string>(),
             ["notificationPriority"] = 0,
             ["notificationSound"] = "",
-            ["defaultType"] = "none"
+            ["defaultType"] = "none",
+            ["backupDelaySeconds"] = 0
         };
         foreach (var (field, value) in changes) form[field] = value;
         return form;
@@ -560,8 +566,11 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal(0, settings.GetProperty("notificationPriority").GetInt32());
         Assert.Equal("", settings.GetProperty("notificationSound").GetString());
         Assert.Equal("none", settings.GetProperty("defaultType").GetString());
+        Assert.Equal(0, settings.GetProperty("backupDelaySeconds").GetInt32());
 
         var bounds = status.GetProperty("bounds");
+        Assert.Equal(0, bounds.GetProperty("backupDelaySeconds").GetProperty("min").GetInt32());
+        Assert.Equal(900, bounds.GetProperty("backupDelaySeconds").GetProperty("max").GetInt32());
         Assert.Equal(30, bounds.GetProperty("repeatSeconds").GetProperty("min").GetInt32());
         Assert.Equal(10800, bounds.GetProperty("repeatSeconds").GetProperty("max").GetInt32());
         Assert.Equal(180, bounds.GetProperty("stopAfterMinutes").GetProperty("max").GetInt32());
@@ -603,7 +612,10 @@ public sealed class AlertsRouteTests : IDisposable
         ["defaultType", "alarm"],
         ["defaultType", "off"],
         ["defaultType", ""],
-        ["defaultType", null]
+        ["defaultType", null],
+        ["backupDelaySeconds", -1],
+        ["backupDelaySeconds", 901],
+        ["backupDelaySeconds", null]
     ];
 
     [Theory]
@@ -631,12 +643,13 @@ public sealed class AlertsRouteTests : IDisposable
         using var low = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
             ("priority", 0), ("repeatSeconds", 30), ("stopAfterMinutes", 1), ("defaultLeadMinutes", 0),
             ("pollMinutes", 1), ("lookaheadHours", 1), ("sound", "none"), ("notificationPriority", 0),
-            ("notificationSound", "none"), ("defaultType", "none")));
+            ("notificationSound", "none"), ("defaultType", "none"), ("backupDelaySeconds", 0)));
         using var high = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
             ("priority", 2), ("repeatSeconds", 10800), ("stopAfterMinutes", 180), ("defaultLeadMinutes", 1440),
             ("pollMinutes", 60), ("lookaheadHours", 336), ("sound", "pushover"),
             ("ownerEmails", Enumerable.Range(0, 10).Select(n => $"owner{n}@example.test").ToArray()),
-            ("notificationPriority", 1), ("notificationSound", "pushover"), ("defaultType", "notification")));
+            ("notificationPriority", 1), ("notificationSound", "pushover"), ("defaultType", "notification"),
+            ("backupDelaySeconds", 900)));
 
         Assert.Equal(HttpStatusCode.OK, low.StatusCode);
         Assert.Equal(HttpStatusCode.OK, high.StatusCode);
@@ -651,7 +664,7 @@ public sealed class AlertsRouteTests : IDisposable
             ("priority", 1), ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"),
             ("pollMinutes", 2), ("lookaheadHours", 72), ("includeAllDay", true), ("timeZone", " Asia/Amman "),
             ("ownerEmails", new[] { " neb@work.example " }), ("notificationPriority", 1), ("notificationSound", "bike"),
-            ("defaultType", "notification")));
+            ("defaultType", "notification"), ("backupDelaySeconds", 120)));
 
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var answer = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("settings");
@@ -659,7 +672,8 @@ public sealed class AlertsRouteTests : IDisposable
         var stored = (await _store.SettingsAsync(CancellationToken.None))!;
         Assert.Equal(["neb@work.example"], stored.OwnerEmails);
         Assert.Equal(
-            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails, 1, "bike", "notification"), stored);
+            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails, 1, "bike", "notification", 120),
+            stored);
 
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         var settings = status.GetProperty("settings");
@@ -674,6 +688,7 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal(1, settings.GetProperty("notificationPriority").GetInt32());
         Assert.Equal("bike", settings.GetProperty("notificationSound").GetString());
         Assert.Equal("notification", settings.GetProperty("defaultType").GetString());
+        Assert.Equal(120, settings.GetProperty("backupDelaySeconds").GetInt32());
         // The unmarked review now follows the new default.
         Assert.Equal("notification", status.GetProperty("alerts")[1].GetProperty("type").GetString());
     }

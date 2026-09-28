@@ -1,18 +1,19 @@
-using aberaTech.Scheduling.Admin;
 using NodaTime;
 
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
-/// settings, and Mute, Unmute, Skip, each event's type, Save settings and
-/// three test sends. Plain JSON over HTTPS, so it works from a locked-down
-/// work computer.
+/// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, Save
+/// settings, three test sends and the paired phones. Plain JSON over HTTPS,
+/// so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
-/// Owner only, behind the same policy as /devbox and the queue. The actions
-/// share one rate limit. Every action answers with the page's whole state,
-/// so the page never shows a mute or a skip the server did not store.
+/// The owner's Google sign-in reaches every route. A paired phone's token
+/// reaches the six a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// the status, mute, unmute, skip, unskip and ack. The actions share one rate
+/// limit. Every action answers with the page's whole state, so the page and
+/// the phone never show a mute or a skip the server did not store.
 /// </remarks>
 public static class AlertsEndpoints
 {
@@ -27,23 +28,30 @@ public static class AlertsEndpoints
     public static IEndpointRouteBuilder MapAlertsEndpoints(
         this IEndpointRouteBuilder routes, AlertsOptions options, IReadOnlyList<string> missing)
     {
+        // The owner's cookie alone.
         var group = routes
             .MapGroup("/api/alerts")
-            .RequireAuthorization(AdminAuth.PolicyName)
+            .RequireAuthorization(AlertsAuth.OwnerPolicy)
+            .WithTags("Alerts");
+
+        // The owner's cookie or a paired phone's token.
+        var shared = routes
+            .MapGroup("/api/alerts")
+            .RequireAuthorization(AlertsAuth.OwnerOrDevicePolicy)
             .WithTags("Alerts");
 
         if (missing.Count > 0)
         {
             // Names, never values. The worker is not running and nothing
             // else is mapped.
-            group.MapGet("/status", () => Results.Ok(new { configured = false, missing }));
+            shared.MapGet("/status", () => Results.Ok(new { configured = false, missing }));
             return routes;
         }
 
-        group.MapGet("/status", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+        shared.MapGet("/status", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
             Results.Ok(await StateAsync(status, store, clock, options, cancellationToken)));
 
-        group.MapPost("/mute", async (
+        shared.MapPost("/mute", async (
             MuteRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
@@ -59,13 +67,13 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        group.MapPost("/unmute", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+        shared.MapPost("/unmute", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             await store.SetMutedUntilAsync(null, clock.GetCurrentInstant(), cancellationToken);
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        group.MapPost("/skip", async (
+        shared.MapPost("/skip", async (
             SkipRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
@@ -78,7 +86,7 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        group.MapPost("/unskip", async (
+        shared.MapPost("/unskip", async (
             SkipRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
@@ -108,7 +116,8 @@ public static class AlertsEndpoints
                 request.OwnerEmails,
                 request.NotificationPriority,
                 request.NotificationSound,
-                request.DefaultType);
+                request.DefaultType,
+                request.BackupDelaySeconds);
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
             var settings = new AlertSettings(
@@ -124,7 +133,8 @@ public static class AlertsEndpoints
                 [.. request.OwnerEmails!.Select(email => email!.Trim())],
                 request.NotificationPriority!.Value,
                 request.NotificationSound!,
-                request.DefaultType!);
+                request.DefaultType!,
+                request.BackupDelaySeconds!.Value);
             await store.SaveSettingsAsync(settings, clock.GetCurrentInstant(), cancellationToken);
 
             // This replica plans with the new values now. The others read
@@ -155,6 +165,78 @@ public static class AlertsEndpoints
                 alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
+
+        // Acknowledge: the phone's alarm or the browser's ring was answered.
+        // An occurrence on the list, or one that was sent and has since
+        // dropped off it, so a phone that answers late still counts. The
+        // first acknowledgement stands, and it cancels Pushover's repeats.
+        shared.MapPost("/ack", async (
+            AckRequest request,
+            AlertsStatus status,
+            AlertDispatcher dispatcher,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var errors = new Dictionary<string, string[]>();
+            if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
+            if (request.Via is not ("phone" or "browser")) errors["via"] = ["\"phone\" or \"browser\"."];
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+
+            var planned = status.Snapshot().Plan.FirstOrDefault(alert => alert.Key == request.Key);
+            var startsAt = planned?.StartsAt ?? (await store.DeliveryAsync(request.Key!, cancellationToken))?.StartsAt;
+            if (startsAt is null) return Results.NotFound();
+
+            if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, clock.GetCurrentInstant(), cancellationToken))
+            {
+                await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
+            }
+
+            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // The paired phones. The token is in the answer to the pairing and
+        // nowhere else, ever: the list names the phones, and the server
+        // keeps only each token's hash.
+        group.MapGet("/devices", async (IAlertDeviceStore devices, CancellationToken cancellationToken) =>
+            Results.Ok((await devices.ListAsync(cancellationToken)).Select(DeviceView.From)));
+
+        group.MapPost("/devices", async (
+            DeviceRequest request, HttpContext context, IAlertDeviceStore devices, IClock clock, CancellationToken cancellationToken) =>
+        {
+            if (AlertDeviceTokens.CleanName(request.Name) is not { } name)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["name"] = [$"1 to {AlertDeviceTokens.MaxNameLength} characters."]
+                });
+            }
+
+            var token = AlertDeviceTokens.New();
+            var device = await devices.CreateAsync(
+                Guid.NewGuid(), name, AlertDeviceTokens.Hash(token), clock.GetCurrentInstant(), cancellationToken);
+            if (device is null)
+            {
+                return Results.Text(
+                    $"At most {AlertDeviceTokens.MaxDevices} phones. Revoke one first.",
+                    "text/plain",
+                    statusCode: StatusCodes.Status409Conflict);
+            }
+
+            var origin = $"{context.Request.Scheme}://{context.Request.Host}";
+            return Results.Created(
+                $"/api/alerts/devices/{device.Id}",
+                new PairedDevice(
+                    device.Id,
+                    device.Name,
+                    device.CreatedAt.ToDateTimeOffset(),
+                    token,
+                    AlertDeviceTokens.PairUrl(token, origin, context.Request.Host.Host)));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        group.MapDelete("/devices/{id:guid}", async (Guid id, IAlertDeviceStore devices, CancellationToken cancellationToken) =>
+            await devices.RevokeAsync(id, cancellationToken) ? Results.NoContent() : Results.NotFound())
+            .RequireRateLimiting(ActionsPolicy);
 
         // Send test alert: an alarm, with the alarm settings.
         group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
@@ -214,6 +296,24 @@ public static class AlertsEndpoints
                 return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
+            // An alarm due now, until the next reset, so the browser suite
+            // can ring the page and acknowledge it.
+            group.MapPost("/fake/due", async (
+                FakeAlertServices fake,
+                CalendarAlertWorker worker,
+                AlertsStatus status,
+                IAlertStore store,
+                IClock clock,
+                CancellationToken cancellationToken) =>
+            {
+                fake.AddDue();
+                await worker.ReadNowAsync(cancellationToken);
+                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            }).RequireRateLimiting(ActionsPolicy);
+
+            // The receipts whose repeats an acknowledgement cancelled.
+            group.MapGet("/fake/cancelled", (FakeAlertServices fake) => Results.Ok(fake.Cancelled));
+
             // The last message the fake Pushover took, so the browser suite
             // can see what Send test alert asked for.
             group.MapGet("/fake/sent", (FakeAlertServices fake) =>
@@ -254,6 +354,7 @@ public static class AlertsEndpoints
         var mutedUntil = await store.MutedUntilAsync(cancellationToken) is { } until && until > now ? until : (Instant?)null;
         var skipped = await store.SkippedAsync(cancellationToken);
         var chosen = await store.EventTypesAsync(cancellationToken);
+        var acknowledged = await store.AcknowledgementsAsync(cancellationToken);
 
         return new AlertsState(
             Configured: true,
@@ -273,7 +374,8 @@ public static class AlertsEndpoints
                 settings.OwnerEmails,
                 settings.NotificationPriority,
                 settings.NotificationSound,
-                settings.DefaultType),
+                settings.DefaultType,
+                settings.BackupDelaySeconds),
             Bounds: SettingsBounds.Instance,
             MutedUntil: mutedUntil?.ToDateTimeOffset(),
             LastFetchAt: snapshot.LastFetchAt?.ToDateTimeOffset(),
@@ -290,6 +392,7 @@ public static class AlertsEndpoints
                     .Select(alert =>
                     {
                         var type = AlertTypes.Resolve(alert, chosen.GetValueOrDefault(alert.EventId), settings);
+                        var acknowledgement = acknowledged.GetValueOrDefault(alert.Key);
                         return new AlertView(
                             alert.Key,
                             alert.Title,
@@ -301,7 +404,10 @@ public static class AlertsEndpoints
                             mutedUntil is { } muted && alert.AlertAt < muted,
                             alert.Critical,
                             type.Type,
-                            type.From);
+                            type.From,
+                            acknowledgement is not null,
+                            acknowledgement?.At.ToDateTimeOffset(),
+                            acknowledgement?.Via);
                     })
             ]);
     }
@@ -309,6 +415,21 @@ public static class AlertsEndpoints
     public sealed record MuteRequest(string? Until);
 
     public sealed record SkipRequest(string? Key);
+
+    /// <summary>A listed or sent alert's key, and "phone" or "browser".</summary>
+    public sealed record AckRequest(string? Key, string? Via);
+
+    public sealed record DeviceRequest(string? Name);
+
+    /// <summary>A paired phone as the list shows it. Never the token or its hash.</summary>
+    public sealed record DeviceView(Guid Id, string Name, DateTimeOffset CreatedAt, DateTimeOffset? LastSeenAt)
+    {
+        public static DeviceView From(AlertDevice device) =>
+            new(device.Id, device.Name, device.CreatedAt.ToDateTimeOffset(), device.LastSeenAt?.ToDateTimeOffset());
+    }
+
+    /// <summary>The answer to a pairing, the one time the token is shown.</summary>
+    public sealed record PairedDevice(Guid Id, string Name, DateTimeOffset CreatedAt, string Token, string PairUrl);
 
     /// <summary>A listed alert's key and the type for its event: none, notification, alarm, or default to drop the choice.</summary>
     public sealed record EventTypeRequest(string? Key, string? Type);
@@ -327,7 +448,8 @@ public static class AlertsEndpoints
         IReadOnlyList<string?>? OwnerEmails,
         int? NotificationPriority,
         string? NotificationSound,
-        string? DefaultType);
+        string? DefaultType,
+        int? BackupDelaySeconds);
 
     /// <summary>
     /// The page's whole state. Lists its fields: the settings in force, and
@@ -361,7 +483,8 @@ public static class AlertsEndpoints
         IReadOnlyList<string> OwnerEmails,
         int NotificationPriority,
         string NotificationSound,
-        string DefaultType);
+        string DefaultType,
+        int BackupDelaySeconds);
 
     public sealed record Bound(int Min, int Max);
 
@@ -372,6 +495,7 @@ public static class AlertsEndpoints
         Bound DefaultLeadMinutes,
         Bound PollMinutes,
         Bound LookaheadHours,
+        Bound BackupDelaySeconds,
         int MaxOwnerEmails,
         int MaxEmergencySounds,
         IReadOnlyList<string> Sounds)
@@ -382,6 +506,7 @@ public static class AlertsEndpoints
             new Bound(AlertSettings.MinDefaultLeadMinutes, AlertSettings.MaxDefaultLeadMinutes),
             new Bound(AlertSettings.MinPollMinutes, AlertSettings.MaxPollMinutes),
             new Bound(AlertSettings.MinLookaheadHours, AlertSettings.MaxLookaheadHours),
+            new Bound(AlertSettings.MinBackupDelaySeconds, AlertSettings.MaxBackupDelaySeconds),
             AlertSettings.MaxOwnerEmails,
             PushoverClient.MaxEmergencySounds,
             PushoverClient.Sounds);
@@ -400,5 +525,8 @@ public static class AlertsEndpoints
         bool Muted,
         bool Critical,
         string Type,
-        string TypeFrom);
+        string TypeFrom,
+        bool Acknowledged,
+        DateTimeOffset? AcknowledgedAt,
+        string? AcknowledgedVia);
 }

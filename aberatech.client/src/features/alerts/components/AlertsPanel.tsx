@@ -15,6 +15,7 @@ import {
   type AlertsView,
   type AlertType,
   fetchAlerts,
+  formatClock,
   formatWhen,
   muteAlerts,
   sendEventTest,
@@ -25,11 +26,14 @@ import {
   unmuteAlerts,
   unskipAlert,
 } from "../core/api";
+import { ringPollMs } from "../core/ring";
 import { count, describe, every, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
 import HowEventsAlert from "./HowEventsAlert";
+import PhonesSection, { type PhonesApi, phonesApi } from "./PhonesSection";
+import RingInBrowser from "./RingInBrowser";
 
-/** How often the page asks again on its own. */
+/** How often the page asks again on its own. Every 15 s while it rings in this browser. */
 const refreshEvery = 60_000;
 
 type View = { status: "loading" } | AlertsView;
@@ -39,8 +43,13 @@ type View = { status: "loading" } | AlertsView;
  * buttons. Plain requests and a timer, so it works from a work computer
  * that blocks everything else.
  */
-export default function AlertsPanel() {
+export default function AlertsPanel({
+  phones = phonesApi,
+}: {
+  phones?: PhonesApi;
+} = {}) {
   const [view, setView] = React.useState<View>({ status: "loading" });
+  const [ringing, setRinging] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -56,14 +65,15 @@ export default function AlertsPanel() {
     let timer = 0;
     const tick = async () => {
       await refresh();
-      if (alive.current) timer = window.setTimeout(tick, refreshEvery);
+      if (alive.current)
+        timer = window.setTimeout(tick, ringing ? ringPollMs : refreshEvery);
     };
     void tick();
     return () => {
       alive.current = false;
       window.clearTimeout(timer);
     };
-  }, [refresh]);
+  }, [refresh, ringing]);
 
   const act = async (
     press: () => Promise<ActionResult>,
@@ -206,6 +216,14 @@ export default function AlertsPanel() {
         </Alert>
       )}
 
+      <RingInBrowser
+        state={state}
+        onState={(next) => {
+          if (alive.current) setView({ status: "owner", state: next });
+        }}
+        onEnabledChange={setRinging}
+      />
+
       <Calendar state={state} when={when} />
 
       <Box>
@@ -228,6 +246,7 @@ export default function AlertsPanel() {
                 key={alert.key}
                 alert={alert}
                 when={when}
+                clock={(iso) => formatClock(iso, state.timeZone)}
                 defaultLead={state.defaultLeadMinutes}
                 busy={busy}
                 onSkip={() =>
@@ -273,6 +292,8 @@ export default function AlertsPanel() {
           state.timeZone,
         )}
       </Typography>
+
+      <PhonesSection api={phones} when={when} />
 
       <AlertSettingsForm
         settings={state.settings}
@@ -369,6 +390,7 @@ function typeLine(alert: AlertItem): string {
 function Item({
   alert,
   when,
+  clock,
   defaultLead,
   busy,
   onSkip,
@@ -378,6 +400,7 @@ function Item({
 }: {
   alert: AlertItem;
   when: (iso: string) => string;
+  clock: (iso: string) => string;
   defaultLead: number;
   busy: boolean;
   onSkip: () => void;
@@ -420,6 +443,13 @@ function Item({
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {typeLine(alert)}
         </Typography>
+        {alert.acknowledged && alert.acknowledgedAt && (
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Acknowledged{" "}
+            {alert.acknowledgedVia === "phone" ? "on phone" : "in a browser"} at{" "}
+            {clock(alert.acknowledgedAt)}
+          </Typography>
+        )}
         <Stack
           direction="row"
           spacing={1}

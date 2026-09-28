@@ -1,4 +1,9 @@
-import { expect, type Page, test } from "@playwright/test";
+import {
+  type APIRequestContext,
+  expect,
+  type Page,
+  test,
+} from "@playwright/test";
 
 // /alerts end to end, against the compose app: sign in by the real button
 // (a Development route issues the cookie), then every button on the page
@@ -40,11 +45,12 @@ const defaults = {
   notificationPriority: 0,
   notificationSound: "",
   defaultType: "none",
+  backupDelaySeconds: 0,
 };
 
 /**
  * Whatever an earlier engine's run left: unmuted, nothing skipped, no type
- * set on any event, the default settings. The
+ * set on any event, no phone paired, the default settings. The
  * development calendar placed its events from the app's start, so after
  * 3 h of uptime the standup had begun and this spec failed. The reset
  * places them from now and has the worker read them at once.
@@ -57,6 +63,9 @@ async function reset(page: Page) {
     data: defaults,
   });
   expect(settings.status()).toBe(200);
+  const devices = await (await page.request.get("/api/alerts/devices")).json();
+  for (const device of devices as { id: string }[])
+    await page.request.delete(`/api/alerts/devices/${device.id}`);
   const status = await (await page.request.get("/api/alerts/status")).json();
   for (const alert of status.alerts ?? []) {
     if (alert.skipped)
@@ -419,6 +428,146 @@ test.describe("/alerts", () => {
     await expect(page.getByText("The calendar cannot be read")).toHaveCount(0);
   });
 
+  test("pairing a phone shows a QR code, a link and the token once, and Revoke stops the token", async ({
+    page,
+    request,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const pair = page.getByRole("button", { name: "Pair a phone" });
+    await expect(pair).toBeDisabled();
+    await page.getByLabel("Phone name").fill("E2E phone");
+    await pair.click();
+
+    const pairing = page.getByRole("region", { name: "Pairing E2E phone" });
+    await expect(
+      pairing.getByRole("img", { name: "QR code that pairs a phone" }),
+    ).toBeVisible();
+    const box = await pairing
+      .getByRole("img", { name: "QR code that pairs a phone" })
+      .boundingBox();
+    expect(box?.width).toBe(224);
+    const href = await pairing
+      .getByRole("link", { name: "Open on this phone" })
+      .getAttribute("href");
+    // Not abera.tech, so the link names this server for the phone.
+    expect(href).toMatch(
+      /^aberaalarms:\/\/pair#token=aat_[A-Za-z0-9_-]{43}&server=http%3A%2F%2F/,
+    );
+    const token = (href ?? "").slice(
+      "aberaalarms://pair#token=".length,
+      "aberaalarms://pair#token=".length + 47,
+    );
+    await expect(pairing.getByLabel("Token")).toHaveText(token);
+    await expect(pairing.getByText(/cannot be shown again/)).toBeVisible();
+
+    const phones = page.getByRole("list", { name: "Paired phones" });
+    await expect(phones.getByText("E2E phone")).toBeVisible();
+    await expect(phones.getByText(/Not seen yet/)).toBeVisible();
+    const listed = await (await page.request.get("/api/alerts/devices")).text();
+    expect(listed).not.toContain(token);
+
+    // The phone's own request: the token and no cookie.
+    const phone = (path: string, request: APIRequestContext) =>
+      request.get(path, { headers: { Authorization: `Bearer ${token}` } });
+    expect((await phone("/api/alerts/status", request)).status()).toBe(200);
+    expect((await phone("/api/alerts/devices", request)).status()).toBe(403);
+    await page.reload();
+    await expect(phones.getByText(/Last seen /)).toBeVisible();
+
+    await page.getByRole("button", { name: "Revoke E2E phone" }).click();
+    await page.getByRole("button", { name: "Yes, revoke E2E phone" }).click();
+    await expect(page.getByText("No phones paired.")).toBeVisible();
+    expect((await phone("/api/alerts/status", request)).status()).toBe(401);
+  });
+
+  test("ringing in this browser rings for a due alarm, and Acknowledge stops it and marks it acknowledged", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    const cancelledBefore = (
+      await (await page.request.get("/api/alerts/fake/cancelled")).json()
+    ).length;
+    // An alarm due now: the worker sends it to the fake Pushover at
+    // emergency priority, with a receipt.
+    const due = await page.request.post("/api/alerts/fake/due");
+    expect(due.status()).toBe(200);
+    await page.reload();
+    await expect(
+      page.getByText(/Rings only while this tab is open/),
+    ).toBeVisible();
+    const ringing = page.getByRole("alertdialog", {
+      name: "Ringing: E2E drill",
+    });
+    await expect(ringing).toHaveCount(0);
+
+    await page.getByRole("switch", { name: "Ring in this browser" }).click();
+
+    await expect(ringing).toBeVisible();
+    await expect(page).toHaveTitle("Alarm: E2E drill");
+    await ringing.getByRole("button", { name: "Acknowledge" }).click();
+
+    await expect(ringing).toHaveCount(0);
+    await expect(page).not.toHaveTitle(/Alarm:/);
+    const drill = page
+      .getByRole("list", { name: "Next alerts" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E drill" });
+    await expect(
+      drill.getByText(/^Acknowledged in a browser at \d\d:\d\d$/),
+    ).toBeVisible();
+    const status = await (await page.request.get("/api/alerts/status")).json();
+    const acknowledged = status.alerts.find(
+      (alert: { title: string }) => alert.title === "E2E drill",
+    );
+    expect(acknowledged).toMatchObject({
+      acknowledged: true,
+      acknowledgedVia: "browser",
+    });
+    // Pushover's repeats for it were cancelled.
+    const cancelled = await (
+      await page.request.get("/api/alerts/fake/cancelled")
+    ).json();
+    expect(cancelled.length).toBe(cancelledBefore + 1);
+
+    // Still on, and nothing rings: the one due alarm is answered.
+    await page.reload();
+    await expect(
+      page.getByRole("switch", { name: "Ring in this browser" }),
+    ).toBeChecked();
+    await expect(ringing).toHaveCount(0);
+    await reset(page);
+  });
+
+  test("the backup delay saves with the settings and comes back after a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const delay = page.getByLabel("Pushover backup after");
+    await expect(delay).toHaveValue("0");
+    await delay.fill("120");
+    await expect(
+      page.getByText(
+        /A paired phone rings first\. Pushover follows 120 seconds later/,
+      ),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Save settings" }).click();
+    await expect(page.getByText("Settings saved.")).toBeVisible();
+
+    await page.reload();
+    await expect(delay).toHaveValue("120");
+    const status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.settings.backupDelaySeconds).toBe(120);
+    expect(status.bounds.backupDelaySeconds).toEqual({ min: 0, max: 900 });
+    await reset(page);
+  });
+
   test("a visitor is sent to sign in and every button is refused", async ({
     browser,
   }) => {
@@ -438,6 +587,8 @@ test.describe("/alerts", () => {
       "/api/alerts/test-notification",
       "/api/alerts/mute",
       "/api/alerts/skip",
+      "/api/alerts/ack",
+      "/api/alerts/devices",
     ]) {
       const response = await page.request.post(path, { data: {} });
       expect(response.status(), path).toBe(401);

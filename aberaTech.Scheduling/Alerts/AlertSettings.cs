@@ -31,7 +31,8 @@ public sealed record AlertSettings(
     IReadOnlyList<string> OwnerEmails,
     int NotificationPriority = 0,
     string NotificationSound = "",
-    string DefaultType = AlertTypes.None)
+    string DefaultType = AlertTypes.None,
+    int BackupDelaySeconds = 0)
 {
     public const int MinPriority = 0;
     public const int MaxPriority = PushoverClient.EmergencyPriority;
@@ -49,6 +50,11 @@ public sealed record AlertSettings(
     public const int MaxEmailLength = 254;
     public const int MaxTimeZoneLength = 64;
     public const int MaxNotificationPriority = 1;
+    public const int MinBackupDelaySeconds = 0;
+    public const int MaxBackupDelaySeconds = 900;
+
+    /// <summary>A backup that would land after this point before the start goes at this point instead.</summary>
+    public static readonly Duration LatestBackupBeforeStart = Duration.FromMinutes(1);
 
     /// <summary>The configuration's values, pulled inside the bounds. What runs until the owner saves.</summary>
     public static AlertSettings Defaults(AlertsOptions options) => new(
@@ -64,7 +70,8 @@ public sealed record AlertSettings(
         [.. options.OwnerEmails.Select(email => email.Trim()).Where(email => email.Length > 0)],
         Math.Clamp(options.NotificationPriority, MinPriority, MaxNotificationPriority),
         PushoverClient.Sounds.Contains(options.NotificationSound ?? "") ? options.NotificationSound! : "",
-        AlertTypes.Defaults.Contains(options.DefaultType ?? "") ? options.DefaultType! : AlertTypes.None);
+        AlertTypes.Defaults.Contains(options.DefaultType ?? "") ? options.DefaultType! : AlertTypes.None,
+        Math.Clamp(options.BackupDelaySeconds, MinBackupDelaySeconds, MaxBackupDelaySeconds));
 
     /// <summary>The saved row, or the configuration's values when nothing is saved.</summary>
     public static async Task<AlertSettings> CurrentAsync(
@@ -105,6 +112,24 @@ public sealed record AlertSettings(
         _ => null
     };
 
+    /// <summary>
+    /// When the Pushover message for an alert goes. An alarm waits
+    /// <see cref="BackupDelaySeconds"/> after its time, so a paired phone
+    /// rings first and Pushover follows only if nobody acknowledged it. The
+    /// wait never runs past one minute before the start: the plan drops an
+    /// event once it starts, and a backup after that would never go. A
+    /// notification, or a delay of 0, goes at the alert's own time.
+    /// </summary>
+    public Instant PushoverAt(PlannedAlert alert, string type)
+    {
+        if (type != AlertTypes.Alarm || BackupDelaySeconds <= 0) return alert.AlertAt;
+
+        var backup = alert.AlertAt + Duration.FromSeconds(BackupDelaySeconds);
+        var latest = alert.StartsAt - LatestBackupBeforeStart;
+        if (backup <= latest) return backup;
+        return latest > alert.AlertAt ? latest : alert.AlertAt;
+    }
+
     /// <summary>The zone when the feed names none. Blank is UTC. A saved name was checked on save.</summary>
     public DateTimeZone FallbackZone() =>
         TimeZone.Length == 0
@@ -133,7 +158,8 @@ public sealed record AlertSettings(
         IReadOnlyList<string?>? ownerEmails,
         int? notificationPriority,
         string? notificationSound,
-        string? defaultType)
+        string? defaultType,
+        int? backupDelaySeconds)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -151,6 +177,7 @@ public sealed record AlertSettings(
         Range("defaultLeadMinutes", defaultLeadMinutes, MinDefaultLeadMinutes, MaxDefaultLeadMinutes, "minutes");
         Range("pollMinutes", pollMinutes, MinPollMinutes, MaxPollMinutes, "minutes");
         Range("lookaheadHours", lookaheadHours, MinLookaheadHours, MaxLookaheadHours, "hours");
+        Range("backupDelaySeconds", backupDelaySeconds, MinBackupDelaySeconds, MaxBackupDelaySeconds, "seconds");
 
         if (sound is null) errors["sound"] = ["Required."];
         else if (sound.Length > 0 && !PushoverClient.Sounds.Contains(sound)) errors["sound"] = ["Not a Pushover sound."];

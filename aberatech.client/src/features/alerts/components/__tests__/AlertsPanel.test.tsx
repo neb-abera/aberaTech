@@ -18,6 +18,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bounds, settings } from "../../../../test/alertsFixtures";
 import { respond } from "../../../../test/fakeFetch";
 import AlertsPanel from "../AlertsPanel";
+import type { PhonesApi } from "../PhonesSection";
+
+/** No phones, and no request for them: PhonesSection.test.tsx covers the list. */
+const noPhones: PhonesApi = {
+  list: async () => ({ ok: true, devices: [] }),
+  pair: async () => ({ ok: false, reason: "refused" }),
+  revoke: async () => ({ ok: true }),
+};
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -33,6 +41,9 @@ const standup = {
   critical: true,
   type: "alarm",
   typeFrom: "critical",
+  acknowledged: false,
+  acknowledgedAt: null,
+  acknowledgedVia: null,
 };
 
 const review = {
@@ -47,6 +58,9 @@ const review = {
   critical: false,
   type: "none",
   typeFrom: "default",
+  acknowledged: false,
+  acknowledgedAt: null,
+  acknowledgedVia: null,
 };
 
 const state = (over: Record<string, unknown> = {}) => ({
@@ -88,7 +102,7 @@ function mount(...answers: unknown[]) {
   for (const answer of answers) fetchMock.mockResolvedValueOnce(answer);
   fetchMock.mockResolvedValue(answers[answers.length - 1]);
   vi.stubGlobal("fetch", fetchMock);
-  render(<AlertsPanel />);
+  render(<AlertsPanel phones={noPhones} />);
 }
 
 const posts = () =>
@@ -704,5 +718,47 @@ describe("the owner", () => {
         "listitem",
       ),
     ).toHaveLength(1);
+  });
+});
+
+describe("an acknowledged alert", () => {
+  it("says where and when it was acknowledged, in the calendar's zone on a 24-hour clock", async () => {
+    mount(
+      respond(
+        200,
+        state({
+          alerts: [
+            {
+              ...standup,
+              acknowledged: true,
+              acknowledgedAt: "2026-10-28T12:47:00+00:00",
+              acknowledgedVia: "phone",
+            },
+            {
+              ...review,
+              acknowledged: true,
+              acknowledgedAt: "2026-10-28T17:52:00+00:00",
+              acknowledgedVia: "browser",
+            },
+          ],
+        }),
+      ),
+    );
+    await settle();
+
+    const list = screen.getByRole("list", { name: "Next alerts" });
+    expect(
+      within(list).getByText("Acknowledged on phone at 08:47"),
+    ).toBeTruthy();
+    expect(
+      within(list).getByText("Acknowledged in a browser at 13:52"),
+    ).toBeTruthy();
+  });
+
+  it("says nothing for one that is not", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    expect(screen.queryByText(/^Acknowledged /)).toBeNull();
   });
 });

@@ -78,13 +78,59 @@ internal sealed class InMemoryAlertStore : IAlertStore
 
     public Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken)
     {
-        lock (_lock) return Task.FromResult(_claims.TryAdd(key, "claimed"));
+        lock (_lock)
+        {
+            if (!_claims.TryAdd(key, "claimed")) return Task.FromResult(false);
+            _starts[key] = startsAt;
+            return Task.FromResult(true);
+        }
     }
 
-    public Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken)
+    private readonly Dictionary<string, Instant> _starts = [];
+    private readonly Dictionary<string, string> _receipts = [];
+    private readonly Dictionary<string, AlertAcknowledgement> _acknowledgements = [];
+
+    public Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null)
     {
-        lock (_lock) _claims[key] = outcome;
+        BeforeRecordOutcome?.Invoke();
+        lock (_lock)
+        {
+            _claims[key] = outcome;
+            if (receipt is not null) _receipts[key] = receipt;
+            else _receipts.Remove(key);
+        }
+
         return Task.CompletedTask;
+    }
+
+    /// <summary>Runs as Pushover's answer is about to be stored, so a test can acknowledge while the message is on its way.</summary>
+    public Action? BeforeRecordOutcome { get; set; }
+
+    public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_claims.TryGetValue(key, out var outcome)
+                ? new AlertDelivery(_starts.GetValueOrDefault(key), outcome, _receipts.GetValueOrDefault(key))
+                : null);
+        }
+    }
+
+    public Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock)
+            return Task.FromResult<IReadOnlyDictionary<string, AlertAcknowledgement>>(
+                new Dictionary<string, AlertAcknowledgement>(_acknowledgements));
+    }
+
+    public Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_acknowledgements.ContainsKey(key));
+    }
+
+    public Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_acknowledgements.TryAdd(key, new AlertAcknowledgement(now, via)));
     }
 
     public Task PruneAsync(Instant before, CancellationToken cancellationToken) => Task.CompletedTask;
@@ -118,6 +164,68 @@ internal sealed class InMemoryAlertStore : IAlertStore
     public Task SeenEventsAsync(IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken)
     {
         lock (_lock) Seen.Add(eventIds);
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// The paired phones in memory, with the database store's rules: at most
+/// five, looked up by the token's hash, a revoked one gone at once.
+/// DatabaseAlertDeviceStoreTests holds the Postgres store to the same rules.
+/// </summary>
+internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
+{
+    private readonly Lock _lock = new();
+    private readonly List<(AlertDevice Device, byte[] Hash)> _devices = [];
+
+    /// <summary>How many times LastSeenAt was written.</summary>
+    public int Touches { get; private set; }
+
+    public IReadOnlyList<byte[]> Hashes
+    {
+        get { lock (_lock) return [.. _devices.Select(row => row.Hash)]; }
+    }
+
+    public Task<IReadOnlyList<AlertDevice>> ListAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult<IReadOnlyList<AlertDevice>>([.. _devices.Select(row => row.Device)]);
+    }
+
+    public Task<AlertDevice?> CreateAsync(Guid id, string name, byte[] tokenHash, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_devices.Count >= AlertDeviceTokens.MaxDevices) return Task.FromResult<AlertDevice?>(null);
+            var device = new AlertDevice(id, name, now, null);
+            _devices.Add((device, tokenHash));
+            return Task.FromResult<AlertDevice?>(device);
+        }
+    }
+
+    public Task<bool> RevokeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_devices.RemoveAll(row => row.Device.Id == id) > 0);
+    }
+
+    public Task<AlertDevice?> FindAsync(byte[] tokenHash, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+            return Task.FromResult<AlertDevice?>(
+                _devices.FirstOrDefault(row => row.Hash.AsSpan().SequenceEqual(tokenHash)).Device);
+    }
+
+    public Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            var index = _devices.FindIndex(row => row.Device.Id == id);
+            if (index >= 0 && (_devices[index].Device.LastSeenAt is not { } seen || seen <= unlessAfter))
+            {
+                _devices[index] = (_devices[index].Device with { LastSeenAt = now }, _devices[index].Hash);
+                Touches++;
+            }
+        }
+
         return Task.CompletedTask;
     }
 }

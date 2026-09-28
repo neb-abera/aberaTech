@@ -16,6 +16,7 @@ export const settings = {
   notificationPriority: 0 as 0 | 1,
   notificationSound: "",
   defaultType: "none" as "none" | "notification",
+  backupDelaySeconds: 0,
 };
 
 export const bounds = {
@@ -24,6 +25,7 @@ export const bounds = {
   defaultLeadMinutes: { min: 0, max: 1440 },
   pollMinutes: { min: 1, max: 60 },
   lookaheadHours: { min: 1, max: 336 },
+  backupDelaySeconds: { min: 0, max: 900 },
   maxOwnerEmails: 10,
   maxEmergencySounds: 50,
   sounds: ["pushover", "siren", "persistent", "none"],
