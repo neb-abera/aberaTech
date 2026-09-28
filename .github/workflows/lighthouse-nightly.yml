@@ -1,0 +1,151 @@
+name: Lighthouse nightly
+# Lighthouse against https://abera.tech itself, every night, uploaded to the
+# Lighthouse CI server as branch `production` of the abera.tech production
+# project, so its history is the live site's (docs/lighthouse.md). The same
+# collection, gate and tables as the Lighthouse job on a pull request, with
+# Cloudflare's compression and its two allowed scripts in front. A failed
+# collection, gate, upload or summary fails the run. Then the backup job
+# snapshots the server's Azure Files share, the store's one backup.
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  # A run on demand, and the first run after a change here.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The form scripts/check-concurrency.sh requires: each commit its own group.
+# Two nights on one commit never overlap, since a run takes under an hour.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  LHCI_SERVER_BASE_URL: https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io
+
+jobs:
+  lighthouse:
+    name: Lighthouse against abera.tech
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    env:
+      LHCI_PROJECT: abera.tech-production
+      LHCI_BASE_BRANCH: production
+      LHCI_REQUIRE_UPLOAD: '1'
+      # Every run, so the next night compares medians with medians.
+      LHCI_KEEP_ALL_RUNS: '1'
+      LHCI_TOKEN: ${{ secrets.LHCI_PRODUCTION_BUILD_TOKEN }}
+      LHCI_BASIC_AUTH__PASSWORD: ${{ secrets.LHCI_BASIC_AUTH_PASSWORD }}
+      LHCI_BUILD_CONTEXT__CURRENT_BRANCH: production
+      LHCI_BUILD_CONTEXT__AUTHOR: abera.tech nightly
+      LHCI_BUILD_CONTEXT__AVATAR_URL: https://github.com/neb-abera.png
+      LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job runs containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface as
+          # refused raw-IP dials. Host-process jobs stay on block.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The server keeps one build per hash and branch, and the site can go a
+      # night without a deploy. So the hash names this run, and the message
+      # names the day and where master was.
+      - name: Build context for tonight
+        run: |
+          set -euo pipefail
+          hash=$(printf 'abera.tech nightly %s %s' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" | sha1sum | cut -c1-40)
+          {
+            echo "LHCI_BUILD_CONTEXT__CURRENT_HASH=$hash"
+            echo "LHCI_BUILD_CONTEXT__COMMIT_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "LHCI_BUILD_CONTEXT__COMMIT_MESSAGE=https://abera.tech on $(date -u +%F), master at ${GITHUB_SHA::7}"
+          } >> "$GITHUB_ENV"
+
+      - name: Lighthouse against https://abera.tech
+        run: make lighthouse-live
+
+      - name: Timings in the job summary
+        if: always()
+        run: |
+          if [ -f lighthouse-results/summary.md ]; then
+            cat lighthouse-results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-reports
+          path: lighthouse-results/
+          # The reports sit in .lighthouseci directories.
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # One snapshot of the share that holds the server's SQLite file, and only
+  # one: the newest replaces the one before. abera-lhci-backup signs in
+  # through a federated credential that trusts a master run of this
+  # repository. Its one role (LHCI share snapshots, on the storage account)
+  # reads, snapshots and deletes shares there. Share soft delete keeps a
+  # deleted share and its snapshots 7 days. docs/lighthouse.md has the
+  # restore.
+  backup:
+    name: Snapshot the Lighthouse CI share
+    needs: lighthouse
+    if: always() && needs.lighthouse.result != 'cancelled' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RESOURCE_GROUP: aberatechserver-app-202412211749ResourceGroup
+      STORAGE_ACCOUNT: aberatechlhci
+      SHARE: lhci
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: the Azure CLI reaches a set of management and
+          # identity hosts that changes with the CLI version.
+          egress-policy: audit
+
+      - name: Azure login, backup identity
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.LHCI_BACKUP_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Snapshot the share, keep only the newest
+        run: |
+          set -euo pipefail
+          new=$(az storage share-rm snapshot -g "$RESOURCE_GROUP" --storage-account "$STORAGE_ACCOUNT" \
+            -n "$SHARE" --query snapshotTime -o tsv)
+          [ -n "$new" ] || { echo "::error::no snapshot time came back"; exit 1; }
+          echo "snapshot $new"
+          az storage share-rm list -g "$RESOURCE_GROUP" --storage-account "$STORAGE_ACCOUNT" --include-snapshot \
+            --query "[?name=='$SHARE' && snapshotTime != null].snapshotTime" -o tsv |
+            while read -r old; do
+              [ "$old" = "$new" ] && continue
+              az storage share-rm delete -g "$RESOURCE_GROUP" --storage-account "$STORAGE_ACCOUNT" \
+                -n "$SHARE" --snapshot "$old" --yes
+              echo "deleted snapshot $old"
+            done
+          left=$(az storage share-rm list -g "$RESOURCE_GROUP" --storage-account "$STORAGE_ACCOUNT" --include-snapshot \
+            --query "length([?name=='$SHARE' && snapshotTime != null])" -o tsv)
+          [ "$left" = 1 ] || { echo "::error::$left snapshots of $SHARE, expected 1"; exit 1; }
+          echo "### Lighthouse CI backup" >> "$GITHUB_STEP_SUMMARY"
+          echo "One snapshot of \`$SHARE\`, taken $new." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Azure logout
+        if: always()
+        run: az logout || true

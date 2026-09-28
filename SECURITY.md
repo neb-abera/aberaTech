@@ -113,6 +113,57 @@ repos-conventions, `devbox/README.md`).
 One deviation stays: a shorter idle timeout, if a second account is ever
 allowed. The others closed on 2026-09-22.
 
+## The Lighthouse CI server
+
+`abera-lhci` is a second public endpoint, at its Azure default hostname
+(docs/lighthouse.md). It holds the Lighthouse reports of this public site.
+
+What it exposes:
+
+* `/healthz` with no password. It answers `healthy`.
+* Everything else behind HTTP basic auth: user `lhci`, a random password of
+  48 characters from 62, about 285 bits. That is the reports, the
+  dashboard and the API.
+* Anyone with the password can read each project's build token from
+  `GET /v1/projects`, and so upload builds. That is Lighthouse CI's design.
+  Deleting a build or a project needs the project's admin token, which the
+  server stores hashed.
+
+Controls:
+
+* HTTPS only. Plain HTTP answers 301.
+* The server refuses to start without a password of 32 characters or more.
+  The Lighthouse job proves on every pull request that it refuses, and that
+  `/v1/projects` answers 401 without the password.
+* The password is a container app secret and an Actions and Dependabot
+  secret. The build tokens and admin tokens are Actions secrets, and the CI
+  build token a Dependabot secret too. None is in the repository.
+  `scripts/provision-lhci-server.sh` writes them through standard input and
+  prints none.
+* The container runs as `node` (uid 1000) with 0.25 vCPU and at most one
+  replica, so a flood costs one replica's time.
+* The image is pulled by the managed identity `abera-lhci`, AcrPull only.
+  The storage account key sits with the Container Apps environment, which
+  needs it to mount the share over SMB 3.1.1 with AES-GCM.
+* The backup identity `abera-lhci-backup` signs in only from a master run of
+  this repository and holds one custom role: read, snapshot and delete
+  shares on the storage account. Share soft delete keeps a deleted share 7
+  days.
+* The image carries a provenance attestation (the lighthouse-server
+  workflow). Dependabot bumps its Node image and packages.
+
+Accepted:
+
+* No limit on wrong passwords. At 285 bits a guess does not succeed.
+* No address restriction. GitHub's hosted runners have no fixed addresses.
+* Not behind Cloudflare. A custom domain needs a Cloudflare API token the
+  dev box does not have.
+* `@lhci/server` 0.15.1 (June 2025) is the newest release. Its express 4 and
+  sequelize 6 come with it.
+* `uuid` 8, through sequelize 6 in the server, has a moderate advisory for
+  a buffer the caller passes in (GHSA-w5hq-g745-h8pq). Sequelize never
+  passes one. No release of sequelize 6 moves off it.
+
 ## Hardening deliberately left for the owner
 
 * **HSTS `preload`.** The header already sends `includeSubDomains`. `preload`

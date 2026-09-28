@@ -49,7 +49,7 @@ export HOST_GID
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e lighthouse lighthouse-live check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -109,10 +109,10 @@ lint: ## biome lint and format check, against the working tree
 # the Dockerfile, so the version lives in one FROM line Dependabot bumps.
 LINT_IMAGE := $(shell sed -n 's|^FROM \(rhysd/actionlint:[^ ]*\) AS actionlint$$|\1|p' $(DOCKERFILE))
 
-lint-ci: ## actionlint on the workflows and their run: blocks, shellcheck on scripts, workflow concurrency, version numbers
+lint-ci: ## actionlint on the workflows and their run: blocks, shellcheck on scripts and tools, workflow concurrency, version numbers
 	@test -n "$(LINT_IMAGE)" || { echo "error: no 'FROM rhysd/actionlint:... AS actionlint' stage in $(DOCKERFILE)" >&2; exit 1; }
 	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint actionlint $(LINT_IMAGE) -color
-	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint shellcheck $(LINT_IMAGE) scripts/*.sh
+	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint shellcheck $(LINT_IMAGE) scripts/*.sh tools/lighthouse/*.sh
 	./scripts/check-concurrency.sh --self-test
 	./scripts/check-concurrency.sh
 	./scripts/check-version.sh --self-test
@@ -166,6 +166,33 @@ e2e: ## Playwright against the production image and its database, on the compose
 	fi; \
 	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1; \
 	exit $$status
+
+# Lighthouse in the same Playwright image, so its Chromium is the one e2e
+# pins. tools/lighthouse/run.sh collects 5 runs of each route under DevTools
+# and simulated throttling, gates on the findings that do not depend on
+# timing, and uploads to the Lighthouse CI server when LHCI_TOKEN is set.
+# Results and summary.md land in lighthouse-results/. docs/lighthouse.md
+# has the rest. The LHCI_ variables pass through by name, so no value is
+# written on a command line.
+LHCI_ENV := LHCI_TOKEN LHCI_SERVER_BASE_URL LHCI_BASIC_AUTH__PASSWORD LHCI_PROJECT \
+  LHCI_BASE_BRANCH LHCI_REQUIRE_UPLOAD LHCI_KEEP_ALL_RUNS \
+  LHCI_BUILD_CONTEXT__CURRENT_HASH LHCI_BUILD_CONTEXT__CURRENT_BRANCH \
+  LHCI_BUILD_CONTEXT__COMMIT_TIME LHCI_BUILD_CONTEXT__AUTHOR LHCI_BUILD_CONTEXT__AVATAR_URL \
+  LHCI_BUILD_CONTEXT__COMMIT_MESSAGE LHCI_BUILD_CONTEXT__ANCESTOR_HASH \
+  LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL
+LIGHTHOUSE_RUN = mkdir -p lighthouse-results && $(DOCKER) run --rm --shm-size=1g \
+  --user $(HOST_UID):$(HOST_GID) -e HOME=/tmp \
+  -v $(CURDIR)/tools/lighthouse:/src:ro -v $(CURDIR)/scripts/page-budgets.json:/budgets.json:ro \
+  -v $(CURDIR)/lighthouse-results:/out $(foreach v,$(LHCI_ENV),-e $(v))
+
+lighthouse: ## Lighthouse against the production image: the gate, and an upload when LHCI_TOKEN is set
+	$(COMPOSE) up -d --build --wait app
+	$(LIGHTHOUSE_RUN) \
+	  --network "$$($(COMPOSE) config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1)_default" \
+	  -e LHCI_BASE_URL=http://app-under-test:8080 -e LHCI_MODE=ci $(PLAYWRIGHT_IMAGE) bash /src/run.sh
+
+lighthouse-live: ## Lighthouse against https://abera.tech, as the nightly run does
+	$(LIGHTHOUSE_RUN) -e LHCI_BASE_URL=https://abera.tech -e LHCI_MODE=live $(PLAYWRIGHT_IMAGE) bash /src/run.sh
 
 check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, prose, database and browser suites
 	./scripts/check-required-contexts.sh --self-test

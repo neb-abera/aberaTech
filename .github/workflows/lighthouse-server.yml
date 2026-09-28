@@ -1,0 +1,99 @@
+name: Deploy the Lighthouse CI server
+# Builds tools/lhci-server, pushes it to the registry the site uses, and
+# rolls the abera-lhci container app to it (docs/lighthouse.md). The
+# Lighthouse job in Checks builds and starts the same image on every pull
+# request, so a change reaches here proven. The tag is the tree hash of
+# tools/lhci-server, the same tag scripts/provision-lhci-server.sh gives it.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - tools/lhci-server/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two rollouts of one container app at once fail with
+# ContainerAppOperationInProgress. Queue them and never cancel one. A third
+# run replaces the pending second, which loses nothing: runs queue in push
+# order, so the newer run deploys the newer tree.
+concurrency:
+  group: deploy-lhci-server
+  cancel-in-progress: false
+
+env:
+  RESOURCE_GROUP: aberatechserver-app-202412211749ResourceGroup
+  CONTAINER_APP: abera-lhci
+  REGISTRY: aberatechserver20241221175455.azurecr.io
+  SERVER_URL: https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io
+
+jobs:
+  deploy:
+    name: Build, push and roll out the server
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      # The provenance attestation on the pushed image.
+      attestations: write
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job builds and pushes a container, and
+          # container-side DNS bypasses harden-runner's resolver.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The deploy identity: AcrPush on the registry, and rights on the app.
+      - name: Azure login
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push the image
+        id: push
+        run: |
+          set -euo pipefail
+          tag=$(git rev-parse --short=12 HEAD:tools/lhci-server)
+          image="$REGISTRY/lhci-server:$tag"
+          az acr login --name "${REGISTRY%%.*}"
+          docker build --file tools/lhci-server/Dockerfile --tag "$image" tools/lhci-server
+          docker push "$image"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$image")
+          { echo "image=$image"; echo "digest=${digest#*@}"; } >> "$GITHUB_OUTPUT"
+
+      - name: Attest image provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/lhci-server
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Roll the container app to it
+        env:
+          IMAGE: ${{ steps.push.outputs.image }}
+        run: |
+          set -euo pipefail
+          az containerapp update -g "$RESOURCE_GROUP" -n "$CONTAINER_APP" --image "$IMAGE" -o none
+          for _ in $(seq 1 60); do
+            curl -sf "$SERVER_URL/healthz" > /dev/null && break
+            sleep 5
+          done
+          curl -sf "$SERVER_URL/healthz" > /dev/null
+          running=$(az containerapp show -g "$RESOURCE_GROUP" -n "$CONTAINER_APP" \
+            --query 'properties.template.containers[0].image' -o tsv)
+          [ "$running" = "$IMAGE" ] || { echo "::error::the app runs $running, not $IMAGE"; exit 1; }
+
+      - name: Azure logout
+        if: always()
+        run: az logout || true

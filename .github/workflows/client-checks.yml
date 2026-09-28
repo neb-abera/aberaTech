@@ -499,6 +499,127 @@ jobs:
         if: always()
         run: docker compose logs app 2>&1 | tail -40 || true
 
+  # Lighthouse on the production image, on the compose network the way e2e
+  # runs it (docs/lighthouse.md). The gate is the findings that do not
+  # depend on timing (tools/lighthouse/gate.mjs). Timings are a table in the
+  # job summary and in one comment on the pull request, never a pass or a
+  # fail. Every build goes to the Lighthouse CI server: a pull request sends
+  # each route's median run, master all five, because the next pull request
+  # compares against master. The server's own image is built and started
+  # here first, so a Dependabot bump of it is proven before the
+  # lighthouse-server workflow deploys it.
+  lighthouse:
+    name: Lighthouse, in the container
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      # The one comment this job posts on a pull request, and edits after.
+      pull-requests: write
+    env:
+      # Not a secret. Named here because a Dependabot run cannot read
+      # Actions variables.
+      LHCI_SERVER_BASE_URL: https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io
+      LHCI_PROJECT: aberatech-ci
+      LHCI_BASE_BRANCH: master
+      LHCI_REQUIRE_UPLOAD: '1'
+      LHCI_KEEP_ALL_RUNS: ${{ github.event_name == 'push' && '1' || '' }}
+      # Both live in the Actions and the Dependabot secret stores.
+      LHCI_TOKEN: ${{ secrets.LHCI_BUILD_TOKEN }}
+      LHCI_BASIC_AUTH__PASSWORD: ${{ secrets.LHCI_BASIC_AUTH_PASSWORD }}
+      # What the server shows for the build. Set here so lhci never asks git.
+      LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
+      LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
+      LHCI_BUILD_CONTEXT__ANCESTOR_HASH: ${{ github.event.pull_request.base.sha || github.event.before || github.event.merge_group.base_sha }}
+      LHCI_BUILD_CONTEXT__COMMIT_MESSAGE: ${{ github.event.pull_request.title || github.event.head_commit.message || github.event.merge_group.head_commit.message }}
+      LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.pull_request.updated_at || github.event.head_commit.timestamp || github.event.merge_group.head_commit.timestamp }}
+      LHCI_BUILD_CONTEXT__AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
+      LHCI_BUILD_CONTEXT__AVATAR_URL: https://github.com/${{ github.event.pull_request.user.login || github.actor }}.png
+      LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          # Audit, not block: this job builds/runs containers, and container-side
+          # DNS bypasses harden-runner's resolver, so blocked lookups surface as
+          # refused raw-IP dials. Host-process jobs stay on block.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The image the lighthouse-server workflow deploys. It must start, answer
+      # /healthz, refuse the API without the password, refuse to start with
+      # no password at all, and create its database with 64 KB pages.
+      - name: Lighthouse CI server image builds and starts
+        run: |
+          set -euo pipefail
+          docker build --file tools/lhci-server/Dockerfile --tag lhci-server-ci tools/lhci-server
+          if docker run --rm lhci-server-ci; then
+            echo "::error::the server started without LHCI_BASIC_AUTH_PASSWORD"
+            exit 1
+          fi
+          docker run -d --name lhci-server-ci -e LHCI_DATABASE_PATH=/tmp/lhci.db \
+            -e LHCI_BASIC_AUTH_PASSWORD="$(openssl rand -hex 24)" lhci-server-ci
+          probe() {
+            docker exec lhci-server-ci node -e \
+              "fetch('http://127.0.0.1:9001$1').then(r => process.exit(r.status === $2 ? 0 : 1), () => process.exit(1))"
+          }
+          for _ in $(seq 1 30); do probe /healthz 200 && break; sleep 1; done
+          probe /healthz 200
+          probe /v1/projects 401
+          # 64 KB pages, which the cost estimate in docs/lighthouse.md counts on.
+          docker exec lhci-server-ci node -e \
+            "new (require('/app/node_modules/sqlite3').Database)('/tmp/lhci.db').get('PRAGMA page_size', (e, r) => process.exit(r && r.page_size === 65536 ? 0 : 1))"
+          docker rm -f lhci-server-ci > /dev/null
+
+      - name: Lighthouse against the production image
+        run: make lighthouse
+
+      - name: Timings in the job summary
+        if: always()
+        run: |
+          if [ -f lighthouse-results/summary.md ]; then
+            cat lighthouse-results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # One comment per pull request, found again by its marker and edited, so
+      # a pull request with ten pushes has one table, the newest.
+      - name: Timings on the pull request
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          [ -f lighthouse-results/summary.md ] || exit 0
+          marker='<!-- lighthouse-ci -->'
+          { echo "$marker"; cat lighthouse-results/summary.md; } > comment.md
+          id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@comment.md > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@comment.md > /dev/null
+          fi
+
+      - name: Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-reports
+          path: lighthouse-results/
+          # The reports sit in .lighthouseci directories.
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: App logs
+        if: failure()
+        run: docker compose logs app 2>&1 | tail -40 || true
+
   # Lint the linters: the workflows and shell scripts every other gate is
   # built out of get no checks from the app toolchain, so a typo'd `if:` or
   # an unquoted variable in a script fails silently until it matters.
