@@ -98,13 +98,20 @@ if [ -z "${LHCI_TOKEN:-}" ]; then
   exit $status
 fi
 
-branch=$LHCI_BUILD_CONTEXT__CURRENT_BRANCH
+# Lighthouse CI keeps the first 40 characters of a branch name
+# (@lhci/utils, build-context.js). A Dependabot branch runs longer, so
+# <branch>-simulated cut to 40 was the DevTools build's name, and the
+# simulated upload was skipped as a duplicate (#270, 2026-09-28). Both
+# names are cut here, with the suffix kept whole.
+full=${LHCI_BUILD_CONTEXT__CURRENT_BRANCH#refs/heads/}
+declare -A branch_for=(
+  [devtools]=${full:0:40}
+  [simulate]=${full:0:30}-simulated
+)
 base=$LHCI_BASE_BRANCH
 for method in devtools simulate; do
-  suffix=""
-  [ "$method" = simulate ] && suffix=-simulated
   (cd "/out/$method" &&
-    LHCI_BUILD_CONTEXT__CURRENT_BRANCH="$branch$suffix" "$lhci" upload --target=lhci --ignoreDuplicateBuildFailure) || {
+    LHCI_BUILD_CONTEXT__CURRENT_BRANCH="${branch_for[$method]}" "$lhci" upload --target=lhci --ignoreDuplicateBuildFailure) || {
     echo "lhci upload failed ($method)" >&2
     exit 1
   }
@@ -116,10 +123,11 @@ done
   echo "$gate_line"
   echo
   LHCI_TITLE="Lighthouse, DevTools throttling" LHCI_TABLE_NOTE="$devtools_note" \
+    LHCI_BUILD_CONTEXT__CURRENT_BRANCH="${branch_for[devtools]}" \
     node summary.mjs report /out/devtools.json || exit 1
   echo
   LHCI_TITLE="Lighthouse, simulated throttling" LHCI_TABLE_NOTE="$simulate_note" \
-    LHCI_BUILD_CONTEXT__CURRENT_BRANCH="$branch-simulated" LHCI_BASE_BRANCH="$base-simulated" \
+    LHCI_BUILD_CONTEXT__CURRENT_BRANCH="${branch_for[simulate]}" LHCI_BASE_BRANCH="$base-simulated" \
     node summary.mjs report /out/simulate.json || exit 1
 } > /out/summary.md || exit 1
 
