@@ -1,0 +1,9 @@
+{
+  "name": "aberatech-lhci-server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@lhci/server": "0.15.1",
+    "sqlite3": "6.0.1"
+  }
+}
