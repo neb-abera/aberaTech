@@ -1,4 +1,6 @@
+import heroAvatar276 from "../assets/headshot-276.webp";
 import heroAvatarUrl from "../assets/headshot-336.webp";
+import heroAvatar414 from "../assets/headshot-414.webp";
 import { alertsStatusUrl } from "../features/alerts/core/api";
 import { devBoxStatusUrl } from "../features/devbox/core/api";
 import { fitnessMeUrl } from "../features/fitness/core/api";
@@ -42,6 +44,12 @@ export const tagline =
 export const heroAvatar = {
   src: heroAvatarUrl,
   size: 336,
+  // The avatar draws 138 px on a phone and 162 px wider, inside its 3 px
+  // border. Each browser takes the file for its own pixel density: 276 at
+  // two pixels a point, 414 at three. 336 alone gave a phone at 1.75 a file
+  // with 7,503 of its 9,026 bytes to spare (Lighthouse, 2026-09-28).
+  srcSet: `${heroAvatar276} 276w, ${heroAvatarUrl} 336w, ${heroAvatar414} 414w`,
+  sizes: "(min-width: 600px) 162px, 138px",
   type: "image/webp",
 } as const;
 
@@ -230,10 +238,11 @@ export function headFor(route: string): string {
     // The avatar is the largest thing in the home page's first screen. React
     // emits a preload of its own for a high-priority image, but at the top of
     // the body; this one is in the head, ahead of the scripts, and names the
-    // type so a browser without WebP does not fetch what it cannot draw. The
-    // file preloaded is the file Hero renders: both read heroAvatar.
+    // type so a browser without WebP does not fetch what it cannot draw. It
+    // carries the same srcset and sizes as the image, so the browser
+    // preloads the file it then draws: both read heroAvatar.
     lines.push(
-      `<link rel="preload" as="image" href="${escapeHtml(heroAvatar.src)}" type="${heroAvatar.type}" fetchpriority="high" />`,
+      `<link rel="preload" as="image" href="${escapeHtml(heroAvatar.src)}" imagesrcset="${escapeHtml(heroAvatar.srcSet)}" imagesizes="${escapeHtml(heroAvatar.sizes)}" type="${heroAvatar.type}" fetchpriority="high" />`,
     );
     lines.push(
       `<script type="application/ld+json">${JSON.stringify(person)}</script>`,

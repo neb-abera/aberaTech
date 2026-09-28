@@ -83,10 +83,25 @@ describe("the prerendered head", () => {
     const home = headFor("/");
 
     expect(home).toContain(
-      `<link rel="preload" as="image" href="${heroAvatar.src}" type="image/webp" fetchpriority="high" />`,
+      `<link rel="preload" as="image" href="${heroAvatar.src}" imagesrcset="${heroAvatar.srcSet}" imagesizes="${heroAvatar.sizes}" type="image/webp" fetchpriority="high" />`,
     );
     expect(heroAvatar.src).toMatch(/headshot-336.*\.webp$/);
     expect(headFor("/guides")).not.toContain('rel="preload"');
+  });
+
+  it("offers the avatar at the sizes it is drawn at, one to three pixels a point", () => {
+    // 144 px on a phone and 168 px wider, less a 3 px border each side. At
+    // 336 px alone a phone drew 138 px from a file for 336, and Lighthouse
+    // counted 7,503 of its 9,026 bytes as waste (2026-09-28).
+    expect(heroAvatar.sizes).toBe("(min-width: 600px) 162px, 138px");
+    const widths = heroAvatar.srcSet
+      .split(", ")
+      .map((candidate) => candidate.match(/headshot-(\d+).*\.webp (\d+)w$/));
+    expect(widths.map((m) => [m?.[1], m?.[2]])).toEqual([
+      ["276", "276"],
+      ["336", "336"],
+      ["414", "414"],
+    ]);
   });
 
   it("starts each owner page's first request from the head, and only there", () => {
