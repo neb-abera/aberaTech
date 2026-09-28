@@ -7,14 +7,23 @@
 #   scripts/provision-lhci-server.sh
 #
 # Needs `az` signed in to the subscription and `gh` signed in with admin
-# on the repository. Prints no secret. Creates:
+# on the repository. Prints no secret. The first run, and a run that
+# changes them, also needs in the environment:
+#
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  the OAuth client "Lighthouse CI
+#       server" in Google Auth Platform, redirect URI
+#       <server>/.auth/login/google/callback
+#   LHCI_ALLOWED_EMAILS  the Google accounts that may read the server
+#
+# A later run keeps the values the app holds. Creates:
 #
 #   - storage account aberatechlhci, Azure Files share `lhci` (SQLite file),
 #     7-day share soft delete
 #   - the share on the Container Apps environment as `lhci`
 #   - identity abera-lhci with AcrPull on the registry (pulls the image)
 #   - image lhci-server:<tree hash of tools/lhci-server>, built by ACR
-#   - container app abera-lhci: 0.25 vCPU, 0.5 GiB, 0 to 1 replicas
+#   - container app abera-lhci: 0.25 vCPU, 0.5 GiB, 0 to 1 replicas, with
+#     Google sign-in for people and basic auth for the workflows
 #   - identity abera-lhci-backup, signed in to by a master run of the
 #     nightly workflow, allowed to snapshot the share and nothing else
 #   - LHCI projects `aberaTech CI` and `abera.tech production`
@@ -93,10 +102,17 @@ env_id=$(az containerapp env show -g "$RG" -n "$ENVIRONMENT" --query id -o tsv)
 if az containerapp show -g "$RG" -n "$APP" -o none 2>/dev/null; then
   password=$(az containerapp secret show -g "$RG" -n "$APP" --secret-name basic-auth-password --query value -o tsv)
   new_password=false
+  kept() { az containerapp secret show -g "$RG" -n "$APP" --secret-name "$1" --query value -o tsv 2>/dev/null || true; }
+  : "${GOOGLE_CLIENT_SECRET:=$(kept google-client-secret)}"
+  : "${LHCI_ALLOWED_EMAILS:=$(kept allowed-emails)}"
+  : "${GOOGLE_CLIENT_ID:=$(az containerapp auth google show -g "$RG" -n "$APP" --query registration.clientId -o tsv 2>/dev/null || true)}"
 else
   password=$(openssl rand -base64 48 | tr -d '/+=\n' | cut -c1-48)
   new_password=true
 fi
+for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET LHCI_ALLOWED_EMAILS; do
+  [ -n "${!name:-}" ] || { say "$name is not set and the app holds none"; exit 1; }
+done
 
 # The whole app in one document, so a second run converges on it.
 # mountOptions: nobrl, because SQLite's byte-range locks fail on SMB without
@@ -127,6 +143,10 @@ properties:
     secrets:
       - name: basic-auth-password
         value: $password
+      - name: google-client-secret
+        value: $GOOGLE_CLIENT_SECRET
+      - name: allowed-emails
+        value: $LHCI_ALLOWED_EMAILS
   template:
     containers:
       - name: lhci-server
@@ -137,6 +157,8 @@ properties:
         env:
           - name: LHCI_BASIC_AUTH_PASSWORD
             secretRef: basic-auth-password
+          - name: LHCI_ALLOWED_EMAILS
+            secretRef: allowed-emails
           - name: LHCI_DATABASE_PATH
             value: /data/lhci.db
         volumeMounts:
@@ -173,6 +195,15 @@ else
   az containerapp update -g "$RG" -n "$APP" --yaml "$work/app.yaml" -o none
 fi
 rm -f "$work/app.yaml"
+
+# Google sign-in by the platform. AllowAnonymous, because the workflows
+# upload with basic auth and no Google session: tools/lhci-server/gate.mjs
+# lets them in by the password and a person in by the signed-in address.
+say "Google sign-in"
+az containerapp auth google update -g "$RG" -n "$APP" --client-id "$GOOGLE_CLIENT_ID" \
+  --client-secret-name google-client-secret --yes -o none
+az containerapp auth update -g "$RG" -n "$APP" --enabled true \
+  --unauthenticated-client-action AllowAnonymous --require-https true -o none
 url="https://$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)"
 
 say "waiting for $url/healthz"
