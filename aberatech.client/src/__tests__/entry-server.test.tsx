@@ -124,6 +124,8 @@ describe("build-time rendering", () => {
     const img = html.match(/<img[^>]*alt="Neb Abera"[^>]*>/)?.[0] ?? "";
 
     expect(img).toContain(heroAvatar.src);
+    expect(img).toContain(`srcSet="${heroAvatar.srcSet}"`);
+    expect(img).toContain(`sizes="${heroAvatar.sizes}"`);
     expect(img).toContain('width="336"');
     expect(img).toContain('height="336"');
     expect(img).toMatch(/fetchpriority="high"/i);

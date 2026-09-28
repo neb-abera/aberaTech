@@ -64,6 +64,8 @@ export default function Hero() {
           alt="Neb Abera"
           slotProps={{
             img: {
+              srcSet: heroAvatar.srcSet,
+              sizes: heroAvatar.sizes,
               width: heroAvatar.size,
               height: heroAvatar.size,
               fetchPriority: "high",
