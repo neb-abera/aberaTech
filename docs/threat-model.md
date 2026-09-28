@@ -32,7 +32,7 @@ before it is a feature.
 | The dev box agent | One heartbeat a minute with a bearer token | The box, or whoever holds the token |
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
-| The site to Pushover | One POST per alert, at the saved priority | Pushover |
+| The site to Pushover | One POST per alarm or notification. An alarm at the alarm priority (2 by default, with retry and expire). A notification at priority 0 or 1, with neither. An event set to None sends nothing | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 | Internet to the Lighthouse CI server | Report uploads with a build token, dashboard reads, both behind basic auth, over TLS | CI, the nightly run, the owner, or whoever holds the password |
 
@@ -58,6 +58,7 @@ before it is a feature.
 | The calendar address leaks through a log or a trace | Disclosure | The HTTP clients have no request logging. Traces leave out calls to the address. Failures log the exception type only. The page lists missing setting names, never values | `CalendarAlertWorkerTests` read every log line. `AlertsRouteTests` pin the trace filter and the status body |
 | A stranger changes the alert settings, or a bad value silences the alerts | Tampering | `PUT /api/alerts/settings` needs the owner, shares the alerts' rate limit, and checks every field against its bound before one row is written. The secrets are not settings, so the route cannot read or change them | `AlertsRouteTests`: 401 and 403 on the route, 400 naming the field for each bound, `RouteTableTests` |
 | A stranger floods the phone with test sends, or a test send uses up the real alert | Denial | `POST /api/alerts/test-event` needs the owner, shares the alerts' rate limit, and sends only an alert on the current list. It takes no claim, so the real send still happens | `AlertsRouteTests`: 401 and 403 on the route, 404 for a key off the list, the claim table empty after a test, the real alert sent at its time |
+| A stranger silences an alarm, or turns every event into one | Tampering | `PUT /api/alerts/event-type` needs the owner, shares the alerts' rate limit, accepts only none, notification, alarm or default, and only for an event on the current list. `POST /api/alerts/test-notification` needs the owner and shares the same limit | `AlertsRouteTests`: 401 and 403 on both routes, 400 naming the field, 404 for a key off the list, 429 past the limit, `RouteTableTests` |
 | A restart or a second replica sends an alert twice | Tampering | One claim row per occurrence, keyed in Postgres, taken with `ON CONFLICT DO NOTHING` before the send | `DatabaseAlertStoreTests` with eight concurrent claims |
 | A crafted calendar hangs or crashes the worker | Denial | 20 MB read cap, 5000 occurrences per read, a limit on rules that never match. A bad read keeps the last list | Seeded random damage in `AlertPlannerTests` |
 | The runtime identity changes the schema | Elevation | Migrations run as their own step. The runtime role has DML only | `least-privilege.sql` and its test |

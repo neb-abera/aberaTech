@@ -6,8 +6,8 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// What the send path and the page share across restarts and replicas:
-/// the mute switch, the skipped occurrences, one claim per occurrence, and
-/// the owner's settings.
+/// the mute switch, the skipped occurrences, one claim per occurrence, the
+/// owner's settings, and the type the owner chose for each event.
 /// </summary>
 public interface IAlertStore
 {
@@ -36,6 +36,21 @@ public interface IAlertStore
 
     /// <summary>Forgets claims and skips from before <paramref name="before"/>. The feed never plans those again.</summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
+
+    /// <summary>Every event the owner chose a type for, by event id.</summary>
+    Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken);
+
+    /// <summary>The owner's choice for one event, or null when there is none.</summary>
+    Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken);
+
+    /// <summary>Sets the choice for one event. Null removes it, and the event follows its mark and the default again.</summary>
+    Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marks the choices for the events in this read as seen, and forgets
+    /// those not seen since <paramref name="forgetBefore"/>.
+    /// </summary>
+    Task SeenEventsAsync(IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken);
 }
 
 /// <summary>The store in the scheduling database, which the site already has.</summary>
@@ -58,7 +73,10 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                 row.LookaheadHours,
                 row.IncludeAllDay,
                 row.TimeZone,
-                row.OwnerEmails);
+                row.OwnerEmails,
+                row.NotificationPriority,
+                row.NotificationSound,
+                row.DefaultType);
     }
 
     public async Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)
@@ -68,10 +86,12 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
-                 "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails", "UpdatedAt")
+                 "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
+                 "NotificationPriority", "NotificationSound", "DefaultType", "UpdatedAt")
              VALUES ({AlertSettingsRecord.SingleId}, {settings.Priority}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
                  {settings.Sound}, {settings.DefaultLeadMinutes}, {settings.PollMinutes}, {settings.LookaheadHours},
-                 {settings.IncludeAllDay}, {settings.TimeZone}, {emails}, {now})
+                 {settings.IncludeAllDay}, {settings.TimeZone}, {emails},
+                 {settings.NotificationPriority}, {settings.NotificationSound}, {settings.DefaultType}, {now})
              ON CONFLICT ("Id") DO UPDATE SET
                  "Priority" = EXCLUDED."Priority",
                  "RepeatSeconds" = EXCLUDED."RepeatSeconds",
@@ -83,6 +103,9 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                  "IncludeAllDay" = EXCLUDED."IncludeAllDay",
                  "TimeZone" = EXCLUDED."TimeZone",
                  "OwnerEmails" = EXCLUDED."OwnerEmails",
+                 "NotificationPriority" = EXCLUDED."NotificationPriority",
+                 "NotificationSound" = EXCLUDED."NotificationSound",
+                 "DefaultType" = EXCLUDED."DefaultType",
                  "UpdatedAt" = EXCLUDED."UpdatedAt"
              """,
             cancellationToken);
@@ -157,5 +180,44 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     {
         await database.AlertDeliveries.Where(delivery => delivery.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertSkips.Where(skip => skip.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
+        await database.AlertEventTypes.AsNoTracking()
+            .ToDictionaryAsync(choice => choice.EventId, choice => choice.Type, StringComparer.Ordinal, cancellationToken);
+
+    public Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken) =>
+        database.AlertEventTypes.AsNoTracking()
+            .Where(choice => choice.EventId == eventId)
+            .Select(choice => choice.Type)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken)
+    {
+        if (type is null)
+        {
+            await database.AlertEventTypes.Where(choice => choice.EventId == eventId).ExecuteDeleteAsync(cancellationToken);
+            return;
+        }
+
+        // One statement, like the mute: two presses on two replicas cannot both insert.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertEventTypes" ("EventId", "Type", "UpdatedAt", "LastSeenAt")
+             VALUES ({eventId}, {type}, {now}, {now})
+             ON CONFLICT ("EventId") DO UPDATE SET
+                 "Type" = EXCLUDED."Type", "UpdatedAt" = EXCLUDED."UpdatedAt", "LastSeenAt" = EXCLUDED."LastSeenAt"
+             """,
+            cancellationToken);
+    }
+
+    public async Task SeenEventsAsync(
+        IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken)
+    {
+        var ids = eventIds.ToArray();
+        await database.AlertEventTypes
+            .Where(choice => ids.Contains(choice.EventId))
+            .ExecuteUpdateAsync(set => set.SetProperty(choice => choice.LastSeenAt, now), cancellationToken);
+        await database.AlertEventTypes.Where(choice => choice.LastSeenAt < forgetBefore).ExecuteDeleteAsync(cancellationToken);
     }
 }

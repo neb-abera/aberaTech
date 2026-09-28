@@ -24,12 +24,17 @@ public static class AlertText
                 : $"Starts {When(alert.StartsAt, zone)}\n{alert.Location}",
             PushoverClient.MaxMessage);
 
-    public static string TestMessage(Instant now, DateTimeZone zone, AlertSettings settings) =>
-        $"Sent from abera.tech at {When(now, zone)}. " + settings.Priority switch
+    /// <summary>"Test alert" goes as an alarm, "Test notification" as a notification.</summary>
+    public static string TestName(string type) => type == AlertTypes.Alarm ? "Test alert" : "Test notification";
+
+    /// <summary>When it was sent, which kind it is, and what its priority does.</summary>
+    public static string TestMessage(Instant now, DateTimeZone zone, string type, PushoverDelivery delivery) =>
+        $"Sent from abera.tech at {When(now, zone)}, as {(type == AlertTypes.Alarm ? "an alarm" : "a notification")}. "
+        + delivery switch
         {
-            PushoverClient.EmergencyPriority =>
-                $"Priority 2: it repeats every {Every(settings.RepeatSeconds)} until you acknowledge it in Pushover.",
-            1 => "Priority 1: one sound, through Pushover's quiet hours.",
+            { Priority: PushoverClient.EmergencyPriority, RetrySeconds: { } retry } =>
+                $"Priority 2: it repeats every {Every(retry)} until you acknowledge it in Pushover.",
+            { Priority: 1 } => "Priority 1: one sound, through Pushover's quiet hours.",
             _ => "Priority 0: one sound, as the phone's Pushover settings allow."
         };
 

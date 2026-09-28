@@ -11,10 +11,10 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The send path, driven tick by tick on a clock the test moves: one
-/// Pushover message at the alert time, at emergency priority so it repeats
-/// until acknowledged, never a second one for
-/// the same occurrence, and none while muted or skipped. Pushover and the
-/// calendar are handlers that record what they were asked.
+/// Pushover message at the alert time, as an alarm for an event marked
+/// #critical and as its type otherwise, never a second one for the same
+/// occurrence, and none while muted, skipped or set to none. Pushover and
+/// the calendar are handlers that record what they were asked.
 /// </summary>
 public sealed class CalendarAlertWorkerTests : IDisposable
 {
@@ -33,7 +33,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
     private Harness New(string? feed = null, IAlertStore? store = null, Instant? now = null)
     {
-        var harness = new Harness(feed ?? Standup(Popup("-PT15M")), store ?? new InMemoryAlertStore(), now ?? Eight);
+        var harness = new Harness(feed ?? CriticalStandup(Popup("-PT15M")), store ?? new InMemoryAlertStore(), now ?? Eight);
         _harnesses.Add(harness);
         return harness;
     }
@@ -157,7 +157,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     public async Task A_skipped_occurrence_is_not_sent_and_the_others_are()
     {
         var feed = Ics(
-            Event("daily@google.com", "Daily", "20261028T090000", "20261028T093000", extra: ["RRULE:FREQ=DAILY;COUNT=2"]));
+            Event("daily@google.com", "Daily #critical", "20261028T090000", "20261028T093000", extra: ["RRULE:FREQ=DAILY;COUNT=2"]));
         var box = New(feed);
         await box.Worker.TickAsync(CancellationToken.None);
         var first = box.Status.Snapshot().Plan[0];
@@ -260,7 +260,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         await box.Worker.TickAsync(CancellationToken.None);
         await box.Store.SetMutedUntilAsync(Eight + Duration.FromHours(3), Eight, CancellationToken.None);
 
-        var result = await box.Dispatcher.SendTestAsync(CancellationToken.None);
+        var result = await box.Dispatcher.SendTestAsync(AlertTypes.Alarm, CancellationToken.None);
 
         Assert.True(result.Ok);
         var sent = Assert.Single(box.Pushover.Requests);
@@ -369,7 +369,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         await box.Store.SaveSettingsAsync(
             Saved(settings => settings with { Priority = 1, Sound = "bugle" }), Eight, CancellationToken.None);
 
-        await box.Dispatcher.SendTestAsync(CancellationToken.None);
+        await box.Dispatcher.SendTestAsync(AlertTypes.Alarm, CancellationToken.None);
 
         var sent = Assert.Single(box.Pushover.Requests);
         Assert.Equal("1", sent.Form["priority"]);
@@ -384,7 +384,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         var box = New();
         await box.Store.SaveSettingsAsync(Saved(settings => settings with { RepeatSeconds = 120 }), Eight, CancellationToken.None);
 
-        await box.Dispatcher.SendTestAsync(CancellationToken.None);
+        await box.Dispatcher.SendTestAsync(AlertTypes.Alarm, CancellationToken.None);
 
         var sent = Assert.Single(box.Pushover.Requests);
         Assert.Equal("120", sent.Form["retry"]);
@@ -414,6 +414,163 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         await box.Worker.TickAsync(CancellationToken.None);
 
         Assert.Equal("300", Assert.Single(box.Pushover.Requests).Form["retry"]);
+    }
+
+    [Fact]
+    public async Task An_unmarked_event_sends_nothing_by_default_and_claims_nothing()
+    {
+        var box = New(Standup(Popup("-PT15M")), now: AlertTime);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Empty(box.Pushover.Requests);
+        Assert.Empty(box.Store.Claims);
+        Assert.False(Assert.Single(box.Status.Snapshot().Plan).Critical);
+    }
+
+    [Fact]
+    public async Task An_unmarked_event_switched_to_notification_after_its_alert_time_still_goes_before_the_start()
+    {
+        var box = New(Standup(Popup("-PT15M")), now: AlertTime);
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(box.Pushover.Requests);
+
+        await box.Store.SetEventTypeAsync("standup@google.com", AlertTypes.Notification, AlertTime, CancellationToken.None);
+        box.Clock.Now = AlertTime + Duration.FromMinutes(2);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("0", sent.Form["priority"]);
+        Assert.Equal("sent", Assert.Single(box.Store.Claims).Value);
+    }
+
+    [Fact]
+    public async Task A_default_of_notification_sends_the_notification_priority_and_sound_with_no_retry_or_expiry()
+    {
+        var box = New(Standup(Popup("-PT15M")), now: AlertTime);
+        await box.Store.SaveSettingsAsync(
+            Saved(settings => settings with
+            {
+                DefaultType = AlertTypes.Notification, NotificationPriority = 1, NotificationSound = "bike", Sound = "siren"
+            }),
+            Eight,
+            CancellationToken.None);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("bike", sent.Form["sound"]);
+        Assert.False(sent.Form.ContainsKey("retry"));
+        Assert.False(sent.Form.ContainsKey("expire"));
+        Assert.Equal("Standup", sent.Form["title"]);
+    }
+
+    [Fact]
+    public async Task An_event_marked_critical_goes_with_the_alarm_settings_and_without_the_mark()
+    {
+        var box = New(now: AlertTime);
+        await box.Store.SaveSettingsAsync(
+            Saved(settings => settings with
+            {
+                RepeatSeconds = 30, StopAfterMinutes = 20, Sound = "persistent", NotificationPriority = 1, NotificationSound = "bike"
+            }),
+            Eight,
+            CancellationToken.None);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("30", sent.Form["retry"]);
+        Assert.Equal("1200", sent.Form["expire"]);
+        Assert.Equal("persistent", sent.Form["sound"]);
+        Assert.Equal("Standup", sent.Form["title"]);
+    }
+
+    [Theory]
+    [InlineData("none", null)]
+    [InlineData("notification", "0")]
+    public async Task A_choice_on_the_page_overrides_the_critical_mark(string type, string? priority)
+    {
+        var box = New(now: AlertTime);
+        await box.Store.SetEventTypeAsync("standup@google.com", type, Eight, CancellationToken.None);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        if (priority is null)
+        {
+            Assert.Empty(box.Pushover.Requests);
+            Assert.Empty(box.Store.Claims);
+            return;
+        }
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal(priority, sent.Form["priority"]);
+        Assert.False(sent.Form.ContainsKey("retry"));
+    }
+
+    [Fact]
+    public async Task Alarm_chosen_for_a_repeating_event_holds_for_every_occurrence()
+    {
+        var feed = Ics(
+            Event("daily@google.com", "Daily", "20261028T090000", "20261028T093000", extra: ["RRULE:FREQ=DAILY;COUNT=2"]));
+        var box = New(feed);
+        await box.Store.SetEventTypeAsync("daily@google.com", AlertTypes.Alarm, Eight, CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+        var first = box.Status.Snapshot().Plan[0];
+
+        box.Clock.Now = first.AlertAt;
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Clock.Now = first.AlertAt + Duration.FromDays(1);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal(["2", "2"], box.Pushover.Requests.Select(request => request.Form["priority"]));
+        Assert.Equal(["60", "60"], box.Pushover.Requests.Select(request => request.Form["retry"]));
+    }
+
+    [Fact]
+    public async Task The_test_notification_goes_with_the_notification_settings_and_says_so()
+    {
+        var box = New();
+        await box.Store.SaveSettingsAsync(
+            Saved(settings => settings with { NotificationPriority = 1, NotificationSound = "bike" }), Eight, CancellationToken.None);
+
+        var result = await box.Dispatcher.SendTestAsync(AlertTypes.Notification, CancellationToken.None);
+
+        Assert.True(result.Ok);
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("Test notification", sent.Form["title"]);
+        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("bike", sent.Form["sound"]);
+        Assert.False(sent.Form.ContainsKey("retry"));
+        Assert.False(sent.Form.ContainsKey("expire"));
+        Assert.Contains("as a notification", sent.Form["message"]);
+        Assert.Equal("Test notification", box.Status.Snapshot().LastSend!.Title);
+    }
+
+    [Fact]
+    public async Task A_test_of_type_none_is_refused_rather_than_sent()
+    {
+        var box = New();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            box.Dispatcher.SendTestAsync(AlertTypes.None, CancellationToken.None));
+
+        Assert.Empty(box.Pushover.Requests);
+    }
+
+    [Fact]
+    public async Task Each_read_reports_every_event_in_the_feed_so_old_choices_can_be_forgotten()
+    {
+        var box = New(Ics(
+            Event("standup@google.com", "Standup", "20261028T090000"),
+            Event("next-month@google.com", "Later", "20261128T090000")));
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal(["next-month@google.com", "standup@google.com"], Assert.Single(box.Store.Seen).Order(StringComparer.Ordinal));
     }
 
     [Fact]
@@ -454,6 +611,16 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken) => Down<bool>();
 
         public Task PruneAsync(Instant before, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
+            Down<IReadOnlyDictionary<string, string>>();
+
+        public Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken) => Down<string?>();
+
+        public Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task SeenEventsAsync(
+            IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) => Down<bool>();
     }
 
     /// <summary>The in-memory store with a settings read that can be made to fail.</summary>
@@ -490,6 +657,19 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.RecordOutcomeAsync(key, outcome, now, cancellationToken);
 
         public Task PruneAsync(Instant before, CancellationToken cancellationToken) => _inner.PruneAsync(before, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
+            _inner.EventTypesAsync(cancellationToken);
+
+        public Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken) =>
+            _inner.EventTypeAsync(eventId, cancellationToken);
+
+        public Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken) =>
+            _inner.SetEventTypeAsync(eventId, type, now, cancellationToken);
+
+        public Task SeenEventsAsync(
+            IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
+            _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
     }
 
     private sealed class Harness : IDisposable

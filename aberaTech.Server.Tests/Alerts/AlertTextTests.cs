@@ -52,13 +52,28 @@ public sealed class AlertTextTests
     [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
     [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]
     [InlineData(2, "Priority 2: it repeats every minute until you acknowledge it in Pushover.")]
-    public void The_test_message_says_what_the_saved_priority_does(int priority, string expected)
+    public void The_test_message_says_what_the_saved_alarm_priority_does(int priority, string expected)
     {
         var settings = AlertSettings.Defaults(new AlertsOptions()) with { Priority = priority };
 
-        var text = AlertText.TestMessage(Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, settings);
+        var text = AlertText.TestMessage(Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, AlertTypes.Alarm, settings.AlarmDelivery);
 
-        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct. {expected}", text);
+        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, as an alarm. {expected}", text);
+    }
+
+    [Theory]
+    [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
+    [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]
+    public void The_test_notification_says_it_is_a_notification_and_what_its_priority_does(int priority, string expected)
+    {
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with { NotificationPriority = priority };
+
+        var text = AlertText.TestMessage(
+            Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, AlertTypes.Notification, settings.NotificationDelivery);
+
+        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, as a notification. {expected}", text);
+        Assert.Equal("Test notification", AlertText.TestName(AlertTypes.Notification));
+        Assert.Equal("Test alert", AlertText.TestName(AlertTypes.Alarm));
     }
 
     [Fact]

@@ -80,17 +80,32 @@ export function stopWork(
   };
 }
 
-/** What one alert does under the saved settings, for the page's closing paragraph. */
+/** What each type does under the saved settings, for the page's closing paragraph. */
 export function describe(
   settings: AlertSettings,
   maxSounds: number,
   timeZone: string,
 ): string {
-  const how =
+  const alarm =
     settings.priority === 2
-      ? `One Pushover message per event. It sounds through quiet hours and again every ${every(settings.repeatSeconds)} until you acknowledge it in the Pushover app, for up to ${minutes(stopWork(settings.repeatSeconds, settings.stopAfterMinutes, maxSounds).minutes)} minutes. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`
+      ? `An alarm is one Pushover message. It sounds through quiet hours and again every ${every(settings.repeatSeconds)} until you acknowledge it in the Pushover app, for up to ${minutes(stopWork(settings.repeatSeconds, settings.stopAfterMinutes, maxSounds).minutes)} minutes. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`
       : settings.priority === 1
-        ? "One Pushover message per event, with one sound that plays through Pushover's quiet hours."
-        : "One Pushover message per event, with one sound. The phone's Pushover settings decide how it plays.";
-  return `${how} Mute and Skip are checked just before each send. Times are in ${timeZone}, the calendar's own zone.`;
+        ? "An alarm is one Pushover message, with one sound that plays through Pushover's quiet hours."
+        : "An alarm is one Pushover message, with one sound. The phone's Pushover settings decide how it plays.";
+  const notification =
+    settings.notificationPriority === 1
+      ? "A notification is one message with one sound, through Pushover's quiet hours."
+      : "A notification is one message with one sound, as the phone's Pushover settings allow.";
+  const unmarked =
+    settings.defaultType === "notification"
+      ? "An event with no mark and no type set here sends a notification."
+      : "An event with no mark and no type set here sends nothing.";
+  return `${alarm} ${notification} ${unmarked} Mute and Skip are checked just before each send. Times are in ${timeZone}, the calendar's own zone.`;
 }
+
+/** What each type is called on the page, and what it sends in one line. */
+export const typeLabels = {
+  none: "None",
+  notification: "Notification",
+  alarm: "Alarm",
+} as const;

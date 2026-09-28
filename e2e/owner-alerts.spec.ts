@@ -37,11 +37,14 @@ const defaults = {
   includeAllDay: false,
   timeZone: "",
   ownerEmails: [],
+  notificationPriority: 0,
+  notificationSound: "",
+  defaultType: "none",
 };
 
 /**
- * Whatever an earlier engine's run left: unmuted, nothing skipped, the
- * default settings. The
+ * Whatever an earlier engine's run left: unmuted, nothing skipped, no type
+ * set on any event, the default settings. The
  * development calendar placed its events from the app's start, so after
  * 3 h of uptime the standup had begun and this spec failed. The reset
  * places them from now and has the worker read them at once.
@@ -60,7 +63,18 @@ async function reset(page: Page) {
       await page.request.post("/api/alerts/unskip", {
         data: { key: alert.key },
       });
+    if (alert.typeFrom === "set")
+      await page.request.put("/api/alerts/event-type", {
+        data: { key: alert.key, type: "default" },
+      });
   }
+}
+
+/** The key of one listed alert, by title. */
+async function keyOf(page: Page, title: string): Promise<string> {
+  const status = await (await page.request.get("/api/alerts/status")).json();
+  return status.alerts.find((alert: { title: string }) => alert.title === title)
+    .key;
 }
 
 test.describe("/alerts", () => {
@@ -77,6 +91,24 @@ test.describe("/alerts", () => {
 
     await expect(page.getByLabel("Alert state: active")).toBeVisible();
     await expect(list.getByText("E2E review")).toBeVisible();
+    // The development calendar marks the review #critical: it is flagged,
+    // and the mark itself is left off the title.
+    const review = list.getByRole("listitem").filter({ hasText: "E2E review" });
+    await expect(review.getByText("Critical", { exact: true })).toBeVisible();
+    await expect(
+      review.getByText("Alarm: from #critical in the calendar."),
+    ).toBeVisible();
+    await expect(list.getByText("E2E review #critical")).toHaveCount(0);
+    // The standup is unmarked: it sends nothing and is still listed.
+    const standupItem = list
+      .getByRole("listitem")
+      .filter({ hasText: "E2E standup" });
+    await expect(
+      standupItem.getByText("Critical", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      standupItem.getByText(/^Sends nothing: the default for unmarked events/),
+    ).toBeVisible();
     await expect(list.getByText("Room 4")).toBeVisible();
     // All-day and cancelled events do not alert.
     await expect(page.getByText("E2E holiday")).toHaveCount(0);
@@ -133,7 +165,7 @@ test.describe("/alerts", () => {
     const save = page.getByRole("button", { name: "Save settings" });
     const repeat = page.getByLabel("Repeat every", { exact: true });
     const emergency = page.getByRole("button", { name: "Emergency" });
-    const high = page.getByRole("button", { name: "High" });
+    const high = page.getByRole("button", { name: "High", exact: true });
     await expect(repeat).toHaveValue("60");
     await expect(emergency).toHaveAttribute("aria-pressed", "true");
     await expect(save).toBeDisabled();
@@ -190,7 +222,7 @@ test.describe("/alerts", () => {
     await reset(page);
   });
 
-  test("Send test on a listed alert sends that event's text, titled as a test, with the saved settings", async ({
+  test("Send test on a listed alarm sends that event's text, titled as a test, with the alarm settings", async ({
     page,
   }) => {
     await signIn(page);
@@ -201,7 +233,9 @@ test.describe("/alerts", () => {
     await expect(page.getByLabel("Repeat every", { exact: true })).toHaveValue(
       "30",
     );
-    await expect(page.getByLabel("Sound")).toHaveValue("persistent");
+    await expect(page.getByLabel("Sound", { exact: true })).toHaveValue(
+      "persistent",
+    );
     await expect(
       page.getByText(/Pushover repeats no faster than every 30 s/),
     ).toBeVisible();
@@ -209,31 +243,123 @@ test.describe("/alerts", () => {
     await expect(page.getByText("Settings saved.")).toBeVisible();
 
     // Skipped and muted: the test goes anyway, and both stay.
-    await page.getByRole("button", { name: /^Skip E2E standup at / }).click();
+    await page.getByRole("button", { name: /^Skip E2E review at / }).click();
     await page.getByRole("button", { name: "Mute 1 hour" }).click();
     await expect(page.getByLabel("Alert state: muted")).toBeVisible();
     await page
-      .getByRole("button", { name: /^Send test of E2E standup at / })
+      .getByRole("button", { name: /^Send test of E2E review at / })
       .click();
     await expect(
       page.getByText(
-        'Test of E2E standup sent, titled "Test: E2E standup", with the saved settings.',
+        'Test of E2E review sent, titled "Test: E2E review", as an alarm.',
+      ),
+    ).toBeVisible();
+    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    expect(sent).toMatchObject({
+      title: "Test: E2E review",
+      priority: "2",
+      retry: "30",
+      sound: "persistent",
+    });
+    expect(sent.message).toMatch(/^Starts /);
+    await expect(page.getByLabel("Alert state: muted")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /^Undo skip of E2E review at / }),
+    ).toBeVisible();
+
+    await reset(page);
+  });
+
+  test("Send test alert sends an alarm and Send test notification sends one plain notification", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    await page.getByRole("button", { name: "Send test alert" }).click();
+    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    const alarm = await (
+      await page.request.get("/api/alerts/fake/sent")
+    ).json();
+    expect(alarm).toMatchObject({
+      title: "Test alert",
+      priority: "2",
+      retry: "60",
+      expire: "10800",
+    });
+
+    await page.getByRole("button", { name: "Send test notification" }).click();
+    await expect(page.getByText(/Test notification sent/)).toBeVisible();
+    const plain = await (
+      await page.request.get("/api/alerts/fake/sent")
+    ).json();
+    expect(plain).toMatchObject({
+      title: "Test notification",
+      priority: "0",
+      retry: null,
+      expire: null,
+    });
+  });
+
+  test("the owner sets an event's type, it survives a reload, and its test goes as that type", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const list = page.getByRole("list", { name: "Next alerts" });
+    const standup = list
+      .getByRole("listitem")
+      .filter({ hasText: "E2E standup" });
+    const test = page.getByRole("button", {
+      name: /^Send test of E2E standup at /,
+    });
+    const notification = page.getByRole("button", {
+      name: /^Set E2E standup at .* to Notification$/,
+    });
+    await expect(test).toBeDisabled();
+
+    await notification.click();
+    await expect(
+      page.getByText("E2E standup is set to Notification, every occurrence."),
+    ).toBeVisible();
+    await page.reload();
+    await expect(notification).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      standup.getByText(
+        "Notification: set here. The notification settings apply.",
+      ),
+    ).toBeVisible();
+
+    await test.click();
+    await expect(
+      page.getByText(
+        'Test of E2E standup sent, titled "Test: E2E standup", as a notification.',
       ),
     ).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
     expect(sent).toMatchObject({
       title: "Test: E2E standup",
-      priority: "2",
-      retry: "30",
-      sound: "persistent",
+      priority: "0",
+      retry: null,
+      expire: null,
     });
-    expect(sent.message).toMatch(/^Starts .*\nRoom 4$/);
-    await expect(page.getByLabel("Alert state: muted")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /^Undo skip of E2E standup at / }),
-    ).toBeVisible();
 
-    await reset(page);
+    await page
+      .getByRole("button", {
+        name: /^Use the default type for E2E standup at /,
+      })
+      .click();
+    await expect(
+      page.getByText("E2E standup follows the calendar and the default again."),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: /^Set E2E standup at .* to None$/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(test).toBeDisabled();
   });
 
   test("the page explains how events become alarms, with the saved values", async ({
@@ -245,7 +371,13 @@ test.describe("/alerts", () => {
 
     const how = page.getByRole("region", { name: "How events become alarms" });
     await expect(how).toContainText(
-      "Every event with a start time in the next 48 hours alerts.",
+      "Every event with a start time in the next 48 hours is planned and listed above.",
+    );
+    await expect(how).toContainText(
+      "an event becomes an alarm when its title or description in Google Calendar has #critical",
+    );
+    await expect(how).toContainText(
+      "Every other event sends nothing, the default for unmarked events under Settings.",
     );
     await expect(how).toContainText("Settings for my calendars");
     await expect(
@@ -303,6 +435,7 @@ test.describe("/alerts", () => {
     for (const path of [
       "/api/alerts/test",
       "/api/alerts/test-event",
+      "/api/alerts/test-notification",
       "/api/alerts/mute",
       "/api/alerts/skip",
     ]) {
@@ -313,6 +446,10 @@ test.describe("/alerts", () => {
       data: defaults,
     });
     expect(settings.status()).toBe(401);
+    const type = await page.request.put("/api/alerts/event-type", {
+      data: { key: "e2e-standup", type: "alarm" },
+    });
+    expect(type.status()).toBe(401);
     await visitor.close();
   });
 });
@@ -495,6 +632,10 @@ test.describe("/alerts button contrast", () => {
     await page.request.post("/api/alerts/skip", {
       data: { key: standup.key },
     });
+    // A type set here shows Use default, a text button of its own.
+    await page.request.put("/api/alerts/event-type", {
+      data: { key: await keyOf(page, "E2E review"), type: "notification" },
+    });
 
     const failures: string[] = [];
     const rows: string[] = [];
@@ -517,7 +658,9 @@ test.describe("/alerts button contrast", () => {
         // which turns Save on and the repeat presets off.
         for (const state of ["loaded", "edited"] as const) {
           if (state === "edited")
-            await page.getByRole("button", { name: "High" }).click();
+            await page
+              .getByRole("button", { name: "High", exact: true })
+              .click();
           await page.mouse.move(0, 0);
           await page.evaluate(() =>
             Promise.all(

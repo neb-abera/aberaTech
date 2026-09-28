@@ -97,7 +97,8 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     public async Task Settings_are_one_row_that_a_new_process_reads_back_whole()
     {
         var first = new AlertSettings(0, 45, 20, "", 15, 3, 24, true, "", []);
-        var second = new AlertSettings(2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"]);
+        var second = new AlertSettings(
+            2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification");
 
         await using (var context = Context())
         {
@@ -153,6 +154,76 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         await using var check = Context();
         Assert.Equal(["new"], await check.AlertDeliveries.Select(row => row.OccurrenceKey).ToListAsync());
         Assert.Equal(["new"], await check.AlertSkips.Select(row => row.OccurrenceKey).ToListAsync());
+    }
+
+    [PostgresFact]
+    public async Task A_row_saved_before_the_notification_columns_existed_reads_back_sending_nothing_for_unmarked_events()
+    {
+        // What the previous release writes, and what the row held before the
+        // migration: none of the three new columns.
+        await using (var context = Context())
+        {
+            await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                     "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails", "UpdatedAt")
+                 VALUES (1, 2, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, {Now})
+                 """);
+        }
+
+        await using var check = Context();
+        var read = await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None);
+
+        Assert.NotNull(read);
+        Assert.Equal((2, 30, 20, "persistent"), (read.Priority, read.RepeatSeconds, read.StopAfterMinutes, read.Sound));
+        Assert.Equal(0, read.NotificationPriority);
+        Assert.Equal("", read.NotificationSound);
+        Assert.Equal(AlertTypes.None, read.DefaultType);
+    }
+
+    [PostgresFact]
+    public async Task An_events_type_is_one_row_per_uid_replaced_in_place_and_removed_by_default()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.Null(await store.EventTypeAsync("standup@google.com", CancellationToken.None));
+            await store.SetEventTypeAsync("standup@google.com", AlertTypes.Alarm, Now, CancellationToken.None);
+            await store.SetEventTypeAsync("standup@google.com", AlertTypes.Notification, Now, CancellationToken.None);
+            await store.SetEventTypeAsync("review@google.com", AlertTypes.None, Now, CancellationToken.None);
+            await store.SetEventTypeAsync("drill@google.com", AlertTypes.Alarm, Now, CancellationToken.None);
+            await store.SetEventTypeAsync("drill@google.com", null, Now, CancellationToken.None);
+            await store.SetEventTypeAsync("never-set@google.com", null, Now, CancellationToken.None);
+        }
+
+        await using var restarted = Context();
+        var again = new DatabaseAlertStore(restarted);
+        Assert.Equal(AlertTypes.Notification, await again.EventTypeAsync("standup@google.com", CancellationToken.None));
+        Assert.Null(await again.EventTypeAsync("drill@google.com", CancellationToken.None));
+        var all = await again.EventTypesAsync(CancellationToken.None);
+        Assert.Equal(["review@google.com", "standup@google.com"], all.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(AlertTypes.None, all["review@google.com"]);
+    }
+
+    [PostgresFact]
+    public async Task A_choice_for_an_event_still_in_the_feed_is_kept_and_one_gone_for_sixty_days_is_forgotten()
+    {
+        var longAgo = Now - Duration.FromDays(61);
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.SetEventTypeAsync("still-there@google.com", AlertTypes.Alarm, longAgo, CancellationToken.None);
+            await store.SetEventTypeAsync("deleted@google.com", AlertTypes.Alarm, longAgo, CancellationToken.None);
+            await store.SetEventTypeAsync("recent@google.com", AlertTypes.Alarm, Now - Duration.FromDays(3), CancellationToken.None);
+
+            await store.SeenEventsAsync(["still-there@google.com", "unchosen@google.com"], Now, Now - Duration.FromDays(60), CancellationToken.None);
+        }
+
+        await using var check = Context();
+        var rows = await check.AlertEventTypes.OrderBy(row => row.EventId).ToListAsync();
+        Assert.Equal(["recent@google.com", "still-there@google.com"], rows.Select(row => row.EventId));
+        Assert.Equal(Now, rows[1].LastSeenAt);
+        Assert.Equal(longAgo, rows[1].UpdatedAt);
     }
 
     public void Dispose() => _database?.Dispose();

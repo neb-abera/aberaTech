@@ -384,4 +384,101 @@ public sealed class AlertPlannerTests
             }
         }
     }
+
+    [Fact]
+    public void An_event_marked_critical_in_its_title_is_critical_and_the_mark_is_left_off_the_title()
+    {
+        var alert = Assert.Single(Plan(Ics(Event("drill@google.com", "Fire drill #critical", "20261028T090000"))));
+
+        Assert.True(alert.Critical);
+        Assert.Equal("Fire drill", alert.Title);
+    }
+
+    [Fact]
+    public void An_event_marked_critical_in_its_description_is_critical()
+    {
+        var alert = Assert.Single(Plan(Ics(Event(
+            "drill@google.com", "Fire drill", "20261028T090000", extra: ["DESCRIPTION:Muster at the lot. #Critical"]))));
+
+        Assert.True(alert.Critical);
+        Assert.Equal("Fire drill", alert.Title);
+    }
+
+    [Theory]
+    [InlineData("#CRITICAL Fire drill")]
+    [InlineData("Fire #Critical drill")]
+    [InlineData("Fire drill (#critical)")]
+    public void The_mark_is_found_in_any_case_and_anywhere_in_the_title(string title)
+    {
+        var alert = Assert.Single(Plan(Ics(Event("drill@google.com", title, "20261028T090000"))));
+
+        Assert.True(alert.Critical);
+        Assert.DoesNotContain("critical", alert.Title, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void A_title_that_is_only_the_mark_says_it_has_no_title()
+    {
+        var alert = Assert.Single(Plan(Ics(Event("drill@google.com", "#critical", "20261028T090000"))));
+
+        Assert.True(alert.Critical);
+        Assert.Equal("(no title)", alert.Title);
+    }
+
+    [Theory]
+    [InlineData("Standup")]
+    [InlineData("Critical path review")]
+    [InlineData("Standup critical")]
+    [InlineData("Standup #criticality")]
+    [InlineData("Standup a#critical")]
+    [InlineData("Standup ##critical")]
+    public void Anything_else_is_not_critical(string title)
+    {
+        var alert = Assert.Single(Plan(Ics(Event("standup@google.com", title, "20261028T090000"))));
+
+        Assert.False(alert.Critical);
+        Assert.Equal(title, alert.Title);
+    }
+
+    [Fact]
+    public void Every_occurrence_of_a_repeating_event_shares_the_events_id()
+    {
+        var alerts = Plan(Ics(Event(
+            "daily@google.com", "Daily", "20261028T090000", "20261028T093000", extra: ["RRULE:FREQ=DAILY;COUNT=2"])),
+            options: new AlertsOptions { LookaheadHours = 72 });
+
+        Assert.Equal(2, alerts.Count);
+        Assert.All(alerts, alert => Assert.Equal("daily@google.com", alert.EventId));
+        Assert.NotEqual(alerts[0].Key, alerts[1].Key);
+    }
+
+    [Fact]
+    public void A_uid_too_long_for_the_column_is_hashed_the_same_way_every_read()
+    {
+        var uid = new string('u', AlertPlanner.MaxKeyLength + 1) + "@google.com";
+
+        var first = Assert.Single(Plan(Ics(Event(uid, "Standup", "20261028T090000"))));
+        var again = Assert.Single(Plan(Ics(Event(uid, "Standup", "20261028T090000"))));
+
+        Assert.StartsWith("sha256:", first.EventId);
+        Assert.InRange(first.EventId.Length, 1, AlertPlanner.MaxKeyLength);
+        Assert.Equal(first.EventId, again.EventId);
+    }
+
+    [Fact]
+    public void The_plan_names_every_event_in_the_feed_including_those_outside_the_window()
+    {
+        var plan = AlertPlanner.Plan(
+            Ics(
+                Event("standup@google.com", "Standup", "20261028T090000"),
+                Event("next-month@google.com", "Later", "20261128T090000"),
+                Event("cancelled@google.com", "Gone", "20261028T100000", extra: ["STATUS:CANCELLED"])),
+            Morning,
+            AlertSettings.Defaults(new AlertsOptions()));
+
+        Assert.Equal(["standup@google.com"], plan.Alerts.Select(alert => alert.EventId));
+        Assert.Equal(
+            ["cancelled@google.com", "next-month@google.com", "standup@google.com"],
+            plan.EventIds.Order(StringComparer.Ordinal));
+    }
 }
