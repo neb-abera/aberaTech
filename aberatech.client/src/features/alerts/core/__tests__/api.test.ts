@@ -14,6 +14,8 @@ import {
   saveAlertSettings,
   sendEventTest,
   sendTestAlert,
+  sendTestNotification,
+  setEventType,
   skipAlert,
   unmuteAlerts,
   unskipAlert,
@@ -172,6 +174,34 @@ describe("sendEventTest", () => {
 
     stub(respond(404));
     expect(await sendEventTest("gone")).toEqual({
+      ok: false,
+      reason: "refused",
+    });
+  });
+});
+
+describe("sendTestNotification and setEventType", () => {
+  it("post the notification test and put an event's type, handing back the state", async () => {
+    const fetchMock = stub(respond(200, { sent: true }));
+    expect(await sendTestNotification()).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/alerts/test-notification",
+      expect.objectContaining({ method: "POST" }),
+    );
+
+    const put = stub(respond(200, state));
+    const answer = await setEventType("review|20261028T180000Z", "alarm");
+    expect(answer.ok && answer.state?.timeZone).toBe("America/New_York");
+    expect(put).toHaveBeenCalledWith(
+      "/api/alerts/event-type",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({ key: "review|20261028T180000Z", type: "alarm" }),
+      }),
+    );
+
+    stub(respond(404));
+    expect(await setEventType("gone", "default")).toEqual({
       ok: false,
       reason: "refused",
     });

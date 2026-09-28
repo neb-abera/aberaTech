@@ -50,7 +50,35 @@ public class AlertSettingsRecord
 
     public string[] OwnerEmails { get; set; } = [];
 
+    /// <summary>0 or 1. A notification sounds once.</summary>
+    public int NotificationPriority { get; set; }
+
+    /// <summary>Empty is the phone's own Pushover default.</summary>
+    public string NotificationSound { get; set; } = string.Empty;
+
+    /// <summary>What an unmarked event with no choice sends: "none" or "notification".</summary>
+    public string DefaultType { get; set; } = AlertTypes.None;
+
     public Instant UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// The owner's choice for one event on /alerts: none, notification or
+/// alarm. Keyed by the event's UID, so it holds for every occurrence of a
+/// repeating event. No row means the event follows its #critical mark and
+/// the default.
+/// </summary>
+public class AlertEventTypeRecord
+{
+    /// <summary>The event's UID, or its hash when it is longer than a key: see <see cref="AlertPlanner"/>.</summary>
+    public string EventId { get; set; } = string.Empty;
+
+    public string Type { get; set; } = AlertTypes.None;
+
+    public Instant UpdatedAt { get; set; }
+
+    /// <summary>The last calendar read that had the event. A row unseen for 60 days is forgotten.</summary>
+    public Instant LastSeenAt { get; set; }
 }
 
 /// <summary>One occurrence the owner pressed Skip on.</summary>

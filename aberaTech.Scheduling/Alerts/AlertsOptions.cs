@@ -49,6 +49,18 @@ public sealed class AlertsOptions
     /// <summary>A Pushover sound name. Empty is the phone's own Pushover default.</summary>
     public string? Sound { get; init; }
 
+    /// <summary>A notification's Pushover priority: 0 normal or 1 high. Notifications sound once.</summary>
+    public int NotificationPriority { get; init; }
+
+    /// <summary>A notification's Pushover sound. Empty is the phone's own Pushover default.</summary>
+    public string? NotificationSound { get; init; }
+
+    /// <summary>
+    /// What an event with no #critical mark and no choice on the page sends:
+    /// "none" or "notification". Nothing by default.
+    /// </summary>
+    public string? DefaultType { get; init; } = AlertTypes.None;
+
     /// <summary>
     /// The zone for the alert text and for "06:00 tomorrow" when the feed
     /// does not name one. Google's feed always does (X-WR-TIMEZONE, the

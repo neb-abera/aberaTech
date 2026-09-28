@@ -42,6 +42,28 @@ const priorities = [
   },
 ] as const;
 
+const notificationPriorities = [
+  {
+    value: 0,
+    label: "Normal",
+    text: "One sound. The phone's Pushover settings decide how it plays.",
+  },
+  {
+    value: 1,
+    label: "High",
+    text: "One sound, even in Pushover's quiet hours.",
+  },
+] as const;
+
+const defaultTypes = [
+  { value: "none", label: "None", text: "Nothing is sent." },
+  {
+    value: "notification",
+    label: "Notification",
+    text: "One notification, with the settings above.",
+  },
+] as const;
+
 const repeatPresets = [
   { seconds: 30, label: "30 s" },
   { seconds: 60, label: "1 min" },
@@ -61,6 +83,9 @@ interface Draft {
   includeAllDay: boolean;
   timeZone: string;
   ownerEmails: string;
+  notificationPriority: 0 | 1;
+  notificationSound: string;
+  defaultType: "none" | "notification";
 }
 
 function toDraft(settings: AlertSettings): Draft {
@@ -94,6 +119,9 @@ function fromDraft(draft: Draft): AlertSettings {
     ownerEmails: draft.ownerEmails
       .split(/[\s,;]+/)
       .filter((email) => email.length > 0),
+    notificationPriority: draft.notificationPriority,
+    notificationSound: draft.notificationSound,
+    defaultType: draft.defaultType,
   };
 }
 
@@ -108,13 +136,17 @@ function same(a: AlertSettings, b: AlertSettings): boolean {
     a.lookaheadHours === b.lookaheadHours &&
     a.includeAllDay === b.includeAllDay &&
     a.timeZone === b.timeZone &&
-    a.ownerEmails.join(",") === b.ownerEmails.join(",")
+    a.ownerEmails.join(",") === b.ownerEmails.join(",") &&
+    a.notificationPriority === b.notificationPriority &&
+    a.notificationSound === b.notificationSound &&
+    a.defaultType === b.defaultType
   );
 }
 
 /**
  * The settings section of /alerts. Everything but the three secrets, saved
- * as one row and in force from the next pass of the worker.
+ * as one row and in force from the next pass of the worker. Alarms, then
+ * notifications, then what an unmarked event sends, then the calendar.
  */
 export default function AlertSettingsForm({
   settings,
@@ -236,6 +268,9 @@ export default function AlertSettingsForm({
         Settings
       </Typography>
       <Stack spacing={2.5}>
+        <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
+          Alarms: events marked #critical or set to Alarm
+        </Typography>
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
           <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
             Priority
@@ -379,6 +414,117 @@ export default function AlertSettingsForm({
             </option>
           ))}
         </TextField>
+
+        <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
+          Notifications: events set to Notification
+        </Typography>
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+          <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
+            Notification priority
+          </Typography>
+          <Stack spacing={1}>
+            {notificationPriorities.map((option) => (
+              <Stack
+                key={option.value}
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "center" }}
+              >
+                <Chip
+                  label={option.label}
+                  aria-label={`Notification priority ${option.label}`}
+                  color={
+                    shown.notificationPriority === option.value
+                      ? "primary"
+                      : "default"
+                  }
+                  variant={
+                    shown.notificationPriority === option.value
+                      ? "filled"
+                      : "outlined"
+                  }
+                  aria-pressed={shown.notificationPriority === option.value}
+                  onClick={() => edit({ notificationPriority: option.value })}
+                  sx={{ minWidth: "6.5rem" }}
+                />
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {option.text}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+          {error("notificationPriority") && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {error("notificationPriority")}
+            </Typography>
+          )}
+        </Box>
+
+        <TextField
+          select
+          label="Notification sound"
+          size="small"
+          value={shown.notificationSound}
+          onChange={(event) => edit({ notificationSound: event.target.value })}
+          error={Boolean(error("notificationSound"))}
+          helperText={
+            error("notificationSound") ??
+            "A notification never repeats, so a long sound plays once."
+          }
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          sx={{ width: "14rem", maxWidth: "100%" }}
+        >
+          <option value="">Phone's default</option>
+          {bounds.sounds.map((sound) => (
+            <option key={sound} value={sound}>
+              {(longSounds as readonly string[]).includes(sound)
+                ? `${sound} (long)`
+                : sound}
+            </option>
+          ))}
+        </TextField>
+
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+          <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
+            Events with no mark and no type set here
+          </Typography>
+          <Stack spacing={1}>
+            {defaultTypes.map((option) => (
+              <Stack
+                key={option.value}
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "center" }}
+              >
+                <Chip
+                  label={option.label}
+                  aria-label={`Unmarked events: ${option.label}`}
+                  color={
+                    shown.defaultType === option.value ? "primary" : "default"
+                  }
+                  variant={
+                    shown.defaultType === option.value ? "filled" : "outlined"
+                  }
+                  aria-pressed={shown.defaultType === option.value}
+                  onClick={() => edit({ defaultType: option.value })}
+                  sx={{ minWidth: "6.5rem" }}
+                />
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {option.text}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+          {error("defaultType") && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {error("defaultType")}
+            </Typography>
+          )}
+        </Box>
+
+        <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
+          Calendar
+        </Typography>
 
         <Stack
           direction="row"

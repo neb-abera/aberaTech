@@ -13,16 +13,19 @@ import {
   type AlertItem,
   type AlertsState,
   type AlertsView,
+  type AlertType,
   fetchAlerts,
   formatWhen,
   muteAlerts,
   sendEventTest,
   sendTestAlert,
+  sendTestNotification,
+  setEventType,
   skipAlert,
   unmuteAlerts,
   unskipAlert,
 } from "../core/api";
-import { count, describe, every } from "../core/settings";
+import { count, describe, every, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
 import HowEventsAlert from "./HowEventsAlert";
 
@@ -168,12 +171,24 @@ export default function AlertsPanel() {
           onClick={() =>
             void act(sendTestAlert, () =>
               state.settings.priority === 2
-                ? `Test alert sent. The phone sounds every ${every(state.settings.repeatSeconds)} until you acknowledge it.`
-                : "Test alert sent. Check the phone for one sound.",
+                ? `Test alert sent as an alarm. The phone sounds every ${every(state.settings.repeatSeconds)} until you acknowledge it.`
+                : "Test alert sent as an alarm. Check the phone for one sound.",
             )
           }
         >
           Send test alert
+        </Button>
+        <Button
+          variant="outlined"
+          disabled={busy}
+          onClick={() =>
+            void act(
+              sendTestNotification,
+              () => "Test notification sent. Check the phone for one sound.",
+            )
+          }
+        >
+          Send test notification
         </Button>
         <Button variant="text" size="small" onClick={() => void refresh()}>
           Refresh
@@ -231,7 +246,16 @@ export default function AlertsPanel() {
                   void act(
                     () => sendEventTest(alert.key),
                     () =>
-                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", with the saved settings.`,
+                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", as ${alert.type === "alarm" ? "an alarm" : "a notification"}.`,
+                  )
+                }
+                onType={(type) =>
+                  void act(
+                    () => setEventType(alert.key, type),
+                    () =>
+                      type === "default"
+                        ? `${alert.title} follows the calendar and the default again.`
+                        : `${alert.title} is set to ${typeLabels[type]}, every occurrence.`,
                   )
                 }
               />
@@ -329,6 +353,19 @@ function Calendar({
   );
 }
 
+/** Where an alert's type came from, and which settings it sends with. */
+function typeLine(alert: AlertItem): string {
+  const from =
+    alert.typeFrom === "set"
+      ? "set here"
+      : alert.typeFrom === "critical"
+        ? "from #critical in the calendar"
+        : "the default for unmarked events";
+  if (alert.type === "none")
+    return `Sends nothing: ${from}. Send test is off until you choose Notification or Alarm.`;
+  return `${typeLabels[alert.type]}: ${from}. The ${alert.type} settings apply.`;
+}
+
 function Item({
   alert,
   when,
@@ -337,6 +374,7 @@ function Item({
   onSkip,
   onUndo,
   onTest,
+  onType,
 }: {
   alert: AlertItem;
   when: (iso: string) => string;
@@ -345,6 +383,7 @@ function Item({
   onSkip: () => void;
   onUndo: () => void;
   onTest: () => void;
+  onType: (type: AlertType | "default") => void;
 }) {
   const at = `${alert.title} at ${when(alert.startsAt)}`;
   return (
@@ -378,7 +417,43 @@ function Item({
             ? "Time from the event's notification."
             : `No notification in the feed: ${count(defaultLead, "minute")} before, the default lead.`}
         </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          {typeLine(alert)}
+        </Typography>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          role="group"
+          aria-label={`Type of ${at}`}
+          sx={{ mt: 1, alignItems: "center", flexWrap: "wrap" }}
+        >
+          {(["none", "notification", "alarm"] as const).map((type) => (
+            <Chip
+              key={type}
+              size="small"
+              label={typeLabels[type]}
+              aria-label={`Set ${at} to ${typeLabels[type]}`}
+              aria-pressed={alert.type === type}
+              color={alert.type === type ? "primary" : "default"}
+              variant={alert.type === type ? "filled" : "outlined"}
+              disabled={busy}
+              onClick={() => onType(type)}
+            />
+          ))}
+          {alert.typeFrom === "set" && (
+            <Button
+              size="small"
+              disabled={busy}
+              onClick={() => onType("default")}
+              aria-label={`Use the default type for ${at}`}
+            >
+              Use default
+            </Button>
+          )}
+        </Stack>
       </Box>
+      {alert.critical && <Chip size="small" color="error" label="Critical" />}
       {alert.skipped && <Chip size="small" label="Skipped" />}
       {alert.muted && !alert.skipped && (
         <Chip size="small" color="warning" label="Muted" />
@@ -386,7 +461,7 @@ function Item({
       <Button
         size="small"
         variant="outlined"
-        disabled={busy}
+        disabled={busy || alert.type === "none"}
         onClick={onTest}
         aria-label={`Send test of ${at}`}
       >

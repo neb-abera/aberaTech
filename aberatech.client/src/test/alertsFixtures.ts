@@ -13,6 +13,9 @@ export const settings = {
   includeAllDay: false,
   timeZone: "",
   ownerEmails: [] as string[],
+  notificationPriority: 0 as 0 | 1,
+  notificationSound: "",
+  defaultType: "none" as "none" | "notification",
 };
 
 export const bounds = {

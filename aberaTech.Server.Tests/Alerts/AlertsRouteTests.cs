@@ -21,7 +21,9 @@ namespace aberaTech.Server.Tests.Alerts;
 /// <summary>
 /// The /alerts page's API from three chairs. A visitor is told to sign in, a
 /// stranger with a Google account is refused, and the owner reads the list,
-/// mutes, skips and sends a test. The store is in memory and Pushover and
+/// mutes, skips, sets an event's type and sends a test. The standup is
+/// marked #critical, so it is an alarm. The review is unmarked, so it sends
+/// nothing until the owner chooses. The store is in memory and Pushover and
 /// the calendar are recording handlers; DatabaseAlertStoreTests holds the
 /// Postgres store to the same rules.
 /// </summary>
@@ -41,7 +43,7 @@ public sealed class AlertsRouteTests : IDisposable
     private readonly RecordingHandler _calendar = new(() => RecordingHandler.Text(
         HttpStatusCode.OK,
         Ics(
-            Event("standup@google.com", "Standup", "20261028T090000", "20261028T093000", "Room 1", alarms: [Popup("-PT15M")]),
+            Event("standup@google.com", "Standup #critical", "20261028T090000", "20261028T093000", "Room 1", alarms: [Popup("-PT15M")]),
             Event("review@google.com", "Review", "20261028T140000", "20261028T150000")),
         "text/calendar"));
     private readonly TestApp _app;
@@ -92,6 +94,8 @@ public sealed class AlertsRouteTests : IDisposable
         ["POST", "/api/alerts/unskip"],
         ["POST", "/api/alerts/test"],
         ["POST", "/api/alerts/test-event"],
+        ["POST", "/api/alerts/test-notification"],
+        ["PUT", "/api/alerts/event-type"],
         ["PUT", "/api/alerts/settings"]
     ];
 
@@ -151,6 +155,16 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal("default", alerts[1].GetProperty("source").GetString());
         Assert.False(standup.GetProperty("skipped").GetBoolean());
         Assert.False(standup.GetProperty("muted").GetBoolean());
+        // The standup is marked #critical: an alarm, and the mark is left
+        // off the title. The review is unmarked: it sends nothing by default,
+        // and it is still listed so the owner can switch it on.
+        Assert.True(standup.GetProperty("critical").GetBoolean());
+        Assert.Equal("alarm", standup.GetProperty("type").GetString());
+        Assert.Equal("critical", standup.GetProperty("typeFrom").GetString());
+        Assert.False(alerts[1].GetProperty("critical").GetBoolean());
+        Assert.Equal("none", alerts[1].GetProperty("type").GetString());
+        Assert.Equal("default", alerts[1].GetProperty("typeFrom").GetString());
+        Assert.DoesNotContain("#critical", text);
 
         // The calendar's address and the Pushover keys are configuration
         // the page never needs.
@@ -338,7 +352,7 @@ public sealed class AlertsRouteTests : IDisposable
     public async Task Pushover_refusing_an_alert_test_is_a_bad_gateway_that_names_only_the_status()
     {
         using var owner = Owner();
-        var key = await KeyOf(owner, "Review");
+        var key = await KeyOf(owner, "Standup");
         _pushover.Then(() => RecordingHandler.Text(HttpStatusCode.BadRequest, "{\"user\":\"invalid\",\"status\":0}"));
 
         using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
@@ -365,6 +379,143 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Empty(_pushover.Requests);
     }
 
+    [Fact]
+    public async Task The_owner_sets_an_events_type_it_is_kept_under_the_uid_and_default_removes_it()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Review");
+
+        using var set = await owner.PutAsJsonAsync("/api/alerts/event-type", new { key, type = "notification" });
+
+        Assert.Equal(HttpStatusCode.OK, set.StatusCode);
+        var review = (await set.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("alerts")[1];
+        Assert.Equal("notification", review.GetProperty("type").GetString());
+        Assert.Equal("set", review.GetProperty("typeFrom").GetString());
+        Assert.Equal("notification", await _store.EventTypeAsync("review@google.com", CancellationToken.None));
+
+        // Set on the page, the standup's #critical mark gives way.
+        var standupKey = await KeyOf(owner, "Standup");
+        using var quiet = await owner.PutAsJsonAsync("/api/alerts/event-type", new { key = standupKey, type = "none" });
+        var standup = (await quiet.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("alerts")[0];
+        Assert.Equal("none", standup.GetProperty("type").GetString());
+        Assert.Equal("set", standup.GetProperty("typeFrom").GetString());
+        Assert.True(standup.GetProperty("critical").GetBoolean());
+
+        using var back = await owner.PutAsJsonAsync("/api/alerts/event-type", new { key = standupKey, type = "default" });
+        var restored = (await back.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("alerts")[0];
+        Assert.Equal("alarm", restored.GetProperty("type").GetString());
+        Assert.Equal("critical", restored.GetProperty("typeFrom").GetString());
+        Assert.Null(await _store.EventTypeAsync("standup@google.com", CancellationToken.None));
+        Assert.Equal(["review@google.com"], (await _store.EventTypesAsync(CancellationToken.None)).Keys);
+    }
+
+    public static IEnumerable<object?[]> BadEventTypes =>
+    [
+        ["type", "{\"key\":\"review@google.com|20261028T180000Z\",\"type\":\"loud\"}"],
+        ["type", "{\"key\":\"review@google.com|20261028T180000Z\",\"type\":\"\"}"],
+        ["type", "{\"key\":\"review@google.com|20261028T180000Z\"}"],
+        ["type", "{\"key\":\"review@google.com|20261028T180000Z\",\"type\":\"ALARM\"}"],
+        ["key", "{\"type\":\"alarm\"}"],
+        ["key", "{\"key\":\"" + new string('k', 201) + "\",\"type\":\"alarm\"}"]
+    ];
+
+    [Theory]
+    [MemberData(nameof(BadEventTypes))]
+    public async Task An_event_type_the_page_would_not_send_is_refused_by_field_and_nothing_is_stored(string field, string body)
+    {
+        using var owner = Owner();
+
+        using var response = await owner.PutAsync(
+            "/api/alerts/event-type", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        Assert.True(errors.TryGetProperty(field, out _), $"no error for {field}: {errors}");
+        Assert.Single(errors.EnumerateObject());
+        Assert.Empty(await _store.EventTypesAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Only_an_event_on_the_list_can_have_its_type_set()
+    {
+        using var owner = Owner();
+
+        using var unknown = await owner.PutAsJsonAsync(
+            "/api/alerts/event-type", new { key = "not-on-the-list|20261028T130000Z", type = "alarm" });
+
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+        Assert.Empty(await _store.EventTypesAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Setting_a_type_shares_the_actions_limit()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Review");
+        for (var press = 0; press < AlertsEndpoints.DefaultActionsPerMinute; press++)
+        {
+            using var ok = await owner.PostAsync("/api/alerts/unmute", null);
+            Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        }
+
+        using var refused = await owner.PutAsJsonAsync("/api/alerts/event-type", new { key, type = "alarm" });
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        Assert.Empty(await _store.EventTypesAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task The_test_notification_button_sends_once_with_the_notification_settings()
+    {
+        using var owner = Owner();
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("notificationPriority", 1), ("notificationSound", "bike"), ("sound", "siren")));
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+
+        using var response = await owner.PostAsync("/api/alerts/test-notification", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("Test notification", sent.Form["title"]);
+        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("bike", sent.Form["sound"]);
+        Assert.False(sent.Form.ContainsKey("retry"));
+        Assert.False(sent.Form.ContainsKey("expire"));
+    }
+
+    [Fact]
+    public async Task Send_test_on_an_event_that_sends_nothing_is_refused_and_nothing_goes()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Review");
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("This event sends nothing.", await response.Content.ReadAsStringAsync());
+        Assert.Empty(_pushover.Requests);
+    }
+
+    [Theory]
+    [InlineData("notification", "1", null)]
+    [InlineData("alarm", "2", "60")]
+    public async Task Send_test_on_an_event_goes_as_the_type_set_for_it(string type, string priority, string? retry)
+    {
+        using var owner = Owner();
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("notificationPriority", 1)));
+        var key = await KeyOf(owner, "Review");
+        using var set = await owner.PutAsJsonAsync("/api/alerts/event-type", new { key, type });
+        Assert.Equal(HttpStatusCode.OK, set.StatusCode);
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("Test: Review", sent.Form["title"]);
+        Assert.Equal(priority, sent.Form["priority"]);
+        Assert.Equal(retry, sent.Form.GetValueOrDefault("retry"));
+    }
+
     /// <summary>The form as the page sends it, at the configuration's defaults, with the changes given.</summary>
     internal static Dictionary<string, object?> Form(params (string Field, object? Value)[] changes)
     {
@@ -379,7 +530,10 @@ public sealed class AlertsRouteTests : IDisposable
             ["lookaheadHours"] = 48,
             ["includeAllDay"] = false,
             ["timeZone"] = "",
-            ["ownerEmails"] = Array.Empty<string>()
+            ["ownerEmails"] = Array.Empty<string>(),
+            ["notificationPriority"] = 0,
+            ["notificationSound"] = "",
+            ["defaultType"] = "none"
         };
         foreach (var (field, value) in changes) form[field] = value;
         return form;
@@ -403,6 +557,9 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.False(settings.GetProperty("includeAllDay").GetBoolean());
         Assert.Equal("", settings.GetProperty("timeZone").GetString());
         Assert.Empty(settings.GetProperty("ownerEmails").EnumerateArray());
+        Assert.Equal(0, settings.GetProperty("notificationPriority").GetInt32());
+        Assert.Equal("", settings.GetProperty("notificationSound").GetString());
+        Assert.Equal("none", settings.GetProperty("defaultType").GetString());
 
         var bounds = status.GetProperty("bounds");
         Assert.Equal(30, bounds.GetProperty("repeatSeconds").GetProperty("min").GetInt32());
@@ -437,7 +594,16 @@ public sealed class AlertsRouteTests : IDisposable
         ["ownerEmails", new[] { "not an address" }],
         ["ownerEmails", new[] { "" }],
         ["ownerEmails", Enumerable.Range(0, 11).Select(n => $"owner{n}@example.test").ToArray()],
-        ["ownerEmails", null]
+        ["ownerEmails", null],
+        ["notificationPriority", -1],
+        ["notificationPriority", 2],
+        ["notificationPriority", null],
+        ["notificationSound", "foghorn"],
+        ["notificationSound", null],
+        ["defaultType", "alarm"],
+        ["defaultType", "off"],
+        ["defaultType", ""],
+        ["defaultType", null]
     ];
 
     [Theory]
@@ -464,11 +630,13 @@ public sealed class AlertsRouteTests : IDisposable
 
         using var low = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
             ("priority", 0), ("repeatSeconds", 30), ("stopAfterMinutes", 1), ("defaultLeadMinutes", 0),
-            ("pollMinutes", 1), ("lookaheadHours", 1), ("sound", "none")));
+            ("pollMinutes", 1), ("lookaheadHours", 1), ("sound", "none"), ("notificationPriority", 0),
+            ("notificationSound", "none"), ("defaultType", "none")));
         using var high = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
             ("priority", 2), ("repeatSeconds", 10800), ("stopAfterMinutes", 180), ("defaultLeadMinutes", 1440),
             ("pollMinutes", 60), ("lookaheadHours", 336), ("sound", "pushover"),
-            ("ownerEmails", Enumerable.Range(0, 10).Select(n => $"owner{n}@example.test").ToArray())));
+            ("ownerEmails", Enumerable.Range(0, 10).Select(n => $"owner{n}@example.test").ToArray()),
+            ("notificationPriority", 1), ("notificationSound", "pushover"), ("defaultType", "notification")));
 
         Assert.Equal(HttpStatusCode.OK, low.StatusCode);
         Assert.Equal(HttpStatusCode.OK, high.StatusCode);
@@ -482,7 +650,8 @@ public sealed class AlertsRouteTests : IDisposable
         using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
             ("priority", 1), ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"),
             ("pollMinutes", 2), ("lookaheadHours", 72), ("includeAllDay", true), ("timeZone", " Asia/Amman "),
-            ("ownerEmails", new[] { " neb@work.example " })));
+            ("ownerEmails", new[] { " neb@work.example " }), ("notificationPriority", 1), ("notificationSound", "bike"),
+            ("defaultType", "notification")));
 
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var answer = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("settings");
@@ -490,7 +659,7 @@ public sealed class AlertsRouteTests : IDisposable
         var stored = (await _store.SettingsAsync(CancellationToken.None))!;
         Assert.Equal(["neb@work.example"], stored.OwnerEmails);
         Assert.Equal(
-            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails), stored);
+            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails, 1, "bike", "notification"), stored);
 
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         var settings = status.GetProperty("settings");
@@ -502,6 +671,11 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal("Asia/Amman", settings.GetProperty("timeZone").GetString());
         Assert.Equal("neb@work.example", settings.GetProperty("ownerEmails")[0].GetString());
         Assert.Equal(2, status.GetProperty("pollMinutes").GetInt32());
+        Assert.Equal(1, settings.GetProperty("notificationPriority").GetInt32());
+        Assert.Equal("bike", settings.GetProperty("notificationSound").GetString());
+        Assert.Equal("notification", settings.GetProperty("defaultType").GetString());
+        // The unmarked review now follows the new default.
+        Assert.Equal("notification", status.GetProperty("alerts")[1].GetProperty("type").GetString());
     }
 
     [Fact]
@@ -630,6 +804,8 @@ public sealed class AlertsRouteTests : IDisposable
             .OfType<RouteEndpoint>().Select(endpoint => endpoint.RoutePattern.RawText).ToList();
         Assert.Contains("/api/alerts/test", routes);
         Assert.Contains("/api/alerts/test-event", routes);
+        Assert.Contains("/api/alerts/test-notification", routes);
+        Assert.Contains("/api/alerts/event-type", routes);
         Assert.DoesNotContain("/api/alerts/fake/reset", routes);
         Assert.DoesNotContain("/api/alerts/fake/fail", routes);
     }

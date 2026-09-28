@@ -4,9 +4,10 @@ import type { AlertSettings } from "../core/api";
 import { count } from "../core/settings";
 
 /**
- * Which events alert and when, with the saved values in the sentences.
- * Each rule is what AlertPlanner.cs does. The Google Calendar menu names
- * are from support.google.com/calendar/answer/37242, checked 2026-09-28.
+ * Which events alert, as what, and when, with the saved values in the
+ * sentences. Each rule is what AlertPlanner.cs and AlertTypes.cs do. The
+ * Google Calendar menu names are from
+ * support.google.com/calendar/answer/37242, checked 2026-09-28.
  */
 export default function HowEventsAlert({
   settings,
@@ -29,15 +30,48 @@ export default function HowEventsAlert({
         How events become alarms
       </Typography>
       <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
-        Which events alert
+        Three types
+      </Typography>
+      <Box component="ul" sx={list}>
+        <li>
+          Alarm: one message with the alarm settings under Settings. At
+          Emergency it repeats until you acknowledge it.
+        </li>
+        <li>
+          Notification: one message with one sound, at the notification priority
+          and sound under Settings.
+        </li>
+        <li>None: nothing is sent. The event is still listed above.</li>
+      </Box>
+      <Typography variant="body1" sx={{ fontWeight: 600, mt: 2, mb: 0.5 }}>
+        Which type an event gets
+      </Typography>
+      <Box component="ul" sx={list}>
+        <li>
+          A type chosen on this page wins. Each alert above has None,
+          Notification and Alarm. The choice holds for every occurrence of a
+          repeating event. Use default removes it.
+        </li>
+        <li>
+          Otherwise an event becomes an alarm when its title or description in
+          Google Calendar has #critical as a word of its own, in any case. The
+          mark is left off the title the phone shows.
+        </li>
+        <li>
+          {settings.defaultType === "notification"
+            ? "Every other event gets one notification, the default for unmarked events under Settings."
+            : "Every other event sends nothing, the default for unmarked events under Settings."}
+        </li>
+      </Box>
+      <Typography variant="body1" sx={{ fontWeight: 600, mt: 2, mb: 0.5 }}>
+        Which events are planned
       </Typography>
       <Box component="ul" sx={list}>
         <li>
           Every event with a start time in the next{" "}
-          {count(settings.lookaheadHours, "hour")} alerts. Nothing needs
-          marking.
+          {count(settings.lookaheadHours, "hour")} is planned and listed above.
         </li>
-        <li>Each occurrence of a repeating event alerts on its own.</li>
+        <li>Each occurrence of a repeating event is planned on its own.</li>
         <li>
           {settings.includeAllDay
             ? "All-day events alert too. Their start is midnight in the calendar's zone."
