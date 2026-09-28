@@ -2,17 +2,22 @@
 // docs/lighthouse.md describes the deployment, the storage and the backup.
 //
 // Configuration comes from the environment so the container app holds the
-// one secret as a secret reference:
+// secrets as secret references:
 //
 //   LHCI_BASIC_AUTH_PASSWORD  required. The server refuses to start without
-//                             it, so it is never served open.
+//                             it, so it is never served open. The workflows
+//                             upload with it.
+//   LHCI_ALLOWED_EMAILS       the Google accounts that may read the server
+//                             in a browser, comma separated. gate.mjs.
 //   LHCI_DATABASE_PATH        the SQLite file, on the Azure Files share.
 //   PORT                      9001 unless set.
+import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import process from "node:process";
+import { gate, parseAllowed } from "./gate.mjs";
 
 const require = createRequire(import.meta.url);
-const { createServer } = require("@lhci/server");
+const { createApp } = require("@lhci/server");
 const sqlite3 = require("sqlite3");
 
 const password = process.env.LHCI_BASIC_AUTH_PASSWORD ?? "";
@@ -46,15 +51,16 @@ await new Promise((resolve, reject) => {
   });
 });
 
-const server = await createServer({
-  port: Number(process.env.PORT ?? 9001),
+// createApp rather than createServer, so gate.mjs decides who gets in
+// instead of the built-in basic auth, whose challenge makes a browser show
+// a password prompt.
+const { app, storageMethod } = await createApp({
   logLevel: "verbose",
   storage: {
     storageMethod: "sql",
     sqlDialect: "sqlite",
     sqlDatabasePath: databasePath,
   },
-  basicAuth: { username: "lhci", password },
   // Pull request and master builds are kept 14 days. A pull request
   // compares against the newest master build. Production builds, two a
   // night (DevTools and simulated throttling), are kept 90 days. docs/lighthouse.md has the storage arithmetic.
@@ -74,11 +80,31 @@ const server = await createServer({
   ],
 });
 
-process.stdout.write(`lhci server listening on port ${server.port}\n`);
+const allow = gate({
+  username: "lhci",
+  password,
+  allowed: parseAllowed(process.env.LHCI_ALLOWED_EMAILS),
+});
+const server = createServer((req, res) => allow(req, res, () => app(req, res)));
+// As createServer in @lhci/server does: computing statistics can take longer
+// than Node's default socket timeout.
+server.on("connection", (socket) =>
+  socket.setTimeout(20 * 60 * 1000, () => socket.end()),
+);
+const port = Number(process.env.PORT ?? 9001);
+await new Promise((resolve, reject) => {
+  server.once("error", reject);
+  server.listen(port, resolve);
+});
+
+process.stdout.write(`lhci server listening on port ${port}\n`);
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, async () => {
-    await server.close();
+    await Promise.all([
+      new Promise((resolve) => server.close(resolve)),
+      storageMethod.close(),
+    ]);
     process.exit(0);
   });
 }

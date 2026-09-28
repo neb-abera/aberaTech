@@ -14,7 +14,7 @@ FROM node:26-slim@sha256:ec7758ee051e457b468b32bde57b0879010b325bb9862718e961522
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=lhci-server-deps --chown=node:node /app/node_modules ./node_modules
-COPY --chown=node:node package.json server.mjs ./
+COPY --chown=node:node package.json server.mjs gate.mjs ./
 USER node
 EXPOSE 9001
 CMD ["node", "server.mjs"]
