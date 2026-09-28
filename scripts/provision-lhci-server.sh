@@ -192,25 +192,26 @@ if [ "$new_password" = true ]; then
   secret LHCI_BASIC_AUTH_PASSWORD "$password" dependabot
 fi
 
-# project <name> <slug> <build token secret> <admin token secret>
+# project <name> <build token secret> <admin token secret>. The server
+# makes the slug from the name: aberatech-ci and abera.tech-production.
 project() {
-  if api "$url/v1/projects/slug:$2" > /dev/null 2>&1; then
+  if api "$url/v1/projects" | jq -e --arg n "$1" 'any(.[]; .name == $n)' > /dev/null; then
     say "project $1 exists"
     return
   fi
   say "project $1"
   api -X POST "$url/v1/projects" \
-    -d "{\"name\":\"$1\",\"slug\":\"$2\",\"externalUrl\":\"https://github.com/$REPO\",\"baseBranch\":\"master\"}" \
+    -d "{\"name\":\"$1\",\"externalUrl\":\"https://github.com/$REPO\",\"baseBranch\":\"master\"}" \
     > "$work/project.json"
-  secret "$3" "$(jq -r .token "$work/project.json")"
-  secret "$4" "$(jq -r .adminToken "$work/project.json")"
-  if [ "$3" = LHCI_BUILD_TOKEN ]; then
-    secret "$3" "$(jq -r .token "$work/project.json")" dependabot
+  secret "$2" "$(jq -r .token "$work/project.json")"
+  secret "$3" "$(jq -r .adminToken "$work/project.json")"
+  if [ "$2" = LHCI_BUILD_TOKEN ]; then
+    secret "$2" "$(jq -r .token "$work/project.json")" dependabot
   fi
   rm -f "$work/project.json"
 }
-project "aberaTech CI" aberatech-ci LHCI_BUILD_TOKEN LHCI_ADMIN_TOKEN
-project "abera.tech production" abera-tech-production LHCI_PRODUCTION_BUILD_TOKEN LHCI_PRODUCTION_ADMIN_TOKEN
+project "aberaTech CI" LHCI_BUILD_TOKEN LHCI_ADMIN_TOKEN
+project "abera.tech production" LHCI_PRODUCTION_BUILD_TOKEN LHCI_PRODUCTION_ADMIN_TOKEN
 unset password
 
 say "backup identity $BACKUP_IDENTITY"

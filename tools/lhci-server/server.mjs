@@ -31,20 +31,21 @@ const server = await createServer({
     sqlDatabasePath: process.env.LHCI_DATABASE_PATH ?? "/data/lhci.db",
   },
   basicAuth: { username: "lhci", password },
-  // Pull request builds are kept 30 days and master builds 180. A pull
-  // request compares against the newest master build. Production builds,
-  // one a night, are kept. The jobs run only while a replica is up, which
-  // is whenever something uploads.
+  // Pull request and master builds are kept 14 days. A pull request
+  // compares against the newest master build. Production builds, two a
+  // night (DevTools and simulated throttling), are kept 90 days. docs/lighthouse.md has the storage arithmetic.
+  // The jobs run only while a replica is up, which is whenever something
+  // uploads.
   deleteOldBuildsCron: [
     {
       schedule: "*/10 * * * *",
-      maxAgeInDays: 30,
-      skipBranches: ["master", "production"],
+      maxAgeInDays: 14,
+      skipBranches: ["production", "production-simulated"],
     },
     {
       schedule: "*/10 * * * *",
-      maxAgeInDays: 180,
-      onlyBranches: ["master"],
+      maxAgeInDays: 90,
+      onlyBranches: ["production", "production-simulated"],
     },
   ],
 });
