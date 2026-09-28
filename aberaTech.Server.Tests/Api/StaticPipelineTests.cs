@@ -27,6 +27,7 @@ public sealed class StaticPipelineTests : IDisposable
         _webRoot = Directory.CreateTempSubdirectory("wwwroot-fixture").FullName;
         Directory.CreateDirectory(Path.Combine(_webRoot, "transition"));
         Directory.CreateDirectory(Path.Combine(_webRoot, "assets"));
+        Directory.CreateDirectory(Path.Combine(_webRoot, "links"));
         File.WriteAllText(
             Path.Combine(_webRoot, "index.html"),
             "<html><script>bootstrap()</script>prerendered home</html>");
@@ -34,6 +35,9 @@ public sealed class StaticPipelineTests : IDisposable
         File.WriteAllText(
             Path.Combine(_webRoot, "transition", "index.html"),
             "<html><head><style data-emotion=\"css abc\">.css-abc{color:red}</style></head>prerendered guide</html>");
+        File.WriteAllText(
+            Path.Combine(_webRoot, "links", "index.html"),
+            "<html><script>bootstrap()</script><script>fetchLinks()</script>prerendered links</html>");
         File.WriteAllText(Path.Combine(_webRoot, "assets", "index-abc123.js"), "console.log('app')");
 
         _factory = new WebApplicationFactory<Program>()
@@ -148,11 +152,10 @@ public sealed class StaticPipelineTests : IDisposable
     [Fact]
     public async Task The_csp_allows_the_style_elements_the_pages_were_baked_with_and_no_others()
     {
-        // The guide's style element, found by the startup scan of every
-        // shipped page (not only index.html), and the empty element emotion
-        // creates at run time and fills through the CSSOM. Nothing inline
-        // beyond those two.
-        var response = await _factory.CreateClient().GetAsync("/");
+        // The guide's style element, found by the startup scan of the
+        // guide's own file, and the empty element emotion creates at run
+        // time and fills through the CSSOM. Nothing inline beyond those two.
+        var response = await _factory.CreateClient().GetAsync("/transition");
 
         var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
         var directives = csp.Split("; ");
@@ -163,6 +166,51 @@ public sealed class StaticPipelineTests : IDisposable
         Assert.Contains($"'sha256-{Sha256Of("")}'", styleSrc);
         Assert.Contains("style-src-attr 'unsafe-inline'", directives);
     }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/index.html")]
+    [InlineData("/transition")]
+    [InlineData("/links")]
+    [InlineData("/schedule")]
+    [InlineData("/spa.html")]
+    [InlineData("/definitely-not-a-page")]
+    [InlineData("/sms-terms")]
+    [InlineData("/sms-privacy")]
+    public async Task Each_page_is_sent_the_hashes_of_its_own_inline_blocks_and_no_others(string path)
+    {
+        // The union of every page's hashes made the home page's header 1,999
+        // bytes on 2026-09-28, and pushed its first response past one round
+        // trip. Each page needs its own blocks. A missing one is a page that
+        // renders unstyled or never runs its bootstrap.
+        var response = await _factory.CreateClient().GetAsync(path);
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Equal(
+            CspInlineScripts.HashesIn(html).Order(StringComparer.Ordinal),
+            HashesIn(csp, "script-src"));
+        Assert.Equal(
+            CspInlineStyles.HashesIn(html).Append(CspInlineStyles.EmptyElement).Distinct().Order(StringComparer.Ordinal),
+            HashesIn(csp, "style-src"));
+    }
+
+    [Fact]
+    public async Task A_response_that_is_not_a_page_carries_no_page_hashes()
+    {
+        var response = await _factory.CreateClient().GetAsync("/assets/index-abc123.js");
+
+        var csp = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Empty(HashesIn(csp, "script-src"));
+        Assert.Equal([CspInlineStyles.EmptyElement], HashesIn(csp, "style-src"));
+    }
+
+    private static IEnumerable<string> HashesIn(string csp, string directive) =>
+        Assert.Single(csp.Split("; "), d => d.StartsWith(directive + " "))
+            .Split(' ')
+            .Where(source => source.StartsWith("'sha256-"))
+            .Order(StringComparer.Ordinal);
 
     private static string Sha256Of(string content) =>
         Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content)));

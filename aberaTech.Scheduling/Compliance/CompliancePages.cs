@@ -19,11 +19,20 @@ public static class CompliancePages
 {
     public static IEndpointRouteBuilder MapCompliancePages(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/sms-terms", () => Results.Content(Terms, "text/html; charset=utf-8")).AllowAnonymous();
-        routes.MapGet("/sms-privacy", () => Results.Content(Privacy, "text/html; charset=utf-8")).AllowAnonymous();
+        foreach (var (path, html) in Pages)
+        {
+            routes.MapGet(path, () => Results.Content(html, "text/html; charset=utf-8")).AllowAnonymous();
+        }
 
         return routes;
     }
+
+    /// <summary>Each page by its route, so the CSP can hash the inline style each one carries.</summary>
+    public static IReadOnlyDictionary<string, string> Pages { get; } = new Dictionary<string, string>
+    {
+        ["/sms-terms"] = Terms,
+        ["/sms-privacy"] = Privacy,
+    };
 
     /// <summary>
     /// Enough style to be readable and to look like the rest of the site,

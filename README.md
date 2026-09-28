@@ -55,7 +55,9 @@ service keeps `node_modules` in a volume that outlives a rebuild.
 - Routing is explicit and sits after the static-file middleware in
   `Program.cs`.
 - The CSP's inline-script and style-element hashes are computed from the
-  shipped HTML at startup (`CspInlineScripts.cs`, `CspInlineStyles.cs`).
+  shipped HTML at startup (`ContentSecurityPolicy.cs`). Each page is sent
+  its own hashes. Before, every page carried all 29, and the home page's
+  headers took 2,653 bytes at the origin.
   `tools/prerender.mjs` gathers each page's MUI styles into its head, so a
   page needs three hashes instead of 94. Cloudflare RUM is allowlisted and is the
   measurement of record.

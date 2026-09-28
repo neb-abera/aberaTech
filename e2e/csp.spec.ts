@@ -178,6 +178,55 @@ for (const path of visitorRoutes) {
   });
 }
 
+// Each page is sent the hashes of its own inline blocks and no others. A
+// visitor who lands on one page and moves to the next inside the app keeps
+// the first page's policy, so every route is also reached that way from
+// the home page, the page most visits start on.
+test("a visitor who moves between pages inside the app meets no policy violation", async ({
+  page,
+}) => {
+  await listen(page);
+  await page.goto("/");
+  await settled(page);
+
+  for (const path of visitorRoutes.filter((path) => path !== "/")) {
+    await test.step(path, async () => {
+      await page.evaluate((path) => {
+        history.pushState(null, "", path);
+        dispatchEvent(new PopStateEvent("popstate"));
+      }, path);
+      await settled(page);
+      const violations = await page.evaluate(
+        () => (window as unknown as { __csp: Violation[] }).__csp,
+      );
+      expect(new URL(page.url()).pathname).toBe(path);
+      expect(violations, JSON.stringify(violations)).toEqual([]);
+    });
+  }
+});
+
+// The text message terms and privacy policy are rendered by the server, with
+// a style element of their own and no script.
+for (const path of ["/sms-terms", "/sms-privacy"]) {
+  test(`a visitor on ${path} meets no policy violation and sees its style`, async ({
+    page,
+  }) => {
+    await listen(page);
+
+    await page.goto(path);
+
+    const violations = await page.evaluate(
+      () => (window as unknown as { __csp: Violation[] }).__csp,
+    );
+    expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
+    // The page's own rule sets a max-width of 46rem on the body.
+    const maxWidth = await page.evaluate(
+      () => getComputedStyle(document.body).maxWidth,
+    );
+    expect(maxWidth).toBe("736px");
+  });
+}
+
 test("the owner's pages meet no policy violation", async ({ page }) => {
   await listen(page);
   // The Development sign-in the compose app maps: the same cookie the

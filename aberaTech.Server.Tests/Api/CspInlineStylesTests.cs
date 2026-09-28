@@ -45,27 +45,4 @@ public class CspInlineStylesTests
         Assert.Equal(CspInlineStyles.EmptyElement, Hash(""));
         Assert.Equal("'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='", CspInlineStyles.EmptyElement);
     }
-
-    [Fact]
-    public void Every_shipped_page_is_read()
-    {
-        var root = Directory.CreateTempSubdirectory("csp-styles").FullName;
-        try
-        {
-            Directory.CreateDirectory(Path.Combine(root, "guide"));
-            File.WriteAllText(Path.Combine(root, "index.html"), "<style>a{}</style>");
-            File.WriteAllText(Path.Combine(root, "guide", "index.html"), "<style>b{}</style>");
-            File.WriteAllText(Path.Combine(root, "notes.txt"), "<style>c{}</style>");
-
-            var hashes = CspInlineStyles.HashesUnder(root);
-
-            Assert.Equal(
-                new[] { Hash("a{}"), Hash("b{}") }.Order(StringComparer.Ordinal),
-                hashes.Order(StringComparer.Ordinal));
-        }
-        finally
-        {
-            Directory.Delete(root, recursive: true);
-        }
-    }
 }
