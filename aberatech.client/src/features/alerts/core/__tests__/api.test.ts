@@ -12,6 +12,7 @@ import {
   formatWhen,
   muteAlerts,
   saveAlertSettings,
+  sendEventTest,
   sendTestAlert,
   skipAlert,
   unmuteAlerts,
@@ -145,6 +146,35 @@ describe("the buttons", () => {
 
     stub(respond(200, { sent: true }));
     expect(await sendTestAlert()).toEqual({ ok: true });
+  });
+});
+
+describe("sendEventTest", () => {
+  it("posts the alert's key, and says what Pushover answered on a 502", async () => {
+    const fetchMock = stub(respond(200, { sent: true }));
+    expect(await sendEventTest("standup|20261028T130000Z")).toEqual({
+      ok: true,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/alerts/test-event",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ key: "standup|20261028T130000Z" }),
+      }),
+    );
+
+    stub({ ...respond(502), text: async () => "HTTP 400" });
+    expect(await sendEventTest("standup|20261028T130000Z")).toEqual({
+      ok: false,
+      reason: "pushover",
+      detail: "HTTP 400",
+    });
+
+    stub(respond(404));
+    expect(await sendEventTest("gone")).toEqual({
+      ok: false,
+      reason: "refused",
+    });
   });
 });
 

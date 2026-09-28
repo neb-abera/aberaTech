@@ -147,7 +147,9 @@ describe("the owner", () => {
     expect(
       screen.getByText(/Calendar read Wed, Oct 28, 8:00 AM EDT/),
     ).toBeTruthy();
-    expect(screen.getByText(/every 5 minutes/)).toBeTruthy();
+    expect(
+      screen.getByText(/Calendar read .*, every 5 minutes\./),
+    ).toBeTruthy();
 
     const list = screen.getByRole("list", { name: "Next alerts" });
     const items = within(list).getAllByRole("listitem");
@@ -156,8 +158,12 @@ describe("the owner", () => {
     expect(items[0].textContent).toContain("Alert Wed, Oct 28, 8:45 AM EDT");
     expect(items[0].textContent).toContain("starts Wed, Oct 28, 9:00 AM EDT");
     expect(items[0].textContent).toContain("Room 1");
-    expect(items[0].textContent).toContain("the event's reminder");
-    expect(items[1].textContent).toContain("10 minutes before, the default");
+    expect(items[0].textContent).toContain(
+      "Time from the event's notification.",
+    );
+    expect(items[1].textContent).toContain(
+      "No notification in the feed: 10 minutes before, the default lead.",
+    );
   });
 
   it("says every alert repeats until acknowledged", async () => {
@@ -355,7 +361,7 @@ describe("the owner", () => {
     expect(screen.getByLabelText("Alert state: active")).toBeTruthy();
   });
 
-  it("says when the last calendar read failed and which list is shown", async () => {
+  it("puts a failed calendar read at the top: the error, the last good read, and where the list is from", async () => {
     mount(
       respond(
         200,
@@ -367,11 +373,126 @@ describe("the owner", () => {
     );
     await settle();
 
+    const banner = screen.getAllByRole("alert")[0];
+    expect(banner.className).toContain("MuiAlert-colorError");
+    expect(banner.textContent).toContain("The calendar cannot be read");
+    expect(banner.textContent).toContain(
+      "The last read, Wed, Oct 28, 8:05 AM EDT, failed: HTTP 404.",
+    );
+    expect(banner.textContent).toContain(
+      "Google answers 404 when the secret address is wrong or was reset.",
+    );
+    expect(banner.textContent).toContain(
+      "The last good read was Wed, Oct 28, 8:00 AM EDT. The alerts below are from that read.",
+    );
+    // Above every button, so it is the first thing on the page.
+    const mute = screen.getByRole("button", { name: "Mute 1 hour" });
+    expect(
+      banner.compareDocumentPosition(mute) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("says no alerts are planned when no read has worked, and names no 404 cause for another error", async () => {
+    mount(
+      respond(
+        200,
+        state({
+          alerts: [],
+          lastFetchAt: "2026-10-28T12:05:00+00:00",
+          lastFetchError: "The feed is not a calendar.",
+          lastSuccessAt: null,
+        }),
+      ),
+    );
+    await settle();
+
+    const banner = screen.getAllByRole("alert")[0];
+    expect(banner.textContent).toContain(
+      "No read has worked since the server started, so no alerts are planned.",
+    );
+    expect(banner.textContent).not.toContain("404");
+    expect(screen.queryByText(/Calendar read /)).toBeNull();
+    expect(
+      screen.getByText(/No read of the calendar has worked yet/),
+    ).toBeTruthy();
+  });
+
+  it("shows no banner when the last read worked", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    expect(screen.queryByText(/The calendar cannot be read/)).toBeNull();
+  });
+
+  it("sends a test of one listed alert and says what the phone shows, or what Pushover answered", async () => {
+    mount(respond(200, state()), respond(200, { sent: true }), {
+      ...respond(502),
+      text: async () => "HTTP 400",
+    });
+    await settle();
+
+    const press = () =>
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Send test of Standup at Wed, Oct 28, 9:00 AM EDT",
+        }),
+      );
+    press();
+    await settle();
+    expect(posts()).toEqual([
+      ["/api/alerts/test-event", JSON.stringify({ key: standup.key })],
+    ]);
     expect(
       screen.getByText(
-        /The last read, Wed, Oct 28, 8:05 AM EDT, failed: HTTP 404. The list is from Wed, Oct 28, 8:00 AM EDT./,
+        'Test of Standup sent, titled "Test: Standup", with the saved settings.',
       ),
     ).toBeTruthy();
+
+    press();
+    await settle();
+    expect(
+      screen.getByText(/Pushover refused the test: HTTP 400/),
+    ).toBeTruthy();
+  });
+
+  it("explains which events alert and when, with the saved values and Google's menu names", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    const how = screen.getByRole("region", {
+      name: "How events become alarms",
+    });
+    const text = how.textContent ?? "";
+    expect(text).toContain(
+      "Every event with a start time in the next 48 hours alerts. Nothing needs marking.",
+    );
+    expect(text).toContain("All-day events are left out.");
+    expect(text).toContain(
+      "Cancelled events and invitations you declined are left out.",
+    );
+    expect(text).toContain(
+      "An event with no notification in the feed alerts 10 minutes before it starts, the default lead.",
+    );
+    expect(text).toContain("click Edit event");
+    expect(text).toContain("Add notification");
+    expect(text).toContain("Settings for my calendars");
+    expect(text).toContain("Event notifications");
+
+    cleanup();
+    mount(
+      respond(
+        200,
+        state({
+          settings: { ...settings, includeAllDay: true, lookaheadHours: 1 },
+        }),
+      ),
+    );
+    await settle();
+    const on =
+      screen.getByRole("region", { name: "How events become alarms" })
+        .textContent ?? "";
+    expect(on).toContain("in the next 1 hour alerts");
+    expect(on).toContain("All-day events alert too");
   });
 
   it("says when there is nothing coming and when the calendar has not been read", async () => {
@@ -385,6 +506,7 @@ describe("the owner", () => {
 
     expect(screen.getByText(/No alerts coming up/)).toBeTruthy();
     expect(screen.getByText(/not read yet/)).toBeTruthy();
+    expect(screen.queryByText(/The calendar cannot be read/)).toBeNull();
   });
 
   it("shows the last send", async () => {

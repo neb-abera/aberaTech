@@ -5,7 +5,15 @@
 
 import { expect, it, describe as suite } from "vitest";
 import { settings } from "../../../../test/alertsFixtures";
-import { describe, every, stopWork } from "../settings";
+import {
+  count,
+  describe,
+  every,
+  isNonstop,
+  longSounds,
+  nonstop,
+  stopWork,
+} from "../settings";
 
 suite("every", () => {
   it("reads as a person would say it", () => {
@@ -47,5 +55,40 @@ suite("describe", () => {
     expect(describe(settings, 50, "Asia/Amman")).toContain(
       "Times are in Asia/Amman, the calendar's own zone.",
     );
+  });
+});
+
+suite("count", () => {
+  it("says one unit in the singular", () => {
+    expect(count(1, "minute")).toBe("1 minute");
+    expect(count(10, "minute")).toBe("10 minutes");
+    expect(count(0, "minute")).toBe("0 minutes");
+    expect(count(48, "hour")).toBe("48 hours");
+  });
+});
+
+suite("nonstop", () => {
+  it("is Emergency every 30 s with one of Pushover's long sounds", () => {
+    expect(nonstop).toEqual({
+      priority: 2,
+      repeatSeconds: 30,
+      sound: "persistent",
+    });
+    expect(longSounds).toEqual([
+      "alien",
+      "climb",
+      "persistent",
+      "echo",
+      "updown",
+    ]);
+    expect(longSounds).toContain(nonstop.sound);
+  });
+
+  it("is pressed only for Emergency at 30 s with a long sound", () => {
+    expect(isNonstop(2, 30, "persistent")).toBe(true);
+    expect(isNonstop(2, 30, "echo")).toBe(true);
+    expect(isNonstop(2, 30, "siren")).toBe(false);
+    expect(isNonstop(2, 60, "persistent")).toBe(false);
+    expect(isNonstop(1, 30, "persistent")).toBe(false);
   });
 });

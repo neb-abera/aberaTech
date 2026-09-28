@@ -70,7 +70,7 @@ describe("the settings form", () => {
     expect(input("Repeat every").value).toBe("60");
     expect(input("Stop after").value).toBe("180");
     expect(input("Default lead").value).toBe("10");
-    expect(input("Read the calendar every").value).toBe("5");
+    expect(input("Check calendar every").value).toBe("5");
     expect(input("Look ahead").value).toBe("48");
     expect((screen.getByLabelText("Sound") as HTMLSelectElement).value).toBe(
       "siren",
@@ -209,7 +209,7 @@ describe("the settings form", () => {
   it("sends a cleared number as nothing, for the server to name", async () => {
     const { saver } = mount();
 
-    fireEvent.change(input("Read the calendar every"), {
+    fireEvent.change(input("Check calendar every"), {
       target: { value: "" },
     });
     fireEvent.click(saveButton());
@@ -231,6 +231,104 @@ describe("the settings form", () => {
       expect(screen.getByText(text)).toBeTruthy();
       cleanup();
     }
+  });
+
+  it("Nonstop sets Emergency, a 30 s repeat and a long sound, and Save sends them", async () => {
+    const { saver } = mount({ priority: 0, sound: "" });
+    const nonstop = screen.getByRole("button", { name: "Nonstop" });
+    expect(nonstop.getAttribute("aria-pressed")).toBe("false");
+
+    fireEvent.click(nonstop);
+
+    expect(
+      screen
+        .getByRole("button", { name: "Emergency" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(input("Repeat every").value).toBe("30");
+    expect((screen.getByLabelText("Sound") as HTMLSelectElement).value).toBe(
+      "persistent",
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "Nonstop" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    fireEvent.click(saveButton());
+    await flush();
+    expect(saver).toHaveBeenCalledWith({
+      ...settings,
+      priority: 2,
+      repeatSeconds: 30,
+      sound: "persistent",
+    });
+  });
+
+  it("says under the repeat why 1 s and 5 s are not offered, with the numbers", () => {
+    mount();
+
+    const floor = screen.getByText(
+      /Pushover repeats no faster than every 30 s/,
+    );
+    expect(floor.textContent).toContain("1 s and 5 s cannot be sent.");
+    expect(floor.textContent).toContain(
+      "iOS plays a notification sound for up to 30 s, the length of the 30 s repeat.",
+    );
+    expect(floor.textContent).toContain(
+      "Nonstop sets Emergency, 30 s and persistent, one of Pushover's 5 long sounds.",
+    );
+  });
+
+  it("marks Pushover's long sounds in the list", () => {
+    mount();
+
+    const options = Array.from(
+      (screen.getByLabelText("Sound") as HTMLSelectElement).options,
+    ).map((option) => option.textContent);
+    expect(options).toContain("persistent (long)");
+    expect(options).toContain("siren");
+  });
+
+  it("explains the three calendar fields with the values typed", () => {
+    mount();
+
+    expect(
+      screen.getByText(
+        "An event with no notification of its own alerts 10 minutes before it starts.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The server reads the calendar every 5 minutes. A new or moved event shows up within 5 minutes.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Events that start in the next 48 hours are planned and listed above.",
+      ),
+    ).toBeTruthy();
+
+    fireEvent.change(input("Default lead"), { target: { value: "1" } });
+    fireEvent.change(input("Check calendar every"), { target: { value: "1" } });
+    fireEvent.change(input("Look ahead"), { target: { value: "1" } });
+    expect(
+      screen.getByText(
+        "An event with no notification of its own alerts 1 minute before it starts.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The server reads the calendar every 1 minute. A new or moved event shows up within 1 minute.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Events that start in the next 1 hour are planned and listed above.",
+      ),
+    ).toBeTruthy();
+
+    fireEvent.change(input("Default lead"), { target: { value: "" } });
+    expect(screen.getByText("0 to 1440 minutes.")).toBeTruthy();
   });
 
   it("says once that the secrets are not editable here", () => {

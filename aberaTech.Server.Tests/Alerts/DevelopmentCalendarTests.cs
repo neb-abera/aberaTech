@@ -116,9 +116,11 @@ public sealed class DevelopmentCalendarTests : IDisposable
 
         using var response = await visitor.PostAsync("/api/alerts/fake/reset", null);
         using var sent = await visitor.GetAsync("/api/alerts/fake/sent");
+        using var fail = await visitor.PostAsync("/api/alerts/fake/fail", null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, sent.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, fail.StatusCode);
     }
 
     [PostgresFact]
@@ -143,6 +145,41 @@ public sealed class DevelopmentCalendarTests : IDisposable
         Assert.Equal("1800", message.GetProperty("expire").GetString());
         Assert.Equal("siren", message.GetProperty("sound").GetString());
         Assert.Equal("Test alert", message.GetProperty("title").GetString());
+    }
+
+    /// <summary>
+    /// The browser suite's way to show the page a calendar that cannot be
+    /// read: the fake answers 404, as production did with a wrong address,
+    /// until the next reset.
+    /// </summary>
+    [PostgresFact]
+    public async Task A_failed_read_keeps_the_last_good_list_and_says_when_it_was_until_the_reset()
+    {
+        using var owner = Owner();
+        using var good = await owner.PostAsync("/api/alerts/fake/reset", null);
+        Assert.Equal(HttpStatusCode.OK, good.StatusCode);
+        var readAt = _clock.Now;
+        _clock.Now += Duration.FromMinutes(7);
+
+        using var failed = await owner.PostAsync("/api/alerts/fake/fail", null);
+
+        Assert.Equal(HttpStatusCode.OK, failed.StatusCode);
+        var state = JsonDocument.Parse(await failed.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal("HTTP 404", state.GetProperty("lastFetchError").GetString());
+        Assert.Equal(_clock.Now.ToDateTimeOffset(), state.GetProperty("lastFetchAt").GetDateTimeOffset());
+        Assert.Equal(readAt.ToDateTimeOffset(), state.GetProperty("lastSuccessAt").GetDateTimeOffset());
+        Assert.Equal(["E2E standup", "E2E review"], Titles(state));
+
+        _clock.Now += Duration.FromMinutes(6);
+        await Worker.TickAsync(CancellationToken.None);
+        using var still = await owner.GetAsync("/api/alerts/status");
+        Assert.Equal("HTTP 404",
+            JsonDocument.Parse(await still.Content.ReadAsStringAsync()).RootElement.GetProperty("lastFetchError").GetString());
+
+        using var reset = await owner.PostAsync("/api/alerts/fake/reset", null);
+        var after = JsonDocument.Parse(await reset.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(JsonValueKind.Null, after.GetProperty("lastFetchError").ValueKind);
+        Assert.Equal(_clock.Now.ToDateTimeOffset(), after.GetProperty("lastSuccessAt").GetDateTimeOffset());
     }
 
     public void Dispose()

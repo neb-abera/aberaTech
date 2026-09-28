@@ -146,6 +146,15 @@ export async function sendTestAlert(): Promise<ActionResult> {
   return result.ok ? { ok: true } : result;
 }
 
+/**
+ * One listed alert's own text, titled "Test: ", with the saved settings.
+ * Claims nothing, so the real alert still goes at its time.
+ */
+export async function sendEventTest(key: string): Promise<ActionResult> {
+  const result = await post("/api/alerts/test-event", { key });
+  return result.ok ? { ok: true } : result;
+}
+
 /** The whole form. A refused field comes back in `errors`, keyed by its name. */
 export function saveAlertSettings(
   settings: AlertSettings,

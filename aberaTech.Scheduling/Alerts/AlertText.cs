@@ -14,6 +14,9 @@ public static class AlertText
 
     public static string Title(string title) => Cut(title, PushoverClient.MaxTitle);
 
+    /// <summary>"Test: Standup". The phone shows at a glance that no event is starting.</summary>
+    public static string TestTitle(string title) => $"Test: {title}";
+
     public static string Message(PlannedAlert alert, DateTimeZone zone) =>
         Cut(
             alert.Location is null

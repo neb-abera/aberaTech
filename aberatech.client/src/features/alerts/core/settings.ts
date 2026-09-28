@@ -5,6 +5,47 @@
 
 import type { AlertSettings } from "./api";
 
+/** "1 minute", "10 minutes", "48 hours". */
+export function count(value: number, unit: string): string {
+  return `${value} ${unit}${value === 1 ? "" : "s"}`;
+}
+
+/**
+ * The sounds pushover.net/api#sounds marks "(long)", checked on 2026-09-28.
+ * The rest are one short chime.
+ */
+export const longSounds = [
+  "alien",
+  "climb",
+  "persistent",
+  "echo",
+  "updown",
+] as const;
+
+/**
+ * The closest Pushover comes to a phone that keeps ringing. It will not
+ * repeat faster than every 30 s, and iOS plays a notification sound for up
+ * to 30 s, so a long sound at the 30 s floor plays into each gap.
+ */
+export const nonstop = {
+  priority: 2 as const,
+  repeatSeconds: 30,
+  sound: "persistent",
+};
+
+/** Emergency, the 30 s floor and a long sound: what Nonstop sets. */
+export function isNonstop(
+  priority: number,
+  repeatSeconds: number,
+  sound: string,
+): boolean {
+  return (
+    priority === nonstop.priority &&
+    repeatSeconds === nonstop.repeatSeconds &&
+    (longSounds as readonly string[]).includes(sound)
+  );
+}
+
 /** "minute", "2 minutes", "45 seconds": the gap between two sounds. */
 export function every(seconds: number): string {
   if (seconds === 60) return "minute";

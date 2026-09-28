@@ -213,12 +213,13 @@ services:
       # /alerts with the calendar and Pushover in memory (FakeAlertServices.cs,
       # Development only). The three values are placeholders that satisfy
       # "configured". Nothing is sent to Google or Pushover. The owner suite
-      # presses about ten buttons per engine on three engines.
+      # presses about 70 buttons per engine on three engines, and the three
+      # can finish inside one minute: 3 × 70 = 210, so 600 leaves room.
       Alerts__CalendarIcsUrl: 'https://calendar.example.test/basic.ics'
       Alerts__PushoverAppToken: 'development-placeholder'
       Alerts__PushoverUserKey: 'development-placeholder'
       Alerts__Fake: 'true'
-      RateLimits__AlertsActionsPerMinute: '120'
+      RateLimits__AlertsActionsPerMinute: '600'
       # Bookings and queue joins get five a minute per address. The suite
       # books once in each of five browsers and joins and leaves the queue
       # in three, all from its one container, so it gets a minute's worth.
