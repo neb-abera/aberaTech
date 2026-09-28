@@ -4,9 +4,9 @@ using NodaTime;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
-/// The owner's /alerts page: the next alerts, the last calendar read, and
-/// Mute, Unmute, Skip and a test send. Plain JSON over HTTPS, so it works
-/// from a locked-down work computer.
+/// The owner's /alerts page: the next alerts, the last calendar read, the
+/// settings, and Mute, Unmute, Skip, Save settings and a test send. Plain
+/// JSON over HTTPS, so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
 /// Owner only, behind the same policy as /devbox and the queue. The actions
@@ -86,6 +86,46 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        group.MapPut("/settings", async (
+            SettingsRequest request,
+            CalendarAlertWorker worker,
+            AlertsStatus status,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var errors = AlertSettings.Validate(
+                request.Priority,
+                request.RepeatSeconds,
+                request.StopAfterMinutes,
+                request.Sound,
+                request.DefaultLeadMinutes,
+                request.PollMinutes,
+                request.LookaheadHours,
+                request.IncludeAllDay,
+                request.TimeZone,
+                request.OwnerEmails);
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+
+            var settings = new AlertSettings(
+                request.Priority!.Value,
+                request.RepeatSeconds!.Value,
+                request.StopAfterMinutes!.Value,
+                request.Sound!,
+                request.DefaultLeadMinutes!.Value,
+                request.PollMinutes!.Value,
+                request.LookaheadHours!.Value,
+                request.IncludeAllDay!.Value,
+                request.TimeZone!.Trim(),
+                [.. request.OwnerEmails!.Select(email => email!.Trim())]);
+            await store.SaveSettingsAsync(settings, clock.GetCurrentInstant(), cancellationToken);
+
+            // This replica plans with the new values now. The others read
+            // the row at the start of their next pass.
+            await worker.ReadNowAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
         {
             var result = await dispatcher.SendTestAsync(cancellationToken);
@@ -111,6 +151,11 @@ public static class AlertsEndpoints
                 await worker.ReadNowAsync(cancellationToken);
                 return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
+
+            // The last message the fake Pushover took, so the browser suite
+            // can see what Send test alert asked for.
+            group.MapGet("/fake/sent", (FakeAlertServices fake) =>
+                fake.Sent.Count == 0 ? Results.NotFound() : Results.Ok(fake.Sent[^1]));
         }
 
         return routes;
@@ -138,14 +183,27 @@ public static class AlertsEndpoints
     {
         var snapshot = status.Snapshot();
         var now = clock.GetCurrentInstant();
+        var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
         var mutedUntil = await store.MutedUntilAsync(cancellationToken) is { } until && until > now ? until : (Instant?)null;
         var skipped = await store.SkippedAsync(cancellationToken);
 
         return new AlertsState(
             Configured: true,
             TimeZone: snapshot.Zone.Id,
-            PollMinutes: (int)options.Poll.TotalMinutes,
-            DefaultLeadMinutes: (int)options.DefaultLead.TotalMinutes,
+            PollMinutes: settings.PollMinutes,
+            DefaultLeadMinutes: settings.DefaultLeadMinutes,
+            Settings: new SettingsView(
+                settings.Priority,
+                settings.RepeatSeconds,
+                settings.StopAfterMinutes,
+                settings.Sound,
+                settings.DefaultLeadMinutes,
+                settings.PollMinutes,
+                settings.LookaheadHours,
+                settings.IncludeAllDay,
+                settings.TimeZone,
+                settings.OwnerEmails),
+            Bounds: SettingsBounds.Instance,
             MutedUntil: mutedUntil?.ToDateTimeOffset(),
             LastFetchAt: snapshot.LastFetchAt?.ToDateTimeOffset(),
             LastFetchError: snapshot.LastFetchError,
@@ -174,18 +232,73 @@ public static class AlertsEndpoints
 
     public sealed record SkipRequest(string? Key);
 
-    /// <summary>The page's whole state. Lists its fields: nothing from the options beyond these two numbers.</summary>
+    /// <summary>The settings form. Every field is required: the page sends the whole form.</summary>
+    public sealed record SettingsRequest(
+        int? Priority,
+        int? RepeatSeconds,
+        int? StopAfterMinutes,
+        string? Sound,
+        int? DefaultLeadMinutes,
+        int? PollMinutes,
+        int? LookaheadHours,
+        bool? IncludeAllDay,
+        string? TimeZone,
+        IReadOnlyList<string?>? OwnerEmails);
+
+    /// <summary>
+    /// The page's whole state. Lists its fields: the settings in force, and
+    /// no secret. TimeZone is the zone in use, the calendar's own when it
+    /// names one. Settings.TimeZone is the fallback the owner set.
+    /// </summary>
     public sealed record AlertsState(
         bool Configured,
         string TimeZone,
         int PollMinutes,
         int DefaultLeadMinutes,
+        SettingsView Settings,
+        SettingsBounds Bounds,
         DateTimeOffset? MutedUntil,
         DateTimeOffset? LastFetchAt,
         string? LastFetchError,
         DateTimeOffset? LastSuccessAt,
         SendView? LastSend,
         IReadOnlyList<AlertView> Alerts);
+
+    public sealed record SettingsView(
+        int Priority,
+        int RepeatSeconds,
+        int StopAfterMinutes,
+        string Sound,
+        int DefaultLeadMinutes,
+        int PollMinutes,
+        int LookaheadHours,
+        bool IncludeAllDay,
+        string TimeZone,
+        IReadOnlyList<string> OwnerEmails);
+
+    public sealed record Bound(int Min, int Max);
+
+    /// <summary>What the form's inputs accept. The server checks the same numbers on save.</summary>
+    public sealed record SettingsBounds(
+        Bound RepeatSeconds,
+        Bound StopAfterMinutes,
+        Bound DefaultLeadMinutes,
+        Bound PollMinutes,
+        Bound LookaheadHours,
+        int MaxOwnerEmails,
+        int MaxEmergencySounds,
+        IReadOnlyList<string> Sounds)
+    {
+        public static readonly SettingsBounds Instance = new(
+            new Bound(AlertSettings.MinRepeatSeconds, AlertSettings.MaxRepeatSeconds),
+            new Bound(AlertSettings.MinStopAfterMinutes, AlertSettings.MaxStopAfterMinutes),
+            new Bound(AlertSettings.MinDefaultLeadMinutes, AlertSettings.MaxDefaultLeadMinutes),
+            new Bound(AlertSettings.MinPollMinutes, AlertSettings.MaxPollMinutes),
+            new Bound(AlertSettings.MinLookaheadHours, AlertSettings.MaxLookaheadHours),
+            AlertSettings.MaxOwnerEmails,
+            PushoverClient.MaxEmergencySounds,
+            PushoverClient.Sounds);
+    }
 
     public sealed record SendView(DateTimeOffset At, string Title, string Outcome);
 

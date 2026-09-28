@@ -1,0 +1,417 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import InputAdornment from "@mui/material/InputAdornment";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import {
+  type ActionResult,
+  type AlertSettings,
+  type AlertsState,
+  type SettingsBounds,
+  saveAlertSettings,
+} from "../core/api";
+import { stopWork } from "../core/settings";
+
+const priorities = [
+  {
+    value: 0,
+    label: "Normal",
+    text: "One sound. The phone's Pushover settings decide how it plays.",
+  },
+  {
+    value: 1,
+    label: "High",
+    text: "One sound, even in Pushover's quiet hours.",
+  },
+  {
+    value: 2,
+    label: "Emergency",
+    text: "Sounds again until you acknowledge it in Pushover.",
+  },
+] as const;
+
+const repeatPresets = [
+  { seconds: 30, label: "30 s" },
+  { seconds: 60, label: "1 min" },
+  { seconds: 120, label: "2 min" },
+  { seconds: 300, label: "5 min" },
+];
+
+/** The form as typed: numbers stay text until Save, so a half-typed value is allowed. */
+interface Draft {
+  priority: 0 | 1 | 2;
+  repeatSeconds: string;
+  stopAfterMinutes: string;
+  sound: string;
+  defaultLeadMinutes: string;
+  pollMinutes: string;
+  lookaheadHours: string;
+  includeAllDay: boolean;
+  timeZone: string;
+  ownerEmails: string;
+}
+
+function toDraft(settings: AlertSettings): Draft {
+  return {
+    ...settings,
+    repeatSeconds: `${settings.repeatSeconds}`,
+    stopAfterMinutes: `${settings.stopAfterMinutes}`,
+    defaultLeadMinutes: `${settings.defaultLeadMinutes}`,
+    pollMinutes: `${settings.pollMinutes}`,
+    lookaheadHours: `${settings.lookaheadHours}`,
+    ownerEmails: settings.ownerEmails.join(", "),
+  };
+}
+
+/** A blank or non-numeric field goes as null, and the server names it. */
+function number(text: string): number {
+  return text.trim() === "" ? Number.NaN : Number(text);
+}
+
+function fromDraft(draft: Draft): AlertSettings {
+  return {
+    priority: draft.priority,
+    repeatSeconds: number(draft.repeatSeconds),
+    stopAfterMinutes: number(draft.stopAfterMinutes),
+    sound: draft.sound,
+    defaultLeadMinutes: number(draft.defaultLeadMinutes),
+    pollMinutes: number(draft.pollMinutes),
+    lookaheadHours: number(draft.lookaheadHours),
+    includeAllDay: draft.includeAllDay,
+    timeZone: draft.timeZone.trim(),
+    ownerEmails: draft.ownerEmails
+      .split(/[\s,;]+/)
+      .filter((email) => email.length > 0),
+  };
+}
+
+function same(a: AlertSettings, b: AlertSettings): boolean {
+  return (
+    a.priority === b.priority &&
+    a.repeatSeconds === b.repeatSeconds &&
+    a.stopAfterMinutes === b.stopAfterMinutes &&
+    a.sound === b.sound &&
+    a.defaultLeadMinutes === b.defaultLeadMinutes &&
+    a.pollMinutes === b.pollMinutes &&
+    a.lookaheadHours === b.lookaheadHours &&
+    a.includeAllDay === b.includeAllDay &&
+    a.timeZone === b.timeZone &&
+    a.ownerEmails.join(",") === b.ownerEmails.join(",")
+  );
+}
+
+/**
+ * The settings section of /alerts. Everything but the three secrets, saved
+ * as one row and in force from the next pass of the worker.
+ */
+export default function AlertSettingsForm({
+  settings,
+  bounds,
+  onSaved,
+  save = saveAlertSettings,
+}: {
+  settings: AlertSettings;
+  bounds: SettingsBounds;
+  onSaved: (state: AlertsState) => void;
+  save?: (settings: AlertSettings) => Promise<ActionResult>;
+}) {
+  // Null until the owner edits: the form shows what the server holds, and
+  // follows the page's refresh until then.
+  const [draft, setDraft] = React.useState<Draft | null>(null);
+  const [saving, setSaving] = React.useState(false);
+  const [errors, setErrors] = React.useState<Record<string, string[]>>({});
+  const [outcome, setOutcome] = React.useState<{
+    severity: "success" | "warning";
+    text: string;
+  } | null>(null);
+
+  const shown = draft ?? toDraft(settings);
+  const changed = draft !== null && !same(fromDraft(draft), settings);
+  const emergency = shown.priority === 2;
+
+  const edit = (change: Partial<Draft>) => {
+    setDraft({ ...shown, ...change });
+    setOutcome(null);
+  };
+
+  const submit = async () => {
+    if (draft === null) return;
+    setSaving(true);
+    setOutcome(null);
+    const result = await save(fromDraft(draft));
+    setSaving(false);
+    if (result.ok) {
+      setErrors({});
+      setDraft(null);
+      if (result.state) onSaved(result.state);
+      setOutcome({ severity: "success", text: "Settings saved." });
+      return;
+    }
+    if (result.reason === "invalid") {
+      setErrors(result.errors ?? {});
+      setOutcome({
+        severity: "warning",
+        text: "Not saved. Check the fields marked below.",
+      });
+      return;
+    }
+    setOutcome({
+      severity: "warning",
+      text:
+        result.reason === "throttled"
+          ? "Not saved. Too many presses. Wait a minute."
+          : result.reason === "visitor"
+            ? "Not saved. The session expired. Reload and sign in again."
+            : "Not saved. The server did not take it. Try again.",
+    });
+  };
+
+  const error = (field: string) => errors[field]?.[0];
+  const numberField = (
+    field: keyof Draft,
+    label: string,
+    unit: string,
+    bound: { min: number; max: number },
+    hint: string,
+    disabled = false,
+  ) => (
+    <TextField
+      label={label}
+      type="number"
+      size="small"
+      disabled={disabled}
+      value={shown[field] as string}
+      onChange={(event) => edit({ [field]: event.target.value })}
+      error={Boolean(error(field))}
+      helperText={error(field) ?? hint}
+      slotProps={{
+        htmlInput: { min: bound.min, max: bound.max, inputMode: "numeric" },
+        input: {
+          endAdornment: <InputAdornment position="end">{unit}</InputAdornment>,
+        },
+      }}
+      sx={{ width: "14rem", maxWidth: "100%" }}
+    />
+  );
+
+  const repeat = number(shown.repeatSeconds);
+  const stop = number(shown.stopAfterMinutes);
+  const work =
+    Number.isFinite(repeat) && Number.isFinite(stop) && repeat > 0 && stop > 0
+      ? stopWork(repeat, stop, bounds.maxEmergencySounds).text
+      : null;
+
+  return (
+    <Box component="section" aria-labelledby="alert-settings-heading">
+      <Typography
+        id="alert-settings-heading"
+        variant="h2"
+        sx={{ fontSize: "1.25rem", mb: 1 }}
+      >
+        Settings
+      </Typography>
+      <Stack spacing={2.5}>
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+          <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
+            Priority
+          </Typography>
+          <Stack spacing={1}>
+            {priorities.map((option) => (
+              <Stack
+                key={option.value}
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "center" }}
+              >
+                <Chip
+                  label={option.label}
+                  color={
+                    shown.priority === option.value ? "primary" : "default"
+                  }
+                  variant={
+                    shown.priority === option.value ? "filled" : "outlined"
+                  }
+                  aria-pressed={shown.priority === option.value}
+                  onClick={() => edit({ priority: option.value })}
+                  sx={{ minWidth: "6.5rem" }}
+                />
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {option.text}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+          {error("priority") && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {error("priority")}
+            </Typography>
+          )}
+        </Box>
+
+        <Stack spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+          >
+            {numberField(
+              "repeatSeconds",
+              "Repeat every",
+              "s",
+              bounds.repeatSeconds,
+              `${bounds.repeatSeconds.min} to ${bounds.repeatSeconds.max} seconds`,
+              !emergency,
+            )}
+            {numberField(
+              "stopAfterMinutes",
+              "Stop after",
+              "min",
+              bounds.stopAfterMinutes,
+              `${bounds.stopAfterMinutes.min} to ${bounds.stopAfterMinutes.max} minutes`,
+              !emergency,
+            )}
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: "wrap" }}
+          >
+            {repeatPresets.map((preset) => (
+              <Chip
+                key={preset.seconds}
+                size="small"
+                label={preset.label}
+                aria-label={`Repeat every ${preset.label}`}
+                disabled={!emergency}
+                color={repeat === preset.seconds ? "primary" : "default"}
+                variant={repeat === preset.seconds ? "filled" : "outlined"}
+                onClick={() => edit({ repeatSeconds: `${preset.seconds}` })}
+              />
+            ))}
+          </Stack>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            {emergency
+              ? work
+              : "Repeat and stop apply to Emergency only. This priority sounds once."}
+          </Typography>
+        </Stack>
+
+        <TextField
+          select
+          label="Sound"
+          size="small"
+          value={shown.sound}
+          onChange={(event) => edit({ sound: event.target.value })}
+          error={Boolean(error("sound"))}
+          helperText={error("sound") ?? "Pushover's built-in sounds."}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          sx={{ width: "14rem", maxWidth: "100%" }}
+        >
+          <option value="">Phone's default</option>
+          {bounds.sounds.map((sound) => (
+            <option key={sound} value={sound}>
+              {sound}
+            </option>
+          ))}
+        </TextField>
+
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+        >
+          {numberField(
+            "defaultLeadMinutes",
+            "Default lead",
+            "min",
+            bounds.defaultLeadMinutes,
+            "Before an event with no reminder of its own.",
+          )}
+          {numberField(
+            "pollMinutes",
+            "Read the calendar every",
+            "min",
+            bounds.pollMinutes,
+            `${bounds.pollMinutes.min} to ${bounds.pollMinutes.max} minutes`,
+          )}
+          {numberField(
+            "lookaheadHours",
+            "Look ahead",
+            "h",
+            bounds.lookaheadHours,
+            `${bounds.lookaheadHours.min} to ${bounds.lookaheadHours.max} hours`,
+          )}
+        </Stack>
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={shown.includeAllDay}
+              onChange={(event) =>
+                edit({ includeAllDay: event.target.checked })
+              }
+            />
+          }
+          label="Alert for all-day events"
+        />
+
+        <TextField
+          label="Time zone when the calendar names none"
+          size="small"
+          value={shown.timeZone}
+          onChange={(event) => edit({ timeZone: event.target.value })}
+          error={Boolean(error("timeZone"))}
+          helperText={
+            error("timeZone") ??
+            "Blank is UTC. A time zone database name, such as America/New_York."
+          }
+          sx={{ maxWidth: "28rem" }}
+        />
+
+        <TextField
+          label="Your addresses, for declined invitations"
+          size="small"
+          value={shown.ownerEmails}
+          onChange={(event) => edit({ ownerEmails: event.target.value })}
+          error={Boolean(error("ownerEmails"))}
+          helperText={
+            error("ownerEmails") ??
+            `Separated by commas, up to ${bounds.maxOwnerEmails}. Needed only for a secondary calendar.`
+          }
+          sx={{ maxWidth: "28rem" }}
+        />
+
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          The calendar address and the Pushover keys stay container secrets and
+          cannot be changed here. Typed into a page, a key would pass through
+          the browser and the database.
+        </Typography>
+
+        {outcome && (
+          <Alert severity={outcome.severity} onClose={() => setOutcome(null)}>
+            {outcome.text}
+          </Alert>
+        )}
+
+        <Box>
+          <Button
+            variant="contained"
+            disabled={!changed || saving}
+            onClick={() => void submit()}
+          >
+            {saving ? "Saving" : "Save settings"}
+          </Button>
+        </Box>
+      </Stack>
+    </Box>
+  );
+}

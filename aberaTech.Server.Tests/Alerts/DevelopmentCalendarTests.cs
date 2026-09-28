@@ -110,13 +110,39 @@ public sealed class DevelopmentCalendarTests : IDisposable
     }
 
     [PostgresFact]
-    public async Task A_visitor_cannot_reset_the_calendar()
+    public async Task A_visitor_cannot_reset_the_calendar_or_read_what_the_fake_pushover_took()
     {
         using var visitor = _app!.CreateClient();
 
         using var response = await visitor.PostAsync("/api/alerts/fake/reset", null);
+        using var sent = await visitor.GetAsync("/api/alerts/fake/sent");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, sent.StatusCode);
+    }
+
+    [PostgresFact]
+    public async Task The_fake_pushover_shows_the_browser_suite_what_the_test_alert_asked_for()
+    {
+        using var owner = Owner();
+        using var none = await owner.GetAsync("/api/alerts/fake/sent");
+        Assert.Equal(HttpStatusCode.NotFound, none.StatusCode);
+
+        using var saved = await owner.PutAsync("/api/alerts/settings", new StringContent(
+            JsonSerializer.Serialize(AlertsRouteTests.Form(("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"))),
+            System.Text.Encoding.UTF8,
+            "application/json"));
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        using var test = await owner.PostAsync("/api/alerts/test", null);
+        Assert.Equal(HttpStatusCode.OK, test.StatusCode);
+
+        using var sent = await owner.GetAsync("/api/alerts/fake/sent");
+        var message = JsonDocument.Parse(await sent.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal("2", message.GetProperty("priority").GetString());
+        Assert.Equal("120", message.GetProperty("retry").GetString());
+        Assert.Equal("1800", message.GetProperty("expire").GetString());
+        Assert.Equal("siren", message.GetProperty("sound").GetString());
+        Assert.Equal("Test alert", message.GetProperty("title").GetString());
     }
 
     public void Dispose()

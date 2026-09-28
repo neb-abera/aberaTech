@@ -17,7 +17,7 @@ public enum AlertSource
     /// <summary>A popup reminder on the event itself (VALARM).</summary>
     Reminder,
 
-    /// <summary>No reminder on the event: <see cref="AlertsOptions.DefaultLeadMinutes"/> before the start.</summary>
+    /// <summary>No reminder on the event: <see cref="AlertSettings.DefaultLeadMinutes"/> before the start.</summary>
     DefaultLead
 }
 
@@ -63,12 +63,12 @@ public static class AlertPlanner
     /// <summary>How many occurrences one read may expand. A personal calendar has tens in two days.</summary>
     public const int MaxOccurrences = 5000;
 
-    public static CalendarPlan Plan(string ics, Instant now, AlertsOptions options)
+    public static CalendarPlan Plan(string ics, Instant now, AlertSettings settings)
     {
         var calendar = Load(ics);
-        var zone = FeedZone(calendar) ?? options.FallbackZone();
-        var owners = OwnerAddresses(calendar, options);
-        var horizon = now + options.Lookahead;
+        var zone = FeedZone(calendar) ?? settings.FallbackZone();
+        var owners = OwnerAddresses(calendar, settings);
+        var horizon = now + settings.Lookahead;
 
         var alerts = new List<PlannedAlert>();
         var keys = new HashSet<string>(StringComparer.Ordinal);
@@ -88,7 +88,7 @@ public static class AlertPlanner
                 if (occurrence.Period.StartTime.AsUtc > until || ++seen > MaxOccurrences) break;
                 if (occurrence.Source is not CalendarEvent calendarEvent) continue;
 
-                var alert = PlanOne(calendarEvent, occurrence, now, horizon, zone, owners, options);
+                var alert = PlanOne(calendarEvent, occurrence, now, horizon, zone, owners, settings);
                 if (alert is not null && keys.Add(alert.Key)) alerts.Add(alert);
             }
         }
@@ -137,10 +137,10 @@ public static class AlertPlanner
         Instant horizon,
         DateTimeZone zone,
         IReadOnlySet<string> owners,
-        AlertsOptions options)
+        AlertSettings settings)
     {
         if (string.Equals(calendarEvent.Status, "CANCELLED", StringComparison.OrdinalIgnoreCase)) return null;
-        if (calendarEvent.IsAllDay && !options.IncludeAllDay) return null;
+        if (calendarEvent.IsAllDay && !settings.IncludeAllDay) return null;
         if (Declined(calendarEvent, owners)) return null;
 
         var startTime = occurrence.Period.StartTime;
@@ -159,7 +159,7 @@ public static class AlertPlanner
             title.Length == 0 ? "(no title)" : title,
             string.IsNullOrWhiteSpace(calendarEvent.Location) ? null : calendarEvent.Location.Trim(),
             start,
-            reminder ?? start - options.DefaultLead,
+            reminder ?? start - settings.DefaultLead,
             reminder is null ? AlertSource.DefaultLead : AlertSource.Reminder);
     }
 
@@ -228,9 +228,9 @@ public static class AlertPlanner
             && Address(attendee.Value) is { } address
             && owners.Contains(address));
 
-    private static IReadOnlySet<string> OwnerAddresses(IcalCalendar calendar, AlertsOptions options)
+    private static IReadOnlySet<string> OwnerAddresses(IcalCalendar calendar, AlertSettings settings)
     {
-        var owners = new HashSet<string>(options.OwnerEmails.Select(email => email.Trim()), StringComparer.OrdinalIgnoreCase);
+        var owners = new HashSet<string>(settings.OwnerEmails.Select(email => email.Trim()), StringComparer.OrdinalIgnoreCase);
         var name = Property(calendar, "X-WR-CALNAME");
         if (name is not null && name.Contains('@')) owners.Add(name.Trim());
         return owners;

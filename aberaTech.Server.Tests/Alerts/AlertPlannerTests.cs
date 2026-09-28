@@ -19,7 +19,7 @@ public sealed class AlertPlannerTests
     private static readonly Instant StandupStart = Instant.FromUtc(2026, 10, 28, 13, 0);
 
     private static IReadOnlyList<PlannedAlert> Plan(string feed, Instant? now = null, AlertsOptions? options = null) =>
-        AlertPlanner.Plan(feed, now ?? Morning, options ?? new AlertsOptions()).Alerts;
+        AlertPlanner.Plan(feed, now ?? Morning, AlertSettings.Defaults(options ?? new AlertsOptions())).Alerts;
 
     [Fact]
     public void The_events_own_reminder_sets_the_alert_time()
@@ -257,7 +257,7 @@ public sealed class AlertPlannerTests
         var feed = IcsIn("Asia/Amman", Event(
             "trip@google.com", "Call from New York", "20261028T090000", "20261028T093000", alarms: [Popup("-PT15M")]));
 
-        var plan = AlertPlanner.Plan(feed, Morning, new AlertsOptions());
+        var plan = AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions()));
 
         Assert.Equal("Asia/Amman", plan.Zone.Id);
         var alert = Assert.Single(plan.Alerts);
@@ -272,7 +272,7 @@ public sealed class AlertPlannerTests
         var feed = IcsIn("Asia/Amman",
             "BEGIN:VEVENT\r\nDTSTART:20261028T160000\r\nUID:floating\r\nSUMMARY:Floating\r\nEND:VEVENT");
 
-        Assert.Equal(StandupStart, Assert.Single(AlertPlanner.Plan(feed, Morning, new AlertsOptions()).Alerts).StartsAt);
+        Assert.Equal(StandupStart, Assert.Single(AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions())).Alerts).StartsAt);
     }
 
     [Fact]
@@ -280,8 +280,8 @@ public sealed class AlertPlannerTests
     {
         var feed = Ics(Event("a", "a", "20261028T090000")).Replace("X-WR-TIMEZONE:America/New_York\r\n", "");
 
-        Assert.Equal("Asia/Amman", AlertPlanner.Plan(feed, Morning, new AlertsOptions { TimeZone = "Asia/Amman" }).Zone.Id);
-        Assert.Equal(DateTimeZone.Utc, AlertPlanner.Plan(feed, Morning, new AlertsOptions()).Zone);
+        Assert.Equal("Asia/Amman", AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions { TimeZone = "Asia/Amman" })).Zone.Id);
+        Assert.Equal(DateTimeZone.Utc, AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions())).Zone);
     }
 
     [Fact]
