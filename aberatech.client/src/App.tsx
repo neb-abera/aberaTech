@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router";
-import "./App.css";
 import ScrollToTop from "./components/ScrollToTop";
 import { titleFor } from "./site/meta";
 import { routes } from "./site/routes";

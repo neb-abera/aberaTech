@@ -15,7 +15,8 @@
  * hand, since every asset's name carries a hash that changes with its bytes:
  *
  *   entry-js       the module script dist/index.html starts
- *   entry-css      the stylesheet it links
+ *   entry-css      the stylesheet it links, if it links one (the site
+ *                  links none since 2026-09-28, and this budget then goes)
  *   home-initial   index.html plus everything its head makes the browser
  *                  fetch before anything else: the two above, every
  *                  modulepreload, every preload
@@ -135,15 +136,21 @@ const preloads = headUrls(index, "link", (tag) =>
   /rel="(?:modulepreload|preload)"/.test(tag),
 );
 
-if (entryJs.length !== 1 || entryCss.length !== 1) {
+if (entryJs.length !== 1 || entryCss.length > 1) {
   process.stderr.write(
-    `expected one module script and one stylesheet in index.html, found ${entryJs.length} and ${entryCss.length}; did the shell change?\n`,
+    `expected one module script and at most one stylesheet in index.html, found ${entryJs.length} and ${entryCss.length}; did the shell change?\n`,
   );
   process.exit(2);
 }
 
 check("entry-js", entryJs);
-check("entry-css", entryCss);
+if (entryCss.length === 1) {
+  check("entry-css", entryCss);
+} else if ("entry-css" in budgets) {
+  failures.push(
+    `entry-css: has a budget but index.html links no stylesheet; remove it from ${budgetsArg}`,
+  );
+}
 check("home-initial", [indexFile, ...entryJs, ...entryCss, ...preloads]);
 
 // Every prerendered page: dist/index.html and dist/<route>/index.html.
