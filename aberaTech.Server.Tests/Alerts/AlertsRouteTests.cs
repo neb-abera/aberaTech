@@ -91,6 +91,7 @@ public sealed class AlertsRouteTests : IDisposable
         ["POST", "/api/alerts/skip"],
         ["POST", "/api/alerts/unskip"],
         ["POST", "/api/alerts/test"],
+        ["POST", "/api/alerts/test-event"],
         ["PUT", "/api/alerts/settings"]
     ];
 
@@ -254,6 +255,114 @@ public sealed class AlertsRouteTests : IDisposable
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         Assert.Equal("sent", status.GetProperty("lastSend").GetProperty("outcome").GetString());
         Assert.Equal("Test alert", status.GetProperty("lastSend").GetProperty("title").GetString());
+    }
+
+    private async Task<string> KeyOf(HttpClient owner, string title) =>
+        (await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status")).GetProperty("alerts").EnumerateArray()
+        .Single(alert => alert.GetProperty("title").GetString() == title).GetProperty("key").GetString()!;
+
+    [Fact]
+    public async Task Send_test_on_an_alert_sends_its_real_text_marked_as_a_test_with_the_saved_settings()
+    {
+        using var owner = Owner();
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "tugboat")));
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var key = await KeyOf(owner, "Standup");
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("Test: Standup", sent.Form["title"]);
+        Assert.Equal("Starts 9:00 AM EDT, Wed 28 Oct\nRoom 1", sent.Form["message"]);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("120", sent.Form["retry"]);
+        Assert.Equal("1800", sent.Form["expire"]);
+        Assert.Equal("tugboat", sent.Form["sound"]);
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+        Assert.Equal("Test: Standup", status.GetProperty("lastSend").GetProperty("title").GetString());
+        Assert.Equal("sent", status.GetProperty("lastSend").GetProperty("outcome").GetString());
+    }
+
+    [Fact]
+    public async Task Send_test_claims_nothing_so_the_real_alert_still_goes_at_its_time()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Standup");
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(_store.Claims);
+
+        // 08:45 New York: the standup's own reminder.
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 12, 45);
+        await _app.Factory.Services.GetRequiredService<CalendarAlertWorker>().TickAsync(CancellationToken.None);
+
+        Assert.Equal(["Test: Standup", "Standup"], _pushover.Requests.Select(request => request.Form["title"]));
+        Assert.Equal("sent", _store.Claims[key]);
+    }
+
+    [Fact]
+    public async Task Send_test_goes_through_a_mute_and_a_skip_and_leaves_both_in_place()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Standup");
+        using var muted = await owner.PostAsJsonAsync("/api/alerts/mute", new { until = "hour" });
+        using var skipped = await owner.PostAsJsonAsync("/api/alerts/skip", new { key });
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Test: Standup", Assert.Single(_pushover.Requests).Form["title"]);
+        Assert.True(await _store.IsSkippedAsync(key, CancellationToken.None));
+        Assert.Equal(Eight + Duration.FromHours(1), await _store.MutedUntilAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Only_an_alert_on_the_list_can_be_sent_as_a_test()
+    {
+        using var owner = Owner();
+
+        using var unknown = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key = "not-on-the-list|20261028T130000Z" });
+        using var missing = await owner.PostAsJsonAsync("/api/alerts/test-event", new { });
+        using var huge = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key = new string('k', 5000) });
+
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, missing.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, huge.StatusCode);
+        Assert.Empty(_pushover.Requests);
+    }
+
+    [Fact]
+    public async Task Pushover_refusing_an_alert_test_is_a_bad_gateway_that_names_only_the_status()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Review");
+        _pushover.Then(() => RecordingHandler.Text(HttpStatusCode.BadRequest, "{\"user\":\"invalid\",\"status\":0}"));
+
+        using var response = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        Assert.Equal("HTTP 400", await response.Content.ReadAsStringAsync());
+        Assert.Empty(_store.Claims);
+    }
+
+    [Fact]
+    public async Task Send_test_on_an_alert_shares_the_actions_limit()
+    {
+        using var owner = Owner();
+        var key = await KeyOf(owner, "Review");
+        for (var press = 0; press < AlertsEndpoints.DefaultActionsPerMinute; press++)
+        {
+            using var ok = await owner.PostAsync("/api/alerts/unmute", null);
+            Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        }
+
+        using var refused = await owner.PostAsJsonAsync("/api/alerts/test-event", new { key });
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        Assert.Empty(_pushover.Requests);
     }
 
     /// <summary>The form as the page sends it, at the configuration's defaults, with the changes given.</summary>
@@ -520,7 +629,9 @@ public sealed class AlertsRouteTests : IDisposable
         var routes = production.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>().Select(endpoint => endpoint.RoutePattern.RawText).ToList();
         Assert.Contains("/api/alerts/test", routes);
+        Assert.Contains("/api/alerts/test-event", routes);
         Assert.DoesNotContain("/api/alerts/fake/reset", routes);
+        Assert.DoesNotContain("/api/alerts/fake/fail", routes);
     }
 
     public void Dispose() => _app.Dispose();

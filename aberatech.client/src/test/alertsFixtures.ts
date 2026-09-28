@@ -23,5 +23,5 @@ export const bounds = {
   lookaheadHours: { min: 1, max: 336 },
   maxOwnerEmails: 10,
   maxEmergencySounds: 50,
-  sounds: ["pushover", "siren", "none"],
+  sounds: ["pushover", "siren", "persistent", "none"],
 };

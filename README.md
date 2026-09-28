@@ -97,6 +97,8 @@ site. The history is on the
   tomorrow" use the calendar's own zone (`X-WR-TIMEZONE`, then the
   settings' zone, then UTC). Mute, Skip, the settings and a one-send claim
   per occurrence are rows in the scheduling database.
+  A failed calendar read is a red banner at the top of the page, with the
+  error and the time of the last good read.
 
 ### Calendar alerts: switching them on
 
@@ -122,6 +124,36 @@ az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
 
 The update starts a new revision. `/alerts` then lists the next alerts and
 the time of the last calendar read. Send test alert proves the keys.
+Send test on a listed alert sends that event's own text, titled
+`Test: <title>`, with the saved settings. It claims nothing and ignores
+Mute and Skip, so the real alert still goes at its time.
+
+A red banner saying the calendar cannot be read with `HTTP 404` means
+Google does not know the address. Copy the secret address in iCal format
+again and set `alerts-calendar-ics` with the first command above.
+
+### Calendar alerts: which events alert
+
+Every timed event that starts inside the look-ahead window alerts. Nothing
+needs marking. All-day events are left out unless the setting is on.
+Cancelled events and invitations the owner declined are left out. The
+alert goes at the event's earliest popup notification, else the default
+lead before the start (`AlertPlanner.cs`).
+
+Google Calendar's menus, from support.google.com/calendar/answer/37242:
+
+- One event: open it, Edit event, then next to Notifications change the
+  time or Add notification.
+- A calendar's default: Settings, then under Settings for my calendars the
+  calendar, then Event notifications.
+
+Google does not document whether the secret address carries a calendar's
+default notifications. Microsoft's page on Google invitations says
+Google's invitation files leave them out
+(learn.microsoft.com/outlook/troubleshoot/calendaring/no-meeting-reminder-for-google-calendar-invites).
+Each listed alert says whether its time came from the event's notification
+or the default lead, so the page shows which. Setting the default lead to
+the calendar's default minutes gives the same time either way.
 
 ### Calendar alerts: settings
 
@@ -136,7 +168,7 @@ every other replica reads it at the start of its next pass.
 | Stop after | 180 min | 1 to 180 min. Priority 2 only |
 | Sound | the phone's default | one of Pushover's 23 built-in sounds |
 | Default lead | 10 min | 0 to 1440 min |
-| Read the calendar every | 5 min | 1 to 60 min |
+| Check calendar every | 5 min | 1 to 60 min |
 | Look ahead | 48 h | 1 to 336 h |
 | Alert for all-day events | off | |
 | Time zone | blank, UTC | a time zone database name |
@@ -144,7 +176,15 @@ every other replica reads it at the start of its next pass.
 
 Pushover stops an emergency message after 50 sounds, so the stop is the
 smaller of the limit and 50 × the repeat. At 60 s that is 50 min. The page
-shows the arithmetic. Until the first save the defaults come from the
+shows the arithmetic.
+
+Pushover refuses a repeat under 30 s (pushover.net/api#priority), so 1 s
+and 5 s cannot be sent. Nonstop sets priority 2, 30 s and `persistent`,
+one of the five sounds pushover.net/api#sounds marks long (alien, climb,
+persistent, echo, updown). iOS plays a notification sound for up to 30 s
+(developer.apple.com/documentation/usernotifications/unnotificationsound),
+so a long sound plays into each 30 s gap. At 30 s Pushover's 50 sounds last
+25 min. Until the first save the defaults come from the
 `Alerts__` settings of the same names (`AlertsOptions.cs`).
 
 The calendar address and the two Pushover keys are not on the page. They

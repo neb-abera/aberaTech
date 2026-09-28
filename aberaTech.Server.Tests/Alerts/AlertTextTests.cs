@@ -40,6 +40,14 @@ public sealed class AlertTextTests
         Assert.Equal(PushoverClient.MaxMessage, AlertText.Message(alert, NewYork).Length);
     }
 
+    [Fact]
+    public void A_test_of_an_alert_is_titled_as_a_test_and_cut_to_what_pushover_accepts()
+    {
+        Assert.Equal("Test: Standup", AlertText.TestTitle("Standup"));
+        Assert.Equal(PushoverClient.MaxTitle, AlertText.Title(AlertText.TestTitle(new string('t', 400))).Length);
+        Assert.StartsWith("Test: ", AlertText.Title(AlertText.TestTitle(new string('t', 400))));
+    }
+
     [Theory]
     [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
     [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]

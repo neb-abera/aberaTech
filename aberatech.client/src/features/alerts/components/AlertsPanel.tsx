@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -15,13 +16,15 @@ import {
   fetchAlerts,
   formatWhen,
   muteAlerts,
+  sendEventTest,
   sendTestAlert,
   skipAlert,
   unmuteAlerts,
   unskipAlert,
 } from "../core/api";
-import { describe, every } from "../core/settings";
+import { count, describe, every } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
+import HowEventsAlert from "./HowEventsAlert";
 
 /** How often the page asks again on its own. */
 const refreshEvery = 60_000;
@@ -112,6 +115,7 @@ export default function AlertsPanel() {
 
   return (
     <Stack spacing={3}>
+      <ReadFailed state={state} when={when} />
       <Stack
         direction="row"
         spacing={1}
@@ -223,11 +227,20 @@ export default function AlertsPanel() {
                     () => `${alert.title} will alert again.`,
                   )
                 }
+                onTest={() =>
+                  void act(
+                    () => sendEventTest(alert.key),
+                    () =>
+                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", with the saved settings.`,
+                  )
+                }
               />
             ))}
           </Stack>
         )}
       </Box>
+
+      <HowEventsAlert settings={state.settings} />
 
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
         {describe(
@@ -263,6 +276,33 @@ function explain(result: Exclude<ActionResult, { ok: true }>): string {
   }
 }
 
+/**
+ * A calendar that cannot be read, first on the page. Every alert listed
+ * comes from the last read that worked, and the owner has to know that.
+ */
+function ReadFailed({
+  state,
+  when,
+}: {
+  state: AlertsState;
+  when: (iso: string) => string;
+}) {
+  if (!state.lastFetchError || !state.lastFetchAt) return null;
+  return (
+    <Alert severity="error">
+      <AlertTitle>The calendar cannot be read</AlertTitle>
+      The last read, {when(state.lastFetchAt)}, failed:{" "}
+      {state.lastFetchError.replace(/\.$/, "")}.
+      {state.lastFetchError === "HTTP 404"
+        ? " Google answers 404 when the secret address is wrong or was reset."
+        : ""}{" "}
+      {state.lastSuccessAt
+        ? `The last good read was ${when(state.lastSuccessAt)}. The alerts below are from that read.`
+        : "No read has worked since the server started, so no alerts are planned."}
+    </Alert>
+  );
+}
+
 function Calendar({
   state,
   when,
@@ -273,19 +313,12 @@ function Calendar({
   return (
     <Stack spacing={1}>
       <Typography variant="body1">
-        {state.lastFetchAt === null
-          ? "Calendar not read yet. The first read is within a minute of the server starting."
-          : `Calendar read ${when(state.lastSuccessAt ?? state.lastFetchAt)}, every ${state.pollMinutes} minutes.`}
+        {state.lastSuccessAt !== null
+          ? `Calendar read ${when(state.lastSuccessAt)}, every ${state.pollMinutes} minutes.`
+          : state.lastFetchAt === null
+            ? "Calendar not read yet. The first read is within a minute of the server starting."
+            : `No read of the calendar has worked yet. It is tried every ${state.pollMinutes} minutes.`}
       </Typography>
-      {state.lastFetchError && state.lastFetchAt && (
-        <Alert severity="warning">
-          The last read, {when(state.lastFetchAt)}, failed:{" "}
-          {state.lastFetchError}. The list is from{" "}
-          {state.lastSuccessAt
-            ? `${when(state.lastSuccessAt)}.`
-            : "no earlier read, so it is empty."}
-        </Alert>
-      )}
       {state.lastSend && (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           Last send: {state.lastSend.title}, {when(state.lastSend.at)},{" "}
@@ -303,6 +336,7 @@ function Item({
   busy,
   onSkip,
   onUndo,
+  onTest,
 }: {
   alert: AlertItem;
   when: (iso: string) => string;
@@ -310,6 +344,7 @@ function Item({
   busy: boolean;
   onSkip: () => void;
   onUndo: () => void;
+  onTest: () => void;
 }) {
   const at = `${alert.title} at ${when(alert.startsAt)}`;
   return (
@@ -340,14 +375,23 @@ function Item({
         )}
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {alert.source === "reminder"
-            ? "Time from the event's reminder."
-            : `${defaultLead} minutes before, the default.`}
+            ? "Time from the event's notification."
+            : `No notification in the feed: ${count(defaultLead, "minute")} before, the default lead.`}
         </Typography>
       </Box>
       {alert.skipped && <Chip size="small" label="Skipped" />}
       {alert.muted && !alert.skipped && (
         <Chip size="small" color="warning" label="Muted" />
       )}
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={busy}
+        onClick={onTest}
+        aria-label={`Send test of ${at}`}
+      >
+        Send test
+      </Button>
       {alert.skipped ? (
         <Button
           size="small"

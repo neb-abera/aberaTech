@@ -5,7 +5,7 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
-/// settings, and Mute, Unmute, Skip, Save settings and a test send. Plain
+/// settings, and Mute, Unmute, Skip, Save settings and two test sends. Plain
 /// JSON over HTTPS, so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
@@ -134,6 +134,23 @@ public static class AlertsEndpoints
                 : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
         }).RequireRateLimiting(ActionsPolicy);
 
+        // One listed alert, as its real send would go but titled as a test.
+        // Claims nothing and ignores mute and skip: pressing it is the owner
+        // asking, and the real alert still goes at its time.
+        group.MapPost("/test-event", async (
+            SkipRequest request, AlertsStatus status, AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
+        {
+            if (!Valid(request.Key)) return Results.BadRequest("key is required");
+
+            var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
+            if (alert is null) return Results.NotFound();
+
+            var result = await dispatcher.SendEventTestAsync(alert, cancellationToken);
+            return result.Ok
+                ? Results.Ok(new { sent = true })
+                : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
+        }).RequireRateLimiting(ActionsPolicy);
+
         // Only where Program.cs registered the development calendar:
         // Development with Alerts:Fake set. The browser suite calls it
         // first, so the calendar's events are hours ahead of the test.
@@ -148,6 +165,21 @@ public static class AlertsEndpoints
                 CancellationToken cancellationToken) =>
             {
                 fake.Reanchor();
+                await worker.ReadNowAsync(cancellationToken);
+                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            }).RequireRateLimiting(ActionsPolicy);
+
+            // The calendar answers 404 until the next reset, so the browser
+            // suite can see the page's failed-read banner.
+            group.MapPost("/fake/fail", async (
+                FakeAlertServices fake,
+                CalendarAlertWorker worker,
+                AlertsStatus status,
+                IAlertStore store,
+                IClock clock,
+                CancellationToken cancellationToken) =>
+            {
+                fake.Fail();
                 await worker.ReadNowAsync(cancellationToken);
                 return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);

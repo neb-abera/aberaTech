@@ -130,6 +130,27 @@ public sealed class AlertDispatcher(
         if (!result.Ok) logger.LogWarning("Test alert failed ({Failure}).", result.Error);
         return result;
     }
+
+    /// <summary>
+    /// Send test on one listed alert: that event's own text with the saved
+    /// settings, titled "Test: ". Nothing is claimed and mute and skip are
+    /// not read, so the real alert still goes at its time.
+    /// </summary>
+    public async Task<PushoverResult> SendEventTestAsync(PlannedAlert alert, CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var settings = await AlertSettings.CurrentAsync(
+            scope.ServiceProvider.GetRequiredService<IAlertStore>(), options, cancellationToken);
+        var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
+        var title = AlertText.TestTitle(alert.Title);
+
+        var result = await pushover.SendAsync(
+            title, AlertText.Message(alert, status.Snapshot().Zone), settings.Delivery, cancellationToken);
+
+        status.Sent(new LastSend(clock.GetCurrentInstant(), title, result.Outcome));
+        if (!result.Ok) logger.LogWarning("Test of the alert for an event starting at {StartsAt} failed ({Failure}).", alert.StartsAt, result.Error);
+        return result;
+    }
 }
 
 /// <summary>
