@@ -58,6 +58,9 @@ public enum DeliveryOutcome
     Sent,
     Failed,
     Skipped,
+
+    /// <summary>Acknowledged on a paired phone or in a browser before its send: nothing more is needed.</summary>
+    Acknowledged,
     Muted,
     AlreadyClaimed,
     Started,
@@ -66,13 +69,19 @@ public enum DeliveryOutcome
     /// The event's type is none. Nothing is claimed or recorded, so a
     /// change to Notification or Alarm before the start still sends.
     /// </summary>
-    Off
+    Off,
+
+    /// <summary>
+    /// An alarm inside its backup delay: the phone rings first, and nothing
+    /// is claimed until <see cref="AlertSettings.PushoverAt"/>.
+    /// </summary>
+    Waiting
 }
 
 /// <summary>
 /// Sends one due alert, after the checks that must be read at that moment
-/// rather than at the last calendar read: skipped, muted, the event's type,
-/// already claimed. The settings are read then too, so a save changes the
+/// rather than at the last calendar read: skipped, acknowledged, muted, the
+/// event's type, the backup delay, already claimed. The settings are read then too, so a save changes the
 /// next send.
 /// </summary>
 public sealed class AlertDispatcher(
@@ -90,10 +99,12 @@ public sealed class AlertDispatcher(
         var now = clock.GetCurrentInstant();
         if (alert.StartsAt <= now) return DeliveryOutcome.Started;
         if (await store.IsSkippedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Skipped;
+        if (await store.IsAcknowledgedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Acknowledged;
         if (await store.MutedUntilAsync(cancellationToken) is { } until && until > now) return DeliveryOutcome.Muted;
         var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
         var type = AlertTypes.Resolve(alert, await store.EventTypeAsync(alert.EventId, cancellationToken), settings);
         if (settings.DeliveryFor(type.Type) is not { } delivery) return DeliveryOutcome.Off;
+        if (settings.PushoverAt(alert, type.Type) > now) return DeliveryOutcome.Waiting;
         if (!await store.TryClaimAsync(alert.Key, alert.StartsAt, now, cancellationToken)) return DeliveryOutcome.AlreadyClaimed;
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
@@ -104,8 +115,15 @@ public sealed class AlertDispatcher(
             cancellationToken);
 
         var done = clock.GetCurrentInstant();
-        await store.RecordOutcomeAsync(alert.Key, result.Outcome, done, cancellationToken);
+        await store.RecordOutcomeAsync(alert.Key, result.Outcome, done, cancellationToken, result.Receipt);
         status.Sent(new LastSend(done, alert.Title, result.Outcome));
+
+        // Acknowledged while the message was on its way: the acknowledgement
+        // found no receipt to cancel, so cancel here.
+        if (result.Receipt is not null && await store.IsAcknowledgedAsync(alert.Key, cancellationToken))
+        {
+            await CancelRepeatsAsync(alert.Key, cancellationToken);
+        }
 
         // The event's start and the outcome. Never its title: the log leaves
         // this process for Application Insights.
@@ -117,6 +135,34 @@ public sealed class AlertDispatcher(
 
         logger.LogWarning("Calendar alert for an event starting at {StartsAt} failed ({Failure}).", alert.StartsAt, result.Error);
         return DeliveryOutcome.Failed;
+    }
+
+    /// <summary>
+    /// Stops an emergency message from repeating once its occurrence is
+    /// acknowledged. Nothing to do when nothing was sent at emergency
+    /// priority. A failure is logged and not thrown: the acknowledgement
+    /// stands, and the message stops at its expiry or in the Pushover app.
+    /// </summary>
+    public async Task CancelRepeatsAsync(string key, CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
+        if (await store.DeliveryAsync(key, cancellationToken) is not { Receipt: { } receipt } delivery) return;
+
+        var result = await scope.ServiceProvider.GetRequiredService<PushoverClient>().CancelAsync(receipt, cancellationToken);
+
+        // The start and the outcome, as for a send. Never the receipt.
+        if (result.Ok)
+        {
+            logger.LogInformation("Repeats cancelled for an acknowledged alert starting at {StartsAt}.", delivery.StartsAt);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Cancelling the repeats of an acknowledged alert starting at {StartsAt} failed ({Failure}).",
+                delivery.StartsAt,
+                result.Error);
+        }
     }
 
     /// <summary>
@@ -246,8 +292,10 @@ public sealed class CalendarAlertWorker(
                 try
                 {
                     // An event set to send nothing is asked again next pass:
-                    // switched on before its start, it still goes.
-                    if (await dispatcher.DeliverAsync(alert, cancellationToken) != DeliveryOutcome.Off) _handled.Add(alert.Key);
+                    // switched on before its start, it still goes. So is an
+                    // alarm inside its backup delay.
+                    var outcome = await dispatcher.DeliverAsync(alert, cancellationToken);
+                    if (outcome is not (DeliveryOutcome.Off or DeliveryOutcome.Waiting)) _handled.Add(alert.Key);
                 }
                 catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                 {
@@ -262,7 +310,10 @@ public sealed class CalendarAlertWorker(
             var next = _lastRead.Value + settings.Poll;
             foreach (var alert in plan)
             {
-                if (alert.AlertAt > now && alert.AlertAt < next && !_handled.Contains(alert.Key)) next = alert.AlertAt;
+                if (_handled.Contains(alert.Key)) continue;
+                // Its own time, or for one already past it, the backup's.
+                var due = alert.AlertAt > now ? alert.AlertAt : settings.PushoverAt(alert, AlertTypes.Alarm);
+                if (due > now && due < next) next = due;
             }
 
             return retry is { } at && at < next ? at : next;

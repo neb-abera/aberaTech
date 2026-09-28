@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
+using AlertsAuth = aberaTech.Scheduling.Alerts.AlertsAuth;
 
 namespace aberaTech.Server.Tests.Security;
 
@@ -118,6 +119,44 @@ public sealed class RouteTableTests
         Assert.Contains(endpoints, endpoint => Names(endpoint, "/api/alerts/event-type"));
 
         Assert.Empty(EndpointAuthorization.Undeclared(endpoints));
+    }
+
+    /// <summary>The /api/alerts routes a paired phone may call. Every other one is the owner's cookie alone.</summary>
+    private static readonly string[] PhoneRoutes =
+    [
+        "GET /api/alerts/status",
+        "POST /api/alerts/mute",
+        "POST /api/alerts/unmute",
+        "POST /api/alerts/skip",
+        "POST /api/alerts/unskip",
+        "POST /api/alerts/ack"
+    ];
+
+    [Fact]
+    public void Every_alerts_route_is_the_owners_alone_or_the_owners_and_a_paired_phones()
+    {
+        using var app = App();
+        var alerts = app.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.RoutePattern.RawText?.StartsWith("/api/alerts/", StringComparison.Ordinal) == true)
+            .ToList();
+        Assert.NotEmpty(alerts);
+
+        string Name(RouteEndpoint endpoint) =>
+            $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Single()} {endpoint.RoutePattern.RawText}";
+
+        // One policy each, and it is one of the two.
+        var policies = alerts.ToDictionary(Name, endpoint =>
+            endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy).Distinct().Single());
+        Assert.All(policies, pair => Assert.Contains(
+            pair.Value, new[] { AlertsAuth.OwnerPolicy, AlertsAuth.OwnerOrDevicePolicy }));
+
+        Assert.Equal(
+            PhoneRoutes.Order(StringComparer.Ordinal),
+            policies.Where(pair => pair.Value == AlertsAuth.OwnerOrDevicePolicy)
+                .Select(pair => pair.Key).Order(StringComparer.Ordinal));
+        Assert.Contains("GET /api/alerts/devices", policies.Keys);
+        Assert.Contains("PUT /api/alerts/settings", policies.Keys);
     }
 
     [Fact]

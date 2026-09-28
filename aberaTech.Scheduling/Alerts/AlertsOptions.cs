@@ -62,6 +62,12 @@ public sealed class AlertsOptions
     public string? DefaultType { get; init; } = AlertTypes.None;
 
     /// <summary>
+    /// Seconds after an alarm's time before its Pushover message goes, so a
+    /// paired phone rings first. 0, the default, sends at once.
+    /// </summary>
+    public int BackupDelaySeconds { get; init; }
+
+    /// <summary>
     /// The zone for the alert text and for "06:00 tomorrow" when the feed
     /// does not name one. Google's feed always does (X-WR-TIMEZONE, the
     /// calendar's default zone), so this is a fallback. Unset, the fallback

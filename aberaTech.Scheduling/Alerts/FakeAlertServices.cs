@@ -29,10 +29,32 @@ public sealed class FakeAlertServices(IClock clock)
 {
     private readonly Lock _lock = new();
     private readonly ConcurrentQueue<FakeMessage> _sent = new();
+    private readonly ConcurrentQueue<string> _cancelled = new();
     private Instant _anchor = Minute(clock.GetCurrentInstant());
     private bool _failing;
+    private Instant? _dueStart;
+    private int _dueCount;
+    private int _receipts;
 
     public IReadOnlyList<FakeMessage> Sent => [.. _sent];
+
+    /// <summary>The receipts whose repeats were cancelled, oldest first.</summary>
+    public IReadOnlyList<string> Cancelled => [.. _cancelled];
+
+    /// <summary>
+    /// Adds an alarm that is due now, until the next <see cref="Reanchor"/>:
+    /// "E2E drill", marked #critical, starting in 30 minutes with a reminder
+    /// an hour before. Each call is a new event, so an earlier engine's
+    /// acknowledgement of the last one does not carry over.
+    /// </summary>
+    public void AddDue()
+    {
+        lock (_lock)
+        {
+            _dueStart = clock.GetCurrentInstant() + Duration.FromMinutes(30);
+            _dueCount++;
+        }
+    }
 
     /// <summary>Places the calendar's events relative to the present minute, and ends <see cref="Fail"/>.</summary>
     public void Reanchor()
@@ -41,6 +63,7 @@ public sealed class FakeAlertServices(IClock clock)
         {
             _anchor = Minute(clock.GetCurrentInstant());
             _failing = false;
+            _dueStart = null;
         }
     }
 
@@ -59,8 +82,31 @@ public sealed class FakeAlertServices(IClock clock)
         static string Utc(Instant instant) => instant.ToDateTimeUtc().ToString("yyyyMMdd'T'HHmmss'Z'");
 
         Instant anchor;
-        lock (_lock) anchor = _anchor;
+        Instant? due;
+        int dueCount;
+        lock (_lock)
+        {
+            anchor = _anchor;
+            due = _dueStart;
+            dueCount = _dueCount;
+        }
+
         var tomorrow = anchor.InUtc().Date.PlusDays(1);
+        string[] drill = due is { } start
+            ?
+            [
+                "BEGIN:VEVENT",
+                $"UID:e2e-drill-{dueCount}",
+                $"DTSTART:{Utc(start)}",
+                $"DTEND:{Utc(start + Duration.FromMinutes(30))}",
+                "SUMMARY:E2E drill #critical",
+                "BEGIN:VALARM",
+                "ACTION:DISPLAY",
+                "TRIGGER:-PT1H",
+                "END:VALARM",
+                "END:VEVENT"
+            ]
+            : [];
         return string.Join("\r\n",
         [
             "BEGIN:VCALENDAR",
@@ -97,6 +143,7 @@ public sealed class FakeAlertServices(IClock clock)
             "SUMMARY:E2E cancelled",
             "STATUS:CANCELLED",
             "END:VEVENT",
+            .. drill,
             "END:VCALENDAR",
             ""
         ]);
@@ -117,6 +164,13 @@ public sealed class FakeAlertServices(IClock clock)
     public HttpMessageHandler PushoverHandler() => new Handler(async request =>
     {
         var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync());
+        if (request.RequestUri?.AbsolutePath.StartsWith("/1/receipts/", StringComparison.Ordinal) == true)
+        {
+            // pushover.net/api/receipts#cancel: /1/receipts/{receipt}/cancel.json
+            _cancelled.Enqueue(request.RequestUri.Segments[3].TrimEnd('/'));
+            return Json("{\"status\":1,\"request\":\"development\"}");
+        }
+
         static string? Field(Dictionary<string, Microsoft.Extensions.Primitives.StringValues> form, string name) =>
             form.TryGetValue(name, out var value) ? value.ToString() : null;
 
@@ -127,11 +181,17 @@ public sealed class FakeAlertServices(IClock clock)
             Field(form, "retry"),
             Field(form, "expire"),
             Field(form, "sound")));
-        return new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("{\"status\":1,\"request\":\"development\"}", System.Text.Encoding.UTF8, "application/json")
-        };
+
+        // Pushover answers an emergency message with a receipt.
+        return form["priority"].ToString() == "2"
+            ? Json($"{{\"status\":1,\"request\":\"development\",\"receipt\":\"development{Interlocked.Increment(ref _receipts)}\"}}")
+            : Json("{\"status\":1,\"request\":\"development\"}");
     });
+
+    private static HttpResponseMessage Json(string body) => new(HttpStatusCode.OK)
+    {
+        Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
+    };
 
     private static Instant Minute(Instant instant) => Instant.FromUnixTimeSeconds(instant.ToUnixTimeSeconds() / 60 * 60);
 

@@ -27,6 +27,10 @@ export interface AlertItem {
   type: AlertType;
   /** "set" on this page, "critical" from the calendar's mark, or "default". */
   typeFrom: "set" | "critical" | "default";
+  /** Answered on a paired phone or in a browser. Nothing more is sent. */
+  acknowledged: boolean;
+  acknowledgedAt: string | null;
+  acknowledgedVia: "phone" | "browser" | null;
 }
 
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
@@ -61,6 +65,8 @@ export interface AlertSettings {
   notificationSound: string;
   /** What an unmarked event with no choice sends. */
   defaultType: "none" | "notification";
+  /** Seconds after an alarm's time before Pushover follows, so a paired phone rings first. */
+  backupDelaySeconds: number;
 }
 
 export interface Bound {
@@ -75,6 +81,7 @@ export interface SettingsBounds {
   defaultLeadMinutes: Bound;
   pollMinutes: Bound;
   lookaheadHours: Bound;
+  backupDelaySeconds: Bound;
   maxOwnerEmails: number;
   maxEmergencySounds: number;
   sounds: string[];
@@ -187,6 +194,114 @@ export async function sendEventTest(key: string): Promise<ActionResult> {
   return result.ok ? { ok: true } : result;
 }
 
+/**
+ * Acknowledge a due alarm: it stops ringing here, on a paired phone, and
+ * Pushover stops repeating it. The first acknowledgement stands.
+ */
+export function acknowledgeAlert(
+  key: string,
+  via: "phone" | "browser",
+): Promise<ActionResult> {
+  return post("/api/alerts/ack", { key, via });
+}
+
+/** A paired phone as the list shows it. The server never sends its token again. */
+export interface Device {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastSeenAt: string | null;
+}
+
+/** The answer to a pairing: the one time the token is shown. */
+export interface PairedDevice {
+  id: string;
+  name: string;
+  createdAt: string;
+  token: string;
+  /** aberaalarms://pair#token=…, which the phone opens. */
+  pairUrl: string;
+}
+
+export type DevicesResult =
+  | { ok: true; devices: Device[] }
+  | { ok: false; reason: "visitor" | "refused" | "network" };
+
+export type PairResult =
+  | { ok: true; device: PairedDevice }
+  | {
+      ok: false;
+      reason:
+        | "visitor"
+        | "throttled"
+        | "full"
+        | "invalid"
+        | "refused"
+        | "network";
+      detail?: string;
+    };
+
+export async function listDevices(): Promise<DevicesResult> {
+  try {
+    const response = await fetch("/api/alerts/devices", {
+      credentials: "same-origin",
+    });
+    if (response.status === 401 || response.status === 403)
+      return { ok: false, reason: "visitor" };
+    if (!response.ok) return { ok: false, reason: "refused" };
+    return { ok: true, devices: (await response.json()) as Device[] };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+/** A name for the list, 1 to 60 characters. The answer carries the token, once. */
+export async function pairDevice(name: string): Promise<PairResult> {
+  try {
+    const response = await fetch("/api/alerts/devices", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (response.status === 401 || response.status === 403)
+      return { ok: false, reason: "visitor" };
+    if (response.status === 429) return { ok: false, reason: "throttled" };
+    if (response.status === 409)
+      return {
+        ok: false,
+        reason: "full",
+        detail: (await response.text()).slice(0, 200),
+      };
+    if (response.status === 400) return { ok: false, reason: "invalid" };
+    if (response.status !== 201) return { ok: false, reason: "refused" };
+    return { ok: true, device: (await response.json()) as PairedDevice };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+/** The phone's token stops working on its next request. */
+export async function revokeDevice(id: string): Promise<{
+  ok: boolean;
+  reason?: "visitor" | "throttled" | "refused" | "network";
+}> {
+  try {
+    const response = await fetch(
+      `/api/alerts/devices/${encodeURIComponent(id)}`,
+      { method: "DELETE", credentials: "same-origin" },
+    );
+    if (response.status === 401 || response.status === 403)
+      return { ok: false, reason: "visitor" };
+    if (response.status === 429) return { ok: false, reason: "throttled" };
+    // Already gone is what was asked for.
+    if (response.status === 204 || response.status === 404) return { ok: true };
+    return { ok: false, reason: "refused" };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
 /** The whole form. A refused field comes back in `errors`, keyed by its name. */
 export function saveAlertSettings(
   settings: AlertSettings,
@@ -277,4 +392,30 @@ export function formatWhen(iso: string, timeZone: string): string {
   // ICU puts a narrow no-break space before AM and PM. A plain space reads
   // the same and matches what a person types when searching the page.
   return formatFor(timeZone).format(new Date(iso)).replace(/[  ]/g, " ");
+}
+
+const clocks = new Map<string, Intl.DateTimeFormat>();
+
+/** "08:47": the time of day in the calendar's zone, on a 24-hour clock. */
+export function formatClock(iso: string, timeZone: string): string {
+  let format = clocks.get(timeZone);
+  if (!format) {
+    try {
+      format = new Intl.DateTimeFormat("en-GB", {
+        timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+    } catch {
+      format = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "UTC",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+    }
+    clocks.set(timeZone, format);
+  }
+  return format.format(new Date(iso));
 }

@@ -608,7 +608,18 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken) => Down<bool>();
 
-        public Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken) => Down<bool>();
+        public Task RecordOutcomeAsync(
+            string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null) => Down<bool>();
+
+        public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken) => Down<AlertDelivery?>();
+
+        public Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken) =>
+            Down<IReadOnlyDictionary<string, AlertAcknowledgement>>();
+
+        public Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken) =>
+            Down<bool>();
 
         public Task PruneAsync(Instant before, CancellationToken cancellationToken) => Down<bool>();
 
@@ -653,8 +664,21 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken) =>
             _inner.TryClaimAsync(key, startsAt, now, cancellationToken);
 
-        public Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken) =>
-            _inner.RecordOutcomeAsync(key, outcome, now, cancellationToken);
+        public Task RecordOutcomeAsync(
+            string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null) =>
+            _inner.RecordOutcomeAsync(key, outcome, now, cancellationToken, receipt);
+
+        public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken) =>
+            _inner.DeliveryAsync(key, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken) =>
+            _inner.AcknowledgementsAsync(cancellationToken);
+
+        public Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken) =>
+            _inner.IsAcknowledgedAsync(key, cancellationToken);
+
+        public Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken) =>
+            _inner.AcknowledgeAsync(key, startsAt, via, now, cancellationToken);
 
         public Task PruneAsync(Instant before, CancellationToken cancellationToken) => _inner.PruneAsync(before, cancellationToken);
 
@@ -670,6 +694,140 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
             _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
+    }
+
+    [Fact]
+    public async Task An_occurrence_acknowledged_before_its_time_is_never_sent()
+    {
+        var box = New();
+        await box.Worker.TickAsync(CancellationToken.None);
+        await box.Store.AcknowledgeAsync("standup@google.com|20261028T130000Z", Start, "phone", Eight, CancellationToken.None);
+
+        box.Clock.Now = AlertTime;
+        var outcome = await box.Dispatcher.DeliverAsync(box.Status.Snapshot().Plan[0], CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal(DeliveryOutcome.Acknowledged, outcome);
+        Assert.Empty(box.Pushover.Requests);
+        Assert.Empty(box.Store.Claims);
+    }
+
+    private static AlertSettings WithBackup(int seconds) =>
+        AlertSettings.Defaults(new AlertsOptions()) with { BackupDelaySeconds = seconds };
+
+    [Fact]
+    public async Task With_a_backup_delay_an_alarm_goes_that_long_after_its_time_and_the_worker_wakes_for_it()
+    {
+        var box = New();
+        await box.Store.SaveSettingsAsync(WithBackup(300), Eight, CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        box.Clock.Now = AlertTime;
+        var wake = await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(box.Pushover.Requests);
+        Assert.Empty(box.Store.Claims);
+        Assert.Equal(AlertTime + Duration.FromMinutes(5), wake);
+
+        box.Clock.Now = AlertTime + Duration.FromMinutes(5) - Duration.FromSeconds(1);
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(box.Pushover.Requests);
+
+        box.Clock.Now = AlertTime + Duration.FromMinutes(5);
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Equal("2", Assert.Single(box.Pushover.Requests).Form["priority"]);
+    }
+
+    [Fact]
+    public async Task With_a_backup_delay_an_alarm_acknowledged_on_the_phone_in_time_is_never_sent()
+    {
+        var box = New();
+        await box.Store.SaveSettingsAsync(WithBackup(300), Eight, CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        // The phone rang at 08:45 and was answered at 08:47.
+        await box.Store.AcknowledgeAsync(
+            "standup@google.com|20261028T130000Z", Start, "phone", AlertTime + Duration.FromMinutes(2), CancellationToken.None);
+        box.Clock.Now = AlertTime + Duration.FromMinutes(5);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Empty(box.Pushover.Requests);
+    }
+
+    [Fact]
+    public async Task A_backup_delay_never_holds_a_notification()
+    {
+        var box = New(Standup(Popup("-PT15M")));
+        await box.Store.SaveSettingsAsync(WithBackup(300) with { DefaultType = AlertTypes.Notification }, Eight, CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal("0", Assert.Single(box.Pushover.Requests).Form["priority"]);
+    }
+
+    [Fact]
+    public async Task Acknowledged_while_the_emergency_message_was_on_its_way_its_repeats_are_cancelled()
+    {
+        var box = New();
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Pushover.Then(() => RecordingHandler.Text(
+            HttpStatusCode.OK, "{\"status\":1,\"request\":\"r\",\"receipt\":\"racereceipt0000000000000000001\"}", "application/json"));
+        // The phone answers after the claim and before the receipt is stored:
+        // the acknowledgement finds no receipt to cancel.
+        box.Store.BeforeRecordOutcome = () => box.Store
+            .AcknowledgeAsync("standup@google.com|20261028T130000Z", Start, "phone", AlertTime, CancellationToken.None)
+            .GetAwaiter().GetResult();
+
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal(
+            [PushoverClient.Endpoint, PushoverClient.CancelEndpoint("racereceipt0000000000000000001")],
+            box.Pushover.Requests.Select(request => request.Url.ToString()));
+    }
+
+    [Fact]
+    public async Task An_emergency_send_keeps_its_receipt_and_a_lower_priority_keeps_none()
+    {
+        var box = New();
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Pushover.Then(() => RecordingHandler.Text(
+            HttpStatusCode.OK, "{\"status\":1,\"request\":\"r\",\"receipt\":\"keptreceipt0000000000000000001\"}", "application/json"));
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var delivery = await box.Store.DeliveryAsync("standup@google.com|20261028T130000Z", CancellationToken.None);
+        Assert.Equal("keptreceipt0000000000000000001", delivery?.Receipt);
+
+        var high = New(Standup(Popup("-PT15M")));
+        await high.Store.SaveSettingsAsync(
+            AlertSettings.Defaults(new AlertsOptions()) with { DefaultType = AlertTypes.Notification }, Eight, CancellationToken.None);
+        high.Pushover.Then(() => RecordingHandler.Text(
+            HttpStatusCode.OK, "{\"status\":1,\"request\":\"r\",\"receipt\":\"notkept0000000000000000000001\"}", "application/json"));
+        high.Clock.Now = AlertTime;
+        await high.Worker.TickAsync(CancellationToken.None);
+        Assert.Null((await high.Store.DeliveryAsync("standup@google.com|20261028T130000Z", CancellationToken.None))?.Receipt);
+    }
+
+    [Theory]
+    [InlineData("{\"status\":1,\"receipt\":\"has spaces in it\"}")]
+    [InlineData("{\"status\":1,\"receipt\":\"../../messages\"}")]
+    [InlineData("{\"status\":1,\"receipt\":42}")]
+    [InlineData("not json")]
+    [InlineData("[]")]
+    public async Task A_receipt_that_is_not_letters_and_digits_is_not_kept(string answer)
+    {
+        var box = New();
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Pushover.Then(() => RecordingHandler.Text(HttpStatusCode.OK, answer, "application/json"));
+        box.Clock.Now = AlertTime;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal("sent", box.Store.Claims.Values.Single());
+        Assert.Null((await box.Store.DeliveryAsync("standup@google.com|20261028T130000Z", CancellationToken.None))?.Receipt);
     }
 
     private sealed class Harness : IDisposable
