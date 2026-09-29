@@ -23,6 +23,8 @@ public partial class _20260929003730_AlarmAlwaysRepeats : Migration
             table: "AlertSettings",
             type: "integer",
             nullable: false,
-            defaultValue: 0);
+            // A rollback runs the release before this one, which reads the
+            // alarm priority. 2 keeps its alarms repeating.
+            defaultValue: 2);
     }
 }
