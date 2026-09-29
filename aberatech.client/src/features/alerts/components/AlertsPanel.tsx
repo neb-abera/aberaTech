@@ -319,7 +319,11 @@ export default function AlertsPanel({
         )}
       </Typography>
 
-      <PhonesSection api={phones} when={when} />
+      <PhonesSection
+        api={phones}
+        when={when}
+        pushMissing={state.push?.missing ?? []}
+      />
 
       <AlertSettingsForm
         settings={state.settings}

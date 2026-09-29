@@ -112,6 +112,17 @@ export interface AlertsState {
    * changing.
    */
   calendarWrite?: string | null;
+  /**
+   * Whether the server pushes phones. Missing lists the secret names that
+   * are not set, never their values.
+   */
+  push?: PushStatus;
+}
+
+/** Phone pushes: on when all three secrets are set. */
+export interface PushStatus {
+  on: boolean;
+  missing: string[];
 }
 
 export type AlertsView =
@@ -288,6 +299,8 @@ export interface Device {
   name: string;
   createdAt: string;
   lastSeenAt: string | null;
+  /** The phone has registered for pushes. The server never sends the push token. */
+  push: boolean;
 }
 
 /** The answer to a pairing: the one time the token is shown. */

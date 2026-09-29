@@ -9,6 +9,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// Pushover keys. Any of them missing and the feature is off: no worker
 /// runs, and the owner page lists the missing names. Never the values.
 ///
+/// Three more are secrets for phone pushes: Apple's .p8 key, its key id
+/// and the team id. Any of them missing and pushes are off. Phones still
+/// register their tokens, and the owner page lists the missing names.
+///
 /// The rest are defaults. Once the owner saves the form on /alerts, the
 /// saved row replaces them (<see cref="AlertSettings"/>).
 /// </remarks>
@@ -24,6 +28,15 @@ public sealed class AlertsOptions
 
     /// <summary>The Pushover user key of the phone that receives them.</summary>
     public string? PushoverUserKey { get; init; }
+
+    /// <summary>The text of Apple's AuthKey_&lt;key id&gt;.p8 file: a P-256 private key in PEM.</summary>
+    public string? ApnsKeyP8 { get; init; }
+
+    /// <summary>The key's 10-character id from the Apple Developer site.</summary>
+    public string? ApnsKeyId { get; init; }
+
+    /// <summary>The Apple Developer team id. No default: a wrong team signs tokens Apple refuses.</summary>
+    public string? ApnsTeamId { get; init; }
 
     /// <summary>How often the calendar is read. Sends do not wait for it: each is timed from the cached list.</summary>
     public int PollMinutes { get; init; } = 5;
@@ -101,6 +114,24 @@ public sealed class AlertsOptions
         if (!IsHttps(CalendarIcsUrl)) missing.Add("Alerts__CalendarIcsUrl");
         if (string.IsNullOrWhiteSpace(PushoverAppToken)) missing.Add("Alerts__PushoverAppToken");
         if (string.IsNullOrWhiteSpace(PushoverUserKey)) missing.Add("Alerts__PushoverUserKey");
+        return missing;
+    }
+
+    /// <summary>
+    /// The phone-push secrets that are missing, by environment variable name.
+    /// A key that is not a P-256 private key counts as missing.
+    /// </summary>
+    /// <remarks>Worked out once: the options do not change after start.</remarks>
+    public IReadOnlyList<string> ApnsMissing() => _apnsMissing ??= FindApnsMissing();
+
+    private IReadOnlyList<string>? _apnsMissing;
+
+    private List<string> FindApnsMissing()
+    {
+        var missing = new List<string>();
+        if (!ApnsTokens.IsKey(ApnsKeyP8)) missing.Add("Alerts__ApnsKeyP8");
+        if (string.IsNullOrWhiteSpace(ApnsKeyId)) missing.Add("Alerts__ApnsKeyId");
+        if (string.IsNullOrWhiteSpace(ApnsTeamId)) missing.Add("Alerts__ApnsTeamId");
         return missing;
     }
 

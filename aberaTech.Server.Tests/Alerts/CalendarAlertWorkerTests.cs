@@ -578,11 +578,14 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public void The_hosted_service_is_registered_once()
+    public void The_worker_and_the_push_sender_are_each_registered_once_as_the_singletons_the_routes_use()
     {
         var box = New();
 
-        Assert.Single(box.Provider.GetServices<Microsoft.Extensions.Hosting.IHostedService>());
+        var hosted = box.Provider.GetServices<Microsoft.Extensions.Hosting.IHostedService>().ToList();
+        Assert.Equal(2, hosted.Count);
+        Assert.Same(box.Worker, Assert.Single(hosted.OfType<CalendarAlertWorker>()));
+        Assert.Same(box.Provider.GetRequiredService<AlertPushWorker>(), Assert.Single(hosted.OfType<AlertPushWorker>()));
     }
 
     public void Dispose()

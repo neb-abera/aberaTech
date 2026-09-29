@@ -9,6 +9,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// <remarks>Retry, expire and sound are null when the request left them out.</remarks>
 public sealed record FakeMessage(string Title, string Message, string Priority, string? Retry, string? Expire, string? Sound);
 
+/// <summary>One push the fake Apple took: the host, the plan version and the headers. Never the token.</summary>
+public sealed record FakePush(
+    string Host, long Version, string PushType, string Priority, string Topic, string CollapseId, string Body);
+
 /// <summary>
 /// Development only: a calendar and a Pushover that live in this process,
 /// so `make up` and the browser suite can drive /alerts without either
@@ -30,6 +34,7 @@ public sealed class FakeAlertServices(IClock clock)
     private readonly Lock _lock = new();
     private readonly ConcurrentQueue<FakeMessage> _sent = new();
     private readonly ConcurrentQueue<string> _cancelled = new();
+    private readonly ConcurrentQueue<FakePush> _pushes = new();
     private Instant _anchor = Minute(clock.GetCurrentInstant());
     private bool _failing;
     private Instant? _dueStart;
@@ -196,6 +201,43 @@ public sealed class FakeAlertServices(IClock clock)
             {
                 Content = new StringContent(Calendar(), System.Text.Encoding.UTF8, "text/calendar")
             });
+    });
+
+    /// <summary>The pushes the fake Apple took, oldest first.</summary>
+    public IReadOnlyList<FakePush> Pushes => [.. _pushes];
+
+    /// <summary>
+    /// A key, key id and team id for the fake Apple, made at start. The key
+    /// is a new P-256 key each run and signs nothing outside this process.
+    /// </summary>
+    public static Dictionary<string, string?> DevelopmentApns()
+    {
+        using var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        return new Dictionary<string, string?>
+        {
+            ["Alerts:ApnsKeyP8"] = key.ExportPkcs8PrivateKeyPem(),
+            ["Alerts:ApnsKeyId"] = "DEVKEY0000",
+            ["Alerts:ApnsTeamId"] = "DEVTEAM000"
+        };
+    }
+
+    /// <summary>Apple's push service: takes every push and answers 200, as Apple does for a live token.</summary>
+    public HttpMessageHandler ApnsHandler() => new Handler(async request =>
+    {
+        static string Header(HttpRequestMessage request, string name) =>
+            request.Headers.TryGetValues(name, out var values) ? string.Join(",", values) : "";
+
+        var body = await request.Content!.ReadAsStringAsync();
+        using var json = System.Text.Json.JsonDocument.Parse(body);
+        _pushes.Enqueue(new FakePush(
+            request.RequestUri!.Host,
+            json.RootElement.GetProperty("v").GetInt64(),
+            Header(request, "apns-push-type"),
+            Header(request, "apns-priority"),
+            Header(request, "apns-topic"),
+            Header(request, "apns-collapse-id"),
+            body));
+        return new HttpResponseMessage(HttpStatusCode.OK);
     });
 
     /// <summary>The one sound the fake Pushover account has uploaded, beside the built-ins.</summary>

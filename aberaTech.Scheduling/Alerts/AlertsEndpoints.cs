@@ -12,8 +12,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// The owner's Google sign-in reaches every route. A paired phone's token
 /// reaches the eight a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
 /// the status, mute, unmute, skip, unskip, ack, an event's type and a new
-/// event. The actions share one rate
-/// limit. Every action answers with the page's whole state, so the page and
+/// event. The phone's own push registration takes its token alone
+/// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
+/// limit. Every change a phone holds bumps the plan version, and
+/// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
 /// the phone never show a mute or a skip the server did not store.
 /// </remarks>
 public static class AlertsEndpoints
@@ -41,6 +43,12 @@ public static class AlertsEndpoints
             .RequireAuthorization(AlertsAuth.OwnerOrDevicePolicy)
             .WithTags("Alerts");
 
+        // A paired phone's token alone.
+        var device = routes
+            .MapGroup("/api/alerts")
+            .RequireAuthorization(AlertsAuth.DevicePolicy)
+            .WithTags("Alerts");
+
         if (missing.Count > 0)
         {
             // Names, never values. The worker is not running and nothing
@@ -53,7 +61,7 @@ public static class AlertsEndpoints
             Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken)));
 
         shared.MapPost("/mute", async (
-            MuteRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            MuteRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
             Instant? until = request.Until switch
@@ -65,17 +73,20 @@ public static class AlertsEndpoints
             if (until is null) return Results.BadRequest("until must be \"hour\" or \"morning\"");
 
             await store.SetMutedUntilAsync(until, now, cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        shared.MapPost("/unmute", async (AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+        shared.MapPost("/unmute", async (
+            AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             await store.SetMutedUntilAsync(null, clock.GetCurrentInstant(), cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/skip", async (
-            SkipRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
@@ -84,15 +95,17 @@ public static class AlertsEndpoints
             if (alert is null) return Results.NotFound();
 
             await store.SkipAsync(alert.Key, alert.StartsAt, clock.GetCurrentInstant(), cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/unskip", async (
-            SkipRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
             await store.UnskipAsync(request.Key!, cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
@@ -159,6 +172,7 @@ public static class AlertsEndpoints
         // Google says, and calendarWrite says why Google was not changed.
         shared.MapPut("/event-type", async (
             EventTypeRequest request,
+            AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertStore store,
@@ -180,6 +194,7 @@ public static class AlertsEndpoints
 
             await store.SetEventTypeAsync(
                 alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
             var written = await google.SetMarkAsync(alert.EventId, request.Type == AlertTypes.Alarm, cancellationToken);
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken, written));
         }).RequireRateLimiting(ActionsPolicy);
@@ -190,6 +205,7 @@ public static class AlertsEndpoints
         // first acknowledgement stands, and it cancels Pushover's repeats.
         shared.MapPost("/ack", async (
             AckRequest request,
+            AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             AlertDispatcher dispatcher,
@@ -208,6 +224,7 @@ public static class AlertsEndpoints
 
             if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, clock.GetCurrentInstant(), cancellationToken))
             {
+                await pushes.PlanChangedAsync(cancellationToken);
                 await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
             }
 
@@ -220,6 +237,7 @@ public static class AlertsEndpoints
         shared.MapPost("/events", async (
             NewEventRequest request,
             CalendarAlertWorker worker,
+            AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertStore store,
@@ -242,6 +260,7 @@ public static class AlertsEndpoints
 
             await store.AddCreatedEventAsync(created, now, cancellationToken);
             await store.SetEventTypeAsync(AlertPlanner.EventIdFor(created.EventId), valid.Type, now, cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
 
             // This replica plans it on its next pass, now rather than at the
             // end of the wait.
@@ -291,6 +310,30 @@ public static class AlertsEndpoints
         group.MapDelete("/devices/{id:guid}", async (Guid id, IAlertDeviceStore devices, CancellationToken cancellationToken) =>
             await devices.RevokeAsync(id, cancellationToken) ? Results.NoContent() : Results.NotFound())
             .RequireRateLimiting(ActionsPolicy);
+
+        // The calling phone's push token, from Apple, and which of Apple's
+        // servers it belongs to. A new one replaces the old. The token is
+        // never answered, listed or logged: the list says only whether a
+        // phone has one.
+        device.MapPut("/devices/me/push", async (
+            PushRequest request, HttpContext context, IAlertDeviceStore devices, CancellationToken cancellationToken) =>
+        {
+            var errors = ApnsPushTokens.Validate(request.ApnsToken, request.Environment);
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+            if (AlertsAuth.DeviceId(context.User) is not { } id) return Results.Forbid();
+
+            await devices.SetPushAsync(id, request.ApnsToken, request.Environment, cancellationToken);
+            return Results.NoContent();
+        }).RequireRateLimiting(ActionsPolicy);
+
+        device.MapDelete("/devices/me/push", async (
+            HttpContext context, IAlertDeviceStore devices, CancellationToken cancellationToken) =>
+        {
+            if (AlertsAuth.DeviceId(context.User) is not { } id) return Results.Forbid();
+
+            await devices.SetPushAsync(id, null, null, cancellationToken);
+            return Results.NoContent();
+        }).RequireRateLimiting(ActionsPolicy);
 
         // Send test alert: an alarm, with the alarm settings.
         group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
@@ -376,6 +419,9 @@ public static class AlertsEndpoints
             // The writes the fake Google Calendar took, so the browser suite
             // can see what a type change and a new event asked for.
             group.MapGet("/fake/google", (FakeAlertServices fake) => Results.Ok(fake.Google.Writes));
+
+            // The pushes the fake Apple took, oldest first. Never a token.
+            group.MapGet("/fake/pushes", (FakeAlertServices fake) => Results.Ok(fake.Pushes));
 
             // The receipts whose repeats an acknowledgement cancelled.
             group.MapGet("/fake/cancelled", (FakeAlertServices fake) => Results.Ok(fake.Cancelled));
@@ -491,6 +537,7 @@ public static class AlertsEndpoints
                             acknowledgement?.Via);
                     })
             ],
+            Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
             CalendarWrite: calendarWrite);
     }
 
@@ -503,12 +550,19 @@ public static class AlertsEndpoints
 
     public sealed record DeviceRequest(string? Name);
 
-    /// <summary>A paired phone as the list shows it. Never the token or its hash.</summary>
-    public sealed record DeviceView(Guid Id, string Name, DateTimeOffset CreatedAt, DateTimeOffset? LastSeenAt)
+    /// <summary>A paired phone as the list shows it. Never the token, its hash or the push token.</summary>
+    /// <param name="Push">True when the phone has registered a push token.</param>
+    public sealed record DeviceView(Guid Id, string Name, DateTimeOffset CreatedAt, DateTimeOffset? LastSeenAt, bool Push)
     {
         public static DeviceView From(AlertDevice device) =>
-            new(device.Id, device.Name, device.CreatedAt.ToDateTimeOffset(), device.LastSeenAt?.ToDateTimeOffset());
+            new(device.Id, device.Name, device.CreatedAt.ToDateTimeOffset(), device.LastSeenAt?.ToDateTimeOffset(), device.Push);
     }
+
+    /// <summary>A phone's push registration: Apple's token in lowercase hex, and "sandbox" or "production".</summary>
+    public sealed record PushRequest(string? ApnsToken, string? Environment);
+
+    /// <summary>Whether phone pushes go, and the names of the secrets that are missing when they do not. Never a value.</summary>
+    public sealed record PushView(bool On, IReadOnlyList<string> Missing);
 
     /// <summary>The answer to a pairing, the one time the token is shown.</summary>
     public sealed record PairedDevice(Guid Id, string Name, DateTimeOffset CreatedAt, string Token, string PairUrl);
@@ -625,6 +679,7 @@ public static class AlertsEndpoints
         DateTimeOffset? LastSuccessAt,
         SendView? LastSend,
         IReadOnlyList<AlertView> Alerts,
+        PushView Push,
         string? CalendarWrite = null);
 
     public sealed record SettingsView(

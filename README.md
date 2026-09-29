@@ -107,7 +107,8 @@ site. The history is on the
   this browser rings a due alarm in an open tab, for a computer where
   nothing can be installed. The page and a paired phone can create an
   event, and an event's type is written back to Google Calendar as
-  `#critical`.
+  `#critical`. Each change a phone holds sends it a background push, so
+  it updates its alarms at once.
 
 ### Calendar alerts: switching them on
 
@@ -232,6 +233,60 @@ with the page's whole state, the new event listed. A refused field is a
 400 keyed by its name. No connection with edit access, or a connection to
 another calendar, is a 409 whose `detail` says which. Google refusing is a
 502 with the same short reason.
+
+### Calendar alerts: phone pushes
+
+A change that alters what a phone should hold sends every phone with a
+push token a background push through Apple's push service
+(`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
+and Unmute, an acknowledgement from anywhere, a new event, and a calendar
+read whose alarms differ from the last read. The phone then reads
+`/api/alerts/status`. iOS can delay or drop a background push, so the
+phone also reads when opened and in the background.
+
+Each change adds one to a plan version in the database. Each phone gets at
+most one push a minute, carrying the version current when it goes. The
+body is `{"aps":{"content-available":1},"v":<version>}`, with
+`apns-push-type: background`, `apns-priority: 5`, `apns-topic:
+tech.abera.alarms`, `apns-collapse-id: plan` and an expiry an hour out.
+Apple's 429 or 5xx is tried once more after 30 s. A 410, or a 400 with
+`BadDeviceToken` or `DeviceTokenNotForTopic`, clears that phone's token.
+
+| Route | Who | Request | Answer |
+|---|---|---|---|
+| `PUT /api/alerts/devices/me/push` | a paired phone's token alone | `{apnsToken, environment}`: lowercase hex, 64 to 200 characters, and `sandbox` or `production` | 204. 400 by field. 403 to the owner's cookie |
+| `DELETE /api/alerts/devices/me/push` | a paired phone's token alone | none | 204. The token is cleared |
+| `GET /api/alerts/devices` | the owner | none | each phone with `push`: true when it has a token. Never the token |
+
+Three secrets switch pushes on. Without all three, phones still register
+and the Phones section names the missing ones.
+
+| Environment variable | Secret | Value |
+|---|---|---|
+| `Alerts__ApnsKeyP8` | `alerts-apns-key` | the text of `AuthKey_<KEYID>.p8` |
+| `Alerts__ApnsKeyId` | `alerts-apns-key-id` | the key's 10-character id |
+| `Alerts__ApnsTeamId` | `alerts-apns-team-id` | `9K44N8AGF7` |
+
+Run these on the MacBook, where the key was downloaded, with `az` signed
+in. Put the key id in place of `<KEYID>`.
+
+```bash
+az containerapp secret set -n aberatechserver-app-202412211749 \
+  -g aberatechserver-app-202412211749ResourceGroup \
+  --secrets alerts-apns-key="$(cat ~/Downloads/AuthKey_<KEYID>.p8)" \
+  alerts-apns-key-id=<KEYID> alerts-apns-team-id=9K44N8AGF7
+
+az containerapp update -n aberatechserver-app-202412211749 \
+  -g aberatechserver-app-202412211749ResourceGroup \
+  --container-name aberatechserver \
+  --set-env-vars Alerts__ApnsKeyP8=secretref:alerts-apns-key \
+  Alerts__ApnsKeyId=secretref:alerts-apns-key-id \
+  Alerts__ApnsTeamId=secretref:alerts-apns-team-id
+```
+
+The deploy workflow changes only the image, so these stay set across
+deploys, like the Pushover secrets. The Phones section then shows no
+missing names.
 
 ### Calendar alerts: settings
 

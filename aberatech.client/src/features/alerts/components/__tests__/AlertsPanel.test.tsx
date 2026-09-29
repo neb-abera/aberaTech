@@ -125,6 +125,31 @@ describe("a visitor", () => {
   });
 });
 
+describe("phone pushes", () => {
+  it("names the missing push secrets under Phones and nothing when pushes are on", async () => {
+    mount(
+      respond(
+        200,
+        state({
+          push: { on: false, missing: ["Alerts__ApnsKeyId"] },
+        }),
+      ),
+    );
+    await settle();
+
+    expect(
+      screen.getByText(
+        "Pushes are off. The server is missing Alerts__ApnsKeyId.",
+      ),
+    ).toBeTruthy();
+    cleanup();
+
+    mount(respond(200, state({ push: { on: true, missing: [] } })));
+    await settle();
+    expect(screen.queryByText(/Pushes are off/)).toBeNull();
+  });
+});
+
 describe("a deployment missing a secret", () => {
   it("names each missing setting and gives the steps to set it", async () => {
     mount(
