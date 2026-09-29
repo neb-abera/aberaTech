@@ -526,7 +526,6 @@ public sealed class AlertsRouteTests : IDisposable
     {
         var form = new Dictionary<string, object?>
         {
-            ["priority"] = 2,
             ["repeatSeconds"] = 60,
             ["stopAfterMinutes"] = 180,
             ["sound"] = "",
@@ -553,7 +552,8 @@ public sealed class AlertsRouteTests : IDisposable
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
 
         var settings = status.GetProperty("settings");
-        Assert.Equal(2, settings.GetProperty("priority").GetInt32());
+        // An alarm always repeats until acknowledged, so there is no alarm priority to show.
+        Assert.False(settings.TryGetProperty("priority", out _));
         Assert.Equal(60, settings.GetProperty("repeatSeconds").GetInt32());
         Assert.Equal(180, settings.GetProperty("stopAfterMinutes").GetInt32());
         Assert.Equal("", settings.GetProperty("sound").GetString());
@@ -582,9 +582,6 @@ public sealed class AlertsRouteTests : IDisposable
 
     public static IEnumerable<object?[]> OutOfBounds =>
     [
-        ["priority", -1],
-        ["priority", 3],
-        ["priority", null],
         ["repeatSeconds", 29],
         ["repeatSeconds", 10801],
         ["stopAfterMinutes", 0],
@@ -641,11 +638,11 @@ public sealed class AlertsRouteTests : IDisposable
         using var owner = Owner();
 
         using var low = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
-            ("priority", 0), ("repeatSeconds", 30), ("stopAfterMinutes", 1), ("defaultLeadMinutes", 0),
+            ("repeatSeconds", 30), ("stopAfterMinutes", 1), ("defaultLeadMinutes", 0),
             ("pollMinutes", 1), ("lookaheadHours", 1), ("sound", "none"), ("notificationPriority", 0),
             ("notificationSound", "none"), ("defaultType", "none"), ("backupDelaySeconds", 0)));
         using var high = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
-            ("priority", 2), ("repeatSeconds", 10800), ("stopAfterMinutes", 180), ("defaultLeadMinutes", 1440),
+            ("repeatSeconds", 10800), ("stopAfterMinutes", 180), ("defaultLeadMinutes", 1440),
             ("pollMinutes", 60), ("lookaheadHours", 336), ("sound", "pushover"),
             ("ownerEmails", Enumerable.Range(0, 10).Select(n => $"owner{n}@example.test").ToArray()),
             ("notificationPriority", 1), ("notificationSound", "pushover"), ("defaultType", "notification"),
@@ -661,18 +658,18 @@ public sealed class AlertsRouteTests : IDisposable
         using var owner = Owner();
 
         using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
-            ("priority", 1), ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"),
+            ("repeatSeconds", 120), ("stopAfterMinutes", 30), ("sound", "siren"),
             ("pollMinutes", 2), ("lookaheadHours", 72), ("includeAllDay", true), ("timeZone", " Asia/Amman "),
             ("ownerEmails", new[] { " neb@work.example " }), ("notificationPriority", 1), ("notificationSound", "bike"),
             ("defaultType", "notification"), ("backupDelaySeconds", 120)));
 
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var answer = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("settings");
-        Assert.Equal(1, answer.GetProperty("priority").GetInt32());
+        Assert.Equal(120, answer.GetProperty("repeatSeconds").GetInt32());
         var stored = (await _store.SettingsAsync(CancellationToken.None))!;
         Assert.Equal(["neb@work.example"], stored.OwnerEmails);
         Assert.Equal(
-            new AlertSettings(1, 120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails, 1, "bike", "notification", 120),
+            new AlertSettings(120, 30, "siren", 10, 2, 72, true, "Asia/Amman", stored.OwnerEmails, 1, "bike", "notification", 120),
             stored);
 
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
@@ -705,6 +702,107 @@ public sealed class AlertsRouteTests : IDisposable
         var alerts = state.GetProperty("alerts").EnumerateArray().ToList();
         Assert.Equal(Instant.FromUtc(2026, 10, 28, 17, 30).ToDateTimeOffset(), alerts[1].GetProperty("alertAt").GetDateTimeOffset());
         Assert.Equal(30, state.GetProperty("defaultLeadMinutes").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(7)]
+    public async Task A_priority_in_the_saved_body_is_ignored_and_an_alarm_still_repeats_until_acknowledged(int priority)
+    {
+        using var owner = Owner();
+
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("priority", priority), ("repeatSeconds", 45), ("stopAfterMinutes", 20)));
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var answer = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("settings");
+        Assert.False(answer.TryGetProperty("priority", out _));
+        using var response = await owner.PostAsync("/api/alerts/test", null);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("45", sent.Form["retry"]);
+        Assert.Equal("1200", sent.Form["expire"]);
+    }
+
+    [Fact]
+    public async Task A_sound_uploaded_to_the_pushover_account_is_listed_first_saves_and_is_sent()
+    {
+        _pushover.Sounds = () => RecordingHandler.SoundList(("aberaalarm", "Abera alarm (29.5 s)"));
+        using var owner = Owner();
+
+        using var raw = await owner.GetAsync("/api/alerts/status");
+        var body = await raw.Content.ReadAsStringAsync();
+        Assert.DoesNotContain(AppToken, body);
+        var sounds = JsonDocument.Parse(body).RootElement.GetProperty("bounds").GetProperty("sounds");
+        Assert.Equal("aberaalarm", sounds[0].GetProperty("name").GetString());
+        Assert.Equal("Abera alarm (29.5 s)", sounds[0].GetProperty("description").GetString());
+        Assert.True(sounds[0].GetProperty("custom").GetBoolean());
+        Assert.False(sounds[1].GetProperty("custom").GetBoolean());
+        Assert.Equal(24, sounds.GetArrayLength());
+
+        using var saved = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("sound", "aberaalarm"), ("notificationSound", "aberaalarm"), ("repeatSeconds", 30)));
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        using var response = await owner.PostAsync("/api/alerts/test", null);
+
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("aberaalarm", sent.Form["sound"]);
+        Assert.Equal("30", sent.Form["retry"]);
+        Assert.Single(_pushover.SoundRequests);
+    }
+
+    [Fact]
+    public async Task A_sound_in_neither_list_is_refused()
+    {
+        using var owner = Owner();
+
+        using var custom = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("sound", "aberaalarm")));
+        using var notification = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("notificationSound", "aberaalarm")));
+
+        Assert.Equal(HttpStatusCode.BadRequest, custom.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, notification.StatusCode);
+        Assert.Null(await _store.SettingsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task With_pushover_down_the_built_ins_are_listed_and_a_saved_upload_stays_valid()
+    {
+        _pushover.Sounds = () => RecordingHandler.SoundList(("aberaalarm", "Abera alarm (29.5 s)"));
+        using var owner = Owner();
+        using var first = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("sound", "aberaalarm")));
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        _pushover.Sounds = () => RecordingHandler.Text(HttpStatusCode.ServiceUnavailable, "");
+        _clock.Now = Eight + PushoverSounds.Fresh;
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+        var names = status.GetProperty("bounds").GetProperty("sounds").EnumerateArray()
+            .Select(sound => sound.GetProperty("name").GetString()).ToList();
+        Assert.Equal(PushoverSounds.BuiltIn.Select(sound => sound.Name), names);
+
+        using var again = await owner.PutAsJsonAsync("/api/alerts/settings", Form(
+            ("sound", "aberaalarm"), ("defaultLeadMinutes", 15)));
+        using var other = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("notificationSound", "otherupload")));
+
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, other.StatusCode);
+        Assert.Equal("aberaalarm", (await _store.SettingsAsync(CancellationToken.None))!.Sound);
+    }
+
+    [Theory]
+    [InlineData(29)]
+    [InlineData(10801)]
+    public async Task A_repeat_outside_pushovers_range_is_refused_with_pushovers_reason(int repeatSeconds)
+    {
+        using var owner = Owner();
+
+        using var response = await owner.PutAsJsonAsync("/api/alerts/settings", Form(("repeatSeconds", repeatSeconds)));
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(
+            "Pushover does not repeat faster than every 30 s or slower than every 10800 s.",
+            problem.GetProperty("errors").GetProperty("repeatSeconds")[0].GetString());
     }
 
     [Fact]
@@ -791,13 +889,14 @@ public sealed class AlertsRouteTests : IDisposable
     }
 
     [Fact]
-    public void Traces_leave_out_the_calendar_address_and_keep_every_other_call()
+    public void Traces_leave_out_the_calendar_address_and_the_sound_list_and_keep_every_other_call()
     {
         var filter = _app.Factory.Services.GetRequiredService<IOptionsMonitor<HttpClientTraceInstrumentationOptions>>()
             .CurrentValue.FilterHttpRequestMessage;
 
         Assert.NotNull(filter);
         Assert.False(filter(new HttpRequestMessage(HttpMethod.Get, FeedUrl)));
+        Assert.False(filter(new HttpRequestMessage(HttpMethod.Get, $"{PushoverClient.SoundsEndpoint}?token={AppToken}")));
         Assert.True(filter(new HttpRequestMessage(HttpMethod.Post, PushoverClient.Endpoint)));
         Assert.True(filter(new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/subscriptions")));
     }

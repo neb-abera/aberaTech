@@ -215,7 +215,7 @@ describe("sendTestNotification and setEventType", () => {
 
 describe("saveAlertSettings", () => {
   it("puts the whole form and hands back the stored state", async () => {
-    const saved = { ...settings, priority: 1 as const, sound: "siren" };
+    const saved = { ...settings, sound: "siren" };
     const fetchMock = stub(respond(200, { ...state, settings: saved }));
 
     const result = await saveAlertSettings(saved);

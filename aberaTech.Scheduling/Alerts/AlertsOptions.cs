@@ -37,13 +37,10 @@ public sealed class AlertsOptions
     /// <summary>All-day events are skipped unless this is set.</summary>
     public bool IncludeAllDay { get; init; }
 
-    /// <summary>Pushover priority: 0 normal, 1 high, 2 emergency. See pushover.net/api#priority.</summary>
-    public int Priority { get; init; } = PushoverClient.EmergencyPriority;
-
-    /// <summary>Seconds between the sounds of an emergency message. Pushover's floor is 30.</summary>
+    /// <summary>Seconds between an alarm's sounds. Pushover's floor is 30.</summary>
     public int RepeatSeconds { get; init; } = 60;
 
-    /// <summary>When an unacknowledged emergency message stops: 180 minutes, Pushover's ceiling.</summary>
+    /// <summary>When an unacknowledged alarm stops: 180 minutes, Pushover's ceiling.</summary>
     public int StopAfterMinutes { get; init; } = 180;
 
     /// <summary>A Pushover sound name. Empty is the phone's own Pushover default.</summary>

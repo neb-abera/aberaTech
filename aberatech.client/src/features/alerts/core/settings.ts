@@ -28,29 +28,16 @@ export const longSounds = [
  * to 30 s, so a long sound at the 30 s floor plays into each gap.
  */
 export const nonstop = {
-  priority: 2 as const,
   repeatSeconds: 30,
   sound: "persistent",
 };
 
-/** Emergency, the 30 s floor and a long sound: what Nonstop sets. */
-export function isNonstop(
-  priority: number,
-  repeatSeconds: number,
-  sound: string,
-): boolean {
+/** The 30 s floor and a long sound: what Nonstop sets. */
+export function isNonstop(repeatSeconds: number, sound: string): boolean {
   return (
-    priority === nonstop.priority &&
     repeatSeconds === nonstop.repeatSeconds &&
     (longSounds as readonly string[]).includes(sound)
   );
-}
-
-/** "minute", "2 minutes", "45 seconds": the gap between two sounds. */
-export function every(seconds: number): string {
-  if (seconds === 60) return "minute";
-  if (seconds % 60 === 0) return `${seconds / 60} minutes`;
-  return `${seconds} seconds`;
 }
 
 function minutes(value: number): string {
@@ -58,7 +45,7 @@ function minutes(value: number): string {
 }
 
 /**
- * When an unacknowledged emergency message stops, with the working:
+ * When an unacknowledged alarm stops, with the working:
  * Pushover sounds it at most `maxSounds` times, so the stop is the smaller
  * of the owner's limit and `maxSounds` × the repeat.
  */
@@ -80,22 +67,34 @@ export function stopWork(
   };
 }
 
+/**
+ * What an alarm does under the saved settings, with the numbers in:
+ * "rings every 60 s until you acknowledge it on the phone or here, and
+ * stops after 50 min."
+ */
+export function alarmLine(
+  settings: Pick<AlertSettings, "repeatSeconds" | "stopAfterMinutes">,
+  maxSounds: number,
+): string {
+  const stop = stopWork(
+    settings.repeatSeconds,
+    settings.stopAfterMinutes,
+    maxSounds,
+  ).minutes;
+  return `rings every ${settings.repeatSeconds} s until you acknowledge it on the phone or here, and stops after ${minutes(stop)} min.`;
+}
+
 /** What each type does under the saved settings, for the page's closing paragraph. */
 export function describe(
   settings: AlertSettings,
   maxSounds: number,
   timeZone: string,
 ): string {
-  const alarm =
-    settings.priority === 2
-      ? `An alarm is one Pushover message. It sounds through quiet hours and again every ${every(settings.repeatSeconds)} until you acknowledge it in the Pushover app, for up to ${minutes(stopWork(settings.repeatSeconds, settings.stopAfterMinutes, maxSounds).minutes)} minutes. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`
-      : settings.priority === 1
-        ? "An alarm is one Pushover message, with one sound that plays through Pushover's quiet hours."
-        : "An alarm is one Pushover message, with one sound. The phone's Pushover settings decide how it plays.";
+  const alarm = `An alarm is one Pushover message. It ${alarmLine(settings, maxSounds)} It plays through Pushover's quiet hours. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`;
   const notification =
     settings.notificationPriority === 1
-      ? "A notification is one message with one sound, through Pushover's quiet hours."
-      : "A notification is one message with one sound, as the phone's Pushover settings allow.";
+      ? "A notification is one message with one sound, even during Pushover's quiet hours."
+      : "A notification is one message with one sound, and follows the phone's settings.";
   const unmarked =
     settings.defaultType === "notification"
       ? "An event with no mark and no type set here sends a notification."

@@ -352,15 +352,18 @@ if (alertsEnabled)
     }
 }
 
-// The calendar's address is its secret, and the path carries it. Request
-// traces record the full URL, so calls to it are left out of them. Every
-// other outgoing call is traced as before. Registered whether or not Azure
+// The calendar's address is its secret, and the path carries it. Pushover's
+// sound list takes the app token in its query string. Request traces record
+// the full URL, so calls to either are left out of them. Every other
+// outgoing call is traced as before. Registered whether or not Azure
 // Monitor is on, after it, so it wraps any filter the distro sets.
 builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
 {
     var previous = trace.FilterHttpRequestMessage;
     trace.FilterHttpRequestMessage = request =>
-        !alertsOptions.IsCalendarRequest(request.RequestUri) && (previous?.Invoke(request) ?? true);
+        !alertsOptions.IsCalendarRequest(request.RequestUri)
+        && !PushoverClient.IsSoundsRequest(request.RequestUri)
+        && (previous?.Invoke(request) ?? true);
 });
 
 // Compress what leaves the origin. Cloudflare compresses edge-to-browser

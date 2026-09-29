@@ -3,7 +3,6 @@
  * saved. Shared by the panel, form and API suites so they agree on the shape.
  */
 export const settings = {
-  priority: 2 as 0 | 1 | 2,
   repeatSeconds: 60,
   stopAfterMinutes: 180,
   sound: "",
@@ -28,5 +27,10 @@ export const bounds = {
   backupDelaySeconds: { min: 0, max: 900 },
   maxOwnerEmails: 10,
   maxEmergencySounds: 50,
-  sounds: ["pushover", "siren", "persistent", "none"],
+  sounds: [
+    { name: "pushover", description: "Pushover (default)", custom: false },
+    { name: "siren", description: "Siren", custom: false },
+    { name: "persistent", description: "Persistent (long)", custom: false },
+    { name: "none", description: "None (silent)", custom: false },
+  ],
 };

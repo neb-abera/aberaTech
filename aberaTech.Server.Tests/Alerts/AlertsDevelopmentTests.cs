@@ -55,6 +55,10 @@ public sealed class AlertsDevelopmentTests : IDisposable
         }
 
         Assert.Equal(JsonValueKind.Null, status.GetProperty("lastFetchError").ValueKind);
+        // The fake account has one upload, listed before the built-ins.
+        var sound = status.GetProperty("bounds").GetProperty("sounds")[0];
+        Assert.Equal(FakeAlertServices.CustomSound, sound.GetProperty("name").GetString());
+        Assert.True(sound.GetProperty("custom").GetBoolean());
         var titles = status.GetProperty("alerts").EnumerateArray().Select(alert => alert.GetProperty("title").GetString()).ToList();
         Assert.Contains("E2E standup", titles);
         Assert.Contains("E2E review", titles);
