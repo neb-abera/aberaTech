@@ -6,7 +6,7 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The settings on their own: the configuration's values as the defaults,
-/// what Pushover is asked for at each priority, and the 50-sound cap.
+/// what Pushover is asked for, and the 50-sound cap.
 /// AlertsRouteTests hold the form's bounds through the route.
 /// </summary>
 public sealed class AlertSettingsTests
@@ -34,7 +34,6 @@ public sealed class AlertSettingsTests
     {
         var settings = AlertSettings.Defaults(new AlertsOptions
         {
-            Priority = 7,
             RepeatSeconds = 5,
             StopAfterMinutes = 999,
             Sound = "foghorn",
@@ -47,18 +46,29 @@ public sealed class AlertSettingsTests
             DefaultType = "alarm"
         });
 
-        Assert.Equal(new AlertSettings(2, 30, 180, "", 0, 1, 336, false, "", settings.OwnerEmails, 1, "", AlertTypes.None), settings);
+        Assert.Equal(new AlertSettings(30, 180, "", 0, 1, 336, false, "", settings.OwnerEmails, 1, "", AlertTypes.None), settings);
         Assert.Equal(["neb@work.example"], settings.OwnerEmails);
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    public void Below_priority_2_pushover_is_asked_for_no_retry_and_no_expiry(int priority)
+    [InlineData(30, 1, "")]
+    [InlineData(60, 50, "bike")]
+    [InlineData(120, 30, "persistent")]
+    [InlineData(10800, 180, "")]
+    public void An_alarm_is_always_priority_2_with_the_saved_repeat_as_retry_and_stop_as_expire(
+        int repeatSeconds, int stopAfterMinutes, string sound)
     {
-        var settings = AlertSettings.Defaults(new AlertsOptions()) with { Priority = priority, Sound = "bike" };
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with
+        {
+            RepeatSeconds = repeatSeconds,
+            StopAfterMinutes = stopAfterMinutes,
+            Sound = sound,
+            NotificationPriority = 0
+        };
 
-        Assert.Equal(new PushoverDelivery(priority, null, null, "bike"), settings.AlarmDelivery);
+        Assert.Equal(
+            new PushoverDelivery(2, repeatSeconds, stopAfterMinutes * 60, sound.Length == 0 ? null : sound),
+            settings.AlarmDelivery);
     }
 
     [Theory]
@@ -130,7 +140,7 @@ public sealed class AlertSettingsTests
     {
         var settings = AlertSettings.Defaults(new AlertsOptions());
 
-        Assert.Equal(settings.PlanKey, (settings with { Priority = 0, RepeatSeconds = 300, Sound = "bike", PollMinutes = 1 }).PlanKey);
+        Assert.Equal(settings.PlanKey, (settings with { RepeatSeconds = 300, Sound = "bike", PollMinutes = 1 }).PlanKey);
         Assert.Equal(
             settings.PlanKey,
             (settings with { NotificationPriority = 1, NotificationSound = "bike", DefaultType = AlertTypes.Notification }).PlanKey);

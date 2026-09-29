@@ -288,19 +288,22 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public async Task A_saved_priority_0_sends_priority_0_with_no_retry_or_expire()
+    public async Task An_alarm_repeats_until_acknowledged_whatever_the_notification_settings_say()
     {
         var box = New();
         await box.Worker.TickAsync(CancellationToken.None);
-        await box.Store.SaveSettingsAsync(Saved(settings => settings with { Priority = 0 }), Eight, CancellationToken.None);
+        await box.Store.SaveSettingsAsync(
+            Saved(settings => settings with { NotificationPriority = 0, RepeatSeconds = 30, StopAfterMinutes = 1 }),
+            Eight,
+            CancellationToken.None);
 
         box.Clock.Now = AlertTime;
         await box.Worker.TickAsync(CancellationToken.None);
 
         var sent = Assert.Single(box.Pushover.Requests);
-        Assert.Equal("0", sent.Form["priority"]);
-        Assert.False(sent.Form.ContainsKey("retry"));
-        Assert.False(sent.Form.ContainsKey("expire"));
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("30", sent.Form["retry"]);
+        Assert.Equal("60", sent.Form["expire"]);
     }
 
     [Fact]
@@ -362,24 +365,25 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public async Task The_test_alert_follows_the_saved_priority_and_sound()
+    public async Task The_test_alert_follows_the_saved_sound_and_always_repeats()
     {
         var box = New();
         await box.Worker.TickAsync(CancellationToken.None);
         await box.Store.SaveSettingsAsync(
-            Saved(settings => settings with { Priority = 1, Sound = "bugle" }), Eight, CancellationToken.None);
+            Saved(settings => settings with { Sound = "bugle", StopAfterMinutes = 20 }), Eight, CancellationToken.None);
 
         await box.Dispatcher.SendTestAsync(AlertTypes.Alarm, CancellationToken.None);
 
         var sent = Assert.Single(box.Pushover.Requests);
-        Assert.Equal("1", sent.Form["priority"]);
+        Assert.Equal("2", sent.Form["priority"]);
         Assert.Equal("bugle", sent.Form["sound"]);
-        Assert.False(sent.Form.ContainsKey("retry"));
-        Assert.Contains("Priority 1: one sound", sent.Form["message"]);
+        Assert.Equal("60", sent.Form["retry"]);
+        Assert.Equal("1200", sent.Form["expire"]);
+        Assert.Contains("It rings every minute until you acknowledge it.", sent.Form["message"]);
     }
 
     [Fact]
-    public async Task The_test_alert_at_priority_2_says_how_often_it_repeats()
+    public async Task The_test_alert_says_how_often_it_rings()
     {
         var box = New();
         await box.Store.SaveSettingsAsync(Saved(settings => settings with { RepeatSeconds = 120 }), Eight, CancellationToken.None);
@@ -388,7 +392,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         var sent = Assert.Single(box.Pushover.Requests);
         Assert.Equal("120", sent.Form["retry"]);
-        Assert.Contains("repeats every 2 minutes until you acknowledge it", sent.Form["message"]);
+        Assert.Contains("rings every 2 minutes until you acknowledge it", sent.Form["message"]);
     }
 
     [Fact]

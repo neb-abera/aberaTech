@@ -67,8 +67,8 @@ describe("the settings form", () => {
       includeAllDay: true,
     });
 
-    expect(input("Repeat every").value).toBe("60");
-    expect(input("Stop after").value).toBe("180");
+    expect(input("Pushover repeats every").value).toBe("60");
+    expect(input("Pushover stops after").value).toBe("180");
     expect(input("Default lead").value).toBe("10");
     expect(input("Check calendar every").value).toBe("5");
     expect(input("Look ahead").value).toBe("48");
@@ -82,19 +82,36 @@ describe("the settings form", () => {
       "a@example.test, b@example.test",
     );
     expect(input("Alert for all-day events").checked).toBe(true);
-    expect(
-      screen
-        .getByRole("button", { name: "Emergency" })
-        .getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(
-      screen
-        .getByRole("button", { name: "Normal" })
-        .getAttribute("aria-pressed"),
-    ).toBe("false");
   });
 
-  it("shows the working for when an emergency message stops", () => {
+  it("has no priority for an alarm: every alarm repeats until acknowledged", () => {
+    mount();
+
+    const alarms = screen.getByRole("heading", {
+      name: "Alarms: events marked #critical or set to Alarm",
+    });
+    expect(alarms).toBeTruthy();
+    expect(screen.queryByText("Priority")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Emergency" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "High" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Normal" })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/emergency/i);
+  });
+
+  it("says the 30 s floor is Pushover's, and that the phone and this browser ring without it", () => {
+    mount();
+
+    expect(screen.getByLabelText("Pushover repeats every")).toBeTruthy();
+    expect(screen.getByLabelText("Pushover stops after")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Pushover does not repeat faster than every 30 s. A paired phone rings as an iPhone alarm until you press Stop. Ring in this browser beeps every second until you acknowledge it.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("30 to 10800 seconds")).toBeNull();
+  });
+
+  it("shows the working for when an alarm stops", () => {
     mount();
     expect(
       screen.getByText(
@@ -102,16 +119,24 @@ describe("the settings form", () => {
       ),
     ).toBeTruthy();
 
-    fireEvent.change(input("Repeat every"), { target: { value: "120" } });
-    fireEvent.change(input("Stop after"), { target: { value: "30" } });
+    fireEvent.change(input("Pushover repeats every"), {
+      target: { value: "120" },
+    });
+    fireEvent.change(input("Pushover stops after"), {
+      target: { value: "30" },
+    });
     expect(
       screen.getByText(
         "Stops after 30 min: the limit comes before 50 sounds × 120 s = 100 min.",
       ),
     ).toBeTruthy();
 
-    fireEvent.change(input("Repeat every"), { target: { value: "45" } });
-    fireEvent.change(input("Stop after"), { target: { value: "180" } });
+    fireEvent.change(input("Pushover repeats every"), {
+      target: { value: "45" },
+    });
+    fireEvent.change(input("Pushover stops after"), {
+      target: { value: "180" },
+    });
     expect(screen.getByText(/50 sounds × 45 s = 37\.5 min/)).toBeTruthy();
   });
 
@@ -120,20 +145,27 @@ describe("the settings form", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Repeat every 2 min" }));
 
-    expect(input("Repeat every").value).toBe("120");
+    expect(input("Pushover repeats every").value).toBe("120");
     fireEvent.click(screen.getByRole("button", { name: "Repeat every 30 s" }));
-    expect(input("Repeat every").value).toBe("30");
+    expect(input("Pushover repeats every").value).toBe("30");
   });
 
-  it("disables repeat and stop below emergency, where Pushover sounds once", () => {
-    mount({ priority: 1 });
+  it("always enables repeat, stop, their presets and the working", () => {
+    mount();
 
-    expect(input("Repeat every").disabled).toBe(true);
-    expect(input("Stop after").disabled).toBe(true);
-    expect(screen.getByText(/apply to Emergency only/)).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("button", { name: "Emergency" }));
-    expect(input("Repeat every").disabled).toBe(false);
+    expect(input("Pushover repeats every").disabled).toBe(false);
+    expect(input("Pushover stops after").disabled).toBe(false);
+    for (const name of [
+      "Repeat every 30 s",
+      "Repeat every 1 min",
+      "Repeat every 2 min",
+      "Repeat every 5 min",
+      "Nonstop",
+    ])
+      expect(
+        screen.getByRole("button", { name }).getAttribute("aria-disabled"),
+      ).not.toBe("true");
+    expect(screen.getByText(/^Stops after 50 min/)).toBeTruthy();
   });
 
   it("keeps Save off until something changes, and off again when it is changed back", () => {
@@ -153,7 +185,6 @@ describe("the settings form", () => {
       state: { settings: value } as never,
     }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Normal" }));
     fireEvent.change(screen.getByLabelText("Sound"), {
       target: { value: "none" },
     });
@@ -170,13 +201,13 @@ describe("the settings form", () => {
 
     expect(saver).toHaveBeenCalledWith({
       ...settings,
-      priority: 0,
       sound: "none",
       lookaheadHours: 72,
       includeAllDay: true,
       timeZone: "America/New_York",
       ownerEmails: ["a@example.test", "b@example.test"],
     });
+    expect(saver.mock.calls[0][0]).not.toHaveProperty("priority");
     expect(onSaved).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Settings saved.")).toBeTruthy();
   });
@@ -186,24 +217,34 @@ describe("the settings form", () => {
       ok: false,
       reason: "invalid",
       errors: {
-        repeatSeconds: ["Between 30 and 10800 seconds."],
+        repeatSeconds: [
+          "Pushover does not repeat faster than every 30 s or slower than every 10800 s.",
+        ],
         timeZone: ["Not a time zone database name, such as America/New_York."],
       },
     }));
 
-    fireEvent.change(input("Repeat every"), { target: { value: "5" } });
+    fireEvent.change(input("Pushover repeats every"), {
+      target: { value: "5" },
+    });
     fireEvent.click(saveButton());
     await flush();
 
-    expect(screen.getByText("Between 30 and 10800 seconds.")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Pushover does not repeat faster than every 30 s or slower than every 10800 s.",
+      ),
+    ).toBeTruthy();
     expect(
       screen.getByText(
         "Not a time zone database name, such as America/New_York.",
       ),
     ).toBeTruthy();
     expect(screen.getByText(/Not saved\. Check the fields/)).toBeTruthy();
-    expect(input("Repeat every").getAttribute("aria-invalid")).toBe("true");
-    expect(input("Repeat every").value).toBe("5");
+    expect(input("Pushover repeats every").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
+    expect(input("Pushover repeats every").value).toBe("5");
   });
 
   it("keeps alarms, notifications and unmarked events in their own sections", () => {
@@ -228,8 +269,17 @@ describe("the settings form", () => {
     expect(
       (screen.getByLabelText("Notification sound") as HTMLSelectElement).value,
     ).toBe("siren");
-    // The alarm's own chips are untouched by the notification's.
-    expect(pressed("Emergency")).toBe("true");
+  });
+
+  it("says what each notification choice does in plain words", () => {
+    mount();
+
+    expect(
+      screen.getByText("One sound, follows the phone's settings."),
+    ).toBeTruthy();
+    expect(
+      screen.getByText("One sound, even during Pushover's quiet hours."),
+    ).toBeTruthy();
   });
 
   it("sends the notification settings and the default for unmarked events with the rest of the form", async () => {
@@ -304,19 +354,14 @@ describe("the settings form", () => {
     }
   });
 
-  it("Nonstop sets Emergency, a 30 s repeat and a long sound, and Save sends them", async () => {
-    const { saver } = mount({ priority: 0, sound: "" });
+  it("Nonstop sets a 30 s repeat and a long sound, nothing else, and Save sends them", async () => {
+    const { saver } = mount({ sound: "" });
     const nonstop = screen.getByRole("button", { name: "Nonstop" });
     expect(nonstop.getAttribute("aria-pressed")).toBe("false");
 
     fireEvent.click(nonstop);
 
-    expect(
-      screen
-        .getByRole("button", { name: "Emergency" })
-        .getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(input("Repeat every").value).toBe("30");
+    expect(input("Pushover repeats every").value).toBe("30");
     expect((screen.getByLabelText("Sound") as HTMLSelectElement).value).toBe(
       "persistent",
     );
@@ -329,25 +374,84 @@ describe("the settings form", () => {
     await flush();
     expect(saver).toHaveBeenCalledWith({
       ...settings,
-      priority: 2,
       repeatSeconds: 30,
       sound: "persistent",
     });
+    expect(saver.mock.calls[0][0]).not.toHaveProperty("priority");
   });
 
-  it("says under the repeat why 1 s and 5 s are not offered, with the numbers", () => {
+  it("says under the repeat how a long sound fills the gap, with the numbers", () => {
     mount();
 
-    const floor = screen.getByText(
-      /Pushover repeats no faster than every 30 s/,
-    );
-    expect(floor.textContent).toContain("1 s and 5 s cannot be sent.");
-    expect(floor.textContent).toContain(
+    const gap = screen.getByText(/A long sound plays into the gap/);
+    expect(gap.textContent).toContain(
       "iOS plays a notification sound for up to 30 s, the length of the 30 s repeat.",
     );
-    expect(floor.textContent).toContain(
-      "Nonstop sets Emergency, 30 s and persistent, one of Pushover's 5 long sounds.",
+    expect(gap.textContent).toContain(
+      "Nonstop sets 30 s and persistent, one of Pushover's 5 long sounds.",
     );
+    expect(gap.textContent).toContain(
+      "Pushover stops after 50 repeats: 50 × 30 s = 25 min.",
+    );
+  });
+
+  it("lists the sounds uploaded to the Pushover account first, under Your sounds", async () => {
+    const onSaved = vi.fn();
+    const saver = vi.fn(async () => ({ ok: true }) as ActionResult);
+    render(
+      <AlertSettingsForm
+        settings={settings}
+        bounds={{
+          ...bounds,
+          sounds: [
+            {
+              name: "aberaalarm",
+              description: "Abera alarm (29.5 s)",
+              custom: true,
+            },
+            ...bounds.sounds,
+          ],
+        }}
+        onSaved={onSaved}
+        save={saver}
+      />,
+    );
+
+    for (const label of ["Sound", "Notification sound"]) {
+      const select = screen.getByLabelText(label) as HTMLSelectElement;
+      const groups = Array.from(select.querySelectorAll("optgroup")).map(
+        (group) => group.label,
+      );
+      expect(groups).toEqual(["Your sounds", "Pushover's sounds"]);
+      const first = select.querySelector(
+        "optgroup option",
+      ) as HTMLOptionElement;
+      expect(first.value).toBe("aberaalarm");
+      expect(first.textContent).toBe("Abera alarm (29.5 s) (aberaalarm)");
+    }
+
+    fireEvent.change(screen.getByLabelText("Sound"), {
+      target: { value: "aberaalarm" },
+    });
+    fireEvent.click(saveButton());
+    await flush();
+    expect(saver).toHaveBeenCalledWith({ ...settings, sound: "aberaalarm" });
+  });
+
+  it("keeps a saved upload choosable when the list names only Pushover's sounds", () => {
+    mount({ sound: "aberaalarm" });
+
+    const select = screen.getByLabelText("Sound") as HTMLSelectElement;
+    expect(select.value).toBe("aberaalarm");
+    expect(select.querySelector("optgroup")?.label).toBe("Your sounds");
+    const notification = screen.getByLabelText(
+      "Notification sound",
+    ) as HTMLSelectElement;
+    expect(
+      Array.from(notification.querySelectorAll("optgroup")).map(
+        (group) => group.label,
+      ),
+    ).toEqual(["Pushover's sounds"]);
   });
 
   it("marks Pushover's long sounds in the list", () => {

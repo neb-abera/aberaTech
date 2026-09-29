@@ -49,12 +49,12 @@ public sealed class AlertTextTests
     }
 
     [Theory]
-    [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
-    [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]
-    [InlineData(2, "Priority 2: it repeats every minute until you acknowledge it in Pushover.")]
-    public void The_test_message_says_what_the_saved_alarm_priority_does(int priority, string expected)
+    [InlineData(60, "It rings every minute until you acknowledge it.")]
+    [InlineData(120, "It rings every 2 minutes until you acknowledge it.")]
+    [InlineData(45, "It rings every 45 seconds until you acknowledge it.")]
+    public void The_test_message_says_how_often_the_alarm_rings(int repeatSeconds, string expected)
     {
-        var settings = AlertSettings.Defaults(new AlertsOptions()) with { Priority = priority };
+        var settings = AlertSettings.Defaults(new AlertsOptions()) with { RepeatSeconds = repeatSeconds };
 
         var text = AlertText.TestMessage(Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, AlertTypes.Alarm, settings.AlarmDelivery);
 
@@ -62,8 +62,8 @@ public sealed class AlertTextTests
     }
 
     [Theory]
-    [InlineData(0, "Priority 0: one sound, as the phone's Pushover settings allow.")]
-    [InlineData(1, "Priority 1: one sound, through Pushover's quiet hours.")]
+    [InlineData(0, "One sound, follows the phone's settings.")]
+    [InlineData(1, "One sound, even during Pushover's quiet hours.")]
     public void The_test_notification_says_it_is_a_notification_and_what_its_priority_does(int priority, string expected)
     {
         var settings = AlertSettings.Defaults(new AlertsOptions()) with { NotificationPriority = priority };

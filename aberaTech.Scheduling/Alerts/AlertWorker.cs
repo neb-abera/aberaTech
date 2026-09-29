@@ -411,7 +411,7 @@ public sealed class CalendarAlertWorker(
 public static class AlertsRegistration
 {
     /// <summary>
-    /// The worker, the send path and the two HTTP clients. The caller
+    /// The worker, the send path, the sound list and the two HTTP clients. The caller
     /// registers <see cref="AlertsOptions"/>, an <see cref="IClock"/> and an
     /// <see cref="IAlertStore"/>.
     /// </summary>
@@ -419,6 +419,7 @@ public static class AlertsRegistration
     {
         services.AddSingleton<AlertsStatus>();
         services.AddSingleton<AlertDispatcher>();
+        services.AddSingleton<PushoverSounds>();
         services.AddSingleton<CalendarAlertWorker>();
         services.AddHostedService(provider => provider.GetRequiredService<CalendarAlertWorker>());
 

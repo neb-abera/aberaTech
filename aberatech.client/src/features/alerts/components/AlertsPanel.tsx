@@ -27,7 +27,7 @@ import {
   unskipAlert,
 } from "../core/api";
 import { ringPollMs } from "../core/ring";
-import { count, describe, every, typeLabels } from "../core/settings";
+import { alarmLine, count, describe, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
 import HowEventsAlert from "./HowEventsAlert";
 import PhonesSection, { type PhonesApi, phonesApi } from "./PhonesSection";
@@ -179,10 +179,10 @@ export default function AlertsPanel({
           variant="contained"
           disabled={busy}
           onClick={() =>
-            void act(sendTestAlert, () =>
-              state.settings.priority === 2
-                ? `Test alert sent as an alarm. The phone sounds every ${every(state.settings.repeatSeconds)} until you acknowledge it.`
-                : "Test alert sent as an alarm. Check the phone for one sound.",
+            void act(
+              sendTestAlert,
+              () =>
+                `Test alert sent as an alarm. It ${alarmLine(state.settings, state.bounds.maxEmergencySounds)}`,
             )
           }
         >
@@ -283,7 +283,10 @@ export default function AlertsPanel({
         )}
       </Box>
 
-      <HowEventsAlert settings={state.settings} />
+      <HowEventsAlert
+        settings={state.settings}
+        maxSounds={state.bounds.maxEmergencySounds}
+      />
 
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
         {describe(

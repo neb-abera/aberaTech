@@ -44,11 +44,9 @@ export interface LastSend {
 
 /** What the alerts run on: the configuration's values until the owner saves. */
 export interface AlertSettings {
-  /** The alarm's priority: 0 normal, 1 high, 2 emergency. */
-  priority: 0 | 1 | 2;
-  /** Seconds between sounds. Priority 2 only. */
+  /** Seconds between an alarm's Pushover repeats. An alarm always repeats until acknowledged. */
   repeatSeconds: number;
-  /** When an unacknowledged message stops. Priority 2 only. */
+  /** When an unacknowledged alarm stops. */
   stopAfterMinutes: number;
   /** A Pushover sound name, or "" for the phone's own default. */
   sound: string;
@@ -74,6 +72,13 @@ export interface Bound {
   max: number;
 }
 
+/** One sound the Pushover account offers. Custom is one the owner uploaded. */
+export interface PushoverSound {
+  name: string;
+  description: string;
+  custom: boolean;
+}
+
 /** What the form's inputs accept. The server checks the same numbers. */
 export interface SettingsBounds {
   repeatSeconds: Bound;
@@ -84,7 +89,8 @@ export interface SettingsBounds {
   backupDelaySeconds: Bound;
   maxOwnerEmails: number;
   maxEmergencySounds: number;
-  sounds: string[];
+  /** The account's uploads first, then Pushover's built-ins. */
+  sounds: PushoverSound[];
 }
 
 export interface AlertsState {

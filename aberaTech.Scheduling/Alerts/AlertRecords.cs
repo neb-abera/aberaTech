@@ -28,8 +28,6 @@ public class AlertSettingsRecord
 
     public int Id { get; set; } = SingleId;
 
-    public int Priority { get; set; }
-
     public int RepeatSeconds { get; set; }
 
     public int StopAfterMinutes { get; set; }
@@ -114,9 +112,9 @@ public class AlertDeliveryRecord
     public Instant? CompletedAt { get; set; }
 
     /// <summary>
-    /// Pushover's receipt for an emergency message, which repeats until
+    /// Pushover's receipt for an alarm, which repeats until
     /// acknowledged. An acknowledgement on /alerts or a paired phone cancels
-    /// the repeats with it. Null for any other priority.
+    /// the repeats with it. Null for a notification.
     /// </summary>
     public string? Receipt { get; set; }
 }

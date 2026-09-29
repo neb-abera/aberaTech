@@ -191,13 +191,13 @@ describe("the owner", () => {
     await settle();
 
     const paragraph = screen.getByText(
-      /again every minute until you acknowledge it in the Pushover app, for up to 50 minutes/,
+      /It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min\./,
     );
     expect(paragraph.textContent).toContain(
       "An alarm is one Pushover message.",
     );
     expect(paragraph.textContent).toContain(
-      "A notification is one message with one sound, as the phone's Pushover settings allow.",
+      "A notification is one message with one sound, and follows the phone's settings.",
     );
     expect(paragraph.textContent).toContain(
       "An event with no mark and no type set here sends nothing.",
@@ -219,7 +219,7 @@ describe("the owner", () => {
     await settle();
     expect(
       screen.getByText(
-        /A notification is one message with one sound, through Pushover's quiet hours\. An event with no mark and no type set here sends a notification\./,
+        /A notification is one message with one sound, even during Pushover's quiet hours\. An event with no mark and no type set here sends a notification\./,
       ),
     ).toBeTruthy();
   });
@@ -333,7 +333,7 @@ describe("the owner", () => {
     ).toBeTruthy();
   });
 
-  it("describes what the saved settings do, not a fixed priority", async () => {
+  it("describes what the saved settings do, with the saved numbers", async () => {
     mount(
       respond(
         200,
@@ -344,18 +344,24 @@ describe("the owner", () => {
     );
     await settle();
     expect(
-      screen.getByText(/again every 2 minutes .* for up to 30 minutes/),
+      screen.getByText(
+        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+      ),
     ).toBeTruthy();
+    expect(
+      screen.getByText(
+        /It rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min\./,
+      ),
+    ).toBeTruthy();
+  });
 
-    cleanup();
-    mount(respond(200, state({ settings: { ...settings, priority: 0 } })));
+  it("says Emergency nowhere on the page", async () => {
+    mount(respond(200, state()));
     await settle();
-    expect(
-      screen.getByText(/with one sound\. The phone's Pushover/),
-    ).toBeTruthy();
-    expect(
-      screen.queryByText(/until you acknowledge it in the Pushover app/),
-    ).toBeNull();
+
+    expect(screen.getByRole("heading", { name: "Settings" })).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/emergency/i);
+    expect(document.body.textContent).not.toMatch(/priority 2/i);
   });
 
   it("saves the settings, then shows what the server stored", async () => {
@@ -364,22 +370,27 @@ describe("the owner", () => {
       respond(
         200,
         state({
-          settings: { ...settings, priority: 1 },
+          settings: { ...settings, repeatSeconds: 120 },
         }),
       ),
     );
     await settle();
 
-    fireEvent.click(screen.getByRole("button", { name: "High" }));
+    fireEvent.click(screen.getByRole("button", { name: "Repeat every 2 min" }));
     fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
     await settle();
 
     const put = fetchMock.mock.calls.find(([, init]) => init?.method === "PUT");
     expect(put?.[0]).toBe("/api/alerts/settings");
-    expect(JSON.parse(put?.[1].body)).toEqual({ ...settings, priority: 1 });
+    expect(JSON.parse(put?.[1].body)).toEqual({
+      ...settings,
+      repeatSeconds: 120,
+    });
     expect(screen.getByText("Settings saved.")).toBeTruthy();
     expect(
-      screen.getByText(/plays through Pushover's quiet hours/),
+      screen.getByText(
+        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 100 min.",
+      ),
     ).toBeTruthy();
   });
 
@@ -498,7 +509,11 @@ describe("the owner", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
     await settle();
     expect(posts()[0]).toEqual(["/api/alerts/test", undefined]);
-    expect(screen.getByText(/Test alert sent as an alarm/)).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Test alert sent as an alarm. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
+      ),
+    ).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
     await settle();
