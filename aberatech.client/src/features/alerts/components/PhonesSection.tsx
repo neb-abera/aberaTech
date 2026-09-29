@@ -74,15 +74,19 @@ export function PairingQr({ value }: { value: string }) {
 
 /**
  * The phones that mirror alarms. Pairing makes a token and shows it once,
- * as a QR code, a link and text. The list names each phone and when it was
- * last seen, and Revoke stops its token on its next request.
+ * as a QR code, a link and text. The list names each phone, when it was
+ * last seen and whether it takes pushes, and Revoke stops its token on its
+ * next request.
  */
 export default function PhonesSection({
   api = phonesApi,
   when,
+  pushMissing = [],
 }: {
   api?: PhonesApi;
   when: (iso: string) => string;
+  /** The push secrets the server lacks. Empty when pushes go. */
+  pushMissing?: string[];
 }) {
   const [devices, setDevices] = React.useState<Device[] | null>(null);
   const [name, setName] = React.useState("");
@@ -154,6 +158,16 @@ export default function PhonesSection({
         A paired iPhone running Abera Alarms rings every alarm itself, offline
         too. Up to 5 phones.
       </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+        A push asks the phone to update its alarms at once. iOS can delay or
+        drop it, most of all after the app is swiped away, so the phone also
+        updates when opened and in the background.
+      </Typography>
+      {pushMissing.length > 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Pushes are off. The server is missing {pushMissing.join(", ")}.
+        </Alert>
+      )}
 
       <Stack
         direction="row"
@@ -268,6 +282,9 @@ export default function PhonesSection({
                   {device.lastSeenAt
                     ? `Last seen ${when(device.lastSeenAt)}.`
                     : "Not seen yet."}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {device.push ? "Push on" : "Push off"}
                 </Typography>
               </Box>
               {confirming === device.id ? (

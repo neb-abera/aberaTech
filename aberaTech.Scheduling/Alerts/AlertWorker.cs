@@ -463,13 +463,19 @@ public sealed class CalendarAlertWorker(
         {
             logger.LogWarning("Pruning old calendar alert rows failed ({Failure}).", exception.GetType().Name);
         }
+
+        // Phones hear about a read whose alarms differ from the last ones.
+        if (scope.ServiceProvider.GetService<AlertPushWorker>() is { } pushes)
+        {
+            await pushes.CalendarReadAsync(cancellationToken);
+        }
     }
 }
 
 public static class AlertsRegistration
 {
     /// <summary>
-    /// The worker, the send path, the sound list and the three HTTP clients. The caller
+    /// The worker, the send path, the sound list, the phone pushes and the four HTTP clients. The caller
     /// registers <see cref="AlertsOptions"/>, an <see cref="IClock"/> and an
     /// <see cref="IAlertStore"/>.
     /// </summary>
@@ -487,6 +493,19 @@ public static class AlertsRegistration
         services.AddHttpClient<PushoverClient>(client => client.Timeout = TimeSpan.FromSeconds(15)).RemoveAllLoggers();
         // Writes to the owner's Google Calendar. The caller registers an IAlertCalendarGrant.
         services.AddHttpClient<GoogleAlertEvents>(client => client.Timeout = TimeSpan.FromSeconds(10)).RemoveAllLoggers();
+
+        // Phone pushes. Apple's push service speaks HTTP/2 only, and the
+        // device token is in the path, so this client logs nothing either.
+        services.AddSingleton<ApnsTokens>();
+        services.AddSingleton<ApnsDelay>();
+        services.AddSingleton<AlertPushWorker>();
+        services.AddHostedService(provider => provider.GetRequiredService<AlertPushWorker>());
+        services.AddHttpClient<ApnsClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+            client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
+        }).RemoveAllLoggers();
         return services;
     }
 }

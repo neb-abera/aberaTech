@@ -82,6 +82,42 @@ public sealed class AlertsDevelopmentTests : IDisposable
         Assert.Equal(JsonValueKind.String, after.GetProperty("mutedUntil").ValueKind);
     }
 
+    [PostgresFact]
+    public async Task A_registered_phone_is_pushed_through_the_fake_apple_with_a_key_made_at_start()
+    {
+        using var owner = _app!.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+        using var paired = await owner.PostAsJsonAsync("/api/alerts/devices", new { name = "Development phone" });
+        var token = (await paired.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString()!;
+        using var phone = _app.CreateClient();
+        phone.DefaultRequestHeaders.Authorization = new("Bearer", token);
+        var apnsToken = new string('d', 64);
+
+        using var registered = await phone.PutAsJsonAsync(
+            "/api/alerts/devices/me/push", new { apnsToken, environment = "sandbox" });
+        Assert.Equal(HttpStatusCode.NoContent, registered.StatusCode);
+        var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+        Assert.True(status.GetProperty("push").GetProperty("on").GetBoolean());
+        using var muted = await phone.PostAsJsonAsync("/api/alerts/mute", new { until = "hour" });
+        Assert.Equal(HttpStatusCode.OK, muted.StatusCode);
+
+        // The sender runs on its own and is woken by the change.
+        JsonElement pushes = default;
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            pushes = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/fake/pushes");
+            if (pushes.GetArrayLength() > 0) break;
+            await Task.Delay(100);
+        }
+
+        var push = Assert.Single(pushes.EnumerateArray());
+        Assert.Equal(ApnsClient.SandboxHost, push.GetProperty("host").GetString());
+        Assert.Equal("background", push.GetProperty("pushType").GetString());
+        Assert.Equal("tech.abera.alarms", push.GetProperty("topic").GetString());
+        Assert.DoesNotContain(apnsToken, pushes.GetRawText());
+        var devices = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/devices");
+        Assert.True(devices[0].GetProperty("push").GetBoolean());
+    }
+
     public void Dispose()
     {
         _app?.Dispose();

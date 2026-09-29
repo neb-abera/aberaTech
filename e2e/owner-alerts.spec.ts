@@ -603,6 +603,85 @@ test.describe("/alerts", () => {
     expect((await phone("/api/alerts/status", request)).status()).toBe(401);
   });
 
+  test("a fresh phone says Push off, and Push on once it registers a push token with its own token", async ({
+    page,
+    request,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    const paired = await page.request.post("/api/alerts/devices", {
+      data: { name: "E2E push phone" },
+    });
+    expect(paired.status()).toBe(201);
+    const { token } = (await paired.json()) as { token: string };
+    await page.reload();
+
+    const row = page
+      .getByRole("list", { name: "Paired phones" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E push phone" });
+    await expect(row.getByText("Push off")).toBeVisible();
+    await expect(
+      page.getByText(
+        "A push asks the phone to update its alarms at once. iOS can delay or drop it, most of all after the app is swiped away, so the phone also updates when opened and in the background.",
+      ),
+    ).toBeVisible();
+
+    const apnsToken = "e2e0".repeat(16);
+    const registration = { apnsToken, environment: "sandbox" };
+    // The owner's cookie is not a phone.
+    expect(
+      (
+        await page.request.put("/api/alerts/devices/me/push", {
+          data: registration,
+        })
+      ).status(),
+    ).toBe(403);
+    const phone = { Authorization: `Bearer ${token}` };
+    expect(
+      (
+        await request.put("/api/alerts/devices/me/push", {
+          data: { apnsToken: "ABC", environment: "sandbox" },
+          headers: phone,
+        })
+      ).status(),
+    ).toBe(400);
+    expect(
+      (
+        await request.put("/api/alerts/devices/me/push", {
+          data: registration,
+          headers: phone,
+        })
+      ).status(),
+    ).toBe(204);
+
+    await page.reload();
+    await expect(row.getByText("Push on")).toBeVisible();
+    const listed = await (await page.request.get("/api/alerts/devices")).text();
+    expect(listed).not.toContain(apnsToken);
+
+    // A mute from the phone pushes it, through the fake Apple.
+    const before = (
+      await (await page.request.get("/api/alerts/fake/pushes")).json()
+    ).length;
+    expect(
+      (
+        await request.post("/api/alerts/mute", {
+          data: { until: "hour" },
+          headers: phone,
+        })
+      ).status(),
+    ).toBe(200);
+    await expect
+      .poll(
+        async () =>
+          (await (await page.request.get("/api/alerts/fake/pushes")).json())
+            .length,
+      )
+      .toBeGreaterThan(before);
+    await page.request.post("/api/alerts/unmute");
+  });
+
   test("ringing in this browser rings for a due alarm, and Acknowledge stops it and marks it acknowledged", async ({
     page,
   }) => {

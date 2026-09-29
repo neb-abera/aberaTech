@@ -9,9 +9,10 @@ using NodaTime;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
-/// Who may call /api/alerts: the owner's cookie everywhere, and a paired
-/// phone's token on the routes the phone needs. Every /api/alerts route
-/// names one of the two policies, and RouteTableTests holds the split.
+/// Who may call /api/alerts: the owner's cookie everywhere but the phone's
+/// own push registration, and a paired phone's token on the routes the
+/// phone needs. Every /api/alerts route names one of the three policies,
+/// and RouteTableTests holds the split.
 /// </summary>
 /// <remarks>
 /// Both policies authenticate both schemes. A request with a valid token
@@ -28,6 +29,13 @@ public static class AlertsAuth
 
     /// <summary>Status, mute, unmute, skip, unskip, ack, event type and new event: the owner's cookie or a paired phone.</summary>
     public const string OwnerOrDevicePolicy = "alerts-owner-or-device";
+
+    /// <summary>
+    /// A paired phone's token alone: the phone's own push registration. The
+    /// owner's cookie is refused with 403, because the route acts on the
+    /// calling phone and a browser is no phone.
+    /// </summary>
+    public const string DevicePolicy = "alerts-device-only";
 
     /// <summary>The paired phone's id, on a principal only the device scheme issues.</summary>
     public const string DeviceClaim = "aberatech:alerts-device";
@@ -49,7 +57,11 @@ public static class AlertsAuth
             .AddPolicy(OwnerOrDevicePolicy, policy => policy
                 .AddAuthenticationSchemes(CookieAuthenticationDefaults.AuthenticationScheme, DeviceScheme)
                 .RequireAuthenticatedUser()
-                .RequireAssertion(context => IsOwner(context.User, admin) || IsDevice(context.User)));
+                .RequireAssertion(context => IsOwner(context.User, admin) || IsDevice(context.User)))
+            .AddPolicy(DevicePolicy, policy => policy
+                .AddAuthenticationSchemes(CookieAuthenticationDefaults.AuthenticationScheme, DeviceScheme)
+                .RequireAuthenticatedUser()
+                .RequireAssertion(context => IsDevice(context.User)));
 
         return services;
     }
@@ -59,6 +71,14 @@ public static class AlertsAuth
         user.Identities.Any(identity => identity.IsAuthenticated
                                         && identity.AuthenticationType == DeviceScheme
                                         && identity.HasClaim(claim => claim.Type == DeviceClaim));
+
+    /// <summary>The calling phone's id, or null for anyone who is not a paired phone.</summary>
+    public static Guid? DeviceId(ClaimsPrincipal user) =>
+        user.Identities
+            .Where(identity => identity.IsAuthenticated && identity.AuthenticationType == DeviceScheme)
+            .Select(identity => identity.FindFirst(DeviceClaim)?.Value)
+            .Select(value => Guid.TryParse(value, out var id) ? id : (Guid?)null)
+            .FirstOrDefault(id => id is not null);
 
     /// <summary>
     /// The owner's cookie, checked as the admin policy checks it: the Google
