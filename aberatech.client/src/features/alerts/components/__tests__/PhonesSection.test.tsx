@@ -34,6 +34,7 @@ const listed: Device = {
   name: paired.name,
   createdAt: paired.createdAt,
   lastSeenAt: null,
+  push: false,
 };
 
 const when = (iso: string) => `at ${iso}`;
@@ -251,5 +252,54 @@ describe("the QR code", () => {
     expect(d.match(/M/g)).toHaveLength(dark);
     // The top-left finder pattern starts at the margin.
     expect(d.startsWith("M4 4h1v1h-1z")).toBe(true);
+  });
+});
+
+describe("pushes", () => {
+  it("says Push off for a phone with no push token and Push on for one with", async () => {
+    render(
+      <PhonesSection
+        api={fakeApi([
+          [listed, { ...listed, id: "second", name: "iPad", push: true }],
+        ])}
+        when={when}
+      />,
+    );
+    await settle();
+
+    const rows = within(
+      screen.getByRole("list", { name: "Paired phones" }),
+    ).getAllByRole("listitem");
+    expect(within(rows[0]).getByText("Push off")).toBeTruthy();
+    expect(within(rows[1]).getByText("Push on")).toBeTruthy();
+  });
+
+  it("says what a push does and that iOS can delay or drop it", async () => {
+    render(<PhonesSection api={fakeApi([[]])} when={when} />);
+    await settle();
+
+    expect(
+      screen.getByText(
+        "A push asks the phone to update its alarms at once. iOS can delay or drop it, most of all after the app is swiped away, so the phone also updates when opened and in the background.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Pushes are off/)).toBeNull();
+  });
+
+  it("names the missing push secrets when the server lacks them", async () => {
+    render(
+      <PhonesSection
+        api={fakeApi([[]])}
+        when={when}
+        pushMissing={["Alerts__ApnsKeyP8", "Alerts__ApnsTeamId"]}
+      />,
+    );
+    await settle();
+
+    expect(
+      screen.getByText(
+        "Pushes are off. The server is missing Alerts__ApnsKeyP8, Alerts__ApnsTeamId.",
+      ),
+    ).toBeTruthy();
   });
 });

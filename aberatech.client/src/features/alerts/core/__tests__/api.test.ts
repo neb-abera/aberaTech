@@ -315,11 +315,15 @@ describe("the phone and the ring", () => {
 
   it("lists the phones, and a 401 or 403 is a visitor", async () => {
     stub(
-      respond(200, [{ id: "a", name: "P", createdAt: "x", lastSeenAt: null }]),
+      respond(200, [
+        { id: "a", name: "P", createdAt: "x", lastSeenAt: null, push: true },
+      ]),
     );
     expect(await listDevices()).toEqual({
       ok: true,
-      devices: [{ id: "a", name: "P", createdAt: "x", lastSeenAt: null }],
+      devices: [
+        { id: "a", name: "P", createdAt: "x", lastSeenAt: null, push: true },
+      ],
     });
     stub(respond(403));
     expect(await listDevices()).toEqual({ ok: false, reason: "visitor" });

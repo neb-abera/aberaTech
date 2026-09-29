@@ -135,6 +135,18 @@ public class AlertDeviceRecord
 
     /// <summary>The last request the token made, written at most once a minute.</summary>
     public Instant? LastSeenAt { get; set; }
+
+    /// <summary>The token Apple gave the phone's app for pushes: lowercase hex. Null until the phone registers one.</summary>
+    public string? ApnsToken { get; set; }
+
+    /// <summary>"sandbox" or "production": which of Apple's servers the token belongs to.</summary>
+    public string? ApnsEnvironment { get; set; }
+
+    /// <summary>The plan version the phone was last pushed, or held when it registered.</summary>
+    public long PushedVersion { get; set; }
+
+    /// <summary>When the last push to the phone was claimed. At most one a minute.</summary>
+    public Instant? PushedAt { get; set; }
 }
 
 /// <summary>One occurrence the owner acknowledged, on a paired phone or in a browser. The first acknowledgement stands.</summary>
@@ -175,4 +187,24 @@ public class AlertCreatedEventRecord
     public bool Critical { get; set; }
 
     public Instant CreatedAt { get; set; }
+}
+
+/// <summary>
+/// The plan version phones are pushed. One row, id 1, like the mute switch.
+/// Every change a phone must hear about adds one. The alarms' fingerprint
+/// is kept with it, so a calendar read that finds the same alarms adds
+/// nothing, on whichever replica reads.
+/// </summary>
+public class AlertPushStateRecord
+{
+    public const int SingleId = 1;
+
+    public int Id { get; set; } = SingleId;
+
+    public long Version { get; set; }
+
+    /// <summary>The SHA-256 of the alarms at the last change. Null until a replica has read the calendar.</summary>
+    public byte[]? AlarmsFingerprint { get; set; }
+
+    public Instant UpdatedAt { get; set; }
 }
