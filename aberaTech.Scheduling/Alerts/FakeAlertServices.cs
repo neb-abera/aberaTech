@@ -35,6 +35,22 @@ public sealed class FakeAlertServices(IClock clock)
     private Instant? _dueStart;
     private int _dueCount;
     private int _receipts;
+    private readonly List<string> _deleted = [];
+
+    /// <summary>
+    /// The owner's Google Calendar and its stored connection, in memory. It
+    /// knows the standing events below, so a type change on the page has
+    /// something to patch.
+    /// </summary>
+    public FakeGoogleCalendar Google { get; } = Seeded();
+
+    private static FakeGoogleCalendar Seeded()
+    {
+        var google = new FakeGoogleCalendar();
+        google.Seed("e2e-standup", "Dial-in: room 4");
+        google.Seed("e2e-review");
+        return google;
+    }
 
     public IReadOnlyList<FakeMessage> Sent => [.. _sent];
 
@@ -49,21 +65,31 @@ public sealed class FakeAlertServices(IClock clock)
     /// </summary>
     public void AddDue()
     {
+        int count;
         lock (_lock)
         {
             _dueStart = clock.GetCurrentInstant() + Duration.FromMinutes(30);
-            _dueCount++;
+            count = ++_dueCount;
         }
+
+        Google.Seed($"e2e-drill-{count}");
     }
 
-    /// <summary>Places the calendar's events relative to the present minute, and ends <see cref="Fail"/>.</summary>
+    /// <summary>
+    /// Places the calendar's events relative to the present minute, and ends
+    /// <see cref="Fail"/>. The events created through the page since the last
+    /// reset are deleted from the fake Google, and the feed lists them as
+    /// cancelled, as Google's does, so the server stops keeping them.
+    /// </summary>
     public void Reanchor()
     {
+        var gone = Google.ForgetInserted();
         lock (_lock)
         {
             _anchor = Minute(clock.GetCurrentInstant());
             _failing = false;
             _dueStart = null;
+            _deleted.AddRange(gone);
         }
     }
 
@@ -84,11 +110,13 @@ public sealed class FakeAlertServices(IClock clock)
         Instant anchor;
         Instant? due;
         int dueCount;
+        string[] deleted;
         lock (_lock)
         {
             anchor = _anchor;
             due = _dueStart;
             dueCount = _dueCount;
+            deleted = [.. _deleted];
         }
 
         var tomorrow = anchor.InUtc().Date.PlusDays(1);
@@ -144,6 +172,15 @@ public sealed class FakeAlertServices(IClock clock)
             "STATUS:CANCELLED",
             "END:VEVENT",
             .. drill,
+            .. deleted.SelectMany(uid => new[]
+            {
+                "BEGIN:VEVENT",
+                $"UID:{uid}",
+                $"DTSTART:{Utc(anchor - Duration.FromDays(1))}",
+                "SUMMARY:Deleted",
+                "STATUS:CANCELLED",
+                "END:VEVENT"
+            }),
             "END:VCALENDAR",
             ""
         ]);
