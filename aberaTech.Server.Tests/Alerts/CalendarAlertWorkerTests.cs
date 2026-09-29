@@ -636,6 +636,13 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
+            Down<IReadOnlyList<CreatedAlertEvent>>();
+
+        public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) => Down<bool>();
     }
 
     /// <summary>The in-memory store with a settings read that can be made to fail.</summary>
@@ -698,6 +705,15 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
             _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
+
+        public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
+            _inner.CreatedEventsAsync(cancellationToken);
+
+        public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken) =>
+            _inner.AddCreatedEventAsync(created, now, cancellationToken);
+
+        public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
+            _inner.ForgetCreatedEventsAsync(eventIds, cancellationToken);
     }
 
     [Fact]
@@ -832,6 +848,201 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         Assert.Equal("sent", box.Store.Claims.Values.Single());
         Assert.Null((await box.Store.DeliveryAsync("standup@google.com|20261028T130000Z", CancellationToken.None))?.Receipt);
+    }
+
+    /// <summary>An alarm created on /alerts at 09:30 with a 20 minute reminder, which the feed does not have yet.</summary>
+    private static readonly CreatedAlertEvent Dentist = new(
+        "dentist@google.com", "Dentist", "Main St", Instant.FromUtc(2026, 10, 28, 13, 30), Instant.FromUtc(2026, 10, 28, 14, 0), 20, Critical: true);
+
+    [Fact]
+    public async Task An_alarm_created_on_the_page_sends_at_its_alert_time_before_the_feed_has_it()
+    {
+        var box = New(Standup());
+        await box.Store.AddCreatedEventAsync(Dentist, Eight, CancellationToken.None);
+        await box.Store.SetEventTypeAsync("dentist@google.com", AlertTypes.Alarm, Eight, CancellationToken.None);
+
+        // The next read comes first, at 08:05, and the plan it makes still has the dentist.
+        var wake = await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Equal(Eight + Duration.FromMinutes(5), wake);
+        Assert.Empty(box.Pushover.Requests);
+
+        box.Clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        await box.Worker.TickAsync(CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("Dentist", sent.Form["title"]);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.Equal("sent", box.Store.Claims["dentist@google.com|20261028T133000Z"]);
+    }
+
+    [Fact]
+    public async Task A_created_event_is_muted_skipped_and_acknowledged_like_a_feed_event()
+    {
+        foreach (var hold in new[] { "mute", "skip", "ack", "none" })
+        {
+            var box = New(Standup());
+            await box.Store.AddCreatedEventAsync(Dentist, Eight, CancellationToken.None);
+            var key = "dentist@google.com|20261028T133000Z";
+            switch (hold)
+            {
+                case "mute": await box.Store.SetMutedUntilAsync(Eight + Duration.FromHours(3), Eight, CancellationToken.None); break;
+                case "skip": await box.Store.SkipAsync(key, Dentist.StartsAt, Eight, CancellationToken.None); break;
+                case "ack": await box.Store.AcknowledgeAsync(key, Dentist.StartsAt, "phone", Eight, CancellationToken.None); break;
+                case "none": await box.Store.SetEventTypeAsync("dentist@google.com", AlertTypes.None, Eight, CancellationToken.None); break;
+            }
+
+            box.Clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+            await box.Worker.TickAsync(CancellationToken.None);
+
+            Assert.Empty(box.Pushover.Requests);
+        }
+    }
+
+    [Fact]
+    public async Task The_feed_copy_of_a_created_event_takes_over_and_it_still_sends_once()
+    {
+        var feed = Ics(
+            Event("standup@google.com", "Standup", "20261028T090000", "20261028T093000", "Room 1"),
+            Event("dentist@google.com", "Dentist #critical", "20261028T093000", "20261028T100000", "Main St", alarms: [Popup("-PT20M")]));
+        var box = New(feed);
+        await box.Store.AddCreatedEventAsync(Dentist, Eight, CancellationToken.None);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(await box.Store.CreatedEventsAsync(CancellationToken.None));
+
+        box.Clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Single(box.Pushover.Requests);
+    }
+
+    [Fact]
+    public async Task A_created_event_is_kept_while_the_feed_cannot_be_read_and_dropped_once_it_starts()
+    {
+        var box = New(Standup());
+        box.Calendar.Then(() => RecordingHandler.Text(HttpStatusCode.NotFound, ""));
+        await box.Store.AddCreatedEventAsync(Dentist, Eight, CancellationToken.None);
+
+        await box.Worker.ReadNowAsync(CancellationToken.None);
+        Assert.Single(await box.Store.CreatedEventsAsync(CancellationToken.None));
+
+        box.Clock.Now = Dentist.StartsAt;
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(await box.Store.CreatedEventsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task With_the_database_down_the_feed_plan_still_sends()
+    {
+        var box = New(CriticalStandup(Popup("-PT15M")), store: new CreatedOutageStore());
+        box.Clock.Now = AlertTime;
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Single(box.Pushover.Requests);
+        Assert.Contains(box.Logs.Entries, entry => entry.Message.Contains("events created on /alerts", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Wake_ends_the_wait_so_an_event_created_now_is_sent_without_waiting_for_the_next_read()
+    {
+        var box = New(Standup());
+        box.Clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        using var stop = new CancellationTokenSource();
+        await box.Worker.StartAsync(stop.Token);
+        try
+        {
+            // The first pass finds nothing due and waits for the next read, five minutes away.
+            await WaitFor(() => box.Calendar.Requests.Count >= 1);
+            await Task.Delay(200);
+            await box.Store.AddCreatedEventAsync(Dentist, Eight, CancellationToken.None);
+            await box.Store.SetEventTypeAsync("dentist@google.com", AlertTypes.Alarm, Eight, CancellationToken.None);
+
+            box.Worker.Wake();
+            box.Worker.Wake();
+
+            await WaitFor(() => !box.Pushover.Requests.IsEmpty);
+            Assert.Single(box.Pushover.Requests);
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            await box.Worker.StopAsync(CancellationToken.None);
+        }
+    }
+
+    private static async Task WaitFor(Func<bool> condition)
+    {
+        for (var tries = 0; tries < 100 && !condition(); tries++) await Task.Delay(50);
+        Assert.True(condition(), "timed out after 5 s");
+    }
+
+    /// <summary>The in-memory store with the created events' table unreachable.</summary>
+    private sealed class CreatedOutageStore : IAlertStore
+    {
+        private readonly InMemoryAlertStore _inner = new();
+
+        public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken) => _inner.SettingsAsync(cancellationToken);
+
+        public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken) =>
+            _inner.SaveSettingsAsync(settings, now, cancellationToken);
+
+        public Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken) => _inner.MutedUntilAsync(cancellationToken);
+
+        public Task SetMutedUntilAsync(Instant? until, Instant now, CancellationToken cancellationToken) =>
+            _inner.SetMutedUntilAsync(until, now, cancellationToken);
+
+        public Task<IReadOnlySet<string>> SkippedAsync(CancellationToken cancellationToken) => _inner.SkippedAsync(cancellationToken);
+
+        public Task<bool> IsSkippedAsync(string key, CancellationToken cancellationToken) => _inner.IsSkippedAsync(key, cancellationToken);
+
+        public Task SkipAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken) =>
+            _inner.SkipAsync(key, startsAt, now, cancellationToken);
+
+        public Task UnskipAsync(string key, CancellationToken cancellationToken) => _inner.UnskipAsync(key, cancellationToken);
+
+        public Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken) =>
+            _inner.TryClaimAsync(key, startsAt, now, cancellationToken);
+
+        public Task RecordOutcomeAsync(
+            string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null) =>
+            _inner.RecordOutcomeAsync(key, outcome, now, cancellationToken, receipt);
+
+        public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken) =>
+            _inner.DeliveryAsync(key, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken) =>
+            _inner.AcknowledgementsAsync(cancellationToken);
+
+        public Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken) =>
+            _inner.IsAcknowledgedAsync(key, cancellationToken);
+
+        public Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken) =>
+            _inner.AcknowledgeAsync(key, startsAt, via, now, cancellationToken);
+
+        public Task PruneAsync(Instant before, CancellationToken cancellationToken) => _inner.PruneAsync(before, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
+            _inner.EventTypesAsync(cancellationToken);
+
+        public Task<string?> EventTypeAsync(string eventId, CancellationToken cancellationToken) =>
+            _inner.EventTypeAsync(eventId, cancellationToken);
+
+        public Task SetEventTypeAsync(string eventId, string? type, Instant now, CancellationToken cancellationToken) =>
+            _inner.SetEventTypeAsync(eventId, type, now, cancellationToken);
+
+        public Task SeenEventsAsync(
+            IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
+            _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
+
+        public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
+            Task.FromException<IReadOnlyList<CreatedAlertEvent>>(new TimeoutException("database down"));
+
+        public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken) =>
+            Task.FromException(new TimeoutException("database down"));
+
+        public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
+            Task.FromException(new TimeoutException("database down"));
     }
 
     private sealed class Harness : IDisposable

@@ -44,7 +44,9 @@ public sealed record PlannedAlert(
 /// zone, which the alert text and "06:00 tomorrow" are written in, and the
 /// id of every event in the feed, in the window or not.
 /// </summary>
-public sealed record CalendarPlan(IReadOnlyList<PlannedAlert> Alerts, DateTimeZone Zone, IReadOnlySet<string> EventIds);
+/// <param name="CalendarName">The feed's X-WR-CALNAME, the address for a primary calendar. Null when it names none.</param>
+public sealed record CalendarPlan(
+    IReadOnlyList<PlannedAlert> Alerts, DateTimeZone Zone, IReadOnlySet<string> EventIds, string? CalendarName = null);
 
 /// <summary>The feed could not be read as a calendar. The message is safe to show and to log.</summary>
 public sealed class CalendarFeedException(string message, Exception? inner = null) : Exception(message, inner);
@@ -76,6 +78,19 @@ public static partial class AlertPlanner
     /// <summary>The mark as a word of its own: not "#criticality", not "a#critical", any case.</summary>
     [GeneratedRegex(@"(?<![\w#])#critical(?!\w)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex Mark();
+
+    /// <summary>The text carries the mark as a word of its own.</summary>
+    public static bool IsMarked(string text) => Mark().IsMatch(text);
+
+    /// <summary>The text with every mark replaced by a space.</summary>
+    public static string Unmark(string text) => Mark().Replace(text, " ");
+
+    /// <summary>The title the phone shows: the summary without the mark, "(no title)" when nothing is left.</summary>
+    public static string DisplayTitle(string? summary)
+    {
+        var title = string.Join(' ', Unmark(summary ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return title.Length == 0 ? "(no title)" : title;
+    }
 
     /// <summary>The longest key stored. A longer one is replaced by its hash.</summary>
     public const int MaxKeyLength = 200;
@@ -120,7 +135,8 @@ public static partial class AlertPlanner
         return new CalendarPlan(
             [.. alerts.OrderBy(alert => alert.AlertAt).ThenBy(alert => alert.StartsAt).ThenBy(alert => alert.Key, StringComparer.Ordinal)],
             zone,
-            calendar.Events.Select(calendarEvent => EventId(calendarEvent.Uid)).ToHashSet(StringComparer.Ordinal));
+            calendar.Events.Select(calendarEvent => EventId(calendarEvent.Uid)).ToHashSet(StringComparer.Ordinal),
+            Property(calendar, "X-WR-CALNAME")?.Trim());
     }
 
     /// <summary>
@@ -175,11 +191,10 @@ public static partial class AlertPlanner
 
         var summary = calendarEvent.Summary ?? "";
         var critical = Mark().IsMatch(summary) || Mark().IsMatch(calendarEvent.Description ?? "");
-        var title = string.Join(' ', Mark().Replace(summary, " ").Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         return new PlannedAlert(
             Key(calendarEvent.Uid, start),
-            title.Length == 0 ? "(no title)" : title,
+            DisplayTitle(summary),
             string.IsNullOrWhiteSpace(calendarEvent.Location) ? null : calendarEvent.Location.Trim(),
             start,
             reminder ?? start - settings.DefaultLead,
@@ -275,6 +290,12 @@ public static partial class AlertPlanner
     /// </summary>
     private static string Key(string? uid, Instant start) =>
         Shorten($"{uid}|{start.ToDateTimeUtc():yyyyMMdd'T'HHmmss'Z'}");
+
+    /// <summary>The key of one occurrence, as the feed's copy of the event will have it.</summary>
+    public static string KeyFor(string uid, Instant start) => Key(uid, start);
+
+    /// <summary>The event id the feed's copy of the event will have.</summary>
+    public static string EventIdFor(string uid) => EventId(uid);
 
     /// <summary>The event's UID, hashed like a key when it is too long for the column.</summary>
     private static string EventId(string? uid) => Shorten(uid ?? "");

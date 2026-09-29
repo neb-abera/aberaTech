@@ -105,7 +105,9 @@ site. The history is on the
   (the Abera Alarms iPhone app) ring every alarm themselves, and
   Acknowledge on the phone or the page stops Pushover's repeats. Ring in
   this browser rings a due alarm in an open tab, for a computer where
-  nothing can be installed.
+  nothing can be installed. The page and a paired phone can create an
+  event, and an event's type is written back to Google Calendar as
+  `#critical`.
 
 ### Calendar alerts: switching them on
 
@@ -180,6 +182,56 @@ The calendar's default notifications are not in it. On 2026-09-28 the
 owner's feed held 1132 events and 30 of them carried a VALARM, each with
 a time set on that event. None of the upcoming events carried one.
 Set the default lead to the calendar's default minutes.
+
+### Calendar alerts: writing to Google Calendar
+
+Two routes write to the owner's Google Calendar, from the page or a paired
+phone (`CalendarWrites.cs`). Both use the connection made on
+`/schedule/admin` with Connect Google Calendar. That grant carries the
+`calendar.events` scope.
+
+- Setting an event's type writes it back. Alarm adds `#critical` on a line
+  of its own at the end of the description, once. None, Notification and
+  Use default remove every `#critical` word, in any case, and the blank
+  line it leaves. A repeating event is one series in Google, so the series
+  is patched once. The choice is stored first. When Google is not changed
+  the answer's `calendarWrite` says why, in one sentence, and the page
+  shows it as a warning.
+- New event on the page creates an event with one popup reminder at the
+  lead, and `#critical` in the description for an alarm. The type is
+  stored under the new event's UID. The server keeps the event until the
+  secret address carries its UID or it starts. Google's feed can lag the
+  API by minutes to hours, and the alert does not wait for it
+  (`CreatedEvents.cs`, table `AlertCreatedEvents`).
+
+A write goes only to the calendar the alerts read. The secret address has
+the calendar's id in its path, `calendar/ical/<id>/private-…/basic.ics`.
+For a primary calendar that id is the account address. The connection's
+calendar is `primary`, whose id is the address it was connected with. The
+two must match, in any case. `X-WR-CALNAME` is used only for an address of
+another shape, and only when it is an address, because the owner can
+rename a calendar.
+
+| Answer | Why |
+|---|---|
+| `Google Calendar is not connected with edit access.` | no connection, or one made before the events scope. Disconnect and connect again on `/schedule/admin` |
+| `The connected calendar is not the one alerts read.` | the connection is another account, or the secret address is a secondary calendar |
+| `Google refused the stored calendar sign-in. Connect the calendar again.` | the refresh token was revoked or cannot be read |
+| `Google Calendar has no such event on the connected calendar.` | the UID is not on that calendar |
+| `Google refused the change: this event is organised by someone else.` | an invitation. Only its organiser can edit the description |
+| `Google refused the change (HTTP <status>).` | any other refusal |
+| `Google Calendar did not answer.` | a timeout or no connection, after 10 s |
+
+`POST /api/alerts/events` takes `{title, startsAt, durationMinutes,
+location, type, leadMinutes}`. `title` is 1 to 200 characters. `startsAt`
+is ISO 8601 with its offset, in the future and at most 366 days ahead.
+`durationMinutes` is 5 to 1440. `location` is optional, at most 200
+characters. `type` is `alarm`, `notification` or `none`. `leadMinutes` is
+0 to 1440, and left out it is the saved default lead. The answer is 201
+with the page's whole state, the new event listed. A refused field is a
+400 keyed by its name. No connection with edit access, or a connection to
+another calendar, is a 409 whose `detail` says which. Google refusing is a
+502 with the same short reason.
 
 ### Calendar alerts: settings
 

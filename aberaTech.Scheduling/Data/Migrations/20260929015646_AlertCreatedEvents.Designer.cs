@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,14 +13,11 @@ using aberaTech.Scheduling.Data;
 namespace aberaTech.Scheduling.Data.Migrations;
 
 [DbContext(typeof(SchedulingDbContext))]
-partial class SchedulingDbContextModelSnapshot : ModelSnapshot
+[Migration("20260929015646_AlertCreatedEvents")]
+partial class _20260929015646_AlertCreatedEvents
 {
-    // If you encounter a merge conflict in the line below, it means you need to
-    // discard one of the migration branches and recreate its migrations on top of
-    // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260929015646_AlertCreatedEvents";
-
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder

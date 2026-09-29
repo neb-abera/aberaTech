@@ -316,6 +316,31 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_created_event_is_kept_once_read_back_soonest_first_by_a_new_process_and_forgotten_by_uid()
+    {
+        var later = new CreatedAlertEvent("later@google.com", "Later", null, Start + Duration.FromHours(2), Start + Duration.FromHours(3), 0, false);
+        var dentist = new CreatedAlertEvent("dentist@google.com", "Dentist", "Main St", Start, Start + Duration.FromMinutes(30), 20, true);
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.AddCreatedEventAsync(later, Now, CancellationToken.None);
+            await store.AddCreatedEventAsync(dentist, Now, CancellationToken.None);
+            // A retry of the same create, on this replica or another, keeps one row.
+            await store.AddCreatedEventAsync(dentist with { Title = "Changed" }, Now, CancellationToken.None);
+        }
+
+        await using (var check = Context())
+        {
+            var store = new DatabaseAlertStore(check);
+            Assert.Equal([dentist, later], await store.CreatedEventsAsync(CancellationToken.None));
+            await store.ForgetCreatedEventsAsync(["dentist@google.com", "unknown@google.com"], CancellationToken.None);
+        }
+
+        await using var after = Context();
+        Assert.Equal([later], await new DatabaseAlertStore(after).CreatedEventsAsync(CancellationToken.None));
+    }
+
+    [PostgresFact]
     public async Task A_row_saved_at_priority_0_before_the_migration_reads_back_as_an_alarm_that_repeats()
     {
         using var database = new TestDatabase("alertsmigrate");

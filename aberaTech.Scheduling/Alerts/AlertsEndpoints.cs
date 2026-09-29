@@ -10,8 +10,9 @@ namespace aberaTech.Scheduling.Alerts;
 /// </summary>
 /// <remarks>
 /// The owner's Google sign-in reaches every route. A paired phone's token
-/// reaches the six a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
-/// the status, mute, unmute, skip, unskip and ack. The actions share one rate
+/// reaches the eight a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// the status, mute, unmute, skip, unskip, ack, an event's type and a new
+/// event. The actions share one rate
 /// limit. Every action answers with the page's whole state, so the page and
 /// the phone never show a mute or a skip the server did not store.
 /// </remarks>
@@ -79,7 +80,7 @@ public static class AlertsEndpoints
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
             // Only what is on the list: a skip is for an alert the owner can see.
-            var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
+            var alert = await FindAsync(request.Key!, status, store, clock, options, cancellationToken);
             if (alert is null) return Results.NotFound();
 
             await store.SkipAsync(alert.Key, alert.StartsAt, clock.GetCurrentInstant(), cancellationToken);
@@ -152,9 +153,18 @@ public static class AlertsEndpoints
 
         // One event's type, kept under its UID so it holds for every
         // occurrence. "default" drops the choice. Only an event on the list:
-        // a choice is for an event the owner can see.
-        group.MapPut("/event-type", async (
-            EventTypeRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+        // a choice is for an event the owner can see. The choice is then
+        // written to Google Calendar: #critical in the description for an
+        // alarm, removed for anything else. The choice stands whatever
+        // Google says, and calendarWrite says why Google was not changed.
+        shared.MapPut("/event-type", async (
+            EventTypeRequest request,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            GoogleAlertEvents google,
+            IClock clock,
+            CancellationToken cancellationToken) =>
         {
             var errors = new Dictionary<string, string[]>();
             if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
@@ -165,12 +175,13 @@ public static class AlertsEndpoints
 
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
-            var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
+            var alert = await FindAsync(request.Key!, status, store, clock, options, cancellationToken);
             if (alert is null) return Results.NotFound();
 
             await store.SetEventTypeAsync(
                 alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            var written = await google.SetMarkAsync(alert.EventId, request.Type == AlertTypes.Alarm, cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken, written));
         }).RequireRateLimiting(ActionsPolicy);
 
         // Acknowledge: the phone's alarm or the browser's ring was answered.
@@ -191,7 +202,7 @@ public static class AlertsEndpoints
             if (request.Via is not ("phone" or "browser")) errors["via"] = ["\"phone\" or \"browser\"."];
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
-            var planned = status.Snapshot().Plan.FirstOrDefault(alert => alert.Key == request.Key);
+            var planned = await FindAsync(request.Key!, status, store, clock, options, cancellationToken);
             var startsAt = planned?.StartsAt ?? (await store.DeliveryAsync(request.Key!, cancellationToken))?.StartsAt;
             if (startsAt is null) return Results.NotFound();
 
@@ -201,6 +212,41 @@ public static class AlertsEndpoints
             }
 
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // A new event on the calendar the feed reads, with one popup reminder
+        // at the lead and #critical for an alarm. Kept here until the feed
+        // carries it, so it is listed and alerts at once (CreatedEvents).
+        shared.MapPost("/events", async (
+            NewEventRequest request,
+            CalendarAlertWorker worker,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            GoogleAlertEvents google,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var now = clock.GetCurrentInstant();
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var (errors, valid) = NewEventRequest.Validate(request, now, settings.DefaultLeadMinutes);
+            if (valid is null) return Results.ValidationProblem(errors);
+
+            var outcome = await google.CreateAsync(valid, cancellationToken);
+            if (outcome.Event is not { } created)
+            {
+                return Results.Problem(
+                    detail: outcome.Problem,
+                    statusCode: outcome.Conflict ? StatusCodes.Status409Conflict : StatusCodes.Status502BadGateway);
+            }
+
+            await store.AddCreatedEventAsync(created, now, cancellationToken);
+            await store.SetEventTypeAsync(AlertPlanner.EventIdFor(created.EventId), valid.Type, now, cancellationToken);
+
+            // This replica plans it on its next pass, now rather than at the
+            // end of the wait.
+            worker.Wake();
+            return Results.Created((string?)null, await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // The paired phones. The token is in the answer to the pairing and
@@ -258,11 +304,16 @@ public static class AlertsEndpoints
         // Claims nothing and ignores mute and skip: pressing it is the owner
         // asking, and the real alert still goes at its time.
         group.MapPost("/test-event", async (
-            SkipRequest request, AlertsStatus status, AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
+            SkipRequest request,
+            AlertsStatus status,
+            IAlertStore store,
+            IClock clock,
+            AlertDispatcher dispatcher,
+            CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
-            var alert = status.Snapshot().Plan.FirstOrDefault(planned => planned.Key == request.Key);
+            var alert = await FindAsync(request.Key!, status, store, clock, options, cancellationToken);
             if (alert is null) return Results.NotFound();
 
             // An event whose type is none sends nothing, so there is nothing to test.
@@ -322,6 +373,10 @@ public static class AlertsEndpoints
                 return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
+            // The writes the fake Google Calendar took, so the browser suite
+            // can see what a type change and a new event asked for.
+            group.MapGet("/fake/google", (FakeAlertServices fake) => Results.Ok(fake.Google.Writes));
+
             // The receipts whose repeats an acknowledgement cancelled.
             group.MapGet("/fake/cancelled", (FakeAlertServices fake) => Results.Ok(fake.Cancelled));
 
@@ -356,17 +411,28 @@ public static class AlertsEndpoints
     private static bool Valid(string? key) =>
         !string.IsNullOrWhiteSpace(key) && key.Length <= AlertPlanner.MaxKeyLength;
 
+    /// <summary>One planned occurrence by key: from the feed, or created here and not in the feed yet.</summary>
+    private static async Task<PlannedAlert?> FindAsync(
+        string key, AlertsStatus status, IAlertStore store, IClock clock, AlertsOptions options, CancellationToken cancellationToken)
+    {
+        var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+        var plan = await AlertsPlan.CurrentAsync(status.Snapshot(), store, settings, clock.GetCurrentInstant(), cancellationToken);
+        return plan.FirstOrDefault(planned => planned.Key == key);
+    }
+
     private static async Task<AlertsState> StateAsync(
         AlertsStatus status,
         IAlertStore store,
         PushoverSounds sounds,
         IClock clock,
         AlertsOptions options,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? calendarWrite = null)
     {
         var snapshot = status.Snapshot();
         var now = clock.GetCurrentInstant();
         var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+        var plan = await AlertsPlan.CurrentAsync(snapshot, store, settings, now, cancellationToken);
         var mutedUntil = await store.MutedUntilAsync(cancellationToken) is { } until && until > now ? until : (Instant?)null;
         var skipped = await store.SkippedAsync(cancellationToken);
         var chosen = await store.EventTypesAsync(cancellationToken);
@@ -401,7 +467,7 @@ public static class AlertsEndpoints
                 : null,
             Alerts:
             [
-                .. snapshot.Plan
+                .. plan
                     .Where(alert => alert.StartsAt > now)
                     .Take(Listed)
                     .Select(alert =>
@@ -424,7 +490,8 @@ public static class AlertsEndpoints
                             acknowledgement?.At.ToDateTimeOffset(),
                             acknowledgement?.Via);
                     })
-            ]);
+            ],
+            CalendarWrite: calendarWrite);
     }
 
     public sealed record MuteRequest(string? Until);
@@ -445,6 +512,75 @@ public static class AlertsEndpoints
 
     /// <summary>The answer to a pairing, the one time the token is shown.</summary>
     public sealed record PairedDevice(Guid Id, string Name, DateTimeOffset CreatedAt, string Token, string PairUrl);
+
+    /// <summary>
+    /// A new event: a title, a start with its offset, a duration, an
+    /// optional location, the type, and an optional lead. Validate names
+    /// each refused field as the body spells it.
+    /// </summary>
+    public sealed record NewEventRequest(
+        string? Title,
+        string? StartsAt,
+        int? DurationMinutes,
+        string? Location,
+        string? Type,
+        int? LeadMinutes)
+    {
+        public static (Dictionary<string, string[]> Errors, NewAlertEvent? Valid) Validate(
+            NewEventRequest request, Instant now, int defaultLeadMinutes)
+        {
+            var errors = new Dictionary<string, string[]>();
+            var title = request.Title?.Trim() ?? "";
+            if (title.Length is 0 or > CreatedEvents.MaxTitleLength || title.Any(char.IsControl))
+            {
+                errors["title"] = [$"1 to {CreatedEvents.MaxTitleLength} characters."];
+            }
+
+            Instant? start = null;
+            if (request.StartsAt is { } text
+                && NodaTime.Text.OffsetDateTimePattern.ExtendedIso.Parse(text.Trim()) is { Success: true } parsed)
+            {
+                start = parsed.Value.ToInstant();
+            }
+
+            if (start is not { } startsAt || startsAt <= now || startsAt > now + CreatedEvents.MaxAhead)
+            {
+                errors["startsAt"] = ["An ISO 8601 time with its offset, in the future and at most 366 days ahead."];
+            }
+
+            if (request.DurationMinutes is not (>= CreatedEvents.MinDurationMinutes and <= CreatedEvents.MaxDurationMinutes))
+            {
+                errors["durationMinutes"] = [$"{CreatedEvents.MinDurationMinutes} to {CreatedEvents.MaxDurationMinutes}."];
+            }
+
+            var location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim();
+            if (location is not null && (location.Length > CreatedEvents.MaxLocationLength || location.Any(char.IsControl)))
+            {
+                errors["location"] = [$"At most {CreatedEvents.MaxLocationLength} characters."];
+            }
+
+            if (request.Type is not { } type || !AlertTypes.Choices.Contains(type))
+            {
+                errors["type"] = ["\"none\", \"notification\" or \"alarm\"."];
+            }
+
+            if (request.LeadMinutes is { } lead && lead is < CreatedEvents.MinLeadMinutes or > CreatedEvents.MaxLeadMinutes)
+            {
+                errors["leadMinutes"] = [$"{CreatedEvents.MinLeadMinutes} to {CreatedEvents.MaxLeadMinutes}."];
+            }
+
+            if (errors.Count > 0) return (errors, null);
+
+            var begins = start!.Value;
+            return (errors, new NewAlertEvent(
+                title,
+                location,
+                begins,
+                begins + Duration.FromMinutes(request.DurationMinutes!.Value),
+                request.LeadMinutes ?? defaultLeadMinutes,
+                request.Type!));
+        }
+    }
 
     /// <summary>A listed alert's key and the type for its event: none, notification, alarm, or default to drop the choice.</summary>
     public sealed record EventTypeRequest(string? Key, string? Type);
@@ -473,6 +609,8 @@ public static class AlertsEndpoints
     /// The page's whole state. Lists its fields: the settings in force, and
     /// no secret. TimeZone is the zone in use, the calendar's own when it
     /// names one. Settings.TimeZone is the fallback the owner set.
+    /// CalendarWrite is set only in the answer to a type change or a new
+    /// event whose write to Google did not happen, and says why.
     /// </summary>
     public sealed record AlertsState(
         bool Configured,
@@ -486,7 +624,8 @@ public static class AlertsEndpoints
         string? LastFetchError,
         DateTimeOffset? LastSuccessAt,
         SendView? LastSend,
-        IReadOnlyList<AlertView> Alerts);
+        IReadOnlyList<AlertView> Alerts,
+        string? CalendarWrite = null);
 
     public sealed record SettingsView(
         int RepeatSeconds,

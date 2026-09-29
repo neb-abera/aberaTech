@@ -316,6 +316,95 @@ describe("the owner", () => {
     ).toBeTruthy();
   });
 
+  it("warns when Google Calendar was not changed, keeps the warning past the next refresh, and closes it", async () => {
+    const chosen = { ...review, type: "alarm", typeFrom: "set" };
+    mount(
+      respond(200, state()),
+      respond(
+        200,
+        state({
+          alerts: [standup, chosen],
+          calendarWrite: "Google Calendar is not connected with edit access.",
+        }),
+      ),
+      respond(200, state({ alerts: [standup, chosen] })),
+    );
+    await settle();
+    expect(
+      screen.getByText(
+        "Each type holds for every occurrence of the event. Alarm also adds #critical to the event in Google Calendar. None and Notification remove it.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("Google Calendar was not changed")).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Alarm",
+      }),
+    );
+    await settle();
+
+    const warning = screen
+      .getByText("Google Calendar was not changed")
+      .closest('[role="alert"]') as HTMLElement;
+    expect(warning.textContent).toContain(
+      "Google Calendar is not connected with edit access. The choice is saved here and alerts follow it.",
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+    await settle();
+    expect(screen.getByText("Google Calendar was not changed")).toBeTruthy();
+
+    fireEvent.click(within(warning).getByRole("button", { name: "Close" }));
+    expect(screen.queryByText("Google Calendar was not changed")).toBeNull();
+  });
+
+  it("shows no calendar warning when the write worked", async () => {
+    mount(respond(200, state()), respond(200, state({ calendarWrite: null })));
+    await settle();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Alarm",
+      }),
+    );
+    await settle();
+    expect(screen.queryByText("Google Calendar was not changed")).toBeNull();
+  });
+
+  it("adds a new event and lists it from the answer", async () => {
+    const dentist = {
+      ...review,
+      key: "created1@google.com|20261028T150000Z",
+      title: "Dentist",
+      type: "alarm",
+      typeFrom: "set",
+      critical: true,
+    };
+    mount(
+      respond(200, state()),
+      respond(201, state({ alerts: [standup, dentist, review] })),
+    );
+    await settle();
+
+    fireEvent.change(screen.getByLabelText(/^Title/), {
+      target: { value: "Dentist" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Add event" }));
+    });
+    await settle();
+
+    expect(posts()[0][0]).toBe("/api/alerts/events");
+    expect(JSON.parse(posts()[0][1] as string).title).toBe("Dentist");
+    expect(
+      within(screen.getByRole("list", { name: "Next alerts" })).getByText(
+        "Dentist",
+      ),
+    ).toBeTruthy();
+  });
+
   it("sends a test notification and says so", async () => {
     mount(respond(200, state()), respond(200, { sent: true }));
     await settle();

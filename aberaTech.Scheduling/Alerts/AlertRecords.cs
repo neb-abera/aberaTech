@@ -149,3 +149,30 @@ public class AlertAcknowledgementRecord
     /// <summary>"phone" or "browser".</summary>
     public string Via { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// An event created on /alerts, kept until Google's iCal feed carries its
+/// UID or it starts. The feed can lag the API by minutes to hours, and the
+/// alert must not wait for it.
+/// </summary>
+public class AlertCreatedEventRecord
+{
+    /// <summary>Google's iCalUID for the event.</summary>
+    public string EventId { get; set; } = string.Empty;
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Location { get; set; }
+
+    public Instant StartsAt { get; set; }
+
+    public Instant EndsAt { get; set; }
+
+    /// <summary>The popup reminder the event was created with.</summary>
+    public int LeadMinutes { get; set; }
+
+    /// <summary>Created as an alarm, with #critical in its description.</summary>
+    public bool Critical { get; set; }
+
+    public Instant CreatedAt { get; set; }
+}

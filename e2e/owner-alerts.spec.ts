@@ -419,6 +419,78 @@ test.describe("/alerts", () => {
     await expect(test).toBeDisabled();
   });
 
+  test("a new event made on the page is listed at once, and a type change is written to Google Calendar", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const form = page.getByRole("form", { name: "New event" });
+    await form.getByLabel(/^Title/).fill("E2E dentist");
+    // Two hours from now, in the browser's zone, as the input takes it.
+    const start = await page.evaluate(() => {
+      const at = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      at.setSeconds(0, 0);
+      const pad = (value: number) => String(value).padStart(2, "0");
+      return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}`;
+    });
+    await form.getByLabel(/^Starts/).fill(start);
+    await form.getByLabel(/^Duration in minutes/).fill("45");
+    await form.getByLabel(/^Location/).fill("Main St");
+    await form.getByLabel(/^Reminder in minutes before/).fill("20");
+    await expect(
+      form.getByRole("button", { name: "New event type Alarm" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await form.getByRole("button", { name: "Add event" }).click();
+
+    await expect(
+      page.getByText("E2E dentist is on the calendar and listed below."),
+    ).toBeVisible();
+    const list = page.getByRole("list", { name: "Next alerts" });
+    const dentist = list
+      .getByRole("listitem")
+      .filter({ hasText: "E2E dentist" });
+    await expect(dentist).toBeVisible();
+    await expect(dentist.getByText("Main St")).toBeVisible();
+    await expect(
+      dentist.getByText("Alarm: set here. The alarm settings apply."),
+    ).toBeVisible();
+    // Still listed after a reload: the server keeps it until the feed has it.
+    await page.reload();
+    await expect(dentist).toBeVisible();
+
+    await page
+      .getByRole("button", { name: /^Set E2E standup at .* to Alarm$/ })
+      .click();
+    await expect(
+      page.getByText("E2E standup is set to Alarm, every occurrence."),
+    ).toBeVisible();
+    await expect(page.getByText("Google Calendar was not changed")).toHaveCount(
+      0,
+    );
+
+    const writes = await (
+      await page.request.get("/api/alerts/fake/google")
+    ).json();
+    expect(writes).toEqual([
+      {
+        kind: "insert",
+        eventId: expect.any(String),
+        summary: "E2E dentist",
+        description: "#critical",
+        popupMinutes: 20,
+      },
+      {
+        kind: "patch",
+        eventId: "e2e-standup",
+        summary: null,
+        description: "Dial-in: room 4\n#critical",
+        popupMinutes: null,
+      },
+    ]);
+  });
+
   test("the page explains how events become alarms, with the saved values", async ({
     page,
   }) => {
