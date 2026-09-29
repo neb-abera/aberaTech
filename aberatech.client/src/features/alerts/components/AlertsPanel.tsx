@@ -30,6 +30,7 @@ import { ringPollMs } from "../core/ring";
 import { alarmLine, count, describe, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
 import HowEventsAlert from "./HowEventsAlert";
+import NewEventForm from "./NewEventForm";
 import PhonesSection, { type PhonesApi, phonesApi } from "./PhonesSection";
 import RingInBrowser from "./RingInBrowser";
 
@@ -53,6 +54,7 @@ export default function AlertsPanel({
   const [busy, setBusy] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
+  const [calendarWrite, setCalendarWrite] = React.useState<string | null>(null);
   const alive = React.useRef(true);
 
   const refresh = React.useCallback(async () => {
@@ -87,7 +89,10 @@ export default function AlertsPanel({
     setBusy(false);
     if (result.ok) {
       const state = result.state;
-      if (state) setView({ status: "owner", state });
+      if (state) {
+        setView({ status: "owner", state });
+        setCalendarWrite(state.calendarWrite ?? null);
+      }
       setNotice(done());
       return;
     }
@@ -215,6 +220,12 @@ export default function AlertsPanel({
           {notice}
         </Alert>
       )}
+      {calendarWrite && (
+        <Alert severity="warning" onClose={() => setCalendarWrite(null)}>
+          <AlertTitle>Google Calendar was not changed</AlertTitle>
+          {calendarWrite} The choice is saved here and alerts follow it.
+        </Alert>
+      )}
 
       <RingInBrowser
         state={state}
@@ -229,6 +240,11 @@ export default function AlertsPanel({
       <Box>
         <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
           Next alerts
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+          Each type holds for every occurrence of the event. Alarm also adds
+          #critical to the event in Google Calendar. None and Notification
+          remove it.
         </Typography>
         {state.alerts.length === 0 ? (
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
@@ -282,6 +298,13 @@ export default function AlertsPanel({
           </Stack>
         )}
       </Box>
+
+      <NewEventForm
+        defaultLead={state.defaultLeadMinutes}
+        onCreated={(created) => {
+          if (alive.current) setView({ status: "owner", state: created });
+        }}
+      />
 
       <HowEventsAlert
         settings={state.settings}

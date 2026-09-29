@@ -19,7 +19,7 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The paired phone's side of /api/alerts: pairing on the page, the token
-/// on the six routes a phone needs, a 403 on the rest, and Acknowledge.
+/// on the eight routes a phone needs, a 403 on the rest, and Acknowledge.
 /// The standup is marked #critical, so it is an alarm and goes at emergency
 /// priority with a receipt.
 /// </summary>
@@ -45,6 +45,8 @@ public sealed class AlertDeviceRouteTests : IDisposable
             Event("review@google.com", "Review", "20261028T140000", "20261028T150000")),
         "text/calendar"));
 
+    private readonly FakeGoogleCalendar _google = new();
+
     private readonly TestApp _app;
 
     public AlertDeviceRouteTests()
@@ -67,7 +69,10 @@ public sealed class AlertDeviceRouteTests : IDisposable
             });
             services.AddHttpClient<CalendarFeed>().ConfigurePrimaryHttpMessageHandler(() => _calendar);
             services.AddHttpClient<PushoverClient>().ConfigurePrimaryHttpMessageHandler(() => _pushover);
+            services.AddSingleton<IAlertCalendarGrant>(_google);
+            services.AddHttpClient<GoogleAlertEvents>().ConfigurePrimaryHttpMessageHandler(_google.Handler);
         });
+        _google.Seed("standup@google.com", "#critical");
         Worker.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 
@@ -105,14 +110,15 @@ public sealed class AlertDeviceRouteTests : IDisposable
         ["POST", "/api/alerts/unmute", "{}"],
         ["POST", "/api/alerts/skip", "{\"key\":\"standup@google.com|20261028T130000Z\"}"],
         ["POST", "/api/alerts/unskip", "{\"key\":\"standup@google.com|20261028T130000Z\"}"],
-        ["POST", "/api/alerts/ack", "{\"key\":\"standup@google.com|20261028T130000Z\",\"via\":\"phone\"}"]
+        ["POST", "/api/alerts/ack", "{\"key\":\"standup@google.com|20261028T130000Z\",\"via\":\"phone\"}"],
+        ["PUT", "/api/alerts/event-type", "{\"key\":\"standup@google.com|20261028T130000Z\",\"type\":\"none\"}"],
+        ["POST", "/api/alerts/events", "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T15:00:00Z\",\"durationMinutes\":30,\"type\":\"alarm\"}"]
     ];
 
     /// <summary>The routes that stay the owner's cookie alone.</summary>
     public static IEnumerable<object?[]> OwnerOnlyRoutes =>
     [
         ["PUT", "/api/alerts/settings", "{}"],
-        ["PUT", "/api/alerts/event-type", "{\"key\":\"standup@google.com|20261028T130000Z\",\"type\":\"none\"}"],
         ["POST", "/api/alerts/test", null],
         ["POST", "/api/alerts/test-notification", null],
         ["POST", "/api/alerts/test-event", "{\"key\":\"standup@google.com|20261028T130000Z\"}"],
@@ -238,9 +244,10 @@ public sealed class AlertDeviceRouteTests : IDisposable
 
         using var response = await Send(phone, method, path, body);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(path.EndsWith("/events", StringComparison.Ordinal) ? HttpStatusCode.Created : HttpStatusCode.OK, response.StatusCode);
         var state = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(state.GetProperty("configured").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, state.GetProperty("calendarWrite").ValueKind);
     }
 
     [Theory]

@@ -6,13 +6,21 @@ namespace aberaTech.Scheduling.Alerts;
 public sealed record LastSend(Instant At, string Title, string Outcome);
 
 /// <summary>What the page shows about the worker. One copy per process.</summary>
+/// <param name="Plan">The last good read of the feed. <see cref="AlertsPlan"/> adds the events created through /alerts.</param>
 public sealed record AlertsSnapshot(
     IReadOnlyList<PlannedAlert> Plan,
     DateTimeZone Zone,
     Instant? LastFetchAt,
     string? LastFetchError,
     Instant? LastSuccessAt,
-    LastSend? LastSend);
+    LastSend? LastSend)
+{
+    /// <summary>Every UID in the last good read. Empty until a read works.</summary>
+    public IReadOnlySet<string> FeedEventIds { get; init; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>The feed's X-WR-CALNAME in the last good read.</summary>
+    public string? CalendarName { get; init; }
+}
 
 /// <summary>
 /// The worker's state in memory: the list from the last good read, and how
@@ -36,7 +44,13 @@ public sealed class AlertsStatus(AlertsOptions options)
         {
             _snapshot = _snapshot with
             {
-                Plan = plan.Alerts, Zone = plan.Zone, LastFetchAt = at, LastFetchError = null, LastSuccessAt = at
+                Plan = plan.Alerts,
+                Zone = plan.Zone,
+                LastFetchAt = at,
+                LastFetchError = null,
+                LastSuccessAt = at,
+                FeedEventIds = plan.EventIds,
+                CalendarName = plan.CalendarName
             };
         }
     }
@@ -252,6 +266,7 @@ public sealed class CalendarAlertWorker(
     public static readonly Duration KeepChoicesFor = Duration.FromDays(60);
 
     private readonly SemaphoreSlim _tick = new(1, 1);
+    private readonly SemaphoreSlim _wake = new(0, 1);
     private readonly HashSet<string> _handled = new(StringComparer.Ordinal);
     private Instant? _lastRead;
     private string? _plannedWith;
@@ -283,7 +298,7 @@ public sealed class CalendarAlertWorker(
             }
 
             Instant? retry = null;
-            var plan = status.Snapshot().Plan;
+            var plan = await PlanAsync(now, settings, cancellationToken);
             foreach (var alert in plan)
             {
                 now = clock.GetCurrentInstant();
@@ -324,6 +339,24 @@ public sealed class CalendarAlertWorker(
         }
     }
 
+    /// <summary>
+    /// Ends the wait before the next pass. An event created through /alerts
+    /// can be due before the wait would end, and this replica plans it on
+    /// the next pass. Another replica reads it from the database at its own
+    /// next pass, at most one poll later, and the claim decides who sends.
+    /// </summary>
+    public void Wake()
+    {
+        try
+        {
+            _wake.Release();
+        }
+        catch (SemaphoreFullException)
+        {
+            // Already woken: one wake is enough.
+        }
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -345,12 +378,37 @@ public sealed class CalendarAlertWorker(
 
             try
             {
-                await Task.Delay(wait.ToTimeSpan(), stoppingToken);
+                await _wake.WaitAsync(wait.ToTimeSpan(), stoppingToken);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
+        }
+    }
+
+    /// <summary>
+    /// The feed's plan with the events created through /alerts that the feed
+    /// does not have yet, read from the database on every pass. The stored
+    /// rows the feed now has, or that have started, are forgotten. With no
+    /// database the feed's plan stands alone.
+    /// </summary>
+    private async Task<IReadOnlyList<PlannedAlert>> PlanAsync(Instant now, AlertSettings settings, CancellationToken cancellationToken)
+    {
+        var snapshot = status.Snapshot();
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
+            var created = await store.CreatedEventsAsync(cancellationToken);
+            var done = CreatedEvents.Done(created, snapshot.FeedEventIds, now);
+            if (done.Count > 0) await store.ForgetCreatedEventsAsync(done, cancellationToken);
+            return CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, created, now, settings);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Reading the events created on /alerts failed ({Failure}).", exception.GetType().Name);
+            return snapshot.Plan;
         }
     }
 
@@ -411,7 +469,7 @@ public sealed class CalendarAlertWorker(
 public static class AlertsRegistration
 {
     /// <summary>
-    /// The worker, the send path, the sound list and the two HTTP clients. The caller
+    /// The worker, the send path, the sound list and the three HTTP clients. The caller
     /// registers <see cref="AlertsOptions"/>, an <see cref="IClock"/> and an
     /// <see cref="IAlertStore"/>.
     /// </summary>
@@ -427,6 +485,8 @@ public static class AlertsRegistration
         // full URL, and the calendar's URL is its secret.
         services.AddHttpClient<CalendarFeed>(client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllLoggers();
         services.AddHttpClient<PushoverClient>(client => client.Timeout = TimeSpan.FromSeconds(15)).RemoveAllLoggers();
+        // Writes to the owner's Google Calendar. The caller registers an IAlertCalendarGrant.
+        services.AddHttpClient<GoogleAlertEvents>(client => client.Timeout = TimeSpan.FromSeconds(10)).RemoveAllLoggers();
         return services;
     }
 }

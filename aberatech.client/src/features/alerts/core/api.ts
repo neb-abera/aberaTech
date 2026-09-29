@@ -106,6 +106,12 @@ export interface AlertsState {
   lastSuccessAt: string | null;
   lastSend: LastSend | null;
   alerts: AlertItem[];
+  /**
+   * Set only in the answer to a type change or a new event: why Google
+   * Calendar was not changed. Null when it was, or when nothing needed
+   * changing.
+   */
+  calendarWrite?: string | null;
 }
 
 export type AlertsView =
@@ -209,6 +215,71 @@ export function acknowledgeAlert(
   via: "phone" | "browser",
 ): Promise<ActionResult> {
   return post("/api/alerts/ack", { key, via });
+}
+
+/** A new event on the calendar the alerts read. */
+export interface NewEvent {
+  title: string;
+  /** An instant with its offset, e.g. from Date.toISOString(). */
+  startsAt: string;
+  durationMinutes: number;
+  location: string | null;
+  type: AlertType;
+  /** Minutes before the start. Left out, the server uses the default lead. */
+  leadMinutes?: number;
+}
+
+export type CreateResult =
+  | { ok: true; state: AlertsState }
+  | {
+      ok: false;
+      reason:
+        | "visitor"
+        | "throttled"
+        | "invalid"
+        | "conflict"
+        | "google"
+        | "refused"
+        | "network";
+      detail?: string;
+      errors?: Record<string, string[]>;
+    };
+
+/**
+ * Creates the event on Google Calendar and answers with the state, the new
+ * event already listed. 409: no calendar with edit access, or not the one
+ * the alerts read. 502: Google refused.
+ */
+export async function createEvent(event: NewEvent): Promise<CreateResult> {
+  try {
+    const response = await fetch("/api/alerts/events", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(event),
+    });
+    if (response.status === 401 || response.status === 403)
+      return { ok: false, reason: "visitor" };
+    if (response.status === 429) return { ok: false, reason: "throttled" };
+    const json = response.headers.get("content-type")?.includes("json");
+    if (response.status === 201)
+      return { ok: true, state: toState((await response.json()) as StateBody) };
+    const problem = json
+      ? ((await response.json()) as {
+          detail?: string;
+          errors?: Record<string, string[]>;
+        })
+      : {};
+    if (response.status === 400 && problem.errors)
+      return { ok: false, reason: "invalid", errors: problem.errors };
+    if (response.status === 409)
+      return { ok: false, reason: "conflict", detail: problem.detail };
+    if (response.status === 502)
+      return { ok: false, reason: "google", detail: problem.detail };
+    return { ok: false, reason: "refused" };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
 }
 
 /** A paired phone as the list shows it. The server never sends its token again. */

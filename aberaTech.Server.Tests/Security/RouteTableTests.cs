@@ -129,7 +129,9 @@ public sealed class RouteTableTests
         "POST /api/alerts/unmute",
         "POST /api/alerts/skip",
         "POST /api/alerts/unskip",
-        "POST /api/alerts/ack"
+        "POST /api/alerts/ack",
+        "PUT /api/alerts/event-type",
+        "POST /api/alerts/events"
     ];
 
     [Fact]

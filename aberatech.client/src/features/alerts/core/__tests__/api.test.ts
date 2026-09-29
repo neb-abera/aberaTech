@@ -9,6 +9,7 @@ import { bounds, settings } from "../../../../test/alertsFixtures";
 import { respond } from "../../../../test/fakeFetch";
 import {
   acknowledgeAlert,
+  createEvent,
   fetchAlerts,
   formatClock,
   formatWhen,
@@ -383,5 +384,69 @@ describe("the phone and the ring", () => {
       "13:52",
     );
     expect(formatClock("2026-10-28T17:52:00Z", "Not/AZone")).toBe("17:52");
+  });
+});
+
+describe("createEvent", () => {
+  const event = {
+    title: "Dentist",
+    startsAt: "2026-10-28T15:00:00.000Z",
+    durationMinutes: 30,
+    location: null,
+    type: "alarm" as const,
+    leadMinutes: 20,
+  };
+
+  it("posts the event in a JSON body and hands back the state on a 201", async () => {
+    const fetchMock = stub(respond(201, state));
+
+    const { configured: _, ...rest } = state;
+    expect(await createEvent(event)).toEqual({ ok: true, state: rest });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/alerts/events");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(event);
+  });
+
+  it("reads each refusal: fields, no calendar, Google, the session, the limit, and no answer", async () => {
+    stub(respond(400, { errors: { title: ["1 to 200 characters."] } }));
+    expect(await createEvent(event)).toEqual({
+      ok: false,
+      reason: "invalid",
+      errors: { title: ["1 to 200 characters."] },
+    });
+
+    stub(
+      respond(409, {
+        detail: "The connected calendar is not the one alerts read.",
+      }),
+    );
+    expect(await createEvent(event)).toEqual({
+      ok: false,
+      reason: "conflict",
+      detail: "The connected calendar is not the one alerts read.",
+    });
+
+    stub(respond(502, { detail: "Google refused the change (HTTP 400)." }));
+    expect(await createEvent(event)).toEqual({
+      ok: false,
+      reason: "google",
+      detail: "Google refused the change (HTTP 400).",
+    });
+
+    stub(respond(403));
+    expect(await createEvent(event)).toEqual({ ok: false, reason: "visitor" });
+    stub(respond(429));
+    expect(await createEvent(event)).toEqual({
+      ok: false,
+      reason: "throttled",
+    });
+    stub(respond(400, { title: "no field errors" }));
+    expect(await createEvent(event)).toEqual({ ok: false, reason: "refused" });
+    stub({ ...respond(500), headers: { get: () => "text/plain" } });
+    expect(await createEvent(event)).toEqual({ ok: false, reason: "refused" });
+
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    expect(await createEvent(event)).toEqual({ ok: false, reason: "network" });
   });
 });
