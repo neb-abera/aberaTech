@@ -7,7 +7,7 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>Who acknowledged one occurrence, and when.</summary>
 public sealed record AlertAcknowledgement(Instant At, string Via);
 
-/// <summary>The claim on one occurrence's send: its start, how it went, and Pushover's receipt for an emergency message.</summary>
+/// <summary>The claim on one occurrence's send: its start, how it went, and Pushover's receipt for an alarm.</summary>
 public sealed record AlertDelivery(Instant StartsAt, string Outcome, string? Receipt);
 
 /// <summary>
@@ -38,7 +38,7 @@ public interface IAlertStore
     /// <summary>True for exactly one caller per key, ever, whatever process it runs in.</summary>
     Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken);
 
-    /// <param name="receipt">Pushover's receipt for an emergency message, kept so an acknowledgement can cancel its repeats.</param>
+    /// <param name="receipt">Pushover's receipt for an alarm, kept so an acknowledgement can cancel its repeats.</param>
     Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null);
 
     /// <summary>The claim on one occurrence, or null when nothing was ever claimed for it.</summary>
@@ -82,7 +82,6 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         return row is null
             ? null
             : new AlertSettings(
-                row.Priority,
                 row.RepeatSeconds,
                 row.StopAfterMinutes,
                 row.Sound,
@@ -104,16 +103,15 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         var emails = settings.OwnerEmails.ToArray();
         await database.Database.ExecuteSqlAsync(
             $"""
-             INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+             INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
                  "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
                  "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
-             VALUES ({AlertSettingsRecord.SingleId}, {settings.Priority}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
+             VALUES ({AlertSettingsRecord.SingleId}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
                  {settings.Sound}, {settings.DefaultLeadMinutes}, {settings.PollMinutes}, {settings.LookaheadHours},
                  {settings.IncludeAllDay}, {settings.TimeZone}, {emails},
                  {settings.NotificationPriority}, {settings.NotificationSound}, {settings.DefaultType},
                  {settings.BackupDelaySeconds}, {now})
              ON CONFLICT ("Id") DO UPDATE SET
-                 "Priority" = EXCLUDED."Priority",
                  "RepeatSeconds" = EXCLUDED."RepeatSeconds",
                  "StopAfterMinutes" = EXCLUDED."StopAfterMinutes",
                  "Sound" = EXCLUDED."Sound",

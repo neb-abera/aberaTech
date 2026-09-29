@@ -7,8 +7,8 @@ public sealed record EffectiveType(string Type, string From);
 
 /// <summary>
 /// The three things an event can send. An alarm uses the alarm settings
-/// (priority, repeat, stop, sound). A notification sounds once, at the
-/// notification priority and sound. None sends nothing.
+/// (repeat, stop, sound) and repeats until acknowledged. A notification
+/// sounds once, at the notification priority and sound. None sends nothing.
 /// </summary>
 /// <remarks>
 /// A choice made on the page wins. Otherwise an event marked #critical in

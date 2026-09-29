@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { AlertSettings } from "../core/api";
-import { count } from "../core/settings";
+import { alarmLine, count } from "../core/settings";
 
 /**
  * Which events alert, as what, and when, with the saved values in the
@@ -11,8 +11,10 @@ import { count } from "../core/settings";
  */
 export default function HowEventsAlert({
   settings,
+  maxSounds,
 }: {
   settings: AlertSettings;
+  maxSounds: number;
 }) {
   const lead = count(settings.defaultLeadMinutes, "minute");
   const list = {
@@ -33,10 +35,7 @@ export default function HowEventsAlert({
         Three types
       </Typography>
       <Box component="ul" sx={list}>
-        <li>
-          Alarm: one message with the alarm settings under Settings. At
-          Emergency it repeats until you acknowledge it.
-        </li>
+        <li>Alarm: {alarmLine(settings, maxSounds)}</li>
         <li>
           Notification: one message with one sound, at the notification priority
           and sound under Settings.

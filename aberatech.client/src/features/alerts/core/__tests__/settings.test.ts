@@ -1,26 +1,31 @@
 /**
- * The words and arithmetic behind the settings: the gap between sounds,
- * when an emergency message stops, and the page's summary per priority.
+ * The words and arithmetic behind the settings: when an alarm stops, what
+ * it does, and the page's summary.
  */
 
 import { expect, it, describe as suite } from "vitest";
 import { settings } from "../../../../test/alertsFixtures";
 import {
+  alarmLine,
   count,
   describe,
-  every,
   isNonstop,
   longSounds,
   nonstop,
   stopWork,
 } from "../settings";
 
-suite("every", () => {
-  it("reads as a person would say it", () => {
-    expect(every(60)).toBe("minute");
-    expect(every(120)).toBe("2 minutes");
-    expect(every(30)).toBe("30 seconds");
-    expect(every(90)).toBe("90 seconds");
+suite("alarmLine", () => {
+  it("says how often an alarm rings and when it stops, with the saved numbers", () => {
+    expect(alarmLine(settings, 50)).toBe(
+      "rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
+    );
+    expect(alarmLine({ repeatSeconds: 120, stopAfterMinutes: 30 }, 50)).toBe(
+      "rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+    );
+    expect(alarmLine({ repeatSeconds: 45, stopAfterMinutes: 180 }, 50)).toBe(
+      "rings every 45 s until you acknowledge it on the phone or here, and stops after 37.5 min.",
+    );
   });
 });
 
@@ -42,16 +47,20 @@ suite("stopWork", () => {
 });
 
 suite("describe", () => {
-  it("follows the priority", () => {
+  it("says an alarm always repeats until acknowledged, with the saved numbers", () => {
     expect(describe(settings, 50, "UTC")).toContain(
-      "again every minute until you acknowledge it in the Pushover app, for up to 50 minutes.",
+      "An alarm is one Pushover message. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
     );
-    expect(describe({ ...settings, priority: 1 }, 50, "UTC")).toContain(
-      "one sound that plays through Pushover's quiet hours",
+    expect(
+      describe(
+        { ...settings, repeatSeconds: 30, stopAfterMinutes: 10 },
+        50,
+        "UTC",
+      ),
+    ).toContain(
+      "It rings every 30 s until you acknowledge it on the phone or here, and stops after 10 min.",
     );
-    expect(describe({ ...settings, priority: 0 }, 50, "UTC")).toContain(
-      "The phone's Pushover settings decide how it plays.",
-    );
+    expect(describe(settings, 50, "UTC")).not.toMatch(/emergency|priority/i);
     expect(describe(settings, 50, "Asia/Amman")).toContain(
       "Times are in Asia/Amman, the calendar's own zone.",
     );
@@ -59,7 +68,7 @@ suite("describe", () => {
 
   it("says what a notification and an unmarked event do", () => {
     expect(describe(settings, 50, "UTC")).toContain(
-      "A notification is one message with one sound, as the phone's Pushover settings allow. An event with no mark and no type set here sends nothing.",
+      "A notification is one message with one sound, and follows the phone's settings. An event with no mark and no type set here sends nothing.",
     );
     expect(
       describe(
@@ -68,7 +77,7 @@ suite("describe", () => {
         "UTC",
       ),
     ).toContain(
-      "A notification is one message with one sound, through Pushover's quiet hours. An event with no mark and no type set here sends a notification.",
+      "A notification is one message with one sound, even during Pushover's quiet hours. An event with no mark and no type set here sends a notification.",
     );
   });
 });
@@ -83,9 +92,8 @@ suite("count", () => {
 });
 
 suite("nonstop", () => {
-  it("is Emergency every 30 s with one of Pushover's long sounds", () => {
+  it("is a 30 s repeat with one of Pushover's long sounds, and nothing else", () => {
     expect(nonstop).toEqual({
-      priority: 2,
       repeatSeconds: 30,
       sound: "persistent",
     });
@@ -99,11 +107,10 @@ suite("nonstop", () => {
     expect(longSounds).toContain(nonstop.sound);
   });
 
-  it("is pressed only for Emergency at 30 s with a long sound", () => {
-    expect(isNonstop(2, 30, "persistent")).toBe(true);
-    expect(isNonstop(2, 30, "echo")).toBe(true);
-    expect(isNonstop(2, 30, "siren")).toBe(false);
-    expect(isNonstop(2, 60, "persistent")).toBe(false);
-    expect(isNonstop(1, 30, "persistent")).toBe(false);
+  it("is pressed only at 30 s with a long sound", () => {
+    expect(isNonstop(30, "persistent")).toBe(true);
+    expect(isNonstop(30, "echo")).toBe(true);
+    expect(isNonstop(30, "siren")).toBe(false);
+    expect(isNonstop(60, "persistent")).toBe(false);
   });
 });

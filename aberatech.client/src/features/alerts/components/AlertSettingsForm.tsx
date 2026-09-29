@@ -13,6 +13,7 @@ import {
   type ActionResult,
   type AlertSettings,
   type AlertsState,
+  type PushoverSound,
   type SettingsBounds,
   saveAlertSettings,
 } from "../core/api";
@@ -24,34 +25,16 @@ import {
   stopWork,
 } from "../core/settings";
 
-const priorities = [
-  {
-    value: 0,
-    label: "Normal",
-    text: "One sound. The phone's Pushover settings decide how it plays.",
-  },
-  {
-    value: 1,
-    label: "High",
-    text: "One sound, even in Pushover's quiet hours.",
-  },
-  {
-    value: 2,
-    label: "Emergency",
-    text: "Sounds again until you acknowledge it in Pushover.",
-  },
-] as const;
-
 const notificationPriorities = [
   {
     value: 0,
     label: "Normal",
-    text: "One sound. The phone's Pushover settings decide how it plays.",
+    text: "One sound, follows the phone's settings.",
   },
   {
     value: 1,
     label: "High",
-    text: "One sound, even in Pushover's quiet hours.",
+    text: "One sound, even during Pushover's quiet hours.",
   },
 ] as const;
 
@@ -71,9 +54,45 @@ const repeatPresets = [
   { seconds: 300, label: "5 min" },
 ];
 
+/**
+ * A sound select's options: the phone's default, the sounds uploaded to the
+ * Pushover account under "Your sounds", then Pushover's own. A saved sound
+ * the list no longer names (Pushover could not be reached) stays choosable.
+ */
+function soundOptions(sounds: PushoverSound[], value: string) {
+  const custom = sounds.filter((sound) => sound.custom);
+  const builtIn = sounds.filter((sound) => !sound.custom);
+  const listed = value === "" || sounds.some((sound) => sound.name === value);
+  return (
+    <>
+      <option value="">Phone's default</option>
+      {(custom.length > 0 || !listed) && (
+        <optgroup label="Your sounds">
+          {custom.map((sound) => (
+            <option key={sound.name} value={sound.name}>
+              {sound.description === sound.name
+                ? sound.name
+                : `${sound.description} (${sound.name})`}
+            </option>
+          ))}
+          {!listed && <option value={value}>{value}</option>}
+        </optgroup>
+      )}
+      <optgroup label="Pushover's sounds">
+        {builtIn.map((sound) => (
+          <option key={sound.name} value={sound.name}>
+            {(longSounds as readonly string[]).includes(sound.name)
+              ? `${sound.name} (long)`
+              : sound.name}
+          </option>
+        ))}
+      </optgroup>
+    </>
+  );
+}
+
 /** The form as typed: numbers stay text until Save, so a half-typed value is allowed. */
 interface Draft {
-  priority: 0 | 1 | 2;
   repeatSeconds: string;
   stopAfterMinutes: string;
   sound: string;
@@ -109,7 +128,6 @@ function number(text: string): number {
 
 function fromDraft(draft: Draft): AlertSettings {
   return {
-    priority: draft.priority,
     repeatSeconds: number(draft.repeatSeconds),
     stopAfterMinutes: number(draft.stopAfterMinutes),
     sound: draft.sound,
@@ -130,7 +148,6 @@ function fromDraft(draft: Draft): AlertSettings {
 
 function same(a: AlertSettings, b: AlertSettings): boolean {
   return (
-    a.priority === b.priority &&
     a.repeatSeconds === b.repeatSeconds &&
     a.stopAfterMinutes === b.stopAfterMinutes &&
     a.sound === b.sound &&
@@ -175,7 +192,6 @@ export default function AlertSettingsForm({
 
   const shown = draft ?? toDraft(settings);
   const changed = draft !== null && !same(fromDraft(draft), settings);
-  const emergency = shown.priority === 2;
 
   const edit = (change: Partial<Draft>) => {
     setDraft({ ...shown, ...change });
@@ -221,13 +237,11 @@ export default function AlertSettingsForm({
     unit: string,
     bound: { min: number; max: number },
     hint: string,
-    disabled = false,
   ) => (
     <TextField
       label={label}
       type="number"
       size="small"
-      disabled={disabled}
       value={shown[field] as string}
       onChange={(event) => edit({ [field]: event.target.value })}
       error={Boolean(error(field))}
@@ -275,43 +289,6 @@ export default function AlertSettingsForm({
         <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
           Alarms: events marked #critical or set to Alarm
         </Typography>
-        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
-          <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
-            Priority
-          </Typography>
-          <Stack spacing={1}>
-            {priorities.map((option) => (
-              <Stack
-                key={option.value}
-                direction="row"
-                spacing={1.5}
-                sx={{ alignItems: "center" }}
-              >
-                <Chip
-                  label={option.label}
-                  color={
-                    shown.priority === option.value ? "primary" : "default"
-                  }
-                  variant={
-                    shown.priority === option.value ? "filled" : "outlined"
-                  }
-                  aria-pressed={shown.priority === option.value}
-                  onClick={() => edit({ priority: option.value })}
-                  sx={{ minWidth: "6.5rem" }}
-                />
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {option.text}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-          {error("priority") && (
-            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-              {error("priority")}
-            </Typography>
-          )}
-        </Box>
-
         <Stack spacing={1}>
           <Stack
             direction="row"
@@ -321,19 +298,17 @@ export default function AlertSettingsForm({
           >
             {numberField(
               "repeatSeconds",
-              "Repeat every",
+              "Pushover repeats every",
               "s",
               bounds.repeatSeconds,
-              `${bounds.repeatSeconds.min} to ${bounds.repeatSeconds.max} seconds`,
-              !emergency,
+              `Up to ${bounds.repeatSeconds.max} seconds`,
             )}
             {numberField(
               "stopAfterMinutes",
-              "Stop after",
+              "Pushover stops after",
               "min",
               bounds.stopAfterMinutes,
               `${bounds.stopAfterMinutes.min} to ${bounds.stopAfterMinutes.max} minutes`,
-              !emergency,
             )}
           </Stack>
           <Stack
@@ -348,7 +323,6 @@ export default function AlertSettingsForm({
                 size="small"
                 label={preset.label}
                 aria-label={`Repeat every ${preset.label}`}
-                disabled={!emergency}
                 color={repeat === preset.seconds ? "primary" : "default"}
                 variant={repeat === preset.seconds ? "filled" : "outlined"}
                 onClick={() => edit({ repeatSeconds: `${preset.seconds}` })}
@@ -357,20 +331,11 @@ export default function AlertSettingsForm({
             <Chip
               size="small"
               label="Nonstop"
-              aria-pressed={isNonstop(shown.priority, repeat, shown.sound)}
-              color={
-                isNonstop(shown.priority, repeat, shown.sound)
-                  ? "primary"
-                  : "default"
-              }
-              variant={
-                isNonstop(shown.priority, repeat, shown.sound)
-                  ? "filled"
-                  : "outlined"
-              }
+              aria-pressed={isNonstop(repeat, shown.sound)}
+              color={isNonstop(repeat, shown.sound) ? "primary" : "default"}
+              variant={isNonstop(repeat, shown.sound) ? "filled" : "outlined"}
               onClick={() =>
                 edit({
-                  priority: nonstop.priority,
                   repeatSeconds: `${nonstop.repeatSeconds}`,
                   sound: nonstop.sound,
                 })
@@ -378,15 +343,20 @@ export default function AlertSettingsForm({
             />
           </Stack>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {emergency
-              ? work
-              : "Repeat and stop apply to Emergency only. This priority sounds once."}
+            Pushover does not repeat faster than every{" "}
+            {bounds.repeatSeconds.min} s. A paired phone rings as an iPhone
+            alarm until you press Stop. Ring in this browser beeps every second
+            until you acknowledge it.
           </Typography>
+          {work && (
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {work}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Pushover repeats no faster than every {bounds.repeatSeconds.min} s,
-            so 1 s and 5 s cannot be sent. A long sound plays into the gap. iOS
+            A long sound plays into the gap between two Pushover repeats. iOS
             plays a notification sound for up to 30 s, the length of the{" "}
-            {bounds.repeatSeconds.min} s repeat. Nonstop sets Emergency,{" "}
+            {bounds.repeatSeconds.min} s repeat. Nonstop sets{" "}
             {nonstop.repeatSeconds} s and {nonstop.sound}, one of Pushover's{" "}
             {longSounds.length} long sounds. Pushover stops after{" "}
             {bounds.maxEmergencySounds} repeats: {bounds.maxEmergencySounds} ×{" "}
@@ -420,19 +390,12 @@ export default function AlertSettingsForm({
           error={Boolean(error("sound"))}
           helperText={
             error("sound") ??
-            "Pushover's built-in sounds. A long one plays for longer than one chime."
+            "Your sounds first, then Pushover's. A long one plays for longer than one chime."
           }
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ width: "14rem", maxWidth: "100%" }}
         >
-          <option value="">Phone's default</option>
-          {bounds.sounds.map((sound) => (
-            <option key={sound} value={sound}>
-              {(longSounds as readonly string[]).includes(sound)
-                ? `${sound} (long)`
-                : sound}
-            </option>
-          ))}
+          {soundOptions(bounds.sounds, shown.sound)}
         </TextField>
 
         <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
@@ -494,14 +457,7 @@ export default function AlertSettingsForm({
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ width: "14rem", maxWidth: "100%" }}
         >
-          <option value="">Phone's default</option>
-          {bounds.sounds.map((sound) => (
-            <option key={sound} value={sound}>
-              {(longSounds as readonly string[]).includes(sound)
-                ? `${sound} (long)`
-                : sound}
-            </option>
-          ))}
+          {soundOptions(bounds.sounds, shown.notificationSound)}
         </TextField>
 
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>

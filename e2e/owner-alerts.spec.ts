@@ -32,7 +32,6 @@ async function signIn(page: Page) {
 
 /** The settings form at the configuration's defaults. */
 const defaults = {
-  priority: 2,
   repeatSeconds: 60,
   stopAfterMinutes: 180,
   sound: "",
@@ -164,7 +163,7 @@ test.describe("/alerts", () => {
     ).toBeVisible();
   });
 
-  test("the owner changes the repeat and the priority, and the test alert follows them", async ({
+  test("an alarm always repeats: the owner changes the repeat and stop, and the test alert follows them", async ({
     page,
   }) => {
     await signIn(page);
@@ -172,18 +171,27 @@ test.describe("/alerts", () => {
     await page.reload();
 
     const save = page.getByRole("button", { name: "Save settings" });
-    const repeat = page.getByLabel("Repeat every", { exact: true });
-    const emergency = page.getByRole("button", { name: "Emergency" });
-    const high = page.getByRole("button", { name: "High", exact: true });
+    const repeat = page.getByLabel("Pushover repeats every", { exact: true });
+    const stop = page.getByLabel("Pushover stops after", { exact: true });
     await expect(repeat).toHaveValue("60");
-    await expect(emergency).toHaveAttribute("aria-pressed", "true");
+    await expect(repeat).toBeEnabled();
+    await expect(stop).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Emergency" })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByText(
+        "Pushover does not repeat faster than every 30 s. A paired phone rings as an iPhone alarm until you press Stop. Ring in this browser beeps every second until you acknowledge it.",
+      ),
+    ).toBeVisible();
     await expect(save).toBeDisabled();
 
     await page.getByRole("button", { name: "Repeat every 2 min" }).click();
     await expect(repeat).toHaveValue("120");
+    await stop.fill("30");
     await expect(
       page.getByText(
-        "Stops after 100 min: 50 sounds × 120 s = 100 min, before the 180 min limit.",
+        "Stops after 30 min: the limit comes before 50 sounds × 120 s = 100 min.",
       ),
     ).toBeVisible();
     await save.click();
@@ -192,41 +200,81 @@ test.describe("/alerts", () => {
     await page.reload();
     await expect(repeat).toHaveValue("120");
     await expect(
-      page.getByText(/again every 2 minutes until you acknowledge it/),
+      page.getByText(
+        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+      ),
     ).toBeVisible();
     await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent/)).toBeVisible();
-    const emergencySent = await (
-      await page.request.get("/api/alerts/fake/sent")
-    ).json();
-    expect(emergencySent).toMatchObject({
+    await expect(
+      page.getByText(
+        "Test alert sent as an alarm. It rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+      ),
+    ).toBeVisible();
+    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    expect(sent).toMatchObject({
       priority: "2",
       retry: "120",
-      expire: "10800",
+      expire: "1800",
       sound: null,
     });
+    expect(sent.message).toContain(
+      "It rings every 2 minutes until you acknowledge it.",
+    );
 
-    await high.click();
-    await expect(repeat).toBeDisabled();
-    await save.click();
+    await reset(page);
+  });
+
+  test("the page says Emergency nowhere, and a priority in a saved body is ignored", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
+
+    const saved = await page.request.put("/api/alerts/settings", {
+      data: {
+        ...defaults,
+        priority: 0,
+        repeatSeconds: 45,
+        stopAfterMinutes: 20,
+      },
+    });
+    expect(saved.status()).toBe(200);
+    expect((await saved.json()).settings).not.toHaveProperty("priority");
+    await page.reload();
+    expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
+    await page.getByRole("button", { name: "Send test alert" }).click();
+    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    expect(sent).toMatchObject({ priority: "2", retry: "45", expire: "1200" });
+
+    await reset(page);
+  });
+
+  test("a sound uploaded to the Pushover account is listed first, saves and is sent", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const sound = page.getByLabel("Sound", { exact: true });
+    const yours = sound.locator('optgroup[label="Your sounds"] option');
+    await expect(yours).toHaveCount(1);
+    await expect(yours).toHaveText("Abera alarm (29.5 s) (aberaalarm)");
+    await sound.selectOption("aberaalarm");
+    await page.getByRole("button", { name: "Save settings" }).click();
     await expect(page.getByText("Settings saved.")).toBeVisible();
 
     await page.reload();
-    await expect(high).toHaveAttribute("aria-pressed", "true");
-    await expect(emergency).toHaveAttribute("aria-pressed", "false");
-    await expect(
-      page.getByText(/one sound that plays through Pushover's quiet hours/),
-    ).toBeVisible();
+    await expect(sound).toHaveValue("aberaalarm");
     await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent/)).toBeVisible();
-    const highSent = await (
-      await page.request.get("/api/alerts/fake/sent")
-    ).json();
-    expect(highSent).toMatchObject({
-      priority: "1",
-      retry: null,
-      expire: null,
-    });
+    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    expect(sent).toMatchObject({ priority: "2", sound: "aberaalarm" });
 
     await reset(page);
   });
@@ -239,14 +287,14 @@ test.describe("/alerts", () => {
     await page.reload();
 
     await page.getByRole("button", { name: "Nonstop" }).click();
-    await expect(page.getByLabel("Repeat every", { exact: true })).toHaveValue(
-      "30",
-    );
+    await expect(
+      page.getByLabel("Pushover repeats every", { exact: true }),
+    ).toHaveValue("30");
     await expect(page.getByLabel("Sound", { exact: true })).toHaveValue(
       "persistent",
     );
     await expect(
-      page.getByText(/Pushover repeats no faster than every 30 s/),
+      page.getByText(/Pushover does not repeat faster than every 30 s\./),
     ).toBeVisible();
     await page.getByRole("button", { name: "Save settings" }).click();
     await expect(page.getByText("Settings saved.")).toBeVisible();
@@ -492,7 +540,7 @@ test.describe("/alerts", () => {
       await (await page.request.get("/api/alerts/fake/cancelled")).json()
     ).length;
     // An alarm due now: the worker sends it to the fake Pushover at
-    // emergency priority, with a receipt.
+    // priority 2, with a receipt.
     const due = await page.request.post("/api/alerts/fake/due");
     expect(due.status()).toBe(200);
     await page.reload();
@@ -806,11 +854,11 @@ test.describe("/alerts button contrast", () => {
         ).toBeVisible();
 
         // Two states: as loaded, with Save off, and with an edit waiting,
-        // which turns Save on and the repeat presets off.
+        // which turns Save on and presses another repeat preset.
         for (const state of ["loaded", "edited"] as const) {
           if (state === "edited")
             await page
-              .getByRole("button", { name: "High", exact: true })
+              .getByRole("button", { name: "Repeat every 2 min" })
               .click();
           await page.mouse.move(0, 0);
           await page.evaluate(() =>

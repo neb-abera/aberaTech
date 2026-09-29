@@ -48,11 +48,11 @@ public static class AlertsEndpoints
             return routes;
         }
 
-        shared.MapGet("/status", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
-            Results.Ok(await StateAsync(status, store, clock, options, cancellationToken)));
+        shared.MapGet("/status", async (AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken)));
 
         shared.MapPost("/mute", async (
-            MuteRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            MuteRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
             Instant? until = request.Until switch
@@ -64,17 +64,17 @@ public static class AlertsEndpoints
             if (until is null) return Results.BadRequest("until must be \"hour\" or \"morning\"");
 
             await store.SetMutedUntilAsync(until, now, cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        shared.MapPost("/unmute", async (AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+        shared.MapPost("/unmute", async (AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             await store.SetMutedUntilAsync(null, clock.GetCurrentInstant(), cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/skip", async (
-            SkipRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
@@ -83,28 +83,35 @@ public static class AlertsEndpoints
             if (alert is null) return Results.NotFound();
 
             await store.SkipAsync(alert.Key, alert.StartsAt, clock.GetCurrentInstant(), cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/unskip", async (
-            SkipRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
             await store.UnskipAsync(request.Key!, cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         group.MapPut("/settings", async (
             SettingsRequest request,
             CalendarAlertWorker worker,
             AlertsStatus status,
+            PushoverSounds sounds,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
+            // A sound saved earlier stays valid while Pushover cannot be
+            // reached and only the built-ins are listed.
+            var allowed = (await sounds.CurrentAsync(cancellationToken)).Select(sound => sound.Name).ToHashSet();
+            var saved = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            allowed.Add(saved.Sound);
+            allowed.Add(saved.NotificationSound);
+
             var errors = AlertSettings.Validate(
-                request.Priority,
                 request.RepeatSeconds,
                 request.StopAfterMinutes,
                 request.Sound,
@@ -117,11 +124,11 @@ public static class AlertsEndpoints
                 request.NotificationPriority,
                 request.NotificationSound,
                 request.DefaultType,
-                request.BackupDelaySeconds);
+                request.BackupDelaySeconds,
+                allowed);
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
             var settings = new AlertSettings(
-                request.Priority!.Value,
                 request.RepeatSeconds!.Value,
                 request.StopAfterMinutes!.Value,
                 request.Sound!,
@@ -140,14 +147,14 @@ public static class AlertsEndpoints
             // This replica plans with the new values now. The others read
             // the row at the start of their next pass.
             await worker.ReadNowAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // One event's type, kept under its UID so it holds for every
         // occurrence. "default" drops the choice. Only an event on the list:
         // a choice is for an event the owner can see.
         group.MapPut("/event-type", async (
-            EventTypeRequest request, AlertsStatus status, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            EventTypeRequest request, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             var errors = new Dictionary<string, string[]>();
             if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
@@ -163,7 +170,7 @@ public static class AlertsEndpoints
 
             await store.SetEventTypeAsync(
                 alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // Acknowledge: the phone's alarm or the browser's ring was answered.
@@ -173,6 +180,7 @@ public static class AlertsEndpoints
         shared.MapPost("/ack", async (
             AckRequest request,
             AlertsStatus status,
+            PushoverSounds sounds,
             AlertDispatcher dispatcher,
             IAlertStore store,
             IClock clock,
@@ -192,7 +200,7 @@ public static class AlertsEndpoints
                 await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
             }
 
-            return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // The paired phones. The token is in the answer to the pairing and
@@ -272,13 +280,14 @@ public static class AlertsEndpoints
                 FakeAlertServices fake,
                 CalendarAlertWorker worker,
                 AlertsStatus status,
+                PushoverSounds sounds,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
                 fake.Reanchor();
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
             // The calendar answers 404 until the next reset, so the browser
@@ -287,13 +296,14 @@ public static class AlertsEndpoints
                 FakeAlertServices fake,
                 CalendarAlertWorker worker,
                 AlertsStatus status,
+                PushoverSounds sounds,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
                 fake.Fail();
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
             // An alarm due now, until the next reset, so the browser suite
@@ -302,13 +312,14 @@ public static class AlertsEndpoints
                 FakeAlertServices fake,
                 CalendarAlertWorker worker,
                 AlertsStatus status,
+                PushoverSounds sounds,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
                 fake.AddDue();
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
             // The receipts whose repeats an acknowledgement cancelled.
@@ -346,7 +357,12 @@ public static class AlertsEndpoints
         !string.IsNullOrWhiteSpace(key) && key.Length <= AlertPlanner.MaxKeyLength;
 
     private static async Task<AlertsState> StateAsync(
-        AlertsStatus status, IAlertStore store, IClock clock, AlertsOptions options, CancellationToken cancellationToken)
+        AlertsStatus status,
+        IAlertStore store,
+        PushoverSounds sounds,
+        IClock clock,
+        AlertsOptions options,
+        CancellationToken cancellationToken)
     {
         var snapshot = status.Snapshot();
         var now = clock.GetCurrentInstant();
@@ -362,7 +378,6 @@ public static class AlertsEndpoints
             PollMinutes: settings.PollMinutes,
             DefaultLeadMinutes: settings.DefaultLeadMinutes,
             Settings: new SettingsView(
-                settings.Priority,
                 settings.RepeatSeconds,
                 settings.StopAfterMinutes,
                 settings.Sound,
@@ -376,7 +391,7 @@ public static class AlertsEndpoints
                 settings.NotificationSound,
                 settings.DefaultType,
                 settings.BackupDelaySeconds),
-            Bounds: SettingsBounds.Instance,
+            Bounds: SettingsBounds.For(await sounds.CurrentAsync(cancellationToken)),
             MutedUntil: mutedUntil?.ToDateTimeOffset(),
             LastFetchAt: snapshot.LastFetchAt?.ToDateTimeOffset(),
             LastFetchError: snapshot.LastFetchError,
@@ -434,9 +449,12 @@ public static class AlertsEndpoints
     /// <summary>A listed alert's key and the type for its event: none, notification, alarm, or default to drop the choice.</summary>
     public sealed record EventTypeRequest(string? Key, string? Type);
 
-    /// <summary>The settings form. Every field is required: the page sends the whole form.</summary>
+    /// <summary>
+    /// The settings form. Every field is required: the page sends the whole
+    /// form. An alarm always repeats until acknowledged, so a "priority"
+    /// field in the body is ignored.
+    /// </summary>
     public sealed record SettingsRequest(
-        int? Priority,
         int? RepeatSeconds,
         int? StopAfterMinutes,
         string? Sound,
@@ -471,7 +489,6 @@ public static class AlertsEndpoints
         IReadOnlyList<AlertView> Alerts);
 
     public sealed record SettingsView(
-        int Priority,
         int RepeatSeconds,
         int StopAfterMinutes,
         string Sound,
@@ -488,7 +505,11 @@ public static class AlertsEndpoints
 
     public sealed record Bound(int Min, int Max);
 
-    /// <summary>What the form's inputs accept. The server checks the same numbers on save.</summary>
+    /// <summary>
+    /// What the form's inputs accept. The server checks the same numbers on
+    /// save. Sounds lists the account's own uploads first, then Pushover's
+    /// built-ins, and never the app token.
+    /// </summary>
     public sealed record SettingsBounds(
         Bound RepeatSeconds,
         Bound StopAfterMinutes,
@@ -498,9 +519,9 @@ public static class AlertsEndpoints
         Bound BackupDelaySeconds,
         int MaxOwnerEmails,
         int MaxEmergencySounds,
-        IReadOnlyList<string> Sounds)
+        IReadOnlyList<PushoverSound> Sounds)
     {
-        public static readonly SettingsBounds Instance = new(
+        public static SettingsBounds For(IReadOnlyList<PushoverSound> sounds) => new(
             new Bound(AlertSettings.MinRepeatSeconds, AlertSettings.MaxRepeatSeconds),
             new Bound(AlertSettings.MinStopAfterMinutes, AlertSettings.MaxStopAfterMinutes),
             new Bound(AlertSettings.MinDefaultLeadMinutes, AlertSettings.MaxDefaultLeadMinutes),
@@ -509,7 +530,7 @@ public static class AlertsEndpoints
             new Bound(AlertSettings.MinBackupDelaySeconds, AlertSettings.MaxBackupDelaySeconds),
             AlertSettings.MaxOwnerEmails,
             PushoverClient.MaxEmergencySounds,
-            PushoverClient.Sounds);
+            sounds);
     }
 
     public sealed record SendView(DateTimeOffset At, string Title, string Outcome);

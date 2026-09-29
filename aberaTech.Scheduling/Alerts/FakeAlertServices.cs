@@ -161,8 +161,19 @@ public sealed class FakeAlertServices(IClock clock)
             });
     });
 
+    /// <summary>The one sound the fake Pushover account has uploaded, beside the built-ins.</summary>
+    public const string CustomSound = "aberaalarm";
+
     public HttpMessageHandler PushoverHandler() => new Handler(async request =>
     {
+        if (request.RequestUri?.AbsolutePath == "/1/sounds.json")
+        {
+            // pushover.net/api#sounds: the built-ins and the account's own uploads.
+            var sounds = PushoverSounds.BuiltIn.ToDictionary(sound => sound.Name, sound => sound.Description);
+            sounds[CustomSound] = "Abera alarm (29.5 s)";
+            return Json(System.Text.Json.JsonSerializer.Serialize(new { sounds, status = 1, request = "development" }));
+        }
+
         var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync());
         if (request.RequestUri?.AbsolutePath.StartsWith("/1/receipts/", StringComparison.Ordinal) == true)
         {
