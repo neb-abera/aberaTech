@@ -10,8 +10,9 @@ namespace aberaTech.Scheduling.Alerts;
 /// effect without a deploy, on every replica.
 /// </summary>
 /// <remarks>
-/// Priority, RepeatSeconds, StopAfterMinutes and Sound are the alarm's:
-/// an event marked #critical, or set to Alarm on the page. The three
+/// RepeatSeconds, StopAfterMinutes and Sound are the alarm's: an event
+/// marked #critical, or set to Alarm on the page. An alarm always goes at
+/// Pushover's priority 2, so it repeats until acknowledged. The three
 /// Notification fields are for an event set to Notification, and
 /// DefaultType says what an event with neither sends.
 ///
@@ -19,7 +20,6 @@ namespace aberaTech.Scheduling.Alerts;
 /// a web form they would pass through the browser and the database.
 /// </remarks>
 public sealed record AlertSettings(
-    int Priority,
     int RepeatSeconds,
     int StopAfterMinutes,
     string Sound,
@@ -34,8 +34,7 @@ public sealed record AlertSettings(
     string DefaultType = AlertTypes.None,
     int BackupDelaySeconds = 0)
 {
-    public const int MinPriority = 0;
-    public const int MaxPriority = PushoverClient.EmergencyPriority;
+    public const int MinNotificationPriority = 0;
     public const int MinRepeatSeconds = PushoverClient.MinRetrySeconds;
     public const int MaxRepeatSeconds = PushoverClient.MaxExpireSeconds;
     public const int MinStopAfterMinutes = 1;
@@ -58,7 +57,6 @@ public sealed record AlertSettings(
 
     /// <summary>The configuration's values, pulled inside the bounds. What runs until the owner saves.</summary>
     public static AlertSettings Defaults(AlertsOptions options) => new(
-        Math.Clamp(options.Priority, MinPriority, MaxPriority),
         Math.Clamp(options.RepeatSeconds, MinRepeatSeconds, MaxRepeatSeconds),
         Math.Clamp(options.StopAfterMinutes, MinStopAfterMinutes, MaxStopAfterMinutes),
         PushoverClient.Sounds.Contains(options.Sound ?? "") ? options.Sound! : "",
@@ -68,7 +66,7 @@ public sealed record AlertSettings(
         options.IncludeAllDay,
         options.TimeZone?.Trim() ?? "",
         [.. options.OwnerEmails.Select(email => email.Trim()).Where(email => email.Length > 0)],
-        Math.Clamp(options.NotificationPriority, MinPriority, MaxNotificationPriority),
+        Math.Clamp(options.NotificationPriority, MinNotificationPriority, MaxNotificationPriority),
         PushoverClient.Sounds.Contains(options.NotificationSound ?? "") ? options.NotificationSound! : "",
         AlertTypes.Defaults.Contains(options.DefaultType ?? "") ? options.DefaultType! : AlertTypes.None,
         Math.Clamp(options.BackupDelaySeconds, MinBackupDelaySeconds, MaxBackupDelaySeconds));
@@ -85,16 +83,19 @@ public sealed record AlertSettings(
     public Duration Lookahead => Duration.FromHours(LookaheadHours);
 
     /// <summary>
-    /// When an unacknowledged emergency message stops: the owner's limit or
-    /// Pushover's 50 sounds, whichever comes first.
+    /// When an unacknowledged alarm stops: the owner's limit or Pushover's
+    /// 50 sounds, whichever comes first.
     /// </summary>
     public int EffectiveStopSeconds => Math.Min(StopAfterMinutes * 60, PushoverClient.MaxEmergencySounds * RepeatSeconds);
 
-    /// <summary>What an alarm asks Pushover for. Retry and expire go only with priority 2.</summary>
+    /// <summary>
+    /// What an alarm asks Pushover for: always priority 2, which repeats every
+    /// retry until acknowledged, and gives up at the expiry.
+    /// </summary>
     public PushoverDelivery AlarmDelivery => new(
-        Priority,
-        Priority == PushoverClient.EmergencyPriority ? RepeatSeconds : null,
-        Priority == PushoverClient.EmergencyPriority ? StopAfterMinutes * 60 : null,
+        PushoverClient.EmergencyPriority,
+        RepeatSeconds,
+        StopAfterMinutes * 60,
         Sound.Length == 0 ? null : Sound);
 
     /// <summary>What a notification asks Pushover for: one sound, never a retry or an expiry.</summary>
@@ -143,10 +144,10 @@ public sealed record AlertSettings(
 
     /// <summary>
     /// The owner's form, checked field by field. Empty when every field is
-    /// inside its bounds. Keys are the JSON field names.
+    /// inside its bounds. Keys are the JSON field names. A sound must be one
+    /// of <paramref name="sounds"/>, the account's list from Pushover.
     /// </summary>
     public static Dictionary<string, string[]> Validate(
-        int? priority,
         int? repeatSeconds,
         int? stopAfterMinutes,
         string? sound,
@@ -159,7 +160,8 @@ public sealed record AlertSettings(
         int? notificationPriority,
         string? notificationSound,
         string? defaultType,
-        int? backupDelaySeconds)
+        int? backupDelaySeconds,
+        IReadOnlySet<string> sounds)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -169,10 +171,13 @@ public sealed record AlertSettings(
             else if (value < min || value > max) errors[field] = [$"Between {min} and {max} {unit}."];
         }
 
-        if (priority is null) errors["priority"] = ["Required."];
-        else if (priority is < MinPriority or > MaxPriority) errors["priority"] = ["0, 1 or 2."];
-
         Range("repeatSeconds", repeatSeconds, MinRepeatSeconds, MaxRepeatSeconds, "seconds");
+        if (repeatSeconds is < MinRepeatSeconds or > MaxRepeatSeconds)
+        {
+            // The bounds are Pushover's. A paired phone and the browser ring without a gap.
+            errors["repeatSeconds"] =
+                [$"Pushover does not repeat faster than every {MinRepeatSeconds} s or slower than every {MaxRepeatSeconds} s."];
+        }
         Range("stopAfterMinutes", stopAfterMinutes, MinStopAfterMinutes, MaxStopAfterMinutes, "minutes");
         Range("defaultLeadMinutes", defaultLeadMinutes, MinDefaultLeadMinutes, MaxDefaultLeadMinutes, "minutes");
         Range("pollMinutes", pollMinutes, MinPollMinutes, MaxPollMinutes, "minutes");
@@ -180,15 +185,15 @@ public sealed record AlertSettings(
         Range("backupDelaySeconds", backupDelaySeconds, MinBackupDelaySeconds, MaxBackupDelaySeconds, "seconds");
 
         if (sound is null) errors["sound"] = ["Required."];
-        else if (sound.Length > 0 && !PushoverClient.Sounds.Contains(sound)) errors["sound"] = ["Not a Pushover sound."];
+        else if (sound.Length > 0 && !sounds.Contains(sound)) errors["sound"] = ["Not a Pushover sound."];
 
         if (includeAllDay is null) errors["includeAllDay"] = ["Required."];
 
         if (notificationPriority is null) errors["notificationPriority"] = ["Required."];
-        else if (notificationPriority is < MinPriority or > MaxNotificationPriority) errors["notificationPriority"] = ["0 or 1."];
+        else if (notificationPriority is < MinNotificationPriority or > MaxNotificationPriority) errors["notificationPriority"] = ["0 or 1."];
 
         if (notificationSound is null) errors["notificationSound"] = ["Required."];
-        else if (notificationSound.Length > 0 && !PushoverClient.Sounds.Contains(notificationSound))
+        else if (notificationSound.Length > 0 && !sounds.Contains(notificationSound))
         {
             errors["notificationSound"] = ["Not a Pushover sound."];
         }

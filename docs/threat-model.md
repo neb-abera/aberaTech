@@ -32,7 +32,7 @@ before it is a feature.
 | The dev box agent | One heartbeat a minute with a bearer token | The box, or whoever holds the token |
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
-| The site to Pushover | One POST per alarm or notification. An alarm at the alarm priority (2 by default, with retry and expire). A notification at priority 0 or 1, with neither. An event set to None sends nothing | Pushover |
+| The site to Pushover | One POST per alarm or notification. An alarm at priority 2, with retry and expire. A notification at priority 0 or 1, with neither. An event set to None sends nothing | Pushover |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 | Internet to the Lighthouse CI server | Report uploads with a build token, dashboard reads, both behind basic auth, over TLS | CI, the nightly run, the owner, or whoever holds the password |
 

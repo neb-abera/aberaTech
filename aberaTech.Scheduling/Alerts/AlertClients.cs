@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 
 namespace aberaTech.Scheduling.Alerts;
 
@@ -77,8 +78,8 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     public const string Endpoint = "https://api.pushover.net/1/messages.json";
 
     /// <summary>
-    /// Emergency: bypasses Pushover's quiet hours and repeats until
-    /// acknowledged. With the app's Critical Alerts setting on, an iPhone
+    /// Pushover's emergency priority, which every alarm goes at. It bypasses
+    /// Pushover's quiet hours and repeats until acknowledged. With the app's Critical Alerts setting on, an iPhone
     /// plays it through the silent switch and Focus too. See
     /// pushover.net/api#priority.
     /// </summary>
@@ -93,13 +94,32 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// <summary>Pushover stops an emergency message after this many sounds, whatever the expiry says.</summary>
     public const int MaxEmergencySounds = 50;
 
-    /// <summary>Pushover's built-in sounds, as pushover.net/api#sounds lists them on 2026-09-28.</summary>
-    public static readonly IReadOnlyList<string> Sounds =
-    [
-        "pushover", "bike", "bugle", "cashregister", "classical", "cosmic", "falling", "gamelan", "incoming",
-        "intermission", "magic", "mechanical", "pianobar", "siren", "spacealarm", "tugboat", "alien", "climb",
-        "persistent", "echo", "updown", "vibrate", "none"
-    ];
+    /// <summary>The names of Pushover's built-in sounds (<see cref="PushoverSounds.BuiltIn"/>).</summary>
+    public static readonly IReadOnlyList<string> Sounds = [.. PushoverSounds.BuiltIn.Select(sound => sound.Name)];
+
+    /// <summary>pushover.net/api#sounds: the built-ins and the sounds uploaded to the account that owns the app token.</summary>
+    public const string SoundsEndpoint = "https://api.pushover.net/1/sounds.json";
+
+    /// <summary>The answer is a few kilobytes. Past this it is not a sound list.</summary>
+    public const int MaxSoundsBytes = 64 * 1024;
+
+    /// <summary>At most this many sounds are taken from the answer.</summary>
+    public const int MaxSounds = 200;
+
+    /// <summary>The longest sound name taken from the answer.</summary>
+    public const int MaxSoundName = 64;
+
+    /// <summary>A description longer than this is cut.</summary>
+    public const int MaxSoundDescription = 100;
+
+    /// <summary>A request for the sound list. Its URL carries the app token, so it is kept out of request traces.</summary>
+    public static bool IsSoundsRequest(Uri? url) =>
+        url is { IsAbsoluteUri: true }
+        && string.Equals(url.GetLeftPart(UriPartial.Path), SoundsEndpoint, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Letters, digits, underscore and dash, at most <see cref="MaxSoundName"/>.</summary>
+    public static bool IsSoundName(string? value) =>
+        value is { Length: > 0 and <= MaxSoundName } && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-');
 
     public const int MaxTitle = 250;
 
@@ -114,6 +134,66 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// <summary>Letters and digits, at most <see cref="MaxReceiptLength"/>, so it is safe in a URL path.</summary>
     public static bool IsReceipt(string? value) =>
         value is { Length: > 0 and <= MaxReceiptLength } && value.All(char.IsAsciiLetterOrDigit);
+
+    /// <summary>
+    /// The account's sound list as name and description, in Pushover's
+    /// order. Null when Pushover cannot be reached or answers with anything
+    /// but a sound list. A name that is not a plain sound name is dropped.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, string>?> SoundsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = $"{SoundsEndpoint}?token={Uri.EscapeDataString(options.PushoverAppToken ?? "")}";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > MaxSoundsBytes) return null;
+
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var buffer = new byte[MaxSoundsBytes + 1];
+            var length = 0;
+            int read;
+            while (length < buffer.Length && (read = await stream.ReadAsync(buffer.AsMemory(length), cancellationToken)) > 0)
+            {
+                length += read;
+            }
+
+            if (length > MaxSoundsBytes) return null;
+
+            using var json = JsonDocument.Parse(buffer.AsMemory(0, length));
+            if (json.RootElement.ValueKind != JsonValueKind.Object
+                || !json.RootElement.TryGetProperty("sounds", out var sounds)
+                || sounds.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var list = new Dictionary<string, string>();
+            foreach (var sound in sounds.EnumerateObject())
+            {
+                if (list.Count == MaxSounds) break;
+                if (!IsSoundName(sound.Name) || sound.Value.ValueKind != JsonValueKind.String) continue;
+                var description = sound.Value.GetString()!.Trim();
+                list[sound.Name] = description.Length == 0
+                    ? sound.Name
+                    : description.Length <= MaxSoundDescription ? description : description[..MaxSoundDescription];
+            }
+
+            return list.Count == 0 ? null : list;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
 
     public async Task<PushoverResult> SendAsync(
         string title, string message, PushoverDelivery delivery, CancellationToken cancellationToken)

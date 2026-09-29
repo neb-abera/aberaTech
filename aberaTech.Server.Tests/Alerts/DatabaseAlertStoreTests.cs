@@ -2,6 +2,8 @@ using aberaTech.Scheduling.Alerts;
 using aberaTech.Scheduling.Data;
 using aberaTech.Server.Tests.Support;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using NodaTime;
 using Xunit;
 
@@ -96,9 +98,9 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     [PostgresFact]
     public async Task Settings_are_one_row_that_a_new_process_reads_back_whole()
     {
-        var first = new AlertSettings(0, 45, 20, "", 15, 3, 24, true, "", []);
+        var first = new AlertSettings(45, 20, "", 15, 3, 24, true, "", []);
         var second = new AlertSettings(
-            2, 120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification", 240);
+            120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification", 240);
 
         await using (var context = Context())
         {
@@ -165,9 +167,9 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         {
             await context.Database.ExecuteSqlAsync(
                 $"""
-                 INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                 INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
                      "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails", "UpdatedAt")
-                 VALUES (1, 2, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, {Now})
+                 VALUES (1, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, {Now})
                  """);
         }
 
@@ -175,7 +177,7 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         var read = await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None);
 
         Assert.NotNull(read);
-        Assert.Equal((2, 30, 20, "persistent"), (read.Priority, read.RepeatSeconds, read.StopAfterMinutes, read.Sound));
+        Assert.Equal((30, 20, "persistent"), (read.RepeatSeconds, read.StopAfterMinutes, read.Sound));
         Assert.Equal(0, read.NotificationPriority);
         Assert.Equal("", read.NotificationSound);
         Assert.Equal(AlertTypes.None, read.DefaultType);
@@ -302,15 +304,55 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         {
             await context.Database.ExecuteSqlAsync(
                 $"""
-                 INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                 INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
                      "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
                      "NotificationPriority", "NotificationSound", "DefaultType", "UpdatedAt")
-                 VALUES (1, 2, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, 0, '', 'none', {Now})
+                 VALUES (1, 30, 20, 'persistent', 15, 5, 48, false, '', {Array.Empty<string>()}, 0, '', 'none', {Now})
                  """);
         }
 
         await using var check = Context();
         Assert.Equal(0, (await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None))!.BackupDelaySeconds);
+    }
+
+    [PostgresFact]
+    public async Task A_row_saved_at_priority_0_before_the_migration_reads_back_as_an_alarm_that_repeats()
+    {
+        using var database = new TestDatabase("alertsmigrate");
+        SchedulingDbContext Fresh() =>
+            new(new DbContextOptionsBuilder<SchedulingDbContext>()
+                .UseNpgsql(database.ConnectionString, npgsql => npgsql.UseNodaTime())
+                .Options);
+
+        await using (var context = Fresh())
+        {
+            // The schema the previous release ran on, and a row it saved with
+            // the alarm set to ring once.
+            await context.GetService<IMigrator>().MigrateAsync("20260928220345_AlertDevices");
+            await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertSettings" ("Id", "Priority", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                     "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
+                     "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
+                 VALUES (1, 0, 45, 20, 'bike', 15, 5, 48, false, '', {Array.Empty<string>()}, 1, '', 'none', 0, {Now})
+                 """);
+        }
+
+        await using (var context = Fresh())
+        {
+            await context.Database.MigrateAsync();
+            Assert.Empty(await context.Database.GetPendingMigrationsAsync());
+        }
+
+        await using var check = Fresh();
+        var read = (await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None))!;
+        Assert.Equal(new PushoverDelivery(2, 45, 1200, "bike"), read.AlarmDelivery);
+        Assert.Equal(1, read.NotificationPriority);
+        var columns = await check.Database
+            .SqlQuery<string>($"""SELECT column_name AS "Value" FROM information_schema.columns WHERE table_name = 'AlertSettings'""")
+            .ToListAsync();
+        Assert.DoesNotContain("Priority", columns);
+        Assert.Contains("NotificationPriority", columns);
     }
 
     public void Dispose() => _database?.Dispose();

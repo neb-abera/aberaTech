@@ -146,7 +146,7 @@ Each event has one of three types (`AlertTypes.cs`):
 
 | Type | Sends |
 |---|---|
-| Alarm | one message with the alarm settings. At priority 2 it repeats until acknowledged |
+| Alarm | one message that rings every repeat until acknowledged, then stops at the stop time |
 | Notification | one message at the notification priority and sound. Never a retry or an expiry |
 | None | nothing. The event is still listed on the page |
 
@@ -189,11 +189,10 @@ every other replica reads it at the start of its next pass.
 
 | Setting | Default | Bounds |
 |---|---|---|
-| Alarm priority | 2, emergency | 0 normal, 1 high (through quiet hours), 2 emergency (repeats until acknowledged) |
-| Alarm repeat every | 60 s | 30 to 10800 s. Priority 2 only |
-| Alarm stop after | 180 min | 1 to 180 min. Priority 2 only |
+| Pushover repeats every | 60 s | 30 to 10800 s |
+| Pushover stops after | 180 min | 1 to 180 min |
 | Alarm sound | the phone's default | one of Pushover's 23 built-in sounds |
-| Notification priority | 0, normal | 0 normal, 1 high |
+| Notification priority | Normal | Normal: one sound, follows the phone's settings. High: one sound, even during Pushover's quiet hours |
 | Notification sound | the phone's default | one of Pushover's 23 built-in sounds |
 | Events with no mark and no type set here | None | None or Notification |
 | Default lead | 10 min | 0 to 1440 min |
@@ -204,12 +203,15 @@ every other replica reads it at the start of its next pass.
 | Your addresses | none | up to 10 |
 | Pushover backup after | 0 s | 0 to 900 s. An alarm's Pushover message waits this long, so a paired phone rings first. It is not sent if the alarm is acknowledged by then, and never later than 1 minute before the start |
 
-Pushover stops an emergency message after 50 sounds, so the stop is the
-smaller of the limit and 50 × the repeat. At 60 s that is 50 min. The page
-shows the arithmetic.
+An alarm has no priority setting. Every alarm goes to Pushover at its
+priority 2 with `retry` set to the repeat and `expire` set to the stop, so
+it rings until acknowledged. Pushover stops such a message after 50 sounds,
+so the stop is the smaller of the limit and 50 × the repeat. At 60 s that is
+50 min. The page shows the arithmetic.
 
-Pushover refuses a repeat under 30 s (pushover.net/api#priority), so 1 s
-and 5 s cannot be sent. Nonstop sets priority 2, 30 s and `persistent`,
+Pushover refuses a repeat under 30 s (pushover.net/api#priority). A paired
+phone rings as an iPhone alarm until Stop is pressed. Ring in this browser
+beeps every second until the alarm is acknowledged. Nonstop sets 30 s and `persistent`,
 one of the five sounds pushover.net/api#sounds marks long (alien, climb,
 persistent, echo, updown). iOS plays a notification sound for up to 30 s
 (developer.apple.com/documentation/usernotifications/unnotificationsound),

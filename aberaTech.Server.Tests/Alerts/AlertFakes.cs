@@ -244,11 +244,35 @@ internal sealed class RecordingHandler(Func<HttpResponseMessage> answer) : HttpM
 
     public void Then(Func<HttpResponseMessage> next) => _queued.Enqueue(next);
 
+    /// <summary>
+    /// pushover.net/api#sounds is answered here and kept out of
+    /// <see cref="Requests"/>, so a test that counts the messages sent is not
+    /// thrown by the page reading the sound list. The built-ins by default.
+    /// </summary>
+    public Func<HttpResponseMessage> Sounds { get; set; } = () => SoundList();
+
+    /// <summary>Every sounds.json request, with its URL.</summary>
+    public ConcurrentQueue<Uri> SoundRequests { get; } = new();
+
+    /// <summary>A sounds.json answer: the built-ins and these uploads.</summary>
+    public static HttpResponseMessage SoundList(params (string Name, string Description)[] custom)
+    {
+        var sounds = PushoverSounds.BuiltIn.ToDictionary(sound => sound.Name, sound => sound.Description);
+        foreach (var (name, description) in custom) sounds[name] = description;
+        return Text(HttpStatusCode.OK, System.Text.Json.JsonSerializer.Serialize(new { sounds, status = 1 }), "application/json");
+    }
+
     public static HttpResponseMessage Text(HttpStatusCode status, string body, string type = "text/plain") =>
         new(status) { Content = new StringContent(body, System.Text.Encoding.UTF8, type) };
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (request.RequestUri?.AbsolutePath == "/1/sounds.json")
+        {
+            SoundRequests.Enqueue(request.RequestUri);
+            return Sounds();
+        }
+
         var form = new Dictionary<string, string>();
         if (request.Content is not null)
         {
