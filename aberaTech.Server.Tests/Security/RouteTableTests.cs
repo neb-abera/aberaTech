@@ -134,8 +134,15 @@ public sealed class RouteTableTests
         "POST /api/alerts/events"
     ];
 
+    /// <summary>The routes a paired phone's token alone reaches: its own push registration.</summary>
+    private static readonly string[] DeviceOnlyRoutes =
+    [
+        "PUT /api/alerts/devices/me/push",
+        "DELETE /api/alerts/devices/me/push"
+    ];
+
     [Fact]
-    public void Every_alerts_route_is_the_owners_alone_or_the_owners_and_a_paired_phones()
+    public void Every_alerts_route_is_the_owners_alone_the_owners_and_a_paired_phones_or_a_paired_phones_alone()
     {
         using var app = App();
         var alerts = app.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
@@ -147,15 +154,19 @@ public sealed class RouteTableTests
         string Name(RouteEndpoint endpoint) =>
             $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Single()} {endpoint.RoutePattern.RawText}";
 
-        // One policy each, and it is one of the two.
+        // One policy each, and it is one of the three.
         var policies = alerts.ToDictionary(Name, endpoint =>
             endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy).Distinct().Single());
         Assert.All(policies, pair => Assert.Contains(
-            pair.Value, new[] { AlertsAuth.OwnerPolicy, AlertsAuth.OwnerOrDevicePolicy }));
+            pair.Value, new[] { AlertsAuth.OwnerPolicy, AlertsAuth.OwnerOrDevicePolicy, AlertsAuth.DevicePolicy }));
 
         Assert.Equal(
             PhoneRoutes.Order(StringComparer.Ordinal),
             policies.Where(pair => pair.Value == AlertsAuth.OwnerOrDevicePolicy)
+                .Select(pair => pair.Key).Order(StringComparer.Ordinal));
+        Assert.Equal(
+            DeviceOnlyRoutes.Order(StringComparer.Ordinal),
+            policies.Where(pair => pair.Value == AlertsAuth.DevicePolicy)
                 .Select(pair => pair.Key).Order(StringComparer.Ordinal));
         Assert.Contains("GET /api/alerts/devices", policies.Keys);
         Assert.Contains("PUT /api/alerts/settings", policies.Keys);

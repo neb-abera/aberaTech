@@ -65,6 +65,18 @@ public static partial class SecurityEvents
     /// <summary>403 from /api/alerts to a paired phone's token, on a route that is the owner's alone.</summary>
     public const int AlertsDeviceRefused = 4012;
 
+    /// <summary>A phone push Apple took. Written by <see cref="aberaTech.Scheduling.Alerts.AlertPushLog"/>: the phone's id and the plan version.</summary>
+    public const int AlertsPushSent = aberaTech.Scheduling.Alerts.AlertPushLog.SentId;
+
+    /// <summary>A phone push Apple answered 429 or 5xx. It is tried once more after 30 s.</summary>
+    public const int AlertsPushRetrying = aberaTech.Scheduling.Alerts.AlertPushLog.RetryingId;
+
+    /// <summary>A phone push that did not go. The next change tries again.</summary>
+    public const int AlertsPushFailed = aberaTech.Scheduling.Alerts.AlertPushLog.FailedId;
+
+    /// <summary>Apple said a phone's push token is dead or not for the app, and it was cleared.</summary>
+    public const int AlertsPushTokenCleared = aberaTech.Scheduling.Alerts.AlertPushLog.TokenClearedId;
+
     /// <summary>
     /// Sign-in and sign-out as events. The application STIG (V-222462,
     /// V-222464) wants a record of when a session starts and ends, with

@@ -324,6 +324,18 @@ if (devBoxEnabled)
 // from its secret iCal address. Needs the owner sign-in (for the page), the
 // scheduling database (for mute, skip and the one-send claim) and the three
 // secrets. Any missing and no worker runs; the page names what is missing.
+// Phone pushes need three more (Apple's key, key id and team id). Without
+// them phones still register and the page names those too.
+//
+// Development with Alerts:Fake and no key of its own signs pushes to the
+// fake Apple with a key made at start (FakeAlertServices.DevelopmentApns).
+if (builder.Environment.IsDevelopment()
+    && builder.Configuration.GetValue<bool>("Alerts:Fake")
+    && string.IsNullOrWhiteSpace(builder.Configuration["Alerts:ApnsKeyP8"]))
+{
+    builder.Configuration.AddInMemoryCollection(FakeAlertServices.DevelopmentApns());
+}
+
 var alertsOptions = builder.Configuration.GetSection(AlertsOptions.Section).Get<AlertsOptions>()
                     ?? new AlertsOptions();
 builder.Services.AddSingleton(alertsOptions);
@@ -354,12 +366,15 @@ if (alertsEnabled)
         builder.Services.AddSingleton<IAlertCalendarGrant>(services => services.GetRequiredService<FakeAlertServices>().Google);
         builder.Services.AddHttpClient<GoogleAlertEvents>()
             .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().Google.Handler());
+        builder.Services.AddHttpClient<ApnsClient>()
+            .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().ApnsHandler());
     }
 }
 
 // The calendar's address is its secret, and the path carries it. Pushover's
-// sound list takes the app token in its query string. Request traces record
-// the full URL, so calls to either are left out of them. Every other
+// sound list takes the app token in its query string. A push to Apple has
+// the phone's push token in its path. Request traces record the full URL,
+// so calls to all three are left out of them. Every other
 // outgoing call is traced as before. Registered whether or not Azure
 // Monitor is on, after it, so it wraps any filter the distro sets.
 builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
@@ -368,6 +383,7 @@ builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
     trace.FilterHttpRequestMessage = request =>
         !alertsOptions.IsCalendarRequest(request.RequestUri)
         && !PushoverClient.IsSoundsRequest(request.RequestUri)
+        && !ApnsClient.IsApnsRequest(request.RequestUri)
         && (previous?.Invoke(request) ?? true);
 });
 

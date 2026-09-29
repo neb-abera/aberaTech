@@ -193,13 +193,31 @@ internal sealed class InMemoryAlertStore : IAlertStore
 
 /// <summary>
 /// The paired phones in memory, with the database store's rules: at most
-/// five, looked up by the token's hash, a revoked one gone at once.
+/// five, looked up by the token's hash, a revoked one gone at once, one
+/// plan version, and a push claimed by one caller per window.
 /// DatabaseAlertDeviceStoreTests holds the Postgres store to the same rules.
 /// </summary>
 internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
 {
+    private sealed class Row
+    {
+        public required AlertDevice Device { get; set; }
+
+        public required byte[] Hash { get; init; }
+
+        public string? ApnsToken { get; set; }
+
+        public string? ApnsEnvironment { get; set; }
+
+        public long PushedVersion { get; set; }
+
+        public Instant? PushedAt { get; set; }
+    }
+
     private readonly Lock _lock = new();
-    private readonly List<(AlertDevice Device, byte[] Hash)> _devices = [];
+    private readonly List<Row> _devices = [];
+    private long _version;
+    private byte[]? _fingerprint;
 
     /// <summary>How many times LastSeenAt was written.</summary>
     public int Touches { get; private set; }
@@ -211,7 +229,9 @@ internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
 
     public Task<IReadOnlyList<AlertDevice>> ListAsync(CancellationToken cancellationToken)
     {
-        lock (_lock) return Task.FromResult<IReadOnlyList<AlertDevice>>([.. _devices.Select(row => row.Device)]);
+        lock (_lock)
+            return Task.FromResult<IReadOnlyList<AlertDevice>>(
+                [.. _devices.Select(row => row.Device with { Push = row.ApnsToken is not null })]);
     }
 
     public Task<AlertDevice?> CreateAsync(Guid id, string name, byte[] tokenHash, Instant now, CancellationToken cancellationToken)
@@ -220,7 +240,7 @@ internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
         {
             if (_devices.Count >= AlertDeviceTokens.MaxDevices) return Task.FromResult<AlertDevice?>(null);
             var device = new AlertDevice(id, name, now, null);
-            _devices.Add((device, tokenHash));
+            _devices.Add(new Row { Device = device, Hash = tokenHash });
             return Task.FromResult<AlertDevice?>(device);
         }
     }
@@ -233,23 +253,99 @@ internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
     public Task<AlertDevice?> FindAsync(byte[] tokenHash, CancellationToken cancellationToken)
     {
         lock (_lock)
-            return Task.FromResult<AlertDevice?>(
-                _devices.FirstOrDefault(row => row.Hash.AsSpan().SequenceEqual(tokenHash)).Device);
+            return Task.FromResult(
+                _devices.FirstOrDefault(row => row.Hash.AsSpan().SequenceEqual(tokenHash)) is { } row
+                    ? row.Device with { Push = row.ApnsToken is not null }
+                    : null);
     }
 
     public Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken)
     {
         lock (_lock)
         {
-            var index = _devices.FindIndex(row => row.Device.Id == id);
-            if (index >= 0 && (_devices[index].Device.LastSeenAt is not { } seen || seen <= unlessAfter))
+            if (_devices.FirstOrDefault(row => row.Device.Id == id) is { } row
+                && (row.Device.LastSeenAt is not { } seen || seen <= unlessAfter))
             {
-                _devices[index] = (_devices[index].Device with { LastSeenAt = now }, _devices[index].Hash);
+                row.Device = row.Device with { LastSeenAt = now };
                 Touches++;
             }
         }
 
         return Task.CompletedTask;
+    }
+
+    public Task SetPushAsync(Guid id, string? token, string? environment, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_devices.FirstOrDefault(row => row.Device.Id == id) is { } row)
+            {
+                row.ApnsToken = token;
+                row.ApnsEnvironment = environment;
+                row.PushedVersion = _version;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_devices.FirstOrDefault(row => row.Device.Id == id && row.ApnsToken == token) is { } row)
+            {
+                row.ApnsToken = null;
+                row.ApnsEnvironment = null;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<long> PlanVersionAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_version);
+    }
+
+    public Task<bool> BumpPlanAsync(byte[]? fingerprint, bool force, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            var differs = fingerprint is not null && (_fingerprint is null || !_fingerprint.AsSpan().SequenceEqual(fingerprint));
+            if (_version > 0 && !force && !differs) return Task.FromResult(false);
+            _version++;
+            if (fingerprint is not null) _fingerprint = fingerprint;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<IReadOnlyList<PushTarget>> PushTargetsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock)
+            return Task.FromResult<IReadOnlyList<PushTarget>>(
+            [
+                .. _devices
+                    .Where(row => row.ApnsToken is not null && row.ApnsEnvironment is not null)
+                    .Select(row => new PushTarget(row.Device.Id, row.ApnsToken!, row.ApnsEnvironment!, row.PushedVersion, row.PushedAt))
+            ]);
+    }
+
+    public Task<bool> TryClaimPushAsync(Guid id, long version, Instant now, Instant windowStart, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_devices.FirstOrDefault(row => row.Device.Id == id) is not { ApnsToken: not null } row
+                || row.PushedVersion >= version
+                || row.PushedAt > windowStart)
+            {
+                return Task.FromResult(false);
+            }
+
+            row.PushedVersion = version;
+            row.PushedAt = now;
+            return Task.FromResult(true);
+        }
     }
 }
 

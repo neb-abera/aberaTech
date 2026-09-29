@@ -105,6 +105,14 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
             Assert.NotNull(await devices.CreateAsync(
                 phone, "Least privilege", aberaTech.Scheduling.Alerts.AlertDeviceTokens.Hash("aat_x"), now, CancellationToken.None));
             await devices.TouchAsync(phone, now, now, CancellationToken.None);
+
+            // Phone pushes: the token, the plan version and the claim, as the runtime role.
+            var pushToken = new string('a', 64);
+            await devices.SetPushAsync(phone, pushToken, "production", CancellationToken.None);
+            Assert.True(await devices.BumpPlanAsync(new byte[32], force: true, now, CancellationToken.None));
+            Assert.True(await devices.TryClaimPushAsync(
+                phone, await devices.PlanVersionAsync(CancellationToken.None), now, now, CancellationToken.None));
+            await devices.ClearPushIfAsync(phone, pushToken, CancellationToken.None);
             Assert.True(await devices.RevokeAsync(phone, CancellationToken.None));
             Assert.True(await new aberaTech.Scheduling.Alerts.DatabaseAlertStore(database)
                 .AcknowledgeAsync("k", now, "phone", now, CancellationToken.None));

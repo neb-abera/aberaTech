@@ -63,8 +63,9 @@ public static class AlertDeviceTokens
         System.Buffers.SearchValues.Create("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 }
 
-/// <summary>One paired phone, as the page lists it. Never the hash.</summary>
-public sealed record AlertDevice(Guid Id, string Name, Instant CreatedAt, Instant? LastSeenAt);
+/// <summary>One paired phone, as the page lists it. Never the hash or the push token.</summary>
+/// <param name="Push">The phone has registered a push token.</param>
+public sealed record AlertDevice(Guid Id, string Name, Instant CreatedAt, Instant? LastSeenAt, bool Push = false);
 
 /// <summary>The paired phones. Owner-only on the page, read by the device scheme on every request with a token.</summary>
 public interface IAlertDeviceStore
@@ -81,6 +82,37 @@ public interface IAlertDeviceStore
 
     /// <summary>Records a request from the phone, unless one was recorded after <paramref name="unlessAfter"/>.</summary>
     Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken);
+
+    /// <summary>Stores the phone's push token and Apple environment, replacing any before. Null clears both.</summary>
+    /// <remarks>
+    /// A new token counts as holding the current plan: the phone registers
+    /// after it reads the plan, so it is pushed the next change.
+    /// </remarks>
+    Task SetPushAsync(Guid id, string? token, string? environment, CancellationToken cancellationToken);
+
+    /// <summary>Clears the phone's push token when it is still this one. Apple said it is dead.</summary>
+    Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken);
+
+    /// <summary>The plan version every replica agrees on. 0 before the first change.</summary>
+    Task<long> PlanVersionAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Bumps the plan version and stores the alarms' fingerprint with it.
+    /// Without <paramref name="force"/>, only when the fingerprint differs
+    /// from the stored one. A null fingerprint keeps the stored one. True when
+    /// the version moved.
+    /// </summary>
+    Task<bool> BumpPlanAsync(byte[]? fingerprint, bool force, Instant now, CancellationToken cancellationToken);
+
+    /// <summary>Every phone with a push token.</summary>
+    Task<IReadOnlyList<PushTarget>> PushTargetsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Claims the push of <paramref name="version"/> to one phone: true for
+    /// one caller, and only while the phone has a token, is behind, and was
+    /// last pushed at or before <paramref name="windowStart"/>.
+    /// </summary>
+    Task<bool> TryClaimPushAsync(Guid id, long version, Instant now, Instant windowStart, CancellationToken cancellationToken);
 }
 
 public sealed class DatabaseAlertDeviceStore(SchedulingDbContext database) : IAlertDeviceStore
@@ -91,7 +123,7 @@ public sealed class DatabaseAlertDeviceStore(SchedulingDbContext database) : IAl
     public async Task<IReadOnlyList<AlertDevice>> ListAsync(CancellationToken cancellationToken) =>
         await database.AlertDevices.AsNoTracking()
             .OrderBy(device => device.CreatedAt)
-            .Select(device => new AlertDevice(device.Id, device.Name, device.CreatedAt, device.LastSeenAt))
+            .Select(device => new AlertDevice(device.Id, device.Name, device.CreatedAt, device.LastSeenAt, device.ApnsToken != null))
             .ToListAsync(cancellationToken);
 
     public async Task<AlertDevice?> CreateAsync(
@@ -120,11 +152,76 @@ public sealed class DatabaseAlertDeviceStore(SchedulingDbContext database) : IAl
     public Task<AlertDevice?> FindAsync(byte[] tokenHash, CancellationToken cancellationToken) =>
         database.AlertDevices.AsNoTracking()
             .Where(device => device.TokenHash == tokenHash)
-            .Select(device => new AlertDevice(device.Id, device.Name, device.CreatedAt, device.LastSeenAt))
+            .Select(device => new AlertDevice(device.Id, device.Name, device.CreatedAt, device.LastSeenAt, device.ApnsToken != null))
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken) =>
         await database.AlertDevices
             .Where(device => device.Id == id && (device.LastSeenAt == null || device.LastSeenAt <= unlessAfter))
             .ExecuteUpdateAsync(set => set.SetProperty(device => device.LastSeenAt, now), cancellationToken);
+
+    public async Task SetPushAsync(Guid id, string? token, string? environment, CancellationToken cancellationToken) =>
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE "AlertDevices" SET "ApnsToken" = {token}, "ApnsEnvironment" = {environment},
+                 "PushedVersion" = COALESCE((SELECT "Version" FROM "AlertPushStates" WHERE "Id" = {AlertPushStateRecord.SingleId}), 0)
+             WHERE "Id" = {id}
+             """,
+            cancellationToken);
+
+    public async Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken) =>
+        await database.AlertDevices
+            .Where(device => device.Id == id && device.ApnsToken == token)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(device => device.ApnsToken, (string?)null)
+                    .SetProperty(device => device.ApnsEnvironment, (string?)null),
+                cancellationToken);
+
+    public async Task<long> PlanVersionAsync(CancellationToken cancellationToken) =>
+        await database.AlertPushStates.AsNoTracking()
+            .Where(state => state.Id == AlertPushStateRecord.SingleId)
+            .Select(state => state.Version)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<bool> BumpPlanAsync(byte[]? fingerprint, bool force, Instant now, CancellationToken cancellationToken)
+    {
+        // One statement: two replicas that read the same change bump once,
+        // because the second finds the fingerprint already stored.
+        var changed = await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertPushStates" ("Id", "Version", "AlarmsFingerprint", "UpdatedAt")
+             VALUES ({AlertPushStateRecord.SingleId}, 1, {fingerprint}, {now})
+             ON CONFLICT ("Id") DO UPDATE SET
+                 "Version" = "AlertPushStates"."Version" + 1,
+                 "AlarmsFingerprint" = COALESCE(EXCLUDED."AlarmsFingerprint", "AlertPushStates"."AlarmsFingerprint"),
+                 "UpdatedAt" = EXCLUDED."UpdatedAt"
+             WHERE {force} OR "AlertPushStates"."AlarmsFingerprint" IS DISTINCT FROM EXCLUDED."AlarmsFingerprint"
+             """,
+            cancellationToken);
+        return changed == 1;
+    }
+
+    public async Task<IReadOnlyList<PushTarget>> PushTargetsAsync(CancellationToken cancellationToken) =>
+        await database.AlertDevices.AsNoTracking()
+            .Where(device => device.ApnsToken != null && device.ApnsEnvironment != null)
+            .OrderBy(device => device.CreatedAt)
+            .Select(device => new PushTarget(
+                device.Id, device.ApnsToken!, device.ApnsEnvironment!, device.PushedVersion, device.PushedAt))
+            .ToListAsync(cancellationToken);
+
+    public async Task<bool> TryClaimPushAsync(
+        Guid id, long version, Instant now, Instant windowStart, CancellationToken cancellationToken) =>
+        // The row decides, like the delivery claims: of two replicas, one
+        // UPDATE matches and the other finds the phone already pushed.
+        await database.AlertDevices
+            .Where(device => device.Id == id
+                             && device.ApnsToken != null
+                             && device.PushedVersion < version
+                             && (device.PushedAt == null || device.PushedAt <= windowStart))
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(device => device.PushedVersion, version)
+                    .SetProperty(device => device.PushedAt, now),
+                cancellationToken) == 1;
 }

@@ -893,7 +893,7 @@ public sealed class AlertsRouteTests : IDisposable
     }
 
     [Fact]
-    public void Traces_leave_out_the_calendar_address_and_the_sound_list_and_keep_every_other_call()
+    public void Traces_leave_out_the_calendar_address_the_sound_list_and_apples_push_hosts_and_keep_every_other_call()
     {
         var filter = _app.Factory.Services.GetRequiredService<IOptionsMonitor<HttpClientTraceInstrumentationOptions>>()
             .CurrentValue.FilterHttpRequestMessage;
@@ -901,6 +901,10 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.NotNull(filter);
         Assert.False(filter(new HttpRequestMessage(HttpMethod.Get, FeedUrl)));
         Assert.False(filter(new HttpRequestMessage(HttpMethod.Get, $"{PushoverClient.SoundsEndpoint}?token={AppToken}")));
+        Assert.False(filter(new HttpRequestMessage(
+            HttpMethod.Post, $"https://api.push.apple.com/3/device/{ApnsFixture.Token}")));
+        Assert.False(filter(new HttpRequestMessage(
+            HttpMethod.Post, $"https://api.sandbox.push.apple.com/3/device/{ApnsFixture.Token}")));
         Assert.True(filter(new HttpRequestMessage(HttpMethod.Post, PushoverClient.Endpoint)));
         Assert.True(filter(new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/subscriptions")));
     }
@@ -926,6 +930,7 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Contains("/api/alerts/event-type", routes);
         Assert.DoesNotContain("/api/alerts/fake/reset", routes);
         Assert.DoesNotContain("/api/alerts/fake/fail", routes);
+        Assert.DoesNotContain("/api/alerts/fake/pushes", routes);
     }
 
     public void Dispose() => _app.Dispose();

@@ -12,13 +12,17 @@ before it is a feature.
 - The owner's session: the Google account on the allowlist and the cookie
   that carries it.
 - The owner's calendar: its secret iCal address reads every event, and
-  the Pushover keys send to his phone.
+  the Pushover keys send to his phone. Apple's push key wakes the paired
+  phones.
 - The dev box: an Azure VM the site can start, and the agent channel that
   tells it to hold or park.
 - The container image and the supply chain that builds and deploys it.
 - Secrets on the container app: the Google client secret, the Twilio
   credentials, the agent token, the calendar address and the Pushover keys,
-  the Cloudflare purge token in CI.
+  Apple's push key (`Alerts__ApnsKeyP8`) with its key id and team id, the
+  Cloudflare purge token in CI.
+- The paired phones' push tokens: each one lets whoever holds it and the
+  push key wake that phone's app.
 
 ## Entry points and trust boundaries
 
@@ -34,6 +38,8 @@ before it is a feature.
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
 | The site to Google Calendar's API | events.list, events.patch and events.insert on the connected calendar, with the stored refresh token of the `/schedule/admin` connection. Only for a type change or a new event on `/alerts` | Google |
 | The site to Pushover | One POST per alarm or notification. An alarm at priority 2, with retry and expire. A notification at priority 0 or 1, with neither. An event set to None sends nothing | Pushover |
+| The site to Apple's push service | A background push over HTTP/2 to `api.push.apple.com` or `api.sandbox.push.apple.com` after a change a phone holds, at most one per phone a minute. The body is `{"aps":{"content-available":1},"v":<plan version>}` and nothing else. A JWT signed with the push key, reused for 50 minutes | Apple |
+| A paired phone to the site | `PUT` and `DELETE /api/alerts/devices/me/push` with the phone's own token: Apple's push token and its environment | The phone, or whoever holds its token |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 | Internet to the Lighthouse CI server | Report uploads with a build token, dashboard reads, both behind basic auth, over TLS | CI, the nightly run, the owner, or whoever holds the password |
 
@@ -86,3 +92,8 @@ before it is a feature.
 
 A second account, a new public form, a new webhook, a second replica, or
 any new thing the site can do to the dev box.
+| The push key leaks through a log, a trace or the page | Disclosure | The key is a container secret, read only when a token is minted. Failures log the exception type only. The page lists missing names, never values | `AlertPushRouteTests` read every log line for the key, the provider token and the push token, and read the status body |
+| A push token leaks and a stranger wakes the phone | Disclosure | The token is in the URL path, so the Apple client logs nothing and traces leave out both hosts. It is never answered: the phones list carries a `push` bool. Events carry the phone's id | `AlertPushRouteTests`, `AlertsRouteTests` pin the trace filter, `ApnsClientTests` refuse a token that is not lowercase hex before it reaches a URL |
+| A stranger registers a push token for a phone | Tampering | The routes take a paired phone's token alone and act on that phone's row. The owner's cookie is 403. Input is lowercase hex of 64 to 200 characters and `sandbox` or `production` | `AlertPushRouteTests`, `RouteTableTests` |
+| Two replicas push the same change twice, or a burst of changes floods the phone | Denial | One plan version row, bumped by one statement. A push is claimed by one `UPDATE` on the phone's row that matches only when the phone is behind and its last push is 60 s old. Apple's 429 or 5xx is retried once after 30 s | `DatabaseAlertDeviceStoreTests` race ten claims and ten bumps, `AlertPushRouteTests` coalescing and retry |
+| Apple refuses the provider token for refreshing too often | Denial | One token per process for 50 minutes. A refresh Apple asks for waits until the token is 20 minutes old | `ApnsClientTests` |

@@ -54,6 +54,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertAcknowledgementRecord> AlertAcknowledgements => Set<AlertAcknowledgementRecord>();
 
+    public DbSet<AlertPushStateRecord> AlertPushStates => Set<AlertPushStateRecord>();
+
     /// <summary>Events created on /alerts, until Google's iCal feed carries them.</summary>
     public DbSet<AlertCreatedEventRecord> AlertCreatedEvents => Set<AlertCreatedEventRecord>();
 
@@ -178,6 +180,14 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(device => device.TokenHash).IsRequired();
             // Every request with a token looks it up by its hash.
             entity.HasIndex(device => device.TokenHash).IsUnique();
+            entity.Property(device => device.ApnsToken).HasMaxLength(ApnsPushTokens.MaxLength);
+            entity.Property(device => device.ApnsEnvironment).HasMaxLength(ApnsPushTokens.MaxEnvironmentLength);
+        });
+
+        builder.Entity<AlertPushStateRecord>(entity =>
+        {
+            entity.HasKey(state => state.Id);
+            entity.Property(state => state.Id).ValueGeneratedNever();
         });
 
         builder.Entity<AlertAcknowledgementRecord>(entity =>

@@ -160,7 +160,7 @@ public sealed class AlertDeviceRouteTests : IDisposable
         Assert.DoesNotContain(Convert.ToBase64String(hash), text);
         Assert.DoesNotContain("tokenHash", text, StringComparison.OrdinalIgnoreCase);
         var listed = Assert.Single(JsonDocument.Parse(text).RootElement.EnumerateArray());
-        Assert.Equal(["id", "name", "createdAt", "lastSeenAt"], listed.EnumerateObject().Select(field => field.Name));
+        Assert.Equal(["id", "name", "createdAt", "lastSeenAt", "push"], listed.EnumerateObject().Select(field => field.Name));
         Assert.Equal(JsonValueKind.Null, listed.GetProperty("lastSeenAt").ValueKind);
     }
 
