@@ -108,6 +108,15 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
             Assert.True(await devices.RevokeAsync(phone, CancellationToken.None));
             Assert.True(await new aberaTech.Scheduling.Alerts.DatabaseAlertStore(database)
                 .AcknowledgeAsync("k", now, "phone", now, CancellationToken.None));
+
+            // An event created on /alerts is kept, read and forgotten as the runtime role.
+            var alerts = new aberaTech.Scheduling.Alerts.DatabaseAlertStore(database);
+            await alerts.AddCreatedEventAsync(
+                new aberaTech.Scheduling.Alerts.CreatedAlertEvent("lp@google.com", "Least privilege", null, now, now, 10, false),
+                now,
+                CancellationToken.None);
+            Assert.Single(await alerts.CreatedEventsAsync(CancellationToken.None));
+            await alerts.ForgetCreatedEventsAsync(["lp@google.com"], CancellationToken.None);
         }
 
         var joined = await client.PostAsJsonAsync("/api/scheduling/queue", new { name = "Private Snuffy" });

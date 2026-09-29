@@ -46,6 +46,7 @@ public sealed class AlertsRouteTests : IDisposable
             Event("standup@google.com", "Standup #critical", "20261028T090000", "20261028T093000", "Room 1", alarms: [Popup("-PT15M")]),
             Event("review@google.com", "Review", "20261028T140000", "20261028T150000")),
         "text/calendar"));
+    private readonly FakeGoogleCalendar _google = new();
     private readonly TestApp _app;
 
     public AlertsRouteTests()
@@ -84,6 +85,8 @@ public sealed class AlertsRouteTests : IDisposable
         });
         services.AddHttpClient<CalendarFeed>().ConfigurePrimaryHttpMessageHandler(() => _calendar);
         services.AddHttpClient<PushoverClient>().ConfigurePrimaryHttpMessageHandler(() => _pushover);
+        services.AddSingleton<IAlertCalendarGrant>(_google);
+        services.AddHttpClient<GoogleAlertEvents>().ConfigurePrimaryHttpMessageHandler(_google.Handler);
     });
 
     public static IEnumerable<object[]> Routes =>
@@ -97,6 +100,7 @@ public sealed class AlertsRouteTests : IDisposable
         ["POST", "/api/alerts/test-event"],
         ["POST", "/api/alerts/test-notification"],
         ["PUT", "/api/alerts/event-type"],
+        ["POST", "/api/alerts/events"],
         ["PUT", "/api/alerts/settings"],
         ["POST", "/api/alerts/ack"],
         ["GET", "/api/alerts/devices"],

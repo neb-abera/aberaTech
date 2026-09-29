@@ -69,6 +69,15 @@ public interface IAlertStore
     /// those not seen since <paramref name="forgetBefore"/>.
     /// </summary>
     Task SeenEventsAsync(IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken);
+
+    /// <summary>The events created on /alerts that are still kept, soonest first.</summary>
+    Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Keeps one created event. A second add of the same UID changes nothing.</summary>
+    Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken);
+
+    /// <summary>Forgets created events: the feed has them now, or they started.</summary>
+    Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken);
 }
 
 /// <summary>The store in the scheduling database, which the site already has.</summary>
@@ -277,5 +286,31 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             .Where(choice => ids.Contains(choice.EventId))
             .ExecuteUpdateAsync(set => set.SetProperty(choice => choice.LastSeenAt, now), cancellationToken);
         await database.AlertEventTypes.Where(choice => choice.LastSeenAt < forgetBefore).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
+        await database.AlertCreatedEvents.AsNoTracking()
+            .OrderBy(row => row.StartsAt)
+            .Select(row => new CreatedAlertEvent(
+                row.EventId, row.Title, row.Location, row.StartsAt, row.EndsAt, row.LeadMinutes, row.Critical))
+            .ToListAsync(cancellationToken);
+
+    public async Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken)
+    {
+        // The UID is the key, so a retried create on two replicas keeps one row.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertCreatedEvents" ("EventId", "Title", "Location", "StartsAt", "EndsAt", "LeadMinutes", "Critical", "CreatedAt")
+             VALUES ({created.EventId}, {created.Title}, {created.Location}, {created.StartsAt}, {created.EndsAt},
+                 {created.LeadMinutes}, {created.Critical}, {now})
+             ON CONFLICT ("EventId") DO NOTHING
+             """,
+            cancellationToken);
+    }
+
+    public async Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken)
+    {
+        var ids = eventIds.ToArray();
+        await database.AlertCreatedEvents.Where(row => ids.Contains(row.EventId)).ExecuteDeleteAsync(cancellationToken);
     }
 }

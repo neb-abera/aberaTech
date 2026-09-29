@@ -166,6 +166,29 @@ internal sealed class InMemoryAlertStore : IAlertStore
         lock (_lock) Seen.Add(eventIds);
         return Task.CompletedTask;
     }
+
+    private readonly Dictionary<string, CreatedAlertEvent> _created = new(StringComparer.Ordinal);
+
+    public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult<IReadOnlyList<CreatedAlertEvent>>([.. _created.Values.OrderBy(created => created.StartsAt)]);
+    }
+
+    public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock) _created.TryAdd(created.EventId, created);
+        return Task.CompletedTask;
+    }
+
+    public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            foreach (var id in eventIds) _created.Remove(id);
+        }
+
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>

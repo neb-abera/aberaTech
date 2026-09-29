@@ -23,10 +23,10 @@ public static class AlertsAuth
 {
     public const string DeviceScheme = "alerts-device";
 
-    /// <summary>Settings, event types, tests, pairing: the owner's cookie alone.</summary>
+    /// <summary>Settings, tests, pairing and the development routes: the owner's cookie alone.</summary>
     public const string OwnerPolicy = "alerts-owner";
 
-    /// <summary>Status, mute, unmute, skip, unskip and ack: the owner's cookie or a paired phone.</summary>
+    /// <summary>Status, mute, unmute, skip, unskip, ack, event type and new event: the owner's cookie or a paired phone.</summary>
     public const string OwnerOrDevicePolicy = "alerts-owner-or-device";
 
     /// <summary>The paired phone's id, on a principal only the device scheme issues.</summary>

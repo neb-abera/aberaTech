@@ -339,16 +339,21 @@ if (alertsEnabled)
     builder.Services.AddScoped<IAlertStore, DatabaseAlertStore>();
     builder.Services.AddScoped<IAlertDeviceStore, DatabaseAlertDeviceStore>();
     builder.Services.AddCalendarAlerts();
+    // Writes to Google Calendar go through the connection /schedule/admin stores.
+    builder.Services.AddScoped<IAlertCalendarGrant, DatabaseAlertCalendarGrant>();
 
     if (builder.Environment.IsDevelopment() && alertsOptions.Fake)
     {
-        // `make up` and `make e2e`: the calendar and Pushover in memory.
+        // `make up` and `make e2e`: the calendar, Google Calendar's API and Pushover in memory.
         // Development only; AlertsRouteTests proves Production ignores it.
         builder.Services.AddSingleton<FakeAlertServices>();
         builder.Services.AddHttpClient<CalendarFeed>()
             .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().CalendarHandler());
         builder.Services.AddHttpClient<PushoverClient>()
             .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().PushoverHandler());
+        builder.Services.AddSingleton<IAlertCalendarGrant>(services => services.GetRequiredService<FakeAlertServices>().Google);
+        builder.Services.AddHttpClient<GoogleAlertEvents>()
+            .ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeAlertServices>().Google.Handler());
     }
 }
 

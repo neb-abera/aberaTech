@@ -54,6 +54,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertAcknowledgementRecord> AlertAcknowledgements => Set<AlertAcknowledgementRecord>();
 
+    /// <summary>Events created on /alerts, until Google's iCal feed carries them.</summary>
+    public DbSet<AlertCreatedEventRecord> AlertCreatedEvents => Set<AlertCreatedEventRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -182,6 +185,14 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasKey(acknowledgement => acknowledgement.OccurrenceKey);
             entity.Property(acknowledgement => acknowledgement.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
             entity.Property(acknowledgement => acknowledgement.Via).HasMaxLength(16).IsRequired();
+        });
+
+        builder.Entity<AlertCreatedEventRecord>(entity =>
+        {
+            entity.HasKey(created => created.EventId);
+            entity.Property(created => created.EventId).HasMaxLength(AlertPlanner.MaxKeyLength);
+            entity.Property(created => created.Title).HasMaxLength(CreatedEvents.MaxTitleLength).IsRequired();
+            entity.Property(created => created.Location).HasMaxLength(CreatedEvents.MaxLocationLength);
         });
 
         builder.Entity<AlertSkipRecord>(entity =>
