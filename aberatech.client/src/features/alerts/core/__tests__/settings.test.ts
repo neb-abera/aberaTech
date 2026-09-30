@@ -49,7 +49,7 @@ suite("stopWork", () => {
 suite("describe", () => {
   it("says an alarm always repeats until acknowledged, with the saved numbers", () => {
     expect(describe(settings, 50, "UTC")).toContain(
-      "An alarm is one Pushover message. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
+      "Ring until stopped is one Pushover message. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
     );
     expect(
       describe(
@@ -68,7 +68,7 @@ suite("describe", () => {
 
   it("says what a notification and an unmarked event do", () => {
     expect(describe(settings, 50, "UTC")).toContain(
-      "A notification is one message with one sound, and follows the phone's settings. An event with no mark and no type set here sends nothing.",
+      "Ring once is one message with one sound. It follows the phone's settings. An event with no mark and no type set here sends nothing.",
     );
     expect(
       describe(
@@ -77,7 +77,7 @@ suite("describe", () => {
         "UTC",
       ),
     ).toContain(
-      "A notification is one message with one sound, even during Pushover's quiet hours. An event with no mark and no type set here sends a notification.",
+      "Ring once is one message with one sound, even during Pushover's quiet hours. An event with no mark and no type set here rings once.",
     );
   });
 });

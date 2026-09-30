@@ -29,36 +29,36 @@ export default function HowEventsAlert({
         variant="h2"
         sx={{ fontSize: "1.25rem", mb: 1 }}
       >
-        How events become alarms
+        How events alert
       </Typography>
       <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
         Three types
       </Typography>
       <Box component="ul" sx={list}>
-        <li>Alarm: {alarmLine(settings, maxSounds)}</li>
+        <li>Ring until stopped: {alarmLine(settings, maxSounds)}</li>
         <li>
-          Notification: one message with one sound, at the notification priority
-          and sound under Settings.
+          Ring once: one message with one sound, at the priority and sound under
+          Ring once settings.
         </li>
-        <li>None: nothing is sent. The event is still listed above.</li>
+        <li>Off: nothing is sent. The event is still listed above.</li>
       </Box>
       <Typography variant="body1" sx={{ fontWeight: 600, mt: 2, mb: 0.5 }}>
         Which type an event gets
       </Typography>
       <Box component="ul" sx={list}>
         <li>
-          A type chosen on this page wins. Each alert above has None,
-          Notification and Alarm. The choice holds for every occurrence of a
+          A type chosen on this page wins. Each alert above has Off, Ring once
+          and Ring until stopped. The choice holds for every occurrence of a
           repeating event. Use default removes it.
         </li>
         <li>
-          Otherwise an event becomes an alarm when its title or description in
-          Google Calendar has #critical as a word of its own, in any case. The
-          mark is left off the title the phone shows.
+          Otherwise an event rings until stopped when its title or description
+          in Google Calendar has #critical as a word of its own, in any case.
+          The mark is left off the title the phone shows.
         </li>
         <li>
           {settings.defaultType === "notification"
-            ? "Every other event gets one notification, the default for unmarked events under Settings."
+            ? "Every other event rings once, the default for unmarked events under Settings."
             : "Every other event sends nothing, the default for unmarked events under Settings."}
         </li>
       </Box>

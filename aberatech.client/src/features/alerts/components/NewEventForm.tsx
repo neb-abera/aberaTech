@@ -213,7 +213,8 @@ export default function NewEventForm({
         />
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           The event goes on the Google calendar the alerts read, with one
-          reminder at that lead. Alarm also writes #critical in its description.
+          reminder at that lead. Ring until stopped also writes #critical in its
+          description.
         </Typography>
         {problem && <Alert severity="warning">{problem}</Alert>}
         {done && <Alert severity="info">{done}</Alert>}
