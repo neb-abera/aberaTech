@@ -131,7 +131,10 @@ public sealed class RouteTableTests
         "POST /api/alerts/unskip",
         "POST /api/alerts/ack",
         "PUT /api/alerts/event-type",
-        "POST /api/alerts/events"
+        "POST /api/alerts/events",
+        "POST /api/alerts/routines",
+        "PUT /api/alerts/routines/{id:guid}",
+        "DELETE /api/alerts/routines/{id:guid}"
     ];
 
     /// <summary>The routes a paired phone's token alone reaches: its own push registration.</summary>

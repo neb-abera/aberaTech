@@ -49,7 +49,7 @@ const defaults = {
 
 /**
  * Whatever an earlier engine's run left: unmuted, nothing skipped, no type
- * set on any event, no phone paired, the default settings. The
+ * set on any event, no phone paired, no routine alarm, the default settings. The
  * development calendar placed its events from the app's start, so after
  * 3 h of uptime the standup had begun and this spec failed. The reset
  * places them from now and has the worker read them at once.
@@ -66,6 +66,8 @@ async function reset(page: Page) {
   for (const device of devices as { id: string }[])
     await page.request.delete(`/api/alerts/devices/${device.id}`);
   const status = await (await page.request.get("/api/alerts/status")).json();
+  for (const routine of (status.routines ?? []) as { id: string }[])
+    await page.request.delete(`/api/alerts/routines/${routine.id}`);
   for (const alert of status.alerts ?? []) {
     if (alert.skipped)
       await page.request.post("/api/alerts/unskip", {
@@ -783,6 +785,91 @@ test.describe("/alerts", () => {
     await reset(page);
   });
 
+  test("the owner adds a routine alarm, switches it off, edits it and deletes it, and each survives a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const section = page.getByRole("region", { name: "Routine alarms" });
+    await expect(section.getByText("No routine alarms.")).toBeVisible();
+    await expect(
+      section.getByText(
+        "Routine alarms ring on the paired phone like Clock alarms. They do not go through Pushover or ring in this browser.",
+      ),
+    ).toBeVisible();
+
+    // Add: 06:30 on Monday, Wednesday and Friday, labelled E2E wake.
+    const add = page.getByRole("form", { name: "Add routine alarm" });
+    await add.getByLabel("Time").fill("06:30");
+    for (const day of ["Monday", "Wednesday", "Friday"])
+      await add.getByRole("button", { name: `Repeat on ${day}` }).click();
+    await add.getByLabel("Label").fill("E2E wake");
+    await add.getByLabel("Snooze in minutes").fill("5");
+    await add.getByRole("button", { name: "Add routine alarm" }).click();
+
+    const list = page.getByRole("list", { name: "Routine alarms" });
+    const item = list.getByRole("listitem").filter({ hasText: "E2E wake" });
+    await expect(item.getByText("06:30")).toBeVisible();
+    await expect(item.getByText("Mon Wed Fri, E2E wake")).toBeVisible();
+    await page.reload();
+    await expect(item.getByText("Mon Wed Fri, E2E wake")).toBeVisible();
+    await expect(item.getByText(/Snooze 5 min/)).toBeVisible();
+
+    // Stored as the phone reads it: wall-clock time, ISO weekdays.
+    let status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.routines).toHaveLength(1);
+    expect(status.routines[0]).toMatchObject({
+      label: "E2E wake",
+      hour: 6,
+      minute: 30,
+      days: [1, 3, 5],
+      enabled: true,
+      snoozeMinutes: 5,
+    });
+
+    // Switch off.
+    const toggle = item.getByRole("switch", { name: "E2E wake at 06:30" });
+    await expect(toggle).toBeChecked();
+    await toggle.click();
+    await expect(page.getByText("E2E wake at 06:30 is off.")).toBeVisible();
+    await page.reload();
+    await expect(
+      item.getByRole("switch", { name: "E2E wake at 06:30" }),
+    ).not.toBeChecked();
+
+    // Edit: 07:15 every day.
+    await item.getByRole("button", { name: "Edit E2E wake at 06:30" }).click();
+    const edit = page.getByRole("form", { name: "Edit routine alarm" });
+    await expect(edit.getByLabel("Time")).toHaveValue("06:30");
+    await edit.getByLabel("Time").fill("07:15");
+    for (const day of ["Tuesday", "Thursday", "Saturday", "Sunday"])
+      await edit.getByRole("button", { name: `Repeat on ${day}` }).click();
+    await edit.getByRole("button", { name: "Save routine alarm" }).click();
+    await expect(item.getByText("Every day, E2E wake")).toBeVisible();
+    await page.reload();
+    await expect(item.getByText("07:15")).toBeVisible();
+    await expect(item.getByText("Every day, E2E wake")).toBeVisible();
+    // The edit kept it off.
+    await expect(
+      item.getByRole("switch", { name: "E2E wake at 07:15" }),
+    ).not.toBeChecked();
+
+    // Delete asks first.
+    await item
+      .getByRole("button", { name: "Delete E2E wake at 07:15" })
+      .click();
+    await page
+      .getByRole("button", { name: "Yes, delete E2E wake at 07:15" })
+      .click();
+    await expect(section.getByText("No routine alarms.")).toBeVisible();
+    await page.reload();
+    await expect(section.getByText("No routine alarms.")).toBeVisible();
+    status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.routines).toEqual([]);
+  });
+
   test("a visitor is sent to sign in and every button is refused", async ({
     browser,
   }) => {
@@ -812,6 +899,28 @@ test.describe("/alerts", () => {
       data: defaults,
     });
     expect(settings.status()).toBe(401);
+    const routine = "/api/alerts/routines/0b9c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10";
+    expect(
+      (
+        await page.request.post("/api/alerts/routines", {
+          data: { hour: 6, minute: 30, days: [] },
+        })
+      ).status(),
+    ).toBe(401);
+    expect(
+      (
+        await page.request.put(routine, {
+          data: {
+            hour: 6,
+            minute: 30,
+            days: [],
+            enabled: true,
+            snoozeMinutes: 9,
+          },
+        })
+      ).status(),
+    ).toBe(401);
+    expect((await page.request.delete(routine)).status()).toBe(401);
     const type = await page.request.put("/api/alerts/event-type", {
       data: { key: "e2e-standup", type: "alarm" },
     });
@@ -1001,6 +1110,10 @@ test.describe("/alerts button contrast", () => {
     // A type set here shows Use default, a text button of its own.
     await page.request.put("/api/alerts/event-type", {
       data: { key: await keyOf(page, "E2E review"), type: "notification" },
+    });
+    // A routine alarm shows its Edit and Delete buttons.
+    await page.request.post("/api/alerts/routines", {
+      data: { label: "E2E contrast", hour: 6, minute: 30, days: [1] },
     });
 
     const failures: string[] = [];

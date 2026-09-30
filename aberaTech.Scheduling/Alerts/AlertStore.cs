@@ -78,11 +78,30 @@ public interface IAlertStore
 
     /// <summary>Forgets created events: the feed has them now, or they started.</summary>
     Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken);
+
+    /// <summary>Every routine alarm, by hour, minute and label.</summary>
+    Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores a new routine alarm. False, and nothing stored, when
+    /// <see cref="AlertRoutines.MaxRoutines"/> are already kept, however many
+    /// creates race.
+    /// </summary>
+    Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken);
+
+    /// <summary>Replaces every field but the id and the creation time. False when there is no such routine.</summary>
+    Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken);
+
+    /// <summary>False when there was no such routine.</summary>
+    Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken);
 }
 
 /// <summary>The store in the scheduling database, which the site already has.</summary>
 public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertStore
 {
+    /// <summary>Held for the count and the insert, so two creates at once cannot make a 51st routine.</summary>
+    private const long RoutinesLock = 0x6161747275746e; // "aatrutn"
+
     public async Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken)
     {
         var row = await database.AlertSettings.AsNoTracking()
@@ -313,4 +332,60 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         var ids = eventIds.ToArray();
         await database.AlertCreatedEvents.Where(row => ids.Contains(row.EventId)).ExecuteDeleteAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) =>
+        AlertRoutines.Sorted(
+            (await database.AlertRoutines.AsNoTracking().ToListAsync(cancellationToken))
+            .Select(row => new AlertRoutine(
+                row.Id,
+                row.Label,
+                row.Hour,
+                row.Minute,
+                [.. row.Days.Select(day => (int)day)],
+                row.Enabled,
+                row.SnoozeMinutes,
+                row.UpdatedAt)));
+
+    public async Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
+    {
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        // An advisory lock needs no privilege beyond connecting, so the
+        // runtime role can take it, as it does for pairing a phone.
+        await database.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({RoutinesLock})", cancellationToken);
+
+        if (await database.AlertRoutines.CountAsync(cancellationToken) >= AlertRoutines.MaxRoutines) return false;
+
+        var days = Days(routine);
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertRoutines" ("Id", "Label", "Hour", "Minute", "Days", "Enabled", "SnoozeMinutes", "CreatedAt", "UpdatedAt")
+             VALUES ({routine.Id}, {routine.Label}, {(short)routine.Hour}, {(short)routine.Minute}, {days},
+                 {routine.Enabled}, {(short)routine.SnoozeMinutes}, {routine.UpdatedAt}, {routine.UpdatedAt})
+             """,
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
+    {
+        var days = Days(routine);
+        return await database.AlertRoutines
+            .Where(row => row.Id == routine.Id)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(row => row.Label, routine.Label)
+                    .SetProperty(row => row.Hour, (short)routine.Hour)
+                    .SetProperty(row => row.Minute, (short)routine.Minute)
+                    .SetProperty(row => row.Days, days)
+                    .SetProperty(row => row.Enabled, routine.Enabled)
+                    .SetProperty(row => row.SnoozeMinutes, (short)routine.SnoozeMinutes)
+                    .SetProperty(row => row.UpdatedAt, routine.UpdatedAt),
+                cancellationToken) == 1;
+    }
+
+    public async Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) =>
+        await database.AlertRoutines.Where(row => row.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
+
+    private static short[] Days(AlertRoutine routine) => [.. routine.Days.Select(day => (short)day)];
 }
