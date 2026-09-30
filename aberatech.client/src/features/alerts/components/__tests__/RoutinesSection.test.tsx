@@ -99,7 +99,7 @@ describe("the list", () => {
     expect(within(items[0]).getByText("Mon Wed Fri, Gym")).toBeTruthy();
     expect(within(items[1]).getByText("06:30")).toBeTruthy();
     expect(within(items[1]).getByText("Weekdays, Wake up")).toBeTruthy();
-    expect(within(items[2]).getByText("Once, Alarm")).toBeTruthy();
+    expect(within(items[2]).getByText("No repeat, Alarm")).toBeTruthy();
     expect(
       screen.getByText(
         "Routine alarms ring on the paired phone like Clock alarms. They do not go through Pushover or ring in this browser.",
@@ -215,7 +215,11 @@ describe("the add form", () => {
         .getByRole("button", { name: "Repeat on Monday" })
         .getAttribute("aria-pressed"),
     ).toBe("true");
-    expect(within(form).getByText("Repeats: Mon Wed Fri.")).toBeTruthy();
+    expect(
+      within(form).getByText(
+        "Repeats: Mon Wed Fri. It rings until you stop it.",
+      ),
+    ).toBeTruthy();
     fireEvent.change(within(form).getByLabelText("Label"), {
       target: { value: "  Gym  " },
     });
@@ -245,7 +249,7 @@ describe("the add form", () => {
     await press(within(form).getByRole("button", { name: "Repeat on Sunday" }));
     expect(
       within(form).getByText(
-        "No day chosen: it rings once, at the next time shown.",
+        "No repeat. It rings at the next time shown until you stop it, then switches off.",
       ),
     ).toBeTruthy();
     await press(
