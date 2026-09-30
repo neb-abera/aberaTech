@@ -29,6 +29,11 @@ public enum AlertSource
 /// The event says <see cref="AlertPlanner.CriticalMark"/> in its title or
 /// description, so it is an alarm unless the owner chose otherwise.
 /// </param>
+/// <param name="EndsAt">The occurrence's end. Null when the feed event has none.</param>
+/// <param name="Recurring">
+/// The occurrence belongs to a series: the event repeats, or it is one moved
+/// or changed occurrence of a series (RECURRENCE-ID).
+/// </param>
 public sealed record PlannedAlert(
     string Key,
     string Title,
@@ -37,7 +42,9 @@ public sealed record PlannedAlert(
     Instant AlertAt,
     AlertSource Source,
     string EventId = "",
-    bool Critical = false);
+    bool Critical = false,
+    Instant? EndsAt = null,
+    bool Recurring = false);
 
 /// <summary>
 /// One read of the calendar: the alerts in the window, the calendar's own
@@ -185,6 +192,8 @@ public static partial class AlertPlanner
         if (start <= now || start > horizon) return null;
 
         var end = occurrence.Period.EffectiveEndTime is { } endTime ? ToInstant(endTime, zone) : start;
+        // An event with neither DTEND nor DURATION has no end to show.
+        Instant? shownEnd = calendarEvent.DtEnd is null && calendarEvent.Duration is null ? null : end;
         // A reminder "one day before" is a day on the event's own clock.
         var eventZone = ZoneOf(startTime) ?? zone;
         var reminder = EarliestReminder(calendarEvent, start, end, eventZone);
@@ -200,7 +209,9 @@ public static partial class AlertPlanner
             reminder ?? start - settings.DefaultLead,
             reminder is null ? AlertSource.DefaultLead : AlertSource.Reminder,
             EventId(calendarEvent.Uid),
-            critical);
+            critical,
+            shownEnd,
+            calendarEvent.RecurrenceRule is not null || calendarEvent.RecurrenceIdentifier is not null);
     }
 
     private static Instant? EarliestReminder(CalendarEvent calendarEvent, Instant start, Instant end, DateTimeZone zone)

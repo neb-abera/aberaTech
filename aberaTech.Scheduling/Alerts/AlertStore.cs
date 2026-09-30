@@ -79,6 +79,18 @@ public interface IAlertStore
     /// <summary>Forgets created events: the feed has them now, or they started.</summary>
     Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken);
 
+    /// <summary>Replaces a kept created event's fields, after an edit. Nothing when the row is gone.</summary>
+    Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken);
+
+    /// <summary>The edits and deletions made on /alerts that the feed may not show yet, oldest first.</summary>
+    Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken);
+
+    /// <summary>Keeps one edit or deletion.</summary>
+    Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken);
+
+    /// <summary>Forgets edits and deletions: the feed shows them, or their occurrences passed.</summary>
+    Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
+
     /// <summary>Every routine alarm, by hour, minute and label.</summary>
     Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken);
 
@@ -331,6 +343,66 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     {
         var ids = eventIds.ToArray();
         await database.AlertCreatedEvents.Where(row => ids.Contains(row.EventId)).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken) =>
+        await database.AlertCreatedEvents
+            .Where(row => row.EventId == updated.EventId)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(row => row.Title, updated.Title)
+                    .SetProperty(row => row.Location, updated.Location)
+                    .SetProperty(row => row.StartsAt, updated.StartsAt)
+                    .SetProperty(row => row.EndsAt, updated.EndsAt)
+                    .SetProperty(row => row.LeadMinutes, updated.LeadMinutes),
+                cancellationToken);
+
+    public async Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken) =>
+        await database.AlertEventChanges.AsNoTracking()
+            .OrderBy(row => row.CreatedAt)
+            .ThenBy(row => row.Id)
+            .Select(row => new AlertEventChange(
+                row.Id,
+                row.EventId,
+                row.Series,
+                row.OriginalStartsAt,
+                row.Deleted,
+                row.Title,
+                row.LocationSet,
+                row.Location,
+                row.StartsAt,
+                row.EndsAt,
+                row.DurationMinutes,
+                row.LeadMinutes,
+                row.TimeZone,
+                row.CreatedAt,
+                row.AlertAt,
+                row.Reminder,
+                row.Critical,
+                row.Recurring,
+                row.PickedLocation))
+            .ToListAsync(cancellationToken);
+
+    public async Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken)
+    {
+        // The id is new for each request, so two replicas never write one row.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertEventChanges" ("Id", "EventId", "Series", "OriginalStartsAt", "Deleted", "Title",
+                 "LocationSet", "Location", "StartsAt", "EndsAt", "DurationMinutes", "LeadMinutes", "TimeZone", "CreatedAt",
+                 "AlertAt", "Reminder", "Critical", "Recurring", "PickedLocation")
+             VALUES ({change.Id}, {change.EventId}, {change.Series}, {change.OriginalStartsAt}, {change.Deleted},
+                 {change.Title}, {change.LocationSet}, {change.Location}, {change.StartsAt}, {change.EndsAt},
+                 {change.DurationMinutes}, {change.LeadMinutes}, {change.TimeZone}, {change.CreatedAt},
+                 {change.AlertAt}, {change.Reminder}, {change.Critical}, {change.Recurring}, {change.PickedLocation})
+             """,
+            cancellationToken);
+    }
+
+    public async Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        var kept = ids.ToArray();
+        await database.AlertEventChanges.Where(row => kept.Contains(row.Id)).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) =>

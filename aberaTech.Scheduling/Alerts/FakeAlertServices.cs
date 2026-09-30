@@ -44,16 +44,24 @@ public sealed class FakeAlertServices(IClock clock)
 
     /// <summary>
     /// The owner's Google Calendar and its stored connection, in memory. It
-    /// knows the standing events below, so a type change on the page has
-    /// something to patch.
+    /// knows the standing events below, at the same times, so a type change,
+    /// an edit or a deletion on the page has something to change.
     /// </summary>
-    public FakeGoogleCalendar Google { get; } = Seeded();
+    public FakeGoogleCalendar Google { get; } = Seeded(Minute(clock.GetCurrentInstant()));
 
-    private static FakeGoogleCalendar Seeded()
+    /// <summary>How many days the daily standing event repeats.</summary>
+    public const int DailyCount = 3;
+
+    private static FakeGoogleCalendar Seeded(Instant anchor) => Seed(new FakeGoogleCalendar(), anchor);
+
+    /// <summary>The standing events, as the calendar below places them from <paramref name="anchor"/>.</summary>
+    private static FakeGoogleCalendar Seed(FakeGoogleCalendar google, Instant anchor)
     {
-        var google = new FakeGoogleCalendar();
-        google.Seed("e2e-standup", "Dial-in: room 4");
-        google.Seed("e2e-review");
+        google.Seed("e2e-standup", "Dial-in: room 4", start: anchor + Duration.FromHours(3), summary: "E2E standup");
+        google.Seed("e2e-review", start: anchor + Duration.FromHours(5), minutes: 60, summary: "E2E review #critical");
+        google.Seed(
+            "e2e-daily", recurring: true, start: anchor + Duration.FromHours(4), timeZone: "UTC", count: DailyCount,
+            summary: "E2E daily");
         return google;
     }
 
@@ -84,14 +92,18 @@ public sealed class FakeAlertServices(IClock clock)
     /// Places the calendar's events relative to the present minute, and ends
     /// <see cref="Fail"/>. The events created through the page since the last
     /// reset are deleted from the fake Google, and the feed lists them as
-    /// cancelled, as Google's does, so the server stops keeping them.
+    /// cancelled, as Google's does, so the server stops keeping them. The
+    /// standing events are put back in the fake Google as they were, at the
+    /// new times, whatever an earlier run edited or deleted.
     /// </summary>
     public void Reanchor()
     {
         var gone = Google.ForgetInserted();
+        var anchor = Minute(clock.GetCurrentInstant());
+        Seed(Google, anchor);
         lock (_lock)
         {
-            _anchor = Minute(clock.GetCurrentInstant());
+            _anchor = anchor;
             _failing = false;
             _dueStart = null;
             _deleted.AddRange(gone);
@@ -163,6 +175,17 @@ public sealed class FakeAlertServices(IClock clock)
             $"DTSTART:{Utc(anchor + Duration.FromHours(5))}",
             $"DTEND:{Utc(anchor + Duration.FromHours(6))}",
             "SUMMARY:E2E review #critical",
+            "END:VEVENT",
+            "BEGIN:VEVENT",
+            "UID:e2e-daily",
+            $"DTSTART:{Utc(anchor + Duration.FromHours(4))}",
+            $"DTEND:{Utc(anchor + Duration.FromHours(4.5))}",
+            $"RRULE:FREQ=DAILY;COUNT={DailyCount}",
+            "SUMMARY:E2E daily",
+            "BEGIN:VALARM",
+            "ACTION:DISPLAY",
+            "TRIGGER:-PT10M",
+            "END:VALARM",
             "END:VEVENT",
             "BEGIN:VEVENT",
             "UID:e2e-holiday",

@@ -190,6 +190,37 @@ internal sealed class InMemoryAlertStore : IAlertStore
         return Task.CompletedTask;
     }
 
+    public Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_created.ContainsKey(updated.EventId)) _created[updated.EventId] = updated;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private readonly List<AlertEventChange> _changes = [];
+
+    public Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock)
+            return Task.FromResult<IReadOnlyList<AlertEventChange>>(
+                [.. _changes.OrderBy(change => change.CreatedAt).ThenBy(change => change.Id)]);
+    }
+
+    public Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken)
+    {
+        lock (_lock) _changes.Add(change);
+        return Task.CompletedTask;
+    }
+
+    public Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        lock (_lock) _changes.RemoveAll(change => ids.Contains(change.Id));
+        return Task.CompletedTask;
+    }
+
     private readonly Dictionary<Guid, AlertRoutine> _routines = [];
 
     public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken)
