@@ -107,13 +107,13 @@ describe("the notification", () => {
     );
     vi.stubGlobal("Notification", Fake);
 
-    notify("Alarm: Standup", "Starts 9:00", "k");
+    notify("Ringing: Standup", "Starts 9:00", "k");
     askToNotify();
     Fake.permission = "granted";
     askToNotify();
-    notify("Alarm: Standup", "Starts 9:00", "k");
+    notify("Ringing: Standup", "Starts 9:00", "k");
 
-    expect(shown).toEqual(["Alarm: Standup"]);
+    expect(shown).toEqual(["Ringing: Standup"]);
     expect(requestPermission).toHaveBeenCalledTimes(1);
   });
 

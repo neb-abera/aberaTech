@@ -37,7 +37,7 @@ before it is a feature.
 | The site to Azure | Start the VM through the container app's identity | Azure Resource Manager |
 | The site to Google Calendar | One GET of the secret iCal address every 5 minutes | Google |
 | The site to Google Calendar's API | events.list, events.patch and events.insert on the connected calendar, with the stored refresh token of the `/schedule/admin` connection. Only for a type change or a new event on `/alerts` | Google |
-| The site to Pushover | One POST per alarm or notification. An alarm at priority 2, with retry and expire. A notification at priority 0 or 1, with neither. An event set to None sends nothing | Pushover |
+| The site to Pushover | One POST per alarm or notification. An alarm at priority 2, with retry and expire. A notification at priority 0 or 1, with neither. An event set to Off sends nothing | Pushover |
 | The site to Apple's push service | A background push over HTTP/2 to `api.push.apple.com` or `api.sandbox.push.apple.com` after a change a phone holds, at most one per phone a minute. The body is `{"aps":{"content-available":1},"v":<plan version>}` and nothing else. A JWT signed with the push key, reused for 50 minutes | Apple |
 | A paired phone to the site | `PUT` and `DELETE /api/alerts/devices/me/push` with the phone's own token: Apple's push token and its environment | The phone, or whoever holds its token |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |

@@ -234,7 +234,7 @@ describe("a due alarm", () => {
       screen.getByRole("alertdialog", { name: "Ringing: Standup" }),
     ).toBeTruthy();
     expect(tone.playing).toBe(true);
-    expect(document.title).toBe("Alarm: Standup");
+    expect(document.title).toBe("Ringing: Standup");
     act(() => {
       vi.advanceTimersByTime(1000);
     });
@@ -242,9 +242,9 @@ describe("a due alarm", () => {
     act(() => {
       vi.advanceTimersByTime(1000);
     });
-    expect(document.title).toBe("Alarm: Standup");
+    expect(document.title).toBe("Ringing: Standup");
     expect(notifications).toEqual([
-      { title: "Alarm: Standup", tag: standup.key },
+      { title: "Ringing: Standup", tag: standup.key },
     ]);
     act(() => {
       vi.advanceTimersByTime(5000);

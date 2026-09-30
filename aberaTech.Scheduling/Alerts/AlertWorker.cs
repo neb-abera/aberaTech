@@ -180,8 +180,8 @@ public sealed class AlertDispatcher(
     }
 
     /// <summary>
-    /// The page's two test buttons: Send test alert goes as an alarm, Send
-    /// test notification as a notification. Not deduplicated and not muted:
+    /// The page's two test buttons: Test: ring until stopped goes as an
+    /// alarm, Test: ring once as a notification. Not deduplicated and not muted:
     /// pressing one is the owner asking. Each goes with the saved settings
     /// for its type, so it shows what an event of that type will do.
     /// </summary>

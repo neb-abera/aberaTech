@@ -83,9 +83,9 @@ export default function RingInBrowser({
     let flash = true;
     const timer = window.setInterval(() => {
       flash = !flash;
-      document.title = flash ? `Alarm: ${dueTitle}` : original;
+      document.title = flash ? `Ringing: ${dueTitle}` : original;
     }, 1000);
-    document.title = `Alarm: ${dueTitle}`;
+    document.title = `Ringing: ${dueTitle}`;
     return () => {
       ringing.stop();
       window.clearInterval(timer);
@@ -99,7 +99,7 @@ export default function RingInBrowser({
     if (!due || notified.current === due.key) return;
     notified.current = due.key;
     notify(
-      `Alarm: ${due.title}`,
+      `Ringing: ${due.title}`,
       `Starts ${formatWhen(due.startsAt, state.timeZone)}. Acknowledge it on abera.tech/alerts.`,
       due.key,
     );
@@ -153,10 +153,11 @@ export default function RingInBrowser({
         label="Ring in this browser"
       />
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-        Rings only while this tab is open. An alarm that comes due plays a tone,
-        flashes the tab title and shows a notification if you allow one, until
-        it is acknowledged here or on a phone, skipped, muted, or its event
-        starts. The page checks the server every 15 seconds while this is on.
+        Rings only while this tab is open. An event set to Ring until stopped
+        plays a tone when it comes due, flashes the tab title and shows a
+        notification if you allow one, until it is acknowledged here or on a
+        phone, skipped, muted, or its event starts. The page checks the server
+        every 15 seconds while this is on.
       </Typography>
       {due && (
         <Alert

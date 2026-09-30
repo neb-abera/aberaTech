@@ -74,7 +74,7 @@ public sealed class AlertsDevelopmentTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, sent.StatusCode);
         var message = Assert.Single(_app.Factory.Services.GetRequiredService<FakeAlertServices>().Sent);
         Assert.Equal("2", message.Priority);
-        Assert.Equal("Test alert", message.Title);
+        Assert.Equal("Test: ring until stopped", message.Title);
 
         using var muted = await owner.PostAsJsonAsync("/api/alerts/mute", new { until = "hour" });
         Assert.Equal(HttpStatusCode.OK, muted.StatusCode);

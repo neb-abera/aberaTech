@@ -39,11 +39,11 @@ const notificationPriorities = [
 ] as const;
 
 const defaultTypes = [
-  { value: "none", label: "None", text: "Nothing is sent." },
+  { value: "none", label: "Off", text: "Nothing is sent." },
   {
     value: "notification",
-    label: "Notification",
-    text: "One notification, with the settings above.",
+    label: "Ring once",
+    text: "Rings once, with the settings above.",
   },
 ] as const;
 
@@ -287,7 +287,10 @@ export default function AlertSettingsForm({
       </Typography>
       <Stack spacing={2.5}>
         <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
-          Alarms: events marked #critical or set to Alarm
+          Ring until stopped settings
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          Events marked #critical ring this way too.
         </Typography>
         <Stack spacing={1}>
           <Stack
@@ -376,7 +379,7 @@ export default function AlertSettingsForm({
             bounds.backupDelaySeconds,
             (delay) =>
               delay.startsWith("0 ")
-                ? "Pushover sends at the alarm's time, with the paired phones."
+                ? "Pushover sends at the alert's time, with the paired phones."
                 : `A paired phone rings first. Pushover follows ${delay} later if nobody acknowledged it, and no later than 1 minute before the start.`,
           ),
         )}
@@ -399,11 +402,11 @@ export default function AlertSettingsForm({
         </TextField>
 
         <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
-          Notifications: events set to Notification
+          Ring once settings
         </Typography>
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
           <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
-            Notification priority
+            Ring once priority
           </Typography>
           <Stack spacing={1}>
             {notificationPriorities.map((option) => (
@@ -415,7 +418,7 @@ export default function AlertSettingsForm({
               >
                 <Chip
                   label={option.label}
-                  aria-label={`Notification priority ${option.label}`}
+                  aria-label={`Ring once priority ${option.label}`}
                   color={
                     shown.notificationPriority === option.value
                       ? "primary"
@@ -445,14 +448,14 @@ export default function AlertSettingsForm({
 
         <TextField
           select
-          label="Notification sound"
+          label="Ring once sound"
           size="small"
           value={shown.notificationSound}
           onChange={(event) => edit({ notificationSound: event.target.value })}
           error={Boolean(error("notificationSound"))}
           helperText={
             error("notificationSound") ??
-            "A notification never repeats, so a long sound plays once."
+            "Ring once never repeats, so a long sound plays once."
           }
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ width: "14rem", maxWidth: "100%" }}

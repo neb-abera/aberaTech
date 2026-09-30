@@ -90,21 +90,21 @@ export function describe(
   maxSounds: number,
   timeZone: string,
 ): string {
-  const alarm = `An alarm is one Pushover message. It ${alarmLine(settings, maxSounds)} It plays through Pushover's quiet hours. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`;
+  const alarm = `Ring until stopped is one Pushover message. It ${alarmLine(settings, maxSounds)} It plays through Pushover's quiet hours. With the Pushover app's Critical Alerts setting on, an iPhone also plays it through the silent switch and Focus.`;
   const notification =
     settings.notificationPriority === 1
-      ? "A notification is one message with one sound, even during Pushover's quiet hours."
-      : "A notification is one message with one sound, and follows the phone's settings.";
+      ? "Ring once is one message with one sound, even during Pushover's quiet hours."
+      : "Ring once is one message with one sound. It follows the phone's settings.";
   const unmarked =
     settings.defaultType === "notification"
-      ? "An event with no mark and no type set here sends a notification."
+      ? "An event with no mark and no type set here rings once."
       : "An event with no mark and no type set here sends nothing.";
   return `${alarm} ${notification} ${unmarked} Mute and Skip are checked just before each send. Times are in ${timeZone}, the calendar's own zone.`;
 }
 
 /** What each type is called on the page, and what it sends in one line. */
 export const typeLabels = {
-  none: "None",
-  notification: "Notification",
-  alarm: "Alarm",
+  none: "Off",
+  notification: "Ring once",
+  alarm: "Ring until stopped",
 } as const;

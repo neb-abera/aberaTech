@@ -144,7 +144,7 @@ public sealed class DevelopmentCalendarTests : IDisposable
         Assert.Equal("120", message.GetProperty("retry").GetString());
         Assert.Equal("1800", message.GetProperty("expire").GetString());
         Assert.Equal("siren", message.GetProperty("sound").GetString());
-        Assert.Equal("Test alert", message.GetProperty("title").GetString());
+        Assert.Equal("Test: ring until stopped", message.GetProperty("title").GetString());
     }
 
     /// <summary>
