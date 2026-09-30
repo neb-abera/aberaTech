@@ -90,9 +90,9 @@ site. The history is on the
   and read. `DevBox__SubscriptionId` switches it on.
 
 - `/alerts` sends one Pushover message before each event on the owner's
-  Google Calendar that is an alarm or a notification
-  (`aberaTech.Scheduling/Alerts/`). An event marked `#critical` is an
-  alarm. Any event's type can be set on the page. Every other event sends
+  Google Calendar set to Ring until stopped or Ring once
+  (`aberaTech.Scheduling/Alerts/`). An event marked `#critical` rings
+  until stopped. Any event's type can be set on the page. Every other event sends
   nothing by default. The worker reads the
   secret iCal address and sends each alert at its own time. The alert time
   is the event's earliest popup reminder, or the default lead before the
@@ -102,9 +102,11 @@ site. The history is on the
   and a one-send claim per occurrence are rows in the scheduling database.
   A failed calendar read is a red banner at the top of the page, with the
   error and the time of the last good read. Phones paired on the page
-  (the Abera Alarms iPhone app) ring every alarm themselves, and
+  (the Abera Alarms iPhone app) ring each Ring until stopped event
+  themselves, and
   Acknowledge on the phone or the page stops Pushover's repeats. Ring in
-  this browser rings a due alarm in an open tab, for a computer where
+  this browser rings a due Ring until stopped event in an open tab, for a
+  computer where
   nothing can be installed. The page and a paired phone can create an
   event, and an event's type is written back to Google Calendar as
   `#critical`. Each change a phone holds sends it a background push, so
@@ -133,8 +135,9 @@ az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
 ```
 
 The update starts a new revision. `/alerts` then lists the next alerts and
-the time of the last calendar read. Send test alert proves the keys with
-an alarm. Send test notification sends one notification. Send test on a
+the time of the last calendar read. Test: ring until stopped proves the
+keys with a message that rings until acknowledged. Test: ring once sends
+one message with one sound. Send test on a
 listed alert sends that event's own text, titled `Test: <title>`, as the
 event's type. It is off for an event that sends nothing. It claims nothing
 and ignores Mute and Skip, so the real alert still goes at its time.
@@ -149,26 +152,26 @@ Each event has one of three types (`AlertTypes.cs`):
 
 | Type | Sends |
 |---|---|
-| Alarm | one message that rings every repeat until acknowledged, then stops at the stop time |
-| Notification | one message at the notification priority and sound. Never a retry or an expiry |
-| None | nothing. The event is still listed on the page |
+| Ring until stopped (`alarm`) | one message that rings every repeat until acknowledged, then stops at the stop time |
+| Ring once (`notification`) | one message at the Ring once priority and sound. Never a retry or an expiry |
+| Off (`none`) | nothing. The event is still listed on the page |
 
 The type comes from the first of these that applies:
 
-1. The type set on the page. Each listed alert has None, Notification and
-   Alarm. The choice is kept under the event's UID, so it holds for every
+1. The type set on the page. Each listed alert has Off, Ring once and Ring
+   until stopped. The choice is kept under the event's UID, so it holds for every
    occurrence of a repeating event. Use default removes it. A choice for an
    event missing from the feed for 60 days is deleted.
 2. `#critical` in the title or description, as a word of its own, in any
-   case: an alarm. `#criticality` and `a#critical` do not count. The mark
+   case: Ring until stopped. `#criticality` and `a#critical` do not count. The mark
    is left off the title shown and sent (`AlertPlanner.cs`).
-3. The default for unmarked events under Settings: None unless changed.
+3. The default for unmarked events under Settings: Off unless changed.
 
 Every timed event that starts inside the look-ahead window is planned and
 listed. All-day events are left out unless the setting is on. Cancelled
 events and invitations the owner declined are left out. The alert goes at
 the event's earliest popup notification, else the default lead before the
-start (`AlertPlanner.cs`). An event set to None is asked again at every
+start (`AlertPlanner.cs`). An event set to Off is asked again at every
 pass until it starts, so switching it on after its alert time still sends.
 
 Google Calendar's menus, from support.google.com/calendar/answer/37242:
@@ -191,15 +194,15 @@ phone (`CalendarWrites.cs`). Both use the connection made on
 `/schedule/admin` with Connect Google Calendar. That grant carries the
 `calendar.events` scope.
 
-- Setting an event's type writes it back. Alarm adds `#critical` on a line
-  of its own at the end of the description, once. None, Notification and
-  Use default remove every `#critical` word, in any case, and the blank
+- Setting an event's type writes it back. Ring until stopped adds
+  `#critical` on a line of its own at the end of the description, once.
+  Off, Ring once and Use default remove every `#critical` word, in any case, and the blank
   line it leaves. A repeating event is one series in Google, so the series
   is patched once. The choice is stored first. When Google is not changed
   the answer's `calendarWrite` says why, in one sentence, and the page
   shows it as a warning.
 - New event on the page creates an event with one popup reminder at the
-  lead, and `#critical` in the description for an alarm. The type is
+  lead, and `#critical` in the description for Ring until stopped. The type is
   stored under the new event's UID. The server keeps the event until the
   secret address carries its UID or it starts. Google's feed can lag the
   API by minutes to hours, and the alert does not wait for it
@@ -298,19 +301,19 @@ every other replica reads it at the start of its next pass.
 |---|---|---|
 | Pushover repeats every | 60 s | 30 to 10800 s |
 | Pushover stops after | 180 min | 1 to 180 min |
-| Alarm sound | the phone's default | one of Pushover's 23 built-in sounds |
-| Notification priority | Normal | Normal: one sound, follows the phone's settings. High: one sound, even during Pushover's quiet hours |
-| Notification sound | the phone's default | one of Pushover's 23 built-in sounds |
-| Events with no mark and no type set here | None | None or Notification |
+| Sound (Ring until stopped) | the phone's default | one of Pushover's 23 built-in sounds |
+| Ring once priority | Normal | Normal: one sound, follows the phone's settings. High: one sound, even during Pushover's quiet hours |
+| Ring once sound | the phone's default | one of Pushover's 23 built-in sounds |
+| Events with no mark and no type set here | Off | Off or Ring once |
 | Default lead | 10 min | 0 to 1440 min |
 | Check calendar every | 5 min | 1 to 60 min |
 | Look ahead | 48 h | 1 to 336 h |
 | Alert for all-day events | off | |
 | Time zone | blank, UTC | a time zone database name |
 | Your addresses | none | up to 10 |
-| Pushover backup after | 0 s | 0 to 900 s. An alarm's Pushover message waits this long, so a paired phone rings first. It is not sent if the alarm is acknowledged by then, and never later than 1 minute before the start |
+| Pushover backup after | 0 s | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start |
 
-An alarm has no priority setting. Every alarm goes to Pushover at its
+Ring until stopped has no priority setting. Every such alert goes to Pushover at its
 priority 2 with `retry` set to the repeat and `expire` set to the stop, so
 it rings until acknowledged. Pushover stops such a message after 50 sounds,
 so the stop is the smaller of the limit and 50 × the repeat. At 60 s that is
@@ -318,7 +321,7 @@ so the stop is the smaller of the limit and 50 × the repeat. At 60 s that is
 
 Pushover refuses a repeat under 30 s (pushover.net/api#priority). A paired
 phone rings as an iPhone alarm until Stop is pressed. Ring in this browser
-beeps every second until the alarm is acknowledged. Nonstop sets 30 s and `persistent`,
+beeps every second until the alert is acknowledged. Nonstop sets 30 s and `persistent`,
 one of the five sounds pushover.net/api#sounds marks long (alien, climb,
 persistent, echo, updown). iOS plays a notification sound for up to 30 s
 (developer.apple.com/documentation/usernotifications/unnotificationsound),

@@ -187,11 +187,11 @@ export default function AlertsPanel({
             void act(
               sendTestAlert,
               () =>
-                `Test alert sent as an alarm. It ${alarmLine(state.settings, state.bounds.maxEmergencySounds)}`,
+                `Ring until stopped test sent. It ${alarmLine(state.settings, state.bounds.maxEmergencySounds)}`,
             )
           }
         >
-          Send test alert
+          Test: ring until stopped
         </Button>
         <Button
           variant="outlined"
@@ -199,11 +199,11 @@ export default function AlertsPanel({
           onClick={() =>
             void act(
               sendTestNotification,
-              () => "Test notification sent. Check the phone for one sound.",
+              () => "Ring once test sent. Check the phone for one sound.",
             )
           }
         >
-          Send test notification
+          Test: ring once
         </Button>
         <Button variant="text" size="small" onClick={() => void refresh()}>
           Refresh
@@ -242,8 +242,8 @@ export default function AlertsPanel({
           Next alerts
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-          Each type holds for every occurrence of the event. Alarm also adds
-          #critical to the event in Google Calendar. None and Notification
+          Each type holds for every occurrence of the event. Ring until stopped
+          also adds #critical to the event in Google Calendar. Off and Ring once
           remove it.
         </Typography>
         {state.alerts.length === 0 ? (
@@ -281,7 +281,7 @@ export default function AlertsPanel({
                   void act(
                     () => sendEventTest(alert.key),
                     () =>
-                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", as ${alert.type === "alarm" ? "an alarm" : "a notification"}.`,
+                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", set to ${typeLabels[alert.type].toLowerCase()}.`,
                   )
                 }
                 onType={(type) =>
@@ -413,8 +413,8 @@ function typeLine(alert: AlertItem): string {
         ? "from #critical in the calendar"
         : "the default for unmarked events";
   if (alert.type === "none")
-    return `Sends nothing: ${from}. Send test is off until you choose Notification or Alarm.`;
-  return `${typeLabels[alert.type]}: ${from}. The ${alert.type} settings apply.`;
+    return `Sends nothing: ${from}. Send test is off until you choose Ring once or Ring until stopped.`;
+  return `${typeLabels[alert.type]}: ${from}. The ${typeLabels[alert.type]} settings apply.`;
 }
 
 function Item({

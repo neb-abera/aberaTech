@@ -24,12 +24,12 @@ public static class AlertText
                 : $"Starts {When(alert.StartsAt, zone)}\n{alert.Location}",
             PushoverClient.MaxMessage);
 
-    /// <summary>"Test alert" goes as an alarm, "Test notification" as a notification.</summary>
-    public static string TestName(string type) => type == AlertTypes.Alarm ? "Test alert" : "Test notification";
+    /// <summary>The page's names for the two test buttons, which the phone shows as the title.</summary>
+    public static string TestName(string type) => type == AlertTypes.Alarm ? "Test: ring until stopped" : "Test: ring once";
 
     /// <summary>When it was sent, which kind it is, and what it does on the phone.</summary>
     public static string TestMessage(Instant now, DateTimeZone zone, string type, PushoverDelivery delivery) =>
-        $"Sent from abera.tech at {When(now, zone)}, as {(type == AlertTypes.Alarm ? "an alarm" : "a notification")}. "
+        $"Sent from abera.tech at {When(now, zone)}, set to {(type == AlertTypes.Alarm ? "ring until stopped" : "ring once")}. "
         + delivery switch
         {
             { Priority: PushoverClient.EmergencyPriority, RetrySeconds: { } retry } =>

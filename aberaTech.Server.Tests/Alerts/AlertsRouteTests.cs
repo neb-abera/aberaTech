@@ -274,10 +274,10 @@ public sealed class AlertsRouteTests : IDisposable
         Assert.Equal("2", sent.Form["priority"]);
         Assert.Equal("60", sent.Form["retry"]);
         Assert.Equal("10800", sent.Form["expire"]);
-        Assert.Equal("Test alert", sent.Form["title"]);
+        Assert.Equal("Test: ring until stopped", sent.Form["title"]);
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         Assert.Equal("sent", status.GetProperty("lastSend").GetProperty("outcome").GetString());
-        Assert.Equal("Test alert", status.GetProperty("lastSend").GetProperty("title").GetString());
+        Assert.Equal("Test: ring until stopped", status.GetProperty("lastSend").GetProperty("title").GetString());
     }
 
     private async Task<string> KeyOf(HttpClient owner, string title) =>
@@ -485,7 +485,7 @@ public sealed class AlertsRouteTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var sent = Assert.Single(_pushover.Requests);
-        Assert.Equal("Test notification", sent.Form["title"]);
+        Assert.Equal("Test: ring once", sent.Form["title"]);
         Assert.Equal("1", sent.Form["priority"]);
         Assert.Equal("bike", sent.Form["sound"]);
         Assert.False(sent.Form.ContainsKey("retry"));

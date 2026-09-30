@@ -81,7 +81,7 @@ describe("New event", () => {
       target: { value: "20" },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: "New event type Notification" }),
+      screen.getByRole("button", { name: "New event type Ring once" }),
     );
     await press();
 
@@ -106,7 +106,7 @@ describe("New event", () => {
     const { create } = renderForm({ ok: true, state });
     expect(
       screen
-        .getByRole("button", { name: "New event type Alarm" })
+        .getByRole("button", { name: "New event type Ring until stopped" })
         .getAttribute("aria-pressed"),
     ).toBe("true");
     expect(

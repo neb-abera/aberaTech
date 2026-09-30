@@ -58,7 +58,7 @@ public sealed class AlertTextTests
 
         var text = AlertText.TestMessage(Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, AlertTypes.Alarm, settings.AlarmDelivery);
 
-        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, as an alarm. {expected}", text);
+        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, set to ring until stopped. {expected}", text);
     }
 
     [Theory]
@@ -71,9 +71,9 @@ public sealed class AlertTextTests
         var text = AlertText.TestMessage(
             Instant.FromUtc(2026, 10, 28, 12, 0), NewYork, AlertTypes.Notification, settings.NotificationDelivery);
 
-        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, as a notification. {expected}", text);
-        Assert.Equal("Test notification", AlertText.TestName(AlertTypes.Notification));
-        Assert.Equal("Test alert", AlertText.TestName(AlertTypes.Alarm));
+        Assert.Equal($"Sent from abera.tech at 8:00 AM EDT, Wed 28 Oct, set to ring once. {expected}", text);
+        Assert.Equal("Test: ring once", AlertText.TestName(AlertTypes.Notification));
+        Assert.Equal("Test: ring until stopped", AlertText.TestName(AlertTypes.Alarm));
     }
 
     [Fact]
