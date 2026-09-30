@@ -62,7 +62,7 @@ const stub = (answer: unknown) => {
 
 describe("daySummary", () => {
   it.each([
-    [[], "Once"],
+    [[], "No repeat"],
     [[1, 2, 3, 4, 5, 6, 7], "Every day"],
     [[1, 2, 3, 4, 5], "Weekdays"],
     [[6, 7], "Weekends"],

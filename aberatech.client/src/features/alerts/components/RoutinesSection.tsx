@@ -403,8 +403,8 @@ export default function RoutinesSection({
         </Stack>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {draft.days.length === 0
-            ? "No day chosen: it rings once, at the next time shown."
-            : `Repeats: ${daySummary(draft.days)}.`}
+            ? "No repeat. It rings at the next time shown until you stop it, then switches off."
+            : `Repeats: ${daySummary(draft.days)}. It rings until you stop it.`}
         </Typography>
         <TextField
           label="Label"
