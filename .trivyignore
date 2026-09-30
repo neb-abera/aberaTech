@@ -1,0 +1,11 @@
+# Accepted findings, each with its reason and an expiry. Trivy reads this
+# file from the repository root.
+
+# CVE-2026-84782, openssl 3.5.5-1ubuntu3.5 in
+# mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled. Ubuntu fixed it in
+# 3.5.5-1ubuntu3.6 on 2026-09-30. Microsoft had not rebuilt the image that
+# day: the tag still resolved to sha256:ec752d90. A chiseled image has no
+# apt, so the fix arrives with the rebuilt digest through Dependabot.
+# Production runs the same image today. The expiry makes the scan fail again
+# if the rebuild has not landed by then.
+CVE-2026-84782 exp:2026-10-14
