@@ -11,7 +11,7 @@ export interface Routine {
   /** Wall-clock time. The server never converts it. */
   hour: number;
   minute: number;
-  /** ISO weekdays, Monday 1 to Sunday 7, sorted. Empty rings once. */
+  /** ISO weekdays, Monday 1 to Sunday 7, sorted. Empty does not repeat. */
   days: number[];
   enabled: boolean;
   snoozeMinutes: number;
@@ -52,11 +52,11 @@ export function routineTime(hour: number, minute: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-/** "Every day", "Weekdays", "Weekends", "Once", or short names: "Mon Wed Fri". */
+/** "Every day", "Weekdays", "Weekends", "No repeat", or short names: "Mon Wed Fri". */
 export function daySummary(days: number[]): string {
   const sorted = [...new Set(days)].sort((a, b) => a - b);
   const key = sorted.join(",");
-  if (sorted.length === 0) return "Once";
+  if (sorted.length === 0) return "No repeat";
   if (key === "1,2,3,4,5,6,7") return "Every day";
   if (key === "1,2,3,4,5") return "Weekdays";
   if (key === "6,7") return "Weekends";
