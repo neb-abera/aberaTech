@@ -29,6 +29,7 @@ import {
 import { ringPollMs } from "../core/ring";
 import { alarmLine, count, describe, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
+import { DeleteEventDialog, EditEventDialog } from "./EventDialogs";
 import HowEventsAlert from "./HowEventsAlert";
 import NewEventForm from "./NewEventForm";
 import PhonesSection, { type PhonesApi, phonesApi } from "./PhonesSection";
@@ -61,6 +62,8 @@ export default function AlertsPanel({
   const [problem, setProblem] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [calendarWrite, setCalendarWrite] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState<AlertItem | null>(null);
+  const [deleting, setDeleting] = React.useState<AlertItem | null>(null);
   const alive = React.useRef(true);
 
   const refresh = React.useCallback(async () => {
@@ -136,6 +139,14 @@ export default function AlertsPanel({
   const { state } = view;
   const when = (iso: string) => formatWhen(iso, state.timeZone);
   const muted = state.mutedUntil !== null;
+  const written = (next: AlertsState, message: string) => {
+    if (!alive.current) return;
+    setEditing(null);
+    setDeleting(null);
+    setProblem(null);
+    setView({ status: "owner", state: next });
+    setNotice(message);
+  };
 
   return (
     <Stack spacing={3}>
@@ -250,7 +261,7 @@ export default function AlertsPanel({
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
           Each type holds for every occurrence of the event. Ring until stopped
           also adds #critical to the event in Google Calendar. Off and Ring once
-          remove it.
+          remove it. Edit and Delete change the event in Google Calendar.
         </Typography>
         {state.alerts.length === 0 ? (
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
@@ -299,11 +310,30 @@ export default function AlertsPanel({
                         : `${alert.title} is set to ${typeLabels[type]}, every occurrence.`,
                   )
                 }
+                onEdit={() => setEditing(alert)}
+                onDelete={() => setDeleting(alert)}
               />
             ))}
           </Stack>
         )}
       </Box>
+
+      {editing && (
+        <EditEventDialog
+          alert={editing}
+          when={when}
+          onClose={() => setEditing(null)}
+          onSaved={written}
+        />
+      )}
+      {deleting && (
+        <DeleteEventDialog
+          alert={deleting}
+          when={when}
+          onClose={() => setDeleting(null)}
+          onDeleted={written}
+        />
+      )}
 
       <NewEventForm
         defaultLead={state.defaultLeadMinutes}
@@ -441,6 +471,8 @@ function Item({
   onUndo,
   onTest,
   onType,
+  onEdit,
+  onDelete,
 }: {
   alert: AlertItem;
   when: (iso: string) => string;
@@ -451,6 +483,8 @@ function Item({
   onUndo: () => void;
   onTest: () => void;
   onType: (type: AlertType | "default") => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const at = `${alert.title} at ${when(alert.startsAt)}`;
   return (
@@ -561,6 +595,25 @@ function Item({
           Skip
         </Button>
       )}
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={busy}
+        onClick={onEdit}
+        aria-label={`Edit ${at}`}
+      >
+        Edit
+      </Button>
+      <Button
+        size="small"
+        variant="outlined"
+        color="error"
+        disabled={busy}
+        onClick={onDelete}
+        aria-label={`Delete ${at}`}
+      >
+        Delete
+      </Button>
     </Box>
   );
 }

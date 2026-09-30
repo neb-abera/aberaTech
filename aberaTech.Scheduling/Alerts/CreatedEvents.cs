@@ -81,17 +81,39 @@ public static class CreatedEvents
             stored.StartsAt - Duration.FromMinutes(stored.LeadMinutes),
             AlertSource.Reminder,
             AlertPlanner.EventIdFor(stored.EventId),
-            stored.Critical);
+            stored.Critical,
+            stored.EndsAt);
 }
 
-/// <summary>What is planned now: the feed's last good read and the stored events it does not have yet.</summary>
+/// <summary>
+/// What is planned now: the feed's last good read, the stored events it does
+/// not have yet, and the stored edits and deletions it does not show yet.
+/// </summary>
 public static class AlertsPlan
 {
     /// <summary>
     /// Read from the database on every call, so a replica that did not take
-    /// the create lists the event too.
+    /// the create, the edit or the deletion plans it too.
     /// </summary>
     public static async Task<IReadOnlyList<PlannedAlert>> CurrentAsync(
         AlertsSnapshot snapshot, IAlertStore store, AlertSettings settings, Instant now, CancellationToken cancellationToken) =>
-        CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, await store.CreatedEventsAsync(cancellationToken), now, settings);
+        Merge(
+            snapshot,
+            await store.CreatedEventsAsync(cancellationToken),
+            await store.EventChangesAsync(cancellationToken),
+            now,
+            settings);
+
+    /// <summary>The same plan from rows already read.</summary>
+    public static IReadOnlyList<PlannedAlert> Merge(
+        AlertsSnapshot snapshot,
+        IEnumerable<CreatedAlertEvent> created,
+        IEnumerable<AlertEventChange> changes,
+        Instant now,
+        AlertSettings settings) =>
+        EventChanges.Apply(
+            CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, created, now, settings),
+            snapshot.Plan,
+            changes,
+            snapshot.Zone);
 }
