@@ -359,3 +359,42 @@ describe("a due alarm", () => {
     expect(tone.playing).toBe(true);
   });
 });
+
+describe("routine alarms", () => {
+  it("never ring in this browser, even at their minute", () => {
+    FakeNotification.permission = "granted";
+    const every = [1, 2, 3, 4, 5, 6, 7];
+    const routine = (id: string, hour: number, minute: number) => ({
+      id,
+      label: `Routine ${hour}:${minute}`,
+      hour,
+      minute,
+      days: every,
+      enabled: true,
+      snoozeMinutes: 9,
+      updatedAt: "2026-10-28T12:00:00+00:00",
+    });
+    // 08:50 in the calendar's zone and 12:50 UTC: now, either way it is read.
+    render(
+      <RingInBrowser
+        state={{
+          ...state([]),
+          routines: [routine("a", 8, 50), routine("b", 12, 50)],
+        }}
+        onState={() => undefined}
+        onEnabledChange={() => undefined}
+        now={() => clock}
+        makeTone={() => tone as unknown as Tone}
+      />,
+    );
+    switchOn();
+    act(() => {
+      vi.advanceTimersByTime(61_000);
+    });
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(tone.start).not.toHaveBeenCalled();
+    expect(notifications).toEqual([]);
+    expect(document.title).toBe("Alerts");
+  });
+});

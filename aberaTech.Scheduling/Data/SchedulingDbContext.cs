@@ -59,6 +59,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Events created on /alerts, until Google's iCal feed carries them.</summary>
     public DbSet<AlertCreatedEventRecord> AlertCreatedEvents => Set<AlertCreatedEventRecord>();
 
+    /// <summary>Routine alarms, rung by the paired phone. At most <see cref="Alerts.AlertRoutines.MaxRoutines"/>.</summary>
+    public DbSet<AlertRoutineRecord> AlertRoutines => Set<AlertRoutineRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("btree_gist");
@@ -203,6 +206,14 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(created => created.EventId).HasMaxLength(AlertPlanner.MaxKeyLength);
             entity.Property(created => created.Title).HasMaxLength(CreatedEvents.MaxTitleLength).IsRequired();
             entity.Property(created => created.Location).HasMaxLength(CreatedEvents.MaxLocationLength);
+        });
+
+        builder.Entity<AlertRoutineRecord>(entity =>
+        {
+            entity.HasKey(routine => routine.Id);
+            entity.Property(routine => routine.Id).ValueGeneratedNever();
+            entity.Property(routine => routine.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+            entity.Property(routine => routine.Days).IsRequired();
         });
 
         builder.Entity<AlertSkipRecord>(entity =>

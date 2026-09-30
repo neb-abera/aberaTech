@@ -189,6 +189,37 @@ internal sealed class InMemoryAlertStore : IAlertStore
 
         return Task.CompletedTask;
     }
+
+    private readonly Dictionary<Guid, AlertRoutine> _routines = [];
+
+    public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(AlertRoutines.Sorted(_routines.Values));
+    }
+
+    public Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_routines.Count >= AlertRoutines.MaxRoutines) return Task.FromResult(false);
+            return Task.FromResult(_routines.TryAdd(routine.Id, routine));
+        }
+    }
+
+    public Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (!_routines.ContainsKey(routine.Id)) return Task.FromResult(false);
+            _routines[routine.Id] = routine;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_routines.Remove(id));
+    }
 }
 
 /// <summary>

@@ -208,3 +208,31 @@ public class AlertPushStateRecord
 
     public Instant UpdatedAt { get; set; }
 }
+
+/// <summary>
+/// A routine alarm the paired phone rings as a phone alarm. Its time is
+/// wall-clock time, stored as given. Nothing on the server fires it.
+/// </summary>
+public class AlertRoutineRecord
+{
+    /// <summary>Made by the server on create.</summary>
+    public Guid Id { get; set; }
+
+    /// <summary>1 to 60 characters. "Alarm" when none was given.</summary>
+    public string Label { get; set; } = AlertRoutines.DefaultLabel;
+
+    public short Hour { get; set; }
+
+    public short Minute { get; set; }
+
+    /// <summary>ISO weekdays, Monday 1 to Sunday 7, sorted. Empty rings once at the next hour:minute.</summary>
+    public short[] Days { get; set; } = [];
+
+    public bool Enabled { get; set; } = true;
+
+    public short SnoozeMinutes { get; set; } = AlertRoutines.DefaultSnoozeMinutes;
+
+    public Instant CreatedAt { get; set; }
+
+    public Instant UpdatedAt { get; set; }
+}

@@ -921,3 +921,61 @@ describe("an acknowledged alert", () => {
     expect(screen.queryByText(/^Acknowledged /)).toBeNull();
   });
 });
+
+describe("routine alarms", () => {
+  const wake = {
+    id: "5f0c1d7e-8a1b-4c2d-9e3f-0a1b2c3d4e5f",
+    label: "Wake up",
+    hour: 6,
+    minute: 30,
+    days: [1, 2, 3, 4, 5],
+    enabled: true,
+    snoozeMinutes: 9,
+    updatedAt: "2026-10-28T12:00:00+00:00",
+  };
+
+  it("lists the status's routines, and the switch puts the change and shows what the server stored", async () => {
+    mount(
+      respond(200, state({ routines: [wake] })),
+      respond(200, state({ routines: [{ ...wake, enabled: false }] })),
+    );
+    await settle();
+
+    const list = screen.getByRole("list", { name: "Routine alarms" });
+    expect(within(list).getByText("06:30")).toBeTruthy();
+    expect(within(list).getByText("Weekdays, Wake up")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("switch", { name: "Wake up at 06:30" }));
+    });
+    await settle();
+
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === "PUT");
+    expect(put?.[0]).toBe(`/api/alerts/routines/${wake.id}`);
+    expect(JSON.parse(put?.[1].body as string)).toEqual({
+      label: "Wake up",
+      hour: 6,
+      minute: 30,
+      days: [1, 2, 3, 4, 5],
+      enabled: false,
+      snoozeMinutes: 9,
+    });
+    expect(
+      (
+        screen.getByRole("switch", {
+          name: "Wake up at 06:30",
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(false);
+  });
+
+  it("says there are none when the status has none", async () => {
+    mount(respond(200, state({ routines: [] })));
+    await settle();
+
+    expect(screen.getByText("No routine alarms.")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Routine alarms" }),
+    ).toBeTruthy();
+  });
+});

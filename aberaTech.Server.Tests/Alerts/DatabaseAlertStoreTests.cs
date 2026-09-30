@@ -35,6 +35,108 @@ public sealed class DatabaseAlertStoreTests : IDisposable
             .UseNpgsql(_database!.ConnectionString, npgsql => npgsql.UseNodaTime())
             .Options);
 
+    private static AlertRoutine Routine(string label, int hour = 6, int minute = 30, int[]? days = null, Guid? id = null) =>
+        new(id ?? Guid.NewGuid(), label, hour, minute, days ?? [1, 2, 3, 4, 5], true, 9, Now);
+
+    [PostgresFact]
+    public async Task A_routine_is_a_row_a_new_process_reads_back_whole_updates_in_place_and_deletes()
+    {
+        var id = Guid.NewGuid();
+        await using (var context = Context())
+        {
+            Assert.True(await new DatabaseAlertStore(context).AddRoutineAsync(
+                Routine("Wake up", days: [1, 3, 5], id: id), CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.RoutinesAsync(CancellationToken.None));
+            Assert.Equal(id, read.Id);
+            Assert.Equal("Wake up", read.Label);
+            Assert.Equal(6, read.Hour);
+            Assert.Equal(30, read.Minute);
+            Assert.Equal([1, 3, 5], read.Days);
+            Assert.True(read.Enabled);
+            Assert.Equal(9, read.SnoozeMinutes);
+            Assert.Equal(Now, read.UpdatedAt);
+
+            var later = Now + Duration.FromMinutes(5);
+            Assert.True(await store.UpdateRoutineAsync(
+                new AlertRoutine(id, "Gym", 5, 0, [], false, 30, later), CancellationToken.None));
+            Assert.False(await store.UpdateRoutineAsync(Routine("Nobody"), CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.RoutinesAsync(CancellationToken.None));
+            Assert.Equal(
+                (id, "Gym", 5, 0, false, 30, Now + Duration.FromMinutes(5)),
+                (read.Id, read.Label, read.Hour, read.Minute, read.Enabled, read.SnoozeMinutes, read.UpdatedAt));
+            Assert.Empty(read.Days);
+            var row = await context.AlertRoutines.AsNoTracking().SingleAsync();
+            Assert.Equal(Now, row.CreatedAt);
+
+            Assert.True(await store.DeleteRoutineAsync(id, CancellationToken.None));
+            Assert.False(await store.DeleteRoutineAsync(id, CancellationToken.None));
+            Assert.Empty(await store.RoutinesAsync(CancellationToken.None));
+        }
+    }
+
+    [PostgresFact]
+    public async Task Routines_read_back_by_hour_minute_then_label()
+    {
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        foreach (var routine in new[] { Routine("b", 7, 0), Routine("late", 22, 5), Routine("a", 7, 0), Routine("early", 6, 45) })
+        {
+            await store.AddRoutineAsync(routine, CancellationToken.None);
+        }
+
+        Assert.Equal(["early", "a", "b", "late"], (await store.RoutinesAsync(CancellationToken.None)).Select(routine => routine.Label));
+    }
+
+    [PostgresFact]
+    public async Task The_51st_routine_is_refused()
+    {
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        for (var n = 0; n < AlertRoutines.MaxRoutines; n++)
+        {
+            Assert.True(await store.AddRoutineAsync(Routine($"R{n}"), CancellationToken.None));
+        }
+
+        Assert.False(await store.AddRoutineAsync(Routine("One more"), CancellationToken.None));
+        Assert.Equal(AlertRoutines.MaxRoutines, await context.AlertRoutines.CountAsync());
+    }
+
+    [PostgresFact]
+    public async Task Twenty_creates_at_once_on_45_kept_make_50_and_no_more()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            for (var n = 0; n < 45; n++) await store.AddRoutineAsync(Routine($"Kept {n}"), CancellationToken.None);
+        }
+
+        var contexts = Enumerable.Range(0, 20).Select(_ => Context()).ToList();
+        try
+        {
+            var made = await Task.WhenAll(contexts.Select((context, n) =>
+                new DatabaseAlertStore(context).AddRoutineAsync(Routine($"Race {n}"), CancellationToken.None)));
+
+            Assert.Equal(AlertRoutines.MaxRoutines - 45, made.Count(taken => taken));
+        }
+        finally
+        {
+            foreach (var context in contexts) await context.DisposeAsync();
+        }
+
+        await using var check = Context();
+        Assert.Equal(AlertRoutines.MaxRoutines, await check.AlertRoutines.CountAsync());
+    }
+
     [PostgresFact]
     public async Task An_occurrence_is_claimed_once_however_many_replicas_ask_at_the_same_moment()
     {

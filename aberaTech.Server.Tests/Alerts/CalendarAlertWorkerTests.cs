@@ -646,6 +646,14 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken) => Down<bool>();
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => Down<IReadOnlyList<AlertRoutine>>();
+
+        public Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) => Down<bool>();
     }
 
     /// <summary>The in-memory store with a settings read that can be made to fail.</summary>
@@ -717,6 +725,16 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
             _inner.ForgetCreatedEventsAsync(eventIds, cancellationToken);
+
+        public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => _inner.RoutinesAsync(cancellationToken);
+
+        public Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) =>
+            _inner.AddRoutineAsync(routine, cancellationToken);
+
+        public Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) =>
+            _inner.UpdateRoutineAsync(routine, cancellationToken);
+
+        public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteRoutineAsync(id, cancellationToken);
     }
 
     [Fact]
@@ -1046,6 +1064,16 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
             Task.FromException(new TimeoutException("database down"));
+
+        public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => _inner.RoutinesAsync(cancellationToken);
+
+        public Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) =>
+            _inner.AddRoutineAsync(routine, cancellationToken);
+
+        public Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) =>
+            _inner.UpdateRoutineAsync(routine, cancellationToken);
+
+        public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteRoutineAsync(id, cancellationToken);
     }
 
     private sealed class Harness : IDisposable

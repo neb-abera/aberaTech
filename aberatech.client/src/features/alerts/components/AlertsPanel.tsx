@@ -33,6 +33,10 @@ import HowEventsAlert from "./HowEventsAlert";
 import NewEventForm from "./NewEventForm";
 import PhonesSection, { type PhonesApi, phonesApi } from "./PhonesSection";
 import RingInBrowser from "./RingInBrowser";
+import RoutinesSection, {
+  type RoutinesApi,
+  routinesApi,
+} from "./RoutinesSection";
 
 /** How often the page asks again on its own. Every 15 s while it rings in this browser. */
 const refreshEvery = 60_000;
@@ -46,8 +50,10 @@ type View = { status: "loading" } | AlertsView;
  */
 export default function AlertsPanel({
   phones = phonesApi,
+  routines = routinesApi,
 }: {
   phones?: PhonesApi;
+  routines?: RoutinesApi;
 } = {}) {
   const [view, setView] = React.useState<View>({ status: "loading" });
   const [ringing, setRinging] = React.useState(false);
@@ -318,6 +324,14 @@ export default function AlertsPanel({
           state.timeZone,
         )}
       </Typography>
+
+      <RoutinesSection
+        routines={state.routines ?? []}
+        api={routines}
+        onState={(next) => {
+          if (alive.current) setView({ status: "owner", state: next });
+        }}
+      />
 
       <PhonesSection
         api={phones}

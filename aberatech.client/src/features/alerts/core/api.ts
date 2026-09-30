@@ -9,6 +9,7 @@
  */
 
 import { requestJson } from "../../../site/earlyRequest";
+import type { Routine } from "./routines";
 
 export interface AlertItem {
   /** The event's UID and the occurrence's start: what Skip sends back. */
@@ -117,6 +118,11 @@ export interface AlertsState {
    * are not set, never their values.
    */
   push?: PushStatus;
+  /**
+   * Routine alarms, by hour, minute and label. The paired phone rings
+   * them. Nothing on this page or on the server rings them.
+   */
+  routines?: Routine[];
 }
 
 /** Phone pushes: on when all three secrets are set. */
