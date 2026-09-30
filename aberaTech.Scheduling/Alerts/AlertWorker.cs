@@ -389,9 +389,9 @@ public sealed class CalendarAlertWorker(
 
     /// <summary>
     /// The feed's plan with the events created through /alerts that the feed
-    /// does not have yet, read from the database on every pass. The stored
-    /// rows the feed now has, or that have started, are forgotten. With no
-    /// database the feed's plan stands alone.
+    /// does not have yet, and the edits and deletions it does not show yet,
+    /// read from the database on every pass. The stored rows that are done
+    /// are forgotten. With no database the feed's plan stands alone.
     /// </summary>
     private async Task<IReadOnlyList<PlannedAlert>> PlanAsync(Instant now, AlertSettings settings, CancellationToken cancellationToken)
     {
@@ -403,7 +403,15 @@ public sealed class CalendarAlertWorker(
             var created = await store.CreatedEventsAsync(cancellationToken);
             var done = CreatedEvents.Done(created, snapshot.FeedEventIds, now);
             if (done.Count > 0) await store.ForgetCreatedEventsAsync(done, cancellationToken);
-            return CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, created, now, settings);
+            var kept = created.Where(stored => !done.Contains(stored.EventId)).ToList();
+
+            // Edits the feed now shows, deletions it no longer lists, and
+            // both once their occurrence has passed.
+            var changes = await store.EventChangesAsync(cancellationToken);
+            var merged = CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, kept, now, settings);
+            var finished = EventChanges.Done(merged, snapshot.Plan, changes, snapshot.Zone, now, snapshot.LastSuccessAt is not null);
+            if (finished.Count > 0) await store.ForgetEventChangesAsync(finished, cancellationToken);
+            return AlertsPlan.Merge(snapshot, kept, changes.Where(change => !finished.Contains(change.Id)), now, settings);
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {

@@ -80,7 +80,7 @@ public sealed class DevelopmentCalendarTests : IDisposable
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var state = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
             Assert.Equal(_clock.Now.ToDateTimeOffset(), state.GetProperty("lastFetchAt").GetDateTimeOffset());
-            Assert.Equal(["E2E standup", "E2E review"], Titles(state));
+            Assert.Equal(["E2E standup", "E2E daily", "E2E review", "E2E daily"], Titles(state));
             foreach (var alert in state.GetProperty("alerts").EnumerateArray())
             {
                 Assert.True(alert.GetProperty("alertAt").GetDateTimeOffset() > _clock.Now.ToDateTimeOffset(), $"{minutesUp} min");
@@ -108,6 +108,45 @@ public sealed class DevelopmentCalendarTests : IDisposable
         Assert.Equal(key, first.GetProperty("key").GetString());
         Assert.True(first.GetProperty("skipped").GetBoolean());
     }
+
+    /// <summary>
+    /// The browser suite edits and deletes the standing events on every
+    /// engine. The reset puts each back, in the fake Google and on the list,
+    /// so the next engine starts where the first did.
+    /// </summary>
+    [PostgresFact]
+    public async Task Edits_and_deletions_are_undone_by_the_reset_in_the_fake_google_and_on_the_list()
+    {
+        using var owner = Owner();
+        using var first = await owner.PostAsync("/api/alerts/fake/reset", null);
+        var alerts = JsonDocument.Parse(await first.Content.ReadAsStringAsync()).RootElement.GetProperty("alerts").EnumerateArray().ToList();
+        string KeyOf(string title) => alerts.First(alert => alert.GetProperty("title").GetString() == title).GetProperty("key").GetString()!;
+        var daily = KeyOf("E2E daily");
+        var review = KeyOf("E2E review");
+
+        using var edited = await owner.PutAsync("/api/alerts/events", Json(new
+        {
+            key = daily, scope = "series", title = "E2E daily moved",
+            startsAt = (Start + Duration.FromHours(5)).ToDateTimeOffset().ToString("O")
+        }));
+        using var deleted = await owner.PostAsync("/api/alerts/events/delete", Json(new { key = review, scope = "series" }));
+        Assert.Equal(HttpStatusCode.OK, edited.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, deleted.StatusCode);
+        var fake = _app!.Factory.Services.GetRequiredService<FakeAlertServices>();
+        Assert.Equal(["patch-master", "delete-master"], fake.Google.Writes.Select(write => write.Kind));
+        Assert.Null(fake.Google.Master("e2e-review"));
+
+        using var reset = await owner.PostAsync("/api/alerts/fake/reset", null);
+
+        var state = JsonDocument.Parse(await reset.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(["E2E standup", "E2E daily", "E2E review", "E2E daily"], Titles(state));
+        Assert.Empty(fake.Google.Writes);
+        Assert.Equal("E2E review #critical", fake.Google.Master("e2e-review")!.Value.Summary);
+        Assert.Equal("E2E daily", fake.Google.Master("e2e-daily")!.Value.Summary);
+    }
+
+    private static StringContent Json(object body) =>
+        new(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json");
 
     [PostgresFact]
     public async Task A_visitor_cannot_reset_the_calendar_or_read_what_the_fake_pushover_took()
@@ -168,7 +207,7 @@ public sealed class DevelopmentCalendarTests : IDisposable
         Assert.Equal("HTTP 404", state.GetProperty("lastFetchError").GetString());
         Assert.Equal(_clock.Now.ToDateTimeOffset(), state.GetProperty("lastFetchAt").GetDateTimeOffset());
         Assert.Equal(readAt.ToDateTimeOffset(), state.GetProperty("lastSuccessAt").GetDateTimeOffset());
-        Assert.Equal(["E2E standup", "E2E review"], Titles(state));
+        Assert.Equal(["E2E standup", "E2E daily", "E2E review", "E2E daily"], Titles(state));
 
         _clock.Now += Duration.FromMinutes(6);
         await Worker.TickAsync(CancellationToken.None);

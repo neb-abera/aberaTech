@@ -80,6 +80,40 @@ async function reset(page: Page) {
   }
 }
 
+/** Every listed alert with this title, soonest first. */
+async function alertsTitled(
+  page: Page,
+  title: string,
+): Promise<{ key: string; startsAt: string }[]> {
+  const status = await (await page.request.get("/api/alerts/status")).json();
+  return status.alerts.filter(
+    (alert: { title: string }) => alert.title === title,
+  );
+}
+
+/** An instant moved by some minutes, as a datetime-local input takes it in the browser's zone. */
+async function localPlus(
+  page: Page,
+  iso: string,
+  minutes: number,
+): Promise<string> {
+  return page.evaluate(
+    ([at, plus]) => {
+      const moved = new Date(
+        Date.parse(at as string) + (plus as number) * 60_000,
+      );
+      const pad = (value: number) => String(value).padStart(2, "0");
+      return `${moved.getFullYear()}-${pad(moved.getMonth() + 1)}-${pad(moved.getDate())}T${pad(moved.getHours())}:${pad(moved.getMinutes())}`;
+    },
+    [iso, minutes],
+  );
+}
+
+/** What the fake Google Calendar took since the last reset. */
+async function googleWrites(page: Page) {
+  return (await page.request.get("/api/alerts/fake/google")).json();
+}
+
 /** The key of one listed alert, by title. */
 async function keyOf(page: Page, title: string): Promise<string> {
   const status = await (await page.request.get("/api/alerts/status")).json();
@@ -491,7 +525,7 @@ test.describe("/alerts", () => {
     const writes = await (
       await page.request.get("/api/alerts/fake/google")
     ).json();
-    expect(writes).toEqual([
+    expect(writes).toMatchObject([
       {
         kind: "insert",
         eventId: expect.any(String),
@@ -507,6 +541,152 @@ test.describe("/alerts", () => {
         popupMinutes: null,
       },
     ]);
+  });
+
+  test("the owner edits one event, and the change survives a reload and reached Google Calendar", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+    const [standup] = await alertsTitled(page, "E2E standup");
+
+    await page.getByRole("button", { name: /^Edit E2E standup at / }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel(/^Title/)).toHaveValue("E2E standup");
+    await expect(dialog.getByLabel(/^Location/)).toHaveValue("Room 4");
+    // Not a repeating event: no choice of which.
+    await expect(dialog.getByText("All events")).toHaveCount(0);
+    await dialog.getByLabel(/^Title/).fill("E2E standup moved");
+    await dialog
+      .getByLabel(/^Starts/)
+      .fill(await localPlus(page, standup.startsAt, 30));
+    await dialog.getByRole("button", { name: "Save" }).click();
+
+    await expect(page.getByText("E2E standup moved is changed.")).toBeVisible();
+    await expect(dialog).toHaveCount(0);
+    await page.reload();
+    const list = page.getByRole("list", { name: "Next alerts" });
+    await expect(list.getByText("E2E standup moved")).toBeVisible();
+    const [moved] = await alertsTitled(page, "E2E standup moved");
+    expect(Date.parse(moved.startsAt) - Date.parse(standup.startsAt)).toBe(
+      30 * 60_000,
+    );
+    expect(await alertsTitled(page, "E2E standup")).toEqual([]);
+
+    const writes = await googleWrites(page);
+    expect(writes).toMatchObject([
+      {
+        kind: "patch-master",
+        eventId: "e2e-standup",
+        summary: "E2E standup moved",
+        description: null,
+      },
+    ]);
+    expect(JSON.parse(writes[0].body)).not.toHaveProperty("description");
+  });
+
+  test("All events moves every occurrence of the daily event, and it survives a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+    const before = await alertsTitled(page, "E2E daily");
+    expect(before).toHaveLength(2);
+
+    await page
+      .getByRole("button", { name: /^Edit E2E daily at / })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("All events").check();
+    await dialog
+      .getByLabel(/^Starts/)
+      .fill(await localPlus(page, before[0].startsAt, 60));
+    await dialog.getByRole("button", { name: "Save" }).click();
+
+    await expect(
+      page.getByText("E2E daily is changed, every occurrence."),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: /^Edit E2E daily at / }),
+    ).toHaveCount(2);
+    const after = await alertsTitled(page, "E2E daily");
+    expect(after.map((alert) => Date.parse(alert.startsAt))).toEqual(
+      before.map((alert) => Date.parse(alert.startsAt) + 60 * 60_000),
+    );
+
+    const writes = await googleWrites(page);
+    expect(writes).toMatchObject([
+      { kind: "patch-master", eventId: "e2e-daily", timeZone: "UTC" },
+    ]);
+    expect(Date.parse(writes[0].start)).toBe(
+      Date.parse(before[0].startsAt) + 60 * 60_000,
+    );
+  });
+
+  test("Delete of one occurrence keeps the rest of the series, and it survives a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+    const [first, second] = await alertsTitled(page, "E2E daily");
+
+    await page
+      .getByRole("button", { name: /^Delete E2E daily at / })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel("This event")).toBeChecked();
+    await dialog.getByRole("button", { name: "Delete" }).click();
+
+    await expect(page.getByText("E2E daily is deleted.")).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: /^Delete E2E daily at / }),
+    ).toHaveCount(1);
+    expect(await alertsTitled(page, "E2E daily")).toMatchObject([
+      { key: second.key },
+    ]);
+
+    const writes = await googleWrites(page);
+    expect(writes).toMatchObject([
+      { kind: "delete-instance", eventId: "e2e-daily" },
+    ]);
+    const utc = new Date(first.startsAt)
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d+Z$/, "Z");
+    expect(writes[0].target).toMatch(new RegExp(`_${utc}$`));
+  });
+
+  test("Delete of a whole event takes it off the list, and it survives a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    await page.getByRole("button", { name: /^Delete E2E review at / }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Delete E2E review?")).toBeVisible();
+    await dialog.getByRole("button", { name: "Delete" }).click();
+
+    await expect(page.getByText("E2E review is deleted.")).toBeVisible();
+    await page.reload();
+    const list = page.getByRole("list", { name: "Next alerts" });
+    await expect(list.getByText("E2E standup")).toBeVisible();
+    await expect(list.getByText("E2E review")).toHaveCount(0);
+
+    expect(await googleWrites(page)).toMatchObject([
+      { kind: "delete-master", eventId: "e2e-review" },
+    ]);
+    // The next engine starts from the whole calendar again.
+    await reset(page);
+    expect(await alertsTitled(page, "E2E review")).toHaveLength(1);
   });
 
   test("the page explains how events become alarms, with the saved values", async ({

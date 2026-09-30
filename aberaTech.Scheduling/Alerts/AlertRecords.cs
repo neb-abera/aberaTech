@@ -190,6 +190,56 @@ public class AlertCreatedEventRecord
 }
 
 /// <summary>
+/// An edit or a deletion made on /alerts, kept until Google's iCal feed
+/// shows it or its occurrence has passed. The plan applies it meanwhile,
+/// on every replica (<see cref="EventChanges"/>).
+/// </summary>
+public class AlertEventChangeRecord
+{
+    public Guid Id { get; set; }
+
+    /// <summary>The event's UID, as the plan carries it.</summary>
+    public string EventId { get; set; } = string.Empty;
+
+    /// <summary>Every occurrence of the event. False: the one at OriginalStartsAt.</summary>
+    public bool Series { get; set; }
+
+    public Instant OriginalStartsAt { get; set; }
+
+    public bool Deleted { get; set; }
+
+    public string? Title { get; set; }
+
+    public bool LocationSet { get; set; }
+
+    public string? Location { get; set; }
+
+    public Instant? StartsAt { get; set; }
+
+    public Instant? EndsAt { get; set; }
+
+    public int? DurationMinutes { get; set; }
+
+    public int? LeadMinutes { get; set; }
+
+    /// <summary>The series' zone in Google, an IANA name.</summary>
+    public string? TimeZone { get; set; }
+
+    public Instant CreatedAt { get; set; }
+
+    /// <summary>The picked occurrence after an edit: its alert time, where that comes from, its mark, whether it repeats, its location.</summary>
+    public Instant? AlertAt { get; set; }
+
+    public bool Reminder { get; set; }
+
+    public bool Critical { get; set; }
+
+    public bool Recurring { get; set; }
+
+    public string? PickedLocation { get; set; }
+}
+
+/// <summary>
 /// The plan version phones are pushed. One row, id 1, like the mute switch.
 /// Every change a phone must hear about adds one. The alarms' fingerprint
 /// is kept with it, so a calendar read that finds the same alarms adds

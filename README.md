@@ -189,8 +189,8 @@ Set the default lead to the calendar's default minutes.
 
 ### Calendar alerts: writing to Google Calendar
 
-Two routes write to the owner's Google Calendar, from the page or a paired
-phone (`CalendarWrites.cs`). Both use the connection made on
+Four routes write to the owner's Google Calendar, from the page or a paired
+phone (`CalendarWrites.cs`). All use the connection made on
 `/schedule/admin` with Connect Google Calendar. That grant carries the
 `calendar.events` scope.
 
@@ -207,6 +207,13 @@ phone (`CalendarWrites.cs`). Both use the connection made on
   secret address carries its UID or it starts. Google's feed can lag the
   API by minutes to hours, and the alert does not wait for it
   (`CreatedEvents.cs`, table `AlertCreatedEvents`).
+- Edit on a listed event changes its title, start, length, location and
+  reminder. Delete removes it. For a repeating event both ask whether the
+  change is for this event or all events. The description, `#critical` and
+  the stored type are left alone. The server keeps the change until the
+  secret address shows it, or the old and new starts have both passed
+  (`EventChanges.cs`, table `AlertEventChanges`). A deleted occurrence is
+  never sent, and a Pushover repeat still running for it is cancelled.
 
 A write goes only to the calendar the alerts read. The secret address has
 the calendar's id in its path, `calendar/ical/<id>/private-…/basic.ics`.
@@ -223,6 +230,7 @@ rename a calendar.
 | `Google refused the stored calendar sign-in. Connect the calendar again.` | the refresh token was revoked or cannot be read |
 | `Google Calendar has no such event on the connected calendar.` | the UID is not on that calendar |
 | `Google refused the change: this event is organised by someone else.` | an invitation. Only its organiser can edit the description |
+| `Only the organizer can change this event.` | an edit or a deletion of an invitation |
 | `Google refused the change (HTTP <status>).` | any other refusal |
 | `Google Calendar did not answer.` | a timeout or no connection, after 10 s |
 
@@ -236,6 +244,42 @@ with the page's whole state, the new event listed. A refused field is a
 400 keyed by its name. No connection with edit access, or a connection to
 another calendar, is a 409 whose `detail` says which. Google refusing is a
 502 with the same short reason.
+
+Each listed alert carries `recurring`, true when the occurrence belongs to
+a series (an RRULE, or a moved occurrence of one), and `endsAt`, ISO 8601
+with its offset, or null when the event has no end.
+
+| Route | Request | Answer |
+|---|---|---|
+| `PUT /api/alerts/events` | `{key, scope, title, startsAt, durationMinutes?, location?, leadMinutes?}` | 200 with the page's whole state, the edit listed |
+| `POST /api/alerts/events/delete` | `{key, scope}` | 200 with the page's whole state, the deleted occurrences gone |
+
+`key` is a listed alert's key. It holds the event's UID, so it goes in the
+body. A key in the query string is not read. `scope` is `occurrence` or `series`.
+`title`, `startsAt`, `location` and `leadMinutes` take the same bounds as a
+new event. A missing or null `durationMinutes` keeps the event's length,
+and 5 to 1440 sets it. A missing `location` leaves it, and null clears it.
+A missing or null `leadMinutes` leaves the reminders alone. A number sets
+one popup reminder at that lead. An unknown key is 404. A refused field is
+a 400 keyed by its name. An invitation, no connection with edit access, or
+a connection to another calendar is a 409 with a `detail`. Any other
+Google failure is a 502 with a `detail`. Nothing is kept or pushed on a
+failure.
+
+The event is found by `events.list?iCalUID=`. `occurrence` on a repeating
+event patches or deletes the one instance: `events.instances` with
+`timeMin` at the occurrence's start and `timeMax` one second later lists
+it, and its own id is patched or deleted, which Google keeps as an
+exception or a cancelled instance. `occurrence` on an event that does not
+repeat, and `series`, patch or delete the event itself. A `series` edit
+moves the master's start by the edited occurrence's change in date and
+wall-clock time, in the series' own zone, and keeps its RRULE. A daily
+09:00 moved to 10:00 stays at 10:00 across a clock change, as Google
+Calendar's All events edit does. Every write carries `sendUpdates=none`.
+
+A moved start gives the occurrence a new key. Its skip goes with it. When
+the new alert time has already come and the alert went, the send claim
+goes with it too, so the alert is not sent twice.
 
 ### Calendar alerts: routine alarms
 
@@ -270,8 +314,8 @@ Each change pushes the phones.
 A change that alters what a phone should hold sends every phone with a
 push token a background push through Apple's push service
 (`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
-and Unmute, an acknowledgement from anywhere, a new event, a routine
-alarm added, changed or deleted, and a calendar read whose alarms differ
+and Unmute, an acknowledgement from anywhere, a new event, an event edited
+or deleted, a routine alarm added, changed or deleted, and a calendar read whose alarms differ
 from the last read. The phone then reads
 `/api/alerts/status`. iOS can delay or drop a background push, so the
 phone also reads when opened and in the background.

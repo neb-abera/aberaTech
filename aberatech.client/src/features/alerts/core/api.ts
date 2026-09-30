@@ -32,6 +32,10 @@ export interface AlertItem {
   acknowledged: boolean;
   acknowledgedAt: string | null;
   acknowledgedVia: "phone" | "browser" | null;
+  /** Part of a repeating event. Edit and Delete then offer "All events". */
+  recurring: boolean;
+  /** The occurrence's end. Null when the calendar gives none. */
+  endsAt: string | null;
 }
 
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
@@ -268,18 +272,77 @@ export type CreateResult =
  * the alerts read. 502: Google refused.
  */
 export async function createEvent(event: NewEvent): Promise<CreateResult> {
+  const result = await writeEvent("POST", "/api/alerts/events", event, 201);
+  if (result.ok) return result;
+  const { reason } = result;
+  return reason === "gone"
+    ? { ok: false, reason: "refused" }
+    : { ...result, reason };
+}
+
+/** Which occurrences an edit or a deletion is for. */
+export type EventScope = "occurrence" | "series";
+
+/** An edit of one listed occurrence, or of every occurrence of its event. */
+export interface EventEdit {
+  /** The listed alert's key. It goes in the body, never the address. */
+  key: string;
+  scope: EventScope;
+  title: string;
+  /** An instant with its offset. */
+  startsAt: string;
+  /** Left out, the event keeps its length. */
+  durationMinutes?: number;
+  /** Null clears it. */
+  location: string | null;
+  /** Left out, the event's reminders stay as they are. */
+  leadMinutes?: number;
+}
+
+export type EventWriteResult =
+  | { ok: true; state: AlertsState }
+  | {
+      ok: false;
+      reason: Exclude<CreateResult, { ok: true }>["reason"] | "gone";
+      detail?: string;
+      errors?: Record<string, string[]>;
+    };
+
+/**
+ * Changes the event on Google Calendar and answers with the state, the
+ * change already listed. 404: the alert is no longer listed. 409: Google
+ * lets only the organiser change it, or no calendar with edit access.
+ */
+export function editEvent(edit: EventEdit): Promise<EventWriteResult> {
+  return writeEvent("PUT", "/api/alerts/events", edit, 200);
+}
+
+/** Deletes one occurrence, or the whole event, and answers with the state without it. */
+export function deleteEvent(
+  key: string,
+  scope: EventScope,
+): Promise<EventWriteResult> {
+  return writeEvent("POST", "/api/alerts/events/delete", { key, scope }, 200);
+}
+
+async function writeEvent(
+  method: "POST" | "PUT",
+  path: string,
+  body: unknown,
+  success: number,
+): Promise<EventWriteResult> {
   try {
-    const response = await fetch("/api/alerts/events", {
-      method: "POST",
+    const response = await fetch(path, {
+      method,
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(event),
+      body: JSON.stringify(body),
     });
     if (response.status === 401 || response.status === 403)
       return { ok: false, reason: "visitor" };
     if (response.status === 429) return { ok: false, reason: "throttled" };
     const json = response.headers.get("content-type")?.includes("json");
-    if (response.status === 201)
+    if (response.status === success)
       return { ok: true, state: toState((await response.json()) as StateBody) };
     const problem = json
       ? ((await response.json()) as {
@@ -289,6 +352,7 @@ export async function createEvent(event: NewEvent): Promise<CreateResult> {
       : {};
     if (response.status === 400 && problem.errors)
       return { ok: false, reason: "invalid", errors: problem.errors };
+    if (response.status === 404) return { ok: false, reason: "gone" };
     if (response.status === 409)
       return { ok: false, reason: "conflict", detail: problem.detail };
     if (response.status === 502)

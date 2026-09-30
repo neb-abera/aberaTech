@@ -1,28 +1,62 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.WebUtilities;
+using NodaTime;
+using NodaTime.Text;
 
 namespace aberaTech.Scheduling.Alerts;
 
-/// <summary>One write the fake Google Calendar took: "patch" or "insert".</summary>
-/// <param name="PopupMinutes">For an insert: the one popup reminder asked for.</param>
-public sealed record FakeGoogleWrite(string Kind, string EventId, string? Summary, string? Description, int? PopupMinutes);
+/// <summary>
+/// One write the fake Google Calendar took. Kind is "insert", "patch" (a
+/// description alone, for a type change), "patch-master", "patch-instance",
+/// "delete-master" or "delete-instance".
+/// </summary>
+/// <param name="PopupMinutes">The one popup reminder asked for. Null when the body set none.</param>
+/// <param name="Target">For an edit or a deletion: the Google id it went to, the master's or an instance's.</param>
+/// <param name="Start">For an edit: the start as sent, dateTime with its offset.</param>
+/// <param name="End">For an edit: the end as sent.</param>
+/// <param name="TimeZone">For an edit: the zone sent with the start, or null.</param>
+/// <param name="Body">For a patch: the JSON body as sent, so a test can see what it left out.</param>
+public sealed record FakeGoogleWrite(
+    string Kind,
+    string EventId,
+    string? Summary,
+    string? Description,
+    int? PopupMinutes,
+    string? Target = null,
+    string? Start = null,
+    string? End = null,
+    string? TimeZone = null,
+    string? Body = null);
+
+/// <summary>One events.instances call: the master's id and the window asked for.</summary>
+public sealed record FakeGoogleLookup(string MasterId, string TimeMin, string TimeMax);
 
 /// <summary>
 /// Development and tests only: a Google Calendar in memory, answering the
-/// three calls <see cref="GoogleAlertEvents"/> makes (events.list by
-/// iCalUID, events.patch, events.insert), and a stored grant for it. The
-/// real client runs on top. Only the network and the stored connection are
-/// replaced, the way <see cref="FakeAlertServices"/> replaces Pushover's.
+/// calls <see cref="GoogleAlertEvents"/> makes (events.list by iCalUID,
+/// events.instances, events.patch, events.insert and events.delete), and a
+/// stored grant for it. The real client runs on top. Only the network and
+/// the stored connection are replaced, the way <see cref="FakeAlertServices"/>
+/// replaces Pushover's.
 /// </summary>
+/// <remarks>
+/// A recurring event repeats daily on its zone's wall clock. Its instances
+/// have the ids Google gives them, the master's id and the original start in
+/// UTC. A patched instance moves on its own. A deleted one is cancelled and
+/// no longer listed.
+/// </remarks>
 public sealed class FakeGoogleCalendar : IAlertCalendarGrant
 {
+    /// <summary>A seeded event with no start of its own starts here: 09:00 New York time on 28 October 2026.</summary>
+    public static readonly Instant DefaultStart = Instant.FromUtc(2026, 10, 28, 13, 0);
+
     private readonly Lock _lock = new();
     private readonly Dictionary<string, FakeEvent> _events = new(StringComparer.Ordinal);
     private readonly ConcurrentQueue<FakeGoogleWrite> _writes = new();
+    private readonly ConcurrentQueue<FakeGoogleLookup> _lookups = new();
     private int _ids;
 
     /// <summary>The stored connection. Null is no calendar connected.</summary>
@@ -34,11 +68,17 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
     /// <summary>Every call answers this status, with this reason word in the error body, until it is set back to null.</summary>
     public (HttpStatusCode Status, string? Reason)? Refusing { get; set; }
 
+    /// <summary>Every write (patch, insert, delete) answers this, while reads still work, until it is set back to null.</summary>
+    public (HttpStatusCode Status, string? Reason)? RefusingWrites { get; set; }
+
     /// <summary>Every call fails as if Google could not be reached.</summary>
     public bool Unreachable { get; set; }
 
     /// <summary>The writes Google took, oldest first.</summary>
     public IReadOnlyList<FakeGoogleWrite> Writes => [.. _writes];
+
+    /// <summary>The events.instances calls, oldest first.</summary>
+    public IReadOnlyList<FakeGoogleLookup> Lookups => [.. _lookups];
 
     /// <summary>How many calls reached the fake, of any kind.</summary>
     public int Calls { get; private set; }
@@ -54,12 +94,41 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
 
     /// <summary>An event the calendar already has, as the feed shows it.</summary>
     /// <param name="organisedHere">False for an invitation from someone else, which this calendar cannot edit.</param>
-    /// <param name="recurring">A series: events.list also returns one moved occurrence of it, as Google does.</param>
-    public void Seed(string uid, string description = "", bool organisedHere = true, bool recurring = false)
+    /// <param name="recurring">
+    /// A series, daily for <paramref name="count"/> days. events.list also
+    /// returns one moved occurrence of it, as Google does.
+    /// </param>
+    /// <param name="start">The first start. <see cref="DefaultStart"/> when null.</param>
+    /// <param name="minutes">The length.</param>
+    /// <param name="timeZone">The zone Google names on its start and end.</param>
+    public void Seed(
+        string uid,
+        string description = "",
+        bool organisedHere = true,
+        bool recurring = false,
+        Instant? start = null,
+        int minutes = 30,
+        string timeZone = "America/New_York",
+        int count = 7,
+        string? summary = null)
     {
         lock (_lock)
         {
-            _events[uid] = new FakeEvent(uid, $"seed{++_ids}", description, organisedHere, recurring, false, _ids);
+            var begins = start ?? DefaultStart;
+            _events[uid] = new FakeEvent
+            {
+                Uid = uid,
+                Id = $"seed{++_ids}",
+                Description = description,
+                OrganisedHere = organisedHere,
+                Recurring = recurring,
+                Order = _ids,
+                Summary = summary,
+                Start = begins,
+                End = begins + Duration.FromMinutes(minutes),
+                TimeZone = timeZone,
+                Count = count
+            };
         }
     }
 
@@ -68,11 +137,32 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         lock (_lock) return _events.TryGetValue(uid, out var item) ? item.Description : null;
     }
 
+    /// <summary>The event's master as the fake holds it now: its summary, start, end and popup. Null when it is gone.</summary>
+    public (string? Summary, Instant Start, Instant End, string? Location, int? Popup)? Master(string uid)
+    {
+        lock (_lock)
+        {
+            return _events.TryGetValue(uid, out var item) ? (item.Summary, item.Start, item.End, item.Location, item.Popup) : null;
+        }
+    }
+
+    /// <summary>The ids of a series' instances that are cancelled.</summary>
+    public IReadOnlyList<string> Cancelled(string uid)
+    {
+        lock (_lock)
+        {
+            return _events.TryGetValue(uid, out var item)
+                ? [.. item.Overrides.Where(pair => pair.Value.Cancelled).Select(pair => InstanceId(item, pair.Key)).Order(StringComparer.Ordinal)]
+                : [];
+        }
+    }
+
     /// <summary>Forgets every event and write. The grant and the switches stay.</summary>
     public void Clear()
     {
         lock (_lock) _events.Clear();
         _writes.Clear();
+        _lookups.Clear();
     }
 
     /// <summary>Forgets the events created through the API and the writes, and keeps the seeded ones.</summary>
@@ -86,6 +176,7 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         }
 
         _writes.Clear();
+        _lookups.Clear();
         return gone;
     }
 
@@ -100,59 +191,204 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
     {
         lock (_lock) Calls++;
         if (Unreachable) throw new HttpRequestException("development: unreachable");
-        if (Refusing is { } refusal)
-        {
-            var reason = refusal.Reason is null ? "" : $",\"errors\":[{{\"reason\":\"{refusal.Reason}\"}}]";
-            return Json(refusal.Status, $"{{\"error\":{{\"code\":{(int)refusal.Status}{reason}}}}}");
-        }
+        if (Refusing is { } refusal) return Refused(refusal);
+        if (request.Method != HttpMethod.Get && RefusingWrites is { } writes) return Refused(writes);
 
         var path = request.RequestUri!.AbsolutePath;
         var events = path.IndexOf("/events", StringComparison.Ordinal);
         if (events < 0) return new HttpResponseMessage(HttpStatusCode.NotFound);
-        var id = path[(events + "/events".Length)..].Trim('/');
-        var body = request.Content is null ? null : JsonNode.Parse(await request.Content.ReadAsStringAsync());
+        var rest = path[(events + "/events".Length)..].Trim('/');
+        var id = Uri.UnescapeDataString(rest.EndsWith("/instances", StringComparison.Ordinal) ? rest[..^"/instances".Length] : rest);
+        var text = request.Content is null ? null : await request.Content.ReadAsStringAsync();
+        var body = text is null ? null : JsonNode.Parse(text);
+        var query = QueryHelpers.ParseQuery(request.RequestUri.Query);
 
         if (request.Method == HttpMethod.Get && id.Length == 0)
         {
-            var uid = QueryHelpers.ParseQuery(request.RequestUri.Query).GetValueOrDefault("iCalUID").ToString();
-            return Json(HttpStatusCode.OK, List(uid));
+            return Json(HttpStatusCode.OK, List(query.GetValueOrDefault("iCalUID").ToString()));
         }
 
-        if (request.Method == HttpMethod.Patch && id.Length > 0)
+        if (request.Method == HttpMethod.Get && rest.EndsWith("/instances", StringComparison.Ordinal))
         {
-            var description = body?["description"]?.GetValue<string>();
-            lock (_lock)
-            {
-                var item = _events.Values.FirstOrDefault(candidate => candidate.Id == Uri.UnescapeDataString(id));
-                if (item is null) return new HttpResponseMessage(HttpStatusCode.NotFound);
-                if (!item.OrganisedHere)
-                {
-                    return Json(
-                        HttpStatusCode.Forbidden, "{\"error\":{\"code\":403,\"errors\":[{\"reason\":\"forbiddenForNonOrganizer\"}]}}");
-                }
-
-                _events[item.Uid] = item with { Description = description ?? "" };
-                _writes.Enqueue(new FakeGoogleWrite("patch", item.Uid, null, description, null));
-                return Json(HttpStatusCode.OK, Item(_events[item.Uid]).ToJsonString());
-            }
+            var from = query.GetValueOrDefault("timeMin").ToString();
+            var until = query.GetValueOrDefault("timeMax").ToString();
+            _lookups.Enqueue(new FakeGoogleLookup(id, from, until));
+            return Instances(id, from, until);
         }
+
+        if (request.Method == HttpMethod.Patch && id.Length > 0 && body is not null) return Patch(id, body, text!);
+
+        if (request.Method == HttpMethod.Delete && id.Length > 0) return Delete(id);
 
         if (request.Method == HttpMethod.Post && id.Length == 0 && body is not null)
         {
             lock (_lock)
             {
                 var n = ++_ids;
-                var item = new FakeEvent($"created{n}@google.com", $"created{n}", body["description"]?.GetValue<string>() ?? "", true, false, true, n);
+                var start = Parse(body["start"]?["dateTime"]?.GetValue<string>()) ?? DefaultStart;
+                var item = new FakeEvent
+                {
+                    Uid = $"created{n}@google.com",
+                    Id = $"created{n}",
+                    Description = body["description"]?.GetValue<string>() ?? "",
+                    OrganisedHere = true,
+                    Inserted = true,
+                    Order = n,
+                    Summary = body["summary"]?.GetValue<string>(),
+                    Location = body["location"]?.GetValue<string>(),
+                    Start = start,
+                    End = Parse(body["end"]?["dateTime"]?.GetValue<string>()) ?? start,
+                    Popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>()
+                };
                 _events[item.Uid] = item;
-                var popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>();
                 _writes.Enqueue(new FakeGoogleWrite(
-                    "insert", item.Uid, body["summary"]?.GetValue<string>(), body["description"]?.GetValue<string>(), popup));
+                    "insert", item.Uid, item.Summary, body["description"]?.GetValue<string>(), item.Popup));
                 return Json(HttpStatusCode.OK, Item(item).ToJsonString());
             }
         }
 
         return new HttpResponseMessage(HttpStatusCode.BadRequest);
     }
+
+    private HttpResponseMessage Patch(string id, JsonNode body, string text)
+    {
+        lock (_lock)
+        {
+            var (item, instance) = Find(id);
+            if (item is null) return new HttpResponseMessage(HttpStatusCode.NotFound);
+            if (!item.OrganisedHere) return NotOrganiser();
+
+            var description = body["description"]?.GetValue<string>();
+            var summary = body["summary"]?.GetValue<string>();
+            var start = body["start"]?["dateTime"]?.GetValue<string>();
+            var end = body["end"]?["dateTime"]?.GetValue<string>();
+            var zone = body["start"]?["timeZone"]?.GetValue<string>();
+            var popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>();
+            var location = body["location"]?.GetValue<string>();
+
+            // A description alone is a type change: the kind every earlier
+            // test and the browser suite read as "patch".
+            var descriptionOnly = body is JsonObject { Count: 1 } && description is not null;
+            if (instance is { } original)
+            {
+                var own = item.Overrides.GetValueOrDefault(original) ?? Fresh(item, original);
+                item.Overrides[original] = own with
+                {
+                    Start = Parse(start) ?? own.Start,
+                    End = Parse(end) ?? own.End,
+                    Summary = summary ?? own.Summary
+                };
+            }
+            else
+            {
+                if (description is not null) item.Description = description;
+                if (summary is not null) item.Summary = summary;
+                if (Parse(start) is { } begins) item.Start = begins;
+                if (Parse(end) is { } ends) item.End = ends;
+                if (zone is not null) item.TimeZone = zone;
+                if (location is not null) item.Location = location.Length == 0 ? null : location;
+                if (popup is not null) item.Popup = popup;
+            }
+
+            _writes.Enqueue(descriptionOnly
+                ? new FakeGoogleWrite("patch", item.Uid, null, description, null)
+                : new FakeGoogleWrite(
+                    instance is null ? "patch-master" : "patch-instance", item.Uid, summary, description, popup, id, start, end, zone, text));
+            return Json(HttpStatusCode.OK, Item(item).ToJsonString());
+        }
+    }
+
+    private HttpResponseMessage Delete(string id)
+    {
+        lock (_lock)
+        {
+            var (item, instance) = Find(id);
+            if (item is null) return new HttpResponseMessage(HttpStatusCode.NotFound);
+            if (!item.OrganisedHere) return NotOrganiser();
+
+            if (instance is { } original)
+            {
+                var own = item.Overrides.GetValueOrDefault(original) ?? Fresh(item, original);
+                item.Overrides[original] = own with { Cancelled = true };
+            }
+            else
+            {
+                _events.Remove(item.Uid);
+            }
+
+            _writes.Enqueue(new FakeGoogleWrite(instance is null ? "delete-master" : "delete-instance", item.Uid, null, null, null, id));
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        }
+    }
+
+    /// <summary>The event a Google id names, and for an instance id, the instance's original start.</summary>
+    private (FakeEvent? Event, Instant? Instance) Find(string id)
+    {
+        var underscore = id.LastIndexOf('_');
+        if (underscore > 0
+            && InstantPattern.Create("uuuuMMdd'T'HHmmss'Z'", System.Globalization.CultureInfo.InvariantCulture)
+                .Parse(id[(underscore + 1)..]) is { Success: true } parsed)
+        {
+            var master = _events.Values.FirstOrDefault(candidate => candidate.Id == id[..underscore] && candidate.Recurring);
+            return master is null ? (null, null) : (master, parsed.Value);
+        }
+
+        return (_events.Values.FirstOrDefault(candidate => candidate.Id == id), null);
+    }
+
+    /// <summary>An instance as Google first lists it: at its original start, with the series' length.</summary>
+    private static FakeInstance Fresh(FakeEvent item, Instant original) =>
+        new(original, original) { End = original + (item.End - item.Start) };
+
+    private HttpResponseMessage Instances(string masterId, string timeMin, string timeMax)
+    {
+        lock (_lock)
+        {
+            var item = _events.Values.FirstOrDefault(candidate => candidate.Id == masterId);
+            if (item is null) return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+            var from = Parse(timeMin) ?? Instant.MinValue;
+            var until = Parse(timeMax) ?? Instant.MaxValue;
+            var length = item.End - item.Start;
+            var items = new JsonArray();
+            foreach (var original in Originals(item))
+            {
+                var own = item.Overrides.GetValueOrDefault(original);
+                if (own is { Cancelled: true }) continue;
+                var start = own?.Start ?? original;
+                var end = own?.End ?? original + length;
+                if (end < from || start >= until) continue;
+
+                items.Add(new JsonObject
+                {
+                    ["id"] = InstanceId(item, original),
+                    ["iCalUID"] = item.Uid,
+                    ["recurringEventId"] = item.Id,
+                    ["originalStartTime"] = new JsonObject { ["dateTime"] = Format(original), ["timeZone"] = item.TimeZone },
+                    ["start"] = new JsonObject { ["dateTime"] = Format(start), ["timeZone"] = item.TimeZone },
+                    ["end"] = new JsonObject { ["dateTime"] = Format(end), ["timeZone"] = item.TimeZone },
+                    ["summary"] = own?.Summary ?? item.Summary,
+                    ["organizer"] = new JsonObject { ["self"] = true }
+                });
+            }
+
+            return Json(HttpStatusCode.OK, new JsonObject { ["items"] = items }.ToJsonString());
+        }
+    }
+
+    /// <summary>The original starts of a series: daily on its zone's wall clock.</summary>
+    private static IEnumerable<Instant> Originals(FakeEvent item)
+    {
+        var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(item.TimeZone ?? "UTC") ?? DateTimeZone.Utc;
+        var local = item.Start.InZone(zone).LocalDateTime;
+        for (var day = 0; day < (item.Recurring ? item.Count : 1); day++)
+        {
+            yield return zone.AtLeniently(local.PlusDays(day)).ToInstant();
+        }
+    }
+
+    private static string InstanceId(FakeEvent item, Instant original) =>
+        $"{item.Id}_{original.ToDateTimeUtc():yyyyMMdd'T'HHmmss'Z'}";
 
     private string List(string uid)
     {
@@ -182,23 +418,89 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         }
     }
 
-    private static JsonObject Item(FakeEvent item) => new()
+    private static JsonObject Item(FakeEvent item)
     {
-        ["id"] = item.Id,
-        ["iCalUID"] = item.Uid,
-        ["description"] = item.Description,
-        ["organizer"] = item.OrganisedHere
-            ? new JsonObject { ["email"] = "owner@example.test", ["self"] = true }
-            : new JsonObject { ["email"] = "someone@example.test" }
-    };
+        var json = new JsonObject
+        {
+            ["id"] = item.Id,
+            ["iCalUID"] = item.Uid,
+            ["summary"] = item.Summary,
+            ["description"] = item.Description,
+            ["start"] = new JsonObject { ["dateTime"] = Format(item.Start), ["timeZone"] = item.TimeZone },
+            ["end"] = new JsonObject { ["dateTime"] = Format(item.End), ["timeZone"] = item.TimeZone },
+            ["organizer"] = item.OrganisedHere
+                ? new JsonObject { ["email"] = "owner@example.test", ["self"] = true }
+                : new JsonObject { ["email"] = "someone@example.test" }
+        };
+        if (item.Recurring) json["recurrence"] = new JsonArray($"RRULE:FREQ=DAILY;COUNT={item.Count}");
+        if (item.Location is not null) json["location"] = item.Location;
+        return json;
+    }
+
+    private static string Format(Instant at) => InstantPattern.ExtendedIso.Format(at);
+
+    private static Instant? Parse(string? text) =>
+        text is not null && DateTimeOffset.TryParse(
+            text, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed)
+            ? Instant.FromDateTimeOffset(parsed)
+            : null;
+
+    private static HttpResponseMessage Refused((HttpStatusCode Status, string? Reason) refusal)
+    {
+        var reason = refusal.Reason is null ? "" : $",\"errors\":[{{\"reason\":\"{refusal.Reason}\"}}]";
+        return Json(refusal.Status, $"{{\"error\":{{\"code\":{(int)refusal.Status}{reason}}}}}");
+    }
+
+    private static HttpResponseMessage NotOrganiser() =>
+        Json(HttpStatusCode.Forbidden, "{\"error\":{\"code\":403,\"errors\":[{\"reason\":\"forbiddenForNonOrganizer\"}]}}");
 
     private static HttpResponseMessage Json(HttpStatusCode status, string body) => new(status)
     {
         Content = new StringContent(body, Encoding.UTF8, "application/json")
     };
 
-    private sealed record FakeEvent(
-        string Uid, string Id, string Description, bool OrganisedHere, bool Recurring, bool Inserted, int Order);
+    private sealed class FakeEvent
+    {
+        public required string Uid { get; init; }
+
+        public required string Id { get; init; }
+
+        public string Description { get; set; } = "";
+
+        public bool OrganisedHere { get; init; }
+
+        public bool Recurring { get; init; }
+
+        public bool Inserted { get; init; }
+
+        public int Order { get; init; }
+
+        public string? Summary { get; set; }
+
+        public string? Location { get; set; }
+
+        public Instant Start { get; set; }
+
+        public Instant End { get; set; }
+
+        public string? TimeZone { get; set; }
+
+        public int Count { get; init; } = 1;
+
+        public int? Popup { get; set; }
+
+        /// <summary>Patched or cancelled instances, by original start.</summary>
+        public Dictionary<Instant, FakeInstance> Overrides { get; } = [];
+    }
+
+    private sealed record FakeInstance(Instant Original, Instant Start)
+    {
+        public Instant? End { get; init; }
+
+        public string? Summary { get; init; }
+
+        public bool Cancelled { get; init; }
+    }
 
     private sealed class FakeHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> answer) : HttpMessageHandler
     {

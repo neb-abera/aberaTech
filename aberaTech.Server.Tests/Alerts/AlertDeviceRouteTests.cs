@@ -19,7 +19,7 @@ namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
 /// The paired phone's side of /api/alerts: pairing on the page, the token
-/// on the eight routes a phone needs, a 403 on the rest, and Acknowledge.
+/// on the routes a phone needs, a 403 on the rest, and Acknowledge.
 /// The standup is marked #critical, so it is an alarm and goes at emergency
 /// priority with a receipt.
 /// </summary>
@@ -112,7 +112,9 @@ public sealed class AlertDeviceRouteTests : IDisposable
         ["POST", "/api/alerts/unskip", "{\"key\":\"standup@google.com|20261028T130000Z\"}"],
         ["POST", "/api/alerts/ack", "{\"key\":\"standup@google.com|20261028T130000Z\",\"via\":\"phone\"}"],
         ["PUT", "/api/alerts/event-type", "{\"key\":\"standup@google.com|20261028T130000Z\",\"type\":\"none\"}"],
-        ["POST", "/api/alerts/events", "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T15:00:00Z\",\"durationMinutes\":30,\"type\":\"alarm\"}"]
+        ["POST", "/api/alerts/events", "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T15:00:00Z\",\"durationMinutes\":30,\"type\":\"alarm\"}"],
+        ["PUT", "/api/alerts/events", "{\"key\":\"standup@google.com|20261028T130000Z\",\"scope\":\"occurrence\",\"title\":\"Standup\",\"startsAt\":\"2026-10-28T09:30:00-04:00\"}"],
+        ["POST", "/api/alerts/events/delete", "{\"key\":\"standup@google.com|20261028T130000Z\",\"scope\":\"occurrence\"}"]
     ];
 
     /// <summary>The routes that stay the owner's cookie alone.</summary>
@@ -244,7 +246,9 @@ public sealed class AlertDeviceRouteTests : IDisposable
 
         using var response = await Send(phone, method, path, body);
 
-        Assert.Equal(path.EndsWith("/events", StringComparison.Ordinal) ? HttpStatusCode.Created : HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            method == "POST" && path.EndsWith("/events", StringComparison.Ordinal) ? HttpStatusCode.Created : HttpStatusCode.OK,
+            response.StatusCode);
         var state = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(state.GetProperty("configured").GetBoolean());
         Assert.Equal(JsonValueKind.Null, state.GetProperty("calendarWrite").ValueKind);

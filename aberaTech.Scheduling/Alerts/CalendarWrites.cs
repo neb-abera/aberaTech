@@ -154,6 +154,42 @@ public sealed record NewAlertEvent(
 /// <summary>How a create went: the stored event, or a message and whether it is a conflict (409) or Google's refusal (502).</summary>
 public sealed record CreateOutcome(CreatedAlertEvent? Event, string? Problem, bool Conflict);
 
+/// <summary>An edit of one listed occurrence, or of its whole series, as the route checked it.</summary>
+/// <param name="LocationSet">The body carried a location. False leaves the event's own.</param>
+/// <param name="Location">The new location. Null clears it when <paramref name="LocationSet"/> is true.</param>
+/// <param name="StartsAt">The picked occurrence's new start.</param>
+/// <param name="DurationMinutes">The new length. Null keeps the event's own.</param>
+/// <param name="LeadMinutes">One popup reminder at this lead. Null leaves the reminders alone.</param>
+public sealed record AlertEventEdit(
+    string Title,
+    bool LocationSet,
+    string? Location,
+    Instant StartsAt,
+    int? DurationMinutes,
+    int? LeadMinutes);
+
+/// <summary>
+/// How an edit or a deletion went. Problem is null when Google took it.
+/// Series says whether the whole series was changed: false for an event
+/// that does not repeat, whatever was asked. TimeZone is the series' zone.
+/// </summary>
+public sealed record EventWriteOutcome(string? Problem, bool Conflict, bool Series = false, string? TimeZone = null)
+{
+    public static EventWriteOutcome Failed(string problem) =>
+        new(problem, problem is CalendarWriteMessages.NotConnected or CalendarWriteMessages.OtherCalendar or CalendarWriteMessages.OnlyOrganizer);
+}
+
+/// <summary>An event as events.list or events.instances answers it: the parts an edit reads.</summary>
+/// <param name="Master">Not an instance of a series: no recurringEventId.</param>
+internal sealed record GoogleEvent(
+    string Id,
+    bool OrganisedHere,
+    bool Recurring,
+    Instant? Start,
+    Instant? End,
+    string? TimeZone,
+    bool Master);
+
 /// <summary>
 /// The messages the page and the phone show when a write to Google does not
 /// happen. Fixed text: never a token, a URL or Google's own answer.
@@ -169,6 +205,9 @@ public static class CalendarWriteMessages
     public const string NotFound = "Google Calendar has no such event on the connected calendar.";
 
     public const string OrganisedElsewhere = "Google refused the change: this event is organised by someone else.";
+
+    /// <summary>An edit or a deletion of an invitation: Google lets only its organiser change it.</summary>
+    public const string OnlyOrganizer = "Only the organizer can change this event.";
 
     public const string Unreachable = "Google Calendar did not answer.";
 
@@ -309,6 +348,202 @@ public sealed class GoogleAlertEvents(
         }
     }
 
+    /// <summary>
+    /// Changes one occurrence, or its series, and answers why not when
+    /// Google did not take it. The event is found by its UID
+    /// (events.list?iCalUID=). One occurrence of a series is the instance
+    /// Google lists at that start (events.instances with timeMin and
+    /// timeMax around it), patched on its own id. A series moves its master
+    /// by the picked occurrence's change in date and wall-clock time, in the
+    /// series' zone, and keeps its RRULE. The description, and so #critical,
+    /// is never sent.
+    /// </summary>
+    /// <param name="zone">The zone to write a time in when Google names none.</param>
+    public async Task<EventWriteOutcome> EditAsync(
+        PlannedAlert occurrence, bool series, AlertEventEdit edit, DateTimeZone zone, CancellationToken cancellationToken)
+    {
+        var found = await FindAsync(occurrence, series, cancellationToken);
+        if (found.Problem is not null) return EventWriteOutcome.Failed(found.Problem);
+        var (calendar, token, master, instance) = (found.Calendar!, found.Token!, found.Master!, found.Instance);
+
+        try
+        {
+            string target;
+            Instant start;
+            Instant? end;
+            string? timeZone;
+            if (master.Recurring && series)
+            {
+                // Google names the zone a series repeats in. Its time of day
+                // is kept on that clock.
+                timeZone = master.TimeZone ?? zone.Id;
+                var seriesZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) ?? zone;
+                var from = master.Start ?? occurrence.StartsAt;
+                start = EventChanges.Shift(from, occurrence.StartsAt, edit.StartsAt, seriesZone);
+                end = Ends(start, edit.DurationMinutes, master.Start, master.End);
+                target = master.Id;
+                zone = seriesZone;
+            }
+            else
+            {
+                var picked = instance ?? master;
+                timeZone = picked.TimeZone;
+                start = edit.StartsAt;
+                end = Ends(start, edit.DurationMinutes, picked.Start ?? occurrence.StartsAt, picked.End ?? occurrence.EndsAt);
+                target = picked.Id;
+                if (timeZone is not null && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) is { } own) zone = own;
+            }
+
+            var body = new Dictionary<string, object?>
+            {
+                ["summary"] = edit.Title,
+                ["start"] = Time(start, timeZone, zone),
+                ["end"] = Time(end ?? start, timeZone, zone)
+            };
+            // Google's patch leaves out what the body leaves out. An empty
+            // location clears it.
+            if (edit.LocationSet) body["location"] = edit.Location ?? "";
+            if (edit.LeadMinutes is { } lead)
+            {
+                body["reminders"] = new { useDefault = false, overrides = new[] { new { method = "popup", minutes = lead } } };
+            }
+
+            using var patch = Request(HttpMethod.Patch, $"{Api}{Escape(calendar)}/events/{Escape(target)}?sendUpdates=none", token);
+            patch.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            using var patched = await http.SendAsync(patch, cancellationToken);
+            if (patched.IsSuccessStatusCode) return new EventWriteOutcome(null, false, master.Recurring && series, timeZone);
+
+            logger.LogWarning("Google answered {StatusCode} to an event edit from /alerts.", (int)patched.StatusCode);
+            return EventWriteOutcome.Failed(Refusal(patched.StatusCode, await patched.Content.ReadAsStringAsync(cancellationToken)));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException
+                                          && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Google Calendar did not answer an event edit from /alerts ({Failure}).", exception.GetType().Name);
+            return EventWriteOutcome.Failed(CalendarWriteMessages.Unreachable);
+        }
+    }
+
+    /// <summary>
+    /// Deletes one occurrence, or the whole event. One occurrence of a series
+    /// is its instance id, deleted: Google keeps the series and cancels that
+    /// one. An event that does not repeat is deleted whatever was asked.
+    /// Gone already (410) is what was asked for.
+    /// </summary>
+    public async Task<EventWriteOutcome> DeleteAsync(PlannedAlert occurrence, bool series, CancellationToken cancellationToken)
+    {
+        var found = await FindAsync(occurrence, series, cancellationToken);
+        if (found.Problem is not null) return EventWriteOutcome.Failed(found.Problem);
+        var target = (found.Instance ?? found.Master!).Id;
+
+        try
+        {
+            using var delete = Request(
+                HttpMethod.Delete, $"{Api}{Escape(found.Calendar!)}/events/{Escape(target)}?sendUpdates=none", found.Token!);
+            using var deleted = await http.SendAsync(delete, cancellationToken);
+            if (deleted.IsSuccessStatusCode || deleted.StatusCode == HttpStatusCode.Gone)
+            {
+                return new EventWriteOutcome(null, false, found.Master!.Recurring && series, found.Master.TimeZone);
+            }
+
+            logger.LogWarning("Google answered {StatusCode} to an event deletion from /alerts.", (int)deleted.StatusCode);
+            return EventWriteOutcome.Failed(Refusal(deleted.StatusCode, await deleted.Content.ReadAsStringAsync(cancellationToken)));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException
+                                          && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Google Calendar did not answer an event deletion from /alerts ({Failure}).", exception.GetType().Name);
+            return EventWriteOutcome.Failed(CalendarWriteMessages.Unreachable);
+        }
+    }
+
+    /// <summary>
+    /// The master event for an occurrence, and for one occurrence of a
+    /// series, the instance at its start. Or why there is none.
+    /// </summary>
+    private async Task<(string? Calendar, string? Token, GoogleEvent? Master, GoogleEvent? Instance, string? Problem)> FindAsync(
+        PlannedAlert occurrence, bool series, CancellationToken cancellationToken)
+    {
+        // A UID too long for the key column is kept as its hash, which Google cannot look up.
+        var uid = occurrence.EventId;
+        if (uid.Length == 0 || uid.StartsWith("sha256:", StringComparison.Ordinal))
+        {
+            return (null, null, null, null, CalendarWriteMessages.NotFound);
+        }
+
+        var (calendar, token, problem) = await ReadyAsync(cancellationToken);
+        if (problem is not null) return (null, null, null, null, problem);
+
+        try
+        {
+            using var find = Request(HttpMethod.Get, $"{Api}{Escape(calendar!)}/events?iCalUID={Escape(uid)}&maxResults=50", token!);
+            using var listed = await http.SendAsync(find, cancellationToken);
+            if (!listed.IsSuccessStatusCode)
+            {
+                logger.LogWarning("Google answered {StatusCode} looking up an event for /alerts.", (int)listed.StatusCode);
+                return (null, null, null, null, CalendarWriteMessages.Refused(listed.StatusCode));
+            }
+
+            var master = Master(await listed.Content.ReadAsStringAsync(cancellationToken));
+            if (master is null) return (null, null, null, null, CalendarWriteMessages.NotFound);
+            if (!master.OrganisedHere) return (null, null, null, null, CalendarWriteMessages.OnlyOrganizer);
+            if (!master.Recurring || series) return (calendar, token, master, null, null);
+
+            // developers.google.com/calendar/api/v3/reference/events/instances:
+            // timeMin bounds an instance's end, timeMax its start, so this
+            // window holds the instances that start at the occurrence's start
+            // or run through it. The one whose start matches is the pick.
+            var from = InstantPattern.ExtendedIso.Format(occurrence.StartsAt);
+            var until = InstantPattern.ExtendedIso.Format(occurrence.StartsAt + Duration.FromSeconds(1));
+            using var instances = Request(
+                HttpMethod.Get,
+                $"{Api}{Escape(calendar!)}/events/{Escape(master.Id)}/instances?timeMin={Escape(from)}&timeMax={Escape(until)}&maxResults=25",
+                token!);
+            using var answered = await http.SendAsync(instances, cancellationToken);
+            if (!answered.IsSuccessStatusCode)
+            {
+                logger.LogWarning("Google answered {StatusCode} listing the instances of an event for /alerts.", (int)answered.StatusCode);
+                return (null, null, null, null, CalendarWriteMessages.Refused(answered.StatusCode));
+            }
+
+            var instance = Items(await answered.Content.ReadAsStringAsync(cancellationToken))
+                .FirstOrDefault(item => item.Start == occurrence.StartsAt);
+            return instance is null
+                ? (null, null, null, null, CalendarWriteMessages.NotFound)
+                : (calendar, token, master, instance, null);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException
+                                          && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Google Calendar did not answer a lookup for /alerts ({Failure}).", exception.GetType().Name);
+            return (null, null, null, null, CalendarWriteMessages.Unreachable);
+        }
+    }
+
+    /// <summary>The new end: the start plus the new length, or plus the event's own length when none was given.</summary>
+    private static Instant? Ends(Instant start, int? minutes, Instant? oldStart, Instant? oldEnd) =>
+        minutes is { } length
+            ? start + Duration.FromMinutes(length)
+            : oldStart is { } from && oldEnd is { } to ? start + (to - from) : null;
+
+    /// <summary>
+    /// A start or end for events.patch: the wall-clock time and its offset,
+    /// and the zone when Google named one. A series needs the zone: it is the
+    /// clock its recurrence is expanded on.
+    /// </summary>
+    private static Dictionary<string, string> Time(Instant at, string? timeZone, DateTimeZone zone)
+    {
+        var time = new Dictionary<string, string>
+        {
+            ["dateTime"] = OffsetDateTimePattern.Rfc3339.Format(at.InZone(zone).ToOffsetDateTime())
+        };
+        if (timeZone is not null) time["timeZone"] = timeZone;
+        return time;
+    }
+
+    private static string Refusal(HttpStatusCode status, string body) =>
+        Reason(body) == "forbiddenForNonOrganizer" ? CalendarWriteMessages.OnlyOrganizer : CalendarWriteMessages.Refused(status);
+
     /// <summary>The calendar to write to and a token, or the reason there is none.</summary>
     private async Task<(string? Calendar, string? Token, string? Problem)> ReadyAsync(CancellationToken cancellationToken)
     {
@@ -377,6 +612,47 @@ public sealed class GoogleAlertEvents(
         }
 
         return null;
+    }
+
+    /// <summary>The master event among what events.list returned for a UID, as <see cref="Series"/> picks it.</summary>
+    internal static GoogleEvent? Master(string json) => Items(json).FirstOrDefault(item => item.Master);
+
+    /// <summary>Every event item in an events.list or events.instances answer, cancelled ones left out.</summary>
+    internal static IReadOnlyList<GoogleEvent> Items(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array) return [];
+
+        var found = new List<GoogleEvent>();
+        foreach (var item in items.EnumerateArray())
+        {
+            if (item.TryGetProperty("status", out var state) && state.GetString() == "cancelled") continue;
+            if (!item.TryGetProperty("id", out var id) || id.GetString() is not { Length: > 0 } eventId) continue;
+
+            var here = !item.TryGetProperty("organizer", out var organizer)
+                       || (organizer.TryGetProperty("self", out var self) && self.ValueKind == JsonValueKind.True);
+            var recurring = item.TryGetProperty("recurrence", out var rules)
+                            && rules.ValueKind == JsonValueKind.Array
+                            && rules.GetArrayLength() > 0;
+            var (start, zone) = When(item, "start");
+            var (end, _) = When(item, "end");
+            found.Add(new GoogleEvent(
+                eventId, here, recurring, start, end, zone, !item.TryGetProperty("recurringEventId", out _)));
+        }
+
+        return found;
+    }
+
+    /// <summary>A start or end: dateTime as an instant, and the zone Google named.</summary>
+    private static (Instant? At, string? Zone) When(JsonElement item, string name)
+    {
+        if (!item.TryGetProperty(name, out var time) || time.ValueKind != JsonValueKind.Object) return (null, null);
+        var zone = time.TryGetProperty("timeZone", out var named) ? named.GetString() : null;
+        return time.TryGetProperty("dateTime", out var value)
+               && DateTimeOffset.TryParse(value.GetString(), System.Globalization.CultureInfo.InvariantCulture,
+                   System.Globalization.DateTimeStyles.None, out var parsed)
+            ? (Instant.FromDateTimeOffset(parsed), zone)
+            : (null, zone);
     }
 
     /// <summary>Google's reason word for a refusal, from its error body. Never shown: only compared.</summary>

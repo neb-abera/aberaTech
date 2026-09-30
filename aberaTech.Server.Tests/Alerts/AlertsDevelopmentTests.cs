@@ -66,9 +66,14 @@ public sealed class AlertsDevelopmentTests : IDisposable
         Assert.DoesNotContain("E2E cancelled", titles);
         // The development calendar marks the review #critical and not the standup.
         var critical = status.GetProperty("alerts").EnumerateArray()
+            .DistinctBy(alert => alert.GetProperty("title").GetString())
             .ToDictionary(alert => alert.GetProperty("title").GetString()!, alert => alert.GetProperty("critical").GetBoolean());
         Assert.True(critical["E2E review"]);
         Assert.False(critical["E2E standup"]);
+        // The daily event repeats, so Edit and Delete offer every occurrence.
+        Assert.All(
+            status.GetProperty("alerts").EnumerateArray().Where(alert => alert.GetProperty("title").GetString() == "E2E daily"),
+            alert => Assert.True(alert.GetProperty("recurring").GetBoolean()));
 
         using var sent = await owner.PostAsync("/api/alerts/test", null);
         Assert.Equal(HttpStatusCode.OK, sent.StatusCode);

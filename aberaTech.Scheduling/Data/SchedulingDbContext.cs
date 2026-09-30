@@ -59,6 +59,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Events created on /alerts, until Google's iCal feed carries them.</summary>
     public DbSet<AlertCreatedEventRecord> AlertCreatedEvents => Set<AlertCreatedEventRecord>();
 
+    /// <summary>Edits and deletions made on /alerts that the feed may not show yet.</summary>
+    public DbSet<AlertEventChangeRecord> AlertEventChanges => Set<AlertEventChangeRecord>();
+
     /// <summary>Routine alarms, rung by the paired phone. At most <see cref="Alerts.AlertRoutines.MaxRoutines"/>.</summary>
     public DbSet<AlertRoutineRecord> AlertRoutines => Set<AlertRoutineRecord>();
 
@@ -206,6 +209,17 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(created => created.EventId).HasMaxLength(AlertPlanner.MaxKeyLength);
             entity.Property(created => created.Title).HasMaxLength(CreatedEvents.MaxTitleLength).IsRequired();
             entity.Property(created => created.Location).HasMaxLength(CreatedEvents.MaxLocationLength);
+        });
+
+        builder.Entity<AlertEventChangeRecord>(entity =>
+        {
+            entity.HasKey(change => change.Id);
+            entity.Property(change => change.Id).ValueGeneratedNever();
+            entity.Property(change => change.EventId).HasMaxLength(AlertPlanner.MaxKeyLength).IsRequired();
+            entity.Property(change => change.Title).HasMaxLength(CreatedEvents.MaxTitleLength);
+            entity.Property(change => change.Location).HasMaxLength(CreatedEvents.MaxLocationLength);
+            entity.Property(change => change.PickedLocation).HasMaxLength(CreatedEvents.MaxLocationLength);
+            entity.Property(change => change.TimeZone).HasMaxLength(Alerts.AlertSettings.MaxTimeZoneLength);
         });
 
         builder.Entity<AlertRoutineRecord>(entity =>
