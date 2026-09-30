@@ -219,10 +219,10 @@ describe("the owner", () => {
       /It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min\./,
     );
     expect(paragraph.textContent).toContain(
-      "An alarm is one Pushover message.",
+      "Ring until stopped is one Pushover message.",
     );
     expect(paragraph.textContent).toContain(
-      "A notification is one message with one sound, and follows the phone's settings.",
+      "Ring once is one message with one sound. It follows the phone's settings.",
     );
     expect(paragraph.textContent).toContain(
       "An event with no mark and no type set here sends nothing.",
@@ -244,7 +244,7 @@ describe("the owner", () => {
     await settle();
     expect(
       screen.getByText(
-        /A notification is one message with one sound, even during Pushover's quiet hours\. An event with no mark and no type set here sends a notification\./,
+        /Ring once is one message with one sound, even during Pushover's quiet hours\. An event with no mark and no type set here rings once\./,
       ),
     ).toBeTruthy();
   });
@@ -258,20 +258,20 @@ describe("the owner", () => {
     expect(within(loud).getByText("Critical")).toBeTruthy();
     expect(within(quiet).queryByText("Critical")).toBeNull();
     expect(loud.textContent).toContain(
-      "Alarm: from #critical in the calendar. The alarm settings apply.",
+      "Ring until stopped: from #critical in the calendar. The Ring until stopped settings apply.",
     );
     expect(quiet.textContent).toContain(
-      "Sends nothing: the default for unmarked events. Send test is off until you choose Notification or Alarm.",
+      "Sends nothing: the default for unmarked events. Send test is off until you choose Ring once or Ring until stopped.",
     );
     const at = "Review at Wed, Oct 28, 2:00 PM EDT";
     expect(
       screen
-        .getByRole("button", { name: `Set ${at} to None` })
+        .getByRole("button", { name: `Set ${at} to Off` })
         .getAttribute("aria-pressed"),
     ).toBe("true");
     expect(
       screen
-        .getByRole("button", { name: `Set ${at} to Alarm` })
+        .getByRole("button", { name: `Set ${at} to Ring until stopped` })
         .getAttribute("aria-pressed"),
     ).toBe("false");
     // An event that sends nothing has nothing to test.
@@ -303,7 +303,7 @@ describe("the owner", () => {
     const at = "Review at Wed, Oct 28, 2:00 PM EDT";
 
     fireEvent.click(
-      screen.getByRole("button", { name: `Set ${at} to Notification` }),
+      screen.getByRole("button", { name: `Set ${at} to Ring once` }),
     );
     await settle();
 
@@ -315,12 +315,10 @@ describe("the owner", () => {
       ["/api/alerts/event-type", { key: review.key, type: "notification" }],
     ]);
     expect(
-      screen.getByText("Review is set to Notification, every occurrence."),
+      screen.getByText("Review is set to Ring once, every occurrence."),
     ).toBeTruthy();
     expect(
-      screen.getByText(
-        "Notification: set here. The notification settings apply.",
-      ),
+      screen.getByText("Ring once: set here. The Ring once settings apply."),
     ).toBeTruthy();
     expect(
       screen
@@ -357,14 +355,14 @@ describe("the owner", () => {
     await settle();
     expect(
       screen.getByText(
-        "Each type holds for every occurrence of the event. Alarm also adds #critical to the event in Google Calendar. None and Notification remove it.",
+        "Each type holds for every occurrence of the event. Ring until stopped also adds #critical to the event in Google Calendar. Off and Ring once remove it.",
       ),
     ).toBeTruthy();
     expect(screen.queryByText("Google Calendar was not changed")).toBeNull();
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Alarm",
+        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Ring until stopped",
       }),
     );
     await settle();
@@ -391,7 +389,7 @@ describe("the owner", () => {
     await settle();
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Alarm",
+        name: "Set Review at Wed, Oct 28, 2:00 PM EDT to Ring until stopped",
       }),
     );
     await settle();
@@ -434,16 +432,12 @@ describe("the owner", () => {
     mount(respond(200, state()), respond(200, { sent: true }));
     await settle();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Send test notification" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Test: ring once" }));
     await settle();
 
     expect(posts()).toEqual([["/api/alerts/test-notification", undefined]]);
     expect(
-      screen.getByText(
-        "Test notification sent. Check the phone for one sound.",
-      ),
+      screen.getByText("Ring once test sent. Check the phone for one sound."),
     ).toBeTruthy();
   });
 
@@ -459,7 +453,7 @@ describe("the owner", () => {
     await settle();
     expect(
       screen.getByText(
-        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+        "Ring until stopped: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
       ),
     ).toBeTruthy();
     expect(
@@ -476,6 +470,38 @@ describe("the owner", () => {
     expect(screen.getByRole("heading", { name: "Settings" })).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/emergency/i);
     expect(document.body.textContent).not.toMatch(/priority 2/i);
+  });
+
+  it("names the types Ring until stopped, Ring once and Off, and no button or heading Alarm, Notification or None", async () => {
+    mount(respond(200, state()));
+    await settle();
+
+    for (const label of ["Ring until stopped", "Ring once", "Off"])
+      expect(
+        screen.getAllByText(label, { exact: true }).length,
+      ).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("button", { name: "Test: ring until stopped" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Test: ring once" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Ring until stopped settings" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Ring once settings" }),
+    ).toBeTruthy();
+
+    const old = /\b(Alarms?|Notifications?|None)\b/;
+    const named = [
+      ...screen.getAllByRole("button"),
+      ...screen.getAllByRole("heading"),
+    ].flatMap((element) => [
+      element.getAttribute("aria-label") ?? "",
+      element.textContent ?? "",
+    ]);
+    expect(named.filter((name) => old.test(name))).toEqual([]);
   });
 
   it("saves the settings, then shows what the server stored", async () => {
@@ -503,7 +529,7 @@ describe("the owner", () => {
     expect(screen.getByText("Settings saved.")).toBeTruthy();
     expect(
       screen.getByText(
-        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 100 min.",
+        "Ring until stopped: rings every 120 s until you acknowledge it on the phone or here, and stops after 100 min.",
       ),
     ).toBeTruthy();
   });
@@ -620,16 +646,20 @@ describe("the owner", () => {
     });
     await settle();
 
-    fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Test: ring until stopped" }),
+    );
     await settle();
     expect(posts()[0]).toEqual(["/api/alerts/test", undefined]);
     expect(
       screen.getByText(
-        "Test alert sent as an alarm. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
+        "Ring until stopped test sent. It rings every 60 s until you acknowledge it on the phone or here, and stops after 50 min.",
       ),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Send test alert" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Test: ring until stopped" }),
+    );
     await settle();
     expect(
       screen.getByText(/Pushover refused the test: HTTP 400/),
@@ -730,7 +760,7 @@ describe("the owner", () => {
     ]);
     expect(
       screen.getByText(
-        'Test of Standup sent, titled "Test: Standup", as an alarm.',
+        'Test of Standup sent, titled "Test: Standup", set to ring until stopped.',
       ),
     ).toBeTruthy();
 
@@ -746,7 +776,7 @@ describe("the owner", () => {
     await settle();
 
     const how = screen.getByRole("region", {
-      name: "How events become alarms",
+      name: "How events alert",
     });
     const text = how.textContent ?? "";
     expect(text).toContain(
@@ -760,7 +790,7 @@ describe("the owner", () => {
     );
     expect(text).toContain("The choice holds for every occurrence");
     expect(text).toContain(
-      "None: nothing is sent. The event is still listed above.",
+      "Off: nothing is sent. The event is still listed above.",
     );
     expect(text).toContain("All-day events are left out.");
     expect(text).toContain(
@@ -790,10 +820,10 @@ describe("the owner", () => {
     );
     await settle();
     const on =
-      screen.getByRole("region", { name: "How events become alarms" })
-        .textContent ?? "";
+      screen.getByRole("region", { name: "How events alert" }).textContent ??
+      "";
     expect(on).toContain("in the next 1 hour is planned");
-    expect(on).toContain("Every other event gets one notification");
+    expect(on).toContain("Every other event rings once");
     expect(on).toContain("All-day events alert too");
   });
 

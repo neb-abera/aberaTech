@@ -335,11 +335,11 @@ public static class AlertsEndpoints
             return Results.NoContent();
         }).RequireRateLimiting(ActionsPolicy);
 
-        // Send test alert: an alarm, with the alarm settings.
+        // Test: ring until stopped. An alarm, with the alarm settings.
         group.MapPost("/test", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
             Answer(await dispatcher.SendTestAsync(AlertTypes.Alarm, cancellationToken))).RequireRateLimiting(ActionsPolicy);
 
-        // Send test notification: one sound, with the notification settings.
+        // Test: ring once. One sound, with the notification settings.
         group.MapPost("/test-notification", async (AlertDispatcher dispatcher, CancellationToken cancellationToken) =>
             Answer(await dispatcher.SendTestAsync(AlertTypes.Notification, cancellationToken))).RequireRateLimiting(ActionsPolicy);
 
@@ -427,7 +427,7 @@ public static class AlertsEndpoints
             group.MapGet("/fake/cancelled", (FakeAlertServices fake) => Results.Ok(fake.Cancelled));
 
             // The last message the fake Pushover took, so the browser suite
-            // can see what Send test alert asked for.
+            // can see what Test: ring until stopped asked for.
             group.MapGet("/fake/sent", (FakeAlertServices fake) =>
                 fake.Sent.Count == 0 ? Results.NotFound() : Results.Ok(fake.Sent[^1]));
         }

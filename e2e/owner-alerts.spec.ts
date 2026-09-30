@@ -17,7 +17,7 @@ test.describe.configure({ mode: "serial" });
 async function signIn(page: Page) {
   await page.goto("/alerts");
   const settled =
-    'a:has-text("Sign in with Google"), button:has-text("Send test alert")';
+    'a:has-text("Sign in with Google"), button:has-text("Test: ring until stopped")';
   await page.locator(settled).first().waitFor({ timeout: 15_000 });
   const button = page.getByRole("link", { name: "Sign in with Google" });
   if (await button.count()) {
@@ -26,7 +26,7 @@ async function signIn(page: Page) {
     await page.locator(settled).first().waitFor({ timeout: 15_000 });
   }
   await expect(
-    page.getByRole("button", { name: "Send test alert" }),
+    page.getByRole("button", { name: "Test: ring until stopped" }),
   ).toBeVisible();
 }
 
@@ -104,7 +104,7 @@ test.describe("/alerts", () => {
     const review = list.getByRole("listitem").filter({ hasText: "E2E review" });
     await expect(review.getByText("Critical", { exact: true })).toBeVisible();
     await expect(
-      review.getByText("Alarm: from #critical in the calendar."),
+      review.getByText("Ring until stopped: from #critical in the calendar."),
     ).toBeVisible();
     await expect(list.getByText("E2E review #critical")).toHaveCount(0);
     // The standup is unmarked: it sends nothing and is still listed.
@@ -155,11 +155,13 @@ test.describe("/alerts", () => {
       page.getByRole("button", { name: /^Skip E2E standup at / }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent/)).toBeVisible();
+    await page
+      .getByRole("button", { name: "Test: ring until stopped" })
+      .click();
+    await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
     await refresh.click();
     await expect(
-      page.getByText(/Last send: Test alert, .*, sent\./),
+      page.getByText(/Last send: Test: ring until stopped, .*, sent\./),
     ).toBeVisible();
   });
 
@@ -201,13 +203,15 @@ test.describe("/alerts", () => {
     await expect(repeat).toHaveValue("120");
     await expect(
       page.getByText(
-        "Alarm: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+        "Ring until stopped: rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
       ),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Send test alert" }).click();
+    await page
+      .getByRole("button", { name: "Test: ring until stopped" })
+      .click();
     await expect(
       page.getByText(
-        "Test alert sent as an alarm. It rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
+        "Ring until stopped test sent. It rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
       ),
     ).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
@@ -231,7 +235,9 @@ test.describe("/alerts", () => {
     await reset(page);
     await page.reload();
 
-    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Settings", exact: true }),
+    ).toBeVisible();
     expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
 
     const saved = await page.request.put("/api/alerts/settings", {
@@ -246,8 +252,10 @@ test.describe("/alerts", () => {
     expect((await saved.json()).settings).not.toHaveProperty("priority");
     await page.reload();
     expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
-    await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    await page
+      .getByRole("button", { name: "Test: ring until stopped" })
+      .click();
+    await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
     expect(sent).toMatchObject({ priority: "2", retry: "45", expire: "1200" });
 
@@ -271,8 +279,10 @@ test.describe("/alerts", () => {
 
     await page.reload();
     await expect(sound).toHaveValue("aberaalarm");
-    await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    await page
+      .getByRole("button", { name: "Test: ring until stopped" })
+      .click();
+    await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
     expect(sent).toMatchObject({ priority: "2", sound: "aberaalarm" });
 
@@ -308,7 +318,7 @@ test.describe("/alerts", () => {
       .click();
     await expect(
       page.getByText(
-        'Test of E2E review sent, titled "Test: E2E review", as an alarm.',
+        'Test of E2E review sent, titled "Test: E2E review", set to ring until stopped.',
       ),
     ).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
@@ -334,25 +344,27 @@ test.describe("/alerts", () => {
     await reset(page);
     await page.reload();
 
-    await page.getByRole("button", { name: "Send test alert" }).click();
-    await expect(page.getByText(/Test alert sent as an alarm/)).toBeVisible();
+    await page
+      .getByRole("button", { name: "Test: ring until stopped" })
+      .click();
+    await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
     const alarm = await (
       await page.request.get("/api/alerts/fake/sent")
     ).json();
     expect(alarm).toMatchObject({
-      title: "Test alert",
+      title: "Test: ring until stopped",
       priority: "2",
       retry: "60",
       expire: "10800",
     });
 
-    await page.getByRole("button", { name: "Send test notification" }).click();
-    await expect(page.getByText(/Test notification sent/)).toBeVisible();
+    await page.getByRole("button", { name: "Test: ring once" }).click();
+    await expect(page.getByText(/Ring once test sent/)).toBeVisible();
     const plain = await (
       await page.request.get("/api/alerts/fake/sent")
     ).json();
     expect(plain).toMatchObject({
-      title: "Test notification",
+      title: "Test: ring once",
       priority: "0",
       retry: null,
       expire: null,
@@ -374,26 +386,24 @@ test.describe("/alerts", () => {
       name: /^Send test of E2E standup at /,
     });
     const notification = page.getByRole("button", {
-      name: /^Set E2E standup at .* to Notification$/,
+      name: /^Set E2E standup at .* to Ring once$/,
     });
     await expect(test).toBeDisabled();
 
     await notification.click();
     await expect(
-      page.getByText("E2E standup is set to Notification, every occurrence."),
+      page.getByText("E2E standup is set to Ring once, every occurrence."),
     ).toBeVisible();
     await page.reload();
     await expect(notification).toHaveAttribute("aria-pressed", "true");
     await expect(
-      standup.getByText(
-        "Notification: set here. The notification settings apply.",
-      ),
+      standup.getByText("Ring once: set here. The Ring once settings apply."),
     ).toBeVisible();
 
     await test.click();
     await expect(
       page.getByText(
-        'Test of E2E standup sent, titled "Test: E2E standup", as a notification.',
+        'Test of E2E standup sent, titled "Test: E2E standup", set to ring once.',
       ),
     ).toBeVisible();
     const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
@@ -414,7 +424,7 @@ test.describe("/alerts", () => {
     ).toBeVisible();
     await page.reload();
     await expect(
-      page.getByRole("button", { name: /^Set E2E standup at .* to None$/ }),
+      page.getByRole("button", { name: /^Set E2E standup at .* to Off$/ }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(test).toBeDisabled();
   });
@@ -440,7 +450,7 @@ test.describe("/alerts", () => {
     await form.getByLabel(/^Location/).fill("Main St");
     await form.getByLabel(/^Reminder in minutes before/).fill("20");
     await expect(
-      form.getByRole("button", { name: "New event type Alarm" }),
+      form.getByRole("button", { name: "New event type Ring until stopped" }),
     ).toHaveAttribute("aria-pressed", "true");
     await form.getByRole("button", { name: "Add event" }).click();
 
@@ -454,17 +464,23 @@ test.describe("/alerts", () => {
     await expect(dentist).toBeVisible();
     await expect(dentist.getByText("Main St")).toBeVisible();
     await expect(
-      dentist.getByText("Alarm: set here. The alarm settings apply."),
+      dentist.getByText(
+        "Ring until stopped: set here. The Ring until stopped settings apply.",
+      ),
     ).toBeVisible();
     // Still listed after a reload: the server keeps it until the feed has it.
     await page.reload();
     await expect(dentist).toBeVisible();
 
     await page
-      .getByRole("button", { name: /^Set E2E standup at .* to Alarm$/ })
+      .getByRole("button", {
+        name: /^Set E2E standup at .* to Ring until stopped$/,
+      })
       .click();
     await expect(
-      page.getByText("E2E standup is set to Alarm, every occurrence."),
+      page.getByText(
+        "E2E standup is set to Ring until stopped, every occurrence.",
+      ),
     ).toBeVisible();
     await expect(page.getByText("Google Calendar was not changed")).toHaveCount(
       0,
@@ -498,12 +514,12 @@ test.describe("/alerts", () => {
     await reset(page);
     await page.reload();
 
-    const how = page.getByRole("region", { name: "How events become alarms" });
+    const how = page.getByRole("region", { name: "How events alert" });
     await expect(how).toContainText(
       "Every event with a start time in the next 48 hours is planned and listed above.",
     );
     await expect(how).toContainText(
-      "an event becomes an alarm when its title or description in Google Calendar has #critical",
+      "an event rings until stopped when its title or description in Google Calendar has #critical",
     );
     await expect(how).toContainText(
       "Every other event sends nothing, the default for unmarked events under Settings.",
@@ -706,11 +722,11 @@ test.describe("/alerts", () => {
     await page.getByRole("switch", { name: "Ring in this browser" }).click();
 
     await expect(ringing).toBeVisible();
-    await expect(page).toHaveTitle("Alarm: E2E drill");
+    await expect(page).toHaveTitle("Ringing: E2E drill");
     await ringing.getByRole("button", { name: "Acknowledge" }).click();
 
     await expect(ringing).toHaveCount(0);
-    await expect(page).not.toHaveTitle(/Alarm:/);
+    await expect(page).not.toHaveTitle(/Ringing:/);
     const drill = page
       .getByRole("list", { name: "Next alerts" })
       .getByRole("listitem")

@@ -265,7 +265,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         Assert.True(result.Ok);
         var sent = Assert.Single(box.Pushover.Requests);
         Assert.Equal("2", sent.Form["priority"]);
-        Assert.Equal("Test alert", sent.Form["title"]);
+        Assert.Equal("Test: ring until stopped", sent.Form["title"]);
         Assert.Contains("8:00 AM EDT", sent.Form["message"]);
     }
 
@@ -545,13 +545,13 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         Assert.True(result.Ok);
         var sent = Assert.Single(box.Pushover.Requests);
-        Assert.Equal("Test notification", sent.Form["title"]);
+        Assert.Equal("Test: ring once", sent.Form["title"]);
         Assert.Equal("1", sent.Form["priority"]);
         Assert.Equal("bike", sent.Form["sound"]);
         Assert.False(sent.Form.ContainsKey("retry"));
         Assert.False(sent.Form.ContainsKey("expire"));
-        Assert.Contains("as a notification", sent.Form["message"]);
-        Assert.Equal("Test notification", box.Status.Snapshot().LastSend!.Title);
+        Assert.Contains("set to ring once", sent.Form["message"]);
+        Assert.Equal("Test: ring once", box.Status.Snapshot().LastSend!.Title);
     }
 
     [Fact]

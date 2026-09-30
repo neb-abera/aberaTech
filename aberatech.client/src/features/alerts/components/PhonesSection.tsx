@@ -155,8 +155,8 @@ export default function PhonesSection({
         Phones
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-        A paired iPhone running Abera Alarms rings every alarm itself, offline
-        too. Up to 5 phones.
+        A paired iPhone running Abera Alarms rings each event set to Ring until
+        stopped on its own, offline too. Up to 5 phones.
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
         A push asks the phone to update its alarms at once. iOS can delay or

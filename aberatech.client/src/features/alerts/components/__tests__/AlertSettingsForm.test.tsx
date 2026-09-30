@@ -88,7 +88,7 @@ describe("the settings form", () => {
     mount();
 
     const alarms = screen.getByRole("heading", {
-      name: "Alarms: events marked #critical or set to Alarm",
+      name: "Ring until stopped settings",
     });
     expect(alarms).toBeTruthy();
     expect(screen.queryByText("Priority")).toBeNull();
@@ -255,19 +255,19 @@ describe("the settings form", () => {
     });
 
     for (const heading of [
-      "Alarms: events marked #critical or set to Alarm",
-      "Notifications: events set to Notification",
+      "Ring until stopped settings",
+      "Ring once settings",
       "Calendar",
     ])
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     const pressed = (name: string) =>
       screen.getByRole("button", { name }).getAttribute("aria-pressed");
-    expect(pressed("Notification priority High")).toBe("true");
-    expect(pressed("Notification priority Normal")).toBe("false");
-    expect(pressed("Unmarked events: Notification")).toBe("true");
-    expect(pressed("Unmarked events: None")).toBe("false");
+    expect(pressed("Ring once priority High")).toBe("true");
+    expect(pressed("Ring once priority Normal")).toBe("false");
+    expect(pressed("Unmarked events: Ring once")).toBe("true");
+    expect(pressed("Unmarked events: Off")).toBe("false");
     expect(
-      (screen.getByLabelText("Notification sound") as HTMLSelectElement).value,
+      (screen.getByLabelText("Ring once sound") as HTMLSelectElement).value,
     ).toBe("siren");
   });
 
@@ -286,13 +286,13 @@ describe("the settings form", () => {
     const { saver } = mount();
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Notification priority High" }),
+      screen.getByRole("button", { name: "Ring once priority High" }),
     );
-    fireEvent.change(screen.getByLabelText("Notification sound"), {
+    fireEvent.change(screen.getByLabelText("Ring once sound"), {
       target: { value: "siren" },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: "Unmarked events: Notification" }),
+      screen.getByRole("button", { name: "Unmarked events: Ring once" }),
     );
     fireEvent.click(saveButton());
     await flush();
@@ -317,7 +317,7 @@ describe("the settings form", () => {
     }));
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Unmarked events: Notification" }),
+      screen.getByRole("button", { name: "Unmarked events: Ring once" }),
     );
     fireEvent.click(saveButton());
     await flush();
@@ -417,7 +417,7 @@ describe("the settings form", () => {
       />,
     );
 
-    for (const label of ["Sound", "Notification sound"]) {
+    for (const label of ["Sound", "Ring once sound"]) {
       const select = screen.getByLabelText(label) as HTMLSelectElement;
       const groups = Array.from(select.querySelectorAll("optgroup")).map(
         (group) => group.label,
@@ -445,7 +445,7 @@ describe("the settings form", () => {
     expect(select.value).toBe("aberaalarm");
     expect(select.querySelector("optgroup")?.label).toBe("Your sounds");
     const notification = screen.getByLabelText(
-      "Notification sound",
+      "Ring once sound",
     ) as HTMLSelectElement;
     expect(
       Array.from(notification.querySelectorAll("optgroup")).map(
@@ -522,7 +522,7 @@ describe("the settings form", () => {
     expect(delay.max).toBe("900");
     expect(
       screen.getByText(
-        "Pushover sends at the alarm's time, with the paired phones.",
+        "Pushover sends at the alert's time, with the paired phones.",
       ),
     ).toBeTruthy();
 
