@@ -302,7 +302,7 @@ public sealed class AlertPushRouteTests : IDisposable
     // ------------------------------------------------------------------ what pushes
 
     /// <summary>Each change a phone must hear about, made the way the page or the phone makes it.</summary>
-    public static IEnumerable<object[]> Triggers =>
+    public static IEnumerable<object?[]> Triggers =>
     [
         ["mute from the phone", "phone", "POST", "/api/alerts/mute", "{\"until\":\"hour\"}"],
         ["unmute from the page", "owner", "POST", "/api/alerts/unmute", "{}"],
@@ -315,13 +315,24 @@ public sealed class AlertPushRouteTests : IDisposable
         ["new event from the phone", "phone", "POST", "/api/alerts/events",
             "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T11:00:00-04:00\",\"durationMinutes\":30,\"type\":\"alarm\",\"leadMinutes\":20}"],
         ["new event from the page", "owner", "POST", "/api/alerts/events",
-            "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T11:00:00-04:00\",\"durationMinutes\":30,\"type\":\"none\"}"]
+            "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T11:00:00-04:00\",\"durationMinutes\":30,\"type\":\"none\"}"],
+        ["routine added on the page", "owner", "POST", "/api/alerts/routines", "{\"label\":\"Wake up\",\"hour\":6,\"minute\":30,\"days\":[1,2,3,4,5]}"],
+        ["routine added from the phone", "phone", "POST", "/api/alerts/routines", "{\"hour\":6,\"minute\":30,\"days\":[]}"],
+        ["routine changed on the page", "owner", "PUT", $"/api/alerts/routines/{SeededRoutine}",
+            "{\"label\":\"Gym\",\"hour\":5,\"minute\":0,\"days\":[1,3,5],\"enabled\":true,\"snoozeMinutes\":9}"],
+        ["ring-once routine turned off by the phone", "phone", "PUT", $"/api/alerts/routines/{SeededRoutine}",
+            "{\"label\":\"Nap\",\"hour\":14,\"minute\":0,\"days\":[],\"enabled\":false,\"snoozeMinutes\":9}"],
+        ["routine deleted on the page", "owner", "DELETE", $"/api/alerts/routines/{SeededRoutine}", null],
+        ["routine deleted from the phone", "phone", "DELETE", $"/api/alerts/routines/{SeededRoutine}", null]
     ];
+
+    /// <summary>A routine alarm the change triggers above find stored.</summary>
+    private static readonly Guid SeededRoutine = Guid.Parse("7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f");
 
     [Theory]
     [MemberData(nameof(Triggers))]
     public async Task Each_change_pushes_every_phone_with_a_token_the_caller_included(
-        string change, string caller, string method, string path, string body)
+        string change, string caller, string method, string path, string? body)
     {
         var first = await RegisteredAsync(ApnsFixture.Token);
         var second = await PairAsync("iPad");
@@ -332,6 +343,8 @@ public sealed class AlertPushRouteTests : IDisposable
         }
 
         await PairAsync("No push");
+        await _store.AddRoutineAsync(
+            new AlertRoutine(SeededRoutine, "Nap", 14, 0, [], true, 9, Eight), CancellationToken.None);
         var before = await _devices.PlanVersionAsync(CancellationToken.None);
 
         using var client = caller == "phone" ? Phone(first.Token) : Owner();
