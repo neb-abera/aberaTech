@@ -647,6 +647,15 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) => Down<bool>();
 
+        public Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken) =>
+            Down<IReadOnlyList<AlertEventChange>>();
+
+        public Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken) => Down<bool>();
+
         public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => Down<IReadOnlyList<AlertRoutine>>();
 
         public Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken) => Down<bool>();
@@ -725,6 +734,18 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
             _inner.ForgetCreatedEventsAsync(eventIds, cancellationToken);
+
+        public Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken) =>
+            _inner.UpdateCreatedEventAsync(updated, cancellationToken);
+
+        public Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken) =>
+            _inner.EventChangesAsync(cancellationToken);
+
+        public Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken) =>
+            _inner.AddEventChangeAsync(change, cancellationToken);
+
+        public Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken) =>
+            _inner.ForgetEventChangesAsync(ids, cancellationToken);
 
         public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => _inner.RoutinesAsync(cancellationToken);
 
@@ -1064,6 +1085,18 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task ForgetCreatedEventsAsync(IReadOnlyCollection<string> eventIds, CancellationToken cancellationToken) =>
             Task.FromException(new TimeoutException("database down"));
+
+        public Task UpdateCreatedEventAsync(CreatedAlertEvent updated, CancellationToken cancellationToken) =>
+            _inner.UpdateCreatedEventAsync(updated, cancellationToken);
+
+        public Task<IReadOnlyList<AlertEventChange>> EventChangesAsync(CancellationToken cancellationToken) =>
+            _inner.EventChangesAsync(cancellationToken);
+
+        public Task AddEventChangeAsync(AlertEventChange change, CancellationToken cancellationToken) =>
+            _inner.AddEventChangeAsync(change, cancellationToken);
+
+        public Task ForgetEventChangesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken) =>
+            _inner.ForgetEventChangesAsync(ids, cancellationToken);
 
         public Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) => _inner.RoutinesAsync(cancellationToken);
 

@@ -443,6 +443,57 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task An_edit_and_a_deletion_are_rows_every_replica_reads_back_whole_and_forgets_by_id()
+    {
+        var edit = new AlertEventChange(
+            Guid.NewGuid(), "daily@google.com", Series: true, Start, Deleted: false, "Daily sync", LocationSet: true, null,
+            Start + Duration.FromMinutes(90), Start + Duration.FromMinutes(120), 30, 20, "America/New_York", Now,
+            AlertAt: Start + Duration.FromMinutes(70), Reminder: true, Critical: true, Recurring: true, PickedLocation: "Room 2");
+        var deletion = new AlertEventChange(
+            Guid.NewGuid(), "standup@google.com", Series: false, Start, Deleted: true, null, false, null, null, null, null, null, null,
+            Now + Duration.FromSeconds(1));
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.AddEventChangeAsync(deletion, CancellationToken.None);
+            await store.AddEventChangeAsync(edit, CancellationToken.None);
+        }
+
+        await using (var check = Context())
+        {
+            var store = new DatabaseAlertStore(check);
+            // Oldest first, every field as written.
+            Assert.Equal([edit, deletion], await store.EventChangesAsync(CancellationToken.None));
+            await store.ForgetEventChangesAsync([edit.Id, Guid.NewGuid()], CancellationToken.None);
+        }
+
+        await using var after = Context();
+        Assert.Equal([deletion], await new DatabaseAlertStore(after).EventChangesAsync(CancellationToken.None));
+    }
+
+    [PostgresFact]
+    public async Task An_edit_of_a_kept_created_event_rewrites_its_row_and_a_gone_row_stays_gone()
+    {
+        var dentist = new CreatedAlertEvent("dentist@google.com", "Dentist", "Main St", Start, Start + Duration.FromMinutes(30), 20, true);
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.AddCreatedEventAsync(dentist, Now, CancellationToken.None);
+            await store.UpdateCreatedEventAsync(
+                dentist with { Title = "Dentist moved", Location = null, StartsAt = Start + Duration.FromHours(1), EndsAt = Start + Duration.FromHours(2), LeadMinutes = 5 },
+                CancellationToken.None);
+            await store.UpdateCreatedEventAsync(dentist with { EventId = "gone@google.com" }, CancellationToken.None);
+        }
+
+        await using var check = Context();
+        var row = Assert.Single(await new DatabaseAlertStore(check).CreatedEventsAsync(CancellationToken.None));
+        Assert.Equal(
+            dentist with { Title = "Dentist moved", Location = null, StartsAt = Start + Duration.FromHours(1), EndsAt = Start + Duration.FromHours(2), LeadMinutes = 5 },
+            row);
+    }
+
+    [PostgresFact]
     public async Task A_row_saved_at_priority_0_before_the_migration_reads_back_as_an_alarm_that_repeats()
     {
         using var database = new TestDatabase("alertsmigrate");

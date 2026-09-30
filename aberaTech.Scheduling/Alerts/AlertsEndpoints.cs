@@ -4,15 +4,17 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
-/// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, Save
-/// settings, three test sends, the routine alarms and the paired phones. Plain JSON over HTTPS,
+/// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, a new
+/// event, an event's edit and deletion, Save settings, three test sends, the
+/// routine alarms and the paired phones. Plain JSON over HTTPS,
 /// so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
 /// The owner's Google sign-in reaches every route. A paired phone's token
-/// reaches the eleven a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// reaches the thirteen a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
 /// the status, mute, unmute, skip, unskip, ack, an event's type, a new
-/// event, and a routine alarm's create, update and delete. The phone's own push registration takes its token alone
+/// event, an event's edit and deletion, and a routine alarm's create, update
+/// and delete. The phone's own push registration takes its token alone
 /// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
 /// limit. Every change a phone holds bumps the plan version, and
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
@@ -268,6 +270,112 @@ public static class AlertsEndpoints
             return Results.Created((string?)null, await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // An edit of one listed occurrence, or of every occurrence of its
+        // series, on the calendar the feed reads. The key travels in the
+        // body alone: it holds the event's UID. Kept here until the feed
+        // shows it, so the list and the alerts follow it at once
+        // (EventChanges). The description, #critical and the stored type
+        // are left as they are.
+        shared.MapPut("/events", async (
+            EditEventRequest request,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            GoogleAlertEvents google,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var now = clock.GetCurrentInstant();
+            var (errors, edit) = EditEventRequest.Validate(request, now);
+            if (edit is null) return Results.ValidationProblem(errors);
+
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var snapshot = status.Snapshot();
+            var before = await AlertsPlan.CurrentAsync(snapshot, store, settings, now, cancellationToken);
+            var alert = before.FirstOrDefault(planned => planned.Key == request.Key);
+            if (alert is null) return Results.NotFound();
+
+            var outcome = await google.EditAsync(
+                alert, request.Scope == EventScopes.Series && alert.Recurring, edit, snapshot.Zone, cancellationToken);
+            if (outcome.Problem is not null) return WriteProblem(outcome);
+
+            var zone = outcome.Series && outcome.TimeZone is { } named
+                ? DateTimeZoneProviders.Tzdb.GetZoneOrNull(named) ?? snapshot.Zone
+                : snapshot.Zone;
+            var change = AlertEventChange.Edit(
+                Guid.NewGuid(), alert, outcome.Series, edit, outcome.Series ? outcome.TimeZone : null, zone, now);
+            await store.AddEventChangeAsync(change, cancellationToken);
+
+            // A created event the feed does not have yet is planned from its
+            // row, which takes the edit too.
+            var created = await store.CreatedEventsAsync(cancellationToken);
+            if (created.FirstOrDefault(row => AlertPlanner.EventIdFor(row.EventId) == alert.EventId) is { } row)
+            {
+                var start = edit.StartsAt;
+                await store.UpdateCreatedEventAsync(
+                    row with
+                    {
+                        Title = edit.Title,
+                        Location = edit.LocationSet ? edit.Location : row.Location,
+                        StartsAt = start,
+                        EndsAt = start + (edit.DurationMinutes is { } minutes ? Duration.FromMinutes(minutes) : row.EndsAt - row.StartsAt),
+                        LeadMinutes = edit.LeadMinutes ?? row.LeadMinutes
+                    },
+                    cancellationToken);
+            }
+
+            await EventMoves.CarryAsync(before, change, zone, store, now, cancellationToken);
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // A deletion of one listed occurrence, or of the whole event. The
+        // key travels in the body alone. Kept here until the feed no longer
+        // lists it, so it is gone from the list and never alerts. A repeat
+        // Pushover is still making for it is cancelled.
+        shared.MapPost("/events/delete", async (
+            DeleteEventRequest request,
+            AlertDispatcher dispatcher,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            GoogleAlertEvents google,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var errors = new Dictionary<string, string[]>();
+            if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
+            if (request.Scope is not (EventScopes.Occurrence or EventScopes.Series)) errors["scope"] = [EventScopes.Message];
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+
+            var now = clock.GetCurrentInstant();
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var plan = await AlertsPlan.CurrentAsync(status.Snapshot(), store, settings, now, cancellationToken);
+            var alert = plan.FirstOrDefault(planned => planned.Key == request.Key);
+            if (alert is null) return Results.NotFound();
+
+            var outcome = await google.DeleteAsync(alert, request.Scope == EventScopes.Series && alert.Recurring, cancellationToken);
+            if (outcome.Problem is not null) return WriteProblem(outcome);
+
+            await store.AddEventChangeAsync(AlertEventChange.Deletion(Guid.NewGuid(), alert, outcome.Series, now), cancellationToken);
+            var created = await store.CreatedEventsAsync(cancellationToken);
+            var pending = created.Where(row => AlertPlanner.EventIdFor(row.EventId) == alert.EventId).Select(row => row.EventId).ToList();
+            if (pending.Count > 0) await store.ForgetCreatedEventsAsync(pending, cancellationToken);
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            var gone = outcome.Series ? plan.Where(planned => planned.EventId == alert.EventId).Select(planned => planned.Key) : [alert.Key];
+            foreach (var key in gone) await dispatcher.CancelRepeatsAsync(key, cancellationToken);
+
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         // Routine alarms: the phone rings them as phone alarms, never
         // through Pushover or a browser. The server stores them and fires
         // nothing. Each change pushes the phones, like any change they hold.
@@ -440,6 +548,10 @@ public static class AlertsEndpoints
                 CancellationToken cancellationToken) =>
             {
                 fake.Reanchor();
+                // Edits and deletions an earlier run made would still hide or
+                // move the standing events.
+                var changes = await store.EventChangesAsync(cancellationToken);
+                await store.ForgetEventChangesAsync([.. changes.Select(change => change.Id)], cancellationToken);
                 await worker.ReadNowAsync(cancellationToken);
                 return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
@@ -513,6 +625,12 @@ public static class AlertsEndpoints
         result.Ok
             ? Results.Ok(new { sent = true })
             : Results.Text(result.Error, "text/plain", statusCode: StatusCodes.Status502BadGateway);
+
+    /// <summary>An edit or a deletion Google did not take: 409 for a refusal the owner can fix, 502 for the rest.</summary>
+    private static IResult WriteProblem(EventWriteOutcome outcome) =>
+        Results.Problem(
+            detail: outcome.Problem,
+            statusCode: outcome.Conflict ? StatusCodes.Status409Conflict : StatusCodes.Status502BadGateway);
 
     private static bool Valid(string? key) =>
         !string.IsNullOrWhiteSpace(key) && key.Length <= AlertPlanner.MaxKeyLength;
@@ -594,7 +712,9 @@ public static class AlertsEndpoints
                             type.From,
                             acknowledgement is not null,
                             acknowledgement?.At.ToDateTimeOffset(),
-                            acknowledgement?.Via);
+                            acknowledgement?.Via,
+                            alert.Recurring,
+                            alert.EndsAt?.ToDateTimeOffset());
                     })
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
@@ -645,35 +765,14 @@ public static class AlertsEndpoints
             NewEventRequest request, Instant now, int defaultLeadMinutes)
         {
             var errors = new Dictionary<string, string[]>();
-            var title = request.Title?.Trim() ?? "";
-            if (title.Length is 0 or > CreatedEvents.MaxTitleLength || title.Any(char.IsControl))
-            {
-                errors["title"] = [$"1 to {CreatedEvents.MaxTitleLength} characters."];
-            }
-
-            Instant? start = null;
-            if (request.StartsAt is { } text
-                && NodaTime.Text.OffsetDateTimePattern.ExtendedIso.Parse(text.Trim()) is { Success: true } parsed)
-            {
-                start = parsed.Value.ToInstant();
-            }
-
-            if (start is not { } startsAt || startsAt <= now || startsAt > now + CreatedEvents.MaxAhead)
-            {
-                errors["startsAt"] = ["An ISO 8601 time with its offset, in the future and at most 366 days ahead."];
-            }
-
+            var title = EventFields.Title(request.Title, errors);
+            var start = EventFields.Start(request.StartsAt, now, errors);
             if (request.DurationMinutes is not (>= CreatedEvents.MinDurationMinutes and <= CreatedEvents.MaxDurationMinutes))
             {
                 errors["durationMinutes"] = [$"{CreatedEvents.MinDurationMinutes} to {CreatedEvents.MaxDurationMinutes}."];
             }
 
-            var location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim();
-            if (location is not null && (location.Length > CreatedEvents.MaxLocationLength || location.Any(char.IsControl)))
-            {
-                errors["location"] = [$"At most {CreatedEvents.MaxLocationLength} characters."];
-            }
-
+            var location = EventFields.Location(request.Location, errors);
             if (request.Type is not { } type || !AlertTypes.Choices.Contains(type))
             {
                 errors["type"] = ["\"none\", \"notification\" or \"alarm\"."];
@@ -688,7 +787,7 @@ public static class AlertsEndpoints
 
             var begins = start!.Value;
             return (errors, new NewAlertEvent(
-                title,
+                title!,
                 location,
                 begins,
                 begins + Duration.FromMinutes(request.DurationMinutes!.Value),
@@ -832,5 +931,129 @@ public static class AlertsEndpoints
         string TypeFrom,
         bool Acknowledged,
         DateTimeOffset? AcknowledgedAt,
-        string? AcknowledgedVia);
+        string? AcknowledgedVia,
+        bool Recurring,
+        DateTimeOffset? EndsAt);
+
+    /// <summary>
+    /// An edit of a listed occurrence. Key, scope, title and startsAt are
+    /// required. A missing or null durationMinutes keeps the event's length,
+    /// and a missing or null leadMinutes leaves its reminders. A missing
+    /// location leaves it, and null or blank clears it.
+    /// </summary>
+    public sealed class EditEventRequest
+    {
+        private readonly string? _location;
+
+        public string? Key { get; init; }
+
+        public string? Scope { get; init; }
+
+        public string? Title { get; init; }
+
+        public string? StartsAt { get; init; }
+
+        public int? DurationMinutes { get; init; }
+
+        public string? Location
+        {
+            get => _location;
+            init
+            {
+                _location = value;
+                LocationGiven = true;
+            }
+        }
+
+        /// <summary>The body carried a location, null included. Set by the serializer calling the setter.</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool LocationGiven { get; private init; }
+
+        public int? LeadMinutes { get; init; }
+
+        public static (Dictionary<string, string[]> Errors, AlertEventEdit? Valid) Validate(EditEventRequest request, Instant now)
+        {
+            var errors = new Dictionary<string, string[]>();
+            if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
+            if (request.Scope is not (EventScopes.Occurrence or EventScopes.Series)) errors["scope"] = [EventScopes.Message];
+
+            var title = EventFields.Title(request.Title, errors);
+            var start = EventFields.Start(request.StartsAt, now, errors);
+            if (request.DurationMinutes is { } duration
+                && duration is < CreatedEvents.MinDurationMinutes or > CreatedEvents.MaxDurationMinutes)
+            {
+                errors["durationMinutes"] = [$"{CreatedEvents.MinDurationMinutes} to {CreatedEvents.MaxDurationMinutes}, or left out to keep the length."];
+            }
+
+            var location = EventFields.Location(request.Location, errors);
+            if (request.LeadMinutes is { } lead && lead is < CreatedEvents.MinLeadMinutes or > CreatedEvents.MaxLeadMinutes)
+            {
+                errors["leadMinutes"] = [$"{CreatedEvents.MinLeadMinutes} to {CreatedEvents.MaxLeadMinutes}."];
+            }
+
+            return errors.Count > 0
+                ? (errors, null)
+                : (errors, new AlertEventEdit(title!, request.LocationGiven, location, start!.Value, request.DurationMinutes, request.LeadMinutes));
+        }
+    }
+
+    /// <summary>A deletion of a listed occurrence: its key, and "occurrence" or "series".</summary>
+    public sealed record DeleteEventRequest(string? Key, string? Scope);
+}
+
+/// <summary>Which occurrences an edit or a deletion is for.</summary>
+public static class EventScopes
+{
+    /// <summary>The one listed occurrence. For an event that does not repeat, the event.</summary>
+    public const string Occurrence = "occurrence";
+
+    /// <summary>Every occurrence: the series' master in Google.</summary>
+    public const string Series = "series";
+
+    public const string Message = "\"occurrence\" or \"series\".";
+}
+
+/// <summary>The checks a new event and an edit share, each naming its field as the body spells it.</summary>
+public static class EventFields
+{
+    public static string? Title(string? text, Dictionary<string, string[]> errors)
+    {
+        var title = text?.Trim() ?? "";
+        if (title.Length is 0 or > CreatedEvents.MaxTitleLength || title.Any(char.IsControl))
+        {
+            errors["title"] = [$"1 to {CreatedEvents.MaxTitleLength} characters."];
+            return null;
+        }
+
+        return title;
+    }
+
+    public static Instant? Start(string? text, Instant now, Dictionary<string, string[]> errors)
+    {
+        Instant? start = null;
+        if (text is not null && NodaTime.Text.OffsetDateTimePattern.ExtendedIso.Parse(text.Trim()) is { Success: true } parsed)
+        {
+            start = parsed.Value.ToInstant();
+        }
+
+        if (start is not { } startsAt || startsAt <= now || startsAt > now + CreatedEvents.MaxAhead)
+        {
+            errors["startsAt"] = ["An ISO 8601 time with its offset, in the future and at most 366 days ahead."];
+            return null;
+        }
+
+        return start;
+    }
+
+    /// <summary>Null for none. Blank is none.</summary>
+    public static string? Location(string? text, Dictionary<string, string[]> errors)
+    {
+        var location = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        if (location is not null && (location.Length > CreatedEvents.MaxLocationLength || location.Any(char.IsControl)))
+        {
+            errors["location"] = [$"At most {CreatedEvents.MaxLocationLength} characters."];
+        }
+
+        return location;
+    }
 }

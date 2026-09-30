@@ -23,6 +23,8 @@ const base: AlertItem = {
   acknowledged: false,
   acknowledgedAt: null,
   acknowledgedVia: null,
+  recurring: false,
+  endsAt: "2026-10-28T13:30:00Z",
 };
 
 const at = (iso: string) => Date.parse(iso);

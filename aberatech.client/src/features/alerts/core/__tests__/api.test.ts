@@ -10,6 +10,8 @@ import { respond } from "../../../../test/fakeFetch";
 import {
   acknowledgeAlert,
   createEvent,
+  deleteEvent,
+  editEvent,
   fetchAlerts,
   formatClock,
   formatWhen,
@@ -452,5 +454,78 @@ describe("createEvent", () => {
 
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
     expect(await createEvent(event)).toEqual({ ok: false, reason: "network" });
+  });
+});
+
+describe("editEvent and deleteEvent", () => {
+  const edit = {
+    key: "standup@google.com|20261028T130000Z",
+    scope: "occurrence" as const,
+    title: "Standup",
+    startsAt: "2026-10-28T13:30:00.000Z",
+    location: null,
+  };
+
+  it("send the key in the body, never the address, and answer with the state", async () => {
+    const fetchMock = stub(respond(200, state));
+
+    const edited = await editEvent(edit);
+    const deleted = await deleteEvent(edit.key, "series");
+
+    const { configured: _, ...rest } = state;
+    expect(edited).toEqual({ ok: true, state: rest });
+    expect(deleted).toEqual({ ok: true, state: rest });
+    expect(
+      fetchMock.mock.calls.map(([url, init]) => [url, init.method]),
+    ).toEqual([
+      ["/api/alerts/events", "PUT"],
+      ["/api/alerts/events/delete", "POST"],
+    ]);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      key: edit.key,
+      scope: "series",
+    });
+    for (const [url] of fetchMock.mock.calls)
+      expect(url).not.toContain("standup");
+  });
+
+  it("report a gone event, a refusal, Google's failure and refused fields", async () => {
+    stub(respond(404));
+    expect(await editEvent(edit)).toEqual({ ok: false, reason: "gone" });
+    stub(respond(409, { detail: "Only the organizer can change this event." }));
+    expect(await deleteEvent(edit.key, "occurrence")).toEqual({
+      ok: false,
+      reason: "conflict",
+      detail: "Only the organizer can change this event.",
+    });
+    stub(respond(502, { detail: "Google Calendar did not answer." }));
+    expect(await editEvent(edit)).toEqual({
+      ok: false,
+      reason: "google",
+      detail: "Google Calendar did not answer.",
+    });
+    stub(respond(400, { errors: { scope: ['"occurrence" or "series".'] } }));
+    expect(await deleteEvent(edit.key, "occurrence")).toEqual({
+      ok: false,
+      reason: "invalid",
+      errors: { scope: ['"occurrence" or "series".'] },
+    });
+    stub(respond(429));
+    expect(await editEvent(edit)).toEqual({ ok: false, reason: "throttled" });
+    stub(respond(401));
+    expect(await editEvent(edit)).toEqual({ ok: false, reason: "visitor" });
+  });
+
+  it("a 404 to a new event is a refusal, never gone", async () => {
+    stub(respond(404));
+    expect(
+      await createEvent({
+        title: "A",
+        startsAt: "2026-10-28T15:00:00.000Z",
+        durationMinutes: 30,
+        location: null,
+        type: "alarm",
+      }),
+    ).toEqual({ ok: false, reason: "refused" });
   });
 });

@@ -44,6 +44,8 @@ const standup = {
   acknowledged: false,
   acknowledgedAt: null,
   acknowledgedVia: null,
+  recurring: false,
+  endsAt: "2026-10-28T13:30:00+00:00",
 };
 
 const review = {
@@ -61,6 +63,8 @@ const review = {
   acknowledged: false,
   acknowledgedAt: null,
   acknowledgedVia: null,
+  recurring: true,
+  endsAt: null,
 };
 
 const state = (over: Record<string, unknown> = {}) => ({
@@ -355,7 +359,7 @@ describe("the owner", () => {
     await settle();
     expect(
       screen.getByText(
-        "Each type holds for every occurrence of the event. Ring until stopped also adds #critical to the event in Google Calendar. Off and Ring once remove it.",
+        "Each type holds for every occurrence of the event. Ring until stopped also adds #critical to the event in Google Calendar. Off and Ring once remove it. Edit and Delete change the event in Google Calendar.",
       ),
     ).toBeTruthy();
     expect(screen.queryByText("Google Calendar was not changed")).toBeNull();
@@ -426,6 +430,76 @@ describe("the owner", () => {
         "Dentist",
       ),
     ).toBeTruthy();
+  });
+
+  it("edits an event from its dialog, sends the key in the body, and lists the answer", async () => {
+    const moved = {
+      ...standup,
+      key: "standup@google.com|20261028T133000Z",
+      title: "Standup late",
+      startsAt: "2026-10-28T13:30:00+00:00",
+    };
+    mount(
+      respond(200, state()),
+      respond(200, state({ alerts: [moved, review] })),
+    );
+    await settle();
+    const at = "Standup at Wed, Oct 28, 9:00 AM EDT";
+
+    fireEvent.click(screen.getByRole("button", { name: `Edit ${at}` }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText(/^Title/), {
+      target: { value: "Standup late" },
+    });
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+    });
+    await settle();
+
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === "PUT");
+    expect(put?.[0]).toBe("/api/alerts/events");
+    expect(JSON.parse(put?.[1].body)).toMatchObject({
+      key: standup.key,
+      scope: "occurrence",
+      title: "Standup late",
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByText("Standup late is changed.")).toBeTruthy();
+    expect(
+      within(screen.getByRole("list", { name: "Next alerts" })).getByText(
+        "Standup late",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("deletes every occurrence of a repeating event after a yes", async () => {
+    mount(respond(200, state()), respond(200, state({ alerts: [standup] })));
+    await settle();
+    const at = "Review at Wed, Oct 28, 2:00 PM EDT";
+
+    fireEvent.click(screen.getByRole("button", { name: `Delete ${at}` }));
+    const dialog = screen.getByRole("dialog");
+    expect(posts()).toEqual([]);
+    fireEvent.click(within(dialog).getByLabelText("All events"));
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    });
+    await settle();
+
+    expect(posts()).toEqual([
+      [
+        "/api/alerts/events/delete",
+        JSON.stringify({ key: review.key, scope: "series" }),
+      ],
+    ]);
+    expect(
+      screen.getByText("Review is deleted, every occurrence."),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole("list", { name: "Next alerts" })).queryByText(
+        "Review",
+      ),
+    ).toBeNull();
   });
 
   it("sends a test notification and says so", async () => {
