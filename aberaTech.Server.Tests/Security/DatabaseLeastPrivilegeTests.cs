@@ -125,6 +125,13 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
                 CancellationToken.None);
             Assert.Single(await alerts.CreatedEventsAsync(CancellationToken.None));
             await alerts.ForgetCreatedEventsAsync(["lp@google.com"], CancellationToken.None);
+
+            // A routine alarm: created under the advisory lock, read, updated and deleted as the runtime role.
+            var routine = new aberaTech.Scheduling.Alerts.AlertRoutine(Guid.NewGuid(), "Least privilege", 6, 30, [1, 3, 5], true, 9, now);
+            Assert.True(await alerts.AddRoutineAsync(routine, CancellationToken.None));
+            Assert.Single(await alerts.RoutinesAsync(CancellationToken.None));
+            Assert.True(await alerts.UpdateRoutineAsync(routine with { Enabled = false }, CancellationToken.None));
+            Assert.True(await alerts.DeleteRoutineAsync(routine.Id, CancellationToken.None));
         }
 
         var joined = await client.PostAsJsonAsync("/api/scheduling/queue", new { name = "Private Snuffy" });

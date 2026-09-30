@@ -5,14 +5,14 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
 /// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, Save
-/// settings, three test sends and the paired phones. Plain JSON over HTTPS,
+/// settings, three test sends, the routine alarms and the paired phones. Plain JSON over HTTPS,
 /// so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
 /// The owner's Google sign-in reaches every route. A paired phone's token
-/// reaches the eight a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
-/// the status, mute, unmute, skip, unskip, ack, an event's type and a new
-/// event. The phone's own push registration takes its token alone
+/// reaches the eleven a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// the status, mute, unmute, skip, unskip, ack, an event's type, a new
+/// event, and a routine alarm's create, update and delete. The phone's own push registration takes its token alone
 /// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
 /// limit. Every change a phone holds bumps the plan version, and
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
@@ -266,6 +266,66 @@ public static class AlertsEndpoints
             // end of the wait.
             worker.Wake();
             return Results.Created((string?)null, await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // Routine alarms: the phone rings them as phone alarms, never
+        // through Pushover or a browser. The server stores them and fires
+        // nothing. Each change pushes the phones, like any change they hold.
+        shared.MapPost("/routines", async (
+            RoutineRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var (errors, routine) = AlertRoutines.Validate(Guid.NewGuid(), request, whole: false, clock.GetCurrentInstant());
+            if (routine is null) return Results.ValidationProblem(errors);
+
+            if (!await store.AddRoutineAsync(routine, cancellationToken))
+            {
+                return Results.Problem(
+                    detail: $"At most {AlertRoutines.MaxRoutines} routine alarms. Delete one first.",
+                    statusCode: StatusCodes.Status409Conflict);
+            }
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Created(
+                $"/api/alerts/routines/{routine.Id}", await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        shared.MapPut("/routines/{id:guid}", async (
+            Guid id,
+            RoutineRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var (errors, routine) = AlertRoutines.Validate(id, request, whole: true, clock.GetCurrentInstant());
+            if (routine is null) return Results.ValidationProblem(errors);
+            if (!await store.UpdateRoutineAsync(routine, cancellationToken)) return Results.NotFound();
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        shared.MapDelete("/routines/{id:guid}", async (
+            Guid id,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await store.DeleteRoutineAsync(id, cancellationToken)) return Results.NotFound();
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // The paired phones. The token is in the answer to the pairing and
@@ -538,6 +598,7 @@ public static class AlertsEndpoints
                     })
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
+            Routines: [.. (await store.RoutinesAsync(cancellationToken)).Select(RoutineView.From)],
             CalendarWrite: calendarWrite);
     }
 
@@ -664,7 +725,8 @@ public static class AlertsEndpoints
     /// no secret. TimeZone is the zone in use, the calendar's own when it
     /// names one. Settings.TimeZone is the fallback the owner set.
     /// CalendarWrite is set only in the answer to a type change or a new
-    /// event whose write to Google did not happen, and says why.
+    /// event whose write to Google did not happen, and says why. Routines
+    /// lists every routine alarm by hour, minute and label.
     /// </summary>
     public sealed record AlertsState(
         bool Configured,
@@ -680,7 +742,34 @@ public static class AlertsEndpoints
         SendView? LastSend,
         IReadOnlyList<AlertView> Alerts,
         PushView Push,
+        IReadOnlyList<RoutineView> Routines,
         string? CalendarWrite = null);
+
+    /// <summary>
+    /// A routine alarm as the page and the phone read it. Hour and minute
+    /// are wall-clock time. Days are ISO weekdays, Monday 1, sorted, and
+    /// empty rings once.
+    /// </summary>
+    public sealed record RoutineView(
+        Guid Id,
+        string Label,
+        int Hour,
+        int Minute,
+        IReadOnlyList<int> Days,
+        bool Enabled,
+        int SnoozeMinutes,
+        DateTimeOffset UpdatedAt)
+    {
+        public static RoutineView From(AlertRoutine routine) => new(
+            routine.Id,
+            routine.Label,
+            routine.Hour,
+            routine.Minute,
+            routine.Days,
+            routine.Enabled,
+            routine.SnoozeMinutes,
+            routine.UpdatedAt.ToDateTimeOffset());
+    }
 
     public sealed record SettingsView(
         int RepeatSeconds,

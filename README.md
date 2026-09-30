@@ -237,13 +237,42 @@ with the page's whole state, the new event listed. A refused field is a
 another calendar, is a 409 whose `detail` says which. Google refusing is a
 502 with the same short reason.
 
+### Calendar alerts: routine alarms
+
+Routine alarms are the phone's everyday alarms, kept on abera.tech so they
+can be read and changed from any computer. The paired iPhone rings them
+as its own alarms. They never go through Pushover. Ring in this browser
+ignores them. Nothing on the server fires them (`AlertRoutines.cs`, table
+`AlertRoutines`).
+
+A routine is `{id, label, hour, minute, days, enabled, snoozeMinutes,
+updatedAt}`. `hour` is 0 to 23 and `minute` 0 to 59, in wall-clock time.
+The server never converts them. `days` are ISO weekdays, Monday 1 to
+Sunday 7, stored sorted. Empty rings once at the next `hour:minute`, and
+the phone then turns it off with a `PUT` setting `enabled` false. `label`
+is trimmed, at most 60 characters, with no control characters. Empty,
+blank or missing is stored as `Alarm`. `snoozeMinutes` is 1 to 30, 9 by
+default. `updatedAt` is ISO 8601 with its offset. At most 50 are kept.
+
+`GET /api/alerts/status` lists every routine under `routines`, by hour,
+minute, then label. Each route below needs the owner or a paired phone,
+shares the actions rate limit, and answers with the page's whole state.
+Each change pushes the phones.
+
+| Route | Request | Answer |
+|---|---|---|
+| `POST /api/alerts/routines` | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
+| `PUT /api/alerts/routines/{id}` | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}` | 200. 400 by field. 404 for an unknown id |
+| `DELETE /api/alerts/routines/{id}` | none | 200. 404 for an unknown id |
+
 ### Calendar alerts: phone pushes
 
 A change that alters what a phone should hold sends every phone with a
 push token a background push through Apple's push service
 (`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
-and Unmute, an acknowledgement from anywhere, a new event, and a calendar
-read whose alarms differ from the last read. The phone then reads
+and Unmute, an acknowledgement from anywhere, a new event, a routine
+alarm added, changed or deleted, and a calendar read whose alarms differ
+from the last read. The phone then reads
 `/api/alerts/status`. iOS can delay or drop a background push, so the
 phone also reads when opened and in the background.
 
