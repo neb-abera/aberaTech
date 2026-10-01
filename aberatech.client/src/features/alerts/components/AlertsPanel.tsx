@@ -342,6 +342,16 @@ export default function AlertsPanel({
         }}
       />
 
+      {/* Under the next alerts and the new event form: the alarms that ring
+          next are read in one place (Neb, 2026-10-02). */}
+      <RoutinesSection
+        routines={state.routines ?? []}
+        api={routines}
+        onState={(next) => {
+          if (alive.current) setView({ status: "owner", state: next });
+        }}
+      />
+
       <HowEventsAlert
         settings={state.settings}
         maxSounds={state.bounds.maxEmergencySounds}
@@ -354,14 +364,6 @@ export default function AlertsPanel({
           state.timeZone,
         )}
       </Typography>
-
-      <RoutinesSection
-        routines={state.routines ?? []}
-        api={routines}
-        onState={(next) => {
-          if (alive.current) setView({ status: "owner", state: next });
-        }}
-      />
 
       <PhonesSection
         api={phones}
