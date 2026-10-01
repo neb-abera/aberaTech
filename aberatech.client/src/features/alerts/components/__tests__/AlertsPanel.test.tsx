@@ -1043,6 +1043,30 @@ describe("routine alarms", () => {
     ).toBe(false);
   });
 
+  it("sits under the next alerts and the new event form, before how events alert", async () => {
+    mount(respond(200, state({ routines: [] })));
+    await settle();
+
+    const order = [
+      screen.getByRole("heading", { name: "Next alerts" }),
+      screen.getByRole("heading", { name: "Routine alarms" }),
+      screen.getByRole("region", { name: "How events alert" }),
+    ];
+    for (let n = 1; n < order.length; n++) {
+      expect(
+        order[n - 1].compareDocumentPosition(order[n]) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+        String(n),
+      ).toBeTruthy();
+    }
+    const form = screen.getByRole("form", { name: /new event/i });
+    expect(
+      form.compareDocumentPosition(
+        screen.getByRole("heading", { name: "Routine alarms" }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("says there are none when the status has none", async () => {
     mount(respond(200, state({ routines: [] })));
     await settle();
