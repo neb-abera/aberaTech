@@ -181,6 +181,7 @@ public sealed record EventWriteOutcome(string? Problem, bool Conflict, bool Seri
 
 /// <summary>An event as events.list or events.instances answers it: the parts an edit reads.</summary>
 /// <param name="Master">Not an instance of a series: no recurringEventId.</param>
+/// <param name="Recurrence">The RRULE, EXRULE, RDATE and EXDATE lines, as Google holds them. Empty for an event that does not repeat.</param>
 internal sealed record GoogleEvent(
     string Id,
     bool OrganisedHere,
@@ -188,7 +189,8 @@ internal sealed record GoogleEvent(
     Instant? Start,
     Instant? End,
     string? TimeZone,
-    bool Master);
+    bool Master,
+    IReadOnlyList<string> Recurrence);
 
 /// <summary>
 /// The messages the page and the phone show when a write to Google does not
@@ -355,8 +357,9 @@ public sealed class GoogleAlertEvents(
     /// Google lists at that start (events.instances with timeMin and
     /// timeMax around it), patched on its own id. A series moves its master
     /// by the picked occurrence's change in date and wall-clock time, in the
-    /// series' zone, and keeps its RRULE. The description, and so #critical,
-    /// is never sent.
+    /// series' zone. When that moves the date, the recurrence is rewritten
+    /// to follow (<see cref="RecurrenceShift"/>) and sent. The description,
+    /// and so #critical, is never sent.
     /// </summary>
     /// <param name="zone">The zone to write a time in when Google names none.</param>
     public async Task<EventWriteOutcome> EditAsync(
@@ -372,6 +375,7 @@ public sealed class GoogleAlertEvents(
             Instant start;
             Instant? end;
             string? timeZone;
+            IReadOnlyList<string>? recurrence = null;
             if (master.Recurring && series)
             {
                 // Google names the zone a series repeats in. Its time of day
@@ -383,6 +387,9 @@ public sealed class GoogleAlertEvents(
                 end = Ends(start, edit.DurationMinutes, master.Start, master.End);
                 target = master.Id;
                 zone = seriesZone;
+                // A rule that names its days (BYDAY=TU) would keep making
+                // the old ones. Null when nothing in the lines changes.
+                recurrence = RecurrenceShift.Rewrite(master.Recurrence, from, start, seriesZone);
             }
             else
             {
@@ -403,6 +410,7 @@ public sealed class GoogleAlertEvents(
             // Google's patch leaves out what the body leaves out. An empty
             // location clears it.
             if (edit.LocationSet) body["location"] = edit.Location ?? "";
+            if (recurrence is not null) body["recurrence"] = recurrence;
             if (edit.LeadMinutes is { } lead)
             {
                 body["reminders"] = new { useDefault = false, overrides = new[] { new { method = "popup", minutes = lead } } };
@@ -631,13 +639,13 @@ public sealed class GoogleAlertEvents(
 
             var here = !item.TryGetProperty("organizer", out var organizer)
                        || (organizer.TryGetProperty("self", out var self) && self.ValueKind == JsonValueKind.True);
-            var recurring = item.TryGetProperty("recurrence", out var rules)
-                            && rules.ValueKind == JsonValueKind.Array
-                            && rules.GetArrayLength() > 0;
+            IReadOnlyList<string> recurrence = item.TryGetProperty("recurrence", out var rules) && rules.ValueKind == JsonValueKind.Array
+                ? [.. rules.EnumerateArray().Where(rule => rule.ValueKind == JsonValueKind.String).Select(rule => rule.GetString()!)]
+                : [];
             var (start, zone) = When(item, "start");
             var (end, _) = When(item, "end");
             found.Add(new GoogleEvent(
-                eventId, here, recurring, start, end, zone, !item.TryGetProperty("recurringEventId", out _)));
+                eventId, here, recurrence.Count > 0, start, end, zone, !item.TryGetProperty("recurringEventId", out _), recurrence));
         }
 
         return found;
