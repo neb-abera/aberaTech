@@ -153,7 +153,7 @@ describe("the form", () => {
     type("Label", "  Home ");
     type("Date", "2027-03-01");
     type("Time", "09:00");
-    type("Time zone", "Asia/Amman");
+    type("Time zone", "asia/amman");
     await press(screen.getByRole("button", { name: "Add countdown" }));
 
     expect(api.create).toHaveBeenCalledExactlyOnceWith({
@@ -246,6 +246,18 @@ describe("the form", () => {
     type("Date", "2027-03-01");
     await press(screen.getByRole("button", { name: "Add countdown" }));
     expect(screen.getByText(message)).toBeTruthy();
+  });
+});
+
+describe("a zone this browser does not know", () => {
+  it("lists the countdown and opens Edit in UTC", async () => {
+    mount([{ ...home, timeZone: "Mars/Olympus" }]);
+
+    await press(screen.getByRole("button", { name: "Edit Home" }));
+
+    const form = screen.getByRole("form", { name: "Edit countdown" });
+    expect(within(form).getByDisplayValue("2026-11-11")).toBe(field("Date"));
+    expect(within(form).getByDisplayValue("12:00")).toBe(field("Time"));
   });
 });
 

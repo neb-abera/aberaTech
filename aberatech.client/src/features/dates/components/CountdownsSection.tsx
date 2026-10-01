@@ -16,10 +16,10 @@ import {
 } from "../../alerts/core/countdowns";
 import {
   browserZone,
+  canonicalZone,
   describeRemaining,
   formatTarget,
   isoToZoned,
-  knownZone,
   zonedToIso,
 } from "../core/countdown";
 
@@ -144,8 +144,8 @@ export default function CountdownsSection({
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const timeZone = draft.timeZone.trim();
-    if (!knownZone(timeZone)) {
+    const timeZone = canonicalZone(draft.timeZone.trim());
+    if (!timeZone) {
       setErrors({ timeZone: ["A time zone such as Asia/Amman."] });
       return;
     }

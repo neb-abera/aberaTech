@@ -20,7 +20,9 @@ test("a visitor counts the days between two dates and never asks for the countdo
   const section = page.getByRole("region", { name: "Days between two dates" });
   // The page is prerendered. Today arrives once the script runs, and a
   // date typed before then would be replaced by it.
-  await expect(section.getByLabel("Start date", { exact: true })).not.toHaveValue("");
+  await expect(
+    section.getByLabel("Start date", { exact: true }),
+  ).not.toHaveValue("");
   await section.getByLabel("Start date", { exact: true }).fill("2026-10-01");
   await section.getByLabel("End date", { exact: true }).fill("2026-11-15");
   const result = section.getByRole("status", { name: "Days between" });
