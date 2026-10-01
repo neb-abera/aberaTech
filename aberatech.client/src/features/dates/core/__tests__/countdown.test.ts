@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  canonicalZone,
   describeRemaining,
   formatRemaining,
   formatTarget,
@@ -77,6 +78,12 @@ describe("zonedToIso", () => {
     expect(knownZone("Asia/Amman")).toBe(true);
   });
 
+  it("spells a zone as the tz database does, whatever case was typed", () => {
+    expect(canonicalZone("asia/amman")).toBe("Asia/Amman");
+    expect(canonicalZone("AMERICA/NEW_YORK")).toBe("America/New_York");
+    expect(canonicalZone("Mars/Olympus")).toBeNull();
+  });
+
   it("writes an offset with seconds as the same instant in UTC", () => {
     // Amman kept local mean time, +2:23:44, until 1931.
     expect(zonedToIso("1920-01-01", "12:00", "Asia/Amman")).toBe(
@@ -98,6 +105,13 @@ describe("isoToZoned and formatTarget", () => {
     expect(isoToZoned("2027-01-10T00:30:00Z", "UTC")).toEqual({
       date: "2027-01-10",
       time: "00:30",
+    });
+  });
+
+  it("reads a zone this browser does not know in UTC rather than throwing", () => {
+    expect(isoToZoned("2027-03-01T06:00:00Z", "Mars/Olympus")).toEqual({
+      date: "2027-03-01",
+      time: "06:00",
     });
   });
 

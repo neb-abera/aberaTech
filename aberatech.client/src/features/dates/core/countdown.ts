@@ -86,14 +86,22 @@ function offsetAt(ms: number, timeZone: string): number {
   return at.getTime() - Math.floor(ms / 1000) * 1000;
 }
 
+/**
+ * The zone as the tz database spells it, or null when this browser does
+ * not know it. Intl takes any letter case. The server does not.
+ */
+export function canonicalZone(timeZone: string): string | null {
+  try {
+    return new Intl.DateTimeFormat("en-US", { timeZone }).resolvedOptions()
+      .timeZone;
+  } catch {
+    return null;
+  }
+}
+
 /** True when this browser's copy of the tz database knows the zone. */
 export function knownZone(timeZone: string): boolean {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone });
-    return true;
-  } catch {
-    return false;
-  }
+  return canonicalZone(timeZone) !== null;
 }
 
 /** The browser's own zone, or UTC when it names none. */
@@ -146,7 +154,11 @@ export function isoToZoned(
   iso: string,
   timeZone: string,
 ): { date: string; time: string } {
-  const wall = wallClock(Date.parse(iso), timeZone);
+  // A zone this browser lacks (the phone's tz data can be newer) reads in UTC.
+  const wall = wallClock(
+    Date.parse(iso),
+    knownZone(timeZone) ? timeZone : "UTC",
+  );
   return {
     date: `${String(wall.year).padStart(4, "0")}-${two(wall.month)}-${two(wall.day)}`,
     time: `${two(wall.hour)}:${two(wall.minute)}`,
