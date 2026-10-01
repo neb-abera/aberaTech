@@ -7,7 +7,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { routes, structural, unlisted } from "../routes";
-import { type Entry, guides, projects } from "../sections";
+import {
+  type Entry,
+  guides,
+  notInBar,
+  ownerPages,
+  projects,
+} from "../sections";
 
 const internal = (entries: Entry[]) =>
   entries.filter((entry) => !entry.external).map((entry) => entry.to);
@@ -69,6 +75,47 @@ describe("the unlisted routes", () => {
   it("do not also appear in the navigation", () => {
     for (const path of Object.keys(unlisted)) {
       expect(linked.has(path)).toBe(false);
+    }
+  });
+});
+
+describe("the app bar", () => {
+  const inBar = new Set(ownerPages.map((page) => page.to));
+
+  it("holds every page or says why it does not", () => {
+    // A page reached only from /projects and the footer is a page its user
+    // asks how to find. /dates was one, on 2026-10-01.
+    const undecided = paths.filter(
+      (path) =>
+        !structural.includes(path) &&
+        !internal(guides).includes(path) &&
+        !inBar.has(path) &&
+        !(path in notInBar),
+    );
+
+    expect(undecided).toEqual([]);
+  });
+
+  it("carries the owner's pages, /dates among them", () => {
+    expect([...inBar]).toEqual(
+      expect.arrayContaining([
+        "/links",
+        "/plan",
+        "/devbox",
+        "/alerts",
+        "/dates",
+      ]),
+    );
+  });
+
+  it("names only served pages, each decided once", () => {
+    const served = new Set(paths);
+    for (const path of [...inBar, ...Object.keys(notInBar)]) {
+      expect(served.has(path), path).toBe(true);
+      expect(inBar.has(path) && path in notInBar, path).toBe(false);
+    }
+    for (const [path, reason] of Object.entries(notInBar)) {
+      expect(reason.length, `${path} has no reason`).toBeGreaterThan(20);
     }
   });
 });
