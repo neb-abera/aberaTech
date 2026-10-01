@@ -371,6 +371,13 @@ public sealed class CalendarAlertWorker(
                 logger.LogError("The calendar alert pass failed ({Failure}).", exception.GetType().Name);
                 next = clock.GetCurrentInstant() + RetryAfter;
             }
+            catch (Exception) when (stoppingToken.IsCancellationRequested)
+            {
+                // The host is stopping. A pass cut short by it can fail with
+                // something other than a cancellation, such as Npgsql's
+                // answer to a connect it gave up on, and that is no fault.
+                return;
+            }
 
             var wait = next - clock.GetCurrentInstant();
             if (wait < Duration.Zero) wait = Duration.Zero;
