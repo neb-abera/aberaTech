@@ -137,6 +137,9 @@ public sealed class RouteTableTests
         "POST /api/alerts/routines",
         "PUT /api/alerts/routines/{id:guid}",
         "DELETE /api/alerts/routines/{id:guid}",
+        "POST /api/alerts/countdowns",
+        "PUT /api/alerts/countdowns/{id:guid}",
+        "DELETE /api/alerts/countdowns/{id:guid}",
         "PUT /api/alerts/phone-settings"
     ];
 

@@ -55,6 +55,7 @@ describe("build-time rendering", () => {
     ["/plan", "Plan"],
     ["/devbox", "Dev box"],
     ["/alerts", "Alerts"],
+    ["/dates", "Dates and countdowns"],
   ]) {
     it(`renders the frame of ${path} around its spinner, and nothing of the owner's`, async () => {
       const html = await render(path);

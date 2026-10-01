@@ -106,6 +106,22 @@ public interface IAlertStore
 
     /// <summary>False when there was no such routine.</summary>
     Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Every countdown, by target and label.</summary>
+    Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores a new countdown. False, and nothing stored, when
+    /// <see cref="AlertCountdowns.MaxCountdowns"/> are already kept, however
+    /// many creates race.
+    /// </summary>
+    Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken);
+
+    /// <summary>Replaces every field but the id and the creation time. False when there is no such countdown.</summary>
+    Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken);
+
+    /// <summary>False when there was no such countdown.</summary>
+    Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken);
 }
 
 /// <summary>The store in the scheduling database, which the site already has.</summary>
@@ -113,6 +129,9 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
 {
     /// <summary>Held for the count and the insert, so two creates at once cannot make a 51st routine.</summary>
     private const long RoutinesLock = 0x6161747275746e; // "aatrutn"
+
+    /// <summary>Held for the count and the insert, so two creates at once cannot make a 51st countdown.</summary>
+    private const long CountdownsLock = 0x616174636e7464; // "aatcntd"
 
     public async Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken)
     {
@@ -465,4 +484,42 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertRoutines.Where(row => row.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
 
     private static short[] Days(AlertRoutine routine) => [.. routine.Days.Select(day => (short)day)];
+
+    public async Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) =>
+        AlertCountdowns.Sorted(
+            (await database.AlertCountdowns.AsNoTracking().ToListAsync(cancellationToken))
+            .Select(row => new AlertCountdown(row.Id, row.Label, row.TargetAt, row.TimeZone, row.UpdatedAt)));
+
+    public async Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken)
+    {
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        // The same advisory lock pattern as the routines: no privilege beyond connecting.
+        await database.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({CountdownsLock})", cancellationToken);
+
+        if (await database.AlertCountdowns.CountAsync(cancellationToken) >= AlertCountdowns.MaxCountdowns) return false;
+
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertCountdowns" ("Id", "Label", "TargetAt", "TimeZone", "CreatedAt", "UpdatedAt")
+             VALUES ({countdown.Id}, {countdown.Label}, {countdown.TargetAt}, {countdown.TimeZone},
+                 {countdown.UpdatedAt}, {countdown.UpdatedAt})
+             """,
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
+        await database.AlertCountdowns
+            .Where(row => row.Id == countdown.Id)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(row => row.Label, countdown.Label)
+                    .SetProperty(row => row.TargetAt, countdown.TargetAt)
+                    .SetProperty(row => row.TimeZone, countdown.TimeZone)
+                    .SetProperty(row => row.UpdatedAt, countdown.UpdatedAt),
+                cancellationToken) == 1;
+
+    public async Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken) =>
+        await database.AlertCountdowns.Where(row => row.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
 }
