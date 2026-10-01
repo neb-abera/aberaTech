@@ -55,6 +55,7 @@ export const routes: PageRoute[] = [
   page("/plan", "Plan"),
   page("/devbox", "DevBox"),
   page("/alerts", "Alerts"),
+  page("/dates", "Dates"),
 ];
 
 /**

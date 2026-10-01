@@ -6,16 +6,17 @@ namespace aberaTech.Scheduling.Alerts;
 /// The owner's /alerts page: the next alerts, the last calendar read, the
 /// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, a new
 /// event, an event's edit and deletion, Save settings, the phone's alarm
-/// sound and snooze, three test sends, the routine alarms and the paired
-/// phones. Plain JSON over HTTPS,
+/// sound and snooze, three test sends, the routine alarms, the countdowns
+/// and the paired phones. Plain JSON over HTTPS,
 /// so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
 /// The owner's Google sign-in reaches every route. A paired phone's token
-/// reaches the fourteen a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// reaches the seventeen a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
 /// the status, mute, unmute, skip, unskip, ack, an event's type, a new
 /// event, an event's edit and deletion, a routine alarm's create, update
-/// and delete, and the phone settings. The phone's own push registration takes its token alone
+/// and delete, a countdown's create, update and delete, and the phone
+/// settings. The phone's own push registration takes its token alone
 /// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
 /// limit. Every change a phone holds bumps the plan version, and
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
@@ -476,6 +477,65 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // Countdowns: /dates and the phone show the time left. The server
+        // stores them and fires nothing. Each change pushes the phones.
+        shared.MapPost("/countdowns", async (
+            CountdownRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var (errors, countdown) = AlertCountdowns.Validate(Guid.NewGuid(), request, clock.GetCurrentInstant());
+            if (countdown is null) return Results.ValidationProblem(errors);
+
+            if (!await store.AddCountdownAsync(countdown, cancellationToken))
+            {
+                return Results.Problem(
+                    detail: $"At most {AlertCountdowns.MaxCountdowns} countdowns. Delete one first.",
+                    statusCode: StatusCodes.Status409Conflict);
+            }
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Created(
+                $"/api/alerts/countdowns/{countdown.Id}", await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        shared.MapPut("/countdowns/{id:guid}", async (
+            Guid id,
+            CountdownRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var (errors, countdown) = AlertCountdowns.Validate(id, request, clock.GetCurrentInstant());
+            if (countdown is null) return Results.ValidationProblem(errors);
+            if (!await store.UpdateCountdownAsync(countdown, cancellationToken)) return Results.NotFound();
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        shared.MapDelete("/countdowns/{id:guid}", async (
+            Guid id,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await store.DeleteCountdownAsync(id, cancellationToken)) return Results.NotFound();
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         // The paired phones. The token is in the answer to the pairing and
         // nowhere else, ever: the list names the phones, and the server
         // keeps only each token's hash.
@@ -764,6 +824,7 @@ public static class AlertsEndpoints
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
             Routines: [.. (await store.RoutinesAsync(cancellationToken)).Select(RoutineView.From)],
+            Countdowns: [.. (await store.CountdownsAsync(cancellationToken)).Select(CountdownView.From)],
             CalendarWrite: calendarWrite);
     }
 
@@ -875,7 +936,8 @@ public static class AlertsEndpoints
     /// names one. Settings.TimeZone is the fallback the owner set.
     /// CalendarWrite is set only in the answer to a type change or a new
     /// event whose write to Google did not happen, and says why. Routines
-    /// lists every routine alarm by hour, minute and label.
+    /// lists every routine alarm by hour, minute and label. Countdowns lists
+    /// every countdown by target and label.
     /// </summary>
     public sealed record AlertsState(
         bool Configured,
@@ -892,7 +954,27 @@ public static class AlertsEndpoints
         IReadOnlyList<AlertView> Alerts,
         PushView Push,
         IReadOnlyList<RoutineView> Routines,
+        IReadOnlyList<CountdownView> Countdowns,
         string? CalendarWrite = null);
+
+    /// <summary>
+    /// A countdown as the page and the phone read it. TargetAt is the
+    /// instant with its offset. TimeZone is the zone its date is written in.
+    /// </summary>
+    public sealed record CountdownView(
+        Guid Id,
+        string Label,
+        DateTimeOffset TargetAt,
+        string TimeZone,
+        DateTimeOffset UpdatedAt)
+    {
+        public static CountdownView From(AlertCountdown countdown) => new(
+            countdown.Id,
+            countdown.Label,
+            countdown.TargetAt.ToDateTimeOffset(),
+            countdown.TimeZone,
+            countdown.UpdatedAt.ToDateTimeOffset());
+    }
 
     /// <summary>
     /// A routine alarm as the page and the phone read it. Hour and minute

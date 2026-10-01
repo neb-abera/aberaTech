@@ -137,6 +137,91 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         Assert.Equal(AlertRoutines.MaxRoutines, await check.AlertRoutines.CountAsync());
     }
 
+    private static AlertCountdown Countdown(string label, Instant? target = null, string zone = "Asia/Amman", Guid? id = null) =>
+        new(id ?? Guid.NewGuid(), label, target ?? Instant.FromUtc(2027, 3, 1, 6, 0), zone, Now);
+
+    [PostgresFact]
+    public async Task A_countdown_is_a_row_a_new_process_reads_back_whole_updates_in_place_and_deletes()
+    {
+        var id = Guid.NewGuid();
+        await using (var context = Context())
+        {
+            Assert.True(await new DatabaseAlertStore(context).AddCountdownAsync(Countdown("Home", id: id), CancellationToken.None));
+        }
+
+        var later = Now + Duration.FromMinutes(5);
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.CountdownsAsync(CancellationToken.None));
+            Assert.Equal(
+                (id, "Home", Instant.FromUtc(2027, 3, 1, 6, 0), "Asia/Amman", Now),
+                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt));
+
+            Assert.True(await store.UpdateCountdownAsync(
+                new AlertCountdown(id, "Leave", Instant.FromUtc(2027, 1, 10, 13, 0), "America/New_York", later), CancellationToken.None));
+            Assert.False(await store.UpdateCountdownAsync(Countdown("Nobody"), CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.CountdownsAsync(CancellationToken.None));
+            Assert.Equal(
+                (id, "Leave", Instant.FromUtc(2027, 1, 10, 13, 0), "America/New_York", later),
+                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt));
+            Assert.Equal(Now, (await context.AlertCountdowns.AsNoTracking().SingleAsync()).CreatedAt);
+
+            Assert.True(await store.DeleteCountdownAsync(id, CancellationToken.None));
+            Assert.False(await store.DeleteCountdownAsync(id, CancellationToken.None));
+            Assert.Empty(await store.CountdownsAsync(CancellationToken.None));
+        }
+    }
+
+    [PostgresFact]
+    public async Task Countdowns_read_back_by_target_then_label()
+    {
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        var march = Instant.FromUtc(2027, 3, 1, 6, 0);
+        foreach (var countdown in new[]
+                 {
+                     Countdown("b", march), Countdown("late", march + Duration.FromDays(30)),
+                     Countdown("a", march), Countdown("early", march - Duration.FromDays(30))
+                 })
+        {
+            await store.AddCountdownAsync(countdown, CancellationToken.None);
+        }
+
+        Assert.Equal(["early", "a", "b", "late"], (await store.CountdownsAsync(CancellationToken.None)).Select(countdown => countdown.Label));
+    }
+
+    [PostgresFact]
+    public async Task Twenty_countdown_creates_at_once_on_45_kept_make_50_and_no_more()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            for (var n = 0; n < 45; n++) await store.AddCountdownAsync(Countdown($"Kept {n}"), CancellationToken.None);
+        }
+
+        var contexts = Enumerable.Range(0, 20).Select(_ => Context()).ToList();
+        try
+        {
+            var made = await Task.WhenAll(contexts.Select((context, n) =>
+                new DatabaseAlertStore(context).AddCountdownAsync(Countdown($"Race {n}"), CancellationToken.None)));
+
+            Assert.Equal(AlertCountdowns.MaxCountdowns - 45, made.Count(taken => taken));
+        }
+        finally
+        {
+            foreach (var context in contexts) await context.DisposeAsync();
+        }
+
+        await using var check = Context();
+        Assert.Equal(AlertCountdowns.MaxCountdowns, await check.AlertCountdowns.CountAsync());
+    }
+
     [PostgresFact]
     public async Task An_occurrence_is_claimed_once_however_many_replicas_ask_at_the_same_moment()
     {

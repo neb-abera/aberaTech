@@ -1,4 +1,4 @@
-8841 words
+8844 words
 1 "Closed
 1 "Most
 1 "No"
@@ -294,6 +294,7 @@
 4 DOD
 1 DPS
 1 DS
+1 Dates
 1 Day
 1 Defense
 1 Delivery
@@ -808,7 +809,7 @@
 1 among
 2 amount
 45 an
-195 and
+196 and
 3 and/or
 1 annual
 1 annually
@@ -1080,6 +1081,7 @@
 3 counselor.
 1 counselors
 1 counsels
+1 countdowns
 2 countless
 5 couple
 1 courage
