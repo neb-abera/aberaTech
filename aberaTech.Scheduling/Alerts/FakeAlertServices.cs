@@ -52,6 +52,20 @@ public sealed class FakeAlertServices(IClock clock)
     /// <summary>How many days the daily standing event repeats.</summary>
     public const int DailyCount = 3;
 
+    /// <summary>
+    /// The daily standing event's rule: weekly on the weekday of its first
+    /// start and the next two, three occurrences. The same days as
+    /// FREQ=DAILY;COUNT=3, written with BYDAY so a move of the series to
+    /// another day has a rule to rewrite.
+    /// </summary>
+    public static string DailyRule(Instant start)
+    {
+        string[] days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+        var first = (int)start.InUtc().DayOfWeek - 1;
+        var byDay = string.Join(',', Enumerable.Range(0, DailyCount).Select(day => days[(first + day) % 7]));
+        return $"RRULE:FREQ=WEEKLY;BYDAY={byDay};COUNT={DailyCount}";
+    }
+
     private static FakeGoogleCalendar Seeded(Instant anchor) => Seed(new FakeGoogleCalendar(), anchor);
 
     /// <summary>The standing events, as the calendar below places them from <paramref name="anchor"/>.</summary>
@@ -61,7 +75,7 @@ public sealed class FakeAlertServices(IClock clock)
         google.Seed("e2e-review", start: anchor + Duration.FromHours(5), minutes: 60, summary: "E2E review #critical");
         google.Seed(
             "e2e-daily", recurring: true, start: anchor + Duration.FromHours(4), timeZone: "UTC", count: DailyCount,
-            summary: "E2E daily");
+            summary: "E2E daily", recurrence: [DailyRule(anchor + Duration.FromHours(4))]);
         return google;
     }
 
@@ -180,7 +194,7 @@ public sealed class FakeAlertServices(IClock clock)
             "UID:e2e-daily",
             $"DTSTART:{Utc(anchor + Duration.FromHours(4))}",
             $"DTEND:{Utc(anchor + Duration.FromHours(4.5))}",
-            $"RRULE:FREQ=DAILY;COUNT={DailyCount}",
+            DailyRule(anchor + Duration.FromHours(4)),
             "SUMMARY:E2E daily",
             "BEGIN:VALARM",
             "ACTION:DISPLAY",
