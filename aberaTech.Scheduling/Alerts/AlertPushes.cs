@@ -289,7 +289,8 @@ public sealed class AlertPushWorker(
 
     /// <summary>
     /// Something a phone holds changed: an event's type, a skip, a mute, an
-    /// acknowledgement, a new event or a routine alarm. Bumps the version and wakes the sender. A failure
+    /// acknowledgement, a new event, a routine alarm, or the phone's alarm sound or snooze. Bumps the
+    /// version and wakes the sender. A failure
     /// is logged, never thrown: the change itself is already stored.
     /// </summary>
     public Task PlanChangedAsync(CancellationToken cancellationToken) => ChangedAsync(force: true, cancellationToken);

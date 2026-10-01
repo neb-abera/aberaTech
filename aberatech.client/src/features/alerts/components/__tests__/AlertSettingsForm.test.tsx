@@ -514,6 +514,81 @@ describe("the settings form", () => {
     ).toHaveLength(1);
   });
 
+  it("shows the phone's sound and snooze under On the phone, with one line on what they do", () => {
+    mount({ phoneSound: "chime", phoneSnoozeMinutes: 12 });
+
+    expect(screen.getByRole("heading", { name: "On the phone" })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The phone plays this sound for every alarm it rings. Snooze delays a calendar alarm by this many minutes without acknowledging it.",
+      ),
+    ).toBeTruthy();
+    const sound = screen.getByLabelText("Alarm sound") as HTMLSelectElement;
+    expect(sound.value).toBe("chime");
+    expect([...sound.options].map((option) => option.textContent)).toEqual([
+      "iPhone default",
+      "Pulse",
+      "Chime",
+      "Rise",
+      "Siren",
+      "Beacon",
+    ]);
+    const snooze = input("Snooze");
+    expect(snooze.value).toBe("12");
+    expect(snooze.min).toBe("1");
+    expect(snooze.max).toBe("30");
+    expect(screen.getByText("1 to 30 minutes")).toBeTruthy();
+  });
+
+  it("sends the phone's sound and snooze with the rest of the form", async () => {
+    const { saver } = mount();
+
+    fireEvent.change(screen.getByLabelText("Alarm sound"), {
+      target: { value: "beacon" },
+    });
+    fireEvent.change(input("Snooze"), { target: { value: "15" } });
+    fireEvent.click(saveButton());
+    await flush();
+
+    expect(saver).toHaveBeenCalledWith({
+      ...settings,
+      phoneSound: "beacon",
+      phoneSnoozeMinutes: 15,
+    });
+  });
+
+  it("keeps Save off when the phone's fields are changed back", () => {
+    mount();
+
+    fireEvent.change(input("Snooze"), { target: { value: "10" } });
+    expect(saveButton().hasAttribute("disabled")).toBe(false);
+    fireEvent.change(input("Snooze"), { target: { value: "9" } });
+    expect(saveButton().hasAttribute("disabled")).toBe(true);
+    fireEvent.change(screen.getByLabelText("Alarm sound"), {
+      target: { value: "rise" },
+    });
+    expect(saveButton().hasAttribute("disabled")).toBe(false);
+  });
+
+  it("shows a refused phone field beside it", async () => {
+    mount({}, async () => ({
+      ok: false,
+      reason: "invalid",
+      errors: {
+        phoneSound: ['One of "default", "pulse".'],
+        phoneSnoozeMinutes: ["Between 1 and 30 minutes."],
+      },
+    }));
+
+    fireEvent.change(input("Snooze"), { target: { value: "31" } });
+    fireEvent.click(saveButton());
+    await flush();
+
+    expect(screen.getByText('One of "default", "pulse".')).toBeTruthy();
+    expect(screen.getByText("Between 1 and 30 minutes.")).toBeTruthy();
+    expect(input("Snooze").getAttribute("aria-invalid")).toBe("true");
+  });
+
   it("sends the backup delay with the form and explains it at the value typed", async () => {
     const { saver } = mount();
     const delay = input("Pushover backup after");

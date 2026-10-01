@@ -202,7 +202,8 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     {
         var first = new AlertSettings(45, 20, "", 15, 3, 24, true, "", []);
         var second = new AlertSettings(
-            120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification", 240);
+            120, 30, "siren", 5, 1, 72, false, "Asia/Amman", ["neb@work.example", "neb@home.example"], 1, "bike", "notification", 240,
+            "beacon", 30);
 
         await using (var context = Context())
         {
@@ -531,6 +532,74 @@ public sealed class DatabaseAlertStoreTests : IDisposable
             .ToListAsync();
         Assert.DoesNotContain("Priority", columns);
         Assert.Contains("NotificationPriority", columns);
+    }
+
+    [PostgresFact]
+    public async Task The_saved_row_gets_the_phones_default_sound_and_snooze_from_the_migration_and_keeps_the_rest()
+    {
+        using var database = new TestDatabase("alertsphone");
+        SchedulingDbContext Fresh() =>
+            new(new DbContextOptionsBuilder<SchedulingDbContext>()
+                .UseNpgsql(database.ConnectionString, npgsql => npgsql.UseNodaTime())
+                .Options);
+
+        await using (var context = Fresh())
+        {
+            // The schema the previous release ran on, and a row it saved.
+            await context.GetService<IMigrator>().MigrateAsync("20260930181237_AlertEventChanges");
+            await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                     "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
+                     "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
+                 VALUES (1, 45, 20, 'bike', 15, 5, 48, true, 'Asia/Amman', {new[] { "neb@work.example" }}, 1, 'siren', 'notification', 120, {Now})
+                 """);
+        }
+
+        await using (var context = Fresh())
+        {
+            await context.Database.MigrateAsync();
+            Assert.Empty(await context.Database.GetPendingMigrationsAsync());
+        }
+
+        await using var check = Fresh();
+        var read = (await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None))!;
+        Assert.Equal(
+            new AlertSettings(45, 20, "bike", 15, 5, 48, true, "Asia/Amman", read.OwnerEmails, 1, "siren", "notification", 120, "default", 9),
+            read);
+        Assert.Equal(["neb@work.example"], read.OwnerEmails);
+    }
+
+    [PostgresFact]
+    public async Task The_previous_releases_save_still_runs_on_the_new_schema_and_leaves_the_phone_fields_alone()
+    {
+        // The previous release's upsert names neither phone column.
+        FormattableString PreviousSave(int repeat) =>
+            $"""
+             INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
+                 "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
+                 "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
+             VALUES (1, {repeat}, 20, '', 15, 5, 48, false, '', {Array.Empty<string>()}, 0, '', 'none', 0, {Now})
+             ON CONFLICT ("Id") DO UPDATE SET "RepeatSeconds" = EXCLUDED."RepeatSeconds", "UpdatedAt" = EXCLUDED."UpdatedAt"
+             """;
+
+        await using (var context = Context())
+        {
+            await context.Database.ExecuteSqlAsync(PreviousSave(45));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = (await store.SettingsAsync(CancellationToken.None))!;
+            Assert.Equal(("default", 9), (read.PhoneSound, read.PhoneSnoozeMinutes));
+            await store.SaveSettingsAsync(read with { PhoneSound = "pulse", PhoneSnoozeMinutes = 3 }, Now, CancellationToken.None);
+            await context.Database.ExecuteSqlAsync(PreviousSave(90));
+        }
+
+        await using var check = Context();
+        var after = (await new DatabaseAlertStore(check).SettingsAsync(CancellationToken.None))!;
+        Assert.Equal((90, "pulse", 3), (after.RepeatSeconds, after.PhoneSound, after.PhoneSnoozeMinutes));
     }
 
     public void Dispose() => _database?.Dispose();

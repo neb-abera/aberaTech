@@ -114,7 +114,8 @@ public sealed class AlertDeviceRouteTests : IDisposable
         ["PUT", "/api/alerts/event-type", "{\"key\":\"standup@google.com|20261028T130000Z\",\"type\":\"none\"}"],
         ["POST", "/api/alerts/events", "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T15:00:00Z\",\"durationMinutes\":30,\"type\":\"alarm\"}"],
         ["PUT", "/api/alerts/events", "{\"key\":\"standup@google.com|20261028T130000Z\",\"scope\":\"occurrence\",\"title\":\"Standup\",\"startsAt\":\"2026-10-28T09:30:00-04:00\"}"],
-        ["POST", "/api/alerts/events/delete", "{\"key\":\"standup@google.com|20261028T130000Z\",\"scope\":\"occurrence\"}"]
+        ["POST", "/api/alerts/events/delete", "{\"key\":\"standup@google.com|20261028T130000Z\",\"scope\":\"occurrence\"}"],
+        ["PUT", "/api/alerts/phone-settings", "{\"sound\":\"chime\",\"snoozeMinutes\":10}"]
     ];
 
     /// <summary>The routes that stay the owner's cookie alone.</summary>

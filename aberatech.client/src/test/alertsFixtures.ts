@@ -16,6 +16,8 @@ export const settings = {
   notificationSound: "",
   defaultType: "none" as "none" | "notification",
   backupDelaySeconds: 0,
+  phoneSound: "default",
+  phoneSnoozeMinutes: 9,
 };
 
 export const bounds = {
@@ -33,4 +35,13 @@ export const bounds = {
     { name: "persistent", description: "Persistent (long)", custom: false },
     { name: "none", description: "None (silent)", custom: false },
   ],
+  phoneSounds: [
+    { value: "default", label: "iPhone default" },
+    { value: "pulse", label: "Pulse" },
+    { value: "chime", label: "Chime" },
+    { value: "rise", label: "Rise" },
+    { value: "siren", label: "Siren" },
+    { value: "beacon", label: "Beacon" },
+  ],
+  phoneSnoozeMinutes: { min: 1, max: 30 },
 };

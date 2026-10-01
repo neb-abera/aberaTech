@@ -134,7 +134,9 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                 row.NotificationPriority,
                 row.NotificationSound,
                 row.DefaultType,
-                row.BackupDelaySeconds);
+                row.BackupDelaySeconds,
+                row.PhoneSound,
+                row.PhoneSnoozeMinutes);
     }
 
     public async Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)
@@ -145,12 +147,13 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             $"""
              INSERT INTO "AlertSettings" ("Id", "RepeatSeconds", "StopAfterMinutes", "Sound",
                  "DefaultLeadMinutes", "PollMinutes", "LookaheadHours", "IncludeAllDay", "TimeZone", "OwnerEmails",
-                 "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds", "UpdatedAt")
+                 "NotificationPriority", "NotificationSound", "DefaultType", "BackupDelaySeconds",
+                 "PhoneSound", "PhoneSnoozeMinutes", "UpdatedAt")
              VALUES ({AlertSettingsRecord.SingleId}, {settings.RepeatSeconds}, {settings.StopAfterMinutes},
                  {settings.Sound}, {settings.DefaultLeadMinutes}, {settings.PollMinutes}, {settings.LookaheadHours},
                  {settings.IncludeAllDay}, {settings.TimeZone}, {emails},
                  {settings.NotificationPriority}, {settings.NotificationSound}, {settings.DefaultType},
-                 {settings.BackupDelaySeconds}, {now})
+                 {settings.BackupDelaySeconds}, {settings.PhoneSound}, {settings.PhoneSnoozeMinutes}, {now})
              ON CONFLICT ("Id") DO UPDATE SET
                  "RepeatSeconds" = EXCLUDED."RepeatSeconds",
                  "StopAfterMinutes" = EXCLUDED."StopAfterMinutes",
@@ -165,6 +168,8 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                  "NotificationSound" = EXCLUDED."NotificationSound",
                  "DefaultType" = EXCLUDED."DefaultType",
                  "BackupDelaySeconds" = EXCLUDED."BackupDelaySeconds",
+                 "PhoneSound" = EXCLUDED."PhoneSound",
+                 "PhoneSnoozeMinutes" = EXCLUDED."PhoneSnoozeMinutes",
                  "UpdatedAt" = EXCLUDED."UpdatedAt"
              """,
             cancellationToken);
