@@ -337,7 +337,8 @@ A change that alters what a phone should hold sends every phone with a
 push token a background push through Apple's push service
 (`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
 and Unmute, an acknowledgement from anywhere, a new event, an event edited
-or deleted, a routine alarm added, changed or deleted, and a calendar read whose alarms differ
+or deleted, a routine alarm added, changed or deleted, a change to the
+phone's alarm sound or snooze, and a calendar read whose alarms differ
 from the last read. The phone then reads
 `/api/alerts/status`. iOS can delay or drop a background push, so the
 phone also reads when opened and in the background.
@@ -407,6 +408,8 @@ every other replica reads it at the start of its next pass.
 | Time zone | blank, UTC | a time zone database name |
 | Your addresses | none | up to 10 |
 | Pushover backup after | 0 s | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start |
+| Alarm sound (On the phone) | iPhone default | iPhone default, Pulse, Chime, Rise, Siren or Beacon |
+| Snooze (On the phone) | 9 min | 1 to 30 min |
 
 Ring until stopped has no priority setting. Every such alert goes to Pushover at its
 priority 2 with `retry` set to the repeat and `expire` set to the stop, so
@@ -423,6 +426,26 @@ persistent, echo, updown). iOS plays a notification sound for up to 30 s
 so a long sound plays into each 30 s gap. At 30 s Pushover's 50 sounds last
 25 min. Until the first save the defaults come from the
 `Alerts__` settings of the same names (`AlertsOptions.cs`).
+
+The paired phone plays the alarm sound for every alarm it rings. The
+sounds are audio files in the app, and the page only names them. Ring in
+this browser keeps its own tone. Snooze delays a calendar alarm on the
+phone by that many minutes. A snooze is not an acknowledgement, and
+nothing on the server changes for it.
+
+`GET /api/alerts/status` carries them as `settings.phoneSound` and
+`settings.phoneSnoozeMinutes`. `bounds.phoneSounds` lists
+`[{value, label}]`: `default` (iPhone default), `pulse`, `chime`, `rise`,
+`siren` and `beacon`. `bounds.phoneSnoozeMinutes` is `{min: 1, max: 30}`.
+
+| Route | Who | Request | Answer |
+|---|---|---|---|
+| `PUT /api/alerts/settings` | the owner | the whole form, `phoneSound` and `phoneSnoozeMinutes` included | 200 with the page's whole state. 400 by field. 403 to a paired phone |
+| `PUT /api/alerts/phone-settings` | the owner or a paired phone | `{sound, snoozeMinutes}`, both required | 200 with the page's whole state. 400 by field. Every other setting is left as saved |
+
+Both share the actions rate limit. A save that changes the sound or the
+snooze pushes the phones once. The same values again change nothing and
+push nothing. Until the first save the two read `default` and 9.
 
 The calendar address and the two Pushover keys are not on the page. They
 stay container secrets, because a key typed into a web form passes through

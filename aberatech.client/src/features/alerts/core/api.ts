@@ -70,6 +70,10 @@ export interface AlertSettings {
   defaultType: "none" | "notification";
   /** Seconds after an alarm's time before Pushover follows, so a paired phone rings first. */
   backupDelaySeconds: number;
+  /** The sound the paired phone plays for every alarm it rings: a value from `bounds.phoneSounds`. */
+  phoneSound: string;
+  /** How many minutes the phone's Snooze delays a calendar alarm. */
+  phoneSnoozeMinutes: number;
 }
 
 export interface Bound {
@@ -84,6 +88,12 @@ export interface PushoverSound {
   custom: boolean;
 }
 
+/** One sound the phone app carries: the value saved, and its name on the page. */
+export interface PhoneSound {
+  value: string;
+  label: string;
+}
+
 /** What the form's inputs accept. The server checks the same numbers. */
 export interface SettingsBounds {
   repeatSeconds: Bound;
@@ -96,6 +106,9 @@ export interface SettingsBounds {
   maxEmergencySounds: number;
   /** The account's uploads first, then Pushover's built-ins. */
   sounds: PushoverSound[];
+  /** The sounds the phone app carries. The page only names them. */
+  phoneSounds: PhoneSound[];
+  phoneSnoozeMinutes: Bound;
 }
 
 export interface AlertsState {

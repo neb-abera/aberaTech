@@ -60,6 +60,12 @@ public class AlertSettingsRecord
     /// <summary>How long after an alarm's time Pushover follows, so a paired phone rings first. 0 sends at once.</summary>
     public int BackupDelaySeconds { get; set; }
 
+    /// <summary>The sound the paired phone plays for every alarm it rings. A row saved before the column existed reads "default".</summary>
+    public string PhoneSound { get; set; } = AlertSettings.DefaultPhoneSound;
+
+    /// <summary>How long the phone's Snooze delays a calendar alarm. A row saved before the column existed reads 9.</summary>
+    public int PhoneSnoozeMinutes { get; set; } = AlertSettings.DefaultPhoneSnoozeMinutes;
+
     public Instant UpdatedAt { get; set; }
 }
 

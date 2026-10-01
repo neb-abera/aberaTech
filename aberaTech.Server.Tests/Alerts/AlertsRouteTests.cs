@@ -542,7 +542,9 @@ public sealed class AlertsRouteTests : IDisposable
             ["notificationPriority"] = 0,
             ["notificationSound"] = "",
             ["defaultType"] = "none",
-            ["backupDelaySeconds"] = 0
+            ["backupDelaySeconds"] = 0,
+            ["phoneSound"] = "default",
+            ["phoneSnoozeMinutes"] = 9
         };
         foreach (var (field, value) in changes) form[field] = value;
         return form;
@@ -616,7 +618,14 @@ public sealed class AlertsRouteTests : IDisposable
         ["defaultType", null],
         ["backupDelaySeconds", -1],
         ["backupDelaySeconds", 901],
-        ["backupDelaySeconds", null]
+        ["backupDelaySeconds", null],
+        ["phoneSound", "foghorn"],
+        ["phoneSound", "siren2"],
+        ["phoneSound", ""],
+        ["phoneSound", null],
+        ["phoneSnoozeMinutes", 0],
+        ["phoneSnoozeMinutes", 31],
+        ["phoneSnoozeMinutes", null]
     ];
 
     [Theory]
