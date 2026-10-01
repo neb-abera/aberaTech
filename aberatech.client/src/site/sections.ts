@@ -95,5 +95,33 @@ export const primaryAction: Entry = {
   blurb: "Book a time, or join the queue. Confirmed by text.",
 };
 
+/**
+ * The owner's pages, in the app bar on every page once signed in, desktop
+ * and phone alike. A page the owner works from goes here, so it is one
+ * click from anywhere. /dates shipped on 2026-10-01 linked only from
+ * /projects and the footer, and Neb had to ask how to reach it.
+ */
+export const ownerPages: { label: string; to: string }[] = [
+  { label: "Links", to: "/links" },
+  { label: "Plan", to: "/plan" },
+  { label: "Dev box", to: "/devbox" },
+  { label: "Alerts", to: "/alerts" },
+  { label: "Dates", to: "/dates" },
+];
+
+/**
+ * Every page that is not structural, not a guide and not in ownerPages,
+ * and why the app bar leaves it out. routes.test.ts fails on a page that
+ * is in none of the four, so a new page gets a decision about the bar.
+ */
+export const notInBar: Record<string, string> = {
+  "/planner":
+    "A project for visitors, reached from Projects in the bar. The owner does not keep state there.",
+  "/fitness":
+    "A project for visitors, reached from Projects in the bar. Its data is the owner's, read on the page itself.",
+  "/schedule/admin":
+    "The queue's admin, reached from the booking flow and by address. Neb has not asked for it in the bar.",
+};
+
 /** What to show where space is tight. */
 export const label = (entry: Entry): string => entry.navLabel ?? entry.title;

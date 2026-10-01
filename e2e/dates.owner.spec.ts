@@ -34,6 +34,39 @@ async function phoneSees(page: Page) {
   }[];
 }
 
+test("the owner reaches /dates from the app bar on any page, and the bar fits", async ({
+  page,
+}) => {
+  await signIn(page);
+  for (const [width, menu] of [
+    [900, false],
+    [1280, false],
+    [390, true],
+  ] as const) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/guides");
+    if (menu) {
+      await page.getByRole("button", { name: "Menu button" }).click();
+      await page.getByRole("menuitem", { name: "Dates", exact: true }).click();
+    } else {
+      const bar = page.getByRole("banner");
+      await bar.getByRole("link", { name: "Dates", exact: true }).click();
+      // Every entry stays inside the bar: nothing wraps out or scrolls.
+      await page.goto("/guides");
+      const overflow = await page.evaluate(() => {
+        const toolbar = document.querySelector("header .MuiToolbar-root");
+        return toolbar ? toolbar.scrollWidth - toolbar.clientWidth : -1;
+      });
+      expect(overflow, `toolbar overflow at ${width}px`).toBe(0);
+      await bar.getByRole("link", { name: "Dates", exact: true }).click();
+    }
+    await expect(page).toHaveURL(/\/dates$/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Dates and countdowns" }),
+    ).toBeVisible();
+  }
+});
+
 test("the owner adds a countdown, sees it tick, edits it and deletes it, and the phone's status follows", async ({
   page,
 }) => {
