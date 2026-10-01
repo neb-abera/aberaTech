@@ -1013,15 +1013,51 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task A_database_failure_that_lands_as_the_host_stops_ends_the_worker_without_a_fault()
+    {
+        var store = new CreatedOutageStore(untilStopped: true);
+        var box = New(Standup(), store: store);
+        await box.Worker.StartAsync(CancellationToken.None);
+        await store.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await box.Worker.StopAsync(CancellationToken.None);
+
+        var run = box.Worker.ExecuteTask!;
+        Assert.True(run.IsCompletedSuccessfully, $"the worker ended {run.Status}: {run.Exception?.InnerException?.GetType().Name}");
+    }
+
     private static async Task WaitFor(Func<bool> condition)
     {
         for (var tries = 0; tries < 100 && !condition(); tries++) await Task.Delay(50);
         Assert.True(condition(), "timed out after 5 s");
     }
 
-    /// <summary>The in-memory store with the created events' table unreachable.</summary>
-    private sealed class CreatedOutageStore : IAlertStore
+    /// <summary>
+    /// The in-memory store with the created events' table unreachable. With
+    /// untilStopped, the read hangs until the host stops and then fails the
+    /// way Npgsql does when the stop lands mid-connect: with an exception that
+    /// is not a cancellation.
+    /// </summary>
+    private sealed class CreatedOutageStore(bool untilStopped = false) : IAlertStore
     {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        private async Task<IReadOnlyList<CreatedAlertEvent>> FailOnStopAsync(CancellationToken cancellationToken)
+        {
+            Entered.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Npgsql answers a cancelled connect with its own exception.
+            }
+
+            throw new TimeoutException("database down");
+        }
+
         private readonly InMemoryAlertStore _inner = new();
 
         public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken) => _inner.SettingsAsync(cancellationToken);
@@ -1078,7 +1114,9 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
 
         public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
-            Task.FromException<IReadOnlyList<CreatedAlertEvent>>(new TimeoutException("database down"));
+            untilStopped
+                ? FailOnStopAsync(cancellationToken)
+                : Task.FromException<IReadOnlyList<CreatedAlertEvent>>(new TimeoutException("database down"));
 
         public Task AddCreatedEventAsync(CreatedAlertEvent created, Instant now, CancellationToken cancellationToken) =>
             Task.FromException(new TimeoutException("database down"));
