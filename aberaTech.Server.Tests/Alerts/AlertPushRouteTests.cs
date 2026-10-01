@@ -700,6 +700,79 @@ public sealed class AlertPushRouteTests : IDisposable
         Assert.Equal(["Alerts__ApnsKeyP8"], options.ApnsMissing());
     }
 
+    [Fact]
+    public async Task A_database_failure_that_lands_as_the_host_stops_ends_the_sender_without_a_fault()
+    {
+        var devices = new FailsOnStopDeviceStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IAlertDeviceStore>(devices);
+        await using var provider = services.BuildServiceProvider();
+        var sender = new AlertPushWorker(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            _app.Factory.Services.GetRequiredService<AlertsStatus>(),
+            _app.Factory.Services.GetRequiredService<AlertsOptions>(),
+            _clock,
+            new ApnsDelay(),
+            _app.Factory.Services.GetRequiredService<ILogger<AlertPushWorker>>());
+        await sender.StartAsync(CancellationToken.None);
+        await devices.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await sender.StopAsync(CancellationToken.None);
+
+        var run = sender.ExecuteTask!;
+        Assert.True(run.IsCompletedSuccessfully, $"the sender ended {run.Status}: {run.Exception?.InnerException?.GetType().Name}");
+    }
+
+    /// <summary>
+    /// A device store whose first read hangs until the host stops, then fails
+    /// the way Npgsql does when the stop lands mid-connect: with an exception
+    /// that is not a cancellation. Nothing else is called before that.
+    /// </summary>
+    private sealed class FailsOnStopDeviceStore : IAlertDeviceStore
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<long> PlanVersionAsync(CancellationToken cancellationToken)
+        {
+            Entered.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Npgsql answers a cancelled connect with its own exception.
+            }
+
+            throw new TimeoutException("database down");
+        }
+
+        public Task<IReadOnlyList<AlertDevice>> ListAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<AlertDevice?> CreateAsync(Guid id, string name, byte[] tokenHash, Instant now, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<bool> RevokeAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<AlertDevice?> FindAsync(byte[] tokenHash, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task SetPushAsync(Guid id, string? token, string? environment, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<bool> BumpPlanAsync(byte[]? fingerprint, bool force, Instant now, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<PushTarget>> PushTargetsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<bool> TryClaimPushAsync(Guid id, long version, Instant now, Instant windowStart, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
     /// <summary>The wait before a retry, recorded rather than slept.</summary>
     private sealed class RecordingDelay : ApnsDelay
     {

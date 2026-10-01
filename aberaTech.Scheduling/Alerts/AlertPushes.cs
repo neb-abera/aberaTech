@@ -444,6 +444,11 @@ public sealed class AlertPushWorker(
                 logger.LogWarning("The phone push pass failed ({Failure}).", exception.GetType().Name);
                 next = clock.GetCurrentInstant() + Window;
             }
+            catch (Exception) when (stoppingToken.IsCancellationRequested)
+            {
+                // The host is stopping, as in CalendarAlertWorker.
+                return;
+            }
 
             var wait = next - clock.GetCurrentInstant();
             if (wait < Duration.Zero) wait = Duration.Zero;
