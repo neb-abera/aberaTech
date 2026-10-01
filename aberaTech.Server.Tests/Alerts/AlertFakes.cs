@@ -251,6 +251,37 @@ internal sealed class InMemoryAlertStore : IAlertStore
     {
         lock (_lock) return Task.FromResult(_routines.Remove(id));
     }
+
+    private readonly Dictionary<Guid, AlertCountdown> _countdowns = [];
+
+    public Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(AlertCountdowns.Sorted(_countdowns.Values));
+    }
+
+    public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_countdowns.Count >= AlertCountdowns.MaxCountdowns) return Task.FromResult(false);
+            return Task.FromResult(_countdowns.TryAdd(countdown.Id, countdown));
+        }
+    }
+
+    public Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (!_countdowns.ContainsKey(countdown.Id)) return Task.FromResult(false);
+            _countdowns[countdown.Id] = countdown;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_countdowns.Remove(id));
+    }
 }
 
 /// <summary>
