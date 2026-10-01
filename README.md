@@ -273,9 +273,31 @@ it, and its own id is patched or deleted, which Google keeps as an
 exception or a cancelled instance. `occurrence` on an event that does not
 repeat, and `series`, patch or delete the event itself. A `series` edit
 moves the master's start by the edited occurrence's change in date and
-wall-clock time, in the series' own zone, and keeps its RRULE. A daily
-09:00 moved to 10:00 stays at 10:00 across a clock change, as Google
-Calendar's All events edit does. Every write carries `sendUpdates=none`.
+wall-clock time, in the series' own zone. A daily 09:00 moved to 10:00
+stays at 10:00 across a clock change, as Google Calendar's All events edit
+does. Every write carries `sendUpdates=none`.
+
+A `series` edit that moves the date by D days, counted on the series'
+clock, also rewrites the recurrence that `events.list` returned, and sends
+it (`RecurrenceShift.cs`). A rule that names its days keeps making them
+after DTSTART moves (RFC 5545 section 3.3.10). So a weekly Tuesday moved
+to Wednesday would go on repeating on Tuesdays.
+
+| Part | Rewrite |
+|---|---|
+| `BYDAY` | Every weekday moves by D, modulo 7. `MO,WE,FR` a day earlier is `SU,TU,TH`. |
+| `BYDAY` with one ordinal, monthly or in a `BYMONTH` | The new start's ordinal when the old one named the old start. `2TU` on 14 July 2026, moved to the 15th, is `3WE`. Otherwise the ordinal stays and the day moves. |
+| `BYMONTHDAY`, monthly or yearly | One value that named the old start takes the new start's day. `31` moved a day later is `1`. `-1` stays negative inside its month. Other values move by D, clamped to 1 to 31. |
+| `BYMONTH`, yearly | One value that named the old start's month takes the new month. |
+| `EXDATE`, `RDATE` | Each date moves by the same change in date and wall-clock time, so a cancelled occurrence stays cancelled. RFC 5545 section 3.8.5.1 matches an EXDATE by its exact start. |
+| `UNTIL`, `COUNT`, `INTERVAL`, `WKST`, `BYSETPOS`, `BYYEARDAY`, `BYWEEKNO` | Kept. |
+
+A rule with none of these parts, such as `FREQ=DAILY` or `FREQ=WEEKLY`
+with no `BYDAY`, takes its days from DTSTART and is not sent. A move
+within the same day sends no recurrence, unless an `EXDATE` or `RDATE`
+must move with the time. Google does not document what its editor does
+with exceptions, so the server keeps them on the series as moved.
+`occurrence` never sends a recurrence.
 
 A moved start gives the occurrence a new key. Its skip goes with it. When
 the new alert time has already come and the alert went, the send claim

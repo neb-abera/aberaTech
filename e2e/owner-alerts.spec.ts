@@ -620,11 +620,60 @@ test.describe("/alerts", () => {
 
     const writes = await googleWrites(page);
     expect(writes).toMatchObject([
-      { kind: "patch-master", eventId: "e2e-daily", timeZone: "UTC" },
+      {
+        kind: "patch-master",
+        eventId: "e2e-daily",
+        timeZone: "UTC",
+        recurrence: null,
+      },
     ]);
     expect(Date.parse(writes[0].start)).toBe(
       Date.parse(before[0].startsAt) + 60 * 60_000,
     );
+  });
+
+  test("All events moved a day later rewrites the series' weekdays in Google", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+    const before = await alertsTitled(page, "E2E daily");
+    expect(before).toHaveLength(2);
+
+    await page
+      .getByRole("button", { name: /^Edit E2E daily at / })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("All events").check();
+    await dialog
+      .getByLabel(/^Starts/)
+      .fill(await localPlus(page, before[0].startsAt, 24 * 60));
+    await dialog.getByRole("button", { name: "Save" }).click();
+
+    await expect(
+      page.getByText("E2E daily is changed, every occurrence."),
+    ).toBeVisible();
+
+    // The development series is weekly on its first day and the next two,
+    // in UTC. A day later it is the three days after.
+    const days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+    const first = new Date(before[0].startsAt).getUTCDay();
+    const moved = [1, 2, 3].map((day) => days[(first + day) % 7]).join(",");
+    const writes = await googleWrites(page);
+    expect(writes).toMatchObject([
+      {
+        kind: "patch-master",
+        eventId: "e2e-daily",
+        timeZone: "UTC",
+        recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${moved};COUNT=3`],
+      },
+    ]);
+    expect(Date.parse(writes[0].start)).toBe(
+      Date.parse(before[0].startsAt) + 24 * 60 * 60_000,
+    );
+    expect(JSON.parse(writes[0].body)).not.toHaveProperty("description");
   });
 
   test("Delete of one occurrence keeps the rest of the series, and it survives a reload", async ({

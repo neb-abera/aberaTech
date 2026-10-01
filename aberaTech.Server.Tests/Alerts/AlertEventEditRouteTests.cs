@@ -352,6 +352,99 @@ public sealed class AlertEventEditRouteTests : IDisposable
         Assert.DoesNotContain(alerts, alert => alert.GetProperty("title").GetString() == "Daily");
     }
 
+    /// <summary>
+    /// 10:00 New York time every Thursday from 29 October, four times, with
+    /// the 12 November occurrence cancelled. Listed: Thursday 29 October.
+    /// </summary>
+    private void Weekly()
+    {
+        string[] rules = ["RRULE:FREQ=WEEKLY;BYDAY=TH;COUNT=4", "EXDATE;TZID=America/New_York:20261112T100000"];
+        _feed = Ics(Standup(), Daily(), Event(
+            "weekly@google.com", "Weekly", "20261029T100000", "20261029T103000", extra: rules, alarms: [Popup("-PT10M")]));
+        _google.Seed(
+            "weekly@google.com", recurring: true, start: Instant.FromUtc(2026, 10, 29, 14, 0), summary: "Weekly", recurrence: rules);
+        Read();
+    }
+
+    [Fact]
+    public async Task A_series_edit_to_another_weekday_rewrites_the_rule_so_google_repeats_on_the_new_day()
+    {
+        Weekly();
+        using var owner = Owner();
+
+        // Thursday 10:00 to Friday 10:00: every Thursday becomes a Friday.
+        using var response = await Put(owner, """
+            {"key":"weekly@google.com|20261029T140000Z","scope":"series","title":"Weekly","startsAt":"2026-10-30T10:00:00-04:00"}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var write = Assert.Single(_google.Writes);
+        Assert.Equal("patch-master", write.Kind);
+        Assert.Equal("2026-10-30T10:00:00-04:00", write.Start);
+        Assert.Equal("America/New_York", write.TimeZone);
+        // COUNT stays. The cancelled Thursday is the cancelled Friday.
+        Assert.Equal(
+            ["RRULE:FREQ=WEEKLY;BYDAY=FR;COUNT=4", "EXDATE;TZID=America/New_York:20261113T100000"],
+            write.Recurrence);
+        var body = JsonDocument.Parse(write.Body!).RootElement;
+        Assert.False(body.TryGetProperty("description", out _));
+        Assert.Equal(["RRULE:FREQ=WEEKLY;BYDAY=FR;COUNT=4", "EXDATE;TZID=America/New_York:20261113T100000"], _google.Recurrence("weekly@google.com"));
+
+        var weekly = (await AlertsOf(response)).Where(alert => alert.GetProperty("title").GetString() == "Weekly").ToList();
+        Assert.Equal([At(10, 30, 14)], weekly.Select(alert => alert.GetProperty("startsAt").GetDateTimeOffset()));
+    }
+
+    [Fact]
+    public async Task A_series_edit_within_the_day_keeps_the_rule_and_moves_a_cancelled_occurrence()
+    {
+        Weekly();
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"weekly@google.com|20261029T140000Z","scope":"series","title":"Weekly","startsAt":"2026-10-29T11:00:00-04:00"}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var write = Assert.Single(_google.Writes);
+        // The cancelled 10:00 Thursday moves to 11:00, so it stays cancelled. The rule is unchanged.
+        Assert.Equal(["RRULE:FREQ=WEEKLY;BYDAY=TH;COUNT=4", "EXDATE;TZID=America/New_York:20261112T110000"], write.Recurrence);
+    }
+
+    [Fact]
+    public async Task A_daily_series_moved_a_day_sends_no_recurrence()
+    {
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"daily@google.com|20261029T140000Z","scope":"series","title":"Daily","startsAt":"2026-10-30T10:00:00-04:00"}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var write = Assert.Single(_google.Writes);
+        Assert.Equal("2026-10-29T10:00:00-04:00", write.Start);
+        Assert.Null(write.Recurrence);
+        Assert.False(JsonDocument.Parse(write.Body!).RootElement.TryGetProperty("recurrence", out _));
+    }
+
+    [Fact]
+    public async Task An_occurrence_edit_of_a_weekday_series_to_another_day_never_touches_the_recurrence()
+    {
+        Weekly();
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"weekly@google.com|20261029T140000Z","scope":"occurrence","title":"Weekly","startsAt":"2026-10-30T10:00:00-04:00"}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var write = Assert.Single(_google.Writes);
+        Assert.Equal("patch-instance", write.Kind);
+        Assert.EndsWith("_20261029T140000Z", write.Target);
+        Assert.Null(write.Recurrence);
+        Assert.False(JsonDocument.Parse(write.Body!).RootElement.TryGetProperty("recurrence", out _));
+        Assert.Equal(["RRULE:FREQ=WEEKLY;BYDAY=TH;COUNT=4", "EXDATE;TZID=America/New_York:20261112T100000"], _google.Recurrence("weekly@google.com"));
+    }
+
     [Fact]
     public async Task A_series_edit_across_a_date_change_and_the_end_of_daylight_time_keeps_the_wall_clock()
     {
