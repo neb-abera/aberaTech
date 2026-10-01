@@ -106,6 +106,7 @@ describe("the account controls", () => {
     expect(screen.queryByRole("link", { name: "Plan" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Dev box" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Alerts" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Dates" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
     expect(screen.getByRole("menuitem", { name: "Sign in" })).toBeTruthy();
@@ -130,6 +131,9 @@ describe("the account controls", () => {
     expect(
       screen.getByRole("link", { name: "Alerts" }).getAttribute("href"),
     ).toBe("/alerts");
+    expect(
+      screen.getByRole("link", { name: "Dates" }).getAttribute("href"),
+    ).toBe("/dates");
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
@@ -145,6 +149,9 @@ describe("the account controls", () => {
     expect(
       screen.getByRole("menuitem", { name: "Alerts" }).getAttribute("href"),
     ).toBe("/alerts");
+    expect(
+      screen.getByRole("menuitem", { name: "Dates" }).getAttribute("href"),
+    ).toBe("/dates");
 
     const reload = vi.fn();
     Object.defineProperty(window, "location", {

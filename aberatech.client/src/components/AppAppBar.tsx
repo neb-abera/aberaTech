@@ -16,7 +16,13 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { Link, useLocation } from "react-router";
 import { signInHref, signOut, useAccount } from "../hooks/useAccount";
-import { guides, label, primaryAction, projects } from "../site/sections";
+import {
+  guides,
+  label,
+  ownerPages,
+  primaryAction,
+  projects,
+} from "../site/sections";
 import ColorModeIconDropdown from "../theme/ColorModeIconDropdown";
 import { brand } from "../theme/themePrimitives";
 
@@ -125,49 +131,20 @@ export default function AppAppBar() {
               >
                 Projects
               </Button>
-              {/* Four more items, for the owner only: the bookmark list, the
-                  plan, the dev box and the alerts are reached by address by
-                  everyone else. */}
-              {signedIn && (
-                <>
+              {/* The owner's pages, for the owner only (sections.ts). */}
+              {signedIn &&
+                ownerPages.map((page) => (
                   <Button
+                    key={page.to}
                     variant="text"
                     color="info"
                     size="small"
                     component={Link}
-                    to="/links"
+                    to={page.to}
                   >
-                    Links
+                    {page.label}
                   </Button>
-                  <Button
-                    variant="text"
-                    color="info"
-                    size="small"
-                    component={Link}
-                    to="/plan"
-                  >
-                    Plan
-                  </Button>
-                  <Button
-                    variant="text"
-                    color="info"
-                    size="small"
-                    component={Link}
-                    to="/devbox"
-                  >
-                    Dev box
-                  </Button>
-                  <Button
-                    variant="text"
-                    color="info"
-                    size="small"
-                    component={Link}
-                    to="/alerts"
-                  >
-                    Alerts
-                  </Button>
-                </>
-              )}
+                ))}
             </Box>
           </Box>
           <Box
@@ -257,26 +234,12 @@ export default function AppAppBar() {
                   <MenuItem component={Link} to="/">
                     Home
                   </MenuItem>
-                  {signedIn && (
-                    <MenuItem component={Link} to="/links">
-                      Links
-                    </MenuItem>
-                  )}
-                  {signedIn && (
-                    <MenuItem component={Link} to="/plan">
-                      Plan
-                    </MenuItem>
-                  )}
-                  {signedIn && (
-                    <MenuItem component={Link} to="/devbox">
-                      Dev box
-                    </MenuItem>
-                  )}
-                  {signedIn && (
-                    <MenuItem component={Link} to="/alerts">
-                      Alerts
-                    </MenuItem>
-                  )}
+                  {signedIn &&
+                    ownerPages.map((page) => (
+                      <MenuItem key={page.to} component={Link} to={page.to}>
+                        {page.label}
+                      </MenuItem>
+                    ))}
                   <Divider sx={{ my: 1 }} />
                   <Typography
                     variant="caption"
