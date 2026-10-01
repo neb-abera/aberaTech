@@ -16,6 +16,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// Notification fields are for an event set to Notification, and
 /// DefaultType says what an event with neither sends.
 ///
+/// PhoneSound and PhoneSnoozeMinutes are the paired phone's. The sounds
+/// are audio files in the app, and the server only names them. A snooze is
+/// the phone's: nothing on the server changes for it.
+///
 /// The three secrets are not here. They stay container secrets: typed into
 /// a web form they would pass through the browser and the database.
 /// </remarks>
@@ -32,7 +36,9 @@ public sealed record AlertSettings(
     int NotificationPriority = 0,
     string NotificationSound = "",
     string DefaultType = AlertTypes.None,
-    int BackupDelaySeconds = 0)
+    int BackupDelaySeconds = 0,
+    string PhoneSound = AlertSettings.DefaultPhoneSound,
+    int PhoneSnoozeMinutes = AlertSettings.DefaultPhoneSnoozeMinutes)
 {
     public const int MinNotificationPriority = 0;
     public const int MinRepeatSeconds = PushoverClient.MinRetrySeconds;
@@ -51,6 +57,22 @@ public sealed record AlertSettings(
     public const int MaxNotificationPriority = 1;
     public const int MinBackupDelaySeconds = 0;
     public const int MaxBackupDelaySeconds = 900;
+    public const string DefaultPhoneSound = "default";
+    public const int DefaultPhoneSnoozeMinutes = 9;
+    public const int MinPhoneSnoozeMinutes = 1;
+    public const int MaxPhoneSnoozeMinutes = 30;
+    public const int MaxPhoneSoundLength = 16;
+
+    /// <summary>The sounds the phone app carries, by the value it reads and the name the page shows.</summary>
+    public static readonly IReadOnlyList<PhoneSoundChoice> PhoneSounds =
+    [
+        new(DefaultPhoneSound, "iPhone default"),
+        new("pulse", "Pulse"),
+        new("chime", "Chime"),
+        new("rise", "Rise"),
+        new("siren", "Siren"),
+        new("beacon", "Beacon")
+    ];
 
     /// <summary>A backup that would land after this point before the start goes at this point instead.</summary>
     public static readonly Duration LatestBackupBeforeStart = Duration.FromMinutes(1);
@@ -218,6 +240,29 @@ public sealed record AlertSettings(
         return errors;
     }
 
+    /// <summary>
+    /// The phone's sound and snooze, checked. Empty when both are inside
+    /// their bounds. Keys are the field names of the body that carried them.
+    /// </summary>
+    public static Dictionary<string, string[]> ValidatePhone(
+        string? sound, int? snoozeMinutes, string soundField, string snoozeField)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (sound is null) errors[soundField] = ["Required."];
+        else if (!PhoneSounds.Any(choice => choice.Value == sound))
+        {
+            errors[soundField] = [$"One of {string.Join(", ", PhoneSounds.Select(choice => $"\"{choice.Value}\""))}."];
+        }
+
+        if (snoozeMinutes is null) errors[snoozeField] = ["Required."];
+        else if (snoozeMinutes is < MinPhoneSnoozeMinutes or > MaxPhoneSnoozeMinutes)
+        {
+            errors[snoozeField] = [$"Between {MinPhoneSnoozeMinutes} and {MaxPhoneSnoozeMinutes} minutes."];
+        }
+
+        return errors;
+    }
+
     private static bool IsAddress(string? value)
     {
         var text = value?.Trim() ?? "";
@@ -228,3 +273,6 @@ public sealed record AlertSettings(
 
     private static string Shorten(string text) => text.Length <= 40 ? text : text[..40] + "…";
 }
+
+/// <summary>One sound the phone app carries: the value stored and sent, and the name the page shows.</summary>
+public sealed record PhoneSoundChoice(string Value, string Label);

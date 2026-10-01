@@ -167,6 +167,13 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // unmarked event: the migration fills it with "none".
             entity.Property(settings => settings.DefaultType).HasMaxLength(AlertTypes.MaxLength).IsRequired()
                 .HasDefaultValue(AlertTypes.None);
+            // The same for the phone's two: the saved row reads the app's
+            // defaults, and the previous release's insert, which names
+            // neither column, gets them too.
+            entity.Property(settings => settings.PhoneSound).HasMaxLength(Alerts.AlertSettings.MaxPhoneSoundLength).IsRequired()
+                .HasDefaultValue(Alerts.AlertSettings.DefaultPhoneSound);
+            entity.Property(settings => settings.PhoneSnoozeMinutes)
+                .HasDefaultValue(Alerts.AlertSettings.DefaultPhoneSnoozeMinutes);
         });
 
         builder.Entity<AlertEventTypeRecord>(entity =>

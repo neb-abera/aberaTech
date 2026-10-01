@@ -45,6 +45,8 @@ const defaults = {
   notificationSound: "",
   defaultType: "none",
   backupDelaySeconds: 0,
+  phoneSound: "default",
+  phoneSnoozeMinutes: 9,
 };
 
 /**
@@ -1011,6 +1013,36 @@ test.describe("/alerts", () => {
     const status = await (await page.request.get("/api/alerts/status")).json();
     expect(status.settings.backupDelaySeconds).toBe(120);
     expect(status.bounds.backupDelaySeconds).toEqual({ min: 0, max: 900 });
+    await reset(page);
+  });
+
+  test("the phone's alarm sound and snooze save with the settings and come back after a reload", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    await expect(
+      page.getByRole("heading", { name: "On the phone" }),
+    ).toBeVisible();
+    const sound = page.getByLabel("Alarm sound", { exact: true });
+    const snooze = page.getByLabel("Snooze", { exact: true });
+    await expect(sound).toHaveValue("default");
+    await expect(snooze).toHaveValue("9");
+    await sound.selectOption({ label: "Beacon" });
+    await snooze.fill("15");
+    await page.getByRole("button", { name: "Save settings" }).click();
+    await expect(page.getByText("Settings saved.")).toBeVisible();
+
+    await page.reload();
+    await expect(sound).toHaveValue("beacon");
+    await expect(sound.locator("option:checked")).toHaveText("Beacon");
+    await expect(snooze).toHaveValue("15");
+    const status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.settings.phoneSound).toBe("beacon");
+    expect(status.settings.phoneSnoozeMinutes).toBe(15);
+    expect(status.bounds.phoneSnoozeMinutes).toEqual({ min: 1, max: 30 });
     await reset(page);
   });
 

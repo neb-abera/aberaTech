@@ -106,6 +106,8 @@ interface Draft {
   notificationSound: string;
   defaultType: "none" | "notification";
   backupDelaySeconds: string;
+  phoneSound: string;
+  phoneSnoozeMinutes: string;
 }
 
 function toDraft(settings: AlertSettings): Draft {
@@ -117,6 +119,7 @@ function toDraft(settings: AlertSettings): Draft {
     pollMinutes: `${settings.pollMinutes}`,
     lookaheadHours: `${settings.lookaheadHours}`,
     backupDelaySeconds: `${settings.backupDelaySeconds}`,
+    phoneSnoozeMinutes: `${settings.phoneSnoozeMinutes}`,
     ownerEmails: settings.ownerEmails.join(", "),
   };
 }
@@ -143,6 +146,8 @@ function fromDraft(draft: Draft): AlertSettings {
     notificationSound: draft.notificationSound,
     defaultType: draft.defaultType,
     backupDelaySeconds: number(draft.backupDelaySeconds),
+    phoneSound: draft.phoneSound,
+    phoneSnoozeMinutes: number(draft.phoneSnoozeMinutes),
   };
 }
 
@@ -160,14 +165,17 @@ function same(a: AlertSettings, b: AlertSettings): boolean {
     a.notificationPriority === b.notificationPriority &&
     a.notificationSound === b.notificationSound &&
     a.defaultType === b.defaultType &&
-    a.backupDelaySeconds === b.backupDelaySeconds
+    a.backupDelaySeconds === b.backupDelaySeconds &&
+    a.phoneSound === b.phoneSound &&
+    a.phoneSnoozeMinutes === b.phoneSnoozeMinutes
   );
 }
 
 /**
  * The settings section of /alerts. Everything but the three secrets, saved
  * as one row and in force from the next pass of the worker. Alarms, then
- * notifications, then what an unmarked event sends, then the calendar.
+ * notifications, then what an unmarked event sends, then the paired phone,
+ * then the calendar.
  */
 export default function AlertSettingsForm({
   settings,
@@ -500,6 +508,48 @@ export default function AlertSettingsForm({
             </Typography>
           )}
         </Box>
+
+        <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
+          On the phone
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          The phone plays this sound for every alarm it rings. Snooze delays a
+          calendar alarm by this many minutes without acknowledging it.
+        </Typography>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+        >
+          <TextField
+            select
+            label="Alarm sound"
+            size="small"
+            value={shown.phoneSound}
+            onChange={(event) => edit({ phoneSound: event.target.value })}
+            error={Boolean(error("phoneSound"))}
+            helperText={error("phoneSound")}
+            slotProps={{
+              select: { native: true },
+              inputLabel: { shrink: true },
+            }}
+            sx={{ width: "14rem", maxWidth: "100%" }}
+          >
+            {bounds.phoneSounds.map((sound) => (
+              <option key={sound.value} value={sound.value}>
+                {sound.label}
+              </option>
+            ))}
+          </TextField>
+          {numberField(
+            "phoneSnoozeMinutes",
+            "Snooze",
+            "min",
+            bounds.phoneSnoozeMinutes,
+            `${bounds.phoneSnoozeMinutes.min} to ${bounds.phoneSnoozeMinutes.max} minutes`,
+          )}
+        </Stack>
 
         <Typography variant="h3" sx={{ fontSize: "1.05rem", fontWeight: 600 }}>
           Calendar
