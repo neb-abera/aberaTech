@@ -5,16 +5,17 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>
 /// The owner's /alerts page: the next alerts, the last calendar read, the
 /// settings, and Mute, Unmute, Skip, Acknowledge, each event's type, a new
-/// event, an event's edit and deletion, Save settings, three test sends, the
-/// routine alarms and the paired phones. Plain JSON over HTTPS,
+/// event, an event's edit and deletion, Save settings, the phone's alarm
+/// sound and snooze, three test sends, the routine alarms and the paired
+/// phones. Plain JSON over HTTPS,
 /// so it works from a locked-down work computer.
 /// </summary>
 /// <remarks>
 /// The owner's Google sign-in reaches every route. A paired phone's token
-/// reaches the thirteen a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
+/// reaches the fourteen a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
 /// the status, mute, unmute, skip, unskip, ack, an event's type, a new
-/// event, an event's edit and deletion, and a routine alarm's create, update
-/// and delete. The phone's own push registration takes its token alone
+/// event, an event's edit and deletion, a routine alarm's create, update
+/// and delete, and the phone settings. The phone's own push registration takes its token alone
 /// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
 /// limit. Every change a phone holds bumps the plan version, and
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
@@ -114,6 +115,7 @@ public static class AlertsEndpoints
         group.MapPut("/settings", async (
             SettingsRequest request,
             CalendarAlertWorker worker,
+            AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertStore store,
@@ -142,6 +144,12 @@ public static class AlertsEndpoints
                 request.DefaultType,
                 request.BackupDelaySeconds,
                 allowed);
+            foreach (var (field, messages) in AlertSettings.ValidatePhone(
+                         request.PhoneSound, request.PhoneSnoozeMinutes, "phoneSound", "phoneSnoozeMinutes"))
+            {
+                errors[field] = messages;
+            }
+
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
             var settings = new AlertSettings(
@@ -157,12 +165,44 @@ public static class AlertsEndpoints
                 request.NotificationPriority!.Value,
                 request.NotificationSound!,
                 request.DefaultType!,
-                request.BackupDelaySeconds!.Value);
+                request.BackupDelaySeconds!.Value,
+                request.PhoneSound!,
+                request.PhoneSnoozeMinutes!.Value);
             await store.SaveSettingsAsync(settings, clock.GetCurrentInstant(), cancellationToken);
+
+            // The phones hold the sound and the snooze, so a change to
+            // either pushes them, as a phone settings save does.
+            if (PhoneChanged(saved, settings)) await pushes.PlanChangedAsync(cancellationToken);
 
             // This replica plans with the new values now. The others read
             // the row at the start of their next pass.
             await worker.ReadNowAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // The phone's alarm sound and snooze, from the page or the phone.
+        // Every other setting is left as saved. Only a change pushes the
+        // phones: the same values again change nothing a phone holds.
+        shared.MapPut("/phone-settings", async (
+            PhoneSettingsRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var errors = AlertSettings.ValidatePhone(request.Sound, request.SnoozeMinutes, "sound", "snoozeMinutes");
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+
+            var saved = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var settings = saved with { PhoneSound = request.Sound!, PhoneSnoozeMinutes = request.SnoozeMinutes!.Value };
+            if (PhoneChanged(saved, settings))
+            {
+                await store.SaveSettingsAsync(settings, clock.GetCurrentInstant(), cancellationToken);
+                await pushes.PlanChangedAsync(cancellationToken);
+            }
+
             return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
@@ -632,6 +672,9 @@ public static class AlertsEndpoints
             detail: outcome.Problem,
             statusCode: outcome.Conflict ? StatusCodes.Status409Conflict : StatusCodes.Status502BadGateway);
 
+    private static bool PhoneChanged(AlertSettings before, AlertSettings after) =>
+        before.PhoneSound != after.PhoneSound || before.PhoneSnoozeMinutes != after.PhoneSnoozeMinutes;
+
     private static bool Valid(string? key) =>
         !string.IsNullOrWhiteSpace(key) && key.Length <= AlertPlanner.MaxKeyLength;
 
@@ -680,7 +723,9 @@ public static class AlertsEndpoints
                 settings.NotificationPriority,
                 settings.NotificationSound,
                 settings.DefaultType,
-                settings.BackupDelaySeconds),
+                settings.BackupDelaySeconds,
+                settings.PhoneSound,
+                settings.PhoneSnoozeMinutes),
             Bounds: SettingsBounds.For(await sounds.CurrentAsync(cancellationToken)),
             MutedUntil: mutedUntil?.ToDateTimeOffset(),
             LastFetchAt: snapshot.LastFetchAt?.ToDateTimeOffset(),
@@ -730,6 +775,9 @@ public static class AlertsEndpoints
     public sealed record AckRequest(string? Key, string? Via);
 
     public sealed record DeviceRequest(string? Name);
+
+    /// <summary>The phone's alarm sound, one of <see cref="AlertSettings.PhoneSounds"/>, and its snooze, 1 to 30 minutes. Both required.</summary>
+    public sealed record PhoneSettingsRequest(string? Sound, int? SnoozeMinutes);
 
     /// <summary>A paired phone as the list shows it. Never the token, its hash or the push token.</summary>
     /// <param name="Push">True when the phone has registered a push token.</param>
@@ -817,7 +865,9 @@ public static class AlertsEndpoints
         int? NotificationPriority,
         string? NotificationSound,
         string? DefaultType,
-        int? BackupDelaySeconds);
+        int? BackupDelaySeconds,
+        string? PhoneSound,
+        int? PhoneSnoozeMinutes);
 
     /// <summary>
     /// The page's whole state. Lists its fields: the settings in force, and
@@ -883,14 +933,17 @@ public static class AlertsEndpoints
         int NotificationPriority,
         string NotificationSound,
         string DefaultType,
-        int BackupDelaySeconds);
+        int BackupDelaySeconds,
+        string PhoneSound,
+        int PhoneSnoozeMinutes);
 
     public sealed record Bound(int Min, int Max);
 
     /// <summary>
     /// What the form's inputs accept. The server checks the same numbers on
     /// save. Sounds lists the account's own uploads first, then Pushover's
-    /// built-ins, and never the app token.
+    /// built-ins, and never the app token. PhoneSounds lists the sounds the
+    /// phone app carries.
     /// </summary>
     public sealed record SettingsBounds(
         Bound RepeatSeconds,
@@ -901,7 +954,9 @@ public static class AlertsEndpoints
         Bound BackupDelaySeconds,
         int MaxOwnerEmails,
         int MaxEmergencySounds,
-        IReadOnlyList<PushoverSound> Sounds)
+        IReadOnlyList<PushoverSound> Sounds,
+        IReadOnlyList<PhoneSoundChoice> PhoneSounds,
+        Bound PhoneSnoozeMinutes)
     {
         public static SettingsBounds For(IReadOnlyList<PushoverSound> sounds) => new(
             new Bound(AlertSettings.MinRepeatSeconds, AlertSettings.MaxRepeatSeconds),
@@ -912,7 +967,9 @@ public static class AlertsEndpoints
             new Bound(AlertSettings.MinBackupDelaySeconds, AlertSettings.MaxBackupDelaySeconds),
             AlertSettings.MaxOwnerEmails,
             PushoverClient.MaxEmergencySounds,
-            sounds);
+            sounds,
+            AlertSettings.PhoneSounds,
+            new Bound(AlertSettings.MinPhoneSnoozeMinutes, AlertSettings.MaxPhoneSnoozeMinutes));
     }
 
     public sealed record SendView(DateTimeOffset At, string Title, string Outcome);

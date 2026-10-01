@@ -323,7 +323,11 @@ public sealed class AlertPushRouteTests : IDisposable
         ["ring-once routine turned off by the phone", "phone", "PUT", $"/api/alerts/routines/{SeededRoutine}",
             "{\"label\":\"Nap\",\"hour\":14,\"minute\":0,\"days\":[],\"enabled\":false,\"snoozeMinutes\":9}"],
         ["routine deleted on the page", "owner", "DELETE", $"/api/alerts/routines/{SeededRoutine}", null],
-        ["routine deleted from the phone", "phone", "DELETE", $"/api/alerts/routines/{SeededRoutine}", null]
+        ["routine deleted from the phone", "phone", "DELETE", $"/api/alerts/routines/{SeededRoutine}", null],
+        ["alarm sound changed from the phone", "phone", "PUT", "/api/alerts/phone-settings", "{\"sound\":\"chime\",\"snoozeMinutes\":9}"],
+        ["snooze changed from the page", "owner", "PUT", "/api/alerts/phone-settings", "{\"sound\":\"default\",\"snoozeMinutes\":15}"],
+        ["alarm sound changed in the settings form", "owner", "PUT", "/api/alerts/settings",
+            JsonSerializer.Serialize(AlertsRouteTests.Form(("phoneSound", "siren"), ("phoneSnoozeMinutes", 5)))]
     ];
 
     /// <summary>A routine alarm the change triggers above find stored.</summary>
