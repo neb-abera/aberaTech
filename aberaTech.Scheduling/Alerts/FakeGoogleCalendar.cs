@@ -19,6 +19,7 @@ namespace aberaTech.Scheduling.Alerts;
 /// <param name="End">For an edit: the end as sent.</param>
 /// <param name="TimeZone">For an edit: the zone sent with the start, or null.</param>
 /// <param name="Body">For a patch: the JSON body as sent, so a test can see what it left out.</param>
+/// <param name="Recurrence">For a patch: the recurrence lines sent, or null when the body sent none.</param>
 public sealed record FakeGoogleWrite(
     string Kind,
     string EventId,
@@ -29,7 +30,8 @@ public sealed record FakeGoogleWrite(
     string? Start = null,
     string? End = null,
     string? TimeZone = null,
-    string? Body = null);
+    string? Body = null,
+    IReadOnlyList<string>? Recurrence = null);
 
 /// <summary>One events.instances call: the master's id and the window asked for.</summary>
 public sealed record FakeGoogleLookup(string MasterId, string TimeMin, string TimeMax);
@@ -43,7 +45,8 @@ public sealed record FakeGoogleLookup(string MasterId, string TimeMin, string Ti
 /// replaces Pushover's.
 /// </summary>
 /// <remarks>
-/// A recurring event repeats daily on its zone's wall clock. Its instances
+/// A recurring event repeats daily on its zone's wall clock, or by the
+/// recurrence lines it was seeded or patched with, expanded by Ical.Net. Its instances
 /// have the ids Google gives them, the master's id and the original start in
 /// UTC. A patched instance moves on its own. A deleted one is cancelled and
 /// no longer listed.
@@ -101,6 +104,10 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
     /// <param name="start">The first start. <see cref="DefaultStart"/> when null.</param>
     /// <param name="minutes">The length.</param>
     /// <param name="timeZone">The zone Google names on its start and end.</param>
+    /// <param name="recurrence">
+    /// The series' recurrence lines, for a rule other than daily. Null is
+    /// daily for <paramref name="count"/> days.
+    /// </param>
     public void Seed(
         string uid,
         string description = "",
@@ -110,7 +117,8 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         int minutes = 30,
         string timeZone = "America/New_York",
         int count = 7,
-        string? summary = null)
+        string? summary = null,
+        IReadOnlyList<string>? recurrence = null)
     {
         lock (_lock)
         {
@@ -127,7 +135,8 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
                 Start = begins,
                 End = begins + Duration.FromMinutes(minutes),
                 TimeZone = timeZone,
-                Count = count
+                Count = count,
+                Recurrence = recurrence is null ? null : [.. recurrence]
             };
         }
     }
@@ -144,6 +153,12 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         {
             return _events.TryGetValue(uid, out var item) ? (item.Summary, item.Start, item.End, item.Location, item.Popup) : null;
         }
+    }
+
+    /// <summary>A series' recurrence lines as the fake holds them now. Null when it is gone.</summary>
+    public IReadOnlyList<string>? Recurrence(string uid)
+    {
+        lock (_lock) return _events.TryGetValue(uid, out var item) ? Rules(item) : null;
     }
 
     /// <summary>The ids of a series' instances that are cancelled.</summary>
@@ -265,6 +280,9 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
             var zone = body["start"]?["timeZone"]?.GetValue<string>();
             var popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>();
             var location = body["location"]?.GetValue<string>();
+            IReadOnlyList<string>? recurrence = body["recurrence"] is JsonArray rules
+                ? [.. rules.Select(rule => rule!.GetValue<string>())]
+                : null;
 
             // A description alone is a type change: the kind every earlier
             // test and the browser suite read as "patch".
@@ -288,12 +306,14 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
                 if (zone is not null) item.TimeZone = zone;
                 if (location is not null) item.Location = location.Length == 0 ? null : location;
                 if (popup is not null) item.Popup = popup;
+                if (recurrence is not null && item.Recurring) item.Recurrence = [.. recurrence];
             }
 
             _writes.Enqueue(descriptionOnly
                 ? new FakeGoogleWrite("patch", item.Uid, null, description, null)
                 : new FakeGoogleWrite(
-                    instance is null ? "patch-master" : "patch-instance", item.Uid, summary, description, popup, id, start, end, zone, text));
+                    instance is null ? "patch-master" : "patch-instance", item.Uid, summary, description, popup, id, start, end, zone, text,
+                    recurrence));
             return Json(HttpStatusCode.OK, Item(item).ToJsonString());
         }
     }
@@ -376,15 +396,55 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         }
     }
 
-    /// <summary>The original starts of a series: daily on its zone's wall clock.</summary>
+    /// <summary>The original starts of a series: daily on its zone's wall clock, or as its own lines expand.</summary>
     private static IEnumerable<Instant> Originals(FakeEvent item)
     {
         var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(item.TimeZone ?? "UTC") ?? DateTimeZone.Utc;
         var local = item.Start.InZone(zone).LocalDateTime;
+        if (item.Recurring && item.Recurrence is { } lines)
+        {
+            foreach (var start in Expand(item.Start, zone, lines, MaxInstances)) yield return start;
+            yield break;
+        }
+
         for (var day = 0; day < (item.Recurring ? item.Count : 1); day++)
         {
             yield return zone.AtLeniently(local.PlusDays(day)).ToInstant();
         }
+    }
+
+    /// <summary>How many instances of a series with its own lines the fake lists at most.</summary>
+    private const int MaxInstances = 100;
+
+    /// <summary>
+    /// The first starts of a series, at most <paramref name="limit"/>, as
+    /// Ical.Net expands its lines from <paramref name="start"/> on the
+    /// zone's wall clock.
+    /// </summary>
+    public static IReadOnlyList<Instant> Expand(Instant start, DateTimeZone zone, IEnumerable<string> recurrence, int limit)
+    {
+        var local = start.InZone(zone).LocalDateTime;
+        var ics = string.Join("\r\n",
+        [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//aberaTech//Fake Google Calendar//EN",
+            "BEGIN:VEVENT",
+            "UID:expand",
+            $"DTSTART;TZID={zone.Id}:{local:yyyyMMdd'T'HHmmss}",
+            .. recurrence,
+            "END:VEVENT",
+            "END:VCALENDAR",
+            ""
+        ]);
+        var calendar = Ical.Net.Calendar.Load(ics)!;
+        return
+        [
+            .. calendar.GetOccurrences<Ical.Net.CalendarComponents.CalendarEvent>(
+                    new Ical.Net.DataTypes.CalDateTime(start.ToDateTimeUtc(), "UTC"))
+                .Take(limit)
+                .Select(occurrence => Instant.FromDateTimeUtc(DateTime.SpecifyKind(occurrence.Period.StartTime.AsUtc, DateTimeKind.Utc)))
+        ];
     }
 
     private static string InstanceId(FakeEvent item, Instant original) =>
@@ -432,10 +492,14 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
                 ? new JsonObject { ["email"] = "owner@example.test", ["self"] = true }
                 : new JsonObject { ["email"] = "someone@example.test" }
         };
-        if (item.Recurring) json["recurrence"] = new JsonArray($"RRULE:FREQ=DAILY;COUNT={item.Count}");
+        if (Rules(item) is { } rules) json["recurrence"] = new JsonArray([.. rules.Select(rule => JsonValue.Create(rule))]);
         if (item.Location is not null) json["location"] = item.Location;
         return json;
     }
+
+    /// <summary>A series' lines: its own, or daily for its count. Null for an event that does not repeat.</summary>
+    private static IReadOnlyList<string>? Rules(FakeEvent item) =>
+        !item.Recurring ? null : item.Recurrence ?? [$"RRULE:FREQ=DAILY;COUNT={item.Count}"];
 
     private static string Format(Instant at) => InstantPattern.ExtendedIso.Format(at);
 
@@ -488,6 +552,9 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         public int Count { get; init; } = 1;
 
         public int? Popup { get; set; }
+
+        /// <summary>The series' own lines. Null is daily for <see cref="Count"/> days.</summary>
+        public List<string>? Recurrence { get; set; }
 
         /// <summary>Patched or cancelled instances, by original start.</summary>
         public Dictionary<Instant, FakeInstance> Overrides { get; } = [];
