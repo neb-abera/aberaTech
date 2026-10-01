@@ -25,5 +25,6 @@ export const prerenderedRoutes: string[] = [
   "/schedule/admin",
   "/fitness",
   "/planner",
+  "/dates",
   ...guides.filter((entry) => !entry.external).map((entry) => entry.to),
 ];

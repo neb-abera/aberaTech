@@ -68,6 +68,12 @@ export const projects: Entry[] = [
       "A training model for military fitness tests. Sessions in, a predicted score out, and the cost of a goal by a date. The data is mine, so it asks you to sign in.",
   },
   {
+    title: "Dates and countdowns",
+    to: "/dates",
+    blurb:
+      "The days between two dates, a date plus or minus a span, and countdowns the alarms app on my phone shows too.",
+  },
+  {
     title: "Facewoof",
     to: "https://facewoof.abera.tech",
     blurb:

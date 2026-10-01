@@ -327,8 +327,18 @@ public sealed class AlertPushRouteTests : IDisposable
         ["alarm sound changed from the phone", "phone", "PUT", "/api/alerts/phone-settings", "{\"sound\":\"chime\",\"snoozeMinutes\":9}"],
         ["snooze changed from the page", "owner", "PUT", "/api/alerts/phone-settings", "{\"sound\":\"default\",\"snoozeMinutes\":15}"],
         ["alarm sound changed in the settings form", "owner", "PUT", "/api/alerts/settings",
-            JsonSerializer.Serialize(AlertsRouteTests.Form(("phoneSound", "siren"), ("phoneSnoozeMinutes", 5)))]
+            JsonSerializer.Serialize(AlertsRouteTests.Form(("phoneSound", "siren"), ("phoneSnoozeMinutes", 5)))],
+        ["countdown added on the page", "owner", "POST", "/api/alerts/countdowns",
+            "{\"label\":\"Home\",\"targetAt\":\"2027-03-01T09:00:00+03:00\",\"timeZone\":\"Asia/Amman\"}"],
+        ["countdown added from the phone", "phone", "POST", "/api/alerts/countdowns",
+            "{\"targetAt\":\"2027-03-01T09:00:00+03:00\",\"timeZone\":\"Asia/Amman\"}"],
+        ["countdown changed on the page", "owner", "PUT", $"/api/alerts/countdowns/{SeededCountdown}",
+            "{\"label\":\"Leave\",\"targetAt\":\"2027-01-10T08:00:00-05:00\",\"timeZone\":\"America/New_York\"}"],
+        ["countdown deleted from the phone", "phone", "DELETE", $"/api/alerts/countdowns/{SeededCountdown}", null]
     ];
+
+    /// <summary>A countdown the change triggers above find stored.</summary>
+    private static readonly Guid SeededCountdown = Guid.Parse("3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a");
 
     /// <summary>A routine alarm the change triggers above find stored.</summary>
     private static readonly Guid SeededRoutine = Guid.Parse("7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f");
@@ -349,6 +359,8 @@ public sealed class AlertPushRouteTests : IDisposable
         await PairAsync("No push");
         await _store.AddRoutineAsync(
             new AlertRoutine(SeededRoutine, "Nap", 14, 0, [], true, 9, Eight), CancellationToken.None);
+        await _store.AddCountdownAsync(
+            new AlertCountdown(SeededCountdown, "Home", Instant.FromUtc(2027, 3, 1, 6, 0), "Asia/Amman", Eight), CancellationToken.None);
         var before = await _devices.PlanVersionAsync(CancellationToken.None);
 
         using var client = caller == "phone" ? Phone(first.Token) : Owner();

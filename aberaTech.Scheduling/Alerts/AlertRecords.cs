@@ -292,3 +292,25 @@ public class AlertRoutineRecord
 
     public Instant UpdatedAt { get; set; }
 }
+
+/// <summary>
+/// A countdown the page and the paired phone show. The target is an
+/// instant. The zone is the one the owner set it in, for writing its date.
+/// </summary>
+public class AlertCountdownRecord
+{
+    /// <summary>Made by the server on create.</summary>
+    public Guid Id { get; set; }
+
+    /// <summary>1 to 60 characters. "Countdown" when none was given.</summary>
+    public string Label { get; set; } = AlertCountdowns.DefaultLabel;
+
+    public Instant TargetAt { get; set; }
+
+    /// <summary>An IANA zone id the tz database knows.</summary>
+    public string TimeZone { get; set; } = "UTC";
+
+    public Instant CreatedAt { get; set; }
+
+    public Instant UpdatedAt { get; set; }
+}

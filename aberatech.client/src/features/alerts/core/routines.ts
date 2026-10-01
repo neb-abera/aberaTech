@@ -3,7 +3,7 @@
  * snooze. Stored on the server, rung by a paired phone. Nothing here rings.
  */
 
-import type { ActionResult, AlertsState } from "./api";
+import { changeState, type StateChangeResult } from "./api";
 
 export interface Routine {
   id: string;
@@ -63,13 +63,12 @@ export function daySummary(days: number[]): string {
   return sorted.map((day) => dayNames[day - 1]).join(" ");
 }
 
-export type RoutineResult =
-  | ActionResult
-  | { ok: false; reason: "full" | "missing"; detail?: string };
+/** A routine alarm's create, update or delete. */
+export type RoutineResult = StateChangeResult;
 
 /** Adds a routine alarm. 409 when 50 are kept. */
 export function createRoutine(fields: RoutineFields): Promise<RoutineResult> {
-  return request("POST", "/api/alerts/routines", fields);
+  return changeState("POST", "/api/alerts/routines", fields);
 }
 
 /** Replaces one routine alarm with the whole body. */
@@ -77,7 +76,7 @@ export function updateRoutine(
   id: string,
   fields: RoutineFields,
 ): Promise<RoutineResult> {
-  return request(
+  return changeState(
     "PUT",
     `/api/alerts/routines/${encodeURIComponent(id)}`,
     fields,
@@ -85,50 +84,8 @@ export function updateRoutine(
 }
 
 export function deleteRoutine(id: string): Promise<RoutineResult> {
-  return request("DELETE", `/api/alerts/routines/${encodeURIComponent(id)}`);
-}
-
-async function request(
-  method: "POST" | "PUT" | "DELETE",
-  path: string,
-  body?: RoutineFields,
-): Promise<RoutineResult> {
-  try {
-    const response = await fetch(path, {
-      method,
-      credentials: "same-origin",
-      ...(body === undefined
-        ? {}
-        : {
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          }),
-    });
-    if (response.status === 401 || response.status === 403)
-      return { ok: false, reason: "visitor" };
-    if (response.status === 429) return { ok: false, reason: "throttled" };
-    if (response.status === 404) return { ok: false, reason: "missing" };
-    const json = response.headers.get("content-type")?.includes("json");
-    if (!response.ok) {
-      const problem: { detail?: string; errors?: Record<string, string[]> } =
-        (json ? await response.json() : null) ?? {};
-      if (response.status === 400 && problem.errors)
-        return { ok: false, reason: "invalid", errors: problem.errors };
-      if (response.status === 409)
-        return { ok: false, reason: "full", detail: problem.detail };
-      return { ok: false, reason: "refused" };
-    }
-    if (!json) return { ok: false, reason: "refused" };
-    const {
-      configured: _configured,
-      missing: _missing,
-      ...state
-    } = (await response.json()) as AlertsState & {
-      configured?: boolean;
-      missing?: string[];
-    };
-    return { ok: true, state };
-  } catch {
-    return { ok: false, reason: "network" };
-  }
+  return changeState(
+    "DELETE",
+    `/api/alerts/routines/${encodeURIComponent(id)}`,
+  );
 }

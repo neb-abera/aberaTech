@@ -84,6 +84,8 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   "/schedule/admin": { url: accountUrl },
   // Who is asking comes first on /planner: a visitor never asks for the plan.
   "/planner": { url: accountUrl },
+  // A visitor never asks for the countdowns, so who is asking comes first.
+  "/dates": { url: accountUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };
@@ -108,7 +110,7 @@ const structuralMeta: Record<string, PageMeta> = {
   "/projects": {
     title: "Projects",
     description:
-      "Tools I built and run: a graduate course planner that solves prerequisites and degree rules, a military fitness console, and a social app for dog owners.",
+      "Tools I built and run: a graduate course planner that solves prerequisites and degree rules, a military fitness console, a date calculator with countdowns, and a social app for dog owners.",
   },
   [primaryAction.to]: {
     title: primaryAction.title,

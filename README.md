@@ -331,13 +331,43 @@ Each change pushes the phones.
 | `PUT /api/alerts/routines/{id}` | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}` | 200. 400 by field. 404 for an unknown id |
 | `DELETE /api/alerts/routines/{id}` | none | 200. 404 for an unknown id |
 
+### Dates and countdowns
+
+`/dates` counts the days between two dates and adds or subtracts years,
+months, weeks and days from a date. It runs in the browser on plain dates,
+with no time and no zone, and sends nothing (`features/dates/core/dateMath.ts`).
+The phone app carries the same arithmetic and the same test table.
+
+Below the calculator the owner keeps countdowns. Each clock shows the time
+left, then the time since once the date passes. They are kept with the
+alerts, so the paired phone shows the same list (`AlertCountdowns.cs`, table
+`AlertCountdowns`). Nothing on the server fires them. A visitor's browser
+asks who is signed in first and never asks for them.
+
+A countdown is `{id, label, targetAt, timeZone, updatedAt}`. `targetAt` is
+ISO 8601 with its offset, between 1900 and 2200, and may be in the past.
+`timeZone` is an IANA zone the tz database knows, and the target's date is
+written in it. `label` follows the routine rules, and empty is stored as
+`Countdown`. At most 50 are kept.
+
+`GET /api/alerts/status` lists every countdown under `countdowns`, by
+target, then label. Each route below needs the owner or a paired phone,
+shares the actions rate limit, and answers with the page's whole state.
+Each change pushes the phones.
+
+| Route | Request | Answer |
+|---|---|---|
+| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone}` | 201. 400 by field. 409 with a `detail` past 50 |
+| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone}` | 200. 400 by field. 404 for an unknown id |
+| `DELETE /api/alerts/countdowns/{id}` | none | 200. 404 for an unknown id |
+
 ### Calendar alerts: phone pushes
 
 A change that alters what a phone should hold sends every phone with a
 push token a background push through Apple's push service
 (`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
 and Unmute, an acknowledgement from anywhere, a new event, an event edited
-or deleted, a routine alarm added, changed or deleted, a change to the
+or deleted, a routine alarm or a countdown added, changed or deleted, a change to the
 phone's alarm sound or snooze, and a calendar read whose alarms differ
 from the last read. The phone then reads
 `/api/alerts/status`. iOS can delay or drop a background push, so the

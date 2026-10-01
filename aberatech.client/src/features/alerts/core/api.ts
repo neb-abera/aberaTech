@@ -9,6 +9,7 @@
  */
 
 import { requestJson } from "../../../site/earlyRequest";
+import type { Countdown } from "./countdowns";
 import type { Routine } from "./routines";
 
 export interface AlertItem {
@@ -140,6 +141,11 @@ export interface AlertsState {
    * them. Nothing on this page or on the server rings them.
    */
   routines?: Routine[];
+  /**
+   * Countdowns, by target and label. /dates and the paired phone show the
+   * time left. An older server leaves the field out.
+   */
+  countdowns?: Countdown[];
 }
 
 /** Phone pushes: on when all three secrets are set. */
@@ -470,6 +476,53 @@ export async function revokeDevice(id: string): Promise<{
     // Already gone is what was asked for.
     if (response.status === 204 || response.status === 404) return { ok: true };
     return { ok: false, reason: "refused" };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+/** A stored item's create, update or delete: the state, or why not. */
+export type StateChangeResult =
+  | ActionResult
+  | { ok: false; reason: "full" | "missing"; detail?: string };
+
+/**
+ * Creates, replaces or deletes one stored item (a routine alarm, a
+ * countdown) and answers with the state the server stored. 404 is
+ * "missing", 409 at the item's limit is "full".
+ */
+export async function changeState(
+  method: "POST" | "PUT" | "DELETE",
+  path: string,
+  body?: unknown,
+): Promise<StateChangeResult> {
+  try {
+    const response = await fetch(path, {
+      method,
+      credentials: "same-origin",
+      ...(body === undefined
+        ? {}
+        : {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }),
+    });
+    if (response.status === 401 || response.status === 403)
+      return { ok: false, reason: "visitor" };
+    if (response.status === 429) return { ok: false, reason: "throttled" };
+    if (response.status === 404) return { ok: false, reason: "missing" };
+    const json = response.headers.get("content-type")?.includes("json");
+    if (!response.ok) {
+      const problem: { detail?: string; errors?: Record<string, string[]> } =
+        (json ? await response.json() : null) ?? {};
+      if (response.status === 400 && problem.errors)
+        return { ok: false, reason: "invalid", errors: problem.errors };
+      if (response.status === 409)
+        return { ok: false, reason: "full", detail: problem.detail };
+      return { ok: false, reason: "refused" };
+    }
+    if (!json) return { ok: false, reason: "refused" };
+    return { ok: true, state: toState((await response.json()) as StateBody) };
   } catch {
     return { ok: false, reason: "network" };
   }
