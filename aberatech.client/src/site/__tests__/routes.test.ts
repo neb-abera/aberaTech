@@ -104,6 +104,7 @@ describe("the app bar", () => {
         "/devbox",
         "/alerts",
         "/dates",
+        "/network",
       ]),
     );
   });
