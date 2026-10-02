@@ -100,6 +100,16 @@ describe("parse", () => {
     ]);
   });
 
+  it("refuses a way in that names nobody", () => {
+    const document = example();
+    document.people[0].via = ["acme", "nobody"];
+    const parsed = parse(JSON.stringify(document));
+    expect(parsed).toEqual({
+      ok: false,
+      problems: ['Person "ada" names a way in that is not listed: "nobody".'],
+    });
+  });
+
   it("refuses text that is not JSON, and JSON that is not an object with the three lists", () => {
     expect(parse("{")).toMatchObject({ ok: false });
     expect(parse("[]")).toEqual({
@@ -121,7 +131,7 @@ describe("counts", () => {
   it("counts people by status", () => {
     const summary = counts(example());
     expect(summary.people).toBe(2);
-    expect(summary.organizations).toBe(2);
+    expect(summary.organizations).toBe(3);
     expect(summary.byStatus.pending).toBe(1);
     expect(summary.byStatus.followed).toBe(1);
     expect(summary.byStatus.connected).toBe(0);
