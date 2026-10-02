@@ -5,5 +5,6 @@ Disallow: /links
 Disallow: /plan
 Disallow: /devbox
 Disallow: /alerts
+Disallow: /network
 
 Sitemap: https://abera.tech/sitemap.xml

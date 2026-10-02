@@ -86,6 +86,8 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   "/planner": { url: accountUrl },
   // A visitor never asks for the countdowns, so who is asking comes first.
   "/dates": { url: accountUrl },
+  // The network is the owner's alone, so who is asking comes first.
+  "/network": { url: accountUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };
@@ -136,6 +138,10 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Dev box",
     description:
       "The owner's dev box: its state, a button that starts it, and the terminal and desktop in a browser tab.",
+  },
+  "/network": {
+    title: "Network",
+    description: "The owner's network, drawn by sector.",
   },
 };
 

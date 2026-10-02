@@ -36,6 +36,7 @@ public sealed class ProgressEndpointsTests : IDisposable
     [InlineData("planner", true)]
     [InlineData("links", true)]
     [InlineData("plan", true)]
+    [InlineData("network", true)]
     [InlineData("signal_processing", false)]
     [InlineData("fitness", false)]
     [InlineData("bookmarks", false)]

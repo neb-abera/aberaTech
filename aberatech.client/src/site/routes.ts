@@ -56,6 +56,7 @@ export const routes: PageRoute[] = [
   page("/devbox", "DevBox"),
   page("/alerts", "Alerts"),
   page("/dates", "Dates"),
+  page("/network", "Network"),
 ];
 
 /**
@@ -84,4 +85,6 @@ export const unlisted: Record<string, string> = {
     "The owner's dev box: its power state, a Start button, the terminal and desktop in a browser tab (devbox.abera.tech, devbox-desktop.abera.tech, behind Cloudflare Access) and the runbook for getting a session back from a phone or a locked-down work computer. A visitor gets a sign-in button; the app bar shows a Dev box entry only to the signed-in owner.",
   "/alerts":
     "The owner's calendar alerts: mute, skip and a test send. Same shape as /devbox: a visitor gets a sign-in button, the app bar shows an Alerts entry only to the signed-in owner.",
+  "/network":
+    "The owner's network, drawn from a document kept on the server. Same shape as /plan: a visitor gets a sign-in button and the document is never requested, the app bar shows a Network entry only to the signed-in owner.",
 };
