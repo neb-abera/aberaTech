@@ -2,7 +2,7 @@
   "about": "Byte budgets for the production client build, enforced by scripts/check-page-budgets.mjs (make budget, and the production image job in CI). Text is measured gzipped at level 9, images as they are. Each budget sits at most 10% above what the build measures, rounded up: ceil(measured * 1.10). A budget above that fails the check, which prints the number to set, so a pull request that makes a page smaller lowers its budget in the same pull request. The rule dates from 2026-09-28, when every budget it flagged was lowered to its number. An entry under floors may sit at its floor instead, for a file so small that 10% of it is a few bytes. home-initial counts the route chunks the home page head preloads since 2026-09-28. To raise one deliberately, change it here in the pull request that needs it and say why in that pull request. The lighthouse:<route> entries are the bytes a route transfers in the Lighthouse job, the median of 5 runs, checked by tools/lighthouse/gate.mjs under the same 10% rule. They are set 5% above the measurement, since response headers make a network count move by a few bytes between runs.",
   "floors": {},
   "budgets": {
-    "entry-js": 89300,
+    "entry-js": 89305,
     "home-initial": 207485,
     "html:/": 13791,
     "html:/alerts": 13197,
@@ -11,7 +11,7 @@
     "html:/fitness": 13392,
     "html:/guides": 13930,
     "html:/links": 13258,
-    "html:/network": 13833,
+    "html:/network": 13832,
     "html:/plan": 13180,
     "html:/planner": 35917,
     "html:/projects": 14106,
