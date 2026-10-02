@@ -31,10 +31,12 @@ export interface Organization {
   id: string;
   name: string;
   sector: string;
-  /** What kind of place it is: company, fund, agency, lab, association. */
+  /** What kind of place it is: company, fund, agency, lab, association, event. */
   kind?: string;
   url?: string;
   note?: string;
+  /** For an event: when and where it meets. */
+  when?: string;
 }
 
 export interface Person {
@@ -51,12 +53,18 @@ export interface Person {
   why?: string;
   location?: string;
   mutuals?: number;
+  /** The next step with this person, in the owner's words. */
+  next?: string;
+  /** The way in: ids of the people or organizations an introduction runs through. */
+  via?: string[];
 }
 
 export interface NetworkDocument {
   version: 1;
   /** The day the document was last edited, YYYY-MM-DD. */
   updated: string;
+  /** The plan behind the picture, free text, shown on the page. */
+  plan?: string;
   sectors: Sector[];
   organizations: Organization[];
   people: Person[];
@@ -107,6 +115,7 @@ export function coerce(value: unknown): NetworkDocument {
           ...(text(entry.kind) ? { kind: text(entry.kind) } : {}),
           ...(text(entry.url) ? { url: text(entry.url) } : {}),
           ...(text(entry.note) ? { note: text(entry.note) } : {}),
+          ...(text(entry.when) ? { when: text(entry.when) } : {}),
         });
   const people: Person[] = [];
   if (Array.isArray(value.people))
@@ -129,11 +138,16 @@ export function coerce(value: unknown): NetworkDocument {
         ...(typeof entry.mutuals === "number"
           ? { mutuals: entry.mutuals }
           : {}),
+        ...(text(entry.next) ? { next: text(entry.next) } : {}),
+        ...(Array.isArray(entry.via)
+          ? { via: entry.via.filter((v): v is string => typeof v === "string") }
+          : {}),
       });
     }
   return {
     version: 1,
     updated: text(value.updated),
+    ...(text(value.plan) ? { plan: text(value.plan) } : {}),
     sectors,
     organizations,
     people,
@@ -220,6 +234,13 @@ export function parse(json: string): Parsed {
     if (text(entry.url) && !isWebAddress(text(entry.url)))
       problems.push(`Person "${id}" has a url that is not http or https.`);
   }
+  const known = new Set([...personIds, ...orgIds]);
+  for (const person of document.people)
+    for (const via of person.via ?? [])
+      if (!known.has(via))
+        problems.push(
+          `Person "${person.id}" names a way in that is not listed: "${via}".`,
+        );
   return problems.length > 0 ? { ok: false, problems } : { ok: true, document };
 }
 
@@ -253,6 +274,7 @@ export function counts(document: NetworkDocument): Counts {
 export const example = (): NetworkDocument => ({
   version: 1,
   updated: "2026-01-01",
+  plan: "Meet the engineering sector in person this quarter. Capital after the first introductions land.",
   sectors: [
     { id: "engineering", label: "Engineering" },
     { id: "capital", label: "Capital" },
@@ -266,6 +288,13 @@ export const example = (): NetworkDocument => ({
       url: "https://example.com/acme",
     },
     { id: "north-fund", name: "North Fund", sector: "capital", kind: "fund" },
+    {
+      id: "radio-day",
+      name: "Radio Day",
+      sector: "engineering",
+      kind: "event",
+      when: "Monthly, Annapolis Junction",
+    },
   ],
   people: [
     {
@@ -280,6 +309,8 @@ export const example = (): NetworkDocument => ({
       why: "Runs the team that builds what you build.",
       location: "Arlington, VA",
       mutuals: 3,
+      next: "Say hello at Radio Day.",
+      via: ["radio-day"],
     },
     {
       id: "bo",

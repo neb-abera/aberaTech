@@ -26,15 +26,17 @@ const ring: Record<Status, { dash?: string; width: number; color: string }> = {
 
 const describe = (node: Node): string =>
   node.kind === "organization"
-    ? `${node.label}, organization`
+    ? `${node.label}, ${node.event ? "event" : "organization"}`
     : `${node.label}, ${node.status ?? "none"}`;
 
 /**
- * The picture: organizations on a ring, people around theirs, a line for
- * each membership. Colour is the sector, size is the tier, the ring is
- * where things stand. Every node is a button, so the keyboard reaches it
- * and a screen reader hears its name and standing; the list under the
- * picture carries the rest of what a node holds.
+ * The picture: each sector a tinted hull, organizations as hubs inside it,
+ * people around theirs, a line for each membership. Colour is the sector,
+ * size is the tier, the ring is where things stand, a square hub is an
+ * event. Every node is a button, so the keyboard reaches it and a screen
+ * reader hears its name and standing; the list under the picture carries
+ * the rest. Captions come placed from the layout, each where it covers
+ * nothing; a node without one names itself on hover.
  */
 export default function NetworkGraph({
   layout,
@@ -47,6 +49,10 @@ export default function NetworkGraph({
   const [hovered, setHovered] = React.useState<string | null>(null);
   const byId = React.useMemo(
     () => new Map(layout.nodes.map((node) => [node.id, node])),
+    [layout],
+  );
+  const captioned = React.useMemo(
+    () => new Set(layout.labels.map((label) => label.id)),
     [layout],
   );
   const lit = selected ?? hovered;
@@ -69,10 +75,11 @@ export default function NetworkGraph({
         color: "text.primary",
         "& svg": { display: "block", width: "100%", height: "auto" },
         "& [role=button]": { cursor: "pointer", outline: "none" },
-        "& [role=button]:focus-visible circle:first-of-type": {
-          stroke: "currentColor",
-          strokeWidth: 2,
-        },
+        "& [role=button]:focus-visible > circle:first-of-type, & [role=button]:focus-visible > rect:first-of-type":
+          {
+            stroke: "currentColor",
+            strokeWidth: 2,
+          },
       }}
     >
       <svg
@@ -82,20 +89,29 @@ export default function NetworkGraph({
         data-testid="network-graph"
       >
         <title>{`Network map: ${summary}`}</title>
-        {layout.sectors.map((sector) => (
-          <text
-            key={sector.id}
-            x={sector.x}
-            y={sector.y}
-            textAnchor={sector.anchor}
-            fill={colorOf(sector.id)}
-            fontSize={15}
-            fontWeight={600}
-            letterSpacing={1}
-            style={{ textTransform: "uppercase" }}
-          >
-            {sector.label}
-          </text>
+        {layout.hulls.map((hull) => (
+          <g key={hull.id} data-hull={hull.id}>
+            <path
+              d={hull.path}
+              fill={colorOf(hull.id)}
+              fillOpacity={0.07}
+              stroke={colorOf(hull.id)}
+              strokeOpacity={0.35}
+              strokeWidth={1}
+            />
+            <text
+              x={hull.x}
+              y={hull.y}
+              textAnchor={hull.anchor}
+              fill={colorOf(hull.id)}
+              fontSize={13}
+              fontWeight={700}
+              letterSpacing={1.5}
+              style={{ textTransform: "uppercase" }}
+            >
+              {hull.label}
+            </text>
+          </g>
         ))}
         {layout.edges.map((edge) => {
           const from = byId.get(edge.from);
@@ -103,6 +119,7 @@ export default function NetworkGraph({
           if (!from || !to) return null;
           const faint = dimmed.has(edge.from) || dimmed.has(edge.to);
           const bright = lit !== null && (edge.from === lit || edge.to === lit);
+          const bridge = from.sector !== to.sector;
           return (
             <line
               key={`${edge.from}-${edge.to}`}
@@ -110,9 +127,9 @@ export default function NetworkGraph({
               y1={from.y}
               x2={to.x}
               y2={to.y}
-              stroke={bright ? colorOf(from.sector) : "currentColor"}
-              strokeOpacity={faint ? 0.05 : bright ? 0.9 : 0.22}
-              strokeWidth={bright ? 2 : 1}
+              stroke={bright || bridge ? colorOf(from.sector) : "currentColor"}
+              strokeOpacity={faint ? 0.05 : bright ? 0.9 : bridge ? 0.5 : 0.2}
+              strokeWidth={bright ? 2 : bridge ? 1.5 : 1}
             />
           );
         })}
@@ -122,12 +139,8 @@ export default function NetworkGraph({
           const near = neighbours.has(node.id);
           const colour = colorOf(node.sector);
           const standing = node.status ? ring[node.status] : ring.none;
-          const showLabel =
-            !faint &&
-            (node.kind === "organization" ||
-              (node.tier ?? 0) >= 4 ||
-              isLit ||
-              near);
+          const hoverLabel =
+            !faint && !captioned.has(node.id) && (isLit || near);
           return (
             // biome-ignore lint/a11y/useSemanticElements: a node in an SVG cannot be a <button>; the group carries the role, a tab stop, a name and the key handling a button would.
             <g
@@ -160,16 +173,39 @@ export default function NetworkGraph({
                 />
               )}
               {node.kind === "organization" ? (
-                <>
-                  <circle
-                    r={node.r}
-                    fill={colour}
-                    fillOpacity={0.18}
-                    stroke={colour}
-                    strokeWidth={2.5}
-                  />
-                  <circle r={node.r * 0.35} fill={colour} />
-                </>
+                node.event ? (
+                  <>
+                    <rect
+                      x={-node.r}
+                      y={-node.r}
+                      width={node.r * 2}
+                      height={node.r * 2}
+                      rx={3}
+                      fill={colour}
+                      fillOpacity={0.18}
+                      stroke={colour}
+                      strokeWidth={2.5}
+                    />
+                    <rect
+                      x={-node.r * 0.35}
+                      y={-node.r * 0.35}
+                      width={node.r * 0.7}
+                      height={node.r * 0.7}
+                      fill={colour}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <circle
+                      r={node.r}
+                      fill={colour}
+                      fillOpacity={0.18}
+                      stroke={colour}
+                      strokeWidth={2.5}
+                    />
+                    <circle r={node.r * 0.35} fill={colour} />
+                  </>
+                )
               ) : (
                 <circle
                   r={node.r}
@@ -180,13 +216,13 @@ export default function NetworkGraph({
                   strokeDasharray={standing.dash}
                 />
               )}
-              {showLabel && (
+              {hoverLabel && (
                 <text
-                  y={node.r + (node.kind === "organization" ? 15 : 12)}
+                  y={node.r + 12}
                   textAnchor="middle"
                   fill="currentColor"
-                  fontSize={node.kind === "organization" ? 12 : 10.5}
-                  fontWeight={node.kind === "organization" || isLit ? 600 : 400}
+                  fontSize={10.5}
+                  fontWeight={600}
                   stroke="var(--mui-palette-background-default)"
                   strokeWidth={3}
                   paintOrder="stroke"
@@ -195,6 +231,35 @@ export default function NetworkGraph({
                 </text>
               )}
             </g>
+          );
+        })}
+        {layout.labels.map((label) => {
+          const node = byId.get(label.id);
+          const faint = node ? dimmed.has(label.id) : false;
+          const bold =
+            node?.kind === "organization" ||
+            lit === label.id ||
+            neighbours.has(label.id);
+          return (
+            <text
+              key={`label-${label.id}`}
+              x={label.x}
+              y={label.y}
+              textAnchor={label.anchor}
+              fill="currentColor"
+              fillOpacity={
+                faint ? 0.15 : node?.kind === "organization" ? 0.95 : 0.8
+              }
+              fontSize={label.size}
+              fontWeight={bold ? 600 : 400}
+              stroke="var(--mui-palette-background-default)"
+              strokeWidth={3}
+              strokeOpacity={faint ? 0 : 1}
+              paintOrder="stroke"
+              pointerEvents="none"
+            >
+              {label.text}
+            </text>
           );
         })}
       </svg>

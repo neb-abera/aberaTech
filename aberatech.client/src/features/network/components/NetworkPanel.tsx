@@ -215,6 +215,8 @@ export default function NetworkPanel() {
     : null;
   const orgName = (id: string) =>
     document.organizations.find((o) => o.id === id)?.name ?? id;
+  const nameOf = (id: string) =>
+    document.people.find((p) => p.id === id)?.name ?? orgName(id);
   const members = (orgId: string) =>
     document.people.filter((p) => p.orgs.includes(orgId));
   const listed = [...visiblePeople].sort(
@@ -296,6 +298,25 @@ export default function NetworkPanel() {
             ))}
           </Box>
         </Alert>
+      )}
+
+      {document.plan && !editing && (
+        <Box
+          component="section"
+          aria-label="Plan"
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 2,
+            p: 2,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          <Typography variant="subtitle2" gutterBottom>
+            Plan
+          </Typography>
+          <Typography variant="body2">{document.plan}</Typography>
+        </Box>
       )}
 
       {editing && (
@@ -446,7 +467,11 @@ export default function NetworkPanel() {
                   followed.
                 </Typography>
               ) : "role" in chosen ? (
-                <PersonDetail person={chosen} orgName={orgName} />
+                <PersonDetail
+                  person={chosen}
+                  orgName={orgName}
+                  nameOf={nameOf}
+                />
               ) : (
                 <Stack spacing={1}>
                   <Typography variant="h6" component="h2">
@@ -454,6 +479,7 @@ export default function NetworkPanel() {
                   </Typography>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
                     {chosen.kind ?? "organization"}
+                    {chosen.when ? `. ${chosen.when}` : ""}
                     {chosen.note ? `. ${chosen.note}` : ""}
                   </Typography>
                   <Typography variant="body2">
@@ -486,6 +512,7 @@ export default function NetworkPanel() {
                   <TableCell>Organizations</TableCell>
                   <TableCell>Standing</TableCell>
                   <TableCell>Priority</TableCell>
+                  <TableCell>Next step</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -527,11 +554,14 @@ export default function NetworkPanel() {
                     >
                       {bars(person.tier)}
                     </TableCell>
+                    <TableCell sx={{ maxWidth: 280 }}>
+                      {person.next ?? ""}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {listed.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       Nobody matches the filters.
                     </TableCell>
                   </TableRow>
@@ -548,9 +578,11 @@ export default function NetworkPanel() {
 function PersonDetail({
   person,
   orgName,
+  nameOf,
 }: {
   person: Person;
   orgName: (id: string) => string;
+  nameOf: (id: string) => string;
 }) {
   return (
     <Stack spacing={1}>
@@ -588,6 +620,16 @@ function PersonDetail({
         </Typography>
       )}
       {person.why && <Typography variant="body2">{person.why}</Typography>}
+      {person.next && (
+        <Typography variant="body2">
+          <b>Next:</b> {person.next}
+        </Typography>
+      )}
+      {person.via && person.via.length > 0 && (
+        <Typography variant="body2">
+          <b>Through:</b> {person.via.map(nameOf).join(", ")}
+        </Typography>
+      )}
       {person.url && (
         <Link href={person.url} target="_blank" rel="noopener noreferrer">
           Open profile

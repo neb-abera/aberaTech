@@ -92,11 +92,11 @@ describe("the owner", () => {
       "/api/progress/network",
     ]);
     expect(graph.getAttribute("aria-label")).toBe(
-      "Network map: 2 people and 2 organizations",
+      "Network map: 2 people and 3 organizations",
     );
-    expect(within(graph).getAllByRole("button")).toHaveLength(4);
+    expect(within(graph).getAllByRole("button")).toHaveLength(5);
     expect(
-      screen.getByText("2 people, 2 organizations, edited 2026-01-01."),
+      screen.getByText("2 people, 3 organizations, edited 2026-01-01."),
     ).toBeTruthy();
 
     const list = screen.getByRole("table", { name: "People" });
@@ -117,6 +117,11 @@ describe("the owner", () => {
       within(detail).getByText("Runs the team that builds what you build."),
     ).toBeTruthy();
     expect(within(detail).getByText("3 mutual")).toBeTruthy();
+    expect(within(detail).getByText("Say hello at Radio Day.")).toBeTruthy();
+    expect(within(detail).getByText("Radio Day")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Plan" }).textContent).toContain(
+      "Meet the engineering sector in person",
+    );
     expect(
       within(detail)
         .getByRole("link", { name: "Open profile" })
@@ -209,7 +214,7 @@ describe("the owner", () => {
     await flushSave();
     expect(puts()).toEqual([]);
     expect(screen.getByTestId("network-graph").getAttribute("aria-label")).toBe(
-      "Network map: 2 people and 2 organizations",
+      "Network map: 2 people and 3 organizations",
     );
   });
 
@@ -242,7 +247,7 @@ describe("the owner", () => {
     expect(screen.queryByLabelText("Document JSON")).toBeNull();
     const graph = screen.getByTestId("network-graph");
     expect(graph.getAttribute("aria-label")).toBe(
-      "Network map: 3 people and 2 organizations",
+      "Network map: 3 people and 3 organizations",
     );
     expect(
       within(graph).getByRole("button", { name: "Cy Example, connected" }),
