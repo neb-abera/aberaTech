@@ -39,7 +39,9 @@ public static class RateLimits
         new("/api/fitness/digest.txt", StatusCodes.Status401Unauthorized, 10),
         new(SmsReceiptEndpoint.Path, StatusCodes.Status403Forbidden, 30),
         // The dev box reports once a minute with a token; a wrong token is a guess.
-        new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10)
+        new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10),
+        // Pushover posts receipts this server sent. A receipt it never sent is a guess.
+        new(PushoverCallback.Path, StatusCodes.Status404NotFound, 10)
     ];
 
     /// <summary>
@@ -66,6 +68,7 @@ public static class RateLimits
             var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
             var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
             var alertsPerMinute = configuration.GetValue("RateLimits:AlertsActionsPerMinute", AlertsEndpoints.DefaultActionsPerMinute);
+            var pushoverCallbacksPerMinute = configuration.GetValue("RateLimits:PushoverCallbacksPerMinute", PushoverCallback.DefaultPerMinute);
 
             // Everything a stranger can call that writes a row or causes a
             // message to be sent. The booking page is public by design, and a
@@ -94,6 +97,12 @@ public static class RateLimits
             // a day; ten a minute is a loop. The end-to-end suite spends
             // more across three engines, so compose raises it there.
             options.AddPolicy(AlertsEndpoints.ActionsPolicy, context => PerMinute(context, alertsPerMinute));
+
+            // Pushover's acknowledgement callback. One post per acknowledged
+            // alarm, and one a minute while it gets no 2xx. Each post that
+            // names a stored receipt asks Pushover once, so this also bounds
+            // what a forger can make the server ask.
+            options.AddPolicy(PushoverCallback.Policy, context => PerMinute(context, pushoverCallbacksPerMinute));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>

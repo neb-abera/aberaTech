@@ -5,8 +5,8 @@
 
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import type { AlertItem } from "../api";
-import { dueAlarm } from "../ring";
+import type { AlertItem, RoutineRing } from "../api";
+import { dueAlarm, dueRinging } from "../ring";
 
 const base: AlertItem = {
   key: "k",
@@ -73,5 +73,88 @@ describe("dueAlarm", () => {
         },
       ),
     );
+  });
+});
+
+const ring: RoutineRing = {
+  key: "routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T08:40",
+  routineId: "0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10",
+  label: "Meds",
+  alertAt: "2026-10-28T12:40:00Z",
+  startsAt: "2026-10-28T15:40:00Z",
+  acknowledged: false,
+  acknowledgedAt: null,
+  acknowledgedVia: null,
+};
+
+describe("dueRinging", () => {
+  const none = { alerts: [], routineRings: [], mutedUntil: null };
+
+  it("rings a routine ring from its time until it stops, titled with its label", () => {
+    const state = { ...none, routineRings: [ring] };
+    expect(dueRinging(state, at("2026-10-28T12:39:59Z"))).toBeNull();
+    expect(dueRinging(state, at("2026-10-28T12:40:00Z"))).toEqual({
+      key: ring.key,
+      title: "Meds",
+      alertAt: ring.alertAt,
+      startsAt: ring.startsAt,
+      routine: true,
+    });
+    expect(dueRinging(state, at("2026-10-28T15:39:59Z"))?.key).toBe(ring.key);
+    expect(dueRinging(state, at("2026-10-28T15:40:00Z"))).toBeNull();
+  });
+
+  it("is the earliest due item from both lists", () => {
+    const now = at("2026-10-28T12:50:00Z");
+    // The ring at 12:40 is earlier than the standup's alarm at 12:45.
+    expect(
+      dueRinging({ ...none, alerts: [base], routineRings: [ring] }, now),
+    ).toMatchObject({ key: ring.key, routine: true });
+    // A ring at 12:48 is later, so the standup rings.
+    const later = { ...ring, key: "later", alertAt: "2026-10-28T12:48:00Z" };
+    expect(
+      dueRinging({ ...none, alerts: [base], routineRings: [later] }, now),
+    ).toEqual({
+      key: base.key,
+      title: "Standup",
+      alertAt: base.alertAt,
+      startsAt: base.startsAt,
+      routine: false,
+    });
+  });
+
+  it("never rings a ring acknowledged anywhere, or one a mute covers", () => {
+    const now = at("2026-10-28T12:50:00Z");
+    for (const via of ["phone", "browser", "pushover"] as const) {
+      const answered = {
+        ...ring,
+        acknowledged: true,
+        acknowledgedAt: "2026-10-28T12:41:00Z",
+        acknowledgedVia: via,
+      };
+      expect(dueRinging({ ...none, routineRings: [answered] }, now)).toBeNull();
+    }
+    expect(
+      dueRinging(
+        { ...none, routineRings: [ring], mutedUntil: "2026-10-28T13:00:00Z" },
+        now,
+      ),
+    ).toBeNull();
+    // A mute that ended, or one that began after the ring, does not.
+    expect(
+      dueRinging(
+        { ...none, routineRings: [ring], mutedUntil: "2026-10-28T12:30:00Z" },
+        now,
+      ),
+    ).not.toBeNull();
+  });
+
+  it("reads a state from an older server with no routineRings", () => {
+    expect(
+      dueRinging(
+        { alerts: [base], mutedUntil: null },
+        at("2026-10-28T12:50:00Z"),
+      )?.key,
+    ).toBe(base.key);
   });
 });

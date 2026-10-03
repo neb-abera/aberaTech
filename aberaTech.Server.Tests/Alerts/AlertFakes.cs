@@ -116,6 +116,16 @@ internal sealed class InMemoryAlertStore : IAlertStore
         }
     }
 
+    public Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_receipts.FirstOrDefault(pair => pair.Value == receipt) is { Key: { } key }
+                ? new ReceiptDelivery(key, _starts.GetValueOrDefault(key))
+                : null);
+        }
+    }
+
     public Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken)
     {
         lock (_lock)
@@ -252,6 +262,33 @@ internal sealed class InMemoryAlertStore : IAlertStore
         lock (_lock) return Task.FromResult(_routines.Remove(id));
     }
 
+    private readonly Dictionary<string, RoutineRing> _held = new(StringComparer.Ordinal);
+
+    public Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult<IReadOnlyList<RoutineRing>>([.. _held.Values.OrderBy(ring => ring.AlertAt)]);
+    }
+
+    public Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            foreach (var ring in rings) _held.TryAdd(ring.Key, ring);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            foreach (var key in _held.Values.Where(ring => ring.RoutineId == routineId).Select(ring => ring.Key).ToList()) _held.Remove(key);
+        }
+
+        return Task.CompletedTask;
+    }
+
     private readonly Dictionary<Guid, AlertCountdown> _countdowns = [];
 
     public Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken)
@@ -382,6 +419,35 @@ internal sealed class InMemoryAlertDeviceStore : IAlertDeviceStore
         return Task.CompletedTask;
     }
 
+    public Task SetTimeZoneAsync(Guid id, string timeZone, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_devices.FirstOrDefault(row => row.Device.Id == id) is { } row)
+            {
+                row.Device = row.Device with { TimeZone = timeZone, LastSeenAt = now };
+                ZoneWrites++;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>How many times a zone was written.</summary>
+    public int ZoneWrites { get; private set; }
+
+    public Task<string?> LatestTimeZoneAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock)
+            return Task.FromResult(_devices
+                .Where(row => row.Device.TimeZone is not null)
+                .OrderByDescending(row => row.Device.LastSeenAt.HasValue)
+                .ThenByDescending(row => row.Device.LastSeenAt)
+                .ThenByDescending(row => row.Device.CreatedAt)
+                .Select(row => row.Device.TimeZone)
+                .FirstOrDefault());
+    }
+
     public Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken)
     {
         lock (_lock)
@@ -456,6 +522,9 @@ internal sealed class RecordingHandler(Func<HttpResponseMessage> answer) : HttpM
 
     public void Then(Func<HttpResponseMessage> next) => _queued.Enqueue(next);
 
+    /// <summary>Answers a request by what it asks, before the queue and the default. Null passes it on.</summary>
+    public Func<Seen, HttpResponseMessage?>? Route { get; set; }
+
     /// <summary>
     /// pushover.net/api#sounds is answered here and kept out of
     /// <see cref="Requests"/>, so a test that counts the messages sent is not
@@ -497,7 +566,9 @@ internal sealed class RecordingHandler(Func<HttpResponseMessage> answer) : HttpM
             }
         }
 
-        Requests.Enqueue(new Seen(request.Method, request.RequestUri!, form));
+        var seen = new Seen(request.Method, request.RequestUri!, form);
+        Requests.Enqueue(seen);
+        if (Route?.Invoke(seen) is { } routed) return routed;
         var next = _queued.TryDequeue(out var queued) ? queued : answer;
         return next();
     }

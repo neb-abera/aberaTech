@@ -195,8 +195,9 @@ export default function RoutinesSection({
         Routine alarms
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-        Routine alarms ring on the paired phone like Clock alarms. They do not
-        go through Pushover or ring in this browser.
+        Routine alarms ring on the paired phone like Clock alarms. They also
+        ring through Pushover, and here when Ring in this browser is on.
+        Acknowledging one anywhere stops it everywhere.
       </Typography>
 
       {routines.length === 0 ? (

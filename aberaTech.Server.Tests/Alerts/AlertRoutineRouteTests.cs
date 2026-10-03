@@ -410,7 +410,7 @@ public sealed class AlertRoutineRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task A_routine_is_never_an_alert_and_sends_nothing_through_Pushover()
+    public async Task A_routine_is_never_an_alert_and_rings_through_Pushover_as_an_alarm_titled_with_its_label()
     {
         using var owner = Owner();
         _clock.Now = Instant.FromUtc(2026, 10, 28, 12, 29);
@@ -422,7 +422,10 @@ public sealed class AlertRoutineRouteTests : IDisposable
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
         Assert.DoesNotContain(
             status.GetProperty("alerts").EnumerateArray(), alert => alert.GetProperty("title").GetString() == "Now");
-        Assert.Empty(_pushover.Requests);
+        var sent = Assert.Single(_pushover.Requests);
+        Assert.Equal("Now", sent.Form["title"]);
+        Assert.Equal("2", sent.Form["priority"]);
+        Assert.StartsWith("Routine alarm, 8:30 AM", sent.Form["message"]);
     }
 
     // ------------------------------------------------------------------ who may call

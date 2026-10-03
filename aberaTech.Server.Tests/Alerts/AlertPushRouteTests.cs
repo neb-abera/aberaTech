@@ -780,6 +780,11 @@ public sealed class AlertPushRouteTests : IDisposable
 
         public Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken) => throw new NotSupportedException();
 
+        public Task SetTimeZoneAsync(Guid id, string timeZone, Instant now, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<string?> LatestTimeZoneAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<bool> BumpPlanAsync(byte[]? fingerprint, bool force, Instant now, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

@@ -21,6 +21,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// limit. Every change a phone holds bumps the plan version, and
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
 /// the phone never show a mute or a skip the server did not store.
+///
+/// One route is anonymous: Pushover's acknowledgement callback
+/// (<see cref="PushoverCallback"/>), which trusts nothing in its body
+/// until Pushover itself confirms it.
 /// </remarks>
 public static class AlertsEndpoints
 {
@@ -61,11 +65,14 @@ public static class AlertsEndpoints
             return routes;
         }
 
-        shared.MapGet("/status", async (AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
-            Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken)));
+        // Pushover's acknowledgement callback: anonymous, checked with Pushover itself.
+        routes.MapPushoverCallback();
+
+        shared.MapGet("/status", async (AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken)));
 
         shared.MapPost("/mute", async (
-            MuteRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            MuteRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
             Instant? until = request.Until switch
@@ -78,19 +85,19 @@ public static class AlertsEndpoints
 
             await store.SetMutedUntilAsync(until, now, cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/unmute", async (
-            AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             await store.SetMutedUntilAsync(null, clock.GetCurrentInstant(), cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/skip", async (
-            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
@@ -100,17 +107,17 @@ public static class AlertsEndpoints
 
             await store.SkipAsync(alert.Key, alert.StartsAt, clock.GetCurrentInstant(), cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPost("/unskip", async (
-            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
+            SkipRequest request, AlertPushWorker pushes, AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
         {
             if (!Valid(request.Key)) return Results.BadRequest("key is required");
 
             await store.UnskipAsync(request.Key!, cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         group.MapPut("/settings", async (
@@ -119,6 +126,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -178,7 +186,7 @@ public static class AlertsEndpoints
             // This replica plans with the new values now. The others read
             // the row at the start of their next pass.
             await worker.ReadNowAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // The phone's alarm sound and snooze, from the page or the phone.
@@ -189,6 +197,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -204,7 +213,7 @@ public static class AlertsEndpoints
                 await pushes.PlanChangedAsync(cancellationToken);
             }
 
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // One event's type, kept under its UID so it holds for every
@@ -218,6 +227,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             GoogleAlertEvents google,
             IClock clock,
@@ -239,7 +249,7 @@ public static class AlertsEndpoints
                 alert.EventId, request.Type == AlertTypes.Default ? null : request.Type, clock.GetCurrentInstant(), cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
             var written = await google.SetMarkAsync(alert.EventId, request.Type == AlertTypes.Alarm, cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken, written));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken, written));
         }).RequireRateLimiting(ActionsPolicy);
 
         // Acknowledge: the phone's alarm or the browser's ring was answered.
@@ -251,6 +261,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             AlertDispatcher dispatcher,
             IAlertStore store,
             IClock clock,
@@ -258,11 +269,23 @@ public static class AlertsEndpoints
         {
             var errors = new Dictionary<string, string[]>();
             if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
-            if (request.Via is not ("phone" or "browser")) errors["via"] = ["\"phone\" or \"browser\"."];
+            if (!AlertAcknowledgementVia.FromClient(request.Via)) errors["via"] = ["\"phone\" or \"browser\"."];
             if (errors.Count > 0) return Results.ValidationProblem(errors);
 
-            var planned = await FindAsync(request.Key!, status, store, clock, options, cancellationToken);
-            var startsAt = planned?.StartsAt ?? (await store.DeliveryAsync(request.Key!, cancellationToken))?.StartsAt;
+            // A routine ring the status lists, a listed event, or anything that was sent.
+            Instant? startsAt;
+            if (RoutineRings.IsKey(request.Key))
+            {
+                var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+                var rings = await RoutineRings.ListedAsync(store, devices, settings, clock.GetCurrentInstant(), cancellationToken);
+                startsAt = rings.FirstOrDefault(ring => ring.Key == request.Key)?.StartsAt;
+            }
+            else
+            {
+                startsAt = (await FindAsync(request.Key!, status, store, clock, options, cancellationToken))?.StartsAt;
+            }
+
+            startsAt ??= (await store.DeliveryAsync(request.Key!, cancellationToken))?.StartsAt;
             if (startsAt is null) return Results.NotFound();
 
             if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, clock.GetCurrentInstant(), cancellationToken))
@@ -271,7 +294,7 @@ public static class AlertsEndpoints
                 await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
             }
 
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // A new event on the calendar the feed reads, with one popup reminder
@@ -283,6 +306,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             GoogleAlertEvents google,
             IClock clock,
@@ -308,7 +332,7 @@ public static class AlertsEndpoints
             // This replica plans it on its next pass, now rather than at the
             // end of the wait.
             worker.Wake();
-            return Results.Created((string?)null, await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Created((string?)null, await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // An edit of one listed occurrence, or of every occurrence of its
@@ -323,6 +347,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             GoogleAlertEvents google,
             IClock clock,
@@ -371,7 +396,7 @@ public static class AlertsEndpoints
 
             await pushes.PlanChangedAsync(cancellationToken);
             worker.Wake();
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // A deletion of one listed occurrence, or of the whole event. The
@@ -385,6 +410,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             GoogleAlertEvents google,
             IClock clock,
@@ -414,17 +440,21 @@ public static class AlertsEndpoints
             foreach (var key in gone) await dispatcher.CancelRepeatsAsync(key, cancellationToken);
 
             worker.Wake();
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        // Routine alarms: the phone rings them as phone alarms, never
-        // through Pushover or a browser. The server stores them and fires
-        // nothing. Each change pushes the phones, like any change they hold.
+        // Routine alarms: the phone rings them as phone alarms, and the
+        // server rings them as alarms too, in a browser with Ring in this
+        // browser on and through Pushover (RoutineRings). Each change pushes
+        // the phones and wakes the worker, so a ring due before its next
+        // pass still goes.
         shared.MapPost("/routines", async (
             RoutineRequest request,
+            CalendarAlertWorker worker,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -440,41 +470,79 @@ public static class AlertsEndpoints
             }
 
             await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
             return Results.Created(
-                $"/api/alerts/routines/{routine.Id}", await StateAsync(status, store, sounds, clock, options, cancellationToken));
+                $"/api/alerts/routines/{routine.Id}", await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // An edit changes later rings only. A ring of this routine that is
+        // ringing now keeps ringing as it was, unless the edit switches the
+        // routine off. Switched off, its rings stop everywhere, Pushover's
+        // repeats included.
         shared.MapPut("/routines/{id:guid}", async (
             Guid id,
             RoutineRequest request,
+            AlertDispatcher dispatcher,
+            CalendarAlertWorker worker,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
-            var (errors, routine) = AlertRoutines.Validate(id, request, whole: true, clock.GetCurrentInstant());
+            var now = clock.GetCurrentInstant();
+            var (errors, routine) = AlertRoutines.Validate(id, request, whole: true, now);
             if (routine is null) return Results.ValidationProblem(errors);
+
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var ringing = (await RoutineRings.RingingAsync(store, devices, settings, now, cancellationToken))
+                .Where(ring => ring.RoutineId == id)
+                .ToList();
             if (!await store.UpdateRoutineAsync(routine, cancellationToken)) return Results.NotFound();
 
+            if (routine.Enabled)
+            {
+                await store.HoldRingsAsync(ringing, cancellationToken);
+            }
+            else
+            {
+                await store.ForgetHeldRingsAsync(id, cancellationToken);
+                foreach (var ring in ringing) await dispatcher.CancelRepeatsAsync(ring.Key, cancellationToken);
+            }
+
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // A deleted routine rings nowhere: Pushover's repeats for a ring
+        // ringing now are cancelled.
         shared.MapDelete("/routines/{id:guid}", async (
             Guid id,
+            AlertDispatcher dispatcher,
+            CalendarAlertWorker worker,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var ringing = (await RoutineRings.RingingAsync(store, devices, settings, clock.GetCurrentInstant(), cancellationToken))
+                .Where(ring => ring.RoutineId == id)
+                .ToList();
             if (!await store.DeleteRoutineAsync(id, cancellationToken)) return Results.NotFound();
 
+            await store.ForgetHeldRingsAsync(id, cancellationToken);
+            foreach (var ring in ringing) await dispatcher.CancelRepeatsAsync(ring.Key, cancellationToken);
+
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // Countdowns: /dates and the phone show the time left. The server
@@ -484,6 +552,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -500,7 +569,7 @@ public static class AlertsEndpoints
 
             await pushes.PlanChangedAsync(cancellationToken);
             return Results.Created(
-                $"/api/alerts/countdowns/{countdown.Id}", await StateAsync(status, store, sounds, clock, options, cancellationToken));
+                $"/api/alerts/countdowns/{countdown.Id}", await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapPut("/countdowns/{id:guid}", async (
@@ -509,6 +578,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -518,7 +588,7 @@ public static class AlertsEndpoints
             if (!await store.UpdateCountdownAsync(countdown, cancellationToken)) return Results.NotFound();
 
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapDelete("/countdowns/{id:guid}", async (
@@ -526,6 +596,7 @@ public static class AlertsEndpoints
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
+            IAlertDeviceStore devices,
             IAlertStore store,
             IClock clock,
             CancellationToken cancellationToken) =>
@@ -533,7 +604,7 @@ public static class AlertsEndpoints
             if (!await store.DeleteCountdownAsync(id, cancellationToken)) return Results.NotFound();
 
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
         // The paired phones. The token is in the answer to the pairing and
@@ -643,6 +714,7 @@ public static class AlertsEndpoints
                 CalendarAlertWorker worker,
                 AlertsStatus status,
                 PushoverSounds sounds,
+                IAlertDeviceStore devices,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
@@ -653,7 +725,7 @@ public static class AlertsEndpoints
                 var changes = await store.EventChangesAsync(cancellationToken);
                 await store.ForgetEventChangesAsync([.. changes.Select(change => change.Id)], cancellationToken);
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
             // The calendar answers 404 until the next reset, so the browser
@@ -663,13 +735,14 @@ public static class AlertsEndpoints
                 CalendarAlertWorker worker,
                 AlertsStatus status,
                 PushoverSounds sounds,
+                IAlertDeviceStore devices,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
                 fake.Fail();
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
 
             // An alarm due now, until the next reset, so the browser suite
@@ -679,14 +752,52 @@ public static class AlertsEndpoints
                 CalendarAlertWorker worker,
                 AlertsStatus status,
                 PushoverSounds sounds,
+                IAlertDeviceStore devices,
                 IAlertStore store,
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
                 fake.AddDue();
                 await worker.ReadNowAsync(cancellationToken);
-                return Results.Ok(await StateAsync(status, store, sounds, clock, options, cancellationToken));
+                return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
+
+            // A routine alarm that rings this minute, every day, saved an
+            // hour ago, so the browser suite can ring the page for a
+            // routine and see Pushover take it.
+            group.MapPost("/fake/routine-due", async (
+                CalendarAlertWorker worker,
+                AlertsStatus status,
+                PushoverSounds sounds,
+                IAlertDeviceStore devices,
+                IAlertStore store,
+                IClock clock,
+                CancellationToken cancellationToken) =>
+            {
+                var now = clock.GetCurrentInstant();
+                var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+                var local = now.InZone(await RoutineRings.ZoneAsync(devices, settings, cancellationToken)).TimeOfDay;
+                var routine = new AlertRoutine(
+                    Guid.NewGuid(), "E2E routine", local.Hour, local.Minute, [1, 2, 3, 4, 5, 6, 7], true,
+                    AlertRoutines.DefaultSnoozeMinutes, now - Duration.FromHours(1));
+                if (!await store.AddRoutineAsync(routine, cancellationToken)) return Results.Conflict();
+
+                await worker.ReadNowAsync(cancellationToken);
+                return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+            }).RequireRateLimiting(ActionsPolicy);
+
+            // The owner pressed Acknowledge in the Pushover app on the
+            // message with this receipt. The suite then posts the callback
+            // as Pushover would.
+            group.MapPost("/fake/pushover-acknowledge", (SkipRequest request, FakeAlertServices fake) =>
+            {
+                if (!PushoverClient.IsReceipt(request.Key)) return Results.BadRequest("key is a receipt");
+                fake.AcknowledgeInApp(request.Key!);
+                return Results.NoContent();
+            }).RequireRateLimiting(ActionsPolicy);
+
+            // The messages the fake Pushover took, oldest first.
+            group.MapGet("/fake/sent-all", (FakeAlertServices fake) => Results.Ok(fake.Sent));
 
             // The writes the fake Google Calendar took, so the browser suite
             // can see what a type change and a new event asked for.
@@ -750,6 +861,7 @@ public static class AlertsEndpoints
     private static async Task<AlertsState> StateAsync(
         AlertsStatus status,
         IAlertStore store,
+        IAlertDeviceStore devices,
         PushoverSounds sounds,
         IClock clock,
         AlertsOptions options,
@@ -824,6 +936,22 @@ public static class AlertsEndpoints
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
             Routines: [.. (await store.RoutinesAsync(cancellationToken)).Select(RoutineView.From)],
+            RoutineRings:
+            [
+                .. (await RoutineRings.ListedAsync(store, devices, settings, now, cancellationToken)).Select(ring =>
+                {
+                    var acknowledgement = acknowledged.GetValueOrDefault(ring.Key);
+                    return new RoutineRingView(
+                        ring.Key,
+                        ring.RoutineId,
+                        ring.Label,
+                        ring.AlertAt.ToDateTimeOffset(),
+                        ring.StartsAt.ToDateTimeOffset(),
+                        acknowledgement is not null,
+                        acknowledgement?.At.ToDateTimeOffset(),
+                        acknowledgement?.Via);
+                })
+            ],
             Countdowns: [.. (await store.CountdownsAsync(cancellationToken)).Select(CountdownView.From)],
             CalendarWrite: calendarWrite);
     }
@@ -832,7 +960,7 @@ public static class AlertsEndpoints
 
     public sealed record SkipRequest(string? Key);
 
-    /// <summary>A listed or sent alert's key, and "phone" or "browser".</summary>
+    /// <summary>A listed or sent alert's key, or a listed routine ring's, and "phone" or "browser".</summary>
     public sealed record AckRequest(string? Key, string? Via);
 
     public sealed record DeviceRequest(string? Name);
@@ -936,8 +1064,9 @@ public static class AlertsEndpoints
     /// names one. Settings.TimeZone is the fallback the owner set.
     /// CalendarWrite is set only in the answer to a type change or a new
     /// event whose write to Google did not happen, and says why. Routines
-    /// lists every routine alarm by hour, minute and label. Countdowns lists
-    /// every countdown by target and label.
+    /// lists every routine alarm by hour, minute and label. RoutineRings
+    /// lists their rings from the one ringing now to 24 hours ahead.
+    /// Countdowns lists every countdown by target and label.
     /// </summary>
     public sealed record AlertsState(
         bool Configured,
@@ -954,8 +1083,25 @@ public static class AlertsEndpoints
         IReadOnlyList<AlertView> Alerts,
         PushView Push,
         IReadOnlyList<RoutineView> Routines,
+        IReadOnlyList<RoutineRingView> RoutineRings,
         IReadOnlyList<CountdownView> Countdowns,
         string? CalendarWrite = null);
+
+    /// <summary>
+    /// One ring of a routine alarm, from the one ringing now to 24 hours
+    /// ahead. AlertAt is the ring, StartsAt when it stops. The key is what
+    /// POST /ack takes. Kept apart from the alerts, so a phone app that
+    /// schedules every alert never schedules these twice.
+    /// </summary>
+    public sealed record RoutineRingView(
+        string Key,
+        Guid RoutineId,
+        string Label,
+        DateTimeOffset AlertAt,
+        DateTimeOffset StartsAt,
+        bool Acknowledged,
+        DateTimeOffset? AcknowledgedAt,
+        string? AcknowledgedVia);
 
     /// <summary>
     /// A countdown as the page and the phone read it. TargetAt is the

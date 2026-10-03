@@ -990,6 +990,142 @@ test.describe("/alerts", () => {
     await reset(page);
   });
 
+  test("a routine alarm rings in this browser with its label and goes to Pushover, and Acknowledge stops both", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    const cancelledBefore = (
+      await (await page.request.get("/api/alerts/fake/cancelled")).json()
+    ).length;
+    // A routine due this minute: the worker sends it to the fake Pushover
+    // at priority 2, titled with its label, with a receipt.
+    const due = await page.request.post("/api/alerts/fake/routine-due");
+    expect(due.status()).toBe(200);
+    const ring = (
+      (await due.json()).routineRings as {
+        key: string;
+        label: string;
+        alertAt: string;
+        startsAt: string;
+      }[]
+    ).find((item) => item.label === "E2E routine");
+    expect(ring?.key).toMatch(
+      /^routine:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:\d{4}-\d\d-\d\dT\d\d:\d\d$/,
+    );
+    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    expect(sent).toMatchObject({
+      title: "E2E routine",
+      priority: "2",
+      callback: expect.stringMatching(/\/api\/alerts\/pushover\/acknowledged$/),
+    });
+
+    await page.reload();
+    const ringing = page.getByRole("alertdialog", {
+      name: "Ringing: E2E routine",
+    });
+    await expect(ringing).toHaveCount(0);
+    await page.getByRole("switch", { name: "Ring in this browser" }).click();
+
+    await expect(ringing).toBeVisible();
+    await expect(ringing).toContainText("Routine alarm,");
+    await expect(page).toHaveTitle("Ringing: E2E routine");
+    await ringing.getByRole("button", { name: "Acknowledge" }).click();
+
+    await expect(ringing).toHaveCount(0);
+    await expect(page).not.toHaveTitle(/Ringing:/);
+    const status = await (await page.request.get("/api/alerts/status")).json();
+    expect(
+      status.routineRings.find(
+        (item: { key: string }) => item.key === ring?.key,
+      ),
+    ).toMatchObject({ acknowledged: true, acknowledgedVia: "browser" });
+    // Pushover's repeats for it were cancelled.
+    const cancelled = await (
+      await page.request.get("/api/alerts/fake/cancelled")
+    ).json();
+    expect(cancelled.length).toBe(cancelledBefore + 1);
+
+    await page.reload();
+    await expect(ringing).toHaveCount(0);
+    await reset(page);
+  });
+
+  test("an alarm acknowledged in the Pushover app is acknowledged on the page, and a callback Pushover does not confirm is refused", async ({
+    page,
+    request,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    expect((await page.request.post("/api/alerts/fake/due")).status()).toBe(
+      200,
+    );
+    const messages = (await (
+      await page.request.get("/api/alerts/fake/sent-all")
+    ).json()) as { title: string; receipt: string | null; callback: string }[];
+    const drill = messages
+      .filter((message) => message.title === "E2E drill")
+      .at(-1);
+    expect(drill?.receipt).toMatch(/^development\d+$/);
+    expect(drill?.callback).toMatch(/\/api\/alerts\/pushover\/acknowledged$/);
+    const receipt = drill?.receipt ?? "";
+    const form = {
+      receipt,
+      acknowledged: "1",
+      acknowledged_at: String(Math.floor(Date.now() / 1000)),
+      acknowledged_by: "user",
+      acknowledged_by_device: "iphone",
+    };
+
+    // Pushover's servers post with no session. Before the owner pressed
+    // Acknowledge in the app, Pushover's receipt says it is not acknowledged.
+    const forged = await request.post("/api/alerts/pushover/acknowledged", {
+      form,
+    });
+    expect(forged.status()).toBe(403);
+
+    expect(
+      (
+        await page.request.post("/api/alerts/fake/pushover-acknowledge", {
+          data: { key: receipt },
+        })
+      ).status(),
+    ).toBe(204);
+    const callback = await request.post("/api/alerts/pushover/acknowledged", {
+      form,
+    });
+    expect(callback.status()).toBe(200);
+    expect(await callback.json()).toEqual({ acknowledged: true });
+
+    await page.reload();
+    const item = page
+      .getByRole("list", { name: "Next alerts" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E drill" });
+    await expect(
+      item.getByText(/^Acknowledged in Pushover at \d\d:\d\d$/),
+    ).toBeVisible();
+    const status = await (await page.request.get("/api/alerts/status")).json();
+    expect(
+      status.alerts.find(
+        (alert: { title: string }) => alert.title === "E2E drill",
+      ),
+    ).toMatchObject({ acknowledged: true, acknowledgedVia: "pushover" });
+
+    // Ringing in this browser does not ring for it.
+    await page.getByRole("switch", { name: "Ring in this browser" }).click();
+    await expect(
+      page.getByRole("alertdialog", { name: "Ringing: E2E drill" }),
+    ).toHaveCount(0);
+
+    // Pushover posting again changes nothing.
+    const again = await request.post("/api/alerts/pushover/acknowledged", {
+      form,
+    });
+    expect(again.status()).toBe(200);
+    await reset(page);
+  });
+
   test("the backup delay saves with the settings and comes back after a reload", async ({
     page,
   }) => {
@@ -1057,7 +1193,7 @@ test.describe("/alerts", () => {
     await expect(section.getByText("No routine alarms.")).toBeVisible();
     await expect(
       section.getByText(
-        "Routine alarms ring on the paired phone like Clock alarms. They do not go through Pushover or ring in this browser.",
+        "Routine alarms ring on the paired phone like Clock alarms. They also ring through Pushover, and here when Ring in this browser is on. Acknowledging one anywhere stops it everywhere.",
       ),
     ).toBeVisible();
 
