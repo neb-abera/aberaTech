@@ -470,6 +470,56 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_receipt_finds_the_occurrence_it_was_sent_for()
+    {
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.TryClaimAsync("a", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("a", "sent", Now, CancellationToken.None, "abcdefghij0123456789abcdefghij");
+            await store.TryClaimAsync("b", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("b", "sent", Now, CancellationToken.None);
+        }
+
+        await using var check = Context();
+        var store2 = new DatabaseAlertStore(check);
+        Assert.Equal(
+            new ReceiptDelivery("a", Start),
+            await store2.DeliveryByReceiptAsync("abcdefghij0123456789abcdefghij", CancellationToken.None));
+        Assert.Null(await store2.DeliveryByReceiptAsync("zzzzzzzzzz0123456789abcdefghij", CancellationToken.None));
+    }
+
+    [PostgresFact]
+    public async Task A_held_ring_is_a_row_held_once_forgotten_with_its_routine_and_pruned_with_the_claims()
+    {
+        var routine = Guid.NewGuid();
+        var other = Guid.NewGuid();
+        var first = new RoutineRing("routine:a:2026-10-28T12:00", routine, "Meds", Now, Now + Duration.FromHours(3));
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.HoldRingsAsync([first], CancellationToken.None);
+            // Held again with another label: the first stays.
+            await store.HoldRingsAsync([first with { Label = "Gym" }], CancellationToken.None);
+            await store.HoldRingsAsync(
+                [new RoutineRing("routine:b:2026-10-28T12:00", other, "Old", Now - Duration.FromDays(30), Now - Duration.FromDays(30))],
+                CancellationToken.None);
+        }
+
+        await using (var check = Context())
+        {
+            var store = new DatabaseAlertStore(check);
+            Assert.Equal(first, (await store.HeldRingsAsync(CancellationToken.None)).Single(ring => ring.RoutineId == routine));
+
+            await store.PruneAsync(Now - Duration.FromDays(14), CancellationToken.None);
+            Assert.Equal([first], await store.HeldRingsAsync(CancellationToken.None));
+
+            await store.ForgetHeldRingsAsync(routine, CancellationToken.None);
+            Assert.Empty(await store.HeldRingsAsync(CancellationToken.None));
+        }
+    }
+
+    [PostgresFact]
     public async Task Pruning_forgets_old_acknowledgements_with_the_claims_and_skips()
     {
         await using (var context = Context())

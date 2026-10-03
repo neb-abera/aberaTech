@@ -61,6 +61,41 @@ public sealed class DatabaseAlertDeviceStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task The_zone_is_the_most_recently_seen_phones_that_reported_one()
+    {
+        var amman = Guid.NewGuid();
+        var york = Guid.NewGuid();
+        var silent = Guid.NewGuid();
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertDeviceStore(context);
+            Assert.Null(await store.LatestTimeZoneAsync(CancellationToken.None));
+            foreach (var id in new[] { amman, york, silent })
+            {
+                await store.CreateAsync(id, id.ToString()[..8], AlertDeviceTokens.Hash(AlertDeviceTokens.New()), Now, CancellationToken.None);
+            }
+
+            await store.SetTimeZoneAsync(amman, "Asia/Amman", Now, CancellationToken.None);
+            Assert.Equal("Asia/Amman", await store.LatestTimeZoneAsync(CancellationToken.None));
+
+            await store.SetTimeZoneAsync(york, "America/New_York", Now + Duration.FromMinutes(1), CancellationToken.None);
+            // A phone that never reported a zone is seen later and changes nothing.
+            await store.TouchAsync(silent, Now + Duration.FromMinutes(5), Now + Duration.FromMinutes(5), CancellationToken.None);
+            Assert.Equal("America/New_York", await store.LatestTimeZoneAsync(CancellationToken.None));
+
+            // The Amman phone makes a request after it: its zone is the one now.
+            await store.TouchAsync(amman, Now + Duration.FromMinutes(10), Now + Duration.FromMinutes(10), CancellationToken.None);
+            Assert.Equal("Asia/Amman", await store.LatestTimeZoneAsync(CancellationToken.None));
+        }
+
+        await using var check = Context();
+        var row = await check.AlertDevices.SingleAsync(device => device.Id == amman);
+        Assert.Equal("Asia/Amman", row.TimeZone);
+        Assert.Equal(Now + Duration.FromMinutes(10), row.LastSeenAt);
+        Assert.Equal("Asia/Amman", (await new DatabaseAlertDeviceStore(check).FindAsync(row.TokenHash, CancellationToken.None))?.TimeZone);
+    }
+
+    [PostgresFact]
     public async Task Ten_pairings_at_once_make_five_phones()
     {
         var contexts = Enumerable.Range(0, 10).Select(_ => Context()).ToList();

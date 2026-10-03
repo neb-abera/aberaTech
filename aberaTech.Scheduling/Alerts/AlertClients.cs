@@ -59,7 +59,8 @@ public sealed record PushoverResult(bool Ok, string? Error, string? Receipt = nu
 /// How one message is sent: the priority, and for priority 2 how often it
 /// sounds again and when it gives up. A null field is left out of the request.
 /// </summary>
-public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? ExpireSeconds, string? Sound);
+/// <param name="Callback">For priority 2: where Pushover posts the acknowledgement (<see cref="PushoverCallback"/>).</param>
+public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? ExpireSeconds, string? Sound, string? Callback = null);
 
 /// <summary>
 /// One Pushover message, sent the way <see cref="AlertSettings"/> says. At
@@ -130,6 +131,67 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
 
     /// <summary>Stops an emergency message's repeats: pushover.net/api/receipts#cancel.</summary>
     public static string CancelEndpoint(string receipt) => $"https://api.pushover.net/1/receipts/{receipt}/cancel.json";
+
+    /// <summary>One receipt's state: pushover.net/api/receipts#poll. The URL carries the app token.</summary>
+    public static string ReceiptEndpoint(string receipt) => $"https://api.pushover.net/1/receipts/{receipt}.json";
+
+    /// <summary>
+    /// A request to Pushover's receipts API. Polling one takes the app token
+    /// in its query string, so these are kept out of request traces.
+    /// </summary>
+    public static bool IsReceiptsRequest(Uri? url) =>
+        url is { IsAbsoluteUri: true }
+        && string.Equals(url.Host, "api.pushover.net", StringComparison.OrdinalIgnoreCase)
+        && url.AbsolutePath.StartsWith("/1/receipts/", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Asks Pushover whether the message with this receipt was acknowledged.
+    /// True or false as Pushover answers. Null when Pushover could not be
+    /// asked or answered with anything but a receipt.
+    /// </summary>
+    public async Task<bool?> IsAcknowledgedAsync(string receipt, CancellationToken cancellationToken)
+    {
+        if (!IsReceipt(receipt)) return null;
+
+        try
+        {
+            var url = $"{ReceiptEndpoint(receipt)}?token={Uri.EscapeDataString(options.PushoverAppToken ?? "")}";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = await http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (body.Length > 4096) return null;
+            using var json = JsonDocument.Parse(body);
+            if (json.RootElement.ValueKind != JsonValueKind.Object
+                || !json.RootElement.TryGetProperty("status", out var status)
+                || status.ValueKind != JsonValueKind.Number
+                || status.GetInt32() != 1
+                || !json.RootElement.TryGetProperty("acknowledged", out var acknowledged)
+                || acknowledged.ValueKind != JsonValueKind.Number)
+            {
+                return null;
+            }
+
+            return acknowledged.GetInt32() == 1;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
 
     /// <summary>Letters and digits, at most <see cref="MaxReceiptLength"/>, so it is safe in a URL path.</summary>
     public static bool IsReceipt(string? value) =>
@@ -211,6 +273,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
         if (delivery.RetrySeconds is { } retry) fields["retry"] = Number(retry);
         if (delivery.ExpireSeconds is { } expire) fields["expire"] = Number(expire);
         if (delivery.Sound is { } sound) fields["sound"] = sound;
+        if (delivery.Priority == EmergencyPriority && delivery.Callback is { } callback) fields["callback"] = callback;
 
         for (var attempt = 1; ; attempt++)
         {

@@ -988,6 +988,31 @@ describe("an acknowledged alert", () => {
     ).toBeTruthy();
   });
 
+  it("says in Pushover for one acknowledged in the Pushover app", async () => {
+    mount(
+      respond(
+        200,
+        state({
+          alerts: [
+            {
+              ...standup,
+              acknowledged: true,
+              acknowledgedAt: "2026-10-28T12:47:00+00:00",
+              acknowledgedVia: "pushover",
+            },
+          ],
+        }),
+      ),
+    );
+    await settle();
+
+    expect(
+      within(screen.getByRole("list", { name: "Next alerts" })).getByText(
+        "Acknowledged in Pushover at 08:47",
+      ),
+    ).toBeTruthy();
+  });
+
   it("says nothing for one that is not", async () => {
     mount(respond(200, state()));
     await settle();

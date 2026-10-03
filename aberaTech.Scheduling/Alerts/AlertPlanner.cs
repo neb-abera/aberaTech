@@ -34,6 +34,10 @@ public enum AlertSource
 /// The occurrence belongs to a series: the event repeats, or it is one moved
 /// or changed occurrence of a series (RECURRENCE-ID).
 /// </param>
+/// <param name="Routine">
+/// One ring of a routine alarm (<see cref="RoutineRings"/>). AlertAt is the
+/// ring and StartsAt is when it stops. Always an alarm.
+/// </param>
 public sealed record PlannedAlert(
     string Key,
     string Title,
@@ -44,7 +48,8 @@ public sealed record PlannedAlert(
     string EventId = "",
     bool Critical = false,
     Instant? EndsAt = null,
-    bool Recurring = false);
+    bool Recurring = false,
+    bool Routine = false);
 
 /// <summary>
 /// One read of the calendar: the alerts in the window, the calendar's own
