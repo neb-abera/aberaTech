@@ -123,7 +123,12 @@ public sealed class AlertDeviceAuthenticationHandler(
         if (device is null) return AuthenticateResult.Fail("unknown");
 
         var now = clock.GetCurrentInstant();
-        if (device.LastSeenAt is not { } seen || seen <= now - AlertsAuth.TouchEvery)
+        if (AlertDeviceZones.Read(Request.Headers[AlertDeviceZones.Header]) is { } zone && zone != device.TimeZone)
+        {
+            // The zone routine alarms ring in. Written when it changes, with the request.
+            await store.SetTimeZoneAsync(device.Id, zone, now, Context.RequestAborted);
+        }
+        else if (device.LastSeenAt is not { } seen || seen <= now - AlertsAuth.TouchEvery)
         {
             await store.TouchAsync(device.Id, now, now - AlertsAuth.TouchEvery, Context.RequestAborted);
         }

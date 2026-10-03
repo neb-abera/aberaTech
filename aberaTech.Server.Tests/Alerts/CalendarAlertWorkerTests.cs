@@ -671,6 +671,14 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
 
         public Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken) => Down<ReceiptDelivery?>();
+
+        public Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken) => Down<IReadOnlyList<RoutineRing>>();
+
+        public Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken) => Down<bool>();
     }
 
     /// <summary>The in-memory store with a settings read that can be made to fail.</summary>
@@ -774,6 +782,17 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.UpdateCountdownAsync(countdown, cancellationToken);
 
         public Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteCountdownAsync(id, cancellationToken);
+
+        public Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken) =>
+            _inner.DeliveryByReceiptAsync(receipt, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken) => _inner.HeldRingsAsync(cancellationToken);
+
+        public Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken) =>
+            _inner.HoldRingsAsync(rings, cancellationToken);
+
+        public Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken) =>
+            _inner.ForgetHeldRingsAsync(routineId, cancellationToken);
     }
 
     [Fact]
@@ -1173,6 +1192,17 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.UpdateCountdownAsync(countdown, cancellationToken);
 
         public Task<bool> DeleteCountdownAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteCountdownAsync(id, cancellationToken);
+
+        public Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken) =>
+            _inner.DeliveryByReceiptAsync(receipt, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken) => _inner.HeldRingsAsync(cancellationToken);
+
+        public Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken) =>
+            _inner.HoldRingsAsync(rings, cancellationToken);
+
+        public Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken) =>
+            _inner.ForgetHeldRingsAsync(routineId, cancellationToken);
     }
 
     private sealed class Harness : IDisposable

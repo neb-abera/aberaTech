@@ -7,8 +7,27 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>Who acknowledged one occurrence, and when.</summary>
 public sealed record AlertAcknowledgement(Instant At, string Via);
 
+/// <summary>Where an acknowledgement came from.</summary>
+public static class AlertAcknowledgementVia
+{
+    /// <summary>A paired phone's alarm.</summary>
+    public const string Phone = "phone";
+
+    /// <summary>The page's Ring in this browser.</summary>
+    public const string Browser = "browser";
+
+    /// <summary>The Pushover app. Only Pushover's callback records it: POST /ack never takes it.</summary>
+    public const string Pushover = "pushover";
+
+    /// <summary>What a client may send to POST /ack.</summary>
+    public static bool FromClient(string? via) => via is Phone or Browser;
+}
+
 /// <summary>The claim on one occurrence's send: its start, how it went, and Pushover's receipt for an alarm.</summary>
 public sealed record AlertDelivery(Instant StartsAt, string Outcome, string? Receipt);
+
+/// <summary>The occurrence a Pushover receipt was sent for: its key and its start.</summary>
+public sealed record ReceiptDelivery(string Key, Instant StartsAt);
 
 /// <summary>
 /// What the send path and the page share across restarts and replicas:
@@ -44,6 +63,9 @@ public interface IAlertStore
     /// <summary>The claim on one occurrence, or null when nothing was ever claimed for it.</summary>
     Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken);
 
+    /// <summary>The occurrence whose send Pushover gave this receipt, or null when none did.</summary>
+    Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken);
+
     /// <summary>Every acknowledged occurrence, by key.</summary>
     Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken);
 
@@ -52,7 +74,7 @@ public interface IAlertStore
     /// <summary>True for the first acknowledgement of a key. A second one changes nothing and is false.</summary>
     Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken);
 
-    /// <summary>Forgets claims, skips and acknowledgements from before <paramref name="before"/>. The feed never plans those again.</summary>
+    /// <summary>Forgets claims, skips, acknowledgements and held rings from before <paramref name="before"/>. The feed never plans those again.</summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
 
     /// <summary>Every event the owner chose a type for, by event id.</summary>
@@ -106,6 +128,15 @@ public interface IAlertStore
 
     /// <summary>False when there was no such routine.</summary>
     Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>The rings held through an edit of their routine (<see cref="RoutineRings"/>).</summary>
+    Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Holds rings that were ringing when their routine was edited. A ring already held stays as it was.</summary>
+    Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken);
+
+    /// <summary>Forgets the held rings of one routine: it was switched off or deleted.</summary>
+    Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken);
 
     /// <summary>Every countdown, by target and label.</summary>
     Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken);
@@ -270,6 +301,12 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             .Select(delivery => new AlertDelivery(delivery.StartsAt, delivery.Outcome, delivery.Receipt))
             .FirstOrDefaultAsync(cancellationToken);
 
+    public Task<ReceiptDelivery?> DeliveryByReceiptAsync(string receipt, CancellationToken cancellationToken) =>
+        database.AlertDeliveries.AsNoTracking()
+            .Where(delivery => delivery.Receipt == receipt)
+            .Select(delivery => new ReceiptDelivery(delivery.OccurrenceKey, delivery.StartsAt))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyDictionary<string, AlertAcknowledgement>> AcknowledgementsAsync(CancellationToken cancellationToken) =>
         await database.AlertAcknowledgements.AsNoTracking()
             .ToDictionaryAsync(
@@ -302,6 +339,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertDeliveries.Where(delivery => delivery.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertSkips.Where(skip => skip.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertAcknowledgements.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertHeldRings.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
@@ -484,6 +522,30 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertRoutines.Where(row => row.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
 
     private static short[] Days(AlertRoutine routine) => [.. routine.Days.Select(day => (short)day)];
+
+    public async Task<IReadOnlyList<RoutineRing>> HeldRingsAsync(CancellationToken cancellationToken) =>
+        await database.AlertHeldRings.AsNoTracking()
+            .OrderBy(row => row.AlertAt)
+            .Select(row => new RoutineRing(row.OccurrenceKey, row.RoutineId, row.Label, row.AlertAt, row.StartsAt))
+            .ToListAsync(cancellationToken);
+
+    public async Task HoldRingsAsync(IReadOnlyCollection<RoutineRing> rings, CancellationToken cancellationToken)
+    {
+        // The key decides, like the claims: a ring held twice stays as first held.
+        foreach (var ring in rings)
+        {
+            await database.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertHeldRings" ("OccurrenceKey", "RoutineId", "Label", "AlertAt", "StartsAt")
+                 VALUES ({ring.Key}, {ring.RoutineId}, {ring.Label}, {ring.AlertAt}, {ring.StartsAt})
+                 ON CONFLICT ("OccurrenceKey") DO NOTHING
+                 """,
+                cancellationToken);
+        }
+    }
+
+    public async Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken) =>
+        await database.AlertHeldRings.Where(row => row.RoutineId == routineId).ExecuteDeleteAsync(cancellationToken);
 
     public async Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) =>
         AlertCountdowns.Sorted(

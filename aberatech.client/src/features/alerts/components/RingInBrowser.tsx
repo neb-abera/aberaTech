@@ -8,15 +8,15 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import {
   type ActionResult,
-  type AlertItem,
   type AlertsState,
   acknowledgeAlert,
   formatWhen,
 } from "../core/api";
 import {
   askToNotify,
-  dueAlarm,
+  dueRinging,
   notify,
+  type Ringing,
   readRingPreference,
   type Tone,
   webAudioTone,
@@ -25,10 +25,11 @@ import {
 
 /**
  * "Ring in this browser": while the switch is on and the tab is open, an
- * alarm that comes due rings here with a tone, a flashing title and a
- * notification, until it is acknowledged anywhere, skipped, muted, or its
- * event starts. For a work computer where the phone is out of reach and
- * nothing can be installed.
+ * alarm or a routine alarm that comes due rings here with a tone, a
+ * flashing title and a notification, until it is acknowledged anywhere
+ * (here, on a phone or in Pushover), skipped, muted, or its event starts
+ * or its ring stops. For a work computer where the phone is out of reach
+ * and nothing can be installed.
  */
 export default function RingInBrowser({
   state,
@@ -69,7 +70,7 @@ export default function RingInBrowser({
     return () => window.clearInterval(timer);
   }, [enabled, now]);
 
-  const due = enabled ? dueAlarm(state.alerts, clock) : null;
+  const due = enabled ? dueRinging(state, clock) : null;
   const dueKey = due?.key ?? null;
   const dueTitle = due?.title ?? "";
 
@@ -100,7 +101,7 @@ export default function RingInBrowser({
     notified.current = due.key;
     notify(
       `Ringing: ${due.title}`,
-      `Starts ${formatWhen(due.startsAt, state.timeZone)}. Acknowledge it on abera.tech/alerts.`,
+      `${when(due, state.timeZone)} Acknowledge it on abera.tech/alerts.`,
       due.key,
     );
   }, [due, state.timeZone]);
@@ -116,10 +117,10 @@ export default function RingInBrowser({
     setClock(now());
   };
 
-  const answer = async (alert: AlertItem) => {
+  const answer = async (ringing: Ringing) => {
     setBusy(true);
     setProblem(null);
-    const result = await acknowledge(alert.key, "browser");
+    const result = await acknowledge(ringing.key, "browser");
     setBusy(false);
     if (result.ok) {
       if (result.state) onState(result.state);
@@ -153,11 +154,12 @@ export default function RingInBrowser({
         label="Ring in this browser"
       />
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-        Rings only while this tab is open. An event set to Ring until stopped
-        plays a tone when it comes due, flashes the tab title and shows a
-        notification if you allow one, until it is acknowledged here or on a
-        phone, skipped, muted, or its event starts. The page checks the server
-        every 15 seconds while this is on.
+        Rings only while this tab is open. An event set to Ring until stopped,
+        or a routine alarm, plays a tone when it comes due, flashes the tab
+        title and shows a notification if you allow one, until it is
+        acknowledged here, on a phone or in Pushover, skipped, muted, or its
+        event starts. The page checks the server every 15 seconds while this is
+        on.
       </Typography>
       {due && (
         <Alert
@@ -178,7 +180,7 @@ export default function RingInBrowser({
           }
         >
           <AlertTitle>Ringing: {due.title}</AlertTitle>
-          Starts {formatWhen(due.startsAt, state.timeZone)}.
+          {when(due, state.timeZone)}
         </Alert>
       )}
       {problem && (
@@ -192,4 +194,11 @@ export default function RingInBrowser({
       )}
     </Box>
   );
+}
+
+/** "Starts Wed, Oct 28, 9:00 AM EDT." for an event, "Routine alarm, Wed, Oct 28, 6:30 AM EDT." for a routine. */
+function when(ringing: Ringing, timeZone: string): string {
+  return ringing.routine
+    ? `Routine alarm, ${formatWhen(ringing.alertAt, timeZone)}.`
+    : `Starts ${formatWhen(ringing.startsAt, timeZone)}.`;
 }

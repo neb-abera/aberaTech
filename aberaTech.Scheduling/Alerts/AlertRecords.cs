@@ -153,6 +153,9 @@ public class AlertDeviceRecord
 
     /// <summary>When the last push to the phone was claimed. At most one a minute.</summary>
     public Instant? PushedAt { get; set; }
+
+    /// <summary>The IANA zone the phone last reported in X-Time-Zone. Routine alarms ring in it.</summary>
+    public string? TimeZone { get; set; }
 }
 
 /// <summary>One occurrence the owner acknowledged, on a paired phone or in a browser. The first acknowledgement stands.</summary>
@@ -164,7 +167,7 @@ public class AlertAcknowledgementRecord
 
     public Instant AcknowledgedAt { get; set; }
 
-    /// <summary>"phone" or "browser".</summary>
+    /// <summary>"phone", "browser" or "pushover" (<see cref="AlertAcknowledgementVia"/>).</summary>
     public string Via { get; set; } = string.Empty;
 }
 
@@ -291,6 +294,24 @@ public class AlertRoutineRecord
     public Instant CreatedAt { get; set; }
 
     public Instant UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// A ring of a routine alarm that was ringing when the routine was edited.
+/// An edit changes later rings only, so this one keeps ringing as it was
+/// until it is acknowledged or stops (<see cref="RoutineRings"/>).
+/// </summary>
+public class AlertHeldRingRecord
+{
+    public string OccurrenceKey { get; set; } = string.Empty;
+
+    public Guid RoutineId { get; set; }
+
+    public string Label { get; set; } = string.Empty;
+
+    public Instant AlertAt { get; set; }
+
+    public Instant StartsAt { get; set; }
 }
 
 /// <summary>

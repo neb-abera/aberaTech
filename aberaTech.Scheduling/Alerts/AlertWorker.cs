@@ -122,6 +122,8 @@ public sealed class AlertDispatcher(
         if (!await store.TryClaimAsync(alert.Key, alert.StartsAt, now, cancellationToken)) return DeliveryOutcome.AlreadyClaimed;
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
+        // An alarm names the callback, so an acknowledgement in the Pushover app reaches every phone and browser.
+        if (delivery.Priority == PushoverClient.EmergencyPriority) delivery = delivery with { Callback = options.PushoverCallbackUrl() };
         var result = await pushover.SendAsync(
             alert.Title,
             AlertText.Message(alert, status.Snapshot().Zone),
@@ -139,15 +141,17 @@ public sealed class AlertDispatcher(
             await CancelRepeatsAsync(alert.Key, cancellationToken);
         }
 
-        // The event's start and the outcome. Never its title: the log leaves
-        // this process for Application Insights.
+        // The event's start, or a routine ring's time, and the outcome.
+        // Never its title: the log leaves this process for Application Insights.
         if (result.Ok)
         {
-            logger.LogInformation("Calendar alert sent for an event starting at {StartsAt}.", alert.StartsAt);
+            if (alert.Routine) logger.LogInformation("Routine alarm sent for a ring at {AlertAt}.", alert.AlertAt);
+            else logger.LogInformation("Calendar alert sent for an event starting at {StartsAt}.", alert.StartsAt);
             return DeliveryOutcome.Sent;
         }
 
-        logger.LogWarning("Calendar alert for an event starting at {StartsAt} failed ({Failure}).", alert.StartsAt, result.Error);
+        if (alert.Routine) logger.LogWarning("Routine alarm for a ring at {AlertAt} failed ({Failure}).", alert.AlertAt, result.Error);
+        else logger.LogWarning("Calendar alert for an event starting at {StartsAt} failed ({Failure}).", alert.StartsAt, result.Error);
         return DeliveryOutcome.Failed;
     }
 
@@ -418,7 +422,17 @@ public sealed class CalendarAlertWorker(
             var merged = CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, kept, now, settings);
             var finished = EventChanges.Done(merged, snapshot.Plan, changes, snapshot.Zone, now, snapshot.LastSuccessAt is not null);
             if (finished.Count > 0) await store.ForgetEventChangesAsync(finished, cancellationToken);
-            return AlertsPlan.Merge(snapshot, kept, changes.Where(change => !finished.Contains(change.Id)), now, settings);
+            var plan = AlertsPlan.Merge(snapshot, kept, changes.Where(change => !finished.Contains(change.Id)), now, settings);
+
+            // The routine alarms' rings, from the one ringing now to the look-ahead.
+            var rings = await RoutineRings.CurrentAsync(
+                store,
+                scope.ServiceProvider.GetService<IAlertDeviceStore>(),
+                settings,
+                now - Duration.FromMinutes(settings.StopAfterMinutes),
+                now + settings.Lookahead,
+                cancellationToken);
+            return [.. plan, .. rings.Select(ring => ring.ToPlanned())];
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {

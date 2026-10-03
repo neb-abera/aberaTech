@@ -100,6 +100,35 @@ public sealed class AlertsOptions
     public int PushoverRetrySeconds { get; init; } = 5;
 
     /// <summary>
+    /// The site's public origin, such as https://abera.tech. Every alarm sent
+    /// to Pushover names a callback here, so an acknowledgement in the
+    /// Pushover app reaches the server. Empty, or anything but an origin,
+    /// sends no callback.
+    /// </summary>
+    public string? PublicOrigin { get; init; }
+
+    /// <summary>
+    /// Where Pushover posts an acknowledgement: the origin and
+    /// <see cref="PushoverCallback.Path"/>. Null when <see cref="PublicOrigin"/>
+    /// is empty or is not an http or https origin.
+    /// </summary>
+    public string? PushoverCallbackUrl()
+    {
+        if (string.IsNullOrWhiteSpace(PublicOrigin)
+            || !Uri.TryCreate(PublicOrigin.Trim(), UriKind.Absolute, out var origin)
+            || (origin.Scheme != Uri.UriSchemeHttps && origin.Scheme != Uri.UriSchemeHttp)
+            || origin.AbsolutePath != "/"
+            || origin.Query.Length > 0
+            || origin.Fragment.Length > 0
+            || origin.UserInfo.Length > 0)
+        {
+            return null;
+        }
+
+        return origin.GetLeftPart(UriPartial.Authority) + PushoverCallback.Path;
+    }
+
+    /// <summary>
     /// Development only: a calendar and a Pushover in memory, so the compose
     /// app and the browser suite can drive the page without either account.
     /// Ignored outside Development.

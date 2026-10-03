@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import SignInToSee from "../../progress/components/SignInToSee";
 import {
+  type AcknowledgedVia,
   type ActionResult,
   type AlertItem,
   type AlertsState,
@@ -451,6 +452,13 @@ function Calendar({
 }
 
 /** Where an alert's type came from, and which settings it sends with. */
+/** "on phone", "in a browser", "in Pushover": where an alarm was answered. */
+function acknowledgedWhere(via: AcknowledgedVia | null): string {
+  if (via === "phone") return "on phone";
+  if (via === "pushover") return "in Pushover";
+  return "in a browser";
+}
+
 function typeLine(alert: AlertItem): string {
   const from =
     alert.typeFrom === "set"
@@ -525,8 +533,7 @@ function Item({
         </Typography>
         {alert.acknowledged && alert.acknowledgedAt && (
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            Acknowledged{" "}
-            {alert.acknowledgedVia === "phone" ? "on phone" : "in a browser"} at{" "}
+            Acknowledged {acknowledgedWhere(alert.acknowledgedVia)} at{" "}
             {clock(alert.acknowledgedAt)}
           </Typography>
         )}

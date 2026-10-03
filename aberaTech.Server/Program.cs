@@ -372,7 +372,7 @@ if (alertsEnabled)
 }
 
 // The calendar's address is its secret, and the path carries it. Pushover's
-// sound list takes the app token in its query string. A push to Apple has
+// sound list and its receipt poll take the app token in the query string. A push to Apple has
 // the phone's push token in its path. Request traces record the full URL,
 // so calls to all three are left out of them. Every other
 // outgoing call is traced as before. Registered whether or not Azure
@@ -383,6 +383,7 @@ builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
     trace.FilterHttpRequestMessage = request =>
         !alertsOptions.IsCalendarRequest(request.RequestUri)
         && !PushoverClient.IsSoundsRequest(request.RequestUri)
+        && !PushoverClient.IsReceiptsRequest(request.RequestUri)
         && !ApnsClient.IsApnsRequest(request.RequestUri)
         && (previous?.Invoke(request) ?? true);
 });

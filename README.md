@@ -104,9 +104,11 @@ site. The history is on the
   error and the time of the last good read. Phones paired on the page
   (the Abera Alarms iPhone app) ring each Ring until stopped event
   themselves, and
-  Acknowledge on the phone or the page stops Pushover's repeats. Ring in
-  this browser rings a due Ring until stopped event in an open tab, for a
-  computer where
+  Acknowledge on the phone or the page stops Pushover's repeats.
+  Acknowledge in the Pushover app reaches the server through Pushover's
+  callback and stops the phones and the page too. Ring in
+  this browser rings a due Ring until stopped event or routine alarm in an
+  open tab, for a computer where
   nothing can be installed. The page and a paired phone can create an
   event, and an event's type is written back to Google Calendar as
   `#critical`. Each change a phone holds sends it a background push, so
@@ -303,13 +305,74 @@ A moved start gives the occurrence a new key. Its skip goes with it. When
 the new alert time has already come and the alert went, the send claim
 goes with it too, so the alert is not sent twice.
 
+### Calendar alerts: acknowledged in Pushover
+
+Every alarm sent to Pushover names a callback,
+`<Alerts:PublicOrigin>/api/alerts/pushover/acknowledged`. Production sets
+`Alerts:PublicOrigin` to `https://abera.tech` in
+`appsettings.Production.json`. Empty sends no callback.
+
+When the owner presses Acknowledge in the Pushover app, Pushover posts
+`receipt`, `acknowledged`, `acknowledged_at`, `acknowledged_by` and
+`acknowledged_by_device`, form-encoded, with no session. The route is
+anonymous and believes nothing in the body alone. The receipt must be one
+the server stored for a send, and
+`GET https://api.pushover.net/1/receipts/{receipt}.json` must say
+`acknowledged` is 1. The acknowledgement is then recorded with `via`
+`pushover`, and the phones are pushed. The page shows "Acknowledged in
+Pushover".
+
+| Answer | When |
+|---|---|
+| 200 `{"acknowledged":true}` | Recorded now, or already acknowledged anywhere. A second post changes nothing |
+| 400 | Not a form, or not exactly one receipt of letters and digits |
+| 403 | Pushover says the receipt is not acknowledged |
+| 404 | A receipt this server never sent. Ten a minute per address, then 429 |
+| 503 | Pushover could not be asked. Pushover posts again a minute later |
+
+Thirty posts a minute per address. Each refusal is logged as 4017.
+`POST /api/alerts/ack` still takes `phone` or `browser` alone.
+
 ### Calendar alerts: routine alarms
 
 Routine alarms are the phone's everyday alarms, kept on abera.tech so they
 can be read and changed from any computer. The paired iPhone rings them
-as its own alarms. They never go through Pushover. Ring in this browser
-ignores them. Nothing on the server fires them (`AlertRoutines.cs`, table
+as its own alarms. The server works out the same rings
+(`RoutineRings.cs`) and rings each one as an alarm: through Pushover
+after the backup delay, and in an open tab with Ring in this browser on.
+One acknowledgement anywhere stops all of them (`AlertRoutines.cs`, table
 `AlertRoutines`).
+
+The rings follow the phone's rules. A routine with days rings on those
+weekdays. One with none rings once, at the next `hour:minute` after it was
+saved. A time a clock change skips rings at the first time that exists
+after it, and a time that happens twice rings the first time. An edit
+changes later rings only: a ring that is ringing when the edit is saved
+keeps ringing as it was (table `AlertHeldRings`), unless the edit turns
+the routine off. Turning it off or deleting it stops its rings and
+cancels Pushover's repeats. The rings are in the zone of the paired phone
+seen most recently that sent `X-Time-Zone`, else the settings' zone.
+
+`GET /api/alerts/status` lists them under `routineRings`, from the one
+ringing now to 24 hours ahead. They are kept out of `alerts`, so an older
+phone app does not schedule them as calendar alarms. Each is:
+
+```json
+{
+  "key": "routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T06:30",
+  "routineId": "0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10",
+  "label": "Wake up",
+  "alertAt": "2026-10-28T03:30:00+00:00",
+  "startsAt": "2026-10-28T06:30:00+00:00",
+  "acknowledged": false,
+  "acknowledgedAt": null,
+  "acknowledgedVia": null
+}
+```
+
+`key` is the routine's id and the scheduled local date and time, never a
+snoozed one. `startsAt` is the ring and the saved Pushover stop time.
+`POST /api/alerts/ack` takes a listed key, or one Pushover sent.
 
 A routine is `{id, label, hour, minute, days, enabled, snoozeMinutes,
 updatedAt}`. `hour` is 0 to 23 and `minute` 0 to 59, in wall-clock time.

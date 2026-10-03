@@ -23,7 +23,12 @@ import {
   vi,
 } from "vitest";
 import { bounds, settings } from "../../../../test/alertsFixtures";
-import type { ActionResult, AlertItem, AlertsState } from "../../core/api";
+import type {
+  ActionResult,
+  AlertItem,
+  AlertsState,
+  RoutineRing,
+} from "../../core/api";
 import { ringPreferenceKey, type Tone } from "../../core/ring";
 import RingInBrowser from "../RingInBrowser";
 
@@ -363,7 +368,84 @@ describe("a due alarm", () => {
 });
 
 describe("routine alarms", () => {
-  it("never ring in this browser, even at their minute", () => {
+  const ring: RoutineRing = {
+    key: "routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T08:40",
+    routineId: "0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10",
+    label: "Meds",
+    alertAt: "2026-10-28T12:40:00+00:00",
+    startsAt: "2026-10-28T15:40:00+00:00",
+    acknowledged: false,
+    acknowledgedAt: null,
+    acknowledgedVia: null,
+  };
+
+  function mountRings(
+    routineRings: RoutineRing[],
+    acknowledge: (key: string, via: "browser") => Promise<ActionResult>,
+  ) {
+    const view = (rings: RoutineRing[]) => (
+      <RingInBrowser
+        state={{ ...state([]), routineRings: rings }}
+        onState={() => undefined}
+        onEnabledChange={() => undefined}
+        now={() => clock}
+        makeTone={() => tone as unknown as Tone}
+        acknowledge={acknowledge}
+      />
+    );
+    const rendered = render(view(routineRings));
+    return (next: RoutineRing[]) => rendered.rerender(view(next));
+  }
+
+  it("a due ring rings with its label, the tone, the title and one notification", () => {
+    FakeNotification.permission = "granted";
+    mountRings([ring], async () => ({ ok: true }));
+    switchOn();
+
+    const ringing = screen.getByRole("alertdialog", { name: "Ringing: Meds" });
+    expect(ringing.textContent).toContain(
+      "Routine alarm, Wed, Oct 28, 8:40 AM EDT.",
+    );
+    expect(tone.playing).toBe(true);
+    expect(document.title).toBe("Ringing: Meds");
+    expect(notifications).toEqual([{ title: "Ringing: Meds", tag: ring.key }]);
+  });
+
+  it("Acknowledge posts the ring's key as the browser", async () => {
+    const acknowledge = vi.fn(async () => ({ ok: true as const }));
+    mountRings([ring], acknowledge);
+    switchOn();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Acknowledge" }));
+    });
+
+    expect(acknowledge).toHaveBeenCalledExactlyOnceWith(ring.key, "browser");
+  });
+
+  it.each(["phone", "browser", "pushover"] as const)(
+    "stops once the ring is acknowledged by %s",
+    (via) => {
+      const rerender = mountRings([ring], async () => ({ ok: true }));
+      switchOn();
+      expect(tone.playing).toBe(true);
+
+      rerender([
+        {
+          ...ring,
+          acknowledged: true,
+          acknowledgedAt: "2026-10-28T12:49:00+00:00",
+          acknowledgedVia: via,
+        },
+      ]);
+
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+      expect(tone.playing).toBe(false);
+      expect(document.title).toBe("Alerts");
+    },
+  );
+
+  it("ring only from the server's rings, never from the routine list alone", () => {
     FakeNotification.permission = "granted";
     const every = [1, 2, 3, 4, 5, 6, 7];
     const routine = (id: string, hour: number, minute: number) => ({

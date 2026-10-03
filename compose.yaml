@@ -219,6 +219,9 @@ services:
       Alerts__PushoverAppToken: 'development-placeholder'
       Alerts__PushoverUserKey: 'development-placeholder'
       Alerts__Fake: 'true'
+      # The callback each alarm names. The fake Pushover records it and
+      # calls nothing. The owner suite posts it as Pushover would.
+      Alerts__PublicOrigin: 'http://localhost:8080'
       RateLimits__AlertsActionsPerMinute: '600'
       # Bookings and queue joins get five a minute per address. The suite
       # books once in each of five browsers and joins and leaves the queue

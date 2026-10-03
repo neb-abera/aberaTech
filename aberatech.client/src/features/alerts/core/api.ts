@@ -29,14 +29,33 @@ export interface AlertItem {
   type: AlertType;
   /** "set" on this page, "critical" from the calendar's mark, or "default". */
   typeFrom: "set" | "critical" | "default";
-  /** Answered on a paired phone or in a browser. Nothing more is sent. */
+  /** Answered on a paired phone, in a browser or in the Pushover app. Nothing more is sent. */
   acknowledged: boolean;
   acknowledgedAt: string | null;
-  acknowledgedVia: "phone" | "browser" | null;
+  acknowledgedVia: AcknowledgedVia | null;
   /** Part of a repeating event. Edit and Delete then offer "All events". */
   recurring: boolean;
   /** The occurrence's end. Null when the calendar gives none. */
   endsAt: string | null;
+}
+
+/** Where an alarm was answered: a paired phone, Ring in this browser, or the Pushover app. */
+export type AcknowledgedVia = "phone" | "browser" | "pushover";
+
+/**
+ * One ring of a routine alarm, from the one ringing now to 24 hours ahead.
+ * alertAt is the ring and startsAt is when it stops. The key is what
+ * Acknowledge sends.
+ */
+export interface RoutineRing {
+  key: string;
+  routineId: string;
+  label: string;
+  alertAt: string;
+  startsAt: string;
+  acknowledged: boolean;
+  acknowledgedAt: string | null;
+  acknowledgedVia: AcknowledgedVia | null;
 }
 
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
@@ -138,9 +157,14 @@ export interface AlertsState {
   push?: PushStatus;
   /**
    * Routine alarms, by hour, minute and label. The paired phone rings
-   * them. Nothing on this page or on the server rings them.
+   * them, and so do this page and Pushover, from routineRings.
    */
   routines?: Routine[];
+  /**
+   * The routine alarms' rings, from the one ringing now to 24 hours ahead.
+   * An older server leaves the field out.
+   */
+  routineRings?: RoutineRing[];
   /**
    * Countdowns, by target and label. /dates and the paired phone show the
    * time left. An older server leaves the field out.
