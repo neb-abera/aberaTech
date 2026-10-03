@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using AlertsAuth = aberaTech.Scheduling.Alerts.AlertsAuth;
+using PushoverCallback = aberaTech.Scheduling.Alerts.PushoverCallback;
 
 namespace aberaTech.Server.Tests.Security;
 
@@ -154,14 +155,21 @@ public sealed class RouteTableTests
     public void Every_alerts_route_is_the_owners_alone_the_owners_and_a_paired_phones_or_a_paired_phones_alone()
     {
         using var app = App();
-        var alerts = app.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+        var all = app.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
             .Where(endpoint => endpoint.RoutePattern.RawText?.StartsWith("/api/alerts/", StringComparison.Ordinal) == true)
             .ToList();
-        Assert.NotEmpty(alerts);
+        Assert.NotEmpty(all);
 
         string Name(RouteEndpoint endpoint) =>
             $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Single()} {endpoint.RoutePattern.RawText}";
+
+        // One route is anonymous on purpose: Pushover's acknowledgement
+        // callback, which Pushover's servers call with no session.
+        var anonymous = all.Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null).ToList();
+        Assert.Equal([$"POST {PushoverCallback.Path}"], anonymous.Select(Name));
+        Assert.Empty(anonymous.Single().Metadata.GetOrderedMetadata<IAuthorizeData>());
+        var alerts = all.Except(anonymous).ToList();
 
         // One policy each, and it is one of the three.
         var policies = alerts.ToDictionary(Name, endpoint =>

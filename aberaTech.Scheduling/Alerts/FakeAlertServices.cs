@@ -6,8 +6,13 @@ using NodaTime;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>One message the fake Pushover took.</summary>
-/// <remarks>Retry, expire and sound are null when the request left them out.</remarks>
-public sealed record FakeMessage(string Title, string Message, string Priority, string? Retry, string? Expire, string? Sound);
+/// <remarks>
+/// Retry, expire, sound and callback are null when the request left them
+/// out. Receipt is the one the fake answered an emergency message with.
+/// </remarks>
+public sealed record FakeMessage(
+    string Title, string Message, string Priority, string? Retry, string? Expire, string? Sound,
+    string? Callback = null, string? Receipt = null);
 
 /// <summary>One push the fake Apple took: the host, the plan version and the headers. Never the token.</summary>
 public sealed record FakePush(
@@ -40,6 +45,7 @@ public sealed class FakeAlertServices(IClock clock)
     private Instant? _dueStart;
     private int _dueCount;
     private int _receipts;
+    private readonly ConcurrentDictionary<string, bool> _acknowledgedInApp = new(StringComparer.Ordinal);
     private readonly List<string> _deleted = [];
 
     /// <summary>
@@ -277,6 +283,13 @@ public sealed class FakeAlertServices(IClock clock)
         return new HttpResponseMessage(HttpStatusCode.OK);
     });
 
+    /// <summary>
+    /// The owner pressed Acknowledge in the Pushover app on the message with
+    /// this receipt. The receipts API answers acknowledged from then on. The
+    /// callback is the browser suite's to post, as Pushover would.
+    /// </summary>
+    public void AcknowledgeInApp(string receipt) => _acknowledgedInApp[receipt] = true;
+
     /// <summary>The one sound the fake Pushover account has uploaded, beside the built-ins.</summary>
     public const string CustomSound = "aberaalarm";
 
@@ -290,6 +303,15 @@ public sealed class FakeAlertServices(IClock clock)
             return Json(System.Text.Json.JsonSerializer.Serialize(new { sounds, status = 1, request = "development" }));
         }
 
+        if (request.Method == HttpMethod.Get
+            && request.RequestUri?.AbsolutePath.StartsWith("/1/receipts/", StringComparison.Ordinal) == true)
+        {
+            // pushover.net/api/receipts#poll: /1/receipts/{receipt}.json
+            var polled = request.RequestUri.Segments[3].Replace(".json", "", StringComparison.Ordinal);
+            var acknowledged = _acknowledgedInApp.ContainsKey(polled) ? 1 : 0;
+            return Json($"{{\"status\":1,\"acknowledged\":{acknowledged},\"request\":\"development\"}}");
+        }
+
         var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync());
         if (request.RequestUri?.AbsolutePath.StartsWith("/1/receipts/", StringComparison.Ordinal) == true)
         {
@@ -301,17 +323,20 @@ public sealed class FakeAlertServices(IClock clock)
         static string? Field(Dictionary<string, Microsoft.Extensions.Primitives.StringValues> form, string name) =>
             form.TryGetValue(name, out var value) ? value.ToString() : null;
 
+        // Pushover answers an emergency message with a receipt.
+        var receipt = form["priority"].ToString() == "2" ? $"development{Interlocked.Increment(ref _receipts)}" : null;
         _sent.Enqueue(new FakeMessage(
             form["title"].ToString(),
             form["message"].ToString(),
             form["priority"].ToString(),
             Field(form, "retry"),
             Field(form, "expire"),
-            Field(form, "sound")));
+            Field(form, "sound"),
+            Field(form, "callback"),
+            receipt));
 
-        // Pushover answers an emergency message with a receipt.
-        return form["priority"].ToString() == "2"
-            ? Json($"{{\"status\":1,\"request\":\"development\",\"receipt\":\"development{Interlocked.Increment(ref _receipts)}\"}}")
+        return receipt is not null
+            ? Json($"{{\"status\":1,\"request\":\"development\",\"receipt\":\"{receipt}\"}}")
             : Json("{\"status\":1,\"request\":\"development\"}");
     });
 

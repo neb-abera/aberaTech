@@ -4,7 +4,7 @@
  * only while the tab is open.
  */
 
-import type { AlertItem } from "./api";
+import type { AlertItem, AlertsState } from "./api";
 
 /** Where the switch is kept. Per browser: each computer decides for itself. */
 export const ringPreferenceKey = "abera.alerts.ringInBrowser";
@@ -42,6 +42,52 @@ export function dueAlarm(alerts: AlertItem[], now: number): AlertItem | null {
     const at = Date.parse(alert.alertAt);
     if (!(at <= now && now < Date.parse(alert.startsAt))) continue;
     if (due === null || at < Date.parse(due.alertAt)) due = alert;
+  }
+  return due;
+}
+
+/** What rings in the browser: a calendar alarm or a routine alarm's ring. */
+export interface Ringing {
+  key: string;
+  title: string;
+  alertAt: string;
+  startsAt: string;
+  /** A routine alarm: startsAt is when it stops, not an event's start. */
+  routine: boolean;
+}
+
+/**
+ * What to ring for now, from the calendar alarms and the routine alarms'
+ * rings together: the earliest due item that is not acknowledged anywhere.
+ * A ring is due from its time until it stops, and a mute silences a ring
+ * whose time falls inside it, as it does an event's alarm.
+ */
+export function dueRinging(
+  state: Pick<AlertsState, "alerts" | "routineRings" | "mutedUntil">,
+  now: number,
+): Ringing | null {
+  const alarm = dueAlarm(state.alerts, now);
+  let due: Ringing | null = alarm && {
+    key: alarm.key,
+    title: alarm.title,
+    alertAt: alarm.alertAt,
+    startsAt: alarm.startsAt,
+    routine: false,
+  };
+  const mutedUntil = state.mutedUntil ? Date.parse(state.mutedUntil) : null;
+  for (const ring of state.routineRings ?? []) {
+    if (ring.acknowledged) continue;
+    const at = Date.parse(ring.alertAt);
+    if (!(at <= now && now < Date.parse(ring.startsAt))) continue;
+    if (mutedUntil !== null && mutedUntil > now && at < mutedUntil) continue;
+    if (due === null || at < Date.parse(due.alertAt))
+      due = {
+        key: ring.key,
+        title: ring.label,
+        alertAt: ring.alertAt,
+        startsAt: ring.startsAt,
+        routine: true,
+      };
   }
   return due;
 }

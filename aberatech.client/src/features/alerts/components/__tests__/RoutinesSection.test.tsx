@@ -102,7 +102,7 @@ describe("the list", () => {
     expect(within(items[2]).getByText("No repeat, Alarm")).toBeTruthy();
     expect(
       screen.getByText(
-        "Routine alarms ring on the paired phone like Clock alarms. They do not go through Pushover or ring in this browser.",
+        "Routine alarms ring on the paired phone like Clock alarms. They also ring through Pushover, and here when Ring in this browser is on. Acknowledging one anywhere stops it everywhere.",
       ),
     ).toBeTruthy();
   });

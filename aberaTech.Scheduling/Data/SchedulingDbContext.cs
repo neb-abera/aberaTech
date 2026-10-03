@@ -65,6 +65,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Routine alarms, rung by the paired phone. At most <see cref="Alerts.AlertRoutines.MaxRoutines"/>.</summary>
     public DbSet<AlertRoutineRecord> AlertRoutines => Set<AlertRoutineRecord>();
 
+    /// <summary>Rings of routine alarms that were ringing when the routine was edited. Kept until they stop.</summary>
+    public DbSet<AlertHeldRingRecord> AlertHeldRings => Set<AlertHeldRingRecord>();
+
     /// <summary>Countdowns, shown on /dates and the paired phone. At most <see cref="Alerts.AlertCountdowns.MaxCountdowns"/>.</summary>
     public DbSet<AlertCountdownRecord> AlertCountdowns => Set<AlertCountdownRecord>();
 
@@ -198,6 +201,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasIndex(device => device.TokenHash).IsUnique();
             entity.Property(device => device.ApnsToken).HasMaxLength(ApnsPushTokens.MaxLength);
             entity.Property(device => device.ApnsEnvironment).HasMaxLength(ApnsPushTokens.MaxEnvironmentLength);
+            entity.Property(device => device.TimeZone).HasMaxLength(AlertDeviceZones.MaxLength);
         });
 
         builder.Entity<AlertPushStateRecord>(entity =>
@@ -240,6 +244,13 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(routine => routine.Days).IsRequired();
         });
 
+        builder.Entity<AlertHeldRingRecord>(entity =>
+        {
+            entity.HasKey(ring => ring.OccurrenceKey);
+            entity.Property(ring => ring.OccurrenceKey).HasMaxLength(AlertPlanner.MaxKeyLength);
+            entity.Property(ring => ring.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+        });
+
         builder.Entity<AlertCountdownRecord>(entity =>
         {
             entity.HasKey(countdown => countdown.Id);
@@ -262,6 +273,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(delivery => delivery.Outcome).HasMaxLength(64).IsRequired();
             entity.Property(delivery => delivery.Receipt).HasMaxLength(PushoverClient.MaxReceiptLength);
             entity.HasIndex(delivery => delivery.ClaimedAt);
+            // Pushover's acknowledgement callback names the receipt alone.
+            entity.HasIndex(delivery => delivery.Receipt);
         });
 
         builder.Entity<OutboxMessage>(entity =>

@@ -65,7 +65,28 @@ public static class AlertDeviceTokens
 
 /// <summary>One paired phone, as the page lists it. Never the hash or the push token.</summary>
 /// <param name="Push">The phone has registered a push token.</param>
-public sealed record AlertDevice(Guid Id, string Name, Instant CreatedAt, Instant? LastSeenAt, bool Push = false);
+/// <param name="TimeZone">The IANA zone the phone last reported. Null until it reports one.</param>
+public sealed record AlertDevice(Guid Id, string Name, Instant CreatedAt, Instant? LastSeenAt, bool Push = false, string? TimeZone = null);
+
+/// <summary>
+/// The phone's zone, sent on every request as <c>X-Time-Zone: Asia/Amman</c>.
+/// Kept when the time zone database knows it. Anything else is ignored and
+/// never logged.
+/// </summary>
+public static class AlertDeviceZones
+{
+    public const string Header = "X-Time-Zone";
+
+    public const int MaxLength = 64;
+
+    /// <summary>The zone's id in the time zone database, or null for a missing, repeated or unknown header.</summary>
+    public static string? Read(Microsoft.Extensions.Primitives.StringValues values)
+    {
+        if (values.Count != 1 || values[0] is not { Length: > 0 and <= MaxLength } name) return null;
+        if (!name.All(c => char.IsAsciiLetterOrDigit(c) || c is '/' or '_' or '-' or '+')) return null;
+        return DateTimeZoneProviders.Tzdb.GetZoneOrNull(name)?.Id;
+    }
+}
 
 /// <summary>The paired phones. Owner-only on the page, read by the device scheme on every request with a token.</summary>
 public interface IAlertDeviceStore
@@ -89,6 +110,12 @@ public interface IAlertDeviceStore
     /// after it reads the plan, so it is pushed the next change.
     /// </remarks>
     Task SetPushAsync(Guid id, string? token, string? environment, CancellationToken cancellationToken);
+
+    /// <summary>Stores the zone the phone reported and records the request, so it is the phone seen most recently.</summary>
+    Task SetTimeZoneAsync(Guid id, string timeZone, Instant now, CancellationToken cancellationToken);
+
+    /// <summary>The zone of the phone seen most recently that reported one. Null when none has.</summary>
+    Task<string?> LatestTimeZoneAsync(CancellationToken cancellationToken);
 
     /// <summary>Clears the phone's push token when it is still this one. Apple said it is dead.</summary>
     Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken);
@@ -152,7 +179,8 @@ public sealed class DatabaseAlertDeviceStore(SchedulingDbContext database) : IAl
     public Task<AlertDevice?> FindAsync(byte[] tokenHash, CancellationToken cancellationToken) =>
         database.AlertDevices.AsNoTracking()
             .Where(device => device.TokenHash == tokenHash)
-            .Select(device => new AlertDevice(device.Id, device.Name, device.CreatedAt, device.LastSeenAt, device.ApnsToken != null))
+            .Select(device => new AlertDevice(
+                device.Id, device.Name, device.CreatedAt, device.LastSeenAt, device.ApnsToken != null, device.TimeZone))
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task TouchAsync(Guid id, Instant now, Instant unlessAfter, CancellationToken cancellationToken) =>
@@ -168,6 +196,24 @@ public sealed class DatabaseAlertDeviceStore(SchedulingDbContext database) : IAl
              WHERE "Id" = {id}
              """,
             cancellationToken);
+
+    public async Task SetTimeZoneAsync(Guid id, string timeZone, Instant now, CancellationToken cancellationToken) =>
+        await database.AlertDevices
+            .Where(device => device.Id == id)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(device => device.TimeZone, timeZone)
+                    .SetProperty(device => device.LastSeenAt, now),
+                cancellationToken);
+
+    public Task<string?> LatestTimeZoneAsync(CancellationToken cancellationToken) =>
+        database.AlertDevices.AsNoTracking()
+            .Where(device => device.TimeZone != null)
+            .OrderByDescending(device => device.LastSeenAt.HasValue)
+            .ThenByDescending(device => device.LastSeenAt)
+            .ThenByDescending(device => device.CreatedAt)
+            .Select(device => device.TimeZone)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task ClearPushIfAsync(Guid id, string token, CancellationToken cancellationToken) =>
         await database.AlertDevices

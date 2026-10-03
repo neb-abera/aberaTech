@@ -19,7 +19,9 @@ public static class AlertText
 
     public static string Message(PlannedAlert alert, DateTimeZone zone) =>
         Cut(
-            alert.Location is null
+            alert.Routine
+                ? $"Routine alarm, {When(alert.AlertAt, zone)}"
+                : alert.Location is null
                 ? $"Starts {When(alert.StartsAt, zone)}"
                 : $"Starts {When(alert.StartsAt, zone)}\n{alert.Location}",
             PushoverClient.MaxMessage);

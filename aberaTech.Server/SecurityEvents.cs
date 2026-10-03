@@ -65,6 +65,13 @@ public static partial class SecurityEvents
     /// <summary>403 from /api/alerts to a paired phone's token, on a route that is the owner's alone.</summary>
     public const int AlertsDeviceRefused = 4012;
 
+    /// <summary>
+    /// 400, 403 or 404 from Pushover's acknowledgement callback: a body that
+    /// is not a receipt, a receipt Pushover says is not acknowledged, or one
+    /// this server never sent. Never the receipt.
+    /// </summary>
+    public const int PushoverCallbackRefused = 4017;
+
     /// <summary>A phone push Apple took. Written by <see cref="aberaTech.Scheduling.Alerts.AlertPushLog"/>: the phone's id and the plan version.</summary>
     public const int AlertsPushSent = aberaTech.Scheduling.Alerts.AlertPushLog.SentId;
 
@@ -162,6 +169,8 @@ public static partial class SecurityEvents
         StatusCodes.Status401Unauthorized when Is(route, DigestRoute) => DigestKeyRejected,
         StatusCodes.Status401Unauthorized when Is(route, DevBox.DevBoxEndpoints.HeartbeatPath) => AgentTokenRejected,
         StatusCodes.Status401Unauthorized => SignInRequired,
+        StatusCodes.Status400BadRequest or StatusCodes.Status403Forbidden or StatusCodes.Status404NotFound
+            when Is(route, aberaTech.Scheduling.Alerts.PushoverCallback.Path) => PushoverCallbackRefused,
         StatusCodes.Status403Forbidden when Is(route, SmsReceiptEndpoint.Path) => WebhookSignatureRejected,
         StatusCodes.Status403Forbidden when signedIn => AllowlistRefused,
         StatusCodes.Status404NotFound when CapabilityRoutes.Contains(route) => UnknownCapability,
@@ -190,6 +199,7 @@ public static partial class SecurityEvents
             case AgentTokenRejected: Log.AgentTokenRejected(logger, clientIp, method, route, status); break;
             case AlertsDeviceTokenRejected: Log.AlertsDeviceTokenRejected(logger, clientIp, method, route, status); break;
             case AlertsDeviceRefused: Log.AlertsDeviceRefused(logger, clientIp, method, route, status); break;
+            case PushoverCallbackRefused: Log.PushoverCallbackRefused(logger, clientIp, method, route, status); break;
         }
     }
 
@@ -238,6 +248,10 @@ public static partial class SecurityEvents
         [LoggerMessage(EventId = SecurityEvents.AlertsDeviceRefused, EventName = nameof(AlertsDeviceRefused), Level = LogLevel.Warning,
             Message = "A paired phone was refused an owner-only route from {ClientIp} on {Method} {Route} ({Status}).")]
         public static partial void AlertsDeviceRefused(ILogger logger, string clientIp, string method, string route, int status);
+
+        [LoggerMessage(EventId = SecurityEvents.PushoverCallbackRefused, EventName = nameof(PushoverCallbackRefused), Level = LogLevel.Warning,
+            Message = "Pushover acknowledgement callback refused from {ClientIp} on {Method} {Route} ({Status}).")]
+        public static partial void PushoverCallbackRefused(ILogger logger, string clientIp, string method, string route, int status);
 
         [LoggerMessage(EventId = SecurityEvents.OwnerSignedIn, EventName = nameof(OwnerSignedIn), Level = LogLevel.Information,
             Message = "Owner signed in from {ClientIp}.")]
