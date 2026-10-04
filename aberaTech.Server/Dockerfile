@@ -24,7 +24,7 @@ FROM rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fe
 # Base stage for .NET runtime
 # Chiseled: distroless-style, no shell, no package manager, non-root by
 # default - and none of the ~30 unfixable distro CVEs the full image carries.
-FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled@sha256:ec752d908262db3ed7fe5cd7baad2dc97373c0bd390456a50bda8aaa866fc93d AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled@sha256:af930df2f1e6da76666d818c5922534cc7f2a4077adfae27e7c81c28a6406d29 AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
@@ -165,7 +165,7 @@ RUN npx biome check .
 # rather than flattened into /src: the server references aberaTech.Scheduling by
 # relative path, and a flattened layout silently resolves that reference to
 # nothing.
-FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute@sha256:1293c84938eecaa93b84d80b561af43007ec3bc356f46d1192a2ca278f5840a1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute@sha256:78559d13d8c810bfe87f329168739ae2ee31f402b1e2c66353d3ff9744d68520 AS build
 ARG BUILD_CONFIGURATION=Release
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
