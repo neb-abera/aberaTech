@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router";
 import { tagline } from "../site/meta";
 import { guides, label, projects } from "../site/sections";
+import GoodreadsIcon from "./GoodreadsIcon";
 
 /**
  * The site footer. It carries the identity on every page, which is why the
@@ -28,6 +29,11 @@ const socials = [
     Icon: LinkedInIcon,
   },
   { label: "GitHub", href: "https://github.com/neb-abera", Icon: GitHubIcon },
+  {
+    label: "Goodreads",
+    href: "https://www.goodreads.com/user/show/195486486-neb",
+    Icon: GoodreadsIcon,
+  },
   {
     label: "Instagram",
     href: "https://www.instagram.com/neb_abera",

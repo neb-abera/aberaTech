@@ -195,6 +195,7 @@ const person = {
   sameAs: [
     "https://www.linkedin.com/in/neb-abera/",
     "https://github.com/neb-abera",
+    "https://www.goodreads.com/user/show/195486486-neb",
   ],
 };
 

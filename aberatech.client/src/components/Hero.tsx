@@ -8,6 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { heroAvatar, tagline } from "../site/meta";
+import GoodreadsIcon from "./GoodreadsIcon";
 
 /**
  * The home page: the photo, the name, one line, and the ways to reach me.
@@ -24,6 +25,11 @@ const contacts = [
     Icon: LinkedInIcon,
   },
   { label: "GitHub", href: "https://github.com/neb-abera", Icon: GitHubIcon },
+  {
+    label: "Goodreads",
+    href: "https://www.goodreads.com/user/show/195486486-neb",
+    Icon: GoodreadsIcon,
+  },
   {
     label: "Email",
     href: "mailto:support@alias.abera.tech",
