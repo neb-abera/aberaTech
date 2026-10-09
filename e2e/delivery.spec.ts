@@ -36,6 +36,7 @@ const prerendered: Record<string, string> = {
   "/planner": "Graduate course planner",
   "/dates": "Dates and countdowns",
   "/network": "Network",
+  "/playbook": "Playbook",
 };
 
 async function loadHome(page: Page) {
@@ -153,6 +154,7 @@ const firstRequest: Record<string, string> = {
   "/planner": "/api/scheduling/admin/me",
   "/dates": "/api/scheduling/admin/me",
   "/network": "/api/scheduling/admin/me",
+  "/playbook": "/api/playbook",
 };
 
 for (const [path, api] of Object.entries(firstRequest)) {

@@ -6,6 +6,7 @@ import { devBoxStatusUrl } from "../features/devbox/core/api";
 import { fitnessMeUrl } from "../features/fitness/core/api";
 import { linksDocumentKey } from "../features/links/core/links";
 import { planDocumentKey } from "../features/plan/core/document";
+import { playbookTreeUrl } from "../features/playbook/core/api";
 import { documentUrl } from "../features/progress/core/documents";
 import { scheduleStateUrl } from "../features/scheduling/hooks/useSchedule";
 import { accountUrl } from "../hooks/useAccount";
@@ -88,6 +89,7 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   "/dates": { url: accountUrl },
   // The network is the owner's alone, so who is asking comes first.
   "/network": { url: accountUrl },
+  "/playbook": { url: playbookTreeUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };
@@ -142,6 +144,10 @@ const structuralMeta: Record<string, PageMeta> = {
   "/network": {
     title: "Network",
     description: "The owner's network, drawn by sector.",
+  },
+  "/playbook": {
+    title: "Playbook",
+    description: "The owner's Notion playbook, read live.",
   },
 };
 

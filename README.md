@@ -88,6 +88,10 @@ site. The history is on the
 - `/devbox` starts the owner's Azure VM from a phone and opens its terminal or desktop in a browser tab (`DevBoxEndpoints.cs`, `BrowserPanel.tsx`).
   The container app's managed identity holds one role on that one VM: start
   and read. `DevBox__SubscriptionId` switches it on.
+- `/playbook` shows the owner's Notion playbook, read live, for a computer
+  that can reach this site and not Notion (`Playbook/`). It reads the
+  pages under one root page and streams their files as downloads. Notion
+  stays the record and nothing is stored here.
 
 - `/alerts` sends one Pushover message before each event on the owner's
   Google Calendar set to Ring until stopped or Ring once
@@ -393,6 +397,52 @@ Each change pushes the phones.
 | `POST /api/alerts/routines` | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
 | `PUT /api/alerts/routines/{id}` | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}` | 200. 400 by field. 404 for an unknown id |
 | `DELETE /api/alerts/routines/{id}` | none | 200. 404 for an unknown id |
+
+### Playbook: connecting Notion
+
+`/playbook` needs two values. Without both, the page says Notion is not
+connected and the rest of the site runs as before.
+
+| Environment variable | Kind | Value |
+|---|---|---|
+| `Notion__Token` | secret `notion-token` | an internal integration's secret, from notion.so/profile/integrations |
+| `Notion__PlaybookPageId` | setting | the root page's id: the 32 characters at the end of its link |
+
+In Notion, open the root page, then ••• > Connections, and add the
+integration. It then reads that page and everything under it.
+
+Run these on the devbox as neb, or anywhere `az` is signed in. Put the
+values between the quotes.
+
+```bash
+app=aberatechserver-app-202412211749
+group=aberatechserver-app-202412211749ResourceGroup
+
+az containerapp secret set -n "$app" -g "$group" \
+  --secrets notion-token='<integration secret>'
+
+az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
+  --set-env-vars Notion__Token=secretref:notion-token \
+  Notion__PlaybookPageId='<root page id>'
+```
+
+The update starts a new revision. The deploy workflow changes only the
+image, so both stay set across deploys.
+
+The server sends `Notion-Version: 2026-03-11`. It keeps Notion's answers
+in memory for 5 minutes (`Notion__CacheSeconds`), waits out a 429 as
+Retry-After says for up to 10 s and 3 tries, and follows `has_more` to the
+end of every list. A file's block is read fresh on every download, since
+its signed address lasts an hour.
+
+| Route | Answer |
+|---|---|
+| `GET /api/playbook` | `{configured, root}`: the tree of pages and databases under the root |
+| `GET /api/playbook/pages/{id}` | `{id, title, blocks}`. 404 for a page outside the root |
+| `GET /api/playbook/files/{blockId}` | the file as an attachment. 404 for a block outside the root or one that is not a file Notion holds |
+
+Each route is the owner's alone. 503 with Retry-After when Notion asks for
+a longer wait. 502 naming Notion's status for any other failure.
 
 ### Dates and countdowns
 

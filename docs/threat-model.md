@@ -16,11 +16,14 @@ before it is a feature.
   phones.
 - The dev box: an Azure VM the site can start, and the agent channel that
   tells it to hold or park.
+- The owner's Notion playbook: the integration token reads every page
+  shared with it, and the site shows only what sits under the root page.
 - The container image and the supply chain that builds and deploys it.
 - Secrets on the container app: the Google client secret, the Twilio
   credentials, the agent token, the calendar address and the Pushover keys,
   Apple's push key (`Alerts__ApnsKeyP8`) with its key id and team id, the
-  Cloudflare purge token in CI.
+  Notion integration token (`Notion__Token`), the Cloudflare purge token
+  in CI.
 - The paired phones' push tokens: each one lets whoever holds it and the
   push key wake that phone's app.
 
@@ -41,6 +44,7 @@ before it is a feature.
 | The site to Pushover | One POST per alarm or notification. An alarm at priority 2, with retry, expire and the callback address. A notification at priority 0 or 1, with none of them. An event set to Off sends nothing. One GET of a receipt per callback, with the app token in the query string, kept out of request traces | Pushover |
 | The site to Apple's push service | A background push over HTTP/2 to `api.push.apple.com` or `api.sandbox.push.apple.com` after a change a phone holds, at most one per phone a minute. The body is `{"aps":{"content-available":1},"v":<plan version>}` and nothing else. A JWT signed with the push key, reused for 50 minutes | Apple |
 | A paired phone to the site | `PUT` and `DELETE /api/alerts/devices/me/push` with the phone's own token: Apple's push token and its environment | The phone, or whoever holds its token |
+| The site to Notion | Reads of pages, blocks, databases and data source queries with the integration token and `Notion-Version: 2026-03-11`. A signed file address, fetched without the token, for each download | Notion and its file store |
 | The site to Postgres | Parameterised queries as the runtime role, passwordless | The application |
 | Internet to the Lighthouse CI server | Report uploads with a build token, dashboard reads, both behind basic auth, over TLS | CI, the nightly run, the owner, or whoever holds the password |
 
@@ -57,6 +61,9 @@ before it is a feature.
 | A stolen agent token orders the box | Tampering | The reply can only hold or park. Start needs the owner's session and Azure's identity | The route table and the role scoped to one VM |
 | The site's identity does more than start a VM | Elevation | One custom role, start and read, on one resource | The role definition in repos-conventions |
 | A session cookie is stolen | Spoofing | `__Host-`, `Secure`, `HttpOnly`, `SameSite=Strict`. Sign-out bumps the account's session version, so every copy of the cookie is refused after it. Events 4009 and 4010 record sign-in and sign-out with the address | `AdminRouteTests`, `SessionAuditTests`, `SessionRevocationTests` |
+| The playbook serves a page or file outside its root | Disclosure | The tree under `Notion__PlaybookPageId` is the allowlist. A page outside it, and a file whose parents do not lead into it, is a 404 | `PlaybookRouteTests` |
+| A Notion block of an unexpected shape breaks the page | Denial | Each field is read by its kind and passed over when it is wrong. Notion's answer is never a 500 | The seeded malformed blocks in `PlaybookRouteTests` |
+| A downloaded file runs as this site | Tampering | Every download is an attachment. HTML, SVG and XML go as `application/octet-stream`. `nosniff` on every response | `PlaybookRouteTests` |
 | Script in a bookmark title runs in the page | Tampering | React escapes. CSP with no `unsafe-inline` for scripts. The parser is property-tested under generated input | `properties.test.ts`, ZAP on every push |
 | A bookmark address runs script when clicked | Tampering | The API refuses a links document holding any address that is not http or https. The page drops one on read | `ProgressEndpointsTests`, `FitnessRouteAuthorizationTests`, `LinksPanel.test.tsx` |
 | An upload replaces the owner's data silently | Tampering | A different title, note or folder is a conflict the owner settles | `bookmarks.test.ts`, the owner e2e |
