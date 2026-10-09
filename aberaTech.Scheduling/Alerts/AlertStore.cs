@@ -285,6 +285,17 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     {
         var text = outcome.Length <= 64 ? outcome : outcome[..64];
         var kept = PushoverClient.IsReceipt(receipt) ? receipt : null;
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+
+        // Pushover's callback names the receipt alone, so one delivery holds
+        // it (a unique index): the newest send.
+        if (kept is not null)
+        {
+            await database.AlertDeliveries
+                .Where(delivery => delivery.Receipt == kept && delivery.OccurrenceKey != key)
+                .ExecuteUpdateAsync(set => set.SetProperty(delivery => delivery.Receipt, (string?)null), cancellationToken);
+        }
+
         await database.AlertDeliveries
             .Where(delivery => delivery.OccurrenceKey == key)
             .ExecuteUpdateAsync(
@@ -293,6 +304,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                     .SetProperty(delivery => delivery.CompletedAt, now)
                     .SetProperty(delivery => delivery.Receipt, kept),
                 cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public Task<AlertDelivery?> DeliveryAsync(string key, CancellationToken cancellationToken) =>

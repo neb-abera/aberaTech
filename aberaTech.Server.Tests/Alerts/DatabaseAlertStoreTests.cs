@@ -489,6 +489,31 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         Assert.Null(await store2.DeliveryByReceiptAsync("zzzzzzzzzz0123456789abcdefghij", CancellationToken.None));
     }
 
+    /// <summary>
+    /// Pushover's callback names the receipt alone, so one delivery holds it.
+    /// On 2026-10-09 two deliveries held "development1", one per app start,
+    /// and the callback found the older, acknowledged one.
+    /// </summary>
+    [PostgresFact]
+    public async Task A_receipt_recorded_again_belongs_to_the_newest_delivery()
+    {
+        const string receipt = "abcdefghij0123456789abcdefghij";
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.TryClaimAsync("a", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("a", "sent", Now, CancellationToken.None, receipt);
+            await store.TryClaimAsync("b", Start, Now, CancellationToken.None);
+            await store.RecordOutcomeAsync("b", "sent", Now, CancellationToken.None, receipt);
+        }
+
+        await using var check = Context();
+        var store2 = new DatabaseAlertStore(check);
+        Assert.Equal(new ReceiptDelivery("b", Start), await store2.DeliveryByReceiptAsync(receipt, CancellationToken.None));
+        Assert.Null((await store2.DeliveryAsync("a", CancellationToken.None))!.Receipt);
+        Assert.Equal(1, await check.AlertDeliveries.CountAsync(delivery => delivery.Receipt == receipt));
+    }
+
     [PostgresFact]
     public async Task A_held_ring_is_a_row_held_once_forgotten_with_its_routine_and_pruned_with_the_claims()
     {
@@ -703,6 +728,50 @@ public sealed class DatabaseAlertStoreTests : IDisposable
             new AlertSettings(45, 20, "bike", 15, 5, 48, true, "Asia/Amman", read.OwnerEmails, 1, "siren", "notification", 120, "default", 9),
             read);
         Assert.Equal(["neb@work.example"], read.OwnerEmails);
+    }
+
+    [PostgresFact]
+    public async Task Receipts_held_twice_before_the_migration_stay_with_the_newest_delivery()
+    {
+        using var database = new TestDatabase("alertsreceipts");
+        SchedulingDbContext Fresh() =>
+            new(new DbContextOptionsBuilder<SchedulingDbContext>()
+                .UseNpgsql(database.ConnectionString, npgsql => npgsql.UseNodaTime())
+                .Options);
+
+        await using (var context = Fresh())
+        {
+            // The schema before the index was unique, and the pairs a
+            // development database holds from two app starts.
+            await context.GetService<IMigrator>().MigrateAsync("20261003065623_RoutineRingsAndPushoverAck");
+            foreach (var (key, minutes, receipt) in new[]
+                     {
+                         ("drill-1-first", 0, "development1"), ("drill-1-second", 5, "development1"),
+                         ("drill-2-first", 0, "development2"), ("drill-2-second", 5, "development2"),
+                         ("drill-2-third", 10, "development2"), ("alone", 0, "development3")
+                     })
+            {
+                var claimed = Now + Duration.FromMinutes(minutes);
+                await context.Database.ExecuteSqlAsync(
+                    $"""
+                     INSERT INTO "AlertDeliveries" ("OccurrenceKey", "StartsAt", "ClaimedAt", "Outcome", "Receipt")
+                     VALUES ({key}, {Start}, {claimed}, 'sent', {receipt})
+                     """);
+            }
+        }
+
+        await using (var context = Fresh())
+        {
+            await context.Database.MigrateAsync();
+            Assert.Empty(await context.Database.GetPendingMigrationsAsync());
+        }
+
+        await using var check = Fresh();
+        var store = new DatabaseAlertStore(check);
+        Assert.Equal(new ReceiptDelivery("drill-1-second", Start), await store.DeliveryByReceiptAsync("development1", CancellationToken.None));
+        Assert.Equal(new ReceiptDelivery("drill-2-third", Start), await store.DeliveryByReceiptAsync("development2", CancellationToken.None));
+        Assert.Equal(new ReceiptDelivery("alone", Start), await store.DeliveryByReceiptAsync("development3", CancellationToken.None));
+        Assert.Equal(3, await check.AlertDeliveries.CountAsync(delivery => delivery.Receipt != null));
     }
 
     [PostgresFact]

@@ -96,6 +96,11 @@ internal sealed class InMemoryAlertStore : IAlertStore
         lock (_lock)
         {
             _claims[key] = outcome;
+            foreach (var older in _receipts.Where(pair => pair.Value == receipt && pair.Key != key).Select(pair => pair.Key).ToList())
+            {
+                _receipts.Remove(older);
+            }
+
             if (receipt is not null) _receipts[key] = receipt;
             else _receipts.Remove(key);
         }
