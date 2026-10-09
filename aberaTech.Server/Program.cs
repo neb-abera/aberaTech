@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using aberaTech.Server;
 using aberaTech.Server.DevBox;
+using aberaTech.Server.Playbook;
 using Azure.Core;
 using Azure.Identity;
 using aberaTech.Scheduling;
@@ -25,6 +26,7 @@ using aberaTech.Fitness.IntervalsIcu;
 using aberaTech.Fitness.Sync;
 using aberaTech.Postgres;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
 using Npgsql;
 using OpenTelemetry.Instrumentation.Http;
@@ -318,6 +320,39 @@ if (devBoxEnabled)
     }
 }
 
+// ---------------------------------------------------------------- playbook
+
+// The owner's Notion playbook, read live for a computer that cannot reach
+// Notion. Needs the admin sign-in. Without Notion__Token and
+// Notion__PlaybookPageId the routes answer "not connected" and the server
+// starts as usual. Notion stays the record: nothing is stored here.
+var notionOptions = builder.Configuration.GetSection(NotionOptions.Section).Get<NotionOptions>()
+                    ?? new NotionOptions();
+builder.Services.AddSingleton(notionOptions);
+
+if (adminOptions.IsConfigured)
+{
+    builder.Services.AddMemoryCache();
+    builder.Services.TryAddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton<NotionClient>();
+    builder.Services.AddScoped<PlaybookReader>();
+    // A hung Notion must not hold the request for the framework's 100 s.
+    builder.Services.AddHttpClient(NotionClient.ApiClient, client => client.Timeout = TimeSpan.FromSeconds(30));
+    // A file streams for as long as it takes; only the headers are bounded.
+    builder.Services.AddHttpClient(NotionClient.FilesClient, client => client.Timeout = TimeSpan.FromMinutes(10));
+
+    if (builder.Environment.IsDevelopment() && notionOptions.Fake)
+    {
+        // `make up` and `make e2e`: a made-up playbook in memory
+        // (FakeNotion.cs). Development only; PlaybookRouteTests proves
+        // Production ignores it.
+        var fakeNotion = FakeNotion.Sample();
+        builder.Services.AddSingleton(fakeNotion);
+        builder.Services.AddHttpClient(NotionClient.ApiClient).ConfigurePrimaryHttpMessageHandler(() => fakeNotion);
+        builder.Services.AddHttpClient(NotionClient.FilesClient).ConfigurePrimaryHttpMessageHandler(() => fakeNotion);
+    }
+}
+
 // ---------------------------------------------------------------- calendar alerts
 
 // A Pushover message before each event on the owner's Google Calendar, read
@@ -373,7 +408,8 @@ if (alertsEnabled)
 
 // The calendar's address is its secret, and the path carries it. Pushover's
 // sound list and its receipt poll take the app token in the query string. A push to Apple has
-// the phone's push token in its path. Request traces record the full URL,
+// the phone's push token in its path. A Notion file's signed address carries
+// its signature in the query. Request traces record the full URL,
 // so calls to all three are left out of them. Every other
 // outgoing call is traced as before. Registered whether or not Azure
 // Monitor is on, after it, so it wraps any filter the distro sets.
@@ -385,6 +421,7 @@ builder.Services.Configure<HttpClientTraceInstrumentationOptions>(trace =>
         && !PushoverClient.IsSoundsRequest(request.RequestUri)
         && !PushoverClient.IsReceiptsRequest(request.RequestUri)
         && !ApnsClient.IsApnsRequest(request.RequestUri)
+        && !(request.RequestUri is { } address && PlaybookReader.IsFileHost(address))
         && (previous?.Invoke(request) ?? true);
 });
 
@@ -585,6 +622,15 @@ if (devBoxEnabled)
 else
 {
     app.MapDevBoxUnavailable();
+}
+
+if (adminOptions.IsConfigured)
+{
+    app.MapPlaybookEndpoints(notionOptions);
+}
+else
+{
+    app.MapPlaybookUnavailable();
 }
 
 if (adminOptions.IsConfigured)

@@ -27,5 +27,6 @@ export const prerenderedRoutes: string[] = [
   "/planner",
   "/dates",
   "/network",
+  "/playbook",
   ...guides.filter((entry) => !entry.external).map((entry) => entry.to),
 ];

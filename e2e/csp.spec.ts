@@ -25,6 +25,7 @@ const visitorRoutes = [
   "/schedule/admin",
   "/dates",
   "/network",
+  "/playbook",
   "/definitely-not-a-page",
 ];
 
@@ -36,6 +37,7 @@ const ownerRoutes = [
   "/alerts",
   "/dates",
   "/network",
+  "/playbook",
 ];
 
 interface Violation {

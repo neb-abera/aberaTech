@@ -105,6 +105,7 @@ describe("the app bar", () => {
         "/alerts",
         "/dates",
         "/network",
+        "/playbook",
       ]),
     );
   });
