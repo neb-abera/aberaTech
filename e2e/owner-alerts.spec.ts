@@ -1066,7 +1066,7 @@ test.describe("/alerts", () => {
     const drill = messages
       .filter((message) => message.title === "E2E drill")
       .at(-1);
-    expect(drill?.receipt).toMatch(/^development\d+$/);
+    expect(drill?.receipt).toMatch(/^development[0-9a-f]{19}$/);
     expect(drill?.callback).toMatch(/\/api\/alerts\/pushover\/acknowledged$/);
     const receipt = drill?.receipt ?? "";
     const form = {

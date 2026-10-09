@@ -44,7 +44,6 @@ public sealed class FakeAlertServices(IClock clock)
     private bool _failing;
     private Instant? _dueStart;
     private int _dueCount;
-    private int _receipts;
     private readonly ConcurrentDictionary<string, bool> _acknowledgedInApp = new(StringComparer.Ordinal);
     private readonly List<string> _deleted = [];
 
@@ -323,8 +322,12 @@ public sealed class FakeAlertServices(IClock clock)
         static string? Field(Dictionary<string, Microsoft.Extensions.Primitives.StringValues> form, string name) =>
             form.TryGetValue(name, out var value) ? value.ToString() : null;
 
-        // Pushover answers an emergency message with a receipt.
-        var receipt = form["priority"].ToString() == "2" ? $"development{Interlocked.Increment(ref _receipts)}" : null;
+        // Pushover answers an emergency message with a receipt, 30 letters and
+        // digits. Random, because the database outlives the process: a counter
+        // restarted at 1 gave a new alarm the receipt of an acknowledged one.
+        var receipt = form["priority"].ToString() == "2"
+            ? $"development{System.Security.Cryptography.RandomNumberGenerator.GetHexString(19, lowercase: true)}"
+            : null;
         _sent.Enqueue(new FakeMessage(
             form["title"].ToString(),
             form["message"].ToString(),
