@@ -596,6 +596,16 @@ test.describe("/alerts", () => {
     await page.reload();
     const before = await alertsTitled(page, "E2E daily");
     expect(before).toHaveLength(2);
+    // The series is in UTC. A move across midnight UTC changes its weekdays
+    // and rewrites the rule, which the next test covers. An hour later
+    // crosses it when the suite runs from 19:00 to 20:00 UTC, so the move is
+    // an hour earlier then.
+    const start = Date.parse(before[0].startsAt);
+    const minutes =
+      new Date(start + 60 * 60_000).getUTCDate() ===
+      new Date(start).getUTCDate()
+        ? 60
+        : -60;
 
     await page
       .getByRole("button", { name: /^Edit E2E daily at / })
@@ -605,7 +615,7 @@ test.describe("/alerts", () => {
     await dialog.getByLabel("All events").check();
     await dialog
       .getByLabel(/^Starts/)
-      .fill(await localPlus(page, before[0].startsAt, 60));
+      .fill(await localPlus(page, before[0].startsAt, minutes));
     await dialog.getByRole("button", { name: "Save" }).click();
 
     await expect(
@@ -617,7 +627,7 @@ test.describe("/alerts", () => {
     ).toHaveCount(2);
     const after = await alertsTitled(page, "E2E daily");
     expect(after.map((alert) => Date.parse(alert.startsAt))).toEqual(
-      before.map((alert) => Date.parse(alert.startsAt) + 60 * 60_000),
+      before.map((alert) => Date.parse(alert.startsAt) + minutes * 60_000),
     );
 
     const writes = await googleWrites(page);
@@ -629,9 +639,7 @@ test.describe("/alerts", () => {
         recurrence: null,
       },
     ]);
-    expect(Date.parse(writes[0].start)).toBe(
-      Date.parse(before[0].startsAt) + 60 * 60_000,
-    );
+    expect(Date.parse(writes[0].start)).toBe(start + minutes * 60_000);
   });
 
   test("All events moved a day later rewrites the series' weekdays in Google", async ({
