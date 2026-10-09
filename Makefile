@@ -49,7 +49,7 @@ export HOST_GID
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e lighthouse lighthouse-live check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e e2e-pass lighthouse lighthouse-live check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -143,10 +143,24 @@ E2E_CONTAINER    := $(subst :,-,$(IMAGE))-e2e
 # leaves the box and two worktrees never test each other's build. Named
 # container rather than --rm so the traces can be copied out when it fails;
 # it is removed either way.
+#
+# Then the owner suite again on the same database, after a restart of the
+# app. The database outlives the process: across this step in CI, and
+# across every run on a developer's box. A fake that numbered Pushover
+# receipts from 1 at each start answered a forged callback with 200 on the
+# second run (aberaTech #307). One engine is enough, because the state is
+# the server's. The pass took 32 s on the dev box.
 e2e: ## Playwright against the production image and its database, on the compose network
 	./scripts/check-playwright-image.sh --self-test
 	./scripts/check-playwright-image.sh
 	$(COMPOSE) up -d --build --wait app
+	$(MAKE) --no-print-directory e2e-pass E2E_ARGS=
+	$(COMPOSE) up -d --force-recreate --wait app
+	$(MAKE) --no-print-directory e2e-pass E2E_ARGS='--project=owner-chromium --no-deps'
+
+E2E_ARGS ?=
+
+e2e-pass:
 	$(DOCKER) rm -f $(E2E_CONTAINER) > /dev/null 2>&1 || true
 	$(DOCKER) run --name $(E2E_CONTAINER) \
 	  --network "$$($(COMPOSE) config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1)_default" \
@@ -156,7 +170,7 @@ e2e: ## Playwright against the production image and its database, on the compose
 	  $(PLAYWRIGHT_IMAGE) bash -c 'set -e; mkdir -p /w && cp -r /src /w/e2e && cd /w/e2e; \
 	    for _ in $$(seq 1 60); do curl -sf "$$E2E_BASE_URL/healthz" > /dev/null && break; sleep 2; done; \
 	    curl -sf "$$E2E_BASE_URL/healthz" > /dev/null; \
-	    npm ci --no-audit --no-fund && npx playwright test'; \
+	    npm ci --no-audit --no-fund && npx playwright test $(E2E_ARGS)'; \
 	status=$$?; \
 	if [ $$status -ne 0 ]; then \
 	  rm -rf e2e-test-results; \
