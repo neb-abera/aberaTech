@@ -46,6 +46,8 @@ way their users do. Compose configures no SMS provider, so every text goes to
 the logging sender. It checks what no unit test can: the bundle arrives
 compressed, hashed assets are immutable and the document is not, nothing
 static sets a cookie, and every prerendered page reads with JavaScript off.
+It then restarts the app, keeps the database, and runs the owner suite on
+Chromium again, so state left by an earlier run cannot pass unseen.
 Traces land in `e2e-test-results/` when it fails.
 
 `e2e/a11y.spec.ts` runs axe over every route in `/app-routes.json`, in both
