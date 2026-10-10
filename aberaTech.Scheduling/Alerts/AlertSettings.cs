@@ -143,6 +143,11 @@ public sealed record AlertSettings(
     /// event once it starts, and a backup after that would never go. A
     /// notification, or a delay of 0, goes at the alert's own time.
     /// </summary>
+    /// <remarks>
+    /// A phone Snooze never delays or stops this backup. Only Stop, a full
+    /// acknowledgement, does. A snooze is a short delay, and the deadline
+    /// does not move because of it. Neb decided this on 2026-10-10.
+    /// </remarks>
     public Instant PushoverAt(PlannedAlert alert, string type)
     {
         if (type != AlertTypes.Alarm || BackupDelaySeconds <= 0) return alert.AlertAt;
