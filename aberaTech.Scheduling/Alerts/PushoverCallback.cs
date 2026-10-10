@@ -46,6 +46,7 @@ public static class PushoverCallback
         PushoverClient pushover,
         AlertPushWorker pushes,
         IClock clock,
+        ILoggerFactory loggers,
         CancellationToken cancellationToken)
     {
         if (!context.Request.HasFormContentType) return Results.BadRequest();
@@ -67,7 +68,12 @@ public static class PushoverCallback
         if (delivery is null) return Results.NotFound();
 
         // A second call, or one after the phone or a browser answered: nothing more to do.
-        if (await store.IsAcknowledgedAsync(delivery.Key, cancellationToken)) return Acknowledged();
+        if (await store.IsAcknowledgedAsync(delivery.Key, cancellationToken))
+        {
+            await AlertAcknowledgementLog.LateAsync(
+                store, loggers, delivery.Key, AlertAcknowledgementVia.Pushover, clock.GetCurrentInstant(), cancellationToken);
+            return Acknowledged();
+        }
 
         switch (await pushover.IsAcknowledgedAsync(receipt[0]!, cancellationToken))
         {
@@ -77,10 +83,14 @@ public static class PushoverCallback
                 return Results.StatusCode(StatusCodes.Status403Forbidden);
         }
 
-        if (await store.AcknowledgeAsync(
-                delivery.Key, delivery.StartsAt, AlertAcknowledgementVia.Pushover, clock.GetCurrentInstant(), cancellationToken))
+        var now = clock.GetCurrentInstant();
+        if (await store.AcknowledgeAsync(delivery.Key, delivery.StartsAt, AlertAcknowledgementVia.Pushover, now, cancellationToken))
         {
             await pushes.PlanChangedAsync(cancellationToken);
+        }
+        else
+        {
+            await AlertAcknowledgementLog.LateAsync(store, loggers, delivery.Key, AlertAcknowledgementVia.Pushover, now, cancellationToken);
         }
 
         return Acknowledged();

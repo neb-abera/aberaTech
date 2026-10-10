@@ -410,6 +410,51 @@ public sealed class AlertDeviceRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task A_second_acknowledgement_is_logged_with_its_channel_and_how_late_it_came()
+    {
+        var token = (await PairAsync()).GetProperty("token").GetString()!;
+        var key = await KeyOf("Standup");
+        using var phone = Phone(token);
+        using var owner = Owner();
+
+        using var first = await phone.PostAsJsonAsync("/api/alerts/ack", new { key, via = "phone" });
+        Assert.DoesNotContain(_logs.Entries, entry => entry.EventId.Id == AlertAcknowledgementLog.LateId);
+        _clock.Now = Eight + Duration.FromSeconds(75);
+        using var second = await owner.PostAsJsonAsync("/api/alerts/ack", new { key, via = "browser" });
+
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        var late = Assert.Single(_logs.Entries, entry => entry.EventId.Id == AlertAcknowledgementLog.LateId);
+        Assert.Equal(AlertAcknowledgementLog.Category, late.Category);
+        Assert.Equal(LogLevel.Information, late.Level);
+        Assert.Equal(key, late.Fields["Key"]);
+        Assert.Equal("browser", late.Fields["Via"]);
+        Assert.Equal("phone", late.Fields["FirstVia"]);
+        Assert.Equal(75L, late.Fields["LateSeconds"]);
+        Assert.All(_logs.Entries, entry => Assert.DoesNotContain(token, entry.Everything));
+    }
+
+    [Fact]
+    public async Task A_phone_stop_that_arrives_after_Pushover_is_logged_as_late()
+    {
+        // 2026-10-10: Pushover rang at the 600 s backup, then the phone's Stop came.
+        var token = (await PairAsync()).GetProperty("token").GetString()!;
+        var key = await KeyOf("Standup");
+        await _store.AcknowledgeAsync(key, Eight, AlertAcknowledgementVia.Pushover, Eight, CancellationToken.None);
+        _clock.Now = Eight + Duration.FromMinutes(18);
+        using var phone = Phone(token);
+
+        using var response = await phone.PostAsJsonAsync("/api/alerts/ack", new { key, via = "phone" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var late = Assert.Single(_logs.Entries, entry => entry.EventId.Id == AlertAcknowledgementLog.LateId);
+        Assert.Equal("phone", late.Fields["Via"]);
+        Assert.Equal("pushover", late.Fields["FirstVia"]);
+        Assert.Equal(1080L, late.Fields["LateSeconds"]);
+        Assert.Equal("pushover", (await _store.AcknowledgementsAsync(CancellationToken.None))[key].Via);
+        Assert.All(_logs.Entries, entry => Assert.DoesNotContain(token, entry.Everything));
+    }
+
+    [Fact]
     public async Task Acknowledging_after_the_emergency_send_cancels_its_repeats_once()
     {
         _clock.Now = AlertTime;
