@@ -265,6 +265,7 @@ public static class AlertsEndpoints
             AlertDispatcher dispatcher,
             IAlertStore store,
             IClock clock,
+            ILoggerFactory loggers,
             CancellationToken cancellationToken) =>
         {
             var errors = new Dictionary<string, string[]>();
@@ -288,10 +289,15 @@ public static class AlertsEndpoints
             startsAt ??= (await store.DeliveryAsync(request.Key!, cancellationToken))?.StartsAt;
             if (startsAt is null) return Results.NotFound();
 
-            if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, clock.GetCurrentInstant(), cancellationToken))
+            var now = clock.GetCurrentInstant();
+            if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, now, cancellationToken))
             {
                 await pushes.PlanChangedAsync(cancellationToken);
                 await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
+            }
+            else
+            {
+                await AlertAcknowledgementLog.LateAsync(store, loggers, request.Key!, request.Via!, now, cancellationToken);
             }
 
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));

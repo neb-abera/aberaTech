@@ -257,6 +257,10 @@ public sealed class PushoverCallbackRouteTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Empty(Polls);
         Assert.Equal("browser", (await _store.AcknowledgementsAsync(CancellationToken.None))[StandupKey].Via);
+        var late = Assert.Single(_logs.Entries, entry => entry.EventId.Id == AlertAcknowledgementLog.LateId);
+        Assert.Equal("pushover", late.Fields["Via"]);
+        Assert.Equal("browser", late.Fields["FirstVia"]);
+        Assert.All(_logs.Entries, entry => Assert.DoesNotContain(Receipt, entry.Everything));
     }
 
     [Fact]

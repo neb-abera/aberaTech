@@ -84,6 +84,9 @@ public static partial class SecurityEvents
     /// <summary>Apple said a phone's push token is dead or not for the app, and it was cleared.</summary>
     public const int AlertsPushTokenCleared = aberaTech.Scheduling.Alerts.AlertPushLog.TokenClearedId;
 
+    /// <summary>An acknowledgement for an occurrence already acknowledged. Written by <see cref="aberaTech.Scheduling.Alerts.AlertAcknowledgementLog"/>: the key, both channels and the seconds between.</summary>
+    public const int AlertsAcknowledgementLate = aberaTech.Scheduling.Alerts.AlertAcknowledgementLog.LateId;
+
     /// <summary>
     /// Sign-in and sign-out as events. The application STIG (V-222462,
     /// V-222464) wants a record of when a session starts and ends, with
