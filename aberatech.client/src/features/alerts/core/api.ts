@@ -193,12 +193,24 @@ export type ActionResult =
         | "throttled"
         | "refused"
         | "network"
+        | "unavailable"
         | "pushover"
         | "invalid";
       detail?: string;
       /** For "invalid": the server's message for each field it refused. */
       errors?: Record<string, string[]>;
     };
+
+/**
+ * No answer, or a server error (5xx): the change may go through later, so
+ * the page keeps it and sends it again. Anything else is a refusal.
+ */
+export function isUnreachable(result: { ok: boolean; reason?: string }) {
+  return (
+    !result.ok &&
+    (result.reason === "network" || result.reason === "unavailable")
+  );
+}
 
 type StateBody = AlertsState & { configured?: boolean; missing?: string[] };
 
@@ -543,6 +555,7 @@ export async function changeState(
         return { ok: false, reason: "invalid", errors: problem.errors };
       if (response.status === 409)
         return { ok: false, reason: "full", detail: problem.detail };
+      if (response.status >= 500) return { ok: false, reason: "unavailable" };
       return { ok: false, reason: "refused" };
     }
     if (!json) return { ok: false, reason: "refused" };
@@ -598,6 +611,7 @@ async function send(
       if (problem.errors)
         return { ok: false, reason: "invalid", errors: problem.errors };
     }
+    if (response.status >= 500) return { ok: false, reason: "unavailable" };
     if (!response.ok) return { ok: false, reason: "refused" };
     const answer = (await response.json()) as StateBody | { sent: boolean };
     return "alerts" in answer

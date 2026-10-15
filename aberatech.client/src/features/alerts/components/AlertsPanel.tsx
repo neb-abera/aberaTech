@@ -18,6 +18,7 @@ import {
   fetchAlerts,
   formatClock,
   formatWhen,
+  isUnreachable,
   muteAlerts,
   sendEventTest,
   sendTestAlert,
@@ -39,11 +40,36 @@ import RoutinesSection, {
   type RoutinesApi,
   routinesApi,
 } from "./RoutinesSection";
+import SyncNote from "./SyncNote";
+import {
+  type Pending,
+  type SendOutcome,
+  type SyncStatus,
+  usePendingChanges,
+} from "./usePendingChanges";
 
 /** How often the page asks again on its own. Every 15 s while it rings in this browser. */
 const refreshEvery = 60_000;
 
 type View = { status: "loading" } | AlertsView;
+
+type MuteChoice = "hour" | "morning" | "off";
+type TypeChoice = AlertType | "default";
+
+/** The most pressing of an item's changes: waiting, then sending, then saved. */
+function mostPressing(
+  ...changes: (Pending<unknown> | undefined)[]
+): SyncStatus | undefined {
+  const order: SyncStatus[] = ["waiting", "sending", "saved"];
+  return order.find((status) =>
+    changes.some((change) => change?.status === status),
+  );
+}
+
+/** The type the server gives an event once its choice is dropped. */
+function defaultTypeOf(alert: AlertItem, state: AlertsState): AlertType {
+  return alert.critical ? "alarm" : state.settings.defaultType;
+}
 
 /**
  * The owner's calendar alerts: whether they are on, the next ones, and the
@@ -69,7 +95,12 @@ export default function AlertsPanel({
 
   const refresh = React.useCallback(async () => {
     const next = await fetchAlerts();
-    if (alive.current) setView(next);
+    if (!alive.current) return;
+    // A refresh with no answer keeps the page as it was, so the controls
+    // and their waiting changes stay in view.
+    setView((current) =>
+      next.status === "error" && current.status === "owner" ? current : next,
+    );
   }, []);
 
   React.useEffect(() => {
@@ -109,6 +140,75 @@ export default function AlertsPanel({
     setProblem(explain(result));
   };
 
+  /**
+   * Sends a change the page already shows. The answer's state replaces the
+   * page's, and the done message says what the server stored.
+   */
+  const confirm = async (
+    press: () => Promise<ActionResult>,
+    done: () => string,
+  ): Promise<SendOutcome> => {
+    const result = await press();
+    if (!alive.current) return { ok: true };
+    if (result.ok) {
+      const state = result.state;
+      if (state) {
+        setView({ status: "owner", state });
+        setCalendarWrite(state.calendarWrite ?? null);
+      }
+      setNotice(done());
+      return { ok: true };
+    }
+    if (isUnreachable(result)) return { ok: false, offline: true };
+    return { ok: false, offline: false, problem: explain(result) };
+  };
+  const refused = (_key: string, reason: string) => {
+    if (alive.current) setProblem(reason);
+  };
+  const titleOf = (key: string) =>
+    view.status === "owner"
+      ? (view.state.alerts.find((alert) => alert.key === key)?.title ??
+        "The event")
+      : "The event";
+
+  const mutes = usePendingChanges<MuteChoice>(
+    (_key, until) =>
+      confirm(
+        () => (until === "off" ? unmuteAlerts() : muteAlerts(until)),
+        () =>
+          until === "off"
+            ? "Alerts are on again."
+            : "Muted. Alerts due before then are not sent.",
+      ),
+    refused,
+  );
+  const skips = usePendingChanges<boolean>(
+    (key, skipped) =>
+      confirm(
+        () => (skipped ? skipAlert(key) : unskipAlert(key)),
+        () =>
+          skipped
+            ? `${titleOf(key)} will not alert.`
+            : `${titleOf(key)} will alert again.`,
+      ),
+    refused,
+  );
+  const types = usePendingChanges<TypeChoice>(
+    (key, type) =>
+      confirm(
+        () => setEventType(key, type),
+        () =>
+          type === "default"
+            ? `${titleOf(key)} follows the calendar and the default again.`
+            : `${titleOf(key)} is set to ${typeLabels[type]}, every occurrence.`,
+      ),
+    refused,
+  );
+  const press = () => {
+    setProblem(null);
+    setNotice(null);
+  };
+
   if (view.status === "loading") {
     return <CircularProgress size={28} aria-label="Loading" />;
   }
@@ -139,7 +239,32 @@ export default function AlertsPanel({
 
   const { state } = view;
   const when = (iso: string) => formatWhen(iso, state.timeZone);
-  const muted = state.mutedUntil !== null;
+  // A mute pressed and not yet confirmed shows at once. Until the server
+  // answers, the page does not know the end, so the chip says Muted.
+  const muteChange = mutes.pending.mute;
+  const muteUnconfirmed =
+    muteChange && muteChange.status !== "saved" ? muteChange.value : undefined;
+  const muted =
+    muteUnconfirmed !== undefined
+      ? muteUnconfirmed !== "off"
+      : state.mutedUntil !== null;
+  /** The alert as the page shows it: a type or a skip pressed and not yet confirmed wins. */
+  const shown = (alert: AlertItem): AlertItem => {
+    const type = types.pending[alert.key]?.value;
+    const skipped = skips.pending[alert.key]?.value;
+    return {
+      ...alert,
+      ...(type === undefined
+        ? {}
+        : type === "default"
+          ? {
+              type: defaultTypeOf(alert, state),
+              typeFrom: alert.critical ? "critical" : "default",
+            }
+          : { type, typeFrom: "set" }),
+      ...(skipped === undefined ? {} : { skipped }),
+    };
+  };
   const written = (next: AlertsState, message: string) => {
     if (!alive.current) return;
     setEditing(null);
@@ -160,41 +285,40 @@ export default function AlertsPanel({
       >
         <Chip
           label={
-            muted && state.mutedUntil
-              ? `Muted until ${when(state.mutedUntil)}`
-              : "Active"
+            !muted
+              ? "Active"
+              : muteUnconfirmed === undefined && state.mutedUntil
+                ? `Muted until ${when(state.mutedUntil)}`
+                : "Muted"
           }
           color={muted ? "warning" : "success"}
           aria-label={`Alert state: ${muted ? "muted" : "active"}`}
         />
         <Button
           variant="outlined"
-          disabled={busy}
-          onClick={() =>
-            void act(
-              () => muteAlerts("hour"),
-              () => "Muted. Alerts due before then are not sent.",
-            )
-          }
+          onClick={() => {
+            press();
+            mutes.change("mute", "hour");
+          }}
         >
           Mute 1 hour
         </Button>
         <Button
           variant="outlined"
-          disabled={busy}
-          onClick={() =>
-            void act(
-              () => muteAlerts("morning"),
-              () => "Muted. Alerts due before then are not sent.",
-            )
-          }
+          onClick={() => {
+            press();
+            mutes.change("mute", "morning");
+          }}
         >
           Mute until tomorrow 06:00
         </Button>
         <Button
           variant="outlined"
-          disabled={busy || !muted}
-          onClick={() => void act(unmuteAlerts, () => "Alerts are on again.")}
+          disabled={!muted}
+          onClick={() => {
+            press();
+            mutes.change("mute", "off");
+          }}
         >
           Unmute
         </Button>
@@ -226,6 +350,7 @@ export default function AlertsPanel({
         <Button variant="text" size="small" onClick={() => void refresh()}>
           Refresh
         </Button>
+        <SyncNote status={muteChange?.status} />
       </Stack>
 
       {problem && (
@@ -275,46 +400,44 @@ export default function AlertsPanel({
             spacing={1.5}
             sx={{ listStyle: "none", p: 0, m: 0 }}
           >
-            {state.alerts.map((alert) => (
-              <Item
-                key={alert.key}
-                alert={alert}
-                when={when}
-                clock={(iso) => formatClock(iso, state.timeZone)}
-                defaultLead={state.defaultLeadMinutes}
-                busy={busy}
-                onSkip={() =>
-                  void act(
-                    () => skipAlert(alert.key),
-                    () => `${alert.title} will not alert.`,
-                  )
-                }
-                onUndo={() =>
-                  void act(
-                    () => unskipAlert(alert.key),
-                    () => `${alert.title} will alert again.`,
-                  )
-                }
-                onTest={() =>
-                  void act(
-                    () => sendEventTest(alert.key),
-                    () =>
-                      `Test of ${alert.title} sent, titled "Test: ${alert.title}", set to ${typeLabels[alert.type].toLowerCase()}.`,
-                  )
-                }
-                onType={(type) =>
-                  void act(
-                    () => setEventType(alert.key, type),
-                    () =>
-                      type === "default"
-                        ? `${alert.title} follows the calendar and the default again.`
-                        : `${alert.title} is set to ${typeLabels[type]}, every occurrence.`,
-                  )
-                }
-                onEdit={() => setEditing(alert)}
-                onDelete={() => setDeleting(alert)}
-              />
-            ))}
+            {state.alerts.map((stored) => {
+              const alert = shown(stored);
+              return (
+                <Item
+                  key={alert.key}
+                  alert={alert}
+                  when={when}
+                  clock={(iso) => formatClock(iso, state.timeZone)}
+                  defaultLead={state.defaultLeadMinutes}
+                  busy={busy}
+                  sync={mostPressing(
+                    types.pending[alert.key],
+                    skips.pending[alert.key],
+                  )}
+                  onSkip={() => {
+                    press();
+                    skips.change(alert.key, true);
+                  }}
+                  onUndo={() => {
+                    press();
+                    skips.change(alert.key, false);
+                  }}
+                  onTest={() =>
+                    void act(
+                      () => sendEventTest(alert.key),
+                      () =>
+                        `Test of ${alert.title} sent, titled "Test: ${alert.title}", set to ${typeLabels[alert.type].toLowerCase()}.`,
+                    )
+                  }
+                  onType={(type) => {
+                    press();
+                    types.change(alert.key, type);
+                  }}
+                  onEdit={() => setEditing(stored)}
+                  onDelete={() => setDeleting(stored)}
+                />
+              );
+            })}
           </Stack>
         )}
       </Box>
@@ -477,6 +600,7 @@ function Item({
   clock,
   defaultLead,
   busy,
+  sync,
   onSkip,
   onUndo,
   onTest,
@@ -489,6 +613,8 @@ function Item({
   clock: (iso: string) => string;
   defaultLead: number;
   busy: boolean;
+  /** Where this item's last type or skip change stands with the server. */
+  sync?: SyncStatus;
   onSkip: () => void;
   onUndo: () => void;
   onTest: () => void;
@@ -554,14 +680,12 @@ function Item({
               aria-pressed={alert.type === type}
               color={alert.type === type ? "primary" : "default"}
               variant={alert.type === type ? "filled" : "outlined"}
-              disabled={busy}
               onClick={() => onType(type)}
             />
           ))}
           {alert.typeFrom === "set" && (
             <Button
               size="small"
-              disabled={busy}
               onClick={() => onType("default")}
               aria-label={`Use the default type for ${at}`}
             >
@@ -569,6 +693,7 @@ function Item({
             </Button>
           )}
         </Stack>
+        <SyncNote status={sync} />
       </Box>
       {alert.critical && <Chip size="small" color="error" label="Critical" />}
       {alert.skipped && <Chip size="small" label="Skipped" />}
@@ -585,19 +710,13 @@ function Item({
         Send test
       </Button>
       {alert.skipped ? (
-        <Button
-          size="small"
-          disabled={busy}
-          onClick={onUndo}
-          aria-label={`Undo skip of ${at}`}
-        >
+        <Button size="small" onClick={onUndo} aria-label={`Undo skip of ${at}`}>
           Undo skip
         </Button>
       ) : (
         <Button
           size="small"
           variant="outlined"
-          disabled={busy}
           onClick={onSkip}
           aria-label={`Skip ${at}`}
         >

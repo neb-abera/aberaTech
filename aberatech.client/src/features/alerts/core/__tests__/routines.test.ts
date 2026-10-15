@@ -156,10 +156,11 @@ describe("requests", () => {
       reason: "throttled",
     });
 
+    // A server error may pass: the page keeps the change and sends it again.
     stub(respond(500));
     expect(await updateRoutine(routine.id, fields)).toEqual({
       ok: false,
-      reason: "refused",
+      reason: "unavailable",
     });
 
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("down")));
