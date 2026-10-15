@@ -54,16 +54,16 @@ const state = (routines: Routine[]): AlertsState => ({
   routines,
 });
 
-const answer = (routines: Routine[]): RoutineResult => ({
+const storedAs = (routines: Routine[]): RoutineResult => ({
   ok: true,
   state: state(routines),
 });
 
 function fakeApi(over: Partial<RoutinesApi> = {}) {
   return {
-    create: vi.fn(async () => answer([wake])),
-    update: vi.fn(async () => answer([wake])),
-    remove: vi.fn(async () => answer([])),
+    create: vi.fn(async () => storedAs([wake])),
+    update: vi.fn(async () => storedAs([wake])),
+    remove: vi.fn(async () => storedAs([])),
     ...over,
   };
 }
@@ -139,6 +139,166 @@ describe("the switch", () => {
     });
     expect(onState).toHaveBeenCalledWith(state([wake]));
     expect(screen.getByText("Wake up at 06:30 is off.")).toBeTruthy();
+  });
+});
+
+describe("the switch moves at once", () => {
+  const toggle = () =>
+    screen.getByRole("switch", {
+      name: "Wake up at 06:30",
+    }) as HTMLInputElement;
+
+  /** An update that answers only when the test says so. */
+  function held() {
+    let answer: (result: RoutineResult) => void = () => {};
+    const update = vi.fn(
+      () =>
+        new Promise<RoutineResult>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    return { update, answer: (result: RoutineResult) => answer(result) };
+  }
+
+  it("moves before the server answers, says Sending, then Saved", async () => {
+    const { update, answer } = held();
+    mount([wake], fakeApi({ update }));
+
+    await press(toggle());
+
+    expect(toggle().checked).toBe(false);
+    expect(toggle().disabled).toBe(false);
+    expect(screen.getByText("Sending…")).toBeTruthy();
+    expect(screen.getByText(/Snooze 9 min\. Off/)).toBeTruthy();
+
+    await act(async () => answer(storedAs([{ ...wake, enabled: false }])));
+
+    expect(toggle().checked).toBe(false);
+    expect(screen.getByText("Saved")).toBeTruthy();
+    expect(screen.queryByText("Sending…")).toBeNull();
+  });
+
+  it("says Sending in a polite live region", async () => {
+    const { update } = held();
+    mount([wake], fakeApi({ update }));
+
+    await press(toggle());
+
+    const status = screen.getByText("Sending…").closest('[role="status"]');
+    expect(status?.getAttribute("aria-live")).toBe("polite");
+  });
+
+  it("with no connection keeps the new position, waits, and sends again when back online", async () => {
+    const update = vi
+      .fn<RoutinesApi["update"]>()
+      .mockResolvedValueOnce({ ok: false, reason: "network" })
+      .mockResolvedValue(storedAs([{ ...wake, enabled: false }]));
+    mount([wake], fakeApi({ update }));
+
+    await press(toggle());
+
+    expect(toggle().checked).toBe(false);
+    expect(
+      screen.getByText(
+        "Waiting for a connection. It will send when you are back online.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    await act(async () => {
+      window.dispatchEvent(new Event("online"));
+    });
+
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenLastCalledWith(
+      wake.id,
+      expect.objectContaining({ enabled: false }),
+    );
+    expect(toggle().checked).toBe(false);
+    expect(screen.getByText("Saved")).toBeTruthy();
+  });
+
+  it("a server error waits too, and is sent again every 15 s", async () => {
+    vi.useFakeTimers();
+    try {
+      const update = vi
+        .fn<RoutinesApi["update"]>()
+        .mockResolvedValueOnce({ ok: false, reason: "unavailable" })
+        .mockResolvedValueOnce({ ok: false, reason: "network" })
+        .mockResolvedValue(storedAs([{ ...wake, enabled: false }]));
+      mount([wake], fakeApi({ update }));
+
+      await press(toggle());
+      expect(screen.getByText(/Waiting for a connection/)).toBeTruthy();
+
+      await act(async () => {
+        vi.advanceTimersByTime(15_000);
+      });
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(screen.getByText(/Waiting for a connection/)).toBeTruthy();
+      expect(toggle().checked).toBe(false);
+
+      await act(async () => {
+        vi.advanceTimersByTime(15_000);
+      });
+      expect(update).toHaveBeenCalledTimes(3);
+      expect(screen.getByText("Saved")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a refusal puts the switch back and says why", async () => {
+    const update = vi.fn<RoutinesApi["update"]>(async () => ({
+      ok: false,
+      reason: "refused",
+    }));
+    mount([wake], fakeApi({ update }));
+
+    await press(toggle());
+
+    expect(toggle().checked).toBe(true);
+    expect(
+      screen.getByText("The server refused. Refresh and try again."),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Waiting for a connection/)).toBeNull();
+  });
+
+  it("a refresh while the change is out does not flip the switch back", async () => {
+    const { update, answer } = held();
+    const api = fakeApi({ update });
+    const onState = vi.fn();
+    const { rerender } = render(
+      <RoutinesSection routines={[wake]} onState={onState} api={api} />,
+    );
+
+    await press(toggle());
+    // The page's own refresh hands down the old state.
+    rerender(
+      <RoutinesSection routines={[{ ...wake }]} onState={onState} api={api} />,
+    );
+    expect(toggle().checked).toBe(false);
+
+    await act(async () => answer(storedAs([{ ...wake, enabled: false }])));
+    expect(toggle().checked).toBe(false);
+  });
+
+  it("presses while one is out send only the latest, once it answers", async () => {
+    const { update, answer } = held();
+    mount([wake], fakeApi({ update }));
+
+    await press(toggle());
+    await press(toggle());
+    expect(toggle().checked).toBe(true);
+    expect(update).toHaveBeenCalledTimes(1);
+
+    await act(async () => answer(storedAs([{ ...wake, enabled: false }])));
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenLastCalledWith(
+      wake.id,
+      expect.objectContaining({ enabled: true }),
+    );
+    expect(toggle().checked).toBe(true);
   });
 });
 

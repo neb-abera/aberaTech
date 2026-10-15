@@ -2,6 +2,7 @@ import {
   type APIRequestContext,
   expect,
   type Page,
+  type Route,
   test,
 } from "@playwright/test";
 
@@ -1273,6 +1274,55 @@ test.describe("/alerts", () => {
     await expect(section.getByText("No routine alarms.")).toBeVisible();
     status = await (await page.request.get("/api/alerts/status")).json();
     expect(status.routines).toEqual([]);
+  });
+
+  test("a routine switch moves at once, waits with no connection, and sends when back online", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.request.post("/api/alerts/routines", {
+      data: { label: "E2E instant", hour: 6, minute: 45, days: [1] },
+    });
+    await page.reload();
+
+    const item = page
+      .getByRole("list", { name: "Routine alarms" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E instant" });
+    const toggle = item.getByRole("switch", { name: "E2E instant at 06:45" });
+    await expect(toggle).toBeChecked();
+
+    // Hold the update: the switch has to move before any answer.
+    const held: Route[] = [];
+    const updates = "**/api/alerts/routines/*";
+    await page.route(updates, async (route) => {
+      if (route.request().method() === "PUT") held.push(route);
+      else await route.continue();
+    });
+    await toggle.click();
+    await expect(toggle).not.toBeChecked();
+    await expect(toggle).toBeEnabled();
+    await expect(item.getByText("Sending…")).toBeVisible();
+
+    // No connection: it stays off and says it waits.
+    await expect.poll(() => held.length).toBe(1);
+    await held[0].abort("internetdisconnected");
+    await expect(
+      item.getByText(
+        "Waiting for a connection. It will send when you are back online.",
+      ),
+    ).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+
+    // Back online: it sends, and the server keeps it.
+    await page.unroute(updates);
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await expect(item.getByText("Saved")).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await page.reload();
+    await expect(toggle).not.toBeChecked();
+    await reset(page);
   });
 
   test("a visitor is sent to sign in and every button is refused", async ({

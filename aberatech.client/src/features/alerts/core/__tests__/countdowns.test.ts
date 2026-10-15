@@ -100,7 +100,7 @@ describe("countdown requests", () => {
     [401, null, { ok: false, reason: "visitor" }],
     [403, null, { ok: false, reason: "visitor" }],
     [429, null, { ok: false, reason: "throttled" }],
-    [500, null, { ok: false, reason: "refused" }],
+    [500, null, { ok: false, reason: "unavailable" }],
   ])("names a %i", async (status, body, expected) => {
     stub(respond(status, body));
     expect(await createCountdown(fields)).toEqual(expected);

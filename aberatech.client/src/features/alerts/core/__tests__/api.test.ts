@@ -15,6 +15,7 @@ import {
   fetchAlerts,
   formatClock,
   formatWhen,
+  isUnreachable,
   listDevices,
   muteAlerts,
   pairDevice,
@@ -141,8 +142,18 @@ describe("the buttons", () => {
     stub(respond(404));
     expect(await skipAlert("gone")).toEqual({ ok: false, reason: "refused" });
 
+    stub(respond(503));
+    expect(await skipAlert("x")).toEqual({ ok: false, reason: "unavailable" });
+
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("down")));
     expect(await unmuteAlerts()).toEqual({ ok: false, reason: "network" });
+  });
+
+  it("count no answer and a server error as unreachable, and a refusal as not", () => {
+    expect(isUnreachable({ ok: false, reason: "network" })).toBe(true);
+    expect(isUnreachable({ ok: false, reason: "unavailable" })).toBe(true);
+    expect(isUnreachable({ ok: false, reason: "refused" })).toBe(false);
+    expect(isUnreachable({ ok: true })).toBe(false);
   });
 
   it("report what Pushover said when the test alert fails", async () => {

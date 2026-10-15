@@ -1102,3 +1102,213 @@ describe("routine alarms", () => {
     ).toBeTruthy();
   });
 });
+
+describe("controls that move at once", () => {
+  const at = "Review at Wed, Oct 28, 2:00 PM EDT";
+  const wake = {
+    id: "5f0c1d7e-8a1b-4c2d-9e3f-0a1b2c3d4e5f",
+    label: "Wake up",
+    hour: 6,
+    minute: 30,
+    days: [1, 2, 3, 4, 5],
+    enabled: true,
+    snoozeMinutes: 9,
+    updatedAt: "2026-10-28T12:00:00+00:00",
+  };
+
+  /**
+   * Reads answer with `stored`, which a test may change. Each write is
+   * handed to `write`, which answers, holds or throws as the test needs.
+   */
+  function mountWith(
+    stored: { current: unknown },
+    write: (url: string) => Promise<unknown>,
+  ) {
+    fetchMock = vi.fn((url: string, init?: RequestInit) =>
+      init?.method && init.method !== "GET"
+        ? write(url)
+        : Promise.resolve(respond(200, stored.current)),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AlertsPanel phones={noPhones} />);
+  }
+
+  const offline = () => Promise.reject(new TypeError("Failed to fetch"));
+  const never = () => new Promise<unknown>(() => {});
+  const pressed = (name: string) =>
+    screen.getByRole("button", { name }).getAttribute("aria-pressed");
+
+  it("a type chip moves before the server answers, and other controls stay usable", async () => {
+    mountWith({ current: state() }, never);
+    await settle();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Set ${at} to Ring once` }),
+    );
+    await settle();
+
+    expect(pressed(`Set ${at} to Ring once`)).toBe("true");
+    expect(pressed(`Set ${at} to Off`)).toBe("false");
+    expect(screen.getByText("Sending…")).toBeTruthy();
+    expect(
+      screen.getByText("Ring once: set here. The Ring once settings apply."),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", {
+          name: "Skip Standup at Wed, Oct 28, 9:00 AM EDT",
+        })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+    expect(
+      screen
+        .getByRole("button", { name: "Mute 1 hour" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+  });
+
+  it("says Saved once the server stores it", async () => {
+    const chosen = { ...review, type: "notification", typeFrom: "set" };
+    mountWith({ current: state() }, async () =>
+      respond(200, state({ alerts: [standup, chosen] })),
+    );
+    await settle();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Set ${at} to Ring once` }),
+    );
+    await settle();
+
+    expect(pressed(`Set ${at} to Ring once`)).toBe("true");
+    expect(screen.getByText("Saved")).toBeTruthy();
+  });
+
+  it("a skip with no connection stays, waits, and is sent again when back online", async () => {
+    const stored = { current: state() as unknown };
+    const write = vi
+      .fn<(url: string) => Promise<unknown>>()
+      .mockImplementationOnce(offline)
+      .mockImplementation(async () => {
+        stored.current = state({
+          alerts: [{ ...standup, skipped: true }, review],
+        });
+        return respond(200, stored.current);
+      });
+    mountWith(stored, write);
+    await settle();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Skip Standup at Wed, Oct 28, 9:00 AM EDT",
+      }),
+    );
+    await settle();
+
+    const first = () =>
+      within(screen.getByRole("list", { name: "Next alerts" })).getAllByRole(
+        "listitem",
+      )[0];
+    expect(first().textContent).toContain("Skipped");
+    expect(
+      within(first()).getByText(
+        "Waiting for a connection. It will send when you are back online.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/No answer from the server/)).toBeNull();
+
+    await act(async () => {
+      window.dispatchEvent(new Event("online"));
+    });
+    await settle();
+
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(first().textContent).toContain("Skipped");
+    expect(within(first()).getByText("Saved")).toBeTruthy();
+  });
+
+  it("a refused type goes back and says why", async () => {
+    mountWith({ current: state() }, async () => ({
+      ...respond(400),
+      headers: { get: () => "text/plain" },
+    }));
+    await settle();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Set ${at} to Ring once` }),
+    );
+    await settle();
+
+    expect(pressed(`Set ${at} to Off`)).toBe("true");
+    expect(pressed(`Set ${at} to Ring once`)).toBe("false");
+    expect(
+      screen.getByText("The server refused. Refresh and try again."),
+    ).toBeTruthy();
+  });
+
+  it("mute shows Muted at once, before the server says until when", async () => {
+    mountWith({ current: state() }, never);
+    await settle();
+
+    fireEvent.click(screen.getByRole("button", { name: "Mute 1 hour" }));
+    await settle();
+
+    expect(screen.getByLabelText("Alert state: muted").textContent).toBe(
+      "Muted",
+    );
+    expect(
+      screen.getByRole("button", { name: "Unmute" }).hasAttribute("disabled"),
+    ).toBe(false);
+  });
+
+  it("the refresh every minute does not flip back a switch still being sent", async () => {
+    const stored = { current: state({ routines: [wake] }) as unknown };
+    mountWith(stored, never);
+    await settle();
+    const toggle = () =>
+      screen.getByRole("switch", {
+        name: "Wake up at 06:30",
+      }) as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.click(toggle());
+    });
+    expect(toggle().checked).toBe(false);
+
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+    await settle();
+
+    // The refresh read the old state, and the switch still shows the press.
+    expect(
+      fetchMock.mock.calls.filter(([, init]) => !init?.method),
+    ).toHaveLength(2);
+    expect(toggle().checked).toBe(false);
+  });
+
+  it("a refresh with no connection keeps the page and its waiting change", async () => {
+    const stored = { current: state({ routines: [wake] }) as unknown };
+    mountWith(stored, offline);
+    await settle();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("switch", { name: "Wake up at 06:30" }));
+    });
+    await settle();
+    fetchMock.mockImplementation(offline);
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+    await settle();
+
+    expect(screen.queryByText("The server did not answer.")).toBeNull();
+    expect(
+      (
+        screen.getByRole("switch", {
+          name: "Wake up at 06:30",
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(false);
+    expect(screen.getByText(/Waiting for a connection/)).toBeTruthy();
+  });
+});

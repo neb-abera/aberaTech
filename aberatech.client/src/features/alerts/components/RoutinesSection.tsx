@@ -7,7 +7,7 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import type { AlertsState } from "../core/api";
+import { type AlertsState, isUnreachable } from "../core/api";
 import {
   createRoutine,
   dayNames,
@@ -20,6 +20,8 @@ import {
   routineTime,
   updateRoutine,
 } from "../core/routines";
+import SyncNote from "./SyncNote";
+import { type SendOutcome, usePendingChanges } from "./usePendingChanges";
 
 /** What the section calls. The page passes the real ones, a test its own. */
 export interface RoutinesApi {
@@ -123,6 +125,34 @@ export default function RoutinesSection({
   const [errors, setErrors] = React.useState<Record<string, string[]>>({});
   const [done, setDone] = React.useState<string | null>(null);
 
+  // The switch moves when pressed. The server's answer only confirms it.
+  const latest = React.useRef(routines);
+  React.useEffect(() => {
+    latest.current = routines;
+  });
+  const switches = usePendingChanges<boolean>(
+    async (id, enabled): Promise<SendOutcome> => {
+      const routine = latest.current.find((r) => r.id === id);
+      // Deleted while the switch waited: nothing is left to send.
+      if (!routine) return { ok: true };
+      const result = await api.update(id, { ...fieldsOf(routine), enabled });
+      if (result.ok) {
+        if (result.state) onState(result.state);
+        const time = routineTime(routine.hour, routine.minute);
+        setDone(`${routine.label} at ${time} is ${enabled ? "on" : "off"}.`);
+        return { ok: true };
+      }
+      if (isUnreachable(result)) return { ok: false, offline: true };
+      return { ok: false, offline: false, problem: explain(result) };
+    },
+    (_id, reason) => setProblem(reason),
+  );
+  /** The routine as the page shows it: a switch pressed and not yet confirmed wins. */
+  const shown = (routine: Routine): Routine => {
+    const change = switches.pending[routine.id];
+    return change ? { ...routine, enabled: change.value } : routine;
+  };
+
   const run = async (
     press: () => Promise<RoutineResult>,
     message: string,
@@ -211,7 +241,8 @@ export default function RoutinesSection({
           spacing={1}
           sx={{ listStyle: "none", p: 0, m: 0, mb: 2 }}
         >
-          {routines.map((routine) => {
+          {routines.map((stored) => {
+            const routine = shown(stored);
             const time = routineTime(routine.hour, routine.minute);
             const name = `${routine.label} at ${time}`;
             return (
@@ -240,20 +271,15 @@ export default function RoutinesSection({
                     Snooze {routine.snoozeMinutes} min.{" "}
                     {routine.enabled ? "On" : "Off"}
                   </Typography>
+                  <SyncNote status={switches.pending[routine.id]?.status} />
                 </Box>
                 <Switch
                   checked={routine.enabled}
-                  disabled={busy}
-                  onChange={(_, checked) =>
-                    void run(
-                      () =>
-                        api.update(routine.id, {
-                          ...fieldsOf(routine),
-                          enabled: checked,
-                        }),
-                      `${name} is ${checked ? "on" : "off"}.`,
-                    )
-                  }
+                  onChange={(_, checked) => {
+                    setProblem(null);
+                    setDone(null);
+                    switches.change(routine.id, checked);
+                  }}
                   slotProps={{ input: { "aria-label": name } }}
                 />
                 <Button
