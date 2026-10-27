@@ -44,7 +44,7 @@ jobs:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -112,7 +112,7 @@ jobs:
       SHARE: lhci
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: the Azure CLI reaches a set of management and
           # identity hosts that changes with the CLI version.
