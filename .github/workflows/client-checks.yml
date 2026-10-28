@@ -46,7 +46,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -135,7 +135,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -184,7 +184,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -281,7 +281,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -378,7 +378,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -464,7 +464,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -538,7 +538,7 @@ jobs:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job builds/runs containers, and container-side
           # DNS bypasses harden-runner's resolver, so blocked lookups surface as
@@ -639,7 +639,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           # Audit, not block: this job runs containers, and container-side
           # DNS bypasses the resolver harden-runner watches. The image layers
