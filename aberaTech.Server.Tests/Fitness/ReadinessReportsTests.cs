@@ -44,6 +44,7 @@ public sealed class ReadinessReportsTests
         Assert.Equal(74, measurements[SelectionReadiness.Metrics.AftLowestEvent].Value);
         Assert.Equal(300, measurements[SelectionReadiness.Metrics.DeadliftTripleLb].Value, precision: 6);
         Assert.Equal(44, measurements[SelectionReadiness.Metrics.HandReleasePushUps].Value);
+        Assert.Equal(104, measurements[SelectionReadiness.Metrics.SprintDragCarry].Value);
         Assert.Equal(300 / BodyMass.PoundsPerKg / 79.4, measurements[SelectionReadiness.Metrics.DeadliftTripleToBodyweight].Value, precision: 6);
         Assert.Contains("days old", measurements[SelectionReadiness.Metrics.AftTotal].Evidence);
         Assert.All(measurements.Values, m => Assert.Equal(Basis.Measured, m.Basis));

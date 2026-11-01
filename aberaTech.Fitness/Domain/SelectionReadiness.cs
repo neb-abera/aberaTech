@@ -41,13 +41,20 @@ public sealed record Requirement(
 /// <param name="WeeksBeforeSelection">How far ahead of the selection date it should be cleared.</param>
 /// <param name="Requirements">The lines the log can score.</param>
 /// <param name="Untracked">The lines it cannot, said out loud rather than dropped.</param>
+/// <param name="DueDate">A date of its own, for a goal that does not count back from selection.</param>
 public sealed record Gate(
     string Id,
     string Name,
     string Purpose,
     int WeeksBeforeSelection,
     IReadOnlyList<Requirement> Requirements,
-    IReadOnlyList<string> Untracked);
+    IReadOnlyList<string> Untracked,
+    LocalDate? DueDate = null)
+{
+    /// <summary>When this gate falls due, given the selection date if one is named.</summary>
+    public LocalDate? DueOn(LocalDate? selectionDate) =>
+        DueDate ?? selectionDate?.PlusWeeks(-WeeksBeforeSelection);
+}
 
 public enum GateStatus
 {
@@ -107,6 +114,7 @@ public static class SelectionReadiness
         public const string PushUps = Calisthenics.PushUps;
         public const string SitUps = Calisthenics.SitUps;
         public const string Plank = Calisthenics.Plank;
+        public const string SprintDragCarry = "sprint-drag-carry";
         public const string DeadliftTripleToBodyweight = "deadlift-3rm-bw";
         public const string FrontSquatTripleToBodyweight = "front-squat-3rm-bw";
         public const string DeadliftTripleLb = "deadlift-3rm-lb";
@@ -228,6 +236,11 @@ public static class SelectionReadiness
             "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \"non-essential\" are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
             0,
             [
+                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 34 * 60, Units.Seconds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.RunTwoMile, "Two-mile run", Comparison.AtMost, (12 * 60) + 15, Units.Seconds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.RuckTwelveMileAt35, "Twelve-mile ruck at 35 lb", Comparison.AtMost, (2 * 3600) + (30 * 60), Units.Seconds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.SprintDragCarry, "Sprint-drag-carry", Comparison.AtMost, 90, Units.Seconds, Citations.NebFitnessGoals.Id),
+                new Requirement(Metrics.Plank, "Plank", Comparison.AtLeast, 210, Units.Seconds, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.FarmersCarryMeters, "Farmer's carry at 1.5× bodyweight", Comparison.AtLeast, 100, Units.Meters, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.NebFitnessGoals.Id),
@@ -238,7 +251,8 @@ public static class SelectionReadiness
                 new Requirement(Metrics.BodyweightLb, "Bodyweight", Comparison.AtMost, 170, Units.Pounds, Citations.NebFitnessGoals.Id),
                 new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 10, Units.Percent, Citations.NebFitnessGoals.Id)
             ],
-            [])
+            [],
+            new LocalDate(2027, 12, 31))
     ];
 
     /// <summary>Every gate, scored against what the athlete has.</summary>
@@ -260,7 +274,7 @@ public static class SelectionReadiness
 
                 return new GateResult(
                     gate,
-                    selectionDate?.PlusWeeks(-gate.WeeksBeforeSelection),
+                    gate.DueOn(selectionDate),
                     status,
                     passed,
                     known,

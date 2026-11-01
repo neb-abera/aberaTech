@@ -23,6 +23,39 @@ public sealed class ReadinessTests
     }
 
     [Fact]
+    public void Own_standards_carry_every_essential_row_of_the_workbook()
+    {
+        var own = SelectionReadiness.Gates.Single(g => g.Id == "own-standards");
+
+        (string Metric, double Target)[] expected =
+        [
+            (SelectionReadiness.Metrics.RunFiveMile, 34 * 60),
+            (SelectionReadiness.Metrics.RunTwoMile, (12 * 60) + 15),
+            (SelectionReadiness.Metrics.RuckTwelveMileAt35, (2 * 3600) + (30 * 60)),
+            ("sprint-drag-carry", 90),
+            (SelectionReadiness.Metrics.Plank, 210)
+        ];
+
+        Assert.All(expected, line =>
+        {
+            var requirement = Assert.Single(own.Requirements, r => r.Metric == line.Metric);
+            Assert.Equal(line.Target, requirement.Target);
+            Assert.Equal(Citations.NebFitnessGoals.Id, requirement.CitationId);
+        });
+        Assert.Equal(14, own.Requirements.Count);
+    }
+
+    [Fact]
+    public void Own_standards_fall_due_at_the_end_of_2027_whatever_the_selection_date()
+    {
+        foreach (var selection in new LocalDate?[] { null, new LocalDate(2029, 3, 1) })
+        {
+            var own = Assert.Single(SelectionReadiness.Evaluate(Measurements(), selection), r => r.Gate.Id == "own-standards");
+            Assert.Equal(new LocalDate(2027, 12, 31), own.DueOn);
+        }
+    }
+
+    [Fact]
     public void Gates_count_back_from_the_selection_date()
     {
         var results = SelectionReadiness.Evaluate(Measurements(), new LocalDate(2028, 4, 1));
@@ -34,7 +67,7 @@ public sealed class ReadinessTests
         var competitive = Assert.Single(results, r => r.Gate.Id == "sfas-competitive");
         Assert.Equal(new LocalDate(2028, 4, 1), competitive.DueOn);
 
-        Assert.All(SelectionReadiness.Evaluate(Measurements(), null), r => Assert.Null(r.DueOn));
+        Assert.All(SelectionReadiness.Evaluate(Measurements(), null).Where(r => r.Gate.DueDate is null), r => Assert.Null(r.DueOn));
     }
 
     [Fact]

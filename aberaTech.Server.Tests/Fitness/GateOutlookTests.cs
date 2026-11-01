@@ -182,9 +182,21 @@ public sealed class GateOutlookTests
     [Fact]
     public void Without_a_selection_date_every_gate_is_asked_a_year_out()
     {
-        var gates = GateOutlook.Evaluate(Context(), null);
+        var gates = GateOutlook.Evaluate(Context(), null).Where(g => g.GateId != "own-standards").ToArray();
         Assert.All(gates, g => Assert.Null(g.DueOn));
         Assert.All(gates, g => Assert.Equal(GateOutlook.DefaultHorizonMonths, g.MonthsAway));
+    }
+
+    [Fact]
+    public void A_goal_with_its_own_date_does_not_set_the_selection_date()
+    {
+        var soon = new GateOutlookResult("a", "A", 4, null, 12, 0.9, 1, 1, 1.0, []);
+        var own = new GateOutlookResult("own-standards", "Own", 0, null, 12, 0.1, 1, 1, null, []);
+
+        var earliest = GateOutlook.EarliestSelection([soon, own], Today);
+
+        Assert.NotNull(earliest);
+        Assert.Equal("a", earliest!.Value.GateId);
     }
 
     [Fact]

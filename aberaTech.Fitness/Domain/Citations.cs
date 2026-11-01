@@ -226,7 +226,7 @@ public static class Citations
 
     public static readonly Citation NebFitnessGoals = new(
         "neb-fitness-goals",
-        "The athlete's own end-of-2027 standards: a farmer's carry at 1.5× bodyweight for 100 m, 15 pull-ups, 80 push-ups, 62 hand-release push-ups, a 350 lb deadlift triple, 170 lb at 10% body fat, a 500-yard swim in 8:00.",
+        "The athlete's own end-of-2027 standards: a five-mile in 34:00, a two-mile in 12:15, a twelve-mile ruck at 35 lb in 2:30, a sprint-drag-carry in 1:30, a 3:30 plank, a farmer's carry at 1.5× bodyweight for 100 m, 15 pull-ups, 80 push-ups, 62 hand-release push-ups, a 350 lb deadlift triple, bench and front squat at 1.5× bodyweight, and 170 lb at 10% body fat.",
         "Neb Abera — the athlete, in the workbook the console is scored against.",
         "physical fitness goals.xlsx (OneDrive, Documents/physical fitness)",
         2026,
