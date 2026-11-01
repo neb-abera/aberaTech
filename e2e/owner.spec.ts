@@ -123,7 +123,12 @@ test.describe("/devbox", () => {
         uptimeSeconds: 200,
       },
     });
-    expect(await orders.json()).toEqual({ holdMinutes: 120, park: true });
+    expect(await orders.json()).toEqual({
+      holdMinutes: 120,
+      park: true,
+      login: false,
+      loginCode: null,
+    });
     const again = await request.post("/api/devbox/heartbeat", {
       headers: { Authorization: `Bearer ${heartbeatToken}` },
       data: {
@@ -133,7 +138,12 @@ test.describe("/devbox", () => {
         uptimeSeconds: 260,
       },
     });
-    expect(await again.json()).toEqual({ holdMinutes: null, park: false });
+    expect(await again.json()).toEqual({
+      holdMinutes: null,
+      park: false,
+      login: false,
+      loginCode: null,
+    });
 
     // The fake box parked itself on the order, as the real one does.
     await page.getByRole("button", { name: "Refresh" }).click();
