@@ -60,7 +60,7 @@ public sealed record PushoverResult(bool Ok, string? Error, string? Receipt = nu
 /// sounds again and when it gives up. A null field is left out of the request.
 /// </summary>
 /// <param name="Callback">For priority 2: where Pushover posts the acknowledgement (<see cref="PushoverCallback"/>).</param>
-public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? ExpireSeconds, string? Sound, string? Callback = null);
+public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? ExpireSeconds, string? Sound, string? Callback = null, string? Url = null);
 
 /// <summary>
 /// One Pushover message, sent the way <see cref="AlertSettings"/> says. At
@@ -274,6 +274,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
         if (delivery.ExpireSeconds is { } expire) fields["expire"] = Number(expire);
         if (delivery.Sound is { } sound) fields["sound"] = sound;
         if (delivery.Priority == EmergencyPriority && delivery.Callback is { } callback) fields["callback"] = callback;
+        if (delivery.Url is { } url) fields["url"] = url;
 
         for (var attempt = 1; ; attempt++)
         {

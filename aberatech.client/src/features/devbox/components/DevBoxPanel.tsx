@@ -14,6 +14,8 @@ import {
   isParked,
   isRunning,
   parkDevBox,
+  sendClaudeLoginCode,
+  startClaudeLogin,
   startDevBox,
 } from "../core/api";
 import AgentPanel from "./AgentPanel";
@@ -159,6 +161,26 @@ export default function DevBoxPanel() {
     } else setProblem(explain(result.reason));
   };
 
+  const login = async () => {
+    setProblem(null);
+    const result = await startClaudeLogin();
+    if (!alive.current) return;
+    if (result.ok) void refresh();
+    else setProblem(explain(result.reason));
+  };
+
+  const loginCode = async (code: string) => {
+    setProblem(null);
+    const result = await sendClaudeLoginCode(code);
+    if (!alive.current) return;
+    if (result.ok) {
+      setNotice(
+        "Code sent. The box signs in, and Remote Control connects within a minute.",
+      );
+      void refresh();
+    } else setProblem(explain(result.reason));
+  };
+
   if (view.status === "loading") {
     return <CircularProgress size={28} aria-label="Loading" />;
   }
@@ -247,7 +269,13 @@ export default function DevBoxPanel() {
 
       {running ? (
         <>
-          <AgentPanel agent={view.agent} onHold={hold} onPark={park} />
+          <AgentPanel
+            agent={view.agent}
+            onHold={hold}
+            onPark={park}
+            onLogin={login}
+            onLoginCode={loginCode}
+          />
           <BrowserPanel />
         </>
       ) : transit ? (

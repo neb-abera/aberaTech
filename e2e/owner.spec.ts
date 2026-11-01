@@ -86,10 +86,16 @@ test.describe("/devbox", () => {
         uptimeSeconds: 120,
         holdUntil: null,
         environmentUrl: "https://claude.ai/code?environment=env_e2e",
+        claudeLogin: "ok",
       },
     });
     expect(report.status()).toBe(200);
-    expect(await report.json()).toEqual({ holdMinutes: null, park: false });
+    expect(await report.json()).toEqual({
+      holdMinutes: null,
+      park: false,
+      login: false,
+      loginCode: null,
+    });
 
     await page.getByRole("button", { name: "Refresh" }).click();
     await expect(
@@ -153,6 +159,59 @@ test.describe("/devbox", () => {
       page.getByRole("link", { name: "Sign in with Google" }),
     ).toBeVisible();
     await visitor.close();
+  });
+
+  test("An expired Claude login is said plainly, and Sign in again carries the link and the code to the box", async ({
+    page,
+    request,
+  }) => {
+    const heartbeat = (data: Record<string, unknown>) =>
+      request.post("/api/devbox/heartbeat", {
+        headers: { Authorization: `Bearer ${heartbeatToken}` },
+        data: { sessions: 0, load: 0, uptimeSeconds: 60, ...data },
+      });
+    await signIn(page, "/devbox");
+    await page.request.post("/api/devbox/start");
+    await heartbeat({ remoteControl: "activating", claudeLogin: "expired" });
+    const refresh = page.getByRole("button", { name: "Refresh" });
+    const expired = page.getByText(
+      /Claude login expired\. Remote Control cannot start/,
+    );
+    await expect(async () => {
+      await refresh.click();
+      await expect(expired).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    await expect(page.getByText(/Remote Control is up with/)).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Sign in again" }).click();
+    await expect(page.getByText(/link appears here/)).toBeVisible();
+    const started = await heartbeat({
+      remoteControl: "activating",
+      claudeLogin: "expired",
+      loginUrl: "https://claude.com/cai/oauth/authorize?state=e2e",
+    });
+    expect((await started.json()).login).toBe(true);
+
+    await refresh.click();
+    await expect(
+      page.getByRole("link", { name: "Open the Claude sign-in" }),
+    ).toHaveAttribute(
+      "href",
+      "https://claude.com/cai/oauth/authorize?state=e2e",
+    );
+    await page.getByLabel("Code from Claude").fill("e2e_code-123#state");
+    await page.getByRole("button", { name: "Send code" }).click();
+    await expect(page.getByText(/Code sent/)).toBeVisible();
+    const coded = await heartbeat({
+      remoteControl: "active",
+      claudeLogin: "ok",
+    });
+    expect((await coded.json()).loginCode).toBe("e2e_code-123#state");
+
+    await refresh.click();
+    await expect(expired).toHaveCount(0);
+    await page.request.post("/api/devbox/park");
+    await heartbeat({ remoteControl: "inactive", claudeLogin: "ok" });
   });
 });
 

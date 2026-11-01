@@ -303,6 +303,7 @@ if (devBoxEnabled)
     // the abstraction so the tests can hand the client a fake.
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<DevBoxAgentState>();
+    builder.Services.AddSingleton<DevBoxNotifier>();
     if (builder.Environment.IsDevelopment() && devBoxOptions.Fake)
     {
         // `make e2e`: a VM in memory, so the browser suite can press Start

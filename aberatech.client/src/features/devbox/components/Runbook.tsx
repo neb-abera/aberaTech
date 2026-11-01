@@ -34,7 +34,7 @@ export default function Runbook() {
           <Step
             n={3}
             primary="Wait for the green box to say Remote Control is up"
-            secondary="The agent reports within a minute of the box coming up. Refresh if it is slow."
+            secondary="The agent reports within a minute of the box coming up. Refresh if it is slow. A red box saying Claude login expired has a Sign in again button: tap it, tap the link, approve, and paste the code."
           />
           <Step
             n={4}
