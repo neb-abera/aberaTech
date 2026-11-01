@@ -73,7 +73,7 @@ test.describe("/devbox", () => {
 
     // The last report said the service was down; the page says so.
     await expect(
-      page.getByText(/Remote Control service is inactive/),
+      page.getByText(/Remote Control has not connected/),
     ).toBeVisible();
 
     // The agent reports, as the box does once a minute.
