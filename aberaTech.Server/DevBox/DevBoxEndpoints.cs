@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
 using aberaTech.Scheduling.Admin;
@@ -22,7 +23,7 @@ namespace aberaTech.Server.DevBox;
 /// with the exception type, never its message: the message can name the
 /// subscription.
 /// </remarks>
-public static class DevBoxEndpoints
+public static partial class DevBoxEndpoints
 {
     public const string StartPolicy = "devbox-start";
 
@@ -30,6 +31,10 @@ public static class DevBoxEndpoints
     public const string HeartbeatPolicy = "devbox-heartbeat";
 
     public const string HeartbeatPath = "/api/devbox/heartbeat";
+
+    private const string DevBoxPage = "https://abera.tech/devbox";
+
+    public const string NotifyPath = "/api/devbox/notify";
 
     /// <summary>The longest a Hold may keep the box up: one working day.</summary>
     public const int MaxHoldMinutes = 12 * 60;
@@ -92,20 +97,59 @@ public static class DevBoxEndpoints
                 return Results.Accepted(value: agent.Pending());
             }).RequireRateLimiting(StartPolicy);
 
+            group.MapPost("/login", (DevBoxAgentState agent) =>
+            {
+                agent.Login();
+                return Results.Accepted(value: agent.Pending());
+            }).RequireRateLimiting(StartPolicy);
+
+            group.MapPost("/login/code", (LoginCodeRequest request, DevBoxAgentState agent) =>
+            {
+                var code = request.Code?.Trim() ?? "";
+                if (!LoginCodeShape().IsMatch(code))
+                {
+                    return Results.BadRequest("That is not a sign-in code.");
+                }
+
+                agent.LoginCode(code);
+                return Results.Accepted(value: agent.Pending());
+            }).RequireRateLimiting(StartPolicy);
+
             // The box, not the owner: a bearer token in place of a session.
             // Anonymous as far as the cookie scheme is concerned, and the
             // GuessedRoutes limit in RateLimits.cs counts its 401s.
-            routes.MapPost(HeartbeatPath, (HttpRequest request, DevBoxHeartbeat heartbeat, DevBoxAgentState agent) =>
+            routes.MapPost(HeartbeatPath, async (HttpRequest request, DevBoxHeartbeat heartbeat, DevBoxAgentState agent, DevBoxNotifier notifier) =>
             {
-                var header = request.Headers.Authorization.ToString();
-                if (!header.StartsWith("Bearer ", StringComparison.Ordinal)
-                    || !FixedTimeEquals(header["Bearer ".Length..].Trim(), options.HeartbeatToken!))
+                if (!Authorized(request, options)) return Results.Unauthorized();
+
+                var (claude, google) = agent.Report(heartbeat);
+                if (claude)
                 {
-                    return Results.Unauthorized();
+                    await notifier.SendAsync(
+                        new DevBoxNotice("failure", "Dev box: Claude login expired", "Remote Control is down. Open /devbox and tap Sign in again."),
+                        DevBoxPage,
+                        request.HttpContext.RequestAborted);
                 }
 
-                agent.Report(heartbeat);
+                if (google)
+                {
+                    await notifier.SendAsync(
+                        new DevBoxNotice("failure", "Dev box: Google signed out", "The box's Chrome lost its Google sign-in. Sign in on the box's desktop."),
+                        DevBoxPage,
+                        request.HttpContext.RequestAborted);
+                }
+
                 return Results.Ok(agent.Take());
+            }).RequireRateLimiting(HeartbeatPolicy).AllowAnonymous();
+
+            // A session on the box telling the owner's phone it finished or
+            // needs him. Pushover's secrets stay here, off the box.
+            routes.MapPost(NotifyPath, async (HttpRequest request, DevBoxNotice notice, DevBoxAgentState agent, DevBoxNotifier notifier) =>
+            {
+                if (!Authorized(request, options)) return Results.Unauthorized();
+
+                await notifier.SendAsync(notice, agent.Last()?.Heartbeat.EnvironmentUrl, request.HttpContext.RequestAborted);
+                return Results.Accepted();
             }).RequireRateLimiting(HeartbeatPolicy).AllowAnonymous();
         }
 
@@ -143,8 +187,26 @@ public static class DevBoxEndpoints
             heartbeat.UptimeSeconds,
             heartbeat.HoldUntil,
             heartbeat.EnvironmentUrl,
+            heartbeat.ClaudeLogin,
+            heartbeat.GoogleLogin,
+            heartbeat.LoginExpiresAt,
+            LoginUrl = IsClaudeSignIn(heartbeat.LoginUrl) ? heartbeat.LoginUrl : null,
             pending = agent.Pending()
         };
+    }
+
+    /// <summary>The page shows this as a link, so only Claude's own sign-in page passes.</summary>
+    private static bool IsClaudeSignIn(string? url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var parsed)
+        && parsed.Scheme == Uri.UriSchemeHttps
+        && parsed.Host is "claude.com" or "claude.ai"
+        && parsed.AbsolutePath.EndsWith("/oauth/authorize", StringComparison.Ordinal);
+
+    private static bool Authorized(HttpRequest request, DevBoxOptions options)
+    {
+        var header = request.Headers.Authorization.ToString();
+        return header.StartsWith("Bearer ", StringComparison.Ordinal)
+               && FixedTimeEquals(header["Bearer ".Length..].Trim(), options.HeartbeatToken!);
     }
 
     private static bool IsAzure(Exception exception) =>
@@ -154,4 +216,9 @@ public static class DevBoxEndpoints
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
 
     public sealed record HoldRequest(int Minutes);
+
+    public sealed record LoginCodeRequest(string? Code);
+
+    [GeneratedRegex("^[A-Za-z0-9_#-]{8,512}$")]
+    private static partial Regex LoginCodeShape();
 }

@@ -33,7 +33,11 @@ const reported = (over: Record<string, unknown> = {}) => ({
   uptimeSeconds: 4200,
   holdUntil: null,
   environmentUrl: "https://claude.ai/code?environment=env_abc",
-  pending: { holdMinutes: null, park: false },
+  claudeLogin: "ok",
+  loginExpiresAt: null,
+  loginUrl: null,
+  googleLogin: "ok",
+  pending: { holdMinutes: null, park: false, login: false },
   ...over,
 });
 
@@ -238,6 +242,69 @@ describe("the owner", () => {
       "https://claude.ai/code?environment=env_abc",
     );
     expect(screen.getByText(/Up 1 h 10 min, load 1.25/)).toBeTruthy();
+  });
+
+  it("is told plainly when the Claude sign-in has expired, with no claim that Remote Control is up", async () => {
+    mount(status("running", reported({ claudeLogin: "expired" })));
+    await settle();
+
+    expect(
+      screen.getByText(/Claude login expired\. Remote Control cannot start/),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Remote Control is up with/)).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Open devbox in Claude" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Sign in again" })).toBeTruthy();
+  });
+
+  it("does not claim Remote Control is up on a report that cannot say", async () => {
+    mount(status("running", reported({ claudeLogin: "unknown" })));
+    await settle();
+
+    expect(screen.queryByText(/Remote Control is up with/)).toBeNull();
+    expect(screen.getByText(/has not connected/)).toBeTruthy();
+  });
+
+  it("offers the sign-in link as a tap and a box for the code", async () => {
+    mount(
+      status(
+        "running",
+        reported({
+          claudeLogin: "expired",
+          loginUrl: "https://claude.com/cai/oauth/authorize?state=abc",
+        }),
+      ),
+    );
+    await settle();
+
+    const link = screen.getByRole("link", { name: "Open the Claude sign-in" });
+    expect(link.getAttribute("href")).toBe(
+      "https://claude.com/cai/oauth/authorize?state=abc",
+    );
+    expect(screen.getByLabelText("Code from Claude")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Send code" })).toBeTruthy();
+  });
+
+  it("says when the box's Chrome has lost its Google sign-in", async () => {
+    mount(status("running", reported({ googleLogin: "signed-out" })));
+    await settle();
+
+    expect(screen.getByText(/Chrome lost its Google sign-in/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Open devbox in Claude" }),
+    ).toBeTruthy();
+  });
+
+  it("warns three days before the sign-in ends and still offers the session", async () => {
+    const soon = new Date(Date.now() + 2 * 86400000).toISOString();
+    mount(status("running", reported({ loginExpiresAt: soon })));
+    await settle();
+
+    expect(screen.getByText(/Claude sign-in ends in 2 days/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Open devbox in Claude" }),
+    ).toBeTruthy();
   });
 
   it("is warned when the box has gone quiet", async () => {

@@ -22,7 +22,11 @@ export type AgentReport =
       uptimeSeconds: number;
       holdUntil: string | null;
       environmentUrl: string | null;
-      pending: { holdMinutes: number | null; park: boolean };
+      claudeLogin: string | null;
+      loginExpiresAt: string | null;
+      loginUrl: string | null;
+      googleLogin: string | null;
+      pending: { holdMinutes: number | null; park: boolean; login: boolean };
     };
 
 export type DevBoxStatus =
@@ -75,6 +79,16 @@ export function holdDevBox(minutes: number): Promise<StartResult> {
 /** Park it now. The box does it itself on its next heartbeat. */
 export function parkDevBox(): Promise<StartResult> {
   return post("/api/devbox/park");
+}
+
+/** Ask the box to begin a Claude sign-in. The link arrives on its next report. */
+export function startClaudeLogin(): Promise<StartResult> {
+  return post("/api/devbox/login");
+}
+
+/** The code Claude showed after the sign-in. It goes to the box on its next report. */
+export function sendClaudeLoginCode(code: string): Promise<StartResult> {
+  return post("/api/devbox/login/code", { code });
 }
 
 async function post(path: string, body?: unknown): Promise<StartResult> {

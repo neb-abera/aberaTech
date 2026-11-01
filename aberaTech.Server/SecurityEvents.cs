@@ -171,6 +171,7 @@ public static partial class SecurityEvents
         StatusCodes.Status403Forbidden when bearer && IsAlerts(route) => AlertsDeviceRefused,
         StatusCodes.Status401Unauthorized when Is(route, DigestRoute) => DigestKeyRejected,
         StatusCodes.Status401Unauthorized when Is(route, DevBox.DevBoxEndpoints.HeartbeatPath) => AgentTokenRejected,
+        StatusCodes.Status401Unauthorized when Is(route, DevBox.DevBoxEndpoints.NotifyPath) => AgentTokenRejected,
         StatusCodes.Status401Unauthorized => SignInRequired,
         StatusCodes.Status400BadRequest or StatusCodes.Status403Forbidden or StatusCodes.Status404NotFound
             when Is(route, aberaTech.Scheduling.Alerts.PushoverCallback.Path) => PushoverCallbackRefused,

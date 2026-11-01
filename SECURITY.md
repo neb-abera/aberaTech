@@ -60,7 +60,7 @@ against them. None are configured yet.
 | 4005 | `WebhookSignatureRejected` | Warning | 403 from `/api/scheduling/sms-status`: a missing or wrong Twilio signature |
 | 4006 | `UnknownCapability` | Warning | 404 from a queue-place or booking route: an id nobody was given, or a stale one |
 | 4007 | `PublicWriteRefused` | Information | 400 from joining the queue or booking: input the form would not have sent |
-| 4008 | `AgentTokenRejected` | Warning | 401 from `/api/devbox/heartbeat`: a missing or wrong dev box agent token |
+| 4008 | `AgentTokenRejected` | Warning | 401 from `/api/devbox/heartbeat` or `/api/devbox/notify`: a missing or wrong dev box agent token |
 | 4009 | `OwnerSignedIn` | Information | The owner's session began: sign-in completed and the cookie was issued |
 | 4010 | `OwnerSignedOut` | Information | The owner's session ended by sign-out |
 | 4011 | `AlertsDeviceTokenRejected` | Warning | 401 from `/api/alerts/*` to a request with a bearer token: malformed, unknown or revoked (the token is not logged) |

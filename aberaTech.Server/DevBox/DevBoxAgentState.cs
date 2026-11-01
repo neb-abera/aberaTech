@@ -9,12 +9,18 @@ public sealed record DevBoxHeartbeat(
     [property: JsonPropertyName("load")] double Load,
     [property: JsonPropertyName("uptimeSeconds")] long UptimeSeconds,
     [property: JsonPropertyName("holdUntil")] DateTimeOffset? HoldUntil,
-    [property: JsonPropertyName("environmentUrl")] string? EnvironmentUrl);
+    [property: JsonPropertyName("environmentUrl")] string? EnvironmentUrl,
+    [property: JsonPropertyName("claudeLogin")] string? ClaudeLogin = null,
+    [property: JsonPropertyName("loginExpiresAt")] DateTimeOffset? LoginExpiresAt = null,
+    [property: JsonPropertyName("loginUrl")] string? LoginUrl = null,
+    [property: JsonPropertyName("googleLogin")] string? GoogleLogin = null);
 
 /// <summary>What the box is asked to do on its next heartbeat.</summary>
 public sealed record DevBoxCommands(
     [property: JsonPropertyName("holdMinutes")] int? HoldMinutes,
-    [property: JsonPropertyName("park")] bool Park);
+    [property: JsonPropertyName("park")] bool Park,
+    [property: JsonPropertyName("login")] bool Login = false,
+    [property: JsonPropertyName("loginCode")] string? LoginCode = null);
 
 /// <summary>
 /// The channel between the box and this site: the box reports once a minute
@@ -30,13 +36,19 @@ public sealed class DevBoxAgentState(TimeProvider clock)
     private DateTimeOffset? _lastAt;
     private int? _holdMinutes;
     private bool _park;
+    private bool _login;
+    private string? _loginCode;
 
-    public void Report(DevBoxHeartbeat heartbeat)
+    /// <summary>Stores the report, and says which sign-ins this report is the first to call lost.</summary>
+    public (bool Claude, bool Google) Report(DevBoxHeartbeat heartbeat)
     {
         lock (_lock)
         {
+            var claude = heartbeat.ClaudeLogin == "expired" && _last?.ClaudeLogin != "expired";
+            var google = heartbeat.GoogleLogin == "signed-out" && _last?.GoogleLogin != "signed-out";
             _last = heartbeat;
             _lastAt = clock.GetUtcNow();
+            return (claude, google);
         }
     }
 
@@ -61,20 +73,35 @@ public sealed class DevBoxAgentState(TimeProvider clock)
         lock (_lock) _park = true;
     }
 
+    /// <summary>Ask the box to begin a Claude sign-in.</summary>
+    public void Login()
+    {
+        lock (_lock) _login = true;
+    }
+
+    /// <summary>The code the owner pasted. It works only with the verifier held on the box.</summary>
+    public void LoginCode(string code)
+    {
+        lock (_lock) _loginCode = code;
+    }
+
     /// <summary>Hands the queued commands to the box and forgets them.</summary>
     public DevBoxCommands Take()
     {
         lock (_lock)
         {
-            var commands = new DevBoxCommands(_holdMinutes, _park);
+            var commands = new DevBoxCommands(_holdMinutes, _park, _login, _loginCode);
             _holdMinutes = null;
             _park = false;
+            _login = false;
+            _loginCode = null;
             return commands;
         }
     }
 
     public DevBoxCommands Pending()
     {
-        lock (_lock) return new DevBoxCommands(_holdMinutes, _park);
+        // The code stays out: this goes back to the page.
+        lock (_lock) return new DevBoxCommands(_holdMinutes, _park, _login);
     }
 }

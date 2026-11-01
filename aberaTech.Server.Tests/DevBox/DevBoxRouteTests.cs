@@ -47,7 +47,9 @@ public sealed class DevBoxRouteTests : IDisposable
         ["GET", "/api/devbox/status"],
         ["POST", "/api/devbox/start"],
         ["POST", "/api/devbox/hold"],
-        ["POST", "/api/devbox/park"]
+        ["POST", "/api/devbox/park"],
+        ["POST", "/api/devbox/login"],
+        ["POST", "/api/devbox/login/code"]
     ];
 
     [Theory]
@@ -191,6 +193,115 @@ public sealed class DevBoxRouteTests : IDisposable
         var nothing = await second.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(JsonValueKind.Null, nothing.GetProperty("holdMinutes").ValueKind);
         Assert.False(nothing.GetProperty("park").GetBoolean());
+    }
+
+    [Fact]
+    public async Task The_owner_sees_whether_claude_is_signed_in_and_when_it_ends()
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var answered = await box.SendAsync(Heartbeat(box, HeartbeatToken, new
+        {
+            remoteControl = "active", sessions = 0, claudeLogin = "expired", googleLogin = "signed-out",
+            loginExpiresAt = "2026-11-30T17:15:40Z",
+            loginUrl = "https://claude.com/cai/oauth/authorize?code=true&state=abc"
+        }));
+        Assert.Equal(HttpStatusCode.OK, answered.StatusCode);
+
+        var agent = (await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status")).GetProperty("agent");
+        Assert.Equal("expired", agent.GetProperty("claudeLogin").GetString());
+        Assert.Equal("signed-out", agent.GetProperty("googleLogin").GetString());
+        Assert.Equal("2026-11-30T17:15:40+00:00", agent.GetProperty("loginExpiresAt").GetString());
+        Assert.Equal("https://claude.com/cai/oauth/authorize?code=true&state=abc", agent.GetProperty("loginUrl").GetString());
+    }
+
+    [Theory]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("https://evil.example/oauth/authorize?x=1")]
+    [InlineData("https://claude.com.evil.example/cai/oauth/authorize?x=1")]
+    [InlineData("http://claude.com/cai/oauth/authorize?x=1")]
+    public async Task A_sign_in_link_that_is_not_claude_never_reaches_the_page(string link)
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var answered = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0, loginUrl = link }));
+        Assert.Equal(HttpStatusCode.OK, answered.StatusCode);
+
+        var agent = (await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status")).GetProperty("agent");
+        Assert.Equal(JsonValueKind.Null, agent.GetProperty("loginUrl").ValueKind);
+    }
+
+    [Fact]
+    public async Task Sign_in_and_its_code_go_to_the_box_once()
+    {
+        using var box = _app.CreateClient();
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+
+        using var start = await owner.PostAsync("/api/devbox/login", null);
+        Assert.Equal(HttpStatusCode.Accepted, start.StatusCode);
+        var pending = (await owner.GetFromJsonAsync<JsonElement>("/api/devbox/status"))
+            .GetProperty("agent").GetProperty("pending");
+        Assert.True(pending.GetProperty("login").GetBoolean());
+
+        using var first = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0 }));
+        Assert.True((await first.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("login").GetBoolean());
+
+        // A phone's paste brings a space or a line end with it.
+        using var code = await owner.PostAsJsonAsync("/api/devbox/login/code", new { code = " Abc_123-def#state\n" });
+        Assert.Equal(HttpStatusCode.Accepted, code.StatusCode);
+        var afterCode = await (await owner.GetAsync("/api/devbox/status")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("Abc_123", afterCode);
+
+        using var second = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0 }));
+        var orders = await second.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(orders.GetProperty("login").GetBoolean());
+        Assert.Equal("Abc_123-def#state", orders.GetProperty("loginCode").GetString());
+
+        using var third = await box.SendAsync(Heartbeat(box, HeartbeatToken, new { sessions = 0 }));
+        Assert.Equal(JsonValueKind.Null, (await third.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("loginCode").ValueKind);
+    }
+
+    [Theory]
+    [InlineData("short")]
+    [InlineData("has a space inside it")]
+    [InlineData("abc123456; rm -rf /")]
+    [InlineData("")]
+    public async Task A_code_that_is_not_a_code_is_refused(string code)
+    {
+        using var owner = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Owner);
+        using var refused = await owner.PostAsJsonAsync("/api/devbox/login/code", new { code });
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+    }
+
+    [Fact]
+    public void A_lost_sign_in_is_news_once()
+    {
+        var state = new DevBoxAgentState(TimeProvider.System);
+        var lost = new DevBoxHeartbeat("active", 0, 0, 0, null, null, ClaudeLogin: "expired", GoogleLogin: "signed-out");
+
+        Assert.Equal((true, true), state.Report(lost));
+        Assert.Equal((false, false), state.Report(lost));
+        Assert.Equal((false, false), state.Report(lost with { ClaudeLogin = "ok", GoogleLogin = "ok" }));
+        Assert.Equal((true, false), state.Report(lost with { GoogleLogin = "ok" }));
+    }
+
+    [Fact]
+    public async Task The_notify_route_takes_the_box_token_and_nothing_else()
+    {
+        using var box = _app.CreateClient();
+        var body = new { kind = "done", title = "t", message = "m", session = "s" };
+
+        using var wrong = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/notify") { Content = JsonContent.Create(body) };
+        wrong.Headers.Authorization = new("Bearer", "not-the-token");
+        using var refused = await box.SendAsync(wrong);
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+
+        using var right = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/notify") { Content = JsonContent.Create(body) };
+        right.Headers.Authorization = new("Bearer", HeartbeatToken);
+        using var accepted = await box.SendAsync(right);
+        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
     }
 
     [Theory]

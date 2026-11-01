@@ -40,6 +40,7 @@ public static class RateLimits
         new(SmsReceiptEndpoint.Path, StatusCodes.Status403Forbidden, 30),
         // The dev box reports once a minute with a token; a wrong token is a guess.
         new(DevBoxEndpoints.HeartbeatPath, StatusCodes.Status401Unauthorized, 10),
+        new(DevBoxEndpoints.NotifyPath, StatusCodes.Status401Unauthorized, 10),
         // Pushover posts receipts this server sent. A receipt it never sent is a guess.
         new(PushoverCallback.Path, StatusCodes.Status404NotFound, 10)
     ];
