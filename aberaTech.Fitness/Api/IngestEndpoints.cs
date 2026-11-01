@@ -53,8 +53,8 @@ public static class IngestEndpoints
         var icu = states.GetValueOrDefault(SyncSchedule.IntervalsIcuSource);
 
         return new IngestStatusDto(
-            new SourceStatusDto(hevyConfigured, hevyConfigured, Iso(hevy?.LastRunAt), Iso(hevy?.LastRunAt), hevy?.LastOutcome),
-            new SourceStatusDto(intervalsIcuConfigured, intervalsIcuConfigured, Iso(icu?.LastRunAt), Iso(icu?.LastRunAt), icu?.LastOutcome));
+            new SourceStatusDto(hevyConfigured, hevyConfigured, Iso(hevy?.LastSuccessAt), Iso(hevy?.LastRunAt), hevy?.LastOutcome),
+            new SourceStatusDto(intervalsIcuConfigured, intervalsIcuConfigured, Iso(icu?.LastSuccessAt), Iso(icu?.LastRunAt), icu?.LastOutcome));
     }
 
     private static string? Iso(Instant? instant) => instant?.ToString("uuuu-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);

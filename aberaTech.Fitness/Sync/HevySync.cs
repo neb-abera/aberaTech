@@ -27,7 +27,8 @@ public sealed class HevySync(
             database.SyncStates.Add(state);
         }
 
-        state.LastRunAt = clock.GetCurrentInstant();
+        var now = clock.GetCurrentInstant();
+        state.LastRunAt = now;
 
         try
         {
@@ -39,16 +40,17 @@ public sealed class HevySync(
             // with whatever Hevy says now, and the cached pages read its sets.
             await pages.EvictFitnessAsync();
 
+            state.LastSuccessAt = now;
             state.LastOutcome = $"{activities.Count} workouts, {outcome.Added} new";
             await database.SaveChangesAsync(cancellationToken);
             return new HevySyncOutcome(activities.Count, outcome.Added, null);
         }
-        catch (HttpRequestException exception)
+        catch (Exception exception) when (SyncFailure.Counts(exception, cancellationToken))
         {
             logger.LogWarning(exception, "Hevy sync failed.");
-            state.LastOutcome = "Hevy did not answer; will try again.";
-            await database.SaveChangesAsync(cancellationToken);
-            return new HevySyncOutcome(0, 0, state.LastOutcome);
+            var outcome = SyncFailure.Describe("Hevy", exception);
+            await SyncFailure.RecordAsync(database, SyncSchedule.HevySource, now, outcome, cancellationToken);
+            return new HevySyncOutcome(0, 0, outcome);
         }
     }
 }
