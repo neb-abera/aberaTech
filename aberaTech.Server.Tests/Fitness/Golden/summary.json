@@ -1152,18 +1152,18 @@
     }
   ],
   "measuredDose": {
-    "easyHours": 3.565380208333332,
+    "easyHours": 3.565380208333333,
     "thresholdHours": 0,
     "intervalHours": 0.36249999999999993,
     "strengthHours": 1.8333333333333328,
-    "runningHours": 3.927880208333332,
-    "strain": 7.946630208333331,
+    "runningHours": 3.927880208333333,
+    "strain": 7.946630208333332,
     "easyShare": 0.9077110347635029,
     "zones": [
       {
         "zone": "Easy",
-        "hours": 3.565380208333332,
-        "strain": 3.565380208333332,
+        "hours": 3.565380208333333,
+        "strain": 3.565380208333333,
         "marginalVdotPerHour": 1.5193376120951454
       },
       {
@@ -1767,11 +1767,96 @@
         "name": "Your own 2027 standards",
         "purpose": "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \u0022non-essential\u0022 are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer\u0027s carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
         "weeksBeforeSelection": 0,
-        "dueOn": "2027-01-11",
+        "dueOn": "2027-12-31",
         "status": "Fail",
-        "passed": 1,
-        "known": 8,
+        "passed": 2,
+        "known": 13,
         "requirements": [
+          {
+            "metric": "run-5mi",
+            "label": "Five-mile run",
+            "comparison": "AtMost",
+            "target": 2040,
+            "unit": "s",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "run-5mi",
+              "value": 2198.9844000269504,
+              "basis": "Modeled",
+              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
+              "on": null
+            },
+            "gap": "short by 2:39"
+          },
+          {
+            "metric": "run-2mi",
+            "label": "Two-mile run",
+            "comparison": "AtMost",
+            "target": 735,
+            "unit": "s",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "run-2mi",
+              "value": 900,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 2:45"
+          },
+          {
+            "metric": "ruck-12mi-35lb",
+            "label": "Twelve-mile ruck at 35 lb",
+            "comparison": "AtMost",
+            "target": 9000,
+            "unit": "s",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "ruck-12mi-35lb",
+              "value": 10814.79168,
+              "basis": "Measured",
+              "evidence": "12.05-mile at 46 lb on 2026-04-29",
+              "on": "2026-04-29"
+            },
+            "gap": "short by 30:15"
+          },
+          {
+            "metric": "sprint-drag-carry",
+            "label": "Sprint-drag-carry",
+            "comparison": "AtMost",
+            "target": 90,
+            "unit": "s",
+            "citationId": "neb-fitness-goals",
+            "status": "Fail",
+            "current": {
+              "metric": "sprint-drag-carry",
+              "value": 98,
+              "basis": "Measured",
+              "evidence": "AFT of 2026-05-16",
+              "on": "2026-05-16"
+            },
+            "gap": "short by 0:08"
+          },
+          {
+            "metric": "plank",
+            "label": "Plank",
+            "comparison": "AtLeast",
+            "target": 210,
+            "unit": "s",
+            "citationId": "neb-fitness-goals",
+            "status": "Pass",
+            "current": {
+              "metric": "plank",
+              "value": 210.33333333333334,
+              "basis": "Measured",
+              "evidence": "best set in the strength log, 2026-06-14",
+              "on": "2026-06-14"
+            },
+            "gap": "clear by 0:00"
+          },
           {
             "metric": "farmer-carry-1.5bw-m",
             "label": "Farmer\u0027s carry at 1.5\u00D7 bodyweight",

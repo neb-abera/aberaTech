@@ -71,7 +71,9 @@ public sealed class IntervalsIcuSync(
                     file = await icu.OriginalFileAsync(summary.Id, cancellationToken)
                            ?? await icu.GeneratedFitAsync(summary.Id, cancellationToken);
                 }
-                catch (HttpRequestException exception)
+                catch (Exception exception) when (
+                    exception is HttpRequestException
+                    || (exception is OperationCanceledException && !cancellationToken.IsCancellationRequested))
                 {
                     logger.LogWarning(exception, "intervals.icu file for {ActivityId} was not available; storing the summary.", summary.Id);
                 }
@@ -88,16 +90,17 @@ public sealed class IntervalsIcuSync(
                 await pages.EvictFitnessAsync();
             }
 
+            state.LastSuccessAt = now;
             state.LastOutcome = $"{fetched} seen, {added} new";
             await database.SaveChangesAsync(cancellationToken);
             return new IntervalsIcuSyncOutcome(fetched, added, null);
         }
-        catch (HttpRequestException exception)
+        catch (Exception exception) when (SyncFailure.Counts(exception, cancellationToken))
         {
             logger.LogWarning(exception, "intervals.icu sync failed.");
-            state.LastOutcome = "intervals.icu did not answer; will try again.";
-            await database.SaveChangesAsync(cancellationToken);
-            return new IntervalsIcuSyncOutcome(0, 0, state.LastOutcome);
+            var outcome = SyncFailure.Describe("intervals.icu", exception);
+            await SyncFailure.RecordAsync(database, SyncSchedule.IntervalsIcuSource, now, outcome, cancellationToken);
+            return new IntervalsIcuSyncOutcome(0, 0, outcome);
         }
     }
 

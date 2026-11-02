@@ -84,6 +84,9 @@ public class SyncState
 
     public Instant? LastRunAt { get; set; }
 
+    /// <summary>The last run that finished. Behind <see cref="LastRunAt"/> means the last run failed.</summary>
+    public Instant? LastSuccessAt { get; set; }
+
     public string? LastOutcome { get; set; }
 }
 

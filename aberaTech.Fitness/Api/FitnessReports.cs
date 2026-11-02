@@ -1,6 +1,7 @@
 using System.Globalization;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
+using aberaTech.Fitness.Sync;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -42,8 +43,9 @@ public static class FitnessReports
         var history = await TrainingHistory.LoadAsync(database, cancellationToken);
         var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
         var predictions = await database.Predictions.AsNoTracking().ToListAsync(cancellationToken);
+        var syncs = await database.SyncStates.AsNoTracking().ToListAsync(cancellationToken);
 
-        return Summary(history, evidence, predictions, clock.GetCurrentInstant());
+        return Summary(history, evidence, predictions, clock.GetCurrentInstant(), syncs);
     }
 
     /// <summary>The summary, from a log that has already been read.</summary>
@@ -51,7 +53,8 @@ public static class FitnessReports
         TrainingHistory history,
         ReadinessEvidence evidence,
         IReadOnlyList<LockedPrediction> predictions,
-        Instant now)
+        Instant now,
+        IReadOnlyList<SyncState>? syncs = null)
     {
         var row = history.Row;
         var settings = SettingsOf(row);
@@ -91,6 +94,7 @@ public static class FitnessReports
 
         // The anchor's age belongs with the findings it quietly distorts.
         var findings = highlights.ToList();
+        findings.InsertRange(0, SyncSchedule.StaleFindings(syncs ?? [], now));
         if (Highlights.Anchor(row.VdotMeasuredOn, today) is { } anchor) findings.Insert(0, anchor);
         findings.AddRange(Durability.Highlights(durability));
 
@@ -101,7 +105,7 @@ public static class FitnessReports
             .OrderBy(l => l.TargetDate)
             .ToArray();
         var nextTest = row.SelectionDate is { } selection
-            ? SelectionReadiness.Gates.Select(g => selection.PlusWeeks(-g.WeeksBeforeSelection)).Where(d => d > today).DefaultIfEmpty(selection).Min()
+            ? SelectionReadiness.Gates.Where(g => g.DueDate is null).Select(g => selection.PlusWeeks(-g.WeeksBeforeSelection)).Where(d => d > today).DefaultIfEmpty(selection).Min()
             : (LocalDate?)null;
         findings.AddRange(Ledger.Highlights(ledger, nextTest, today));
 

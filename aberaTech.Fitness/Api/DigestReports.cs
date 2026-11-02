@@ -29,7 +29,9 @@ internal static class DigestReports
         var predictions = await database.Predictions.AsNoTracking().ToListAsync(cancellationToken);
         var today = now.InUtc().Date;
 
-        var summary = FitnessReports.Summary(history, evidence, predictions, now);
+        var syncs = await database.SyncStates.AsNoTracking().ToListAsync(cancellationToken);
+
+        var summary = FitnessReports.Summary(history, evidence, predictions, now, syncs);
         var outlook = OutlookReports.Build(history, evidence, null, 1.0, today, now);
         return Compose(summary, outlook, today);
     }

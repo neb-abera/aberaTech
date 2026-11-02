@@ -82,6 +82,29 @@ public sealed class SummaryEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task A_quiet_source_reaches_the_digest()
+    {
+        await _app.SeedAsync(FitnessSeed.AthleteAsync);
+        await _app.SeedAsync(database =>
+        {
+            database.SyncStates.Add(new aberaTech.Fitness.Data.SyncState
+            {
+                Source = aberaTech.Fitness.Sync.SyncSchedule.HevySource,
+                LastRunAt = FitnessApp.Now,
+                LastSuccessAt = FitnessApp.Now - NodaTime.Duration.FromDays(3),
+                LastOutcome = "Hevy refused the API key; replace it."
+            });
+            return database.SaveChangesAsync();
+        });
+        using var client = _app.Factory.CreateClient();
+
+        var body = await client.GetStringAsync("/api/fitness/digest");
+
+        Assert.Contains("Hevy has not synced since 2026-06-12", body);
+        Assert.Contains("refused the API key", body);
+    }
+
+    [Fact]
     public async Task One_summary_costs_a_fixed_handful_of_commands_however_long_the_log()
     {
         await _app.SeedAsync(FitnessSeed.AthleteAsync);
@@ -93,13 +116,13 @@ public sealed class SummaryEndpointTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         // Settings, the weigh-ins, the activities with their laps, the
-        // strength sets, the fitness tests and the ledger: one each. It was
-        // eighteen, most of them re-reading the same activities.
-        Assert.Equal(6, _app.Commands.Count);
+        // strength sets, the fitness tests, the ledger and the sync states:
+        // one each. It was eighteen, most of them re-reading the same activities.
+        Assert.Equal(7, _app.Commands.Count);
     }
 
     [Theory]
-    [InlineData("/api/fitness/digest", 6)]
+    [InlineData("/api/fitness/digest", 7)]
     [InlineData("/api/fitness/readiness/outlook", 5)]
     public async Task The_pages_written_from_the_same_log_read_it_once_too(string path, int commands)
     {

@@ -13,7 +13,7 @@ namespace aberaTech.Fitness.Sync;
 /// control over cadence and failure without a scheduler's surface to defend.
 /// One tick a few minutes after boot, then every ten minutes, asking
 /// <see cref="SyncSchedule"/> what is due. A source that fails is recorded and
-/// waited on, not hammered.
+/// retried on <see cref="SyncSchedule"/>'s terms, not hammered.
 /// </remarks>
 public sealed class FitnessSyncWorker(
     IServiceScopeFactory scopeFactory,
@@ -62,28 +62,56 @@ public sealed class FitnessSyncWorker(
         }
     }
 
-    private async Task TickAsync(CancellationToken cancellationToken)
+    /// <summary>One pass over both sources. Each runs on its own scope, so one failing cannot stop the other.</summary>
+    internal async Task TickAsync(CancellationToken cancellationToken)
     {
-        using var scope = scopeFactory.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var now = clock.GetCurrentInstant();
-
-        var states = await database.SyncStates.AsNoTracking().ToDictionaryAsync(s => s.Source, cancellationToken);
-
-        if (scope.ServiceProvider.GetService<HevySync>() is { } hevy
-            && SyncSchedule.IsDue(SyncSchedule.HevySource, states.GetValueOrDefault(SyncSchedule.HevySource)?.LastRunAt, now))
+        Dictionary<string, SyncState> states;
+        using (var scope = scopeFactory.CreateScope())
         {
-            var outcome = await hevy.RunAsync(cancellationToken);
-            logger.LogInformation("Hevy sync: {Fetched} fetched, {Added} new{Error}.",
-                outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
+            var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
+            states = await database.SyncStates.AsNoTracking().ToDictionaryAsync(s => s.Source, cancellationToken);
         }
 
-        if (scope.ServiceProvider.GetService<IntervalsIcuSync>() is { } icu
-            && SyncSchedule.IsDue(SyncSchedule.IntervalsIcuSource, states.GetValueOrDefault(SyncSchedule.IntervalsIcuSource)?.LastRunAt, now))
+        var now = clock.GetCurrentInstant();
+        bool Due(string source)
         {
-            var outcome = await icu.RunAsync(cancellationToken);
-            logger.LogInformation("intervals.icu sync: {Fetched} seen, {Added} new{Error}.",
-                outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
+            var state = states.GetValueOrDefault(source);
+            return SyncSchedule.IsDue(source, state?.LastRunAt, state?.LastSuccessAt, now);
+        }
+
+        if (Due(SyncSchedule.HevySource))
+        {
+            await IsolatedAsync(SyncSchedule.HevySource, async services =>
+            {
+                if (services.GetService<HevySync>() is not { } hevy) return;
+                var outcome = await hevy.RunAsync(cancellationToken);
+                logger.LogInformation("Hevy sync: {Fetched} fetched, {Added} new{Error}.",
+                    outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
+            }, cancellationToken);
+        }
+
+        if (Due(SyncSchedule.IntervalsIcuSource))
+        {
+            await IsolatedAsync(SyncSchedule.IntervalsIcuSource, async services =>
+            {
+                if (services.GetService<IntervalsIcuSync>() is not { } icu) return;
+                var outcome = await icu.RunAsync(cancellationToken);
+                logger.LogInformation("intervals.icu sync: {Fetched} seen, {Added} new{Error}.",
+                    outcome.Fetched, outcome.Added, outcome.Error is null ? "" : $" ({outcome.Error})");
+            }, cancellationToken);
+        }
+    }
+
+    private async Task IsolatedAsync(string source, Func<IServiceProvider, Task> run, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            await run(scope.ServiceProvider);
+        }
+        catch (Exception exception) when (SyncFailure.Counts(exception, cancellationToken))
+        {
+            logger.LogError(exception, "{Source} sync could not record its run. The other source still runs.", source);
         }
     }
 }

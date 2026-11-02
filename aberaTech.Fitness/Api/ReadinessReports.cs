@@ -459,6 +459,7 @@ internal static class ReadinessReports
                 Record(histories, SelectionReadiness.Metrics.AftLowestEvent, date, result.LowestEvent);
                 Record(histories, SelectionReadiness.Metrics.HandReleasePushUps, date, result.HandReleasePushUps);
                 Record(histories, SelectionReadiness.Metrics.Plank, date, result.PlankSeconds);
+                Record(histories, SelectionReadiness.Metrics.SprintDragCarry, date, result.SprintDragCarrySeconds);
                 Record(histories, SelectionReadiness.Metrics.DeadliftTripleLb, date, result.DeadliftKg * BodyMass.PoundsPerKg);
                 if (weight is { } bw) Record(histories, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, date, result.DeadliftKg / bw.WeightKg);
             }
@@ -479,6 +480,7 @@ internal static class ReadinessReports
         Prefer(measurements, SelectionReadiness.Metrics.RunTwoMile, latest.TwoMileSeconds, lowerIsBetter: true, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.HandReleasePushUps, latest.HandReleasePushUps, lowerIsBetter: false, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.Plank, latest.PlankSeconds, lowerIsBetter: false, evidence, on);
+        Prefer(measurements, SelectionReadiness.Metrics.SprintDragCarry, latest.SprintDragCarrySeconds, lowerIsBetter: true, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleLb, latest.DeadliftKg * BodyMass.PoundsPerKg, lowerIsBetter: false, evidence, on);
 
         // The test's deadlift is a real triple, which the log's Epley estimate

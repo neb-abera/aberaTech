@@ -127,7 +127,7 @@ public static class GateOutlook
         return SelectionReadiness.Gates
             .Select(gate =>
             {
-                var dueOn = selectionDate?.PlusWeeks(-gate.WeeksBeforeSelection);
+                var dueOn = gate.DueOn(selectionDate);
                 var months = dueOn is { } due
                     ? Math.Max(0, Period.Between(context.Today, due, PeriodUnits.Days).Days / DaysPerMonth)
                     : DefaultHorizonMonths;
@@ -159,7 +159,10 @@ public static class GateOutlook
         IReadOnlyList<GateOutlookResult> gates, LocalDate today)
     {
         (LocalDate Date, string GateId)? latest = null;
-        foreach (var gate in gates.Where(g => g.Forecast > 0))
+        // A goal with a date of its own does not move the selection date.
+        var dated = SelectionReadiness.Gates.Where(g => g.DueDate is not null).Select(g => g.Id).ToHashSet();
+
+        foreach (var gate in gates.Where(g => g.Forecast > 0 && !dated.Contains(g.GateId)))
         {
             if (gate.ReadyInMonths is not { } ready) return null;
             var date = today.PlusDays((int)Math.Ceiling(ready * DaysPerMonth)).PlusWeeks(gate.WeeksBeforeSelection);
