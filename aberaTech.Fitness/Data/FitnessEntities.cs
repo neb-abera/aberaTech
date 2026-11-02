@@ -76,6 +76,20 @@ public class Lap
     public int? AverageHr { get; set; }
 }
 
+/// <summary>
+/// The grant to read the goals workbook from the owner's OneDrive. One row.
+/// The refresh token is sealed with ASP.NET Data Protection, so the database
+/// alone cannot read it.
+/// </summary>
+public class OneDriveConnection
+{
+    public int Id { get; set; }
+
+    public required string ProtectedRefreshToken { get; set; }
+
+    public Instant ConnectedAt { get; set; }
+}
+
 /// <summary>When an automatic source last ran, and what it said.</summary>
 public class SyncState
 {

@@ -215,6 +215,11 @@ var intervalsIcuOptions = builder.Configuration.GetSection(IntervalsIcuOptions.S
                           ?? new IntervalsIcuOptions();
 builder.Services.AddSingleton(intervalsIcuOptions);
 
+var oneDriveOptions = builder.Configuration.GetSection(aberaTech.Fitness.OneDrive.OneDriveOptions.Section)
+                          .Get<aberaTech.Fitness.OneDrive.OneDriveOptions>()
+                      ?? new aberaTech.Fitness.OneDrive.OneDriveOptions();
+builder.Services.AddSingleton(oneDriveOptions);
+
 var fitnessConnection = builder.Configuration.GetConnectionString("Fitness");
 var fitnessRequiresSignIn = FitnessGate.RequiresOwnerSignIn(
     builder.Environment.IsDevelopment(), fitnessOptions);
@@ -280,6 +285,16 @@ if (fitnessEnabled)
             client.Timeout = TimeSpan.FromSeconds(60);
         });
         builder.Services.AddScoped<IntervalsIcuSync>();
+    }
+
+    // The goals workbook: read from OneDrive when the app registration is
+    // configured, from a file in development and the e2e suite, and the last
+    // good read kept in memory with its time.
+    builder.Services.AddSingleton<aberaTech.Fitness.OneDrive.WorkbookCache>();
+    builder.Services.AddScoped<aberaTech.Fitness.OneDrive.IWorkbookSource, aberaTech.Fitness.OneDrive.WorkbookSource>();
+    if (oneDriveOptions.IsConfigured)
+    {
+        builder.Services.AddHttpClient<aberaTech.Fitness.OneDrive.OneDriveClient>(client => client.Timeout = TimeSpan.FromSeconds(30));
     }
 
     // Hevy daily, intervals.icu hourly, each only when it is there to sync.
@@ -649,7 +664,7 @@ if (fitnessEnabled)
     // Same single-writer reasoning as the scheduling migration above.
     await app.PrepareAsync<FitnessDbContext>("fitness");
 
-    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions);
+    app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions, oneDriveOptions);
 }
 else
 {

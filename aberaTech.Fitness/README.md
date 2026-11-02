@@ -351,6 +351,20 @@ mapped and `/api/fitness/me` answers `configured: false`.
 | `Admin:*` (existing) | Provides the Google sign-in schemes. Fitness reuses them. |
 | `Fitness:HevyApiKey` | Optional. Hevy Pro API key. Enables `/api/fitness/sync/hevy`. A container app secret. Keep it out of appsettings. |
 | `Database:UseEntraAuth` | Same switch the scheduling database uses. Applies here too. |
+| `OneDrive:ClientId`, `OneDrive:ClientSecret` | Optional. The Entra app that reads the goals workbook from the athlete's OneDrive (personal accounts, delegated `Files.Read`). The secret is a container app secret. Without them the Goals tab says so. |
+| `OneDrive:WorkbookPath` | The workbook's path from the drive's root. Defaults to `Documents/physical fitness/physical fitness goals.xlsx`. |
+| `OneDrive:LocalWorkbookPath` | A workbook on disk read instead of OneDrive, for `make up` and the e2e suite. Never set in production. |
+
+## Goals
+
+The goals are the athlete's workbook, read at request time. `GET
+/api/fitness/goals` downloads it through Microsoft Graph when its ETag has
+changed, reads the essential rows (column B from the header that says
+"Exercise" down to the "Non-essential metrics" line), and returns them in the
+sheet's groups and order with the current value, its source, test points and
+the forecast on 31 December of the year column F's header names. Graph's Excel
+API does not serve personal OneDrive, so the file is parsed here with the Open
+XML SDK. A row the catalog cannot measure is still shown, marked as not measured.
 
 ## Costs
 

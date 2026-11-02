@@ -92,8 +92,19 @@ internal static class OutlookReports
         return Build(history, evidence, weeklyHours, compliance, now.InUtc().Date, now);
     }
 
-    /// <summary>The outlook, from a log that has already been read.</summary>
-    internal static OutlookDto Build(
+    /// <summary>Everything one forecast is asked against: the athlete, the week, the readings.</summary>
+    internal sealed record Frame(
+        AthleteSnapshot Athlete,
+        TrajectoryParameters P,
+        double Measured,
+        double Hours,
+        string Basis,
+        DoseSchedule Schedule,
+        Readings Readings,
+        OutlookContext Context);
+
+    /// <summary>The forecast's inputs, from a log that has already been read. One engine for the outlook and the goals.</summary>
+    internal static Frame FrameFor(
         TrainingHistory history,
         ReadinessEvidence evidence,
         double? weeklyHours,
@@ -126,6 +137,23 @@ internal static class OutlookReports
             readings.Measurements,
             readings.Histories.ToDictionary(h => h.Key, h => (IReadOnlyList<DatedValue>)h.Value),
             today);
+
+        return new Frame(athlete, p, measured, hours, basis, schedule, readings, context);
+    }
+
+    /// <summary>The outlook, from a log that has already been read.</summary>
+    internal static OutlookDto Build(
+        TrainingHistory history,
+        ReadinessEvidence evidence,
+        double? weeklyHours,
+        double compliance,
+        LocalDate today,
+        Instant now)
+    {
+        var frame = FrameFor(history, evidence, weeklyHours, compliance, today, now);
+        var (athlete, p, measured, hours, basis, schedule, _, context) = frame;
+        var row = athlete.Row;
+        var weight = evidence.LatestWeight;
 
         var gates = GateOutlook.Evaluate(context, row.SelectionDate);
         var earliest = GateOutlook.EarliestSelection(gates, today);

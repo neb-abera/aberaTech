@@ -73,9 +73,11 @@ public static class FitnessEndpoints
         this IEndpointRouteBuilder routes,
         FitnessOptions options,
         bool requireOwnerSignIn = true,
-        IntervalsIcuOptions? intervalsIcu = null)
+        IntervalsIcuOptions? intervalsIcu = null,
+        OneDrive.OneDriveOptions? oneDrive = null)
     {
         intervalsIcu ??= new IntervalsIcuOptions();
+        oneDrive ??= new OneDrive.OneDriveOptions();
         var group = routes.MapGroup("/api/fitness");
 
         // The Development bypass is the one case with no policy: sign-in is
@@ -101,7 +103,8 @@ public static class FitnessEndpoints
                 configured = true,
                 signedIn,
                 hevyApi = options.HasHevyApi,
-                intervalsIcu = intervalsIcu.IsConfigured
+                intervalsIcu = intervalsIcu.IsConfigured,
+                oneDrive = oneDrive.IsConfigured
             });
         }).AllowAnonymous();
 
@@ -136,6 +139,9 @@ public static class FitnessEndpoints
         api.MapSolverEndpoints();
         api.MapPredictionLedger();
         api.MapIngestEndpoints(intervalsIcu, options.HasHevyApi);
+
+        // The goals, read from the athlete's own workbook.
+        api.MapGoalEndpoints(oneDrive);
 
         // The gates as a forecast: the chance of clearing each line by the
         // date it is due, under a named training week.

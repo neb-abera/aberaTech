@@ -226,11 +226,19 @@ public static class Citations
 
     public static readonly Citation NebFitnessGoals = new(
         "neb-fitness-goals",
-        "The athlete's own end-of-2027 standards: a farmer's carry at 1.5× bodyweight for 100 m, 15 pull-ups, 80 push-ups, 62 hand-release push-ups, a 350 lb deadlift triple, 170 lb at 10% body fat, a 500-yard swim in 8:00.",
+        "The athlete's own end-of-2027 goals: the essential rows of his workbook, read from it at request time, in its groups and order.",
         "Neb Abera — the athlete, in the workbook the console is scored against.",
         "physical fitness goals.xlsx (OneDrive, Documents/physical fitness)",
         2026,
         null);
+
+    public static readonly Citation FbiPft = new(
+        "fbi-pft",
+        "The FBI special agent Physical Fitness Test scores pull-ups, a 300-meter sprint, untimed push-ups and a 1.5-mile run from -2 to 10 points each; 10 points takes 20 pull-ups, 40.9 s, 71 push-ups and 8:59 for men.",
+        "Federal Bureau of Investigation, Special Agent Selection System — the scoring tables as published.",
+        "Physical Requirements: Events 1-4 (fbijobs.gov)",
+        2026,
+        "https://fbijobs.gov/special-agents/physical-requirements");
 
     public static readonly Citation UphillAthleteHrDrift = new(
         "uphill-athlete-hr-drift",
@@ -273,6 +281,6 @@ public static class Citations
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
-        MaffetoneMaf, FosterMonotony
+        MaffetoneMaf, FosterMonotony, FbiPft
     ];
 }

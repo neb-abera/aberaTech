@@ -127,6 +127,14 @@ public static class SelectionReadiness
         /// <summary>Estimated one-rep maxes over bodyweight, the way the athlete's own sheet states them.</summary>
         public const string BenchPressToBodyweight = "bench-1rm-bw";
         public const string FrontSquatToBodyweight = "front-squat-1rm-bw";
+
+        public const string RunTenMile = "run-10mi";
+        public const string RunOneAndHalfMile = "run-1.5mi";
+        public const string Sprint300m = "sprint-300m";
+        public const string SprintDragCarry = "sprint-drag-carry";
+        public const string BenchPressLb = "bench-1rm-lb";
+        public const string FrontSquatLb = "front-squat-1rm-lb";
+        public const string BackSquatLb = "back-squat-1rm-lb";
     }
 
     /// <summary>Units a requirement is stated in.</summary>
