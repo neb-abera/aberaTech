@@ -32,9 +32,11 @@ jobs:
   analyze:
     name: analyze (${{ matrix.language }})
     runs-on: ubuntu-26.04
-    # Buildless C# analysis is the slow leg; it normally finishes well inside
-    # this, and a hung run should not hold the runner for six hours.
-    timeout-minutes: 45
+    # The slowest leg of the last 15 runs on master took 207 s. On
+    # 2026-11-03 harden-runner could not reach its API, blocked github.com,
+    # and checkout's post step hung each time until a 45-minute limit
+    # cancelled it. 15 minutes surfaces that hang 30 minutes sooner.
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
