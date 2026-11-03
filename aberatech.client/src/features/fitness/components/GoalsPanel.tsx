@@ -84,7 +84,10 @@ export function latestDetail(
   current: NonNullable<GoalRow["current"]>,
   today: Date = new Date(),
 ): string {
-  const kind = current.basis === "Modeled" ? "Modelled" : "Measured";
+  const kind =
+    current.basis === "Modeled"
+      ? "Modelled, not done as this event"
+      : "Measured";
   if (!current.on) return `${kind}: ${current.evidence}.`;
   const date = new Date(`${current.on}T12:00:00`).toLocaleDateString("en-US", {
     day: "numeric",
@@ -128,7 +131,15 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 aria-label={`${formatGoalValue(row.unit, row.current.value)}, ${latestDetail(row.current)}`}
                 sx={{ cursor: "help" }}
               >
-                {`${row.current.basis === "Modeled" ? "≈ " : ""}${formatGoalValue(row.unit, row.current.value)}`}
+                {formatGoalValue(row.unit, row.current.value)}
+                {row.current.basis === "Modeled" ? (
+                  <Chip
+                    size="small"
+                    label="modelled"
+                    variant="outlined"
+                    sx={{ ml: 0.5, height: 20 }}
+                  />
+                ) : null}
                 {row.current.on ? (
                   <Typography
                     component="span"
@@ -202,7 +213,7 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {row.current
-                    ? `Latest: ${latestDetail(row.current)}${row.current.basis === "Modeled" ? " ≈ marks a modelled value." : ""}`
+                    ? `Latest: ${latestDetail(row.current)}${row.current.basis === "Modeled" ? " Modelled means worked out from other results, not timed or lifted as this event." : ""}`
                     : "Latest: nothing in the log measures this yet."}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">

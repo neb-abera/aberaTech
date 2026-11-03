@@ -8,7 +8,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Summary } from "../../core/api";
-import Workbench, { NumberInput } from "../Workbench";
+import { NumberInput } from "../NumberInput";
+import Workbench from "../Workbench";
 
 afterEach(() => {
   cleanup();
