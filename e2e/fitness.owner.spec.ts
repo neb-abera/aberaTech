@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // /fitness as its owner uses it: the tabs live in the address, a Garmin
-// export goes in through the Data tab and shows up as an activity, and a
+// export goes in through the Log tab and shows up as an activity, and a
 // wrong file can be taken out again. Under `make e2e` the owner is signed in
 // without Google (compose.yaml, Fitness__DevelopmentOwner). The activity
 // uploaded here is removed before the test ends.
@@ -13,10 +13,16 @@ test("the open tab is in the address and survives a reload", async ({
   const tabs = page.getByRole("tablist", { name: "Fitness sections" });
   await expect(tabs).toBeVisible({ timeout: 15_000 });
 
-  await tabs.getByRole("tab", { name: "Readiness" }).click();
-  await expect(page).toHaveURL(/[?&]tab=readiness/);
+  await expect(tabs.getByRole("tab")).toHaveText([
+    "Goals",
+    "Plan",
+    "Log",
+    "Sources",
+  ]);
+  await tabs.getByRole("tab", { name: "Log" }).click();
+  await expect(page).toHaveURL(/[?&]tab=log/);
   await page.reload();
-  await expect(tabs.getByRole("tab", { name: "Readiness" })).toHaveAttribute(
+  await expect(tabs.getByRole("tab", { name: "Log" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -40,7 +46,7 @@ test("a Garmin export becomes an activity, and a wrong one can be removed", asyn
     `Running,${day} 03:17:00,${name},5.00,00:25:00,150,170`,
   ].join("\n");
 
-  await page.goto("/fitness?tab=data");
+  await page.goto("/fitness?tab=log");
   // Through the button, as the owner does. setInputFiles on the hidden
   // input passed while the button itself sent nothing in Chromium.
   const chooser = page.waitForEvent("filechooser");

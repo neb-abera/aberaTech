@@ -29,7 +29,6 @@ import {
   toMeters,
 } from "../core/format";
 import { ProjectionChart } from "./charts";
-import GoalSeek from "./GoalSeek";
 import MathPanel from "./MathPanel";
 import NumberChips from "./NumberChips";
 import PlanEditor, {
@@ -167,8 +166,8 @@ export default function ProjectionPanel({
               {summary.settings.pastPeakWeightKg === null && (
                 <>
                   {" "}
-                  Record what your lifetime best was run at, on the Data tab,
-                  and the ceiling will follow this slider too.
+                  Record what your lifetime best was run at, on the Log tab, and
+                  the ceiling will follow this slider too.
                 </>
               )}
             </Typography>
@@ -377,11 +376,6 @@ export default function ProjectionPanel({
           </Card>
         </>
       )}
-
-      <GoalSeek
-        availableHours={summary.settings.availableHoursPerWeek}
-        onGoalSaved={onGoalsChanged}
-      />
     </Stack>
   );
 }
