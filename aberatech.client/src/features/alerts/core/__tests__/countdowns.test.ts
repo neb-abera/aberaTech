@@ -43,6 +43,7 @@ const fields = {
   targetAt: "2027-03-01T09:00:00+03:00",
   timeZone: "Asia/Amman",
   alarm: true,
+  repeat: "none" as const,
 };
 
 const stub = (answer: unknown) => {

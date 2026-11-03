@@ -337,6 +337,9 @@ public class AlertCountdownRecord
     /// <summary>The iCalUID of its event on Google Calendar. Null until one is made.</summary>
     public string? CalendarEventId { get; set; }
 
+    /// <summary>none, weekly, monthly or yearly.</summary>
+    public string Repeat { get; set; } = CountdownRepeats.None;
+
     public Instant CreatedAt { get; set; }
 
     public Instant UpdatedAt { get; set; }

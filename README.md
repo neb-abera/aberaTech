@@ -349,7 +349,7 @@ One acknowledgement anywhere stops all of them (`AlertRoutines.cs`, table
 
 The rings follow the phone's rules. A routine with days rings on those
 weekdays. One with none rings once, at the next `hour:minute` after it was
-saved. A time a clock change skips rings at the first time that exists
+saved, and deletes itself once that ring is stopped. A time a clock change skips rings at the first time that exists
 after it, and a time that happens twice rings the first time. An edit
 changes later rings only: a ring that is ringing when the edit is saved
 keeps ringing as it was (table `AlertHeldRings`), unless the edit turns
@@ -490,7 +490,18 @@ phone and through Pushover until it is stopped, like any calendar alarm.
 Google is written first: a countdown Google refuses is not stored, and the
 answer says why (409 when no calendar is connected with edit access, 502
 when Google refuses or does not answer). An edit moves and renames the
-event, and delete deletes it. An event deleted on Google is made again at
+event, and delete deletes it. A countdown with its alarm on that does not
+repeat deletes itself once its alarm is stopped, on the phone, in Pushover
+or in a browser. Its calendar event stays as the record of the day. So
+does a routine alarm with no repeat days (`OneTimeAlarms.cs`).
+
+Repeats is Never, Every year, Every month or Every week. A countdown that
+repeats moves to its next date once its time comes, at the same time on
+its zone's clock, and `targetAt` in the status is that next date. A date
+the period lacks, the 31st or 29 February, is skipped, as RFC 5545 and
+Google Calendar skip it (`CountdownRepeats.cs`). Its event is a repeating
+Google Calendar event from the next date on, in the countdown's zone, so
+an alarm rings at every date. An edit makes the series again. An event deleted on Google is made again at
 the countdown's next save. So is the event of a countdown saved before
 countdowns made events.
 
@@ -500,7 +511,7 @@ else America/New_York. The phone starts one in its own zone. Zone lists
 put the United States first, east to west, then Puerto Rico and Guam.
 
 A countdown is `{id, label, targetAt, timeZone, updatedAt, alarm,
-onCalendar}`. `targetAt` is ISO 8601 with its offset, between 1900 and
+onCalendar, repeat}`. `targetAt` is ISO 8601 with its offset, between 1900 and
 2200, and may be in the past. `timeZone` is an IANA zone the tz database
 knows, and the target's date is written in it. `label` follows the
 routine rules, and empty is stored as `Countdown`. `onCalendar` is false
@@ -513,8 +524,8 @@ Each change pushes the phones.
 
 | Route | Request | Answer |
 |---|---|---|
-| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone, alarm?}` | 201. 400 by field. 409 with a `detail` past 50 or with no calendar. 502 when Google refuses |
-| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone, alarm?}` | 200. 400 by field. 404 for an unknown id. 502 when Google refuses. A missing `alarm` keeps the saved one |
+| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone, alarm?, repeat?}` | 201. 400 by field. 409 with a `detail` past 50 or with no calendar. 502 when Google refuses |
+| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone, alarm?, repeat?}` | 200. 400 by field. 404 for an unknown id. 502 when Google refuses. A missing `alarm` or `repeat` keeps the saved one |
 | `DELETE /api/alerts/countdowns/{id}` | none | 200. 404 for an unknown id. 502 when Google refuses |
 
 ### Calendar alerts: phone pushes

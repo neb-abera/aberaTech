@@ -292,6 +292,7 @@ public static class AlertsEndpoints
             var now = clock.GetCurrentInstant();
             if (await store.AcknowledgeAsync(request.Key!, startsAt.Value, request.Via!, now, cancellationToken))
             {
+                await OneTimeAlarms.ForgetAcknowledgedAsync(store, now, cancellationToken);
                 await pushes.PlanChangedAsync(cancellationToken);
                 await dispatcher.CancelRepeatsAsync(request.Key!, cancellationToken);
             }
@@ -590,7 +591,7 @@ public static class AlertsEndpoints
             if (saved is null) return Results.NotFound();
 
             var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
-            var next = valid with { Alarm = request.Alarm ?? saved.Alarm };
+            var next = valid with { Alarm = request.Alarm ?? saved.Alarm, Repeat = request.Repeat ?? saved.Repeat };
             var (countdown, problem, conflict, mark) = await CountdownEvents.UpdateAsync(
                 saved, next, status.Snapshot(), settings, google, store, now, cancellationToken);
             if (countdown is null)
@@ -980,7 +981,14 @@ public static class AlertsEndpoints
                         acknowledgement?.Via);
                 })
             ],
-            Countdowns: [.. (await store.CountdownsAsync(cancellationToken)).Select(CountdownView.From)],
+            Countdowns:
+            [
+                .. (await store.CountdownsAsync(cancellationToken))
+                    .Select(countdown => CountdownView.From(countdown, now))
+                    .OrderBy(view => view.TargetAt)
+                    .ThenBy(view => view.Label, StringComparer.Ordinal)
+                    .ThenBy(view => view.Id)
+            ],
             CalendarWrite: calendarWrite);
     }
 
@@ -1139,7 +1147,9 @@ public static class AlertsEndpoints
     /// instant with its offset. TimeZone is the zone its date is written in.
     /// Alarm says its calendar event rings at the target. OnCalendar is
     /// false only for a countdown saved before countdowns made events. Its
-    /// next save makes one.
+    /// next save makes one. Repeat is none, weekly, monthly or yearly. For
+    /// one that repeats, TargetAt is the next date in the series, so a
+    /// client that knows nothing of repeats still counts to the right date.
     /// </summary>
     public sealed record CountdownView(
         Guid Id,
@@ -1148,16 +1158,18 @@ public static class AlertsEndpoints
         string TimeZone,
         DateTimeOffset UpdatedAt,
         bool Alarm,
-        bool OnCalendar)
+        bool OnCalendar,
+        string Repeat)
     {
-        public static CountdownView From(AlertCountdown countdown) => new(
+        public static CountdownView From(AlertCountdown countdown, Instant now) => new(
             countdown.Id,
             countdown.Label,
-            countdown.TargetAt.ToDateTimeOffset(),
+            countdown.NextAt(now).ToDateTimeOffset(),
             countdown.TimeZone,
             countdown.UpdatedAt.ToDateTimeOffset(),
             countdown.Alarm,
-            countdown.CalendarEventId is not null);
+            countdown.CalendarEventId is not null,
+            countdown.Repeat);
     }
 
     /// <summary>

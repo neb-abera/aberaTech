@@ -8,16 +8,28 @@ namespace aberaTech.Scheduling.Alerts;
 /// starts at the target and lasts <see cref="AlertCountdowns.EventLength"/>.
 /// Its one popup reminder is at the start. Its type on /alerts is alarm when
 /// the countdown's Alarm is on and none when it is off, so an alarm rings
-/// at the target through the same planner as any calendar alarm.
+/// at the target through the same planner as any calendar alarm. A
+/// countdown that repeats has a repeating event, in its zone, from its next
+/// date on.
 /// </summary>
 public static class CountdownEvents
 {
     /// <summary>The type stored for the countdown's event.</summary>
     public static string TypeFor(bool alarm) => alarm ? AlertTypes.Alarm : AlertTypes.None;
 
-    /// <summary>The event Google is asked to make for a countdown.</summary>
-    public static NewAlertEvent NewEvent(AlertCountdown countdown) =>
-        new(countdown.Label, null, countdown.TargetAt, countdown.TargetAt + AlertCountdowns.EventLength, 0, TypeFor(countdown.Alarm));
+    /// <summary>
+    /// The event Google is asked to make for a countdown. One that repeats
+    /// starts at its next date, so the first ring is planned before the feed
+    /// carries the series.
+    /// </summary>
+    public static NewAlertEvent NewEvent(AlertCountdown countdown, Instant now)
+    {
+        var rule = CountdownRepeats.Rule(countdown.Repeat);
+        var start = rule is null ? countdown.TargetAt : countdown.NextAt(now);
+        return new NewAlertEvent(
+            countdown.Label, null, start, start + AlertCountdowns.EventLength, 0, TypeFor(countdown.Alarm), rule,
+            rule is null ? null : countdown.TimeZone);
+    }
 
     /// <summary>
     /// Makes the countdown's event, stores it so it is planned before the
@@ -27,7 +39,7 @@ public static class CountdownEvents
     public static async Task<(AlertCountdown? Countdown, CreateOutcome Outcome)> CreateAsync(
         AlertCountdown countdown, GoogleAlertEvents google, IAlertStore store, Instant now, CancellationToken cancellationToken)
     {
-        var outcome = await google.CreateAsync(NewEvent(countdown), cancellationToken);
+        var outcome = await google.CreateAsync(NewEvent(countdown, now), cancellationToken);
         if (outcome.Event is not { } created) return (null, outcome);
 
         await store.AddCreatedEventAsync(created, now, cancellationToken);
@@ -55,12 +67,26 @@ public static class CountdownEvents
     {
         if (saved.CalendarEventId is not { } uid) return Created(await CreateAsync(next, google, store, now, cancellationToken));
 
+        // A series is made again rather than moved: its first date, its rule
+        // and its zone all follow the countdown.
+        if (saved.Repeat != CountdownRepeats.None || next.Repeat != CountdownRepeats.None)
+        {
+            if (saved != next with { UpdatedAt = saved.UpdatedAt, CalendarEventId = saved.CalendarEventId })
+            {
+                var gone = await DeleteAsync(saved, snapshot, settings, google, store, null, null, now, cancellationToken);
+                if (gone is not null) return (null, gone.Problem, gone.Conflict, null);
+                return Created(await CreateAsync(next, google, store, now, cancellationToken));
+            }
+
+            return (next with { CalendarEventId = uid }, null, false, null);
+        }
+
         if (saved.Label != next.Label || saved.TargetAt != next.TargetAt)
         {
             var plan = await AlertsPlan.CurrentAsync(snapshot, store, settings, now, cancellationToken);
             var edit = new AlertEventEdit(next.Label, false, null, next.TargetAt, null, null);
             var outcome = await AlertEventWrites.EditAsync(
-                Occurrence(saved, uid, plan), plan, false, edit, Zone(next, snapshot), google, store, now, cancellationToken);
+                Occurrence(saved, uid, plan, now), plan, false, edit, Zone(next, snapshot), google, store, now, cancellationToken);
             if (outcome.Problem == CalendarWriteMessages.NotFound)
             {
                 return Created(await CreateAsync(next, google, store, now, cancellationToken));
@@ -85,16 +111,17 @@ public static class CountdownEvents
         AlertSettings settings,
         GoogleAlertEvents google,
         IAlertStore store,
-        AlertDispatcher dispatcher,
-        AlertPushWorker pushes,
+        AlertDispatcher? dispatcher,
+        AlertPushWorker? pushes,
         Instant now,
         CancellationToken cancellationToken)
     {
         if (saved.CalendarEventId is not { } uid) return null;
 
         var plan = await AlertsPlan.CurrentAsync(snapshot, store, settings, now, cancellationToken);
+        var series = saved.Repeat != CountdownRepeats.None;
         var outcome = await AlertEventWrites.DeleteAsync(
-            Occurrence(saved, uid, plan), plan, false, google, store, dispatcher, pushes, now, cancellationToken);
+            Occurrence(saved, uid, plan, now), plan, series, google, store, dispatcher, pushes, now, cancellationToken);
         if (outcome.Problem is not null && outcome.Problem != CalendarWriteMessages.NotFound) return outcome;
 
         await store.SetEventTypeAsync(AlertPlanner.EventIdFor(uid), null, now, cancellationToken);
@@ -105,20 +132,22 @@ public static class CountdownEvents
     /// The event as the plan holds it, or as the plan would hold it when its
     /// target is outside the window or the feed has not listed it yet.
     /// </summary>
-    public static PlannedAlert Occurrence(AlertCountdown saved, string uid, IReadOnlyList<PlannedAlert> plan)
+    public static PlannedAlert Occurrence(AlertCountdown saved, string uid, IReadOnlyList<PlannedAlert> plan, Instant now)
     {
         var eventId = AlertPlanner.EventIdFor(uid);
-        return plan.FirstOrDefault(alert => alert.EventId == eventId && alert.StartsAt == saved.TargetAt)
+        var start = saved.NextAt(now);
+        return plan.FirstOrDefault(alert => alert.EventId == eventId && alert.StartsAt == start)
                ?? new PlannedAlert(
-                   AlertPlanner.KeyFor(uid, saved.TargetAt),
+                   AlertPlanner.KeyFor(uid, start),
                    AlertPlanner.DisplayTitle(saved.Label),
                    null,
-                   saved.TargetAt,
-                   saved.TargetAt,
+                   start,
+                   start,
                    AlertSource.Reminder,
                    eventId,
                    saved.Alarm,
-                   saved.TargetAt + AlertCountdowns.EventLength);
+                   start + AlertCountdowns.EventLength,
+                   saved.Repeat != CountdownRepeats.None);
     }
 
     private static DateTimeZone Zone(AlertCountdown countdown, AlertsSnapshot snapshot) =>

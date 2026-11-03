@@ -348,6 +348,45 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task A_one_time_alarm_deletes_itself_once_its_ring_is_stopped_and_a_repeating_one_stays()
+    {
+        using var phone = await PhoneAsync("UTC");
+        _clock.Now = Noon - Duration.FromHours(1);
+        var once = await CreateAsync(phone, "Take meds", 12, 0, days: "[]");
+        var daily = await CreateAsync(phone, "Gym", 12, 0);
+        _clock.Now = Noon + Duration.FromSeconds(5);
+        var version = await _devices.PlanVersionAsync(CancellationToken.None);
+
+        using var stopped = await phone.PostAsJsonAsync("/api/alerts/ack", new { key = $"routine:{once:D}:2026-10-28T12:00", via = "phone" });
+        using var stoppedDaily = await phone.PostAsJsonAsync("/api/alerts/ack", new { key = $"routine:{daily:D}:2026-10-28T12:00", via = "phone" });
+
+        Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);
+        Assert.Equal([daily], (await _store.RoutinesAsync(CancellationToken.None)).Select(routine => routine.Id));
+        Assert.True(await _devices.PlanVersionAsync(CancellationToken.None) > version);
+        Assert.DoesNotContain(
+            (await stoppedDaily.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("routines").EnumerateArray(),
+            routine => routine.GetProperty("id").GetGuid() == once);
+    }
+
+    [Fact]
+    public async Task A_one_time_alarm_saved_again_after_its_ring_was_stopped_stays()
+    {
+        using var owner = Owner();
+        _clock.Now = Noon - Duration.FromHours(1);
+        var id = await CreateAsync(owner, "Take meds", 12, 0, days: "[]");
+        _clock.Now = Noon + Duration.FromSeconds(5);
+        await _store.AcknowledgeAsync($"routine:{id:D}:2026-10-28T12:00", Noon, "phone", _clock.Now, CancellationToken.None);
+        _clock.Now = Noon + Duration.FromMinutes(1);
+        await Send(owner, "PUT", $"/api/alerts/routines/{id}", Body("Take meds", 13, 0, days: "[]"));
+        var other = await CreateAsync(owner, "Gym", 13, 0, days: "[]");
+        _clock.Now = Noon + Duration.FromHours(1) + Duration.FromSeconds(5);
+
+        await owner.PostAsJsonAsync("/api/alerts/ack", new { key = $"routine:{other:D}:2026-10-28T13:00", via = "browser" });
+
+        Assert.Equal([id], (await _store.RoutinesAsync(CancellationToken.None)).Select(routine => routine.Id));
+    }
+
+    [Fact]
     public async Task A_sent_ring_is_still_acknowledged_after_it_drops_off_the_list()
     {
         using var phone = await PhoneAsync("UTC");

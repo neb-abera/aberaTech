@@ -253,7 +253,10 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
                     Location = body["location"]?.GetValue<string>(),
                     Start = start,
                     End = Parse(body["end"]?["dateTime"]?.GetValue<string>()) ?? start,
-                    Popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>()
+                    Popup = body["reminders"]?["overrides"]?[0]?["minutes"]?.GetValue<int>(),
+                    TimeZone = body["start"]?["timeZone"]?.GetValue<string>(),
+                    Recurring = body["recurrence"] is JsonArray,
+                    Recurrence = body["recurrence"] is JsonArray lines ? [.. lines.Select(line => line!.GetValue<string>())] : null
                 };
                 _events[item.Uid] = item;
                 _writes.Enqueue(new FakeGoogleWrite(

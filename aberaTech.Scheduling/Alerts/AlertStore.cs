@@ -563,7 +563,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         AlertCountdowns.Sorted(
             (await database.AlertCountdowns.AsNoTracking().ToListAsync(cancellationToken))
             .Select(row => new AlertCountdown(
-                row.Id, row.Label, row.TargetAt, row.TimeZone, row.UpdatedAt, row.Alarm, row.CalendarEventId)));
+                row.Id, row.Label, row.TargetAt, row.TimeZone, row.UpdatedAt, row.Alarm, row.CalendarEventId, row.Repeat)));
 
     public async Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken)
     {
@@ -576,9 +576,9 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertCountdowns"
-                 ("Id", "Label", "TargetAt", "TimeZone", "Alarm", "CalendarEventId", "CreatedAt", "UpdatedAt")
+                 ("Id", "Label", "TargetAt", "TimeZone", "Alarm", "CalendarEventId", "Repeat", "CreatedAt", "UpdatedAt")
              VALUES ({countdown.Id}, {countdown.Label}, {countdown.TargetAt}, {countdown.TimeZone},
-                 {countdown.Alarm}, {countdown.CalendarEventId}, {countdown.UpdatedAt}, {countdown.UpdatedAt})
+                 {countdown.Alarm}, {countdown.CalendarEventId}, {countdown.Repeat}, {countdown.UpdatedAt}, {countdown.UpdatedAt})
              """,
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -595,6 +595,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                     .SetProperty(row => row.TimeZone, countdown.TimeZone)
                     .SetProperty(row => row.Alarm, countdown.Alarm)
                     .SetProperty(row => row.CalendarEventId, countdown.CalendarEventId)
+                    .SetProperty(row => row.Repeat, countdown.Repeat)
                     .SetProperty(row => row.UpdatedAt, countdown.UpdatedAt),
                 cancellationToken) == 1;
 

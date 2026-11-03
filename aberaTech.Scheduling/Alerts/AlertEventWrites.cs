@@ -73,8 +73,8 @@ public static class AlertEventWrites
         bool series,
         GoogleAlertEvents google,
         IAlertStore store,
-        AlertDispatcher dispatcher,
-        AlertPushWorker pushes,
+        AlertDispatcher? dispatcher,
+        AlertPushWorker? pushes,
         Instant now,
         CancellationToken cancellationToken)
     {
@@ -86,9 +86,9 @@ public static class AlertEventWrites
         var pending = created.Where(row => AlertPlanner.EventIdFor(row.EventId) == alert.EventId).Select(row => row.EventId).ToList();
         if (pending.Count > 0) await store.ForgetCreatedEventsAsync(pending, cancellationToken);
 
-        await pushes.PlanChangedAsync(cancellationToken);
+        if (pushes is not null) await pushes.PlanChangedAsync(cancellationToken);
         var gone = outcome.Series ? plan.Where(planned => planned.EventId == alert.EventId).Select(planned => planned.Key) : [alert.Key];
-        foreach (var key in gone) await dispatcher.CancelRepeatsAsync(key, cancellationToken);
+        if (dispatcher is not null) foreach (var key in gone) await dispatcher.CancelRepeatsAsync(key, cancellationToken);
         return outcome;
     }
 }

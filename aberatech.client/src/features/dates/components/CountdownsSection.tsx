@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
@@ -12,7 +13,9 @@ import type { AlertsState, StateChangeResult } from "../../alerts/core/api";
 import {
   type Countdown,
   type CountdownFields,
+  type CountdownRepeat,
   countdownBounds,
+  countdownRepeats,
   createCountdown,
   deleteCountdown,
   updateCountdown,
@@ -45,6 +48,7 @@ interface Draft {
   time: string;
   timeZone: string;
   alarm: boolean;
+  repeat: CountdownRepeat;
 }
 
 /** A new countdown starts in the phone's zone, as the server reports it. */
@@ -54,6 +58,7 @@ const blank = (timeZone: string): Draft => ({
   time: "00:00",
   timeZone,
   alarm: false,
+  repeat: "none",
 });
 
 function draftOf(countdown: Countdown): Draft {
@@ -62,8 +67,12 @@ function draftOf(countdown: Countdown): Draft {
     ...isoToZoned(countdown.targetAt, countdown.timeZone),
     timeZone: countdown.timeZone,
     alarm: countdown.alarm ?? false,
+    repeat: countdown.repeat ?? "none",
   };
 }
+
+const repeatLabel = (repeat: CountdownRepeat | undefined) =>
+  countdownRepeats.find((choice) => choice.value === repeat)?.label;
 
 function explain(result: Exclude<StateChangeResult, { ok: true }>): string {
   switch (result.reason) {
@@ -172,6 +181,7 @@ export default function CountdownsSection({
       targetAt,
       timeZone,
       alarm: draft.alarm,
+      repeat: draft.repeat,
     };
     const name = fields.label || countdownBounds.defaultLabel;
     const saved = editing
@@ -247,6 +257,11 @@ export default function CountdownsSection({
                     {formatTarget(countdown.targetAt, countdown.timeZone)} (
                     {countdown.timeZone})
                   </Typography>
+                  {countdown.repeat && countdown.repeat !== "none" && (
+                    <Typography variant="body2" data-testid="countdown-repeat">
+                      {repeatLabel(countdown.repeat)}
+                    </Typography>
+                  )}
                   {countdown.alarm && (
                     <Typography variant="body2" data-testid="countdown-alarm">
                       Alarm at this time
@@ -422,9 +437,33 @@ export default function CountdownsSection({
             label="Alarm at this time"
           />
           <FormHelperText sx={{ mt: 0 }}>
-            Rings on the phone and through Pushover until it is stopped.
+            Rings on the phone and through Pushover until it is stopped. One
+            that does not repeat is deleted once its alarm is stopped.
           </FormHelperText>
         </Box>
+        <TextField
+          select
+          label="Repeats"
+          value={draft.repeat}
+          onChange={(event) =>
+            setDraft((current) => ({
+              ...current,
+              repeat: event.target.value as CountdownRepeat,
+            }))
+          }
+          error={Boolean(errors.repeat)}
+          helperText={help(
+            "repeat",
+            "At its time it moves to the next date, and its calendar event repeats.",
+          )}
+          sx={{ maxWidth: "16rem" }}
+        >
+          {countdownRepeats.map((choice) => (
+            <MenuItem key={choice.value} value={choice.value}>
+              {choice.label}
+            </MenuItem>
+          ))}
+        </TextField>
         <Stack direction="row" spacing={1}>
           <Button type="submit" variant="contained" disabled={busy}>
             {editing ? "Save countdown" : "Add countdown"}

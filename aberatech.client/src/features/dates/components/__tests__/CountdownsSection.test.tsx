@@ -167,6 +167,7 @@ describe("the form", () => {
       targetAt: "2027-03-01T09:00:00+03:00",
       timeZone: "Asia/Amman",
       alarm: false,
+      repeat: "none",
     });
     expect(onState).toHaveBeenCalledWith(state([home]));
     expect(screen.getByText("Home is added.")).toBeTruthy();
@@ -240,6 +241,7 @@ describe("the form", () => {
       targetAt: "2026-11-11T15:00:00+03:00",
       timeZone: "Asia/Amman",
       alarm: false,
+      repeat: "none",
     });
     expect(screen.getByRole("form", { name: "Add countdown" })).toBeTruthy();
   });
@@ -336,6 +338,41 @@ describe("the calendar and the alarm", () => {
     expect(api.update).toHaveBeenCalledWith(
       home.id,
       expect.objectContaining({ alarm: true }),
+    );
+  });
+});
+
+describe("repeats", () => {
+  it("sends the repeat chosen and lists it", async () => {
+    const { api } = mount([{ ...home, repeat: "yearly" }]);
+
+    expect(
+      within(screen.getByRole("listitem", { name: "Home" })).getByTestId(
+        "countdown-repeat",
+      ).textContent,
+    ).toBe("Every year");
+    type("Date", "2027-03-01");
+    // MUI's select opens on the press of the button, not the click.
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByRole("combobox", { name: "Repeats" }));
+    });
+    await press(screen.getByRole("option", { name: "Every month" }));
+    await press(screen.getByRole("button", { name: "Add countdown" }));
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ repeat: "monthly" }),
+    );
+  });
+
+  it("opens Edit on the saved repeat", async () => {
+    const { api } = mount([{ ...home, repeat: "weekly" }]);
+
+    await press(screen.getByRole("button", { name: "Edit Home" }));
+    await press(screen.getByRole("button", { name: "Save countdown" }));
+
+    expect(api.update).toHaveBeenCalledWith(
+      home.id,
+      expect.objectContaining({ repeat: "weekly" }),
     );
   });
 });

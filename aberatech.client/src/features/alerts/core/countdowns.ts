@@ -18,7 +18,23 @@ export interface Countdown {
   alarm?: boolean;
   /** False for a countdown saved before countdowns made calendar events. Its next save makes one. */
   onCalendar?: boolean;
+  /** How it repeats. For one that repeats, targetAt is the next date. An older server leaves it out. */
+  repeat?: CountdownRepeat;
 }
+
+/** Never, or every week, month or year at the same time on its zone's clock. */
+export type CountdownRepeat = "none" | "weekly" | "monthly" | "yearly";
+
+/** The choices, in the order the form lists them, with what the page calls each. */
+export const countdownRepeats: readonly {
+  value: CountdownRepeat;
+  label: string;
+}[] = [
+  { value: "none", label: "Never" },
+  { value: "yearly", label: "Every year" },
+  { value: "monthly", label: "Every month" },
+  { value: "weekly", label: "Every week" },
+];
 
 /** What a create or an update sends. */
 export interface CountdownFields {
@@ -28,6 +44,7 @@ export interface CountdownFields {
   timeZone: string;
   /** Ring an alarm at the target, on the phone and through Pushover, until it is stopped. */
   alarm: boolean;
+  repeat: CountdownRepeat;
 }
 
 /** What the server takes. It checks the same numbers. */
