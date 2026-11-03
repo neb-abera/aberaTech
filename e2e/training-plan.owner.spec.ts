@@ -77,3 +77,34 @@ test("the owner reads a week, moves to the next, and downloads files", async ({
     about.getByText("Two made-up weeks of base training."),
   ).toBeVisible();
 });
+
+test("the owner opens a page the plan links and comes back", async ({
+  page,
+}) => {
+  await openAsOwner(page, "/training-plan", ready);
+  const related = page.getByRole("navigation", { name: "Related pages" });
+  await related.getByRole("link", { name: "Sample guide" }).click();
+  await expect(page).toHaveURL(/\/training-plan\?page=/);
+  const article = page.getByRole("article", { name: "Linked page" });
+  await expect(
+    article.getByRole("heading", { level: 2, name: "Sample guide" }),
+  ).toBeVisible();
+  await expect(
+    article.getByText("Start with four easy runs a week."),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    article.getByText("Start with four easy runs a week."),
+  ).toBeVisible();
+
+  await article.getByRole("link", { name: "Back to the plan" }).click();
+  await expect(page.locator(ready)).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Related pages" })
+    .getByRole("link", { name: "Sample analysis" })
+    .click();
+  await expect(
+    page.getByText("Three build weeks, then a deload."),
+  ).toBeVisible();
+});

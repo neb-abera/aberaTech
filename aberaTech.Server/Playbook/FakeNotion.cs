@@ -172,6 +172,16 @@ public sealed class FakeNotion : HttpMessageHandler
         });
     }
 
+    /// <summary>A mention of a page, the way Notion writes one in rich text.</summary>
+    public static JsonObject Mention(string pageId, string title) => new()
+    {
+        ["type"] = "mention",
+        ["mention"] = new JsonObject { ["type"] = "page", ["page"] = new JsonObject { ["id"] = pageId } },
+        ["annotations"] = new JsonObject { ["bold"] = false, ["italic"] = false, ["strikethrough"] = false, ["underline"] = false, ["code"] = false, ["color"] = "default" },
+        ["plain_text"] = title,
+        ["href"] = "https://www.notion.so/" + pageId.Replace("-", "")
+    };
+
     public static JsonObject Run(string text, bool bold = false, bool italic = false, bool code = false, string? href = null) => new()
     {
         ["type"] = "text",
@@ -359,6 +369,14 @@ public sealed class FakeNotion : HttpMessageHandler
             notion.File(toggle, "pdf", "For best results.pdf", "application/pdf", Encoding.ASCII.GetBytes(body));
         }
 
+        // A page elsewhere that the plan mentions, and a subpage of its own.
+        var guide = notion.Page("Sample guide", id: SamplePlanGuide);
+        notion.Text(guide, "paragraph", Run("Start with four easy runs a week."));
+        notion.Text(plan, "bulleted_list_item", Mention(guide, "Sample guide"), Run(". A guide for beginners."));
+        var analysis = notion.Page("Sample analysis", plan);
+        notion.Text(analysis, "heading_2", Run("Progression"));
+        notion.Text(analysis, "paragraph", Run("Three build weeks, then a deload."));
+
         var (workouts, workoutsSource) = notion.Database(plan, TrainingPlanReader.WorkoutsTitle);
         void Workout(string title, string date, int week, int day, string weekday, string sport, int order, double? minutes, double? tss, string description, string comments = "", string structure = "") =>
             notion.Row(workouts, workoutsSource, title, new JsonObject
@@ -404,6 +422,9 @@ public sealed class FakeNotion : HttpMessageHandler
             ["Description"] = Column.Text("Two weeks done.")
         });
     }
+
+    /// <summary>The page the sample plan mentions, outside it.</summary>
+    public const string SamplePlanGuide = "0000e70f-0000-0000-0000-000000000000";
 
     /// <summary>The plan page of <see cref="Sample"/>, which compose.yaml names as Notion__TrainingPlanPageId.</summary>
     public const string SamplePlan = "0000e70e-0000-0000-0000-000000000000";

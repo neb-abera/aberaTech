@@ -10,12 +10,15 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { useSearchParams } from "react-router";
+import { Link as RouterLink, useSearchParams } from "react-router";
+import Blocks from "../../playbook/components/Blocks";
 import SignInToSee from "../../progress/components/SignInToSee";
 import {
   fetchPlan,
+  fetchPlanPage,
   type PlanFile,
   type PlanNote,
+  type PlanPageResult,
   type PlanResult,
   type PlanWorkout,
   planFileUrl,
@@ -81,6 +84,16 @@ export default function TrainingPlanPanel({ today }: { today?: string }) {
   }
 
   const { plan: p } = result;
+  const openPage = params.get("page");
+  const pages = p.pages ?? [];
+  if (openPage) {
+    return (
+      <LinkedPage
+        id={openPage}
+        title={pages.find((page) => page.id === openPage)?.title}
+      />
+    );
+  }
   if (weeks.length === 0) {
     return (
       <Alert severity="info">
@@ -120,6 +133,26 @@ export default function TrainingPlanPanel({ today }: { today?: string }) {
           </Button>
         )}
       </Box>
+
+      {pages.length > 0 && (
+        <Box component="nav" aria-label="Related pages">
+          <Typography variant="h4" component="h3" sx={{ mb: 1 }}>
+            Related pages
+          </Typography>
+          <Box component="ul" sx={{ pl: 2.5, my: 0 }}>
+            {pages.map((page) => (
+              <li key={page.id}>
+                <Link
+                  component={RouterLink}
+                  to={`/training-plan?page=${page.id}`}
+                >
+                  {page.title || "Untitled"}
+                </Link>
+              </li>
+            ))}
+          </Box>
+        </Box>
+      )}
 
       <Box component="nav" aria-label="Weeks">
         <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
@@ -187,6 +220,56 @@ export default function TrainingPlanPanel({ today }: { today?: string }) {
         </Box>
       )}
     </Stack>
+  );
+}
+
+/** A page the plan links, read live and drawn the way /playbook draws a page. */
+function LinkedPage({ id, title }: { id: string; title?: string }) {
+  const [page, setPage] = React.useState<
+    PlanPageResult | { status: "loading" }
+  >({ status: "loading" });
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    setPage({ status: "loading" });
+    void fetchPlanPage(id, controller.signal).then((next) => {
+      if (!controller.signal.aborted) setPage(next);
+    });
+    return () => controller.abort();
+  }, [id]);
+
+  return (
+    <Box component="article" aria-label="Linked page">
+      <Link
+        component={RouterLink}
+        to="/training-plan"
+        sx={{ mb: 2, display: "inline-block" }}
+      >
+        Back to the plan
+      </Link>
+      {page.status === "loading" && (
+        <CircularProgress size={24} aria-label="Loading page" />
+      )}
+      {page.status === "visitor" && (
+        <Alert severity="warning">
+          The session expired. Reload and sign in again.
+        </Alert>
+      )}
+      {page.status === "missing" && (
+        <Alert severity="info">The plan does not link that page.</Alert>
+      )}
+      {page.status === "error" && (
+        <Alert severity="error">{page.busy ? busy : failed}</Alert>
+      )}
+      {page.status === "owner" && (
+        <>
+          <Typography variant="h3" component="h2" sx={{ mb: 2 }}>
+            {page.page.title || title}
+          </Typography>
+          <Blocks blocks={page.page.blocks} />
+        </>
+      )}
+    </Box>
   );
 }
 

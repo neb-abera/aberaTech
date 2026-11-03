@@ -7,6 +7,9 @@ namespace aberaTech.Server.Playbook;
 /// <summary>A file on the plan page or on a plan note. Its id is what the download route takes.</summary>
 public sealed record PlanFile(string Id, string Name);
 
+/// <summary>A page the plan page links: one of its subpages, or a page mentioned on it.</summary>
+public sealed record PlanLink(string Id, string Title);
+
 /// <summary>One heading on the plan page and the paragraphs under it.</summary>
 public sealed record PlanSection(string Heading, IReadOnlyList<string> Paragraphs);
 
@@ -41,7 +44,8 @@ public sealed record TrainingPlan(
     IReadOnlyList<PlanSection> Sections,
     IReadOnlyList<PlanFile> Files,
     IReadOnlyList<PlanWorkout> Workouts,
-    IReadOnlyList<PlanNote> Notes);
+    IReadOnlyList<PlanNote> Notes,
+    IReadOnlyList<PlanLink> Pages);
 
 /// <summary>A file's current signed address and its name.</summary>
 public sealed record PlanDownload(Uri Address, string Name);
@@ -76,6 +80,7 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
 
         var sections = new List<PlanSection>();
         var files = new List<PlanFile>();
+        var pages = new List<PlanLink>();
         string? heading = null;
         var paragraphs = new List<string>();
         string? workoutsSource = null, notesSource = null;
@@ -85,6 +90,12 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
             var type = Str(block, "type");
             var id = Str(block, "id");
             if (type is null || id is null || !block.TryGetProperty(type, out var payload)) continue;
+
+            Links(payload, pages);
+            if (type == "child_page" && NotionIds.TryNormalize(id, out var subpageId) && pages.All(link => link.Id != subpageId))
+            {
+                pages.Add(new PlanLink(subpageId, Str(payload, "title") ?? ""));
+            }
 
             if (type is "heading_1" or "heading_2" or "heading_3")
             {
@@ -169,7 +180,7 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
         workouts.Sort((a, b) => Compare(a.Place, b.Place, a.Order ?? 0, b.Order ?? 0));
         notes.Sort((a, b) => Compare(a.Place, b.Place, 0, 0));
 
-        return new TrainingPlan(Root, PageTitle(page), Str(page, "url"), sections, files, workouts, notes);
+        return new TrainingPlan(Root, PageTitle(page), Str(page, "url"), sections, files, workouts, notes, pages);
     }
 
     /// <summary>
@@ -217,6 +228,20 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
         var holder = await notion.BlockAsync(holderId, fresh: false, cancellationToken);
         return holder.TryGetProperty("parent", out var up) && up.ValueKind == JsonValueKind.Object
                && Str(up, "page_id") is { } upPage && NotionIds.TryNormalize(upPage, out var root) && root == Root;
+    }
+
+    /// <summary>Every page mentioned in a block's text, once each, in the order they appear.</summary>
+    private static void Links(JsonElement payload, List<PlanLink> into)
+    {
+        if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty("rich_text", out var runs) || runs.ValueKind != JsonValueKind.Array) return;
+        foreach (var run in runs.EnumerateArray())
+        {
+            if (run.ValueKind != JsonValueKind.Object || Str(run, "type") != "mention"
+                || !run.TryGetProperty("mention", out var mention) || mention.ValueKind != JsonValueKind.Object
+                || Str(mention, "type") != "page" || !mention.TryGetProperty("page", out var page)
+                || Str(page, "id") is not { } pageId || !NotionIds.TryNormalize(pageId, out var id)) continue;
+            if (into.All(link => link.Id != id)) into.Add(new PlanLink(id, Str(run, "plain_text") ?? ""));
+        }
     }
 
     private async Task<string?> NotesSourceAsync(CancellationToken cancellationToken)

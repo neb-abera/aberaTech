@@ -8,6 +8,7 @@
  */
 
 import { requestJson } from "../../../site/earlyRequest";
+import type { PlaybookPage } from "../../playbook/core/api";
 
 export interface PlanFile {
   id: string;
@@ -55,6 +56,12 @@ export interface PlanNote {
   url?: string;
 }
 
+/** A page the plan page links: a subpage, or a page mentioned on it. */
+export interface PlanLink {
+  id: string;
+  title: string;
+}
+
 export interface TrainingPlan {
   id: string;
   title: string;
@@ -63,6 +70,7 @@ export interface TrainingPlan {
   files: PlanFile[];
   workouts: PlanWorkout[];
   notes: PlanNote[];
+  pages?: PlanLink[];
 }
 
 export type PlanResult =
@@ -94,6 +102,32 @@ export async function fetchPlan(): Promise<PlanResult> {
     if (body.configured !== true || !body.plan)
       return { status: "unconfigured", message: body.message };
     return { status: "owner", plan: body.plan };
+  } catch {
+    return { status: "error", busy: false };
+  }
+}
+
+export type PlanPageResult =
+  | { status: "visitor" }
+  | { status: "missing" }
+  | { status: "owner"; page: PlaybookPage }
+  | { status: "error"; busy: boolean };
+
+export const planPageUrl = (id: string) =>
+  `/api/training-plan/pages/${encodeURIComponent(id)}`;
+
+/** One linked page, as blocks the playbook's renderer draws. */
+export async function fetchPlanPage(
+  id: string,
+  signal?: AbortSignal,
+): Promise<PlanPageResult> {
+  try {
+    const response = await requestJson(planPageUrl(id), signal);
+    if (response.status === 401 || response.status === 403)
+      return { status: "visitor" };
+    if (response.status === 404) return { status: "missing" };
+    if (!response.ok) return { status: "error", busy: response.status === 503 };
+    return { status: "owner", page: (await response.json()) as PlaybookPage };
   } catch {
     return { status: "error", busy: false };
   }
