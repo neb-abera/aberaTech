@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -628,39 +629,41 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 sensitivities={sensitivities}
                 baselineSeconds={result.predicted.median}
               />
-              <Table size="small" sx={{ mt: 1 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Factor</TableCell>
-                    <TableCell align="right">Now</TableCell>
-                    <TableCell align="right">Per unit</TableCell>
-                    <TableCell align="right">Elasticity</TableCell>
-                    <TableCell align="right">Swing</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sensitivities.map((s) => (
-                    <TableRow key={s.factor}>
-                      <TableCell>{s.label}</TableCell>
-                      <TableCell align="right">
-                        {s.factor === "Compliance"
-                          ? `${Math.round(s.value * 100)}%`
-                          : s.value.toFixed(1)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {s.perUnitSeconds >= 0 ? "+" : ""}
-                        {s.perUnitSeconds.toFixed(1)} s
-                      </TableCell>
-                      <TableCell align="right">
-                        {s.elasticity.toFixed(3)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {Math.round(s.swing)} s
-                      </TableCell>
+              <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ mt: 1 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Factor</TableCell>
+                      <TableCell align="right">Now</TableCell>
+                      <TableCell align="right">Per unit</TableCell>
+                      <TableCell align="right">Elasticity</TableCell>
+                      <TableCell align="right">Swing</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {sensitivities.map((s) => (
+                      <TableRow key={s.factor}>
+                        <TableCell>{s.label}</TableCell>
+                        <TableCell align="right">
+                          {s.factor === "Compliance"
+                            ? `${Math.round(s.value * 100)}%`
+                            : s.value.toFixed(1)}
+                        </TableCell>
+                        <TableCell align="right">
+                          {s.perUnitSeconds >= 0 ? "+" : ""}
+                          {s.perUnitSeconds.toFixed(1)} s
+                        </TableCell>
+                        <TableCell align="right">
+                          {s.elasticity.toFixed(3)}
+                        </TableCell>
+                        <TableCell align="right">
+                          {Math.round(s.swing)} s
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 Elasticity is the percentage change in race time from a one
                 percent change in the factor — the derivative, made comparable
@@ -769,42 +772,44 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   mathematics. This is what each measurement would be worth,
                   before the effort is spent.
                 </Typography>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Measurement</TableCell>
-                      <TableCell align="right">When</TableCell>
-                      <TableCell align="right">Interval now</TableCell>
-                      <TableCell align="right">After</TableCell>
-                      <TableCell align="right">Cuts</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {plan.options.slice(0, 6).map((option) => (
-                      <TableRow key={`${option.kind}-${option.atMonths}`}>
-                        <TableCell>
-                          {option.kind === "TimeTrial"
-                            ? "Time trial"
-                            : "A month of logged runs"}
-                        </TableCell>
-                        <TableCell align="right">
-                          {option.atMonths < 0.05
-                            ? "now"
-                            : `+${option.atMonths.toFixed(0)}mo`}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatSeconds(option.widthBeforeSeconds)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatSeconds(option.widthAfterSeconds)}
-                        </TableCell>
-                        <TableCell align="right">
-                          <strong>{formatChance(option.reduction)}</strong>
-                        </TableCell>
+                <Box sx={{ overflowX: "auto" }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Measurement</TableCell>
+                        <TableCell align="right">When</TableCell>
+                        <TableCell align="right">Interval now</TableCell>
+                        <TableCell align="right">After</TableCell>
+                        <TableCell align="right">Cuts</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHead>
+                    <TableBody>
+                      {plan.options.slice(0, 6).map((option) => (
+                        <TableRow key={`${option.kind}-${option.atMonths}`}>
+                          <TableCell>
+                            {option.kind === "TimeTrial"
+                              ? "Time trial"
+                              : "A month of logged runs"}
+                          </TableCell>
+                          <TableCell align="right">
+                            {option.atMonths < 0.05
+                              ? "now"
+                              : `+${option.atMonths.toFixed(0)}mo`}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatSeconds(option.widthBeforeSeconds)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatSeconds(option.widthAfterSeconds)}
+                          </TableCell>
+                          <TableCell align="right">
+                            <strong>{formatChance(option.reduction)}</strong>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
                 <MathPanel
                   steps={plan.steps}
                   title="Show the information calculation"
@@ -965,30 +970,32 @@ function ModelCardView({ result }: { result: SolveResult }) {
             label={`${model.observations} months, ${model.timeTrials} time trial${model.timeTrials === 1 ? "" : "s"}`}
           />
         </Stack>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Parameter</TableCell>
-              <TableCell align="right">Median</TableCell>
-              <TableCell align="right">80% range</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {model.parameters.map((parameter) => (
-              <TableRow key={parameter.name}>
-                <TableCell>{parameter.name}</TableCell>
-                <TableCell align="right">
-                  {parameter.median.toFixed(parameter.median < 1 ? 3 : 2)}{" "}
-                  {parameter.unit}
-                </TableCell>
-                <TableCell align="right">
-                  {parameter.low.toFixed(parameter.low < 1 ? 3 : 2)} –{" "}
-                  {parameter.high.toFixed(parameter.high < 1 ? 3 : 2)}
-                </TableCell>
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Parameter</TableCell>
+                <TableCell align="right">Median</TableCell>
+                <TableCell align="right">80% range</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {model.parameters.map((parameter) => (
+                <TableRow key={parameter.name}>
+                  <TableCell>{parameter.name}</TableCell>
+                  <TableCell align="right">
+                    {parameter.median.toFixed(parameter.median < 1 ? 3 : 2)}{" "}
+                    {parameter.unit}
+                  </TableCell>
+                  <TableCell align="right">
+                    {parameter.low.toFixed(parameter.low < 1 ? 3 : 2)} –{" "}
+                    {parameter.high.toFixed(parameter.high < 1 ? 3 : 2)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
         <Typography variant="caption" sx={{ color: "text.secondary" }}>
           The parameters sit on a ridge — a proxy read low, from a low start,
           approached slowly fits about as well as an accurate one from a high

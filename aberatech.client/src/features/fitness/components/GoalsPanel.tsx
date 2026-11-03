@@ -100,6 +100,12 @@ export function latestDetail(
   return `${kind} ${date} (${ago}): ${current.evidence}.`;
 }
 
+/**
+ * One line a row on a laptop, where the tab's height is budgeted; free to
+ * wrap on a phone, where four columns on one line ran past a 390 px screen.
+ */
+const WRAP_ON_PHONE = { xs: "normal", sm: "nowrap" } as const;
+
 function Points({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
@@ -122,7 +128,7 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
         <TableCell component="th" scope="row" sx={{ pl: 0 }}>
           {row.label}
         </TableCell>
-        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+        <TableCell align="right" sx={{ whiteSpace: WRAP_ON_PHONE }}>
           {row.current ? (
             <Tooltip title={latestDetail(row.current)} placement="top" arrow>
               <Box
@@ -160,7 +166,7 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
           )}
           {test ? <Points value={row.pointsNow} /> : null}
         </TableCell>
-        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+        <TableCell align="right" sx={{ whiteSpace: WRAP_ON_PHONE }}>
           {row.goal !== null
             ? formatGoalValue(row.unit, row.goal)
             : "blank in the sheet"}
@@ -174,7 +180,7 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
             />
           ) : null}
         </TableCell>
-        <TableCell align="right" sx={{ pr: 0, whiteSpace: "nowrap" }}>
+        <TableCell align="right" sx={{ pr: 0, whiteSpace: WRAP_ON_PHONE }}>
           {forecast ? (
             <Button
               size="small"
@@ -268,27 +274,37 @@ function SectionCard({ section }: { section: GoalSection }) {
             </Typography>
           ) : null}
         </Stack>
-        <Table
-          size="small"
-          aria-labelledby={headingId}
-          sx={{ "& td, & th": { py: 0.5 } }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ pl: 0 }}>Event</TableCell>
-              <TableCell align="right">Latest</TableCell>
-              <TableCell align="right">Goal</TableCell>
-              <TableCell align="right" sx={{ pr: 0 }}>
-                Forecast
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {section.rows.map((row) => (
-              <GoalLine key={row.row} row={row} test={section.test} />
-            ))}
-          </TableBody>
-        </Table>
+        <Box sx={{ overflowX: "auto" }}>
+          <Table
+            size="small"
+            aria-labelledby={headingId}
+            sx={{
+              "& td, & th": { py: 0.5, px: { xs: 0.5, sm: 2 } },
+              "& .MuiButton-root": { minWidth: 0, px: { xs: 0.5, sm: 1 } },
+              // The tags are the widest thing in a cell on a phone.
+              "& .MuiChip-label": { px: { xs: 0.5, sm: 1 } },
+              "& .MuiChip-root": {
+                fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+              },
+            }}
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ pl: 0 }}>Event</TableCell>
+                <TableCell align="right">Latest</TableCell>
+                <TableCell align="right">Goal</TableCell>
+                <TableCell align="right" sx={{ pr: 0 }}>
+                  Forecast
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {section.rows.map((row) => (
+                <GoalLine key={row.row} row={row} test={section.test} />
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
         {section.scoringNote ? (
           <Typography
             variant="caption"
@@ -411,7 +427,12 @@ export default function GoalsPanel() {
         sx={{
           display: "grid",
           gap: 2,
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          // minmax(0, …): a plain 1fr track grows to its widest table, which
+          // pushed the page past a phone's edge.
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            md: "minmax(0, 1fr) minmax(0, 1fr)",
+          },
           alignItems: "start",
         }}
       >
