@@ -43,101 +43,13 @@ import {
   parseClock,
 } from "../core/format";
 import ContourPlot from "./ContourPlot";
+import { ATHLETIC, EVOKE, type WeekPreset } from "./doses";
 import FanChart from "./FanChart";
 import MathPanel from "./MathPanel";
+import { NumberInput } from "./NumberInput";
 import PredictionLedger from "./PredictionLedger";
 import { parseDistance } from "./ProjectionPanel";
 import Tornado from "./Tornado";
-
-/** A week of training the workbench can start from. */
-interface Dose {
-  label: string;
-  weeklyHours: number;
-  strengthHours: number;
-  source: string;
-}
-
-/** Neb's default, 2026-11-03: eight hours of running and three of lifting. */
-const ATHLETIC: Dose = {
-  label: "Athletic",
-  weeklyHours: 8,
-  strengthHours: 3,
-  source: "8 h running, 3 h lifting",
-};
-
-/**
- * The Evoke Endurance Military Athlete Foundational Plan v1.1, averaged over
- * its 41 weeks (2026-11-02 to 2027-08-15) from the TrainingPeaks export:
- * running 3.9 h a week (3.0 at the start, 6.6 at the peak) plus 0.3 h of
- * rucking, and 2.5 h of strength, muscular endurance and core.
- */
-const EVOKE: Dose = {
-  label: "Evoke plan",
-  weeklyHours: 4.2,
-  strengthHours: 2.5,
-  source: "41-week average: 3.9 h running, 0.3 h rucking, 2.5 h strength",
-};
-
-/**
- * A number box that can be cleared and retyped. The draft is text, and only
- * a value inside the range reaches the scenario, so deleting the digits shows
- * an empty box rather than a zero that comes back.
- */
-export function NumberInput({
-  label,
-  value,
-  min,
-  max,
-  step,
-  onCommit,
-  disabled,
-  helperText,
-  sx,
-}: {
-  label?: string;
-  value: number | null;
-  min: number;
-  max: number;
-  step: number;
-  onCommit: (value: number) => void;
-  disabled?: boolean;
-  helperText?: string;
-  sx?: object;
-}) {
-  const shown = value === null ? "" : String(value);
-  const [draft, setDraft] = React.useState(shown);
-  const [editing, setEditing] = React.useState(false);
-
-  return (
-    <TextField
-      fullWidth={!sx}
-      size="small"
-      type="number"
-      label={label}
-      disabled={disabled}
-      helperText={helperText}
-      sx={sx}
-      value={editing ? draft : shown}
-      slotProps={{ htmlInput: { min, max, step } }}
-      onFocus={() => {
-        setDraft(shown);
-        setEditing(true);
-      }}
-      onBlur={() => setEditing(false)}
-      onChange={(event) => {
-        setDraft(event.target.value);
-        const parsed = Number(event.target.value);
-        if (
-          event.target.value.trim() !== "" &&
-          Number.isFinite(parsed) &&
-          parsed >= min &&
-          parsed <= max
-        )
-          onCommit(parsed);
-      }}
-    />
-  );
-}
 
 /** What the workbench can be asked to work out. */
 const UNKNOWNS: {
@@ -253,14 +165,14 @@ export default function Workbench({ summary }: { summary: Summary }) {
 
   const sensitivities =
     result?.sensitivities.filter((x) => x.factor !== "Compliance") ?? [];
-  const logged: Dose = {
+  const logged: WeekPreset = {
     label: "Your log",
     weeklyHours: Number(summary.measuredDose.runningHours.toFixed(1)),
     strengthHours: Number(summary.measuredDose.strengthHours.toFixed(1)),
     source: "8-week average from your imports",
   };
   const doses = [ATHLETIC, EVOKE, logged];
-  const applyDose = (dose: Dose) =>
+  const applyDose = (dose: WeekPreset) =>
     setState((previous) => ({
       ...previous,
       weeklyHours: dose.weeklyHours,

@@ -29,11 +29,12 @@ import {
   toMeters,
 } from "../core/format";
 import { ProjectionChart } from "./charts";
+import { ATHLETIC } from "./doses";
 import MathPanel from "./MathPanel";
 import NumberChips from "./NumberChips";
 import PlanEditor, {
   type PlanState,
-  planFromDose,
+  planFromPreset,
   toRequest,
 } from "./PlanEditor";
 
@@ -57,17 +58,10 @@ export default function ProjectionPanel({
     ? Math.round(kgToLb(summary.settings.currentWeightKg))
     : null;
 
+  // Neb's week (2026-11-03): 8 h of running and 3 of strength. The log
+  // is one click away, and is no longer the default.
   const [plan, setPlan] = React.useState<PlanState>(() =>
-    summary.measuredDose.runningHours > 0.5
-      ? planFromDose(summary.measuredDose, "total")
-      : {
-          mode: "total",
-          totalHours: 6.75,
-          easyHours: 5.4,
-          thresholdHours: 0.8,
-          intervalHours: 0.55,
-          strengthHours: summary.measuredDose.strengthHours,
-        },
+    planFromPreset(ATHLETIC, "total"),
   );
   const [compliance, setCompliance] = React.useState(85);
   // Opens on the weight the athlete is actually training towards, which they

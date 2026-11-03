@@ -297,4 +297,21 @@ describe("columns", () => {
       ),
     ).toBe("Measured Apr 3, 2026 (214 days ago): AFT of 2026-04-03.");
   });
+
+  it("says in words that a modelled value was worked out, not done", () => {
+    expect(
+      latestDetail(
+        {
+          metric: "run-10mi",
+          value: 5400,
+          basis: "Modeled",
+          evidence: "modelled from your VDOT 37.5 anchor of 2026-04-03",
+          on: "2026-04-03",
+        },
+        new Date(2026, 10, 3),
+      ),
+    ).toBe(
+      "Modelled, not done as this event Apr 3, 2026 (214 days ago): modelled from your VDOT 37.5 anchor of 2026-04-03.",
+    );
+  });
 });

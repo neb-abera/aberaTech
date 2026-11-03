@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -9,11 +10,12 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import type { Dose, PlanRequest, Prediction } from "../core/api";
+import { ATHLETIC, EVOKE, type WeekPreset } from "./doses";
+import { NumberInput } from "./NumberInput";
 
 export type PlanMode = "total" | "zones";
 
@@ -45,6 +47,30 @@ export function planFromDose(dose: Dose, mode: PlanMode = "zones"): PlanState {
     thresholdHours: Number(dose.thresholdHours.toFixed(2)),
     intervalHours: Number(dose.intervalHours.toFixed(2)),
     strengthHours: Number(dose.strengthHours.toFixed(2)),
+  };
+}
+
+/**
+ * A preset week as a plan: running split near 80% easy, the way the model
+ * would spend a total, and strength as stated. The Evoke plan's base blocks
+ * are aerobic running, so its hours all go to easy.
+ */
+export function planFromPreset(
+  preset: WeekPreset,
+  mode: PlanMode = "total",
+): PlanState {
+  const run = preset.weeklyHours;
+  const allEasy = preset === EVOKE;
+  const round = (x: number) => Math.round(x * 4) / 4;
+  const threshold = allEasy ? 0 : round(run * 0.125);
+  const interval = allEasy ? 0 : round(run * 0.075);
+  return {
+    mode,
+    totalHours: run,
+    easyHours: allEasy ? run : round(run - threshold - interval),
+    thresholdHours: threshold,
+    intervalHours: interval,
+    strengthHours: preset.strengthHours,
   };
 }
 
@@ -81,19 +107,13 @@ export default function PlanEditor({
     key: "easyHours" | "thresholdHours" | "intervalHours" | "strengthHours",
   ) => (
     <Grid size={{ xs: 6, sm: 3 }} key={key}>
-      <TextField
-        fullWidth
-        size="small"
-        type="number"
+      <NumberInput
         label={`${label} (h/week)`}
         value={plan[key]}
-        slotProps={{ htmlInput: { min: 0, max: 40, step: 0.25 } }}
-        onChange={(event) =>
-          onChange({
-            ...plan,
-            [key]: Math.max(0, Math.min(40, Number(event.target.value))),
-          })
-        }
+        min={0}
+        max={40}
+        step={0.25}
+        onCommit={(value) => onChange({ ...plan, [key]: value })}
       />
     </Grid>
   );
@@ -123,6 +143,16 @@ export default function PlanEditor({
             </ToggleButton>
             <ToggleButton value="zones">I'll set the hours</ToggleButton>
           </ToggleButtonGroup>
+          {[ATHLETIC, EVOKE].map((preset) => (
+            <Button
+              key={preset.label}
+              size="small"
+              title={preset.source}
+              onClick={() => onChange(planFromPreset(preset, plan.mode))}
+            >
+              {preset.label}: {preset.weeklyHours} h + {preset.strengthHours} h
+            </Button>
+          ))}
           <Button
             size="small"
             onClick={() => onChange(planFromDose(measured, plan.mode))}
@@ -166,21 +196,14 @@ export default function PlanEditor({
 
           {plan.mode === "total" && (
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
+              <NumberInput
                 label="Strength (h/week)"
                 value={plan.strengthHours}
-                slotProps={{ htmlInput: { min: 0, max: 10, step: 0.25 } }}
-                onChange={(event) =>
-                  onChange({
-                    ...plan,
-                    strengthHours: Math.max(
-                      0,
-                      Math.min(10, Number(event.target.value)),
-                    ),
-                  })
+                min={0}
+                max={10}
+                step={0.25}
+                onCommit={(value) =>
+                  onChange({ ...plan, strengthHours: value })
                 }
               />
             </Grid>
@@ -227,34 +250,38 @@ export default function PlanEditor({
               )}
             </Typography>
 
-            <Table size="small" sx={{ mt: 1 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Zone</TableCell>
-                  <TableCell align="right">Hours</TableCell>
-                  <TableCell align="right">Recovery cost</TableCell>
-                  <TableCell align="right">Next hour buys</TableCell>
-                  <TableCell>What it is for</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {prediction.effective.zones.map((zone) => (
-                  <TableRow key={zone.zone}>
-                    <TableCell>{zone.zone}</TableCell>
-                    <TableCell align="right">{zone.hours.toFixed(2)}</TableCell>
-                    <TableCell align="right">
-                      {zone.strain.toFixed(1)}
-                    </TableCell>
-                    <TableCell align="right">
-                      +{zone.marginalVdotPerHour.toFixed(2)} VDOT
-                    </TableCell>
-                    <TableCell sx={{ color: "text.secondary" }}>
-                      {ZONE_NOTES[zone.zone]}
-                    </TableCell>
+            <Box sx={{ overflowX: "auto", mt: 1 }}>
+              <Table size="small" sx={{ minWidth: 520 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Zone</TableCell>
+                    <TableCell align="right">Hours</TableCell>
+                    <TableCell align="right">Recovery cost</TableCell>
+                    <TableCell align="right">Next hour buys</TableCell>
+                    <TableCell>What it is for</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {prediction.effective.zones.map((zone) => (
+                    <TableRow key={zone.zone}>
+                      <TableCell>{zone.zone}</TableCell>
+                      <TableCell align="right">
+                        {zone.hours.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {zone.strain.toFixed(1)}
+                      </TableCell>
+                      <TableCell align="right">
+                        +{zone.marginalVdotPerHour.toFixed(2)} VDOT
+                      </TableCell>
+                      <TableCell sx={{ color: "text.secondary" }}>
+                        {ZONE_NOTES[zone.zone]}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
           </>
         )}
       </CardContent>
