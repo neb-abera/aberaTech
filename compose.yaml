@@ -179,6 +179,13 @@ services:
         IN_DOCKER: 'true'
     volumes:
       - ./aberaTech.Server.Tests/Fitness/Fixtures/goals.xlsx:/fixtures/goals.xlsx:ro
+    # The app runs as the image's own user, and a checkout with umask 007
+    # (the dev box) leaves the fixture rw-rw----, so /fitness answered
+    # "Access to the path '/fixtures/goals.xlsx' is denied". The checkout's
+    # group lets that user read it. CI checks out world-readable and needs
+    # none. 65534 is nogroup, for a run outside make.
+    group_add:
+      - '${HOST_GID:-65534}'
     ports:
       - '127.0.0.1:${APP_PORT:-8080}:8080'
     environment:
