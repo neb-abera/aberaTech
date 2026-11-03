@@ -59,7 +59,7 @@ public sealed class SummaryEndpointTests : IDisposable
         Assert.True(root.GetProperty("durability").GetProperty("days").GetArrayLength() > 0);
 
         var readiness = root.GetProperty("readiness");
-        Assert.True(readiness.GetProperty("gates").GetArrayLength() > 0);
+        Assert.False(readiness.TryGetProperty("gates", out _));
         Assert.True(readiness.GetProperty("ruck").GetProperty("marches").GetArrayLength() > 0);
         Assert.True(readiness.GetProperty("calisthenics").GetProperty("latest").GetArrayLength() > 0);
         Assert.True(readiness.GetProperty("body").GetProperty("points").GetArrayLength() > 0);

@@ -253,7 +253,7 @@ export default function DataPanel({
       {/* A weigh-in moves the dashboard too: VDOT is per kilogram. */}
       <WeighIn onSaved={onDataChanged} />
 
-      {/* A fitness test is a measurement the readiness gates outrank the
+      {/* A fitness test is a measurement the goals rank above the
           model with. */}
       <AftEntry onSaved={onDataChanged} />
 

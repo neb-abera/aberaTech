@@ -50,9 +50,6 @@ export default function ProfileCard({
   const [altitudeFt, setAltitudeFt] = React.useState(
     String(Math.round(settings.homeAltitudeMeters * FEET_PER_METER)),
   );
-  const [selectionDate, setSelectionDate] = React.useState(
-    settings.selectionDate ?? "",
-  );
   const [anchorDistance, setAnchorDistance] = React.useState(2 * MILE);
   const [anchorTime, setAnchorTime] = React.useState("");
   const [anchorDate, setAnchorDate] = React.useState(
@@ -170,7 +167,6 @@ export default function ProfileCard({
         homeAltitudeMeters: altitude / FEET_PER_METER,
         anchorDistanceMeters: anchorSeconds === null ? null : anchorDistance,
         anchorSeconds,
-        selectionDate: selectionDate.trim() === "" ? null : selectionDate,
       });
       setStatus({ ok: true, text: "Profile saved — predictions now use it." });
       onSaved();
@@ -321,15 +317,6 @@ export default function ProfileCard({
               value={altitudeFt}
               onChange={(event) => setAltitudeFt(event.target.value)}
               helperText="El Paso ≈ 3,900 ft; ~1% on race times"
-              sx={{ width: 200 }}
-            />
-            <TextField
-              label="Selection date"
-              type="date"
-              value={selectionDate}
-              onChange={(event) => setSelectionDate(event.target.value)}
-              helperText="The SFRE; the readiness gates count back from it"
-              slotProps={{ inputLabel: { shrink: true } }}
               sx={{ width: 200 }}
             />
             <Button

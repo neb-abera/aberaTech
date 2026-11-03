@@ -45,7 +45,6 @@ function updateFrom(settings: SettingsDto) {
     homeAltitudeMeters: settings.homeAltitudeMeters,
     anchorDistanceMeters: null,
     anchorSeconds: null,
-    selectionDate: settings.selectionDate,
   };
 }
 
