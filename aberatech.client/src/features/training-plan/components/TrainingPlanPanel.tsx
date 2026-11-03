@@ -213,6 +213,11 @@ function WeekView({ week, total }: { week: PlanWeek; total: number }) {
           `. ${week.bySport.map((s) => `${s.sport} ${formatMinutes(s.minutes)}`).join(", ")}`}
         .
       </Typography>
+      {week.days.length === 0 && (
+        <Typography sx={{ color: "text.secondary" }}>
+          Nothing is planned this week.
+        </Typography>
+      )}
       <Stack spacing={3}>
         {week.days.map((day) => (
           <Box

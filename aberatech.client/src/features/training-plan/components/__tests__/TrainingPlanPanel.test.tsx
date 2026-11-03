@@ -206,6 +206,33 @@ describe("the owner", () => {
     ).toBe("/api/training-plan/files/file-id");
   });
 
+  it("shows a week the plan leaves empty and counts it", async () => {
+    const gap = {
+      ...plan,
+      workouts: [
+        ...plan.workouts,
+        {
+          ...plan.workouts[1],
+          id: "w4",
+          title: "Later",
+          place: { date: "2026-11-23", week: 4 },
+        },
+      ],
+    };
+    mount("/training-plan?week=3", () =>
+      respond(200, { configured: true, plan: gap }),
+    );
+    await settle();
+    const week = screen.getByRole("region", { name: "Week 3" });
+    expect(
+      within(week).getByRole("heading", { name: "Week 3 of 4" }),
+    ).toBeTruthy();
+    expect(
+      within(week).getByText("Nothing is planned this week."),
+    ).toBeTruthy();
+    expect(screen.getByText(/^4 weeks, 3 workouts and 1 notes\./)).toBeTruthy();
+  });
+
   it("opens the first week before the plan starts", async () => {
     mount("/training-plan", owner, "2026-01-01");
     await settle();

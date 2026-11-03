@@ -112,6 +112,17 @@ describe("planWeeks", () => {
     expect(second.bySport).toEqual([{ sport: "Other", minutes: 75 }]);
   });
 
+  it("keeps a week the plan leaves empty, dated after the week before it", () => {
+    const weeks = planWeeks(
+      plan([workout("a", "2026-11-03", 1), workout("c", "2026-11-17", 3)]),
+    );
+    expect(weeks.map((w) => w.week)).toEqual([1, 2, 3]);
+    expect(weeks[1].days).toEqual([]);
+    expect(weeks[1].start).toBe("2026-11-09");
+    expect(weeks[1].end).toBe("2026-11-15");
+    expect(currentWeek(weeks, "2026-11-12")).toBe(2);
+  });
+
   it("leaves out a row with no week or no date", () => {
     const weeks = planWeeks(
       plan([
