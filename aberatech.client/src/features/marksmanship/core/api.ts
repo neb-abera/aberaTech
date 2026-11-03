@@ -70,6 +70,7 @@ export const logColumns = [
   "Slow fire",
   "Timed",
   "Rapid",
+  "Score",
   "Total",
   "X",
   "Group in",
