@@ -1,0 +1,233 @@
+// @vitest-environment jsdom
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { GoalRow, GoalSection, Goals } from "../../core/api";
+import GoalsPanel, { formatGoalValue, goalTag } from "../GoalsPanel";
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+function row(
+  partial: Partial<GoalRow> & Pick<GoalRow, "row" | "label">,
+): GoalRow {
+  return {
+    metric: "m",
+    unit: "reps",
+    lowerIsBetter: false,
+    baseline: null,
+    baselineText: null,
+    goal: null,
+    goalColumn: "F",
+    current: null,
+    met: null,
+    pointsNow: null,
+    pointsGoal: null,
+    forecast: null,
+    note: null,
+    ...partial,
+  };
+}
+
+const sections: GoalSection[] = [
+  {
+    name: "Run calculator",
+    test: null,
+    pointsNow: null,
+    pointsGoal: null,
+    pointsMax: null,
+    scoringNote: null,
+    rows: [
+      row({
+        row: 4,
+        label: "10 mile run",
+        unit: "s",
+        lowerIsBetter: true,
+        goal: 4254,
+        note: "2027 goal inferred from the 5-mile",
+        forecast: {
+          probability: 0.42,
+          projected: 4400,
+          method: "trajectory",
+          evidence: "Needs VDOT 48.1.",
+          hoursToReach: 8.5,
+        },
+      }),
+    ],
+  },
+  {
+    name: "Army Fitness Test",
+    test: "aft",
+    pointsNow: 428,
+    pointsGoal: 500,
+    pointsMax: 500,
+    scoringNote: "Army Fitness Test tables, men, age band 32-36.",
+    rows: [
+      row({
+        row: 8,
+        label: "HR pushups",
+        goal: 62,
+        pointsNow: 87,
+        pointsGoal: 100,
+        current: {
+          metric: "hand-release-push-ups",
+          value: 44,
+          basis: "Measured",
+          evidence: "AFT of 2026-04-03",
+          on: "2026-04-03",
+        },
+      }),
+    ],
+  },
+  {
+    name: "FBI Physical Fitness Test",
+    test: "fbi",
+    pointsNow: null,
+    pointsGoal: 37,
+    pointsMax: 40,
+    scoringNote: null,
+    rows: [
+      row({ row: 14, label: "Push-ups", goal: 80, pointsGoal: 10 }),
+      row({
+        row: 13,
+        label: "300m sprint",
+        unit: "s",
+        lowerIsBetter: true,
+        goal: 40.9,
+        pointsGoal: 10,
+        note: "2027 goal set to the FBI PFT maximum",
+      }),
+    ],
+  },
+];
+
+function serve(goals: Goals) {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify(goals), {
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+}
+
+const connected: Goals = {
+  source: {
+    origin: "OneDrive",
+    configured: true,
+    connected: true,
+    readAt: "2026-11-03T09:00:00Z",
+    modified: "2026-11-02T20:00:00Z",
+    error: null,
+    sheetName: "goals",
+  },
+  dueOn: "2027-12-31",
+  weeklyHours: 7,
+  weekBasis: "the hours a week the profile says you can train",
+  sections,
+};
+
+describe("GoalsPanel", () => {
+  it("shows each section of the workbook in its order, tests with their points", async () => {
+    serve(connected);
+    render(<GoalsPanel />);
+
+    const headings = await screen.findAllByRole("heading", { level: 2 });
+    expect(headings.map((h) => h.textContent)).toEqual([
+      "Run calculator",
+      "Army Fitness Test",
+      "FBI Physical Fitness Test",
+    ]);
+
+    const aft = screen.getByRole("region", { name: "Army Fitness Test" });
+    expect(within(aft).getByTestId("points-now").textContent).toBe("428");
+    expect(within(aft).getByText(/goal 500 of 500 pts/)).toBeTruthy();
+    expect(within(aft).getByText("HR pushups")).toBeTruthy();
+    expect(within(aft).queryByText("Push-ups")).toBeNull();
+
+    const fbi = screen.getByRole("region", {
+      name: "FBI Physical Fitness Test",
+    });
+    expect(within(fbi).getByText("Push-ups")).toBeTruthy();
+    expect(within(fbi).getByText("—")).toBeTruthy();
+  });
+
+  it("tags an inferred goal and an FBI maximum from the athlete's own note", async () => {
+    serve(connected);
+    render(<GoalsPanel />);
+
+    expect(await screen.findByText("inferred")).toBeTruthy();
+    expect(screen.getByText("FBI max")).toBeTruthy();
+    expect(screen.getByText("1:10:54")).toBeTruthy();
+    expect(screen.getByText("0:40.9")).toBeTruthy();
+  });
+
+  it("opens a forecast to its arithmetic and the sheet row it came from", async () => {
+    serve(connected);
+    render(<GoalsPanel />);
+
+    const button = await screen.findByRole("button", {
+      name: "Forecast for 10 mile run",
+    });
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(button);
+
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(await screen.findByText("Needs VDOT 48.1.")).toBeTruthy();
+    expect(screen.getByText(/Sheet row 4/)).toBeTruthy();
+    expect(screen.getByText(/Chance of the goal by then: 42%/)).toBeTruthy();
+  });
+
+  it("asks to connect OneDrive when the grant is missing", async () => {
+    serve({
+      ...connected,
+      source: { ...connected.source, connected: false, readAt: null },
+      sections: [],
+    });
+    render(<GoalsPanel />);
+
+    const link = await screen.findByRole("link", { name: "Connect OneDrive" });
+    expect(link.getAttribute("href")).toBe("/api/fitness/onedrive/connect");
+  });
+
+  it("says why a read failed and keeps the last good goals", async () => {
+    serve({
+      ...connected,
+      source: {
+        ...connected.source,
+        error: "OneDrive did not answer in time.",
+      },
+    });
+    render(<GoalsPanel />);
+
+    expect(
+      await screen.findByText(/OneDrive did not answer in time/),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("region", { name: "Army Fitness Test" }),
+    ).toBeTruthy();
+  });
+});
+
+describe("goal values", () => {
+  it("writes each unit the way the sheet does", () => {
+    expect(formatGoalValue("s", 735)).toBe("12:15");
+    expect(formatGoalValue("s", 9000)).toBe("2:30:00");
+    expect(formatGoalValue("s", 40.9)).toBe("0:40.9");
+    expect(formatGoalValue("s/mi", 480)).toBe("8:00/mi");
+    expect(formatGoalValue("lb", 247.5)).toBe("247.5 lb");
+    expect(formatGoalValue("%", 10)).toBe("10%");
+    expect(formatGoalValue("m", 100)).toBe("100 m");
+  });
+
+  it("tags a goal taken from the Ideal column", () => {
+    expect(
+      goalTag(row({ row: 20, label: "Farmer carry", goalColumn: "D" })),
+    ).toBe("ideal");
+  });
+});

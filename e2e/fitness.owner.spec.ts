@@ -22,7 +22,7 @@ test("the open tab is in the address and survives a reload", async ({
   );
 
   await page.goBack();
-  await expect(tabs.getByRole("tab", { name: "Dashboard" })).toHaveAttribute(
+  await expect(tabs.getByRole("tab", { name: "Goals" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -65,4 +65,48 @@ test("a Garmin export becomes an activity, and a wrong one can be removed", asyn
   page.once("dialog", (dialog) => dialog.accept());
   await remove.click();
   await expect(remove).toHaveCount(0);
+});
+
+// The Goals tab reads the synthetic workbook compose.yaml mounts in place of
+// OneDrive (OneDrive__LocalWorkbookPath). Its groups and order are the
+// athlete's, and each test keeps its own events.
+test("the console opens on the workbook's goals, in its groups and order", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1432, height: 900 });
+  await page.goto("/fitness");
+
+  const headings = page.getByRole("heading", { level: 2 });
+  await expect(headings.first()).toHaveText("Run calculator", {
+    timeout: 15_000,
+  });
+  await expect(headings).toHaveText([
+    "Run calculator",
+    "Army Fitness Test",
+    "FBI Physical Fitness Test",
+    "Body composition",
+    "Strength",
+  ]);
+
+  const aft = page.getByRole("region", { name: "Army Fitness Test" });
+  const fbi = page.getByRole("region", { name: "FBI Physical Fitness Test" });
+  await expect(
+    aft.getByRole("rowheader", { name: /HR pushups/ }),
+  ).toBeVisible();
+  await expect(aft.getByRole("rowheader", { name: /^Push-ups/ })).toHaveCount(
+    0,
+  );
+  await expect(fbi.getByRole("rowheader", { name: /^Push-ups/ })).toBeVisible();
+  await expect(aft.getByText(/goal 500 of 500 pts/)).toBeVisible();
+
+  // All nineteen goals within 1.2 desktop screens of the tab bar.
+  const rows = page.getByRole("rowheader");
+  await expect(rows).toHaveCount(19);
+  const tabsTop = await page
+    .getByRole("tablist", { name: "Fitness sections" })
+    .evaluate((t) => t.getBoundingClientRect().top + window.scrollY);
+  const bottoms = await rows.evaluateAll((cells) =>
+    cells.map((c) => c.getBoundingClientRect().bottom + window.scrollY),
+  );
+  expect(Math.max(...bottoms) - tabsTop).toBeLessThan(900 * 1.2);
 });

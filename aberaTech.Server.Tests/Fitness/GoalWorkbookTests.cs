@@ -267,3 +267,45 @@ public sealed class OneDriveClientTests
             OneDriveClient.EscapePath("/Documents/physical fitness/physical fitness goals.xlsx"));
     }
 }
+
+/// <summary>
+/// The workbook `make up` and the e2e suite read in place of OneDrive
+/// (compose.yaml, OneDrive__LocalWorkbookPath). Committed so the browser
+/// suite needs no .NET step; this test keeps it equal to the fixture.
+/// Regenerate with ABERA_WRITE_GOALS_FIXTURE=1.
+/// </summary>
+public sealed class GoalsFixtureFileTests
+{
+    [Fact]
+    public void The_committed_fixture_reads_as_the_builder_does()
+    {
+        var path = Path.Combine(RepositoryRoot(), "aberaTech.Server.Tests", "Fitness", "Fixtures", "goals.xlsx");
+        if (Environment.GetEnvironmentVariable("ABERA_WRITE_GOALS_FIXTURE") == "1")
+        {
+            File.WriteAllBytes(path, WorkbookFixture.Build());
+        }
+
+        using var committed = File.OpenRead(path);
+        using var built = new MemoryStream(WorkbookFixture.Build());
+        Assert.Equal(GoalWorkbook.Parse(built), GoalWorkbook.Parse(committed), new SheetComparer());
+    }
+
+    private static string RepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Directory.Packages.props")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName ?? throw new InvalidOperationException("No repository root above the test binary.");
+    }
+
+    private sealed class SheetComparer : IEqualityComparer<GoalSheet>
+    {
+        public bool Equals(GoalSheet? x, GoalSheet? y) =>
+            x is not null && y is not null && x.SheetName == y.SheetName && x.GoalYear == y.GoalYear && x.Rows.SequenceEqual(y.Rows);
+
+        public int GetHashCode(GoalSheet obj) => obj.Rows.Count;
+    }
+}
