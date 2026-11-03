@@ -75,7 +75,7 @@ internal static class DigestReports
         }
         if (summary.ThresholdSuggestion is { } suggestion)
         {
-            lines.Add(Text($"  Thresholds: a test suggests {Describe(suggestion)}. Apply it on the dashboard."));
+            lines.Add(Text($"  Thresholds: a test suggests {Describe(suggestion)}. Apply it on the Log tab."));
         }
         lines.Add("");
 

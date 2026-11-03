@@ -42,7 +42,7 @@ public static class Ledger
                 : "";
             highlights.Add(new Highlight("ledger-empty",
                 "Nothing locked in the prediction ledger",
-                when + "lock the model's 2-mile for the next test on the Solve tab, so it can be scored when the time comes. A forecast nobody wrote down was never a forecast.",
+                when + "lock the model's 2-mile for the next test on the Plan tab, so it can be scored when the time comes. A forecast nobody wrote down was never a forecast.",
                 Positive: false));
         }
 

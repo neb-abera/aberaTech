@@ -34,7 +34,9 @@ export default function SchedulePanel() {
   // A screen of room while the schedule loads. With the spinner alone the
   // footer drew 215 px from the top of a phone, and the slots then pushed it
   // down: a layout shift of 0.55 (Lighthouse, 2026-09-28). Below the window,
-  // the footer's move is not a shift. The loaded page is taller than this.
+  // the footer's move is not a shift. The loaded panel keeps the same room:
+  // late in the day a phone shows few slots, and the footer came up to
+  // 762 px of an 839 px window (2026-11-03).
   if (loading) {
     return (
       <Box sx={{ minHeight: "100dvh" }}>
@@ -50,7 +52,7 @@ export default function SchedulePanel() {
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ minHeight: "100dvh" }}>
       {state.mode === "unavailable" ? (
         <Alert severity="info">
           Online booking is still being set up. Email me and we will find a time

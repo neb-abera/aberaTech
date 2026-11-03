@@ -68,7 +68,7 @@ function RuckCard({ ruck }: { ruck: RuckReport }) {
             </>
           )}
           . A timed ruck of your own outranks this; record the load on each ruck
-          on the Data tab and the goals use the clock instead.
+          below and the goals use the clock instead.
         </Typography>
 
         {ruck.rucksWithoutLoad > 0 && (
@@ -76,7 +76,7 @@ function RuckCard({ ruck }: { ruck: RuckReport }) {
             {ruck.rucksWithoutLoad} ruck
             {ruck.rucksWithoutLoad === 1 ? " has" : "s have"} no load recorded,
             so the models read {ruck.rucksWithoutLoad === 1 ? "it" : "them"} as
-            walks. Name the weight on the Data tab.
+            walks. Name the weight on the activity below.
           </Alert>
         )}
 
@@ -196,7 +196,7 @@ function BodyCard({ body }: { body: BodyReport }) {
         </Typography>
         {body.latestBodyFatPercent === null ? (
           <Typography variant="body2">
-            Record body fat with a weigh-in on the Data tab to place yourself.
+            Record body fat with a weigh-in below to place yourself.
           </Typography>
         ) : (
           <Stack spacing={0.5}>
@@ -242,7 +242,7 @@ function AftCard({ results }: { results: AftResult[] }) {
         <Typography variant="h6">Army Fitness Test</Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
           Scored on the published tables as of today. The combat standard is 60
-          in every event and 350 in total; record a test on the Data tab.
+          in every event and 350 in total; record a test below.
         </Typography>
         {results.length === 0 ? (
           <Typography variant="body2">No test recorded.</Typography>

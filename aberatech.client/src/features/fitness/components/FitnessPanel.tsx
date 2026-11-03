@@ -32,15 +32,15 @@ import ThresholdsCard from "./ThresholdsCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
-const TAB_SLUGS: readonly string[] = [
-  "goals",
-  "dashboard",
-  "readiness",
-  "solve",
-  "plan",
-  "data",
-  "sources",
-];
+const TAB_SLUGS: readonly string[] = ["goals", "plan", "log", "sources"];
+
+/** Slugs from before the four tabs, so an old link lands where its content went. */
+const FORMER_SLUGS: Readonly<Record<string, string>> = {
+  dashboard: "log",
+  readiness: "log",
+  data: "log",
+  solve: "plan",
+};
 
 /**
  * One tab's contents, mounted the first time it is opened and kept mounted
@@ -86,7 +86,11 @@ export default function FitnessPanel() {
 
   // The open tab lives in the URL, so a reload comes back to where you were,
   // Back steps between sections, and a tab can be linked to at all.
-  const tab = Math.max(0, TAB_SLUGS.indexOf(params.get("tab") ?? TAB_SLUGS[0]));
+  const requested = params.get("tab") ?? TAB_SLUGS[0];
+  const tab = Math.max(
+    0,
+    TAB_SLUGS.indexOf(FORMER_SLUGS[requested] ?? requested),
+  );
 
   const showTab = (next: number) => {
     const updated = new URLSearchParams(params);
@@ -194,11 +198,8 @@ export default function FitnessPanel() {
         allowScrollButtonsMobile
       >
         <Tab label="Goals" />
-        <Tab label="Dashboard" />
-        <Tab label="Readiness" />
-        <Tab label="Solve" />
         <Tab label="Plan" />
-        <Tab label="Data" />
+        <Tab label="Log" />
         <Tab label="Sources" />
       </Tabs>
 
@@ -206,29 +207,51 @@ export default function FitnessPanel() {
         <GoalsPanel />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
-        <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
+        <Stack spacing={3}>
+          <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
+          <Workbench summary={summary} />
+        </Stack>
       </Section>
       <Section index={2} tab={tab} visited={visited}>
-        <ReadinessPanel readiness={summary.readiness} />
+        <Stack spacing={4}>
+          <LogPart title="Training">
+            <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
+          </LogPart>
+          <LogPart title="Tests and body">
+            <ReadinessPanel readiness={summary.readiness} />
+          </LogPart>
+          <LogPart title="Bring data in">
+            <DataPanel
+              hevyApi={me.hevyApi}
+              intervalsIcu={me.intervalsIcu}
+              settings={summary.settings}
+              onDataChanged={reloadSummary}
+            />
+          </LogPart>
+        </Stack>
       </Section>
       <Section index={3} tab={tab} visited={visited}>
-        <Workbench summary={summary} />
-      </Section>
-      <Section index={4} tab={tab} visited={visited}>
-        <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
-      </Section>
-      <Section index={5} tab={tab} visited={visited}>
-        <DataPanel
-          hevyApi={me.hevyApi}
-          intervalsIcu={me.intervalsIcu}
-          settings={summary.settings}
-          onDataChanged={reloadSummary}
-        />
-      </Section>
-      <Section index={6} tab={tab} visited={visited}>
         <SourcesPanel />
       </Section>
     </Stack>
+  );
+}
+
+/** One part of the Log tab, under its own heading. */
+function LogPart({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box component="section" aria-label={title}>
+      <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+        {title}
+      </Typography>
+      {children}
+    </Box>
   );
 }
 
@@ -242,8 +265,8 @@ function Dashboard({
   if (summary.activityCount === 0) {
     return (
       <Alert severity="info">
-        No activities yet. Head to the Data tab and upload a Garmin or Hevy
-        export to light this page up.
+        No activities yet. Upload a Garmin or Hevy export below to fill in the
+        training charts.
       </Alert>
     );
   }

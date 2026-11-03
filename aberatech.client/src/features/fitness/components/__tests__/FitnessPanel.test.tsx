@@ -224,7 +224,7 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount("/fitness?tab=dashboard");
+    mount("/fitness?tab=log");
 
     await screen.findByText(/aerobic base up 8%/i);
     await screen.findByText(/training paces \(daniels\)/i);
@@ -232,10 +232,13 @@ describe("FitnessPanel", () => {
     await screen.findByText(/over the 10% deficiency line/i);
 
     await waitFor(() => {
-      // The console's two prediction surfaces: the what-if workbench and the
-      // training plan behind it.
-      expect(screen.getByRole("tab", { name: /solve/i })).toBeDefined();
-      expect(screen.getByRole("tab", { name: /plan/i })).toBeDefined();
+      // Four tabs: the goals, the plan and its solver, the log, the sources.
+      expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+        "Goals",
+        "Plan",
+        "Log",
+        "Sources",
+      ]);
     });
   });
   it("keeps the console standing when a refresh fails", async () => {
@@ -269,15 +272,15 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount("/fitness?tab=dashboard");
-    await screen.findByRole("tab", { name: "Dashboard" });
+    mount("/fitness?tab=log");
+    await screen.findByRole("tab", { name: "Log" });
 
     // A later refresh fails.
-    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Plan" }));
     await waitFor(() => expect(summaryCalls).toBeGreaterThan(0));
 
     // Whatever else happens, the tabs are still there to click.
-    expect(screen.getByRole("tab", { name: "Dashboard" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Log" })).toBeTruthy();
   });
 
   it("opens the tab named in the address, so a reload comes back to it", async () => {
@@ -304,8 +307,9 @@ describe("FitnessPanel", () => {
 
     mount("/fitness?tab=data");
 
-    const dataTab = await screen.findByRole("tab", { name: "Data" });
-    expect(dataTab.getAttribute("aria-selected")).toBe("true");
+    // An address from before the four tabs lands where its content went.
+    const logTab = await screen.findByRole("tab", { name: "Log" });
+    expect(logTab.getAttribute("aria-selected")).toBe("true");
   });
 
   it("asks for sign-in again when the session goes, rather than blaming the server", async () => {
@@ -334,8 +338,8 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount("/fitness?tab=dashboard");
-    await screen.findByRole("tab", { name: "Dashboard" });
+    mount("/fitness?tab=log");
+    await screen.findByRole("tab", { name: "Log" });
   });
 });
 

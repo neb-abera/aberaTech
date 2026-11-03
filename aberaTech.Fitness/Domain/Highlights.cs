@@ -152,7 +152,7 @@ public static class Highlights
         {
             return new Highlight("anchor-missing",
                 "Your anchor is the default, not a measurement",
-                "Every projection launches from the default VDOT because no time trial is recorded. Run a two-mile and record it on the Data tab.",
+                "Every projection launches from the default VDOT because no time trial is recorded. Run a two-mile and record it on the Log tab.",
                 Positive: false);
         }
 
