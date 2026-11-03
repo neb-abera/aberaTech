@@ -43,6 +43,8 @@ public sealed class AlertRoutineRouteTests : IDisposable
     public AlertRoutineRouteTests()
     {
         var settings = AlertsRouteTests.Settings();
+        // The rings below are written in UTC. Blank would be New York.
+        settings["Alerts:TimeZone"] = "UTC";
         // Enough presses for the 51 creates below. The limit itself is AlertsRouteTests'.
         settings["RateLimits:AlertsActionsPerMinute"] = "1000";
         _app = new TestApp(settings, services =>
@@ -54,6 +56,7 @@ public sealed class AlertRoutineRouteTests : IDisposable
             services.AddSingleton<IAlertDeviceStore>(_devices);
             services.AddSingleton(new AlertsOptions
             {
+                TimeZone = "UTC",
                 CalendarIcsUrl = AlertsRouteTests.FeedUrl,
                 PushoverAppToken = AlertsRouteTests.AppToken,
                 PushoverUserKey = AlertsRouteTests.UserKey,

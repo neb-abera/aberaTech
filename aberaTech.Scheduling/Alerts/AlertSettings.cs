@@ -159,10 +159,13 @@ public sealed record AlertSettings(
         return latest > alert.AlertAt ? latest : alert.AlertAt;
     }
 
-    /// <summary>The zone when the feed names none. Blank is UTC. A saved name was checked on save.</summary>
+    /// <summary>The zone when the feed and the phone name none. Neb lives in Washington, DC.</summary>
+    public const string HomeZone = "America/New_York";
+
+    /// <summary>The zone when the feed names none. Blank is <see cref="HomeZone"/>. A saved name was checked on save.</summary>
     public DateTimeZone FallbackZone() =>
         TimeZone.Length == 0
-            ? DateTimeZone.Utc
+            ? DateTimeZoneProviders.Tzdb[HomeZone]
             : DateTimeZoneProviders.Tzdb.GetZoneOrNull(TimeZone)
               ?? throw new InvalidOperationException($"Alerts:TimeZone '{TimeZone}' is not a time zone database name.");
 

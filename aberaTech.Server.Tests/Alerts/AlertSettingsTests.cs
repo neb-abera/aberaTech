@@ -127,11 +127,11 @@ public sealed class AlertSettingsTests
     }
 
     [Fact]
-    public void A_blank_zone_is_utc_and_a_named_one_is_that_zone()
+    public void A_blank_zone_is_New_York_and_a_named_one_is_that_zone()
     {
         var defaults = AlertSettings.Defaults(new AlertsOptions());
 
-        Assert.Equal(NodaTime.DateTimeZone.Utc, defaults.FallbackZone());
+        Assert.Equal("America/New_York", defaults.FallbackZone().Id);
         Assert.Equal("Asia/Amman", (defaults with { TimeZone = "Asia/Amman" }).FallbackZone().Id);
     }
 

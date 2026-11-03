@@ -1,7 +1,10 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
@@ -14,8 +17,8 @@ import {
   deleteCountdown,
   updateCountdown,
 } from "../../alerts/core/countdowns";
+import { homeZone, zoneOptions } from "../../scheduling/core/timezones";
 import {
-  browserZone,
   canonicalZone,
   describeRemaining,
   formatTarget,
@@ -41,13 +44,16 @@ interface Draft {
   date: string;
   time: string;
   timeZone: string;
+  alarm: boolean;
 }
 
-const blank = (): Draft => ({
+/** A new countdown starts in the phone's zone, as the server reports it. */
+const blank = (timeZone: string): Draft => ({
   label: "",
   date: "",
   time: "00:00",
-  timeZone: browserZone(),
+  timeZone,
+  alarm: false,
 });
 
 function draftOf(countdown: Countdown): Draft {
@@ -55,6 +61,7 @@ function draftOf(countdown: Countdown): Draft {
     label: countdown.label,
     ...isoToZoned(countdown.targetAt, countdown.timeZone),
     timeZone: countdown.timeZone,
+    alarm: countdown.alarm ?? false,
   };
 }
 
@@ -75,6 +82,11 @@ function explain(result: Exclude<StateChangeResult, { ok: true }>): string {
       return "Check the fields marked below.";
     case "refused":
       return "The server refused. Refresh and try again.";
+    case "unavailable":
+      return (
+        result.detail ??
+        "No answer from the server. Check the connection and try again."
+      );
     default:
       return "No answer from the server. Check the connection and try again.";
   }
@@ -91,11 +103,8 @@ function useNow(initial?: number): number {
   return now;
 }
 
-/** Every zone this browser knows, for the zone field's suggestions. */
-const zones: readonly string[] =
-  (
-    Intl as { supportedValuesOf?: (key: "timeZone") => string[] }
-  ).supportedValuesOf?.("timeZone") ?? [];
+/** Every zone this browser knows, United States first, for the zone field's suggestions. */
+const zones: readonly string[] = zoneOptions();
 
 /**
  * The owner's countdowns: each with its clock, its target in its own zone,
@@ -107,15 +116,18 @@ export default function CountdownsSection({
   onState,
   api = countdownsApi,
   now: fixedNow,
+  defaultZone = homeZone,
 }: {
   countdowns: Countdown[];
   onState: (state: AlertsState) => void;
   api?: CountdownsApi;
   /** A fixed time for tests. Left out, the clocks tick. */
   now?: number;
+  /** The zone a new countdown starts in: the paired phone's, else New York. */
+  defaultZone?: string;
 }) {
   const now = useNow(fixedNow);
-  const [draft, setDraft] = React.useState<Draft>(blank);
+  const [draft, setDraft] = React.useState<Draft>(() => blank(defaultZone));
   const [editing, setEditing] = React.useState<Countdown | null>(null);
   const [confirming, setConfirming] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -159,6 +171,7 @@ export default function CountdownsSection({
       label: draft.label.trim(),
       targetAt,
       timeZone,
+      alarm: draft.alarm,
     };
     const name = fields.label || countdownBounds.defaultLabel;
     const saved = editing
@@ -166,7 +179,7 @@ export default function CountdownsSection({
       : await run(() => api.create(fields), `${name} is added.`);
     if (saved) {
       setEditing(null);
-      setDraft(blank());
+      setDraft(blank(defaultZone));
     }
   };
 
@@ -182,8 +195,9 @@ export default function CountdownsSection({
         Countdowns
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-        Kept on abera.tech. The paired phone shows the same countdowns. Once a
-        date passes, its clock counts the time since.
+        Kept on abera.tech, and each is an event on Google Calendar at its date
+        and time. The paired phone shows the same countdowns. Once a date
+        passes, its clock counts the time since.
       </Typography>
 
       {countdowns.length === 0 ? (
@@ -233,6 +247,20 @@ export default function CountdownsSection({
                     {formatTarget(countdown.targetAt, countdown.timeZone)} (
                     {countdown.timeZone})
                   </Typography>
+                  {countdown.alarm && (
+                    <Typography variant="body2" data-testid="countdown-alarm">
+                      Alarm at this time
+                    </Typography>
+                  )}
+                  {countdown.onCalendar === false && (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "warning.main" }}
+                      data-testid="countdown-off-calendar"
+                    >
+                      Not on the calendar yet. Edit and save it to add it.
+                    </Typography>
+                  )}
                 </Box>
                 <Button
                   size="small"
@@ -259,7 +287,7 @@ export default function CountdownsSection({
                         setConfirming(null);
                         if (editing?.id === countdown.id) {
                           setEditing(null);
-                          setDraft(blank());
+                          setDraft(blank(defaultZone));
                         }
                         void run(
                           () => api.remove(countdown.id),
@@ -378,6 +406,25 @@ export default function CountdownsSection({
             <option key={zone} value={zone} />
           ))}
         </datalist>
+        <Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={draft.alarm}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    alarm: event.target.checked,
+                  }))
+                }
+              />
+            }
+            label="Alarm at this time"
+          />
+          <FormHelperText sx={{ mt: 0 }}>
+            Rings on the phone and through Pushover until it is stopped.
+          </FormHelperText>
+        </Box>
         <Stack direction="row" spacing={1}>
           <Button type="submit" variant="contained" disabled={busy}>
             {editing ? "Save countdown" : "Add countdown"}
@@ -386,7 +433,7 @@ export default function CountdownsSection({
             <Button
               onClick={() => {
                 setEditing(null);
-                setDraft(blank());
+                setDraft(blank(defaultZone));
                 setErrors({});
               }}
             >

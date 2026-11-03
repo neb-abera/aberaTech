@@ -67,7 +67,12 @@ function fakeApi(over: Partial<CountdownsApi> = {}) {
   };
 }
 
-function mount(countdowns: Countdown[], api = fakeApi(), at: number = now) {
+function mount(
+  countdowns: Countdown[],
+  api = fakeApi(),
+  at: number = now,
+  defaultZone?: string,
+) {
   const onState = vi.fn();
   render(
     <CountdownsSection
@@ -75,6 +80,7 @@ function mount(countdowns: Countdown[], api = fakeApi(), at: number = now) {
       onState={onState}
       api={api}
       now={at}
+      defaultZone={defaultZone}
     />,
   );
   return { api, onState };
@@ -160,17 +166,46 @@ describe("the form", () => {
       label: "Home",
       targetAt: "2027-03-01T09:00:00+03:00",
       timeZone: "Asia/Amman",
+      alarm: false,
     });
     expect(onState).toHaveBeenCalledWith(state([home]));
     expect(screen.getByText("Home is added.")).toBeTruthy();
   });
 
-  it("starts on this computer's zone and midnight", () => {
+  it("sends the alarm when its switch is on", async () => {
+    const { api } = mount([]);
+
+    type("Date", "2027-03-01");
+    await press(screen.getByRole("switch", { name: "Alarm at this time" }));
+    await press(screen.getByRole("button", { name: "Add countdown" }));
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ alarm: true }),
+    );
+  });
+
+  it("starts on the phone's zone and midnight, and on New York without one", () => {
+    mount([], fakeApi(), now, "Asia/Amman");
+    expect((field("Time zone") as HTMLInputElement).value).toBe("Asia/Amman");
+    expect((field("Time") as HTMLInputElement).value).toBe("00:00");
+    cleanup();
+
     mount([]);
     expect((field("Time zone") as HTMLInputElement).value).toBe(
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      "America/New_York",
     );
-    expect((field("Time") as HTMLInputElement).value).toBe("00:00");
+  });
+
+  it("suggests the United States zones first", () => {
+    mount([]);
+    const options = [
+      ...document.querySelectorAll("#countdown-zones option"),
+    ].map((option) => option.getAttribute("value"));
+    expect(options.slice(0, 3)).toEqual([
+      "America/New_York",
+      "America/Chicago",
+      "America/Denver",
+    ]);
   });
 
   it("refuses an unknown zone and a missing date before asking the server", async () => {
@@ -204,6 +239,7 @@ describe("the form", () => {
       label: "Leave",
       targetAt: "2026-11-11T15:00:00+03:00",
       timeZone: "Asia/Amman",
+      alarm: false,
     });
     expect(screen.getByRole("form", { name: "Add countdown" })).toBeTruthy();
   });
@@ -241,11 +277,66 @@ describe("the form", () => {
       { ok: false as const, reason: "throttled" as const },
       "Too many presses. Wait a minute.",
     ],
+    [
+      {
+        ok: false as const,
+        reason: "full" as const,
+        detail: "Google Calendar is not connected with edit access.",
+      },
+      "Google Calendar is not connected with edit access.",
+    ],
+    [
+      {
+        ok: false as const,
+        reason: "unavailable" as const,
+        detail: "Google Calendar did not answer.",
+      },
+      "Google Calendar did not answer.",
+    ],
   ])("explains %j", async (result, message) => {
     mount([], fakeApi({ create: vi.fn(async () => result) }));
     type("Date", "2027-03-01");
     await press(screen.getByRole("button", { name: "Add countdown" }));
     expect(screen.getByText(message)).toBeTruthy();
+  });
+});
+
+describe("the calendar and the alarm", () => {
+  it("marks a countdown with an alarm and one not yet on the calendar", () => {
+    mount([
+      { ...home, alarm: true, onCalendar: true },
+      { ...deployed, alarm: false, onCalendar: false },
+    ]);
+
+    const homeItem = screen.getByRole("listitem", { name: "Home" });
+    expect(within(homeItem).getByTestId("countdown-alarm").textContent).toBe(
+      "Alarm at this time",
+    );
+    expect(within(homeItem).queryByTestId("countdown-off-calendar")).toBeNull();
+    const deployedItem = screen.getByRole("listitem", { name: "Deployed" });
+    expect(within(deployedItem).queryByTestId("countdown-alarm")).toBeNull();
+    expect(
+      within(deployedItem).getByTestId("countdown-off-calendar"),
+    ).toBeTruthy();
+  });
+
+  it("opens Edit with the saved alarm and sends it back", async () => {
+    const { api } = mount([{ ...home, alarm: true }]);
+
+    await press(screen.getByRole("button", { name: "Edit Home" }));
+    expect(
+      (
+        screen.getByRole("switch", {
+          name: "Alarm at this time",
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    await press(screen.getByRole("button", { name: "Save countdown" }));
+
+    expect(api.update).toHaveBeenCalledWith(
+      home.id,
+      expect.objectContaining({ alarm: true }),
+    );
   });
 });
 

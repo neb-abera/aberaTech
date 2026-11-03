@@ -276,12 +276,12 @@ public sealed class AlertPlannerTests
     }
 
     [Fact]
-    public void A_feed_that_names_no_zone_falls_back_to_configuration_and_then_to_utc()
+    public void A_feed_that_names_no_zone_falls_back_to_configuration_and_then_to_New_York()
     {
         var feed = Ics(Event("a", "a", "20261028T090000")).Replace("X-WR-TIMEZONE:America/New_York\r\n", "");
 
         Assert.Equal("Asia/Amman", AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions { TimeZone = "Asia/Amman" })).Zone.Id);
-        Assert.Equal(DateTimeZone.Utc, AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions())).Zone);
+        Assert.Equal("America/New_York", AlertPlanner.Plan(feed, Morning, AlertSettings.Defaults(new AlertsOptions())).Zone.Id);
     }
 
     [Fact]

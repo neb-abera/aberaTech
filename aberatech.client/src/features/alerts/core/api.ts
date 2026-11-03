@@ -79,7 +79,7 @@ export interface AlertSettings {
   pollMinutes: number;
   lookaheadHours: number;
   includeAllDay: boolean;
-  /** The zone when the calendar names none. "" is UTC. */
+  /** The zone when the calendar names none. "" is America/New_York. */
   timeZone: string;
   ownerEmails: string[];
   /** A notification's priority: 0 normal, 1 high. It sounds once. */
@@ -170,6 +170,11 @@ export interface AlertsState {
    * time left. An older server leaves the field out.
    */
   countdowns?: Countdown[];
+  /**
+   * The zone a new countdown starts in: the paired phone's, else the
+   * settings' zone, else America/New_York. An older server leaves it out.
+   */
+  defaultTimeZone?: string;
 }
 
 /** Phone pushes: on when all three secrets are set. */
@@ -555,7 +560,8 @@ export async function changeState(
         return { ok: false, reason: "invalid", errors: problem.errors };
       if (response.status === 409)
         return { ok: false, reason: "full", detail: problem.detail };
-      if (response.status >= 500) return { ok: false, reason: "unavailable" };
+      if (response.status >= 500)
+        return { ok: false, reason: "unavailable", detail: problem.detail };
       return { ok: false, reason: "refused" };
     }
     if (!json) return { ok: false, reason: "refused" };

@@ -257,6 +257,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(countdown => countdown.Id).ValueGeneratedNever();
             entity.Property(countdown => countdown.Label).HasMaxLength(Alerts.AlertCountdowns.MaxLabelLength).IsRequired();
             entity.Property(countdown => countdown.TimeZone).HasMaxLength(Alerts.AlertCountdowns.MaxTimeZoneLength).IsRequired();
+            entity.Property(countdown => countdown.CalendarEventId).HasMaxLength(AlertPlanner.MaxKeyLength);
         });
 
         builder.Entity<AlertSkipRecord>(entity =>

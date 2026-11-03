@@ -72,6 +72,15 @@ describe("CountdownsPanel", () => {
     expect(screen.getByText("41 days 05:12:33 left")).toBeTruthy();
   });
 
+  it("starts a new countdown in the zone the server says the phone is in", async () => {
+    await mount(true, {
+      status: "owner",
+      state: { ...owner.state, defaultTimeZone: "Asia/Amman" },
+    } as AlertsView);
+
+    expect(screen.getByDisplayValue("Asia/Amman")).toBeTruthy();
+  });
+
   it("says when the alerts are not set up, and when the server does not answer", async () => {
     await mount(true, {
       status: "unconfigured",

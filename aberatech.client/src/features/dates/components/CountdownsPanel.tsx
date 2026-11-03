@@ -66,6 +66,7 @@ export default function CountdownsPanel({
       return (
         <CountdownsSection
           countdowns={view.state.countdowns ?? []}
+          defaultZone={view.state.defaultTimeZone}
           onState={(state) => setView({ status: "owner", state })}
           api={api}
           now={now}

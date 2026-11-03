@@ -49,6 +49,8 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
     public AlertRoutineRingRouteTests()
     {
         var settings = AlertsRouteTests.Settings();
+        // The rings below are written in UTC. Blank would be New York.
+        settings["Alerts:TimeZone"] = "UTC";
         settings["RateLimits:AlertsActionsPerMinute"] = "1000";
         _app = new TestApp(settings, services =>
         {
@@ -60,6 +62,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
             services.AddSingleton<ILoggerProvider>(_logs);
             services.AddSingleton(new AlertsOptions
             {
+                TimeZone = "UTC",
                 CalendarIcsUrl = AlertsRouteTests.FeedUrl,
                 PushoverAppToken = AlertsRouteTests.AppToken,
                 PushoverUserKey = AlertsRouteTests.UserKey,
@@ -194,7 +197,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
         var id = await CreateAsync(owner, "Wake up", 6, 30);
         _clock.Now = Noon;
 
-        // No phone has sent a zone: the settings' fallback, UTC here.
+        // No phone has sent a zone: the settings' fallback, set to UTC here.
         Assert.Equal($"routine:{id:D}:2026-10-29T06:30", (await RingsIn(owner)).Single().GetProperty("key").GetString());
         Assert.Equal(
             Instant.FromUtc(2026, 10, 29, 6, 30).ToDateTimeOffset(),
@@ -271,7 +274,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
     public async Task A_ring_waits_for_the_backup_delay_so_the_phone_rings_first()
     {
         using var owner = Owner();
-        var form = AlertsRouteTests.Form(("backupDelaySeconds", 60));
+        var form = AlertsRouteTests.Form(("backupDelaySeconds", 60), ("timeZone", "UTC"));
         Assert.Equal(HttpStatusCode.OK, (await owner.PutAsJsonAsync("/api/alerts/settings", form)).StatusCode);
         _clock.Now = Noon - Duration.FromHours(1);
         await CreateAsync(owner, "Take meds", 12, 0);

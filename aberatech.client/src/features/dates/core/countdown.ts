@@ -104,11 +104,6 @@ export function knownZone(timeZone: string): boolean {
   return canonicalZone(timeZone) !== null;
 }
 
-/** The browser's own zone, or UTC when it names none. */
-export function browserZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
-
 /**
  * "2027-03-01" and "09:00" in Asia/Amman to the instant, as ISO 8601 with
  * its offset: "2027-03-01T09:00:00+03:00". A time a clock change skips is

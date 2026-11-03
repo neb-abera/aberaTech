@@ -369,36 +369,10 @@ public static class AlertsEndpoints
             var alert = before.FirstOrDefault(planned => planned.Key == request.Key);
             if (alert is null) return Results.NotFound();
 
-            var outcome = await google.EditAsync(
-                alert, request.Scope == EventScopes.Series && alert.Recurring, edit, snapshot.Zone, cancellationToken);
+            var outcome = await AlertEventWrites.EditAsync(
+                alert, before, request.Scope == EventScopes.Series && alert.Recurring, edit, snapshot.Zone, google, store, now,
+                cancellationToken);
             if (outcome.Problem is not null) return WriteProblem(outcome);
-
-            var zone = outcome.Series && outcome.TimeZone is { } named
-                ? DateTimeZoneProviders.Tzdb.GetZoneOrNull(named) ?? snapshot.Zone
-                : snapshot.Zone;
-            var change = AlertEventChange.Edit(
-                Guid.NewGuid(), alert, outcome.Series, edit, outcome.Series ? outcome.TimeZone : null, zone, now);
-            await store.AddEventChangeAsync(change, cancellationToken);
-
-            // A created event the feed does not have yet is planned from its
-            // row, which takes the edit too.
-            var created = await store.CreatedEventsAsync(cancellationToken);
-            if (created.FirstOrDefault(row => AlertPlanner.EventIdFor(row.EventId) == alert.EventId) is { } row)
-            {
-                var start = edit.StartsAt;
-                await store.UpdateCreatedEventAsync(
-                    row with
-                    {
-                        Title = edit.Title,
-                        Location = edit.LocationSet ? edit.Location : row.Location,
-                        StartsAt = start,
-                        EndsAt = start + (edit.DurationMinutes is { } minutes ? Duration.FromMinutes(minutes) : row.EndsAt - row.StartsAt),
-                        LeadMinutes = edit.LeadMinutes ?? row.LeadMinutes
-                    },
-                    cancellationToken);
-            }
-
-            await EventMoves.CarryAsync(before, change, zone, store, now, cancellationToken);
 
             await pushes.PlanChangedAsync(cancellationToken);
             worker.Wake();
@@ -433,17 +407,10 @@ public static class AlertsEndpoints
             var alert = plan.FirstOrDefault(planned => planned.Key == request.Key);
             if (alert is null) return Results.NotFound();
 
-            var outcome = await google.DeleteAsync(alert, request.Scope == EventScopes.Series && alert.Recurring, cancellationToken);
+            var outcome = await AlertEventWrites.DeleteAsync(
+                alert, plan, request.Scope == EventScopes.Series && alert.Recurring, google, store, dispatcher, pushes, now,
+                cancellationToken);
             if (outcome.Problem is not null) return WriteProblem(outcome);
-
-            await store.AddEventChangeAsync(AlertEventChange.Deletion(Guid.NewGuid(), alert, outcome.Series, now), cancellationToken);
-            var created = await store.CreatedEventsAsync(cancellationToken);
-            var pending = created.Where(row => AlertPlanner.EventIdFor(row.EventId) == alert.EventId).Select(row => row.EventId).ToList();
-            if (pending.Count > 0) await store.ForgetCreatedEventsAsync(pending, cancellationToken);
-
-            await pushes.PlanChangedAsync(cancellationToken);
-            var gone = outcome.Series ? plan.Where(planned => planned.EventId == alert.EventId).Select(planned => planned.Key) : [alert.Key];
-            foreach (var key in gone) await dispatcher.CancelRepeatsAsync(key, cancellationToken);
 
             worker.Wake();
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
@@ -551,29 +518,54 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
-        // Countdowns: /dates and the phone show the time left. The server
-        // stores them and fires nothing. Each change pushes the phones.
+        // Countdowns: /dates and the phone show the time left. Each has an
+        // event at its target on the calendar the alerts read
+        // (CountdownEvents), and with Alarm on that event rings as an alarm.
+        // Google is written first: a countdown it refuses is not stored, so
+        // every stored countdown is on the calendar. Each change pushes the
+        // phones and wakes the worker, so an alarm due before its next pass
+        // still rings.
         shared.MapPost("/countdowns", async (
             CountdownRequest request,
+            CalendarAlertWorker worker,
+            AlertDispatcher dispatcher,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertDeviceStore devices,
             IAlertStore store,
+            GoogleAlertEvents google,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
-            var (errors, countdown) = AlertCountdowns.Validate(Guid.NewGuid(), request, clock.GetCurrentInstant());
-            if (countdown is null) return Results.ValidationProblem(errors);
+            var now = clock.GetCurrentInstant();
+            var (errors, valid) = AlertCountdowns.Validate(Guid.NewGuid(), request, now);
+            if (valid is null) return Results.ValidationProblem(errors);
+
+            var full = Results.Problem(
+                detail: $"At most {AlertCountdowns.MaxCountdowns} countdowns. Delete one first.",
+                statusCode: StatusCodes.Status409Conflict);
+            if ((await store.CountdownsAsync(cancellationToken)).Count >= AlertCountdowns.MaxCountdowns) return full;
+
+            var (countdown, outcome) = await CountdownEvents.CreateAsync(valid, google, store, now, cancellationToken);
+            if (countdown is null)
+            {
+                return Results.Problem(
+                    detail: outcome.Problem,
+                    statusCode: outcome.Conflict ? StatusCodes.Status409Conflict : StatusCodes.Status502BadGateway);
+            }
 
             if (!await store.AddCountdownAsync(countdown, cancellationToken))
             {
-                return Results.Problem(
-                    detail: $"At most {AlertCountdowns.MaxCountdowns} countdowns. Delete one first.",
-                    statusCode: StatusCodes.Status409Conflict);
+                // Another create took the last place while Google made this one's event.
+                var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+                await CountdownEvents.DeleteAsync(
+                    countdown, status.Snapshot(), settings, google, store, dispatcher, pushes, now, cancellationToken);
+                return full;
             }
 
             await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
             return Results.Created(
                 $"/api/alerts/countdowns/{countdown.Id}", await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
@@ -581,35 +573,64 @@ public static class AlertsEndpoints
         shared.MapPut("/countdowns/{id:guid}", async (
             Guid id,
             CountdownRequest request,
+            CalendarAlertWorker worker,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertDeviceStore devices,
             IAlertStore store,
+            GoogleAlertEvents google,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
-            var (errors, countdown) = AlertCountdowns.Validate(id, request, clock.GetCurrentInstant());
-            if (countdown is null) return Results.ValidationProblem(errors);
+            var now = clock.GetCurrentInstant();
+            var (errors, valid) = AlertCountdowns.Validate(id, request, now);
+            if (valid is null) return Results.ValidationProblem(errors);
+            var saved = (await store.CountdownsAsync(cancellationToken)).FirstOrDefault(countdown => countdown.Id == id);
+            if (saved is null) return Results.NotFound();
+
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var next = valid with { Alarm = request.Alarm ?? saved.Alarm };
+            var (countdown, problem, conflict, mark) = await CountdownEvents.UpdateAsync(
+                saved, next, status.Snapshot(), settings, google, store, now, cancellationToken);
+            if (countdown is null)
+            {
+                return Results.Problem(
+                    detail: problem, statusCode: conflict ? StatusCodes.Status409Conflict : StatusCodes.Status502BadGateway);
+            }
+
             if (!await store.UpdateCountdownAsync(countdown, cancellationToken)) return Results.NotFound();
 
             await pushes.PlanChangedAsync(cancellationToken);
-            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken, mark));
         }).RequireRateLimiting(ActionsPolicy);
 
         shared.MapDelete("/countdowns/{id:guid}", async (
             Guid id,
+            CalendarAlertWorker worker,
+            AlertDispatcher dispatcher,
             AlertPushWorker pushes,
             AlertsStatus status,
             PushoverSounds sounds,
             IAlertDeviceStore devices,
             IAlertStore store,
+            GoogleAlertEvents google,
             IClock clock,
             CancellationToken cancellationToken) =>
         {
+            var saved = (await store.CountdownsAsync(cancellationToken)).FirstOrDefault(countdown => countdown.Id == id);
+            if (saved is null) return Results.NotFound();
+
+            var now = clock.GetCurrentInstant();
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var refused = await CountdownEvents.DeleteAsync(
+                saved, status.Snapshot(), settings, google, store, dispatcher, pushes, now, cancellationToken);
+            if (refused is not null) return WriteProblem(refused);
             if (!await store.DeleteCountdownAsync(id, cancellationToken)) return Results.NotFound();
 
             await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
@@ -886,6 +907,7 @@ public static class AlertsEndpoints
         return new AlertsState(
             Configured: true,
             TimeZone: snapshot.Zone.Id,
+            DefaultTimeZone: (await RoutineRings.ZoneAsync(devices, settings, cancellationToken)).Id,
             PollMinutes: settings.PollMinutes,
             DefaultLeadMinutes: settings.DefaultLeadMinutes,
             Settings: new SettingsView(
@@ -1068,6 +1090,8 @@ public static class AlertsEndpoints
     /// The page's whole state. Lists its fields: the settings in force, and
     /// no secret. TimeZone is the zone in use, the calendar's own when it
     /// names one. Settings.TimeZone is the fallback the owner set.
+    /// DefaultTimeZone is the zone a new countdown starts in on the page:
+    /// the paired phone's, else Settings.TimeZone, else America/New_York.
     /// CalendarWrite is set only in the answer to a type change or a new
     /// event whose write to Google did not happen, and says why. Routines
     /// lists every routine alarm by hour, minute and label. RoutineRings
@@ -1077,6 +1101,7 @@ public static class AlertsEndpoints
     public sealed record AlertsState(
         bool Configured,
         string TimeZone,
+        string DefaultTimeZone,
         int PollMinutes,
         int DefaultLeadMinutes,
         SettingsView Settings,
@@ -1112,20 +1137,27 @@ public static class AlertsEndpoints
     /// <summary>
     /// A countdown as the page and the phone read it. TargetAt is the
     /// instant with its offset. TimeZone is the zone its date is written in.
+    /// Alarm says its calendar event rings at the target. OnCalendar is
+    /// false only for a countdown saved before countdowns made events. Its
+    /// next save makes one.
     /// </summary>
     public sealed record CountdownView(
         Guid Id,
         string Label,
         DateTimeOffset TargetAt,
         string TimeZone,
-        DateTimeOffset UpdatedAt)
+        DateTimeOffset UpdatedAt,
+        bool Alarm,
+        bool OnCalendar)
     {
         public static CountdownView From(AlertCountdown countdown) => new(
             countdown.Id,
             countdown.Label,
             countdown.TargetAt.ToDateTimeOffset(),
             countdown.TimeZone,
-            countdown.UpdatedAt.ToDateTimeOffset());
+            countdown.UpdatedAt.ToDateTimeOffset(),
+            countdown.Alarm,
+            countdown.CalendarEventId is not null);
     }
 
     /// <summary>

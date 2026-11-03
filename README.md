@@ -479,14 +479,32 @@ The phone app carries the same arithmetic and the same test table.
 Below the calculator the owner keeps countdowns. Each clock shows the time
 left, then the time since once the date passes. They are kept with the
 alerts, so the paired phone shows the same list (`AlertCountdowns.cs`, table
-`AlertCountdowns`). Nothing on the server fires them. A visitor's browser
-asks who is signed in first and never asks for them.
+`AlertCountdowns`). A visitor's browser asks who is signed in first and
+never asks for them.
 
-A countdown is `{id, label, targetAt, timeZone, updatedAt}`. `targetAt` is
-ISO 8601 with its offset, between 1900 and 2200, and may be in the past.
-`timeZone` is an IANA zone the tz database knows, and the target's date is
-written in it. `label` follows the routine rules, and empty is stored as
-`Countdown`. At most 50 are kept.
+Each countdown is an event on the Google Calendar the alerts read, at its
+target, 30 minutes long, with one popup reminder at the start
+(`CountdownEvents.cs`). Its type on /alerts is none. With Alarm at this time
+on, it is alarm and carries `#critical`, so it rings at the target on the
+phone and through Pushover until it is stopped, like any calendar alarm.
+Google is written first: a countdown Google refuses is not stored, and the
+answer says why (409 when no calendar is connected with edit access, 502
+when Google refuses or does not answer). An edit moves and renames the
+event, and delete deletes it. An event deleted on Google is made again at
+the countdown's next save. So is the event of a countdown saved before
+countdowns made events.
+
+A new countdown on the page starts in `defaultTimeZone` from the status:
+the zone of the paired phone seen most recently, else the settings' zone,
+else America/New_York. The phone starts one in its own zone. Zone lists
+put the United States first, east to west, then Puerto Rico and Guam.
+
+A countdown is `{id, label, targetAt, timeZone, updatedAt, alarm,
+onCalendar}`. `targetAt` is ISO 8601 with its offset, between 1900 and
+2200, and may be in the past. `timeZone` is an IANA zone the tz database
+knows, and the target's date is written in it. `label` follows the
+routine rules, and empty is stored as `Countdown`. `onCalendar` is false
+only for a countdown that has no event yet. At most 50 are kept.
 
 `GET /api/alerts/status` lists every countdown under `countdowns`, by
 target, then label. Each route below needs the owner or a paired phone,
@@ -495,9 +513,9 @@ Each change pushes the phones.
 
 | Route | Request | Answer |
 |---|---|---|
-| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone}` | 201. 400 by field. 409 with a `detail` past 50 |
-| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone}` | 200. 400 by field. 404 for an unknown id |
-| `DELETE /api/alerts/countdowns/{id}` | none | 200. 404 for an unknown id |
+| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone, alarm?}` | 201. 400 by field. 409 with a `detail` past 50 or with no calendar. 502 when Google refuses |
+| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone, alarm?}` | 200. 400 by field. 404 for an unknown id. 502 when Google refuses. A missing `alarm` keeps the saved one |
+| `DELETE /api/alerts/countdowns/{id}` | none | 200. 404 for an unknown id. 502 when Google refuses |
 
 ### Calendar alerts: phone pushes
 

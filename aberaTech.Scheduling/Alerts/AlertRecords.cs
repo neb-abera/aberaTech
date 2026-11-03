@@ -331,6 +331,12 @@ public class AlertCountdownRecord
     /// <summary>An IANA zone id the tz database knows.</summary>
     public string TimeZone { get; set; } = "UTC";
 
+    /// <summary>Its calendar event rings as an alarm at the target.</summary>
+    public bool Alarm { get; set; }
+
+    /// <summary>The iCalUID of its event on Google Calendar. Null until one is made.</summary>
+    public string? CalendarEventId { get; set; }
+
     public Instant CreatedAt { get; set; }
 
     public Instant UpdatedAt { get; set; }

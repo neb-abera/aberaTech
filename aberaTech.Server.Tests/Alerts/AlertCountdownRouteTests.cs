@@ -18,8 +18,9 @@ namespace aberaTech.Server.Tests.Alerts;
 /// <summary>
 /// Countdowns from every entry point: the page's cookie and a paired
 /// phone's token on the four routes, each field's bounds, the label's
-/// default, 404 for an unknown id, 409 past 50, and the status listing them
-/// by target.
+/// default, 404 for an unknown id, 409 past 50, the status listing them
+/// by target, the calendar event each makes, moves and deletes, its alarm,
+/// and the zone a new one starts in.
 /// </summary>
 public sealed class AlertCountdownRouteTests : IDisposable
 {
@@ -93,8 +94,11 @@ public sealed class AlertCountdownRouteTests : IDisposable
 
     private const string Home = "{\"label\":\"Home\",\"targetAt\":\"2027-03-01T09:00:00+03:00\",\"timeZone\":\"Asia/Amman\"}";
 
-    private static string Body(string label = "Home", string targetAt = "2027-03-01T09:00:00+03:00", string timeZone = "Asia/Amman") =>
-        $"{{\"label\":\"{label}\",\"targetAt\":\"{targetAt}\",\"timeZone\":\"{timeZone}\"}}";
+    private static string Body(
+        string label = "Home", string targetAt = "2027-03-01T09:00:00+03:00", string timeZone = "Asia/Amman", bool? alarm = null) =>
+        alarm is { } on
+            ? $"{{\"label\":\"{label}\",\"targetAt\":\"{targetAt}\",\"timeZone\":\"{timeZone}\",\"alarm\":{(on ? "true" : "false")}}}"
+            : $"{{\"label\":\"{label}\",\"targetAt\":\"{targetAt}\",\"timeZone\":\"{timeZone}\"}}";
 
     // ------------------------------------------------------------------ create
 
@@ -111,13 +115,15 @@ public sealed class AlertCountdownRouteTests : IDisposable
         Assert.True(state.TryGetProperty("routines", out _));
         var countdown = Assert.Single(state.GetProperty("countdowns").EnumerateArray());
         Assert.Equal(
-            ["id", "label", "targetAt", "timeZone", "updatedAt"],
+            ["id", "label", "targetAt", "timeZone", "updatedAt", "alarm", "onCalendar"],
             countdown.EnumerateObject().Select(field => field.Name));
         Assert.True(countdown.GetProperty("id").GetGuid() != Guid.Empty);
         Assert.Equal("Home", countdown.GetProperty("label").GetString());
         Assert.Equal(Instant.FromUtc(2027, 3, 1, 6, 0).ToDateTimeOffset(), countdown.GetProperty("targetAt").GetDateTimeOffset());
         Assert.Equal("Asia/Amman", countdown.GetProperty("timeZone").GetString());
         Assert.Equal(Eight.ToDateTimeOffset(), countdown.GetProperty("updatedAt").GetDateTimeOffset());
+        Assert.False(countdown.GetProperty("alarm").GetBoolean());
+        Assert.True(countdown.GetProperty("onCalendar").GetBoolean());
         // ISO 8601 with its offset, which the phone and the page parse.
         Assert.Matches(@"^2027-03-01T06:00:00(\+00:00|Z)$", countdown.GetProperty("targetAt").GetString());
     }
@@ -357,7 +363,7 @@ public sealed class AlertCountdownRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task A_countdown_reaching_its_target_sends_nothing_through_Pushover()
+    public async Task A_countdown_with_no_alarm_reaching_its_target_sends_nothing_through_Pushover()
     {
         using var owner = Owner();
         await Send(owner, "POST", "/api/alerts/countdowns", Body(label: "Now", targetAt: "2026-10-28T12:01:00Z"));
@@ -366,9 +372,264 @@ public sealed class AlertCountdownRouteTests : IDisposable
         await _app.Factory.Services.GetRequiredService<CalendarAlertWorker>().TickAsync(CancellationToken.None);
 
         var status = await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status");
-        Assert.DoesNotContain(
-            status.GetProperty("alerts").EnumerateArray(), alert => alert.GetProperty("title").GetString() == "Now");
+        Assert.All(
+            status.GetProperty("alerts").EnumerateArray().Where(alert => alert.GetProperty("title").GetString() == "Now"),
+            alert => Assert.Equal(AlertTypes.None, alert.GetProperty("type").GetString()));
         Assert.Empty(_pushover.Requests);
+    }
+
+    // ------------------------------------------------------------------ calendar event and alarm
+
+    private string OnlyEvent() => Assert.Single(_google.Inserted);
+
+    private async Task<JsonElement> StatusAsync(HttpClient client) =>
+        await client.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+
+    [Fact]
+    public async Task A_create_puts_an_event_at_the_target_on_the_calendar_with_no_alarm()
+    {
+        using var owner = Owner();
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var uid = OnlyEvent();
+        var made = _google.Master(uid)!.Value;
+        Assert.Equal("Home", made.Summary);
+        Assert.Equal(Instant.FromUtc(2027, 3, 1, 6, 0), made.Start);
+        Assert.Equal(Instant.FromUtc(2027, 3, 1, 6, 30), made.End);
+        Assert.Equal(0, made.Popup);
+        Assert.DoesNotContain(AlertPlanner.CriticalMark, _google.Description(uid) ?? "", StringComparison.Ordinal);
+        Assert.Equal(AlertTypes.None, (await _store.EventTypesAsync(CancellationToken.None))[AlertPlanner.EventIdFor(uid)]);
+        Assert.Equal(uid, Assert.Single(await _store.CountdownsAsync(CancellationToken.None)).CalendarEventId);
+    }
+
+    [Fact]
+    public async Task A_countdown_with_its_alarm_on_is_an_alarm_at_the_target_and_rings_through_Pushover()
+    {
+        using var owner = Owner();
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns",
+            Body(label: "Leave", targetAt: "2026-10-28T14:00:00Z", timeZone: "America/New_York", alarm: true));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.True((await CountdownsIn(response)).Single().GetProperty("alarm").GetBoolean());
+        var uid = OnlyEvent();
+        Assert.Contains(AlertPlanner.CriticalMark, _google.Description(uid), StringComparison.Ordinal);
+        var alert = (await StatusAsync(owner)).GetProperty("alerts").EnumerateArray()
+            .Single(item => item.GetProperty("title").GetString() == "Leave");
+        Assert.Equal(AlertTypes.Alarm, alert.GetProperty("type").GetString());
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 14, 0).ToDateTimeOffset(), alert.GetProperty("alertAt").GetDateTimeOffset());
+
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 14, 0, 30);
+        await _app.Factory.Services.GetRequiredService<CalendarAlertWorker>().TickAsync(CancellationToken.None);
+
+        Assert.Contains(_pushover.Requests, request => request.Form.Values.Any(value => value.Contains("Leave", StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Google_refusing_the_event_stores_no_countdown(bool unreachable)
+    {
+        using var owner = Owner();
+        if (unreachable) _google.Unreachable = true;
+        else _google.RefusingWrites = (HttpStatusCode.Forbidden, null);
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        Assert.Empty(await _store.CountdownsAsync(CancellationToken.None));
+        Assert.Empty(await _store.EventTypesAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task No_calendar_connected_is_409_and_stores_nothing()
+    {
+        using var owner = Owner();
+        _google.Grant = null;
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(CalendarWriteMessages.NotConnected,
+            (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("detail").GetString());
+        Assert.Empty(await _store.CountdownsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task An_update_moves_and_renames_the_event_and_switching_the_alarm_on_marks_it()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        var uid = OnlyEvent();
+
+        using var response = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}",
+            Body(label: "Leave", targetAt: "2027-01-10T08:00:00-05:00", timeZone: "America/New_York", alarm: true));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(uid, OnlyEvent());
+        var moved = _google.Master(uid)!.Value;
+        Assert.Equal("Leave", moved.Summary);
+        Assert.Equal(Instant.FromUtc(2027, 1, 10, 13, 0), moved.Start);
+        Assert.Equal(Instant.FromUtc(2027, 1, 10, 13, 30), moved.End);
+        Assert.Contains(AlertPlanner.CriticalMark, _google.Description(uid), StringComparison.Ordinal);
+        Assert.Equal(AlertTypes.Alarm, (await _store.EventTypesAsync(CancellationToken.None))[AlertPlanner.EventIdFor(uid)]);
+        Assert.True((await CountdownsIn(response)).Single().GetProperty("alarm").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Switching_the_alarm_off_removes_the_mark_and_an_update_without_the_field_keeps_it()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Body(alarm: true));
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        var uid = OnlyEvent();
+
+        // An older phone app sends no alarm field: the alarm stays on.
+        using var kept = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Renamed"));
+        Assert.True((await CountdownsIn(kept)).Single().GetProperty("alarm").GetBoolean());
+        Assert.Contains(AlertPlanner.CriticalMark, _google.Description(uid), StringComparison.Ordinal);
+
+        using var off = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Renamed", alarm: false));
+
+        Assert.False((await CountdownsIn(off)).Single().GetProperty("alarm").GetBoolean());
+        Assert.DoesNotContain(AlertPlanner.CriticalMark, _google.Description(uid), StringComparison.Ordinal);
+        Assert.Equal(AlertTypes.None, (await _store.EventTypesAsync(CancellationToken.None))[AlertPlanner.EventIdFor(uid)]);
+    }
+
+    [Fact]
+    public async Task A_countdown_saved_before_events_gets_one_on_its_next_save()
+    {
+        var id = Guid.NewGuid();
+        await _store.AddCountdownAsync(
+            new AlertCountdown(id, "Home", Instant.FromUtc(2027, 3, 1, 6, 0), "Asia/Amman", Eight), CancellationToken.None);
+        using var owner = Owner();
+        Assert.False((await StatusAsync(owner)).GetProperty("countdowns")[0].GetProperty("onCalendar").GetBoolean());
+
+        using var response = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Home);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var uid = OnlyEvent();
+        Assert.Equal(Instant.FromUtc(2027, 3, 1, 6, 0), _google.Master(uid)!.Value.Start);
+        Assert.True((await CountdownsIn(response)).Single().GetProperty("onCalendar").GetBoolean());
+    }
+
+    [Fact]
+    public async Task An_event_deleted_on_Google_is_made_again_on_the_next_save()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        var first = OnlyEvent();
+        _google.ForgetInserted();
+
+        using var response = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Again"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var second = OnlyEvent();
+        Assert.NotEqual(first, second);
+        Assert.Equal("Again", _google.Master(second)!.Value.Summary);
+        Assert.Equal(second, Assert.Single(await _store.CountdownsAsync(CancellationToken.None)).CalendarEventId);
+    }
+
+    [Fact]
+    public async Task Google_refusing_an_edit_changes_nothing()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        _google.RefusingWrites = (HttpStatusCode.Forbidden, null);
+
+        using var response = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Other"));
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        Assert.Equal("Home", Assert.Single(await _store.CountdownsAsync(CancellationToken.None)).Label);
+    }
+
+    [Fact]
+    public async Task Delete_deletes_the_event_and_Google_refusing_keeps_the_countdown()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        var uid = OnlyEvent();
+
+        _google.RefusingWrites = (HttpStatusCode.Forbidden, null);
+        using var refused = await Send(owner, "DELETE", $"/api/alerts/countdowns/{id}", null);
+        Assert.Equal(HttpStatusCode.BadGateway, refused.StatusCode);
+        Assert.Single(await _store.CountdownsAsync(CancellationToken.None));
+
+        _google.RefusingWrites = null;
+        using var response = await Send(owner, "DELETE", $"/api/alerts/countdowns/{id}", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(_google.Master(uid));
+        Assert.Empty(await _store.CountdownsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Delete_of_a_countdown_whose_event_is_gone_still_deletes_it()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", Home);
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        _google.ForgetInserted();
+
+        using var response = await Send(owner, "DELETE", $"/api/alerts/countdowns/{id}", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(await _store.CountdownsAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task An_alarm_countdown_deleted_before_its_target_never_rings()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns",
+            Body(label: "Leave", targetAt: "2026-10-28T14:00:00Z", alarm: true));
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+
+        await Send(owner, "DELETE", $"/api/alerts/countdowns/{id}", null);
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 14, 0, 30);
+        await _app.Factory.Services.GetRequiredService<CalendarAlertWorker>().TickAsync(CancellationToken.None);
+
+        Assert.DoesNotContain(
+            (await StatusAsync(owner)).GetProperty("alerts").EnumerateArray(), alert => alert.GetProperty("title").GetString() == "Leave");
+        Assert.DoesNotContain(_pushover.Requests, request => request.Form.Values.Any(value => value.Contains("Leave", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task A_moved_alarm_countdown_rings_at_its_new_time_only()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns",
+            Body(label: "Leave", targetAt: "2026-10-28T14:00:00Z", alarm: true));
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+
+        await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Leave", targetAt: "2026-10-28T16:00:00Z"));
+
+        var alerts = (await StatusAsync(owner)).GetProperty("alerts").EnumerateArray()
+            .Where(alert => alert.GetProperty("title").GetString() == "Leave").ToList();
+        var alert = Assert.Single(alerts);
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 16, 0).ToDateTimeOffset(), alert.GetProperty("alertAt").GetDateTimeOffset());
+        Assert.Equal(AlertTypes.Alarm, alert.GetProperty("type").GetString());
+    }
+
+    // ------------------------------------------------------------------ the zone a new one starts in
+
+    [Fact]
+    public async Task A_new_countdown_starts_in_New_York_until_a_phone_reports_its_zone()
+    {
+        using var owner = Owner();
+        Assert.Equal("America/New_York", (await StatusAsync(owner)).GetProperty("defaultTimeZone").GetString());
+
+        using var phone = await PhoneAsync();
+        phone.DefaultRequestHeaders.Add(AlertDeviceZones.Header, "Asia/Amman");
+        using var reported = await phone.GetAsync("/api/alerts/status");
+
+        Assert.Equal("Asia/Amman", (await StatusAsync(owner)).GetProperty("defaultTimeZone").GetString());
     }
 
     // ------------------------------------------------------------------ who may call

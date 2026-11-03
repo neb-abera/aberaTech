@@ -58,6 +58,8 @@ public sealed class PushoverCallbackRouteTests : IDisposable
     private PushoverCallbackRouteTests(string? origin, Dictionary<string, string?>? extra = null)
     {
         var settings = AlertsRouteTests.Settings();
+        // The rings below are written in UTC. Blank would be New York.
+        settings["Alerts:TimeZone"] = "UTC";
         foreach (var (key, value) in extra ?? []) settings[key] = value;
         _pushover.Route = seen => seen.Method == HttpMethod.Get && seen.Url.AbsolutePath == $"/1/receipts/{Receipt}.json" ? _poll() : null;
         _app = new TestApp(settings, services =>
@@ -70,6 +72,7 @@ public sealed class PushoverCallbackRouteTests : IDisposable
             services.AddSingleton<ILoggerProvider>(_logs);
             services.AddSingleton(new AlertsOptions
             {
+                TimeZone = "UTC",
                 CalendarIcsUrl = AlertsRouteTests.FeedUrl,
                 PushoverAppToken = AlertsRouteTests.AppToken,
                 PushoverUserKey = AlertsRouteTests.UserKey,
