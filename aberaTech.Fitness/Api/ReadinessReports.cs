@@ -94,6 +94,10 @@ internal static class ReadinessReports
             SelectionReadiness.Metrics.RunTwoMile, RaceSeconds(2 * Vdot.MileMeters, row), anchorEvidence);
         measurements[SelectionReadiness.Metrics.RunFiveMile] = Modeled(
             SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence);
+        measurements[SelectionReadiness.Metrics.RunTenMile] = Modeled(
+            SelectionReadiness.Metrics.RunTenMile, RaceSeconds(10 * Vdot.MileMeters, row), anchorEvidence);
+        measurements[SelectionReadiness.Metrics.RunOneAndHalfMile] = Modeled(
+            SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence);
 
         // The pace held at the reference heart rate is the aerobic-threshold
         // pace the coaches ask about, if the reference is set at that
@@ -328,9 +332,10 @@ internal static class ReadinessReports
                  {
                      ("deadlift", 3, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, SelectionReadiness.Metrics.DeadliftTripleLb),
                      ("front squat", 3, SelectionReadiness.Metrics.FrontSquatTripleToBodyweight, (string?)null),
-                     ("front squat", 1, SelectionReadiness.Metrics.FrontSquatToBodyweight, (string?)null),
-                     ("bench press", 1, SelectionReadiness.Metrics.BenchPressToBodyweight, (string?)null),
-                     ("back squat", 5, (string?)null, SelectionReadiness.Metrics.BackSquatFiveLb)
+                     ("front squat", 1, SelectionReadiness.Metrics.FrontSquatToBodyweight, SelectionReadiness.Metrics.FrontSquatLb),
+                     ("bench press", 1, SelectionReadiness.Metrics.BenchPressToBodyweight, SelectionReadiness.Metrics.BenchPressLb),
+                     ("back squat", 5, (string?)null, SelectionReadiness.Metrics.BackSquatFiveLb),
+                     ("back squat", 1, (string?)null, SelectionReadiness.Metrics.BackSquatLb)
                  })
         {
             // Every day the lift was trained, its best estimate: the history a
@@ -459,6 +464,7 @@ internal static class ReadinessReports
                 Record(histories, SelectionReadiness.Metrics.AftLowestEvent, date, result.LowestEvent);
                 Record(histories, SelectionReadiness.Metrics.HandReleasePushUps, date, result.HandReleasePushUps);
                 Record(histories, SelectionReadiness.Metrics.Plank, date, result.PlankSeconds);
+                Record(histories, SelectionReadiness.Metrics.SprintDragCarry, date, result.SprintDragCarrySeconds);
                 Record(histories, SelectionReadiness.Metrics.DeadliftTripleLb, date, result.DeadliftKg * BodyMass.PoundsPerKg);
                 if (weight is { } bw) Record(histories, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, date, result.DeadliftKg / bw.WeightKg);
             }
@@ -479,6 +485,7 @@ internal static class ReadinessReports
         Prefer(measurements, SelectionReadiness.Metrics.RunTwoMile, latest.TwoMileSeconds, lowerIsBetter: true, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.HandReleasePushUps, latest.HandReleasePushUps, lowerIsBetter: false, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.Plank, latest.PlankSeconds, lowerIsBetter: false, evidence, on);
+        Prefer(measurements, SelectionReadiness.Metrics.SprintDragCarry, latest.SprintDragCarrySeconds, lowerIsBetter: true, evidence, on);
         Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleLb, latest.DeadliftKg * BodyMass.PoundsPerKg, lowerIsBetter: false, evidence, on);
 
         // The test's deadlift is a real triple, which the log's Epley estimate

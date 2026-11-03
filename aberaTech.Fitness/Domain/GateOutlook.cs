@@ -205,6 +205,10 @@ public static class GateOutlook
                 return RaceVdot(2 * Vdot.MileMeters, requirement.Target, context.HomeAltitudeMeters);
             case SelectionReadiness.Metrics.RunFiveMile:
                 return RaceVdot(5 * Vdot.MileMeters, requirement.Target, context.HomeAltitudeMeters);
+            case SelectionReadiness.Metrics.RunTenMile:
+                return RaceVdot(10 * Vdot.MileMeters, requirement.Target, context.HomeAltitudeMeters);
+            case SelectionReadiness.Metrics.RunOneAndHalfMile:
+                return RaceVdot(1.5 * Vdot.MileMeters, requirement.Target, context.HomeAltitudeMeters);
 
             case SelectionReadiness.Metrics.RuckTwelveMileAt45:
                 return context.BodyKg is { } b45 ? RuckVdot(b45, LoadCarriage.ReferenceLoadKg, requirement.Target) : null;
@@ -267,6 +271,8 @@ public static class GateOutlook
         {
             SelectionReadiness.Metrics.RunTwoMile => Altitude.AtAltitude(Vdot.MinutesFor(2 * Vdot.MileMeters, vdot) * 60, context.HomeAltitudeMeters),
             SelectionReadiness.Metrics.RunFiveMile => Altitude.AtAltitude(Vdot.MinutesFor(5 * Vdot.MileMeters, vdot) * 60, context.HomeAltitudeMeters),
+            SelectionReadiness.Metrics.RunTenMile => Altitude.AtAltitude(Vdot.MinutesFor(10 * Vdot.MileMeters, vdot) * 60, context.HomeAltitudeMeters),
+            SelectionReadiness.Metrics.RunOneAndHalfMile => Altitude.AtAltitude(Vdot.MinutesFor(1.5 * Vdot.MileMeters, vdot) * 60, context.HomeAltitudeMeters),
             SelectionReadiness.Metrics.RuckTwelveMileAt45 when context.BodyKg is { } b => LoadCarriage.PredictSeconds(vdot, b, LoadCarriage.ReferenceLoadKg, TwelveMiles),
             SelectionReadiness.Metrics.RuckTwelveMileAt35 when context.BodyKg is { } b => LoadCarriage.PredictSeconds(vdot, b, 35 / BodyMass.PoundsPerKg, TwelveMiles),
             _ => null

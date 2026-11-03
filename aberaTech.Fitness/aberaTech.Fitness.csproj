@@ -38,6 +38,10 @@
          binary FIT format by hand is how you get subtly wrong heart-rate data;
          the vendor's decoder is the one engine for that behaviour. -->
     <PackageReference Include="Garmin.FIT.Sdk" />
+    <!-- Microsoft's Open XML SDK reads the goals workbook. The .xlsx format
+         is a zip of XML parts with shared strings and styles; the vendor's
+         reader is the one engine for it, as Garmin's is for FIT. -->
+    <PackageReference Include="DocumentFormat.OpenXml" />
     <PackageReference Include="NodaTime" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />

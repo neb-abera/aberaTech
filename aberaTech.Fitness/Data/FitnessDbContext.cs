@@ -14,6 +14,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<Lap> Laps => Set<Lap>();
     public DbSet<SyncState> SyncStates => Set<SyncState>();
     public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
+    public DbSet<OneDriveConnection> OneDriveConnections => Set<OneDriveConnection>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,8 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
             .HasForeignKey(l => l.ActivityId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<OneDriveConnection>().Property(c => c.Id).ValueGeneratedNever();
+        modelBuilder.Entity<OneDriveConnection>().Property(c => c.ProtectedRefreshToken).HasMaxLength(8192);
         modelBuilder.Entity<SyncState>().HasKey(s => s.Source);
         modelBuilder.Entity<SyncState>().Property(s => s.Source).HasMaxLength(32);
         modelBuilder.Entity<SyncState>().Property(s => s.LastOutcome).HasMaxLength(256);
