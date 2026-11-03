@@ -38,6 +38,8 @@ public sealed class AerobicAnalysisTests
         var point = Assert.Single(trend);
         Assert.Equal(395, point.MedianNormalizedSecPerKm, precision: 3);
         Assert.Equal(3, point.RunCount);
+        // Dated by its last run, so "latest" ages from the 16th, not the 1st.
+        Assert.Equal(august.PlusDays(15), point.LastRun);
     }
 
     [Fact]

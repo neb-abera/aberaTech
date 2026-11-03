@@ -986,8 +986,8 @@ function Answer({
                 </strong>{" "}
               </>
             )}
-          At {state.weeklyHours.toFixed(1)} h/week and{" "}
-          {Math.round(state.compliance * 100)}% compliance, the model puts your{" "}
+          At {state.weeklyHours.toFixed(1)} h/week of running and{" "}
+          {state.strengthHours.toFixed(1)} h of strength, the model puts your{" "}
           {formatDistance(state.distanceMeters)} at{" "}
           <strong>{formatSeconds(predicted.median)}</strong> in{" "}
           {state.months.toFixed(0)} months, and is 80% sure it lands between{" "}

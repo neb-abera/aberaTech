@@ -79,7 +79,9 @@ internal static class ReadinessReports
                 month.MedianNormalizedSecPerKm * Vdot.MileMeters / 1000,
                 Basis.Measured,
                 Text($"median pace at {row.ReferenceHr} bpm over {month.RunCount} runs in {month.Year:0000}-{month.Month:00}"),
-                new LocalDate(month.Year, month.Month, 1));
+                // The last run counted, so the Goals tab ages it from that
+                // run rather than from the first of the month.
+                month.LastRun ?? new LocalDate(month.Year, month.Month, 1));
         }
 
         // Rucks: a timed twelve-mile at the load beats any estimate; without
