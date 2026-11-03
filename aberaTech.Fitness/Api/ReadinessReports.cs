@@ -5,11 +5,6 @@ using NodaTime;
 
 namespace aberaTech.Fitness.Api;
 
-/// <summary>
-/// Reads the selection gates out of the log: what the athlete has actually
-/// done recently, what the model says where nothing was done, and how that
-/// stands against every published standard between here and a slot.
-/// </summary>
 /// <summary>What the log says today, and what it said on every earlier date, by metric.</summary>
 internal sealed record Readings(
     Dictionary<string, Measurement> Measurements,
@@ -36,42 +31,16 @@ internal static class ReadinessReports
         IReadOnlyList<MonthlyAerobicPoint> aerobicTrend,
         LocalDate today)
     {
-        var row = history.Row;
         var readings = Gather(history, evidence, aerobicTrend, today);
 
-        var gates = SelectionReadiness.Evaluate(readings.Measurements, row.SelectionDate)
-            .Select(g => new GateDto(
-                g.Gate.Id,
-                g.Gate.Name,
-                g.Gate.Purpose,
-                g.Gate.WeeksBeforeSelection,
-                g.DueOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                g.Status.ToString(),
-                g.Passed,
-                g.Known,
-                g.Requirements.Select(r => new RequirementResultDto(
-                    r.Requirement.Metric,
-                    r.Requirement.Label,
-                    r.Requirement.Comparison.ToString(),
-                    r.Requirement.Target,
-                    r.Requirement.Unit,
-                    r.Requirement.CitationId,
-                    r.Status.ToString(),
-                    r.Current is { } current ? Dto(current) : null,
-                    r.Gap)).ToArray(),
-                g.Gate.Untracked))
-            .ToArray();
-
         return new ReadinessDto(
-            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            gates,
             readings.Ruck,
             readings.Calisthenics,
             readings.Body,
             readings.AftResults);
     }
 
-    /// <summary>Every measurement the gates score from, and every dated reading behind them.</summary>
+    /// <summary>Every measurement the goals are scored from, and every dated reading behind them.</summary>
     internal static Readings Gather(
         TrainingHistory history,
         ReadinessEvidence evidence,

@@ -48,8 +48,6 @@ public sealed record SettingsDto(
     /// </summary>
     double MaxWeightAdjustmentFraction,
     double HomeAltitudeMeters,
-    /// <summary>The date the readiness gates count back from, if named.</summary>
-    string? SelectionDate = null,
     /// <summary>The lactate-threshold heart rate, when a test has set it.</summary>
     int? LtHr = null);
 
@@ -173,31 +171,6 @@ public sealed record SummaryDto(
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
 public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On);
 
-/// <summary>One line of a gate, scored.</summary>
-public sealed record RequirementResultDto(
-    string Metric,
-    string Label,
-    string Comparison,
-    double Target,
-    string Unit,
-    string CitationId,
-    string Status,
-    StandingDto? Current,
-    string Gap);
-
-/// <summary>One published standard on the way to selection, scored and dated.</summary>
-public sealed record GateDto(
-    string Id,
-    string Name,
-    string Purpose,
-    int WeeksBeforeSelection,
-    string? DueOn,
-    string Status,
-    int Passed,
-    int Known,
-    IReadOnlyList<RequirementResultDto> Requirements,
-    IReadOnlyList<string> Untracked);
-
 /// <summary>A month of rucking, as a median pace at the reference heart rate and load.</summary>
 public sealed record RuckPointDto(string Month, double MedianSecPerKm, int Rucks);
 
@@ -259,10 +232,8 @@ public sealed record AftResultDto(
     IReadOnlyList<AftEventDto> Events,
     IReadOnlyList<StepDto> Steps);
 
-/// <summary>Everything between the athlete and a selection slot, as the log sees it.</summary>
+/// <summary>Rucking, calisthenics, body composition and the fitness tests, as the log sees them.</summary>
 public sealed record ReadinessDto(
-    string? SelectionDate,
-    IReadOnlyList<GateDto> Gates,
     RuckReportDto Ruck,
     CalisthenicsDto Calisthenics,
     BodyReportDto Body,

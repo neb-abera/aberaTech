@@ -21,21 +21,23 @@ public sealed record DigestDto(
 /// </summary>
 internal static class DigestReports
 {
-    public static async Task<DigestDto> BuildAsync(FitnessDbContext database, Instant now, CancellationToken cancellationToken)
+    public static async Task<DigestDto> BuildAsync(
+        FitnessDbContext database, OneDrive.IWorkbookSource source, Instant now, CancellationToken cancellationToken)
     {
         // One read of the log for both halves of the page.
+        var read = await source.ReadAsync(cancellationToken);
         var history = await TrainingHistory.LoadAsync(database, cancellationToken);
         var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
         var predictions = await database.Predictions.AsNoTracking().ToListAsync(cancellationToken);
         var today = now.InUtc().Date;
 
         var summary = FitnessReports.Summary(history, evidence, predictions, now);
-        var outlook = OutlookReports.Build(history, evidence, null, 1.0, today, now);
-        return Compose(summary, outlook, today);
+        var goals = GoalReports.Build(read, history, evidence, null, 1.0, today, now);
+        return Compose(summary, goals, today);
     }
 
     /// <summary>The page itself, from the two reports it is written from.</summary>
-    internal static DigestDto Compose(SummaryDto summary, OutlookDto outlook, LocalDate today)
+    internal static DigestDto Compose(SummaryDto summary, GoalsDto goals, LocalDate today)
     {
         var weekStart = today.PlusDays(-(((int)today.DayOfWeek - 1 + 7) % 7));
 
@@ -77,17 +79,28 @@ internal static class DigestReports
         }
         lines.Add("");
 
-        // The gates.
-        lines.Add(Text($"GATES{(outlook.SelectionDate is { } sd ? Text($" (selection {sd})") : " (no selection date set)")}"));
-        foreach (var gate in outlook.Gates)
+        // The goals, as the workbook states them.
+        lines.Add(Text($"GOALS{(goals.DueOn is { } due ? Text($" (due {due})") : "")}"));
+        if (goals.Source.Error is { } error) lines.Add(Text($"  The workbook could not be read: {error}"));
+        if (goals.Sections.Count == 0 && goals.Source.Error is null)
         {
-            var scored = summary.Readiness.Gates.FirstOrDefault(g => g.Id == gate.Id);
-            var chance = gate.Probability is { } p ? Text($"{Format.Percent(p)} by {gate.DueOn ?? "12 mo out"}") : "not forecast";
-            lines.Add(Text($"  {gate.Name}: {scored?.Passed ?? 0}/{gate.Total} clear today; {chance} at {outlook.WeeklyHours:0.0} h/wk ({gate.Forecast}/{gate.Total} lines)."));
+            lines.Add(!goals.Source.Configured
+                ? "  No goals read: this deployment has no OneDrive connection set up."
+                : "  No goals read: connect OneDrive on the Goals tab.");
         }
-        lines.Add(outlook.EarliestSelectionDate is { } earliest
-            ? Text($"  Earliest selection every forecast gate is ready for: {earliest} (set by {outlook.BindingGate}).")
-            : "  No selection date can be named yet: some forecast line never reaches 80% at this week.");
+        foreach (var section in goals.Sections)
+        {
+            lines.Add(section.Test is null
+                ? Text($"  {section.Name}")
+                : Text($"  {section.Name}: {(section.PointsNow is { } pn ? pn.ToString(CultureInfo.InvariantCulture) : "not all events tested")} now, goal {(section.PointsGoal is { } pg ? pg.ToString(CultureInfo.InvariantCulture) : "n/a")} of {section.PointsMax} pts"));
+            foreach (var row in section.Rows)
+            {
+                var now = row.Current is { } c ? SelectionReadiness.Describe(row.Unit, c.Value) : "untested";
+                var goal = row.Goal is { } g ? SelectionReadiness.Describe(row.Unit, g) : "blank";
+                var chance = row.Forecast?.Probability is { } p ? Text($", {Format.Percent(p)} by the due date at {goals.WeeklyHours:0.0} h/wk") : "";
+                lines.Add(Text($"    {row.Label}: {now} now, goal {goal}{chance}."));
+            }
+        }
         lines.Add("");
 
         // What needs doing.

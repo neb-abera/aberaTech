@@ -31,7 +31,6 @@ public sealed record SettingsUpdate(
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
     double? AnchorSeconds = null,
-    string? SelectionDate = null,
     int? LtHr = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
@@ -109,8 +108,8 @@ public static class FitnessEndpoints
         }).AllowAnonymous();
 
         // The week in one page, for the dashboard.
-        api.MapGet("/digest", async (FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
-            Results.Ok(await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken)))
+        api.MapGet("/digest", async (FitnessDbContext database, OneDrive.IWorkbookSource source, IClock clock, CancellationToken cancellationToken) =>
+            Results.Ok(await DigestReports.BuildAsync(database, source, clock.GetCurrentInstant(), cancellationToken)))
             .CacheOutput(FitnessOutputCache.PolicyName);
 
         // The same page as text, for the morning brief: one bearer key, no
@@ -118,14 +117,14 @@ public static class FitnessEndpoints
         // compared in constant time, because a fitness log is health data.
         if (options.HasDigestKey)
         {
-            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, IClock clock, CancellationToken cancellationToken) =>
+            routes.MapGet("/api/fitness/digest.txt", async (HttpContext context, FitnessDbContext database, OneDrive.IWorkbookSource source, IClock clock, CancellationToken cancellationToken) =>
             {
                 if (!DigestKeyAllows(context.Request.Headers.Authorization.ToString(), options.DigestKey))
                 {
                     return Results.Unauthorized();
                 }
 
-                var digest = await DigestReports.BuildAsync(database, clock.GetCurrentInstant(), cancellationToken);
+                var digest = await DigestReports.BuildAsync(database, source, clock.GetCurrentInstant(), cancellationToken);
                 return Results.Text(digest.Text + "\n", "text/plain; charset=utf-8");
             }).AllowAnonymous(); // The bearer key above is the whole of its authorization.
         }
@@ -142,22 +141,6 @@ public static class FitnessEndpoints
 
         // The goals, read from the athlete's own workbook.
         api.MapGoalEndpoints(oneDrive);
-
-        // The gates as a forecast: the chance of clearing each line by the
-        // date it is due, under a named training week.
-        api.MapGet("/readiness/outlook", async (
-            FitnessDbContext database,
-            IClock clock,
-            double? weeklyHours,
-            double? compliance,
-            CancellationToken cancellationToken) =>
-        {
-            if (weeklyHours is < 0 or > 40) return Fail("weeklyHours 0-40.");
-            if (compliance is < 0 or > 1) return Fail("compliance 0-1.");
-
-            return Results.Ok(await OutlookReports.BuildAsync(
-                database, weeklyHours, compliance ?? 1.0, clock.GetCurrentInstant(), cancellationToken));
-        }).CacheOutput(FitnessOutputCache.PolicyName);
 
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide
@@ -455,7 +438,6 @@ public static class FitnessEndpoints
             row.PastPeakWeightKg = update.PastPeakWeightKg;
             row.GoalWeightKg = update.GoalWeightKg;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
-            row.SelectionDate = ParseDate(update.SelectionDate);
 
             // A race is the honest way to state the anchor; raw VDOT stays as
             // the escape hatch. The race happened at home altitude, so its

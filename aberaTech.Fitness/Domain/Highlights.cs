@@ -120,15 +120,15 @@ public static class Highlights
             if (latest.E1Rm > bestBefore)
             {
                 highlights.Add(new Highlight("strength-pr",
-                    $"{exercise.Key}: new estimated 1RM {latest.E1Rm:0}",
-                    $"Previous best {bestBefore:0}; Epley estimate from {latest.Date:yyyy-MM-dd}.",
+                    $"{exercise.Key}: new estimated 1RM {latest.E1Rm * BodyMass.PoundsPerKg:0} lb",
+                    $"Previous best {bestBefore * BodyMass.PoundsPerKg:0} lb; Epley estimate from {latest.Date:yyyy-MM-dd}.",
                     Positive: true));
             }
             else if (latest.E1Rm < bestBefore * 0.93)
             {
                 highlights.Add(new Highlight("strength-slide",
                     $"{exercise.Key}: estimated 1RM down {Format.Percent(1 - latest.E1Rm / bestBefore)} from peak",
-                    $"Peak {bestBefore:0}, latest {latest.E1Rm:0} on {latest.Date:yyyy-MM-dd}. Strength holds on ~2 sessions/week.",
+                    $"Peak {bestBefore * BodyMass.PoundsPerKg:0} lb, latest {latest.E1Rm * BodyMass.PoundsPerKg:0} lb on {latest.Date:yyyy-MM-dd}. Strength holds on ~2 sessions/week.",
                     Positive: false));
             }
         }

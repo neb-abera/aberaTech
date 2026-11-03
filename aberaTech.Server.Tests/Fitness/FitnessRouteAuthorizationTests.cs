@@ -52,7 +52,7 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         ["GET", "/api/fitness/summary"],
         ["GET", "/api/fitness/digest"],
         ["GET", "/api/fitness/citations"],
-        ["GET", "/api/fitness/readiness/outlook?weeklyHours=6"],
+        ["GET", "/api/fitness/goals"],
         ["GET", "/api/fitness/predictions?weeklyHours=6&compliance=0.9"],
         ["GET", "/api/fitness/predictions/goal?distanceMeters=3218.688&targetSeconds=840&monthsAvailable=6"],
         ["POST", "/api/fitness/import"],

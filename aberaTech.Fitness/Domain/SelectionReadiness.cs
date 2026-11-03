@@ -34,65 +34,10 @@ public sealed record Requirement(
     string Unit,
     string CitationId);
 
-/// <summary>A standard the athlete has to clear by a date on the way to selection.</summary>
-/// <param name="Id">Stable key.</param>
-/// <param name="Name">What the gate is.</param>
-/// <param name="Purpose">Why it is on the list.</param>
-/// <param name="WeeksBeforeSelection">How far ahead of the selection date it should be cleared.</param>
-/// <param name="Requirements">The lines the log can score.</param>
-/// <param name="Untracked">The lines it cannot, said out loud rather than dropped.</param>
-public sealed record Gate(
-    string Id,
-    string Name,
-    string Purpose,
-    int WeeksBeforeSelection,
-    IReadOnlyList<Requirement> Requirements,
-    IReadOnlyList<string> Untracked);
-
-public enum GateStatus
-{
-    Pass,
-    Fail,
-    Unknown
-}
-
-/// <summary>One requirement, against what the athlete has.</summary>
-public sealed record RequirementResult(Requirement Requirement, GateStatus Status, Measurement? Current, string Gap);
-
-/// <summary>One gate, against what the athlete has.</summary>
-public sealed record GateResult(
-    Gate Gate,
-    LocalDate? DueOn,
-    GateStatus Status,
-    int Passed,
-    int Known,
-    IReadOnlyList<RequirementResult> Requirements);
-
 /// <summary>
-/// The published standards between this athlete and a Special Forces slot,
-/// as gates with dates, scored from the log.
+/// The metrics a goal can be measured under, and the units its value is
+/// stated in. The goals themselves are the athlete's workbook (GoalCatalog).
 /// </summary>
-/// <remarks>
-/// A goal list of running times cannot say whether someone is ready for a
-/// selection course, because selection is not a running race. The standards
-/// that actually gate the path are published — the day-one drop line at
-/// SFAS, a Guard company's readiness-evaluation prerequisites, the entry test
-/// for the final training block — and each is a handful of numbers over
-/// rucking, calisthenics, strength and a run. They are transcribed here with
-/// their sources, ordered by when they have to be cleared, and scored against
-/// whatever the log can say; what it cannot say is listed, not hidden.
-///
-/// The dates hang off the selection date the athlete names — the readiness
-/// evaluation is the first gate a Guard candidate faces — and count back:
-/// the final block's entry test has to be passed before the block begins,
-/// the day-one minimums should be in hand a year out.
-///
-/// Citations: <see cref="Citations.SfasDayOne"/>,
-/// <see cref="Citations.EvokeSelectionPrep"/>,
-/// <see cref="Citations.GuardSfrePrerequisites"/>,
-/// <see cref="Citations.SfasCompetitive"/>, <see cref="Citations.ArmyAft"/>,
-/// <see cref="Citations.FarinaSfasBody"/>.
-/// </remarks>
 public static class SelectionReadiness
 {
     /// <summary>The metric keys a gate can ask about.</summary>
@@ -150,133 +95,6 @@ public static class SelectionReadiness
         public const string Meters = "m";
     }
 
-    private const double Mile = Vdot.MileMeters;
-
-    public static IReadOnlyList<Gate> Gates { get; } =
-    [
-        new Gate(
-            "aft-combat",
-            "AFT combat standard",
-            "The fitness test every combat specialty has to pass, and the score the recruiter sees first.",
-            52,
-            [
-                new Requirement(Metrics.AftLowestEvent, "Lowest AFT event", Comparison.AtLeast, Aft.CombatMinimumPerEvent, Units.Points, Citations.ArmyAft.Id),
-                new Requirement(Metrics.AftTotal, "AFT total", Comparison.AtLeast, Aft.CombatMinimumTotal, Units.Points, Citations.ArmyAft.Id)
-            ],
-            []),
-        new Gate(
-            "sfas-day-one",
-            "SFAS day-one minimums",
-            "Under any of these on the first morning and the course is over before it starts. A year out, these should already be comfortable.",
-            52,
-            [
-                new Requirement(Metrics.RunTwoMile, "Two-mile run", Comparison.AtMost, 15 * 60 + 12, Units.Seconds, Citations.SfasDayOne.Id),
-                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 28, Units.Reps, Citations.SfasDayOne.Id),
-                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 6, Units.Reps, Citations.SfasDayOne.Id)
-            ],
-            []),
-        new Gate(
-            "selection-prep-entry",
-            "Selection Prep entry test",
-            "What Evoke expects before the final fifteen-week block; it has to be passed before that block can start.",
-            20,
-            [
-                new Requirement(Metrics.RunTwoMile, "Two-mile run", Comparison.AtMost, 14 * 60, Units.Seconds, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 45 * 60, Units.Seconds, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.RuckTwelveMileAt35, "Twelve-mile ruck at 35 lb", Comparison.AtMost, 3 * 3600, Units.Seconds, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 40, Units.Reps, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 10, Units.Reps, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.FrontSquatTripleToBodyweight, "Front squat 3RM", Comparison.AtLeast, 1.0, Units.Bodyweights, Citations.EvokeSelectionPrep.Id),
-                new Requirement(Metrics.DeadliftTripleToBodyweight, "Deadlift 3RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.EvokeSelectionPrep.Id)
-            ],
-            []),
-        new Gate(
-            "sfre-prerequisites",
-            "SFRE prerequisites",
-            "What a Guard Special Forces company publishes as the price of a seat at its readiness evaluation, the gate to an SFAS slot.",
-            8,
-            [
-                new Requirement(Metrics.RunTwoMile, "Two-mile run", Comparison.AtMost, 13 * 60 + 42, Units.Seconds, Citations.GuardSfrePrerequisites.Id),
-                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 64, Units.Reps, Citations.GuardSfrePrerequisites.Id),
-                new Requirement(Metrics.SitUps, "Sit-ups in two minutes", Comparison.AtLeast, 72, Units.Reps, Citations.GuardSfrePrerequisites.Id),
-                new Requirement(Metrics.RuckTwelveMileAt45, "Twelve-mile ruck at 45 lb dry", Comparison.AtMost, 3 * 3600, Units.Seconds, Citations.GuardSfrePrerequisites.Id)
-            ],
-            ["Rope climb", "100 m swim", "Pull-ups (no count published)"]),
-        new Gate(
-            "evoke-sfas-ready",
-            "Evoke coaches' SFAS-ready numbers",
-            "Where the Selection Prep block is meant to leave you, from what Jack Kuenzle and Scott Johnston told an SFAS candidate on Evoke's forum, with the lifting numbers Kuenzle attributes to Vince Paikowski. No ruck line on purpose: the best ruckers Kuenzle ever saw never trained with a ruck and were simply the best runners, so the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
-            4,
-            [
-                new Requirement(Metrics.AerobicThresholdPace, "Aerobic-threshold pace on the flat", Comparison.AtMost, 8 * 60, Units.SecondsPerMile, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 35 * 60, Units.Seconds, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.PullUps, "Strict pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.EvokeSfasReady.Id),
-                new Requirement(Metrics.BackSquatFiveLb, "Back squat 5RM", Comparison.AtLeast, 250, Units.Pounds, Citations.EvokeSfasReady.Id)
-            ],
-            ["Deadlift + squat + overhead press total of 750 lb"]),
-        new Gate(
-            "sfas-competitive",
-            "Competitive at selection",
-            "The row selected candidates sit on. The minimums get you in the door; these are what the cadre see from someone who belongs there.",
-            0,
-            [
-                new Requirement(Metrics.RunTwoMile, "Two-mile run", Comparison.AtMost, 13 * 60 + 30, Units.Seconds, Citations.SfasDayOne.Id),
-                new Requirement(Metrics.RunFiveMile, "Five-mile run", Comparison.AtMost, 35 * 60, Units.Seconds, Citations.SfasCompetitive.Id),
-                new Requirement(Metrics.RuckTwelveMileAt45, "Twelve-mile ruck at 45 lb", Comparison.AtMost, 2 * 3600 + 45 * 60, Units.Seconds, Citations.SfasCompetitive.Id),
-                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 12, Units.Reps, Citations.SfasCompetitive.Id),
-                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 40, Units.Reps, Citations.SfasDayOne.Id),
-                new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 15, Units.Percent, Citations.FarinaSfasBody.Id)
-            ],
-            ["Land navigation, day and night", "Back-to-back days under load"]),
-        new Gate(
-            "own-standards",
-            "Your own 2027 standards",
-            "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \"non-essential\" are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer's carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
-            0,
-            [
-                new Requirement(Metrics.FarmersCarryMeters, "Farmer's carry at 1.5× bodyweight", Comparison.AtLeast, 100, Units.Meters, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.PullUps, "Pull-ups", Comparison.AtLeast, 15, Units.Reps, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.PushUps, "Push-ups in two minutes", Comparison.AtLeast, 80, Units.Reps, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.HandReleasePushUps, "Hand-release push-ups", Comparison.AtLeast, 62, Units.Reps, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.DeadliftTripleLb, "Deadlift 3RM", Comparison.AtLeast, 350, Units.Pounds, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.BenchPressToBodyweight, "Bench press 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.FrontSquatToBodyweight, "Front squat 1RM", Comparison.AtLeast, 1.5, Units.Bodyweights, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.BodyweightLb, "Bodyweight", Comparison.AtMost, 170, Units.Pounds, Citations.NebFitnessGoals.Id),
-                new Requirement(Metrics.BodyFat, "Body fat", Comparison.AtMost, 10, Units.Percent, Citations.NebFitnessGoals.Id)
-            ],
-            [])
-    ];
-
-    /// <summary>Every gate, scored against what the athlete has.</summary>
-    /// <param name="measurements">The latest standing on each metric, by key; a metric absent here is unknown.</param>
-    /// <param name="selectionDate">The readiness evaluation the gates count back from, if named.</param>
-    public static IReadOnlyList<GateResult> Evaluate(
-        IReadOnlyDictionary<string, Measurement> measurements, LocalDate? selectionDate)
-    {
-        return Gates
-            .Select(gate =>
-            {
-                var results = gate.Requirements.Select(r => Score(r, measurements)).ToArray();
-                var known = results.Count(r => r.Status != GateStatus.Unknown);
-                var passed = results.Count(r => r.Status == GateStatus.Pass);
-
-                var status = results.Any(r => r.Status == GateStatus.Fail) ? GateStatus.Fail
-                    : known < results.Length ? GateStatus.Unknown
-                    : GateStatus.Pass;
-
-                return new GateResult(
-                    gate,
-                    selectionDate?.PlusWeeks(-gate.WeeksBeforeSelection),
-                    status,
-                    passed,
-                    known,
-                    results);
-            })
-            .ToArray();
-    }
-
     /// <summary>A value in a requirement's unit, the way an athlete would say it.</summary>
     public static string Describe(string unit, double value) => unit switch
     {
@@ -290,28 +108,6 @@ public static class SelectionReadiness
         Units.Meters => Text($"{value:0} m"),
         _ => Text($"{value:0.##}")
     };
-
-    private static RequirementResult Score(Requirement requirement, IReadOnlyDictionary<string, Measurement> measurements)
-    {
-        if (!measurements.TryGetValue(requirement.Metric, out var current))
-        {
-            return new RequirementResult(requirement, GateStatus.Unknown, null, "nothing in the log scores this yet");
-        }
-
-        var passes = requirement.Comparison == Comparison.AtLeast
-            ? current.Value >= requirement.Target
-            : current.Value <= requirement.Target;
-
-        var margin = requirement.Comparison == Comparison.AtLeast
-            ? current.Value - requirement.Target
-            : requirement.Target - current.Value;
-
-        var gap = passes
-            ? Text($"clear by {Describe(requirement.Unit, Math.Abs(margin))}")
-            : Text($"short by {Describe(requirement.Unit, Math.Abs(margin))}");
-
-        return new RequirementResult(requirement, passes ? GateStatus.Pass : GateStatus.Fail, current, gap);
-    }
 
     private static string Text(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
 }

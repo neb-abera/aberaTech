@@ -14,7 +14,7 @@ public sealed class DigestTests
 
     private static SummaryDto Summary() =>
         new(
-            new SettingsDto(152, 340, 160, 35.4, "2026-04-03", 79.4, 1991, null, 7, null, null, null, null, null, null, 0.1, 15, "2028-04-01", 168),
+            new SettingsDto(152, 340, 160, 35.4, "2026-04-03", 79.4, 1991, null, 7, null, null, null, null, null, null, 0.1, 15, 168),
             [new AerobicPointDto("2026-07", 447, 2, 0), new AerobicPointDto("2026-08", 410, 11, 4)],
             [new WeekVolumeDto("2026-08-31", 210), new WeekVolumeDto("2026-09-07", 85)],
             [],
@@ -28,8 +28,6 @@ public sealed class DigestTests
             0.147,
             25,
             new ReadinessDto(
-                "2028-04-01",
-                [new GateDto("sfas-day-one", "SFAS day-one minimums", "", 52, "2027-04-03", "Fail", 1, 2, [], [])],
                 new RuckReportDto(20.41, 0.67, [], [], null, null, 0, []),
                 new CalisthenicsDto([], []),
                 new BodyReportDto([], null, null, null, null),
@@ -38,19 +36,30 @@ public sealed class DigestTests
             new ThresholdSuggestionDto(158, null, null, "The test held 158 bpm.", "uphill-athlete-hr-drift"),
             new DurabilityDto(10.5, 7.9, 1.33, 1.4, 14.7, 4, 1, 60, [], []));
 
-    private static OutlookDto Outlook() =>
+    private static GoalsDto Goals() =>
         new(
-            "2028-04-01", 4.5, 4.5, 7, "the hours a week the profile says you can train (7.0 h)", 1.0, 35.4,
-            [new OutlookGateDto("sfas-day-one", "SFAS day-one minimums", 52, "2027-04-03", 6.9, 0.62, 2, 3, 4.5, [])],
-            "2028-01-22",
-            "sfas-day-one",
-            [],
-            []);
+            new GoalSourceDto("OneDrive", true, true, "2026-09-09T06:00:00Z", null, null, "goals"),
+            "2027-12-31",
+            7,
+            "the hours a week the profile says you can train (7.0 h)",
+            [
+                new GoalSectionDto("Army Fitness Test", "aft", 428, 500, 500, null,
+                [
+                    new GoalRowDto(11, "2 mile run", "run-2mi", "s", true, 1009, null, 735, "F",
+                        new StandingDto("run-2mi", 1009, "Measured", "AFT of 2026-04-03", "2026-04-03"),
+                        false, 83, 100, new GoalForecastDto(0.34, 760, "trajectory", "Needs VDOT 51.", 9.1), null)
+                ]),
+                new GoalSectionDto("Strength", null, null, null, null, null,
+                [
+                    new GoalRowDto(20, "Farmer carry 1.5x bw m", "farmer-carry-1.5bw-m", "m", false, 25, null, 100, "D",
+                        null, null, null, null, null, null)
+                ])
+            ]);
 
     [Fact]
-    public void The_page_covers_training_engine_gates_and_what_needs_attention()
+    public void The_page_covers_training_engine_goals_and_what_needs_attention()
     {
-        var digest = DigestReports.Compose(Summary(), Outlook(), Today);
+        var digest = DigestReports.Compose(Summary(), Goals(), Today);
 
         Assert.Equal("2026-09-07", digest.WeekStart);
         var text = digest.Text;
@@ -63,9 +72,12 @@ public sealed class DigestTests
         Assert.Contains("VDOT anchor 35.4 from 2026-04-03", text);
         Assert.Contains("AeT–LT spread 15% (over the 10% line: base volume)", text);
         Assert.Contains("a test suggests AeT 158 bpm", text);
-        Assert.Contains("GATES (selection 2028-04-01)", text);
-        Assert.Contains("SFAS day-one minimums: 1/3 clear today; 62% by 2027-04-03 at 4.5 h/wk (2/3 lines)", text);
-        Assert.Contains("Earliest selection every forecast gate is ready for: 2028-01-22", text);
+        Assert.Contains("GOALS (due 2027-12-31)", text);
+        Assert.Contains("  Army Fitness Test: 428 now, goal 500 of 500 pts", text);
+        Assert.Contains("    2 mile run: 16:49 now, goal 12:15, 34% by the due date at 7.0 h/wk.", text);
+        Assert.Contains("    Farmer carry 1.5x bw m: untested now, goal 100 m.", text);
+        Assert.DoesNotContain("GATES", text);
+        Assert.DoesNotContain("selection", text, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("- Nothing locked in the prediction ledger.", text);
         Assert.Contains("+ Aerobic base up 8% month over month.", text);
 
@@ -74,22 +86,26 @@ public sealed class DigestTests
     }
 
     [Fact]
-    public void Without_a_selection_date_or_a_trend_the_page_says_so_rather_than_breaking()
+    public void Without_a_workbook_or_a_trend_the_page_says_so_rather_than_breaking()
     {
         var summary = Summary() with
         {
             AerobicTrend = [],
             DeficiencySpread = null,
             ThresholdSuggestion = null,
-            Highlights = [],
-            Readiness = Summary().Readiness with { SelectionDate = null }
+            Highlights = []
         };
-        var outlook = Outlook() with { SelectionDate = null, EarliestSelectionDate = null, BindingGate = null };
+        var goals = Goals() with
+        {
+            DueOn = null,
+            Source = Goals().Source with { Error = "OneDrive did not answer in time." },
+            Sections = []
+        };
 
-        var text = DigestReports.Compose(summary, outlook, Today).Text;
+        var text = DigestReports.Compose(summary, goals, Today).Text;
 
-        Assert.Contains("GATES (no selection date set)", text);
-        Assert.Contains("No selection date can be named yet", text);
+        Assert.Contains("GOALS\n", text);
+        Assert.Contains("The workbook could not be read: OneDrive did not answer in time.", text);
         Assert.Contains("Nothing flagged.", text);
         Assert.DoesNotContain("AeT pace at", text);
     }
