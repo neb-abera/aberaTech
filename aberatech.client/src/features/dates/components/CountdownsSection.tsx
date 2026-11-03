@@ -18,6 +18,7 @@ import {
   countdownRepeats,
   createCountdown,
   deleteCountdown,
+  describeRepeat,
   updateCountdown,
 } from "../../alerts/core/countdowns";
 import { homeZone, zoneOptions } from "../../scheduling/core/timezones";
@@ -49,6 +50,8 @@ interface Draft {
   timeZone: string;
   alarm: boolean;
   repeat: CountdownRepeat;
+  /** As typed, so the field can be cleared while it is edited. */
+  every: string;
 }
 
 /** A new countdown starts in the phone's zone, as the server reports it. */
@@ -59,6 +62,7 @@ const blank = (timeZone: string): Draft => ({
   timeZone,
   alarm: false,
   repeat: "none",
+  every: "1",
 });
 
 function draftOf(countdown: Countdown): Draft {
@@ -68,11 +72,9 @@ function draftOf(countdown: Countdown): Draft {
     timeZone: countdown.timeZone,
     alarm: countdown.alarm ?? false,
     repeat: countdown.repeat ?? "none",
+    every: String(countdown.repeatEvery ?? 1),
   };
 }
-
-const repeatLabel = (repeat: CountdownRepeat | undefined) =>
-  countdownRepeats.find((choice) => choice.value === repeat)?.label;
 
 function explain(result: Exclude<StateChangeResult, { ok: true }>): string {
   switch (result.reason) {
@@ -175,6 +177,20 @@ export default function CountdownsSection({
       setErrors({ targetAt: ["A date and a time."] });
       return;
     }
+    const every = Number(draft.every);
+    if (
+      draft.repeat !== "none" &&
+      !(
+        Number.isInteger(every) &&
+        every >= 1 &&
+        every <= countdownBounds.repeatEvery
+      )
+    ) {
+      setErrors({
+        repeatEvery: [`A whole number, 1 to ${countdownBounds.repeatEvery}.`],
+      });
+      return;
+    }
     setErrors({});
     const fields: CountdownFields = {
       label: draft.label.trim(),
@@ -182,6 +198,7 @@ export default function CountdownsSection({
       timeZone,
       alarm: draft.alarm,
       repeat: draft.repeat,
+      repeatEvery: draft.repeat === "none" ? 1 : every,
     };
     const name = fields.label || countdownBounds.defaultLabel;
     const saved = editing
@@ -257,9 +274,9 @@ export default function CountdownsSection({
                     {formatTarget(countdown.targetAt, countdown.timeZone)} (
                     {countdown.timeZone})
                   </Typography>
-                  {countdown.repeat && countdown.repeat !== "none" && (
+                  {describeRepeat(countdown.repeat, countdown.repeatEvery) && (
                     <Typography variant="body2" data-testid="countdown-repeat">
-                      {repeatLabel(countdown.repeat)}
+                      {describeRepeat(countdown.repeat, countdown.repeatEvery)}
                     </Typography>
                   )}
                   {countdown.alarm && (
@@ -441,29 +458,46 @@ export default function CountdownsSection({
             that does not repeat is deleted once its alarm is stopped.
           </FormHelperText>
         </Box>
-        <TextField
-          select
-          label="Repeats"
-          value={draft.repeat}
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              repeat: event.target.value as CountdownRepeat,
-            }))
-          }
-          error={Boolean(errors.repeat)}
-          helperText={help(
-            "repeat",
-            "At its time it moves to the next date, and its calendar event repeats.",
-          )}
-          sx={{ maxWidth: "16rem" }}
-        >
-          {countdownRepeats.map((choice) => (
-            <MenuItem key={choice.value} value={choice.value}>
-              {choice.label}
-            </MenuItem>
-          ))}
-        </TextField>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
+          <TextField
+            label="Repeats every"
+            type="number"
+            value={draft.every}
+            disabled={draft.repeat === "none"}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, every: event.target.value }))
+            }
+            error={Boolean(errors.repeatEvery)}
+            helperText={errors.repeatEvery?.[0]}
+            slotProps={{
+              htmlInput: { min: 1, max: countdownBounds.repeatEvery, step: 1 },
+            }}
+            sx={{ width: "9rem" }}
+          />
+          <TextField
+            select
+            label="Unit"
+            value={draft.repeat}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                repeat: event.target.value as CountdownRepeat,
+              }))
+            }
+            error={Boolean(errors.repeat)}
+            sx={{ width: "10rem" }}
+          >
+            {countdownRepeats.map((choice) => (
+              <MenuItem key={choice.value} value={choice.value}>
+                {Number(draft.every) === 1 ? choice.one : choice.many}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+        <FormHelperText sx={{ mt: 0 }}>
+          {errors.repeat?.[0] ??
+            "Never, or every so many hours, days, weeks, months or years. At its time it moves to the next date, and its calendar event repeats."}
+        </FormHelperText>
         <Stack direction="row" spacing={1}>
           <Button type="submit" variant="contained" disabled={busy}>
             {editing ? "Save countdown" : "Add countdown"}

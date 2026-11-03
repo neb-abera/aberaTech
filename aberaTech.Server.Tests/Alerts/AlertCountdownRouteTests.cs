@@ -115,7 +115,7 @@ public sealed class AlertCountdownRouteTests : IDisposable
         Assert.True(state.TryGetProperty("routines", out _));
         var countdown = Assert.Single(state.GetProperty("countdowns").EnumerateArray());
         Assert.Equal(
-            ["id", "label", "targetAt", "timeZone", "updatedAt", "alarm", "onCalendar", "repeat"],
+            ["id", "label", "targetAt", "timeZone", "updatedAt", "alarm", "onCalendar", "repeat", "repeatEvery"],
             countdown.EnumerateObject().Select(field => field.Name));
         Assert.True(countdown.GetProperty("id").GetGuid() != Guid.Empty);
         Assert.Equal("Home", countdown.GetProperty("label").GetString());
@@ -712,11 +712,45 @@ public sealed class AlertCountdownRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task Every_two_hours_counts_two_hours_on_and_tells_Google_the_interval()
+    {
+        using var owner = Owner();
+
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns",
+            "{\"label\":\"Meds\",\"targetAt\":\"2026-10-28T08:00:00Z\",\"timeZone\":\"America/New_York\",\"repeat\":\"hourly\",\"repeatEvery\":2}");
+
+        var countdown = (await CountdownsIn(created)).Single();
+        Assert.Equal(2, countdown.GetProperty("repeatEvery").GetInt32());
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 14, 0).ToDateTimeOffset(), countdown.GetProperty("targetAt").GetDateTimeOffset());
+        Assert.Equal(["RRULE:FREQ=HOURLY;INTERVAL=2"], _google.Recurrence(OnlyEvent()));
+
+        // An update without the interval keeps it.
+        var id = countdown.GetProperty("id").GetGuid();
+        using var renamed = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}",
+            "{\"label\":\"Pills\",\"targetAt\":\"2026-10-28T08:00:00Z\",\"timeZone\":\"America/New_York\"}");
+        Assert.Equal(2, (await CountdownsIn(renamed)).Single().GetProperty("repeatEvery").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1000)]
+    public async Task An_interval_outside_1_to_999_is_400(int every)
+    {
+        using var owner = Owner();
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns",
+            $"{{\"targetAt\":\"2027-01-01T00:00:00Z\",\"timeZone\":\"UTC\",\"repeat\":\"daily\",\"repeatEvery\":{every}}}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").TryGetProperty("repeatEvery", out _));
+    }
+
+    [Fact]
     public async Task A_repeat_the_page_would_not_send_is_400()
     {
         using var owner = Owner();
 
-        using var response = await Send(owner, "POST", "/api/alerts/countdowns", WithRepeat("X", "2027-01-01T00:00:00Z", "daily"));
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns", WithRepeat("X", "2027-01-01T00:00:00Z", "fortnightly"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.True((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").TryGetProperty("repeat", out _));

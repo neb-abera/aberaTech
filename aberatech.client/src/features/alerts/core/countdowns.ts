@@ -18,23 +18,44 @@ export interface Countdown {
   alarm?: boolean;
   /** False for a countdown saved before countdowns made calendar events. Its next save makes one. */
   onCalendar?: boolean;
-  /** How it repeats. For one that repeats, targetAt is the next date. An older server leaves it out. */
+  /** The unit it repeats in. For one that repeats, targetAt is the next date. An older server leaves it out. */
   repeat?: CountdownRepeat;
+  /** How many units between two dates. */
+  repeatEvery?: number;
 }
 
-/** Never, or every week, month or year at the same time on its zone's clock. */
-export type CountdownRepeat = "none" | "weekly" | "monthly" | "yearly";
+/** Never, or every N hours, days, weeks, months or years. */
+export type CountdownRepeat =
+  | "none"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "yearly";
 
-/** The choices, in the order the form lists them, with what the page calls each. */
+/** The units, in the order the form lists them, singular and plural. */
 export const countdownRepeats: readonly {
   value: CountdownRepeat;
-  label: string;
+  one: string;
+  many: string;
 }[] = [
-  { value: "none", label: "Never" },
-  { value: "yearly", label: "Every year" },
-  { value: "monthly", label: "Every month" },
-  { value: "weekly", label: "Every week" },
+  { value: "none", one: "Never", many: "Never" },
+  { value: "hourly", one: "hour", many: "hours" },
+  { value: "daily", one: "day", many: "days" },
+  { value: "weekly", one: "week", many: "weeks" },
+  { value: "monthly", one: "month", many: "months" },
+  { value: "yearly", one: "year", many: "years" },
 ];
+
+/** "Every 2 weeks", "Every year". Null for one that does not repeat. */
+export function describeRepeat(
+  repeat: CountdownRepeat | undefined,
+  every = 1,
+): string | null {
+  const unit = countdownRepeats.find((choice) => choice.value === repeat);
+  if (!unit || unit.value === "none") return null;
+  return every === 1 ? `Every ${unit.one}` : `Every ${every} ${unit.many}`;
+}
 
 /** What a create or an update sends. */
 export interface CountdownFields {
@@ -45,11 +66,13 @@ export interface CountdownFields {
   /** Ring an alarm at the target, on the phone and through Pushover, until it is stopped. */
   alarm: boolean;
   repeat: CountdownRepeat;
+  repeatEvery: number;
 }
 
 /** What the server takes. It checks the same numbers. */
 export const countdownBounds = {
   label: 60,
+  repeatEvery: 999,
   max: 50,
   defaultLabel: "Countdown",
 } as const;

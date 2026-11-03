@@ -44,6 +44,7 @@ const fields = {
   timeZone: "Asia/Amman",
   alarm: true,
   repeat: "none" as const,
+  repeatEvery: 1,
 };
 
 const stub = (answer: unknown) => {

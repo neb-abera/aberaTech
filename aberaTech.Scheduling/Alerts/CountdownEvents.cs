@@ -24,7 +24,7 @@ public static class CountdownEvents
     /// </summary>
     public static NewAlertEvent NewEvent(AlertCountdown countdown, Instant now)
     {
-        var rule = CountdownRepeats.Rule(countdown.Repeat);
+        var rule = CountdownRepeats.Rule(countdown.Repeat, countdown.RepeatEvery);
         var start = rule is null ? countdown.TargetAt : countdown.NextAt(now);
         return new NewAlertEvent(
             countdown.Label, null, start, start + AlertCountdowns.EventLength, 0, TypeFor(countdown.Alarm), rule,

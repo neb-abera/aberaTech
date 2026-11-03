@@ -13,8 +13,8 @@ using aberaTech.Scheduling.Data;
 namespace aberaTech.Scheduling.Data.Migrations;
 
 [DbContext(typeof(SchedulingDbContext))]
-[Migration("20261103190849_CountdownRepeat")]
-partial class _20261103190849_CountdownRepeat
+[Migration("20261103195359_CountdownRepeat")]
+partial class _20261103195359_CountdownRepeat
 {
     /// <inheritdoc />
     protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -94,6 +94,11 @@ partial class _20261103190849_CountdownRepeat
                     .HasMaxLength(16)
                     .HasColumnType("character varying(16)")
                     .HasDefaultValue("none");
+
+                b.Property<int>("RepeatEvery")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
                 b.Property<Instant>("TargetAt")
                     .HasColumnType("timestamp with time zone");

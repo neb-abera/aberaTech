@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace aberaTech.Scheduling.Data.Migrations;
 
 /// <inheritdoc />
-public partial class _20261103190849_CountdownRepeat : Migration
+public partial class _20261103195359_CountdownRepeat : Migration
 {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,6 +17,13 @@ public partial class _20261103190849_CountdownRepeat : Migration
             maxLength: 16,
             nullable: false,
             defaultValue: "none");
+
+        migrationBuilder.AddColumn<int>(
+            name: "RepeatEvery",
+            table: "AlertCountdowns",
+            type: "integer",
+            nullable: false,
+            defaultValue: 1);
     }
 
     /// <inheritdoc />
@@ -24,6 +31,10 @@ public partial class _20261103190849_CountdownRepeat : Migration
     {
         migrationBuilder.DropColumn(
             name: "Repeat",
+            table: "AlertCountdowns");
+
+        migrationBuilder.DropColumn(
+            name: "RepeatEvery",
             table: "AlertCountdowns");
     }
 }

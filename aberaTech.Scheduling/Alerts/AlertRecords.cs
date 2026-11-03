@@ -337,8 +337,11 @@ public class AlertCountdownRecord
     /// <summary>The iCalUID of its event on Google Calendar. Null until one is made.</summary>
     public string? CalendarEventId { get; set; }
 
-    /// <summary>none, weekly, monthly or yearly.</summary>
+    /// <summary>The unit: none, hourly, daily, weekly, monthly or yearly.</summary>
     public string Repeat { get; set; } = CountdownRepeats.None;
+
+    /// <summary>How many units between two dates.</summary>
+    public int RepeatEvery { get; set; } = 1;
 
     public Instant CreatedAt { get; set; }
 
