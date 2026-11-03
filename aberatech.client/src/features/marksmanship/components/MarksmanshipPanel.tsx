@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Link from "@mui/material/Link";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -16,6 +17,7 @@ import {
   fetchPlan,
   type LogTable,
   newestFirst,
+  notionUrl,
   type PlanResult,
   show,
 } from "../core/api";
@@ -67,9 +69,7 @@ export default function MarksmanshipPanel() {
         <Log key={table.id} table={table} />
       ))}
       <Box component="article" aria-label="Plan">
-        <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
-          {plan.page.title}
-        </Typography>
+        <Heading title={plan.page.title} id={plan.page.id} />
         <Blocks blocks={plan.page.blocks} />
       </Box>
     </Box>
@@ -82,9 +82,7 @@ function Log({ table }: { table: LogTable }) {
   const heading = `log-${table.id}`;
   return (
     <Box component="section" aria-labelledby={heading}>
-      <Typography variant="h5" component="h2" id={heading} sx={{ mb: 1 }}>
-        {table.title}
-      </Typography>
+      <Heading title={table.title} id={table.id} headingId={heading} />
       {rows.length === 0 ? (
         <Typography variant="body2">No sessions logged yet.</Typography>
       ) : (
@@ -120,6 +118,33 @@ function Log({ table }: { table: LogTable }) {
           </Table>
         </TableContainer>
       )}
+    </Box>
+  );
+}
+
+/** A section's title, with a link to the same page or database in Notion. */
+function Heading(props: { title: string; id: string; headingId?: string }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "baseline",
+        flexWrap: "wrap",
+        columnGap: 2,
+        mb: 1,
+      }}
+    >
+      <Typography variant="h5" component="h2" id={props.headingId}>
+        {props.title}
+      </Typography>
+      <Link
+        href={notionUrl(props.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Open ${props.title} in Notion`}
+      >
+        Open in Notion
+      </Link>
     </Box>
   );
 }

@@ -40,4 +40,16 @@ test("the owner reads the training log and the plan", async ({ page }) => {
     plan.getByRole("heading", { name: "President's Hundred pistol plan" }),
   ).toBeVisible();
   await expect(plan.getByText("The goal is 342 at Camp Perry.")).toBeVisible();
+
+  await expect(
+    plan.getByRole("link", {
+      name: "Open President's Hundred pistol plan in Notion",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "https://www.notion.so/0000a3c0000000000000000000000000",
+  );
+  await expect(
+    page.getByRole("link", { name: "Open Pistol training log in Notion" }),
+  ).toHaveAttribute("href", /^https:\/\/www\.notion\.so\/[0-9a-f]{32}$/);
 });

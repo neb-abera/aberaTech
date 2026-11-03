@@ -5,7 +5,14 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { respond } from "../../../../test/fakeFetch";
-import { columnsOf, fetchPlan, type LogRow, newestFirst, show } from "../api";
+import {
+  columnsOf,
+  fetchPlan,
+  type LogRow,
+  newestFirst,
+  notionUrl,
+  show,
+} from "../api";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -83,5 +90,13 @@ describe("the log", () => {
     expect(show(true)).toBe("Yes");
     expect(show(false)).toBe("No");
     expect(show(342)).toBe("342");
+  });
+});
+
+describe("notionUrl", () => {
+  it("points at the page by its id without dashes", () => {
+    expect(notionUrl("40d3731a-4cfa-813a-91be-c961d3875ebc")).toBe(
+      "https://www.notion.so/40d3731a4cfa813a91bec961d3875ebc",
+    );
   });
 });

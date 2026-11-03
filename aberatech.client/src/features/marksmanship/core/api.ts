@@ -95,6 +95,11 @@ export function newestFirst(rows: LogRow[]): LogRow[] {
   return [...rows].sort((a, b) => date(b).localeCompare(date(a)));
 }
 
+/** The page or database in Notion, for a device that can open it. */
+export function notionUrl(id: string): string {
+  return `https://www.notion.so/${id.replace(/-/g, "")}`;
+}
+
 export function show(value: CellValue | undefined): string {
   if (value === undefined) return "";
   if (typeof value === "boolean") return value ? "Yes" : "No";
