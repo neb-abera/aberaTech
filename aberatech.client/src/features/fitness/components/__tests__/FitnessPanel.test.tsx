@@ -227,7 +227,7 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount();
+    mount("/fitness?tab=dashboard");
 
     await screen.findByText(/aerobic base up 8%/i);
     await screen.findByText(/training paces \(daniels\)/i);
@@ -272,7 +272,7 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount();
+    mount("/fitness?tab=dashboard");
     await screen.findByRole("tab", { name: "Dashboard" });
 
     // A later refresh fails.
@@ -337,7 +337,57 @@ describe("FitnessPanel", () => {
       }),
     );
 
-    mount();
+    mount("/fitness?tab=dashboard");
     await screen.findByRole("tab", { name: "Dashboard" });
+  });
+});
+
+describe("FitnessPanel opening", () => {
+  it("opens on the goals, the first tab", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: RequestInfo | URL) => {
+        const path = String(url);
+        if (path.includes("/api/fitness/me")) {
+          return Promise.resolve(
+            json({
+              configured: true,
+              signedIn: true,
+              hevyApi: false,
+              intervalsIcu: false,
+            }),
+          );
+        }
+        if (path.includes("/api/fitness/summary"))
+          return Promise.resolve(json(emptySummary));
+        if (path.includes("/api/fitness/goals")) {
+          return Promise.resolve(
+            json({
+              source: {
+                origin: "file",
+                configured: true,
+                connected: true,
+                readAt: null,
+                modified: null,
+                error: null,
+                sheetName: "goals",
+              },
+              dueOn: "2027-12-31",
+              weeklyHours: 7,
+              weekBasis: "the profile's hours",
+              sections: [],
+            }),
+          );
+        }
+        return Promise.reject(new Error(`unexpected ${path}`));
+      }),
+    );
+
+    mount();
+
+    const tabs = await screen.findAllByRole("tab");
+    expect(tabs[0].textContent).toBe("Goals");
+    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
+    expect(await screen.findByText(/Goals for 2027-12-31/)).toBeTruthy();
   });
 });

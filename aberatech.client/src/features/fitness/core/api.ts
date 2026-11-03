@@ -12,6 +12,8 @@ export interface FitnessMe {
   hevyApi: boolean;
   /** Whether this deployment has an intervals.icu API key, so the hourly pull is on. */
   intervalsIcu: boolean;
+  /** Whether this deployment can read the goals workbook from OneDrive. */
+  oneDrive?: boolean;
 }
 
 export interface SettingsDto {
@@ -1013,3 +1015,70 @@ export async function saveActivityLoad(
     loadKg,
   });
 }
+
+/** Where the goals came from, and whether this read worked. */
+export interface GoalSource {
+  origin: string;
+  configured: boolean;
+  connected: boolean;
+  readAt: string | null;
+  modified: string | null;
+  error: string | null;
+  sheetName: string | null;
+}
+
+/** The forecast for one goal on its due date, under the week the Plan tab states. */
+export interface GoalForecast {
+  probability: number | null;
+  projected: number | null;
+  method: "trajectory" | "trend" | "held" | "none";
+  evidence: string;
+  hoursToReach: number | null;
+}
+
+/** One essential workbook row, against the log. */
+export interface GoalRow {
+  row: number;
+  label: string;
+  /** Null when the console cannot measure the row yet. */
+  metric: string | null;
+  /** s, s/mi, reps, lb, %, m; empty for a row the console cannot measure. */
+  unit: string;
+  lowerIsBetter: boolean;
+  baseline: number | null;
+  baselineText: string | null;
+  goal: number | null;
+  goalColumn: "F" | "D";
+  current: Standing | null;
+  met: boolean | null;
+  pointsNow: number | null;
+  pointsGoal: number | null;
+  forecast: GoalForecast | null;
+  note: string | null;
+}
+
+/** One group of rows, or a test scored the way its graders score it. */
+export interface GoalSection {
+  name: string;
+  test: "aft" | "fbi" | null;
+  pointsNow: number | null;
+  pointsGoal: number | null;
+  pointsMax: number | null;
+  scoringNote: string | null;
+  rows: GoalRow[];
+}
+
+export interface Goals {
+  source: GoalSource;
+  dueOn: string | null;
+  weeklyHours: number;
+  weekBasis: string;
+  sections: GoalSection[];
+}
+
+export function fetchGoals(signal?: AbortSignal): Promise<Goals> {
+  return get<Goals>("/api/fitness/goals", signal);
+}
+
+/** Where the browser goes to grant OneDrive; a full navigation, not a fetch. */
+export const oneDriveConnectUrl = "/api/fitness/onedrive/connect";

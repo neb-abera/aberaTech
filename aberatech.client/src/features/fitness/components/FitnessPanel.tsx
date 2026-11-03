@@ -25,6 +25,7 @@ import DataPanel from "./DataPanel";
 import DecisionPanel from "./DecisionPanel";
 import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
+import GoalsPanel from "./GoalsPanel";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
@@ -33,6 +34,7 @@ import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
 const TAB_SLUGS: readonly string[] = [
+  "goals",
   "dashboard",
   "readiness",
   "solve",
@@ -192,6 +194,7 @@ export default function FitnessPanel() {
         variant="scrollable"
         allowScrollButtonsMobile
       >
+        <Tab label="Goals" />
         <Tab label="Dashboard" />
         <Tab label="Readiness" />
         <Tab label="Solve" />
@@ -201,21 +204,24 @@ export default function FitnessPanel() {
       </Tabs>
 
       <Section index={0} tab={tab} visited={visited}>
-        <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
+        <GoalsPanel />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
+        <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
+      </Section>
+      <Section index={2} tab={tab} visited={visited}>
         <Stack spacing={3}>
           <DecisionPanel selectionDate={summary.readiness.selectionDate} />
           <ReadinessPanel readiness={summary.readiness} />
         </Stack>
       </Section>
-      <Section index={2} tab={tab} visited={visited}>
+      <Section index={3} tab={tab} visited={visited}>
         <Workbench summary={summary} />
       </Section>
-      <Section index={3} tab={tab} visited={visited}>
+      <Section index={4} tab={tab} visited={visited}>
         <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
       </Section>
-      <Section index={4} tab={tab} visited={visited}>
+      <Section index={5} tab={tab} visited={visited}>
         <DataPanel
           hevyApi={me.hevyApi}
           intervalsIcu={me.intervalsIcu}
@@ -223,7 +229,7 @@ export default function FitnessPanel() {
           onDataChanged={reloadSummary}
         />
       </Section>
-      <Section index={5} tab={tab} visited={visited}>
+      <Section index={6} tab={tab} visited={visited}>
         <SourcesPanel />
       </Section>
     </Stack>

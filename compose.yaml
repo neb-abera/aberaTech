@@ -177,6 +177,8 @@ services:
       dockerfile: aberaTech.Server/Dockerfile
       args:
         IN_DOCKER: 'true'
+    volumes:
+      - ./aberaTech.Server.Tests/Fitness/Fixtures/goals.xlsx:/fixtures/goals.xlsx:ro
     ports:
       - '127.0.0.1:${APP_PORT:-8080}:8080'
     environment:
@@ -190,6 +192,10 @@ services:
       # FitnessGate — so /fitness works out of the box.
       ConnectionStrings__Fitness: 'Host=db;Port=5432;Database=fitness;Username=scheduling;Password=scheduling'
       Fitness__DevelopmentOwner: 'true'
+      # The goals workbook from a file instead of OneDrive: a synthetic copy
+      # of the athlete's layout, kept equal to the builder by
+      # GoalsFixtureFileTests. Development and the e2e suite only.
+      OneDrive__LocalWorkbookPath: '/fixtures/goals.xlsx'
       # The owner pages under `make e2e`: a sign-in that skips Google for
       # the first allowed address, a dev box in memory, and the token the
       # suite's fake agent reports with. All three are Development-only
