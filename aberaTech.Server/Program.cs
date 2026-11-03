@@ -366,6 +366,8 @@ if (adminOptions.IsConfigured)
         notionOptions,
         notionOptions.MarksmanshipPlanPageId,
         PlaybookEndpoints.MarksmanshipReader));
+    // The training plan: its page and two databases, read by column.
+    builder.Services.AddScoped<TrainingPlanReader>();
     // A hung Notion must not hold the request for the framework's 100 s.
     builder.Services.AddHttpClient(NotionClient.ApiClient, client => client.Timeout = TimeSpan.FromSeconds(30));
     // A file streams for as long as it takes; only the headers are bounded.
@@ -659,10 +661,12 @@ if (adminOptions.IsConfigured)
     app.MapPlaybookEndpoints(notionOptions);
     app.MapFitnessLessonsEndpoints(notionOptions);
     app.MapMarksmanshipEndpoints(notionOptions);
+    app.MapTrainingPlanEndpoints(notionOptions);
 }
 else
 {
     app.MapPlaybookUnavailable();
+    app.MapTrainingPlanUnavailable();
 }
 
 if (adminOptions.IsConfigured)

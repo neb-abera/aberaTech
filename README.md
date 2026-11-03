@@ -441,6 +441,19 @@ what to set.
 `GET /api/marksmanship` answers `{configured, page, tables}`: the page as
 blocks, and each database in its tree with its rows' properties.
 
+`/training-plan` reads the training plan page and the rows of its
+Workouts and Plan notes databases by column. It never opens a row, so
+749 workouts and 99 notes cost about ten calls. Set its id and add the
+integration to the page the same way.
+
+| Environment variable | Kind | Value |
+|---|---|---|
+| `Notion__TrainingPlanPageId` | setting | the plan page's id |
+
+`GET /api/training-plan` answers `{configured, plan}`.
+`GET /api/training-plan/files/{id}` downloads a file block on the plan
+page by its id, or a note's attachment by `<row id>:<index>`.
+
 The server sends `Notion-Version: 2026-03-11`. It keeps Notion's answers
 in memory for 5 minutes (`Notion__CacheSeconds`), waits out a 429 as
 Retry-After says for up to 10 s and 3 tries, and follows `has_more` to the

@@ -90,12 +90,41 @@ public sealed class FakeNotion : HttpMessageHandler
             ["object"] = "page",
             ["id"] = id,
             ["in_trash"] = false,
+            ["url"] = "https://www.notion.so/" + id.Replace("-", ""),
             ["parent"] = new JsonObject { ["type"] = "data_source_id", ["data_source_id"] = sourceId, ["database_id"] = databaseId },
             ["properties"] = all
         };
         _children[id] = [];
         _sources[sourceId].Add(id);
         return id;
+    }
+
+    /// <summary>Sets one column of a row, as the owner editing it in Notion would.</summary>
+    public void SetProperty(string pageId, string name, JsonObject value) =>
+        _pages[Key(pageId)]["properties"]!.AsObject()[name] = value;
+
+    /// <summary>A file Notion holds, as one entry of a Files column.</summary>
+    public JsonObject FileEntry(string name, string contentType, byte[] body)
+    {
+        var path = $"/secure/{NextId()}/{Uri.EscapeDataString(name)}";
+        _files[path] = (body, contentType);
+        return new JsonObject
+        {
+            ["name"] = name,
+            ["type"] = "file",
+            ["file"] = new JsonObject { ["url"] = $"https://{FileHost}{path}?X-Amz-Signature=fake", ["expiry_time"] = "2099-01-01T00:00:00.000Z" }
+        };
+    }
+
+    /// <summary>Column values the way Notion's API writes them.</summary>
+    public static class Column
+    {
+        public static JsonObject Text(string text) => new() { ["type"] = "rich_text", ["rich_text"] = text.Length == 0 ? new JsonArray() : new JsonArray(Run(text)) };
+        public static JsonObject Number(double? value) => new() { ["type"] = "number", ["number"] = value };
+        public static JsonObject Select(string? name) => new() { ["type"] = "select", ["select"] = name is null ? null : new JsonObject { ["name"] = name } };
+        public static JsonObject Date(string start) => new() { ["type"] = "date", ["date"] = new JsonObject { ["start"] = start, ["end"] = null } };
+        public static JsonObject Checkbox(bool value) => new() { ["type"] = "checkbox", ["checkbox"] = value };
+        public static JsonObject Files(params JsonObject[] files) => new() { ["type"] = "files", ["files"] = new JsonArray([.. files]) };
     }
 
     /// <summary>A block appended to a page or block. Returns its id.</summary>
@@ -304,10 +333,72 @@ public sealed class FakeNotion : HttpMessageHandler
             ["Total"] = new JsonObject { ["type"] = "formula", ["formula"] = new JsonObject { ["type"] = "number", ["number"] = 315 } },
             ["Notes"] = new JsonObject { ["type"] = "rich_text", ["rich_text"] = new JsonArray(Run("Slow fire lost the most.")) }
         });
+        SampleTrainingPlan(notion);
 
         if (root != SampleRoot) throw new InvalidOperationException("The sample's root is always the first id.");
         return notion;
     }
+
+    /// <summary>
+    /// A made-up two-week plan in the shape of the owner's: a page with a
+    /// heading, a paragraph and a file, a Workouts database and a Plan notes
+    /// database with one attachment.
+    /// </summary>
+    private static void SampleTrainingPlan(FakeNotion notion)
+    {
+        var plan = notion.Page("Sample training plan", id: SamplePlan);
+        notion.Text(plan, "heading_3", Run("About the plan"));
+        notion.Text(plan, "paragraph", Run("Two made-up weeks of base training."));
+        notion.File(plan, "pdf", "plan-guide.pdf", "application/pdf", Encoding.ASCII.GetBytes("%PDF-1.4\n%guide\n"));
+
+        var (workouts, workoutsSource) = notion.Database(plan, TrainingPlanReader.WorkoutsTitle);
+        void Workout(string title, string date, int week, int day, string weekday, string sport, int order, double? minutes, double? tss, string description, string comments = "", string structure = "") =>
+            notion.Row(workouts, workoutsSource, title, new JsonObject
+            {
+                ["Date"] = Column.Date(date),
+                ["Week"] = Column.Number(week),
+                ["Plan day"] = Column.Number(day),
+                ["Weekday"] = Column.Select(weekday),
+                ["Block"] = Column.Select("Block 1"),
+                ["Week label"] = Column.Text($"Block 1 Week {week} Notes"),
+                ["Sport"] = Column.Select(sport),
+                ["Order on day"] = Column.Number(order),
+                ["Duration (min)"] = Column.Number(minutes),
+                ["TSS"] = Column.Number(tss),
+                ["Description"] = Column.Text(description),
+                ["Pre-activity comments"] = Column.Text(comments),
+                ["Structure"] = Column.Text(structure),
+                ["Changed"] = Column.Checkbox(false)
+            });
+        Workout("Dynamic warmup", "2026-11-02", 1, 1, "Mon", "Other", 0, 5, null, "Walking knee hugs and quad stretch.");
+        Workout("Aerobic base run", "2026-11-02", 1, 1, "Mon", "Run", 1, 45, 33, "Run at your MAF heart rate. See https://example.com/maf for how.", "Nose breathe the whole run.");
+        Workout("Push strength", "2026-11-04", 1, 3, "Wed", "Strength", 0, 60, null, "3x10 bench press.");
+        Workout("Rest day", "2026-11-08", 1, 7, "Sun", "Day Off", 0, null, null, "Rest.");
+        Workout("Heart rate drift test", "2026-11-09", 2, 8, "Mon", "Other", 0, 75, 57.5, "Run at a 2% grade for 60 minutes.", "", "Warm up: 15:00 at 1-3 RPE\nActive: 1:00:00 at 3-4 RPE");
+
+        var (notes, notesSource) = notion.Database(plan, TrainingPlanReader.NotesTitle);
+        notion.Row(notes, notesSource, "Intro to block one", new JsonObject
+        {
+            ["Date"] = Column.Date("2026-11-02"),
+            ["Week"] = Column.Number(1),
+            ["Plan day"] = Column.Number(1),
+            ["Weekday"] = Column.Select("Mon"),
+            ["Block"] = Column.Select("Block 1"),
+            ["Description"] = Column.Text("Read the attachment before you start."),
+            ["Attachments"] = Column.Files(notion.FileEntry("intro.pdf", "application/pdf", Encoding.ASCII.GetBytes("%PDF-1.4\n%intro\n")))
+        });
+        notion.Row(notes, notesSource, "Week two recap", new JsonObject
+        {
+            ["Date"] = Column.Date("2026-11-15"),
+            ["Week"] = Column.Number(2),
+            ["Plan day"] = Column.Number(14),
+            ["Weekday"] = Column.Select("Sun"),
+            ["Description"] = Column.Text("Two weeks done.")
+        });
+    }
+
+    /// <summary>The plan page of <see cref="Sample"/>, which compose.yaml names as Notion__TrainingPlanPageId.</summary>
+    public const string SamplePlan = "0000e70e-0000-0000-0000-000000000000";
 
     /// <summary>The root page of <see cref="Sample"/>, which compose.yaml names as Notion__PlaybookPageId.</summary>
     public const string SampleRoot = "00000001-0000-0000-0000-000000000000";

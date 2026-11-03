@@ -110,6 +110,7 @@ export const ownerPages: { label: string; to: string }[] = [
   { label: "Network", to: "/network" },
   { label: "Playbook", to: "/playbook" },
   { label: "Marksmanship", to: "/marksmanship" },
+  { label: "Training plan", to: "/training-plan" },
 ];
 
 /**

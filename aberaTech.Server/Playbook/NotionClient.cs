@@ -55,6 +55,10 @@ public sealed class NotionClient(
     public Task<JsonElement> PageAsync(string id, CancellationToken cancellationToken) =>
         GetAsync($"/v1/pages/{id}", cached: true, cancellationToken);
 
+    /// <summary>A page asked fresh, for the signed file addresses in its properties.</summary>
+    public Task<JsonElement> PageFreshAsync(string id, CancellationToken cancellationToken) =>
+        GetAsync($"/v1/pages/{id}", cached: false, cancellationToken);
+
     public Task<JsonElement> DatabaseAsync(string id, CancellationToken cancellationToken) =>
         GetAsync($"/v1/databases/{id}", cached: true, cancellationToken);
 
