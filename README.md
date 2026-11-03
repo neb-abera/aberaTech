@@ -429,6 +429,18 @@ az containerapp update -n "$app" -g "$group" --container-name aberatechserver \
 The update starts a new revision. The deploy workflow changes only the
 image, so both stay set across deploys.
 
+`/marksmanship` reads one more page, the President's Hundred plan, and
+the rows of the training log inside it. Set its id, then add the same
+integration to that page under ••• > Connections. Unset, the page says
+what to set.
+
+| Environment variable | Kind | Value |
+|---|---|---|
+| `Notion__MarksmanshipPlanPageId` | setting | the plan page's id |
+
+`GET /api/marksmanship` answers `{configured, page, tables}`: the page as
+blocks, and each database in its tree with its rows' properties.
+
 The server sends `Notion-Version: 2026-03-11`. It keeps Notion's answers
 in memory for 5 minutes (`Notion__CacheSeconds`), waits out a 429 as
 Retry-After says for up to 10 s and 3 tries, and follows `has_more` to the
