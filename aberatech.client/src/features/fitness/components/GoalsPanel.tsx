@@ -12,6 +12,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import {
@@ -60,6 +61,42 @@ export function goalTag(row: GoalRow): string | null {
   return null;
 }
 
+const DAY_MS = 86_400_000;
+
+/** Whole days from an ISO date to today, in the viewer's calendar. */
+export function daysSince(on: string, today: Date = new Date()): number {
+  const [y, m, d] = on.split("-").map(Number);
+  const then = Date.UTC(y, m - 1, d);
+  const now = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.max(0, Math.round((now - then) / DAY_MS));
+}
+
+/** How old a result is, short enough to sit beside it: 3d, 5wk, 7mo, 2y. */
+export function ageLabel(days: number): string {
+  if (days < 14) return `${days}d`;
+  if (days < 70) return `${Math.round(days / 7)}wk`;
+  if (days < 730) return `${Math.round(days / 30.4375)}mo`;
+  return `${Math.round(days / 365.25)}y`;
+}
+
+/** The hover text: what the number is, the date it is from, and its source. */
+export function latestDetail(
+  current: NonNullable<GoalRow["current"]>,
+  today: Date = new Date(),
+): string {
+  const kind = current.basis === "Modeled" ? "Modelled" : "Measured";
+  if (!current.on) return `${kind}: ${current.evidence}.`;
+  const date = new Date(`${current.on}T12:00:00`).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const days = daysSince(current.on, today);
+  const ago =
+    days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
+  return `${kind} ${date} (${ago}): ${current.evidence}.`;
+}
+
 function Points({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
@@ -82,16 +119,34 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
         <TableCell component="th" scope="row" sx={{ pl: 0 }}>
           {row.label}
         </TableCell>
-        <TableCell
-          align="right"
-          sx={{ whiteSpace: "nowrap" }}
-          title={row.current?.evidence}
-        >
-          {row.current
-            ? `${row.current.basis === "Modeled" ? "≈ " : ""}${formatGoalValue(row.unit, row.current.value)}`
-            : row.metric
-              ? "untested"
-              : "not measured"}
+        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+          {row.current ? (
+            <Tooltip title={latestDetail(row.current)} placement="top" arrow>
+              <Box
+                component="span"
+                tabIndex={0}
+                aria-label={`${formatGoalValue(row.unit, row.current.value)}, ${latestDetail(row.current)}`}
+                sx={{ cursor: "help" }}
+              >
+                {`${row.current.basis === "Modeled" ? "≈ " : ""}${formatGoalValue(row.unit, row.current.value)}`}
+                {row.current.on ? (
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    color="text.secondary"
+                    data-testid="latest-age"
+                  >
+                    {" "}
+                    {ageLabel(daysSince(row.current.on))}
+                  </Typography>
+                ) : null}
+              </Box>
+            </Tooltip>
+          ) : row.metric ? (
+            "untested"
+          ) : (
+            "not measured"
+          )}
           {test ? <Points value={row.pointsNow} /> : null}
         </TableCell>
         <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
@@ -147,8 +202,8 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {row.current
-                    ? `Now: ${row.current.evidence}${row.current.basis === "Modeled" ? " (≈ marks a modelled value)" : ""}.`
-                    : "Now: nothing in the log measures this yet."}
+                    ? `Latest: ${latestDetail(row.current)}${row.current.basis === "Modeled" ? " ≈ marks a modelled value." : ""}`
+                    : "Latest: nothing in the log measures this yet."}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Sheet row {row.row}
@@ -197,7 +252,8 @@ function SectionCard({ section }: { section: GoalSection }) {
               >
                 {section.pointsNow ?? "—"}
               </Typography>{" "}
-              now · goal {section.pointsGoal ?? "—"} of {section.pointsMax} pts
+              latest · goal {section.pointsGoal ?? "—"} of {section.pointsMax}{" "}
+              pts
             </Typography>
           ) : null}
         </Stack>
@@ -209,7 +265,7 @@ function SectionCard({ section }: { section: GoalSection }) {
           <TableHead>
             <TableRow>
               <TableCell sx={{ pl: 0 }}>Event</TableCell>
-              <TableCell align="right">Now</TableCell>
+              <TableCell align="right">Latest</TableCell>
               <TableCell align="right">Goal</TableCell>
               <TableCell align="right" sx={{ pr: 0 }}>
                 Forecast

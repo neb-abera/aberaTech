@@ -9,8 +9,11 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GoalRow, GoalSection, Goals } from "../../core/api";
 import GoalsPanel, {
+  ageLabel,
+  daysSince,
   formatGoalValue,
   goalTag,
+  latestDetail,
   splitByRows,
 } from "../GoalsPanel";
 
@@ -152,6 +155,17 @@ describe("GoalsPanel", () => {
     expect(within(aft).getByTestId("points-now").textContent).toBe("428");
     expect(within(aft).getByText(/goal 500 of 500 pts/)).toBeTruthy();
     expect(within(aft).getByText("HR pushups")).toBeTruthy();
+    expect(
+      within(aft).getByRole("columnheader", { name: "Latest" }),
+    ).toBeTruthy();
+    expect(within(aft).getByTestId("latest-age").textContent?.trim()).toMatch(
+      /^\d+(d|wk|mo|y)$/,
+    );
+    expect(
+      within(aft).getByLabelText(
+        /^44, Measured Apr 3, 2026 \(\d+ days ago\): AFT of 2026-04-03\.$/,
+      ),
+    ).toBeTruthy();
     expect(within(aft).queryByText("Push-ups")).toBeNull();
 
     const fbi = screen.getByRole("region", {
@@ -260,5 +274,27 @@ describe("columns", () => {
       ["Run", "AFT"],
       ["FBI", "Body", "Strength"],
     ]);
+  });
+
+  it("dates the latest result, short beside it and in full on hover", () => {
+    const today = new Date(2026, 10, 3);
+    expect(daysSince("2026-04-03", today)).toBe(214);
+    expect(ageLabel(0)).toBe("0d");
+    expect(ageLabel(13)).toBe("13d");
+    expect(ageLabel(35)).toBe("5wk");
+    expect(ageLabel(214)).toBe("7mo");
+    expect(ageLabel(800)).toBe("2y");
+    expect(
+      latestDetail(
+        {
+          metric: "hand-release-push-ups",
+          value: 44,
+          basis: "Measured",
+          evidence: "AFT of 2026-04-03",
+          on: "2026-04-03",
+        },
+        today,
+      ),
+    ).toBe("Measured Apr 3, 2026 (214 days ago): AFT of 2026-04-03.");
   });
 });
