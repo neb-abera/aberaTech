@@ -359,6 +359,13 @@ if (adminOptions.IsConfigured)
         notionOptions,
         notionOptions.FitnessLessonsPageId,
         PlaybookEndpoints.LessonsReader));
+    // The marksmanship plan: the same reader again, rooted at that page.
+    builder.Services.AddKeyedScoped(PlaybookEndpoints.MarksmanshipReader, (services, _) => new PlaybookReader(
+        services.GetRequiredService<NotionClient>(),
+        services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+        notionOptions,
+        notionOptions.MarksmanshipPlanPageId,
+        PlaybookEndpoints.MarksmanshipReader));
     // A hung Notion must not hold the request for the framework's 100 s.
     builder.Services.AddHttpClient(NotionClient.ApiClient, client => client.Timeout = TimeSpan.FromSeconds(30));
     // A file streams for as long as it takes; only the headers are bounded.
@@ -651,6 +658,7 @@ if (adminOptions.IsConfigured)
 {
     app.MapPlaybookEndpoints(notionOptions);
     app.MapFitnessLessonsEndpoints(notionOptions);
+    app.MapMarksmanshipEndpoints(notionOptions);
 }
 else
 {

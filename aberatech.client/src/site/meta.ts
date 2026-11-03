@@ -5,6 +5,7 @@ import { alertsStatusUrl } from "../features/alerts/core/api";
 import { devBoxStatusUrl } from "../features/devbox/core/api";
 import { fitnessMeUrl } from "../features/fitness/core/api";
 import { linksDocumentKey } from "../features/links/core/links";
+import { marksmanshipUrl } from "../features/marksmanship/core/api";
 import { planDocumentKey } from "../features/plan/core/document";
 import { playbookTreeUrl } from "../features/playbook/core/api";
 import { documentUrl } from "../features/progress/core/documents";
@@ -90,6 +91,7 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   // The network is the owner's alone, so who is asking comes first.
   "/network": { url: accountUrl },
   "/playbook": { url: playbookTreeUrl },
+  "/marksmanship": { url: marksmanshipUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };
@@ -148,6 +150,11 @@ const structuralMeta: Record<string, PageMeta> = {
   "/playbook": {
     title: "Playbook",
     description: "The owner's Notion playbook, read live.",
+  },
+  "/marksmanship": {
+    title: "Marksmanship",
+    description:
+      "The owner's President's Hundred plan and training log, read live.",
   },
 };
 
