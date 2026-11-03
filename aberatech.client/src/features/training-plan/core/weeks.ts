@@ -93,7 +93,30 @@ export function planWeeks(plan: TrainingPlan): PlanWeek[] {
       .sort((a, b) => b.minutes - a.minutes);
     w.tss = Math.round(w.tss * 10) / 10;
   }
-  return all;
+  // A week the plan numbers but leaves empty stays in, so the count and
+  // the chips match the plan's own week numbers. It is dated as the week
+  // after the one before it.
+  const filled: PlanWeek[] = [];
+  for (const w of all) {
+    const last = filled[filled.length - 1];
+    for (let n = last ? last.week + 1 : w.week; n < w.week; n++) {
+      const before = filled[filled.length - 1];
+      const start = before?.start
+        ? addDays(mondayOf(before.start), 7)
+        : undefined;
+      filled.push({
+        week: n,
+        days: [],
+        minutes: 0,
+        tss: 0,
+        bySport: [],
+        start,
+        end: start ? addDays(start, 6) : undefined,
+      });
+    }
+    filled.push(w);
+  }
+  return filled;
 }
 
 /**
