@@ -72,6 +72,18 @@ describe("MarksmanshipPanel", () => {
     expect(within(rows[1]).getByText("Newer")).toBeTruthy();
     expect(within(rows[2]).getByText("Older")).toBeTruthy();
     expect(screen.getByText("Bottom line")).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "Open Pistol training log in Notion" })
+        .getAttribute("href"),
+    ).toBe("https://www.notion.so/t");
+    expect(
+      screen
+        .getByRole("link", {
+          name: "Open President's Hundred pistol plan in Notion",
+        })
+        .getAttribute("href"),
+    ).toBe("https://www.notion.so/p");
   });
 
   it("says when nothing is logged yet", async () => {

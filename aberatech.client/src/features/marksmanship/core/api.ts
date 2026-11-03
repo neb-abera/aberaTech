@@ -70,6 +70,7 @@ export const logColumns = [
   "Slow fire",
   "Timed",
   "Rapid",
+  "Score",
   "Total",
   "X",
   "Group in",
@@ -93,6 +94,11 @@ export function newestFirst(rows: LogRow[]): LogRow[] {
   const date = (row: LogRow) =>
     typeof row.values.Date === "string" ? row.values.Date : "";
   return [...rows].sort((a, b) => date(b).localeCompare(date(a)));
+}
+
+/** The page or database in Notion, for a device that can open it. */
+export function notionUrl(id: string): string {
+  return `https://www.notion.so/${id.replace(/-/g, "")}`;
 }
 
 export function show(value: CellValue | undefined): string {
