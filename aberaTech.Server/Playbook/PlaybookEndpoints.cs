@@ -23,6 +23,11 @@ public static class PlaybookEndpoints
     /// <summary>The keyed service name of the reader rooted at the fitness lessons page.</summary>
     public const string LessonsReader = "fitness-lessons";
 
+    public const string MarksmanshipNotConfigured = "The marksmanship plan is not connected. Set Notion__MarksmanshipPlanPageId on the container app and share the page with the integration.";
+
+    /// <summary>The keyed service name of the reader rooted at the marksmanship plan page.</summary>
+    public const string MarksmanshipReader = "marksmanship";
+
     public static IEndpointRouteBuilder MapPlaybookEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
     {
         var group = routes
@@ -79,6 +84,33 @@ public static class PlaybookEndpoints
                         var tree = await reader.TreeAsync(cancellationToken);
                         var page = await reader.PageAsync(tree.Root.Id, cancellationToken);
                         return Results.Json(new { configured = true, page }, PlaybookJson.Options);
+                    },
+                    context))
+            .RequireAuthorization(AdminAuth.PolicyName)
+            .WithTags("Playbook");
+
+        return routes;
+    }
+
+    /// <summary>
+    /// The President's Hundred plan for /marksmanship: one Notion page read
+    /// live as blocks, with its training log rows. Same owner policy and the
+    /// same failure answers as the playbook. Only that page's tree is served.
+    /// </summary>
+    public static IEndpointRouteBuilder MapMarksmanshipEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
+    {
+        routes.MapGet("/api/marksmanship", (HttpContext context, ILogger<PlaybookReader> logger, CancellationToken cancellationToken) =>
+                Answer(
+                    options.HasMarksmanshipPlan,
+                    MarksmanshipNotConfigured,
+                    () => context.RequestServices.GetRequiredKeyedService<PlaybookReader>(MarksmanshipReader),
+                    logger,
+                    async reader =>
+                    {
+                        var tree = await reader.TreeAsync(cancellationToken);
+                        var page = await reader.PageAsync(tree.Root.Id, cancellationToken);
+                        var tables = await reader.TablesAsync(cancellationToken);
+                        return Results.Json(new { configured = true, page, tables }, PlaybookJson.Options);
                     },
                     context))
             .RequireAuthorization(AdminAuth.PolicyName)

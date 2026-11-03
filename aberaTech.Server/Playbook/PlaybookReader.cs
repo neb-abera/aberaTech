@@ -97,6 +97,90 @@ public sealed class PlaybookReader
     }
 
     /// <summary>
+    /// Every database in the tree, with each row's properties. Only a
+    /// database the tree holds is read, so the tree stays the allowlist.
+    /// </summary>
+    public async Task<IReadOnlyList<PlaybookTable>> TablesAsync(CancellationToken cancellationToken)
+    {
+        var tree = await TreeAsync(cancellationToken);
+        var tables = new List<PlaybookTable>();
+        foreach (var (id, node) in tree.Databases)
+        {
+            JsonElement database;
+            try
+            {
+                database = await notion.DatabaseAsync(id, cancellationToken);
+            }
+            catch (NotionException exception) when (exception.Status == System.Net.HttpStatusCode.NotFound)
+            {
+                continue;
+            }
+
+            var rows = new List<PlaybookRow>();
+            if (database.TryGetProperty("data_sources", out var sources) && sources.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var source in sources.EnumerateArray())
+                {
+                    if (!NotionIds.TryNormalize(Text(source, "id"), out var sourceId)) continue;
+                    foreach (var page in await notion.QueryAsync(sourceId, cancellationToken))
+                    {
+                        if (IsTrashed(page) || !NotionIds.TryNormalize(Text(page, "id"), out var rowId)) continue;
+                        rows.Add(new PlaybookRow(rowId, Values(page)));
+                    }
+                }
+            }
+
+            tables.Add(new PlaybookTable(id, node.Title, rows));
+        }
+
+        return tables;
+    }
+
+    /// <summary>A row's properties as Notion shows them. Kinds the page does not draw are left out.</summary>
+    public static IReadOnlyDictionary<string, object> Values(JsonElement page)
+    {
+        var values = new Dictionary<string, object>(StringComparer.Ordinal);
+        if (!page.TryGetProperty("properties", out var properties) || properties.ValueKind != JsonValueKind.Object) return values;
+
+        foreach (var property in properties.EnumerateObject())
+        {
+            var value = Value(property.Value);
+            if (value is not null) values[property.Name] = value;
+        }
+
+        return values;
+    }
+
+    private static object? Value(JsonElement property)
+    {
+        var type = Text(property, "type");
+        if (type is null || !property.TryGetProperty(type, out var payload)) return null;
+
+        switch (type)
+        {
+            case "title" or "rich_text" when payload.ValueKind == JsonValueKind.Array:
+                var text = string.Concat(payload.EnumerateArray().Select(run => Text(run, "plain_text")));
+                return text.Length == 0 ? null : text;
+            case "number" when payload.ValueKind == JsonValueKind.Number:
+                return payload.GetDouble();
+            case "select" or "status" when payload.ValueKind == JsonValueKind.Object:
+                return Text(payload, "name");
+            case "checkbox":
+                return payload.ValueKind == JsonValueKind.True;
+            case "date" when payload.ValueKind == JsonValueKind.Object:
+                var start = Text(payload, "start");
+                var end = Text(payload, "end");
+                return start is null ? null : end is null ? start : $"{start} to {end}";
+            case "formula" when payload.ValueKind == JsonValueKind.Object:
+                return Value(payload);
+            case "string" when payload.ValueKind == JsonValueKind.String:
+                return payload.GetString();
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
     /// A file block's address as Notion signs it now, or null when the block
     /// is not a file Notion holds, or is not under the root.
     /// </summary>

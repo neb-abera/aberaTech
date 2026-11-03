@@ -58,6 +58,7 @@ export const routes: PageRoute[] = [
   page("/dates", "Dates"),
   page("/network", "Network"),
   page("/playbook", "Playbook"),
+  page("/marksmanship", "Marksmanship"),
 ];
 
 /**
@@ -90,4 +91,6 @@ export const unlisted: Record<string, string> = {
     "The owner's network, drawn from a document kept on the server. Same shape as /plan: a visitor gets a sign-in button and the document is never requested, the app bar shows a Network entry only to the signed-in owner.",
   "/playbook":
     "The owner's Notion playbook, read live from Notion for a computer that cannot reach it. Same shape as /devbox: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Playbook entry only to the signed-in owner.",
+  "/marksmanship":
+    "The owner's President's Hundred plan and pistol training log, read live from one Notion page. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Marksmanship entry only to the signed-in owner.",
 };

@@ -56,6 +56,16 @@ public sealed record PlaybookBlock(string Type)
 
 public sealed record PlaybookPage(string Id, string Title, IReadOnlyList<PlaybookBlock> Blocks);
 
+/// <summary>
+/// One row of a database in the tree: its properties by name, each as the
+/// text Notion shows. A number stays a number. A date is its start, or
+/// "start to end". An empty property is left out.
+/// </summary>
+public sealed record PlaybookRow(string Id, IReadOnlyDictionary<string, object> Values);
+
+/// <summary>A database in the tree and its rows, in the order Notion returns them.</summary>
+public sealed record PlaybookTable(string Id, string Title, IReadOnlyList<PlaybookRow> Rows);
+
 internal static class PlaybookJson
 {
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)

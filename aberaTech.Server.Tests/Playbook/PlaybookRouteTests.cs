@@ -51,6 +51,7 @@ public sealed class PlaybookRouteTests : IDisposable
         settings["Notion:Token"] = token;
         settings["Notion:PlaybookPageId"] = root;
         settings["Notion:FitnessLessonsPageId"] = FakeNotion.SampleLessons;
+        settings["Notion:MarksmanshipPlanPageId"] = FakeNotion.SampleMarksmanship;
         return settings;
     }
 
@@ -70,7 +71,8 @@ public sealed class PlaybookRouteTests : IDisposable
         ["GET", "/api/playbook"],
         ["GET", $"/api/playbook/pages/{FakeNotion.SampleRoot}"],
         ["GET", "/api/playbook/files/00000002-0000-0000-0000-000000000000"],
-        ["GET", "/api/fitness/lessons"]
+        ["GET", "/api/fitness/lessons"],
+        ["GET", "/api/marksmanship"]
     ];
 
     [Theory]
@@ -257,6 +259,56 @@ public sealed class PlaybookRouteTests : IDisposable
 
         Assert.False(lessons.GetProperty("configured").GetBoolean());
         Assert.Contains("Notion__FitnessLessonsPageId", lessons.GetProperty("message").GetString());
+        Assert.Empty(_notion.Requests);
+    }
+
+    [Fact]
+    public async Task The_owner_reads_the_marksmanship_plan_and_its_training_log()
+    {
+        using var owner = Owner();
+
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/marksmanship");
+
+        Assert.True(plan.GetProperty("configured").GetBoolean());
+        var page = plan.GetProperty("page");
+        Assert.Equal("President's Hundred pistol plan", page.GetProperty("title").GetString());
+        Assert.Equal("Bottom line", page.GetProperty("blocks")[0].GetProperty("text")[0].GetProperty("text").GetString());
+        var log = Assert.Single(plan.GetProperty("tables").EnumerateArray());
+        Assert.Equal("Pistol training log", log.GetProperty("title").GetString());
+        var row = Assert.Single(log.GetProperty("rows").EnumerateArray()).GetProperty("values");
+        Assert.Equal("Baseline President's course", row.GetProperty("Name").GetString());
+        Assert.Equal("Baseline", row.GetProperty("Type").GetString());
+        Assert.Equal("2026-11-21", row.GetProperty("Date").GetString());
+        Assert.Equal(150, row.GetProperty("Slow fire").GetDouble());
+        Assert.Equal(315, row.GetProperty("Total").GetDouble());
+        Assert.Equal("Slow fire lost the most.", row.GetProperty("Notes").GetString());
+    }
+
+    [Fact]
+    public async Task The_marksmanship_route_and_the_playbook_cannot_reach_each_other()
+    {
+        using var owner = Owner();
+
+        using var throughPlaybook = await owner.GetAsync($"/api/playbook/pages/{FakeNotion.SampleMarksmanship}");
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/marksmanship");
+
+        Assert.Equal(HttpStatusCode.NotFound, throughPlaybook.StatusCode);
+        Assert.DoesNotContain("Field notes", plan.GetRawText(), StringComparison.Ordinal);
+        Assert.DoesNotContain("Meeting template", plan.GetRawText(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Without_a_marksmanship_page_the_route_says_what_to_set_and_asks_notion_nothing()
+    {
+        var settings = Settings();
+        settings["Notion:MarksmanshipPlanPageId"] = null;
+        using var app = App(settings, _notion);
+        using var owner = app.CreateClient().SignedInAs(app.Factory.Services, AdminRouteTests.Owner);
+
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/marksmanship");
+
+        Assert.False(plan.GetProperty("configured").GetBoolean());
+        Assert.Contains("Notion__MarksmanshipPlanPageId", plan.GetProperty("message").GetString());
         Assert.Empty(_notion.Requests);
     }
 

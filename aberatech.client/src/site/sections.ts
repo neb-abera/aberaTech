@@ -109,6 +109,7 @@ export const ownerPages: { label: string; to: string }[] = [
   { label: "Dates", to: "/dates" },
   { label: "Network", to: "/network" },
   { label: "Playbook", to: "/playbook" },
+  { label: "Marksmanship", to: "/marksmanship" },
 ];
 
 /**

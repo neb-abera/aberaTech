@@ -26,6 +26,13 @@ public sealed class NotionOptions
     /// </summary>
     public string? FitnessLessonsPageId { get; init; }
 
+    /// <summary>
+    /// The page /marksmanship shows: "President's Hundred pistol plan,
+    /// Camp Perry 2028" in Notes, with its training log database. The
+    /// integration has to be shared with it. Optional.
+    /// </summary>
+    public string? MarksmanshipPlanPageId { get; init; }
+
     /// <summary>The API's origin. A test points it at a fake.</summary>
     public string BaseUrl { get; init; } = "https://api.notion.com";
 
@@ -44,6 +51,9 @@ public sealed class NotionOptions
 
     public bool HasFitnessLessons =>
         !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(FitnessLessonsPageId, out _);
+
+    public bool HasMarksmanshipPlan =>
+        !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(MarksmanshipPlanPageId, out _);
 }
 
 /// <summary>Notion ids are UUIDs, written with or without dashes. One spelling is used everywhere here.</summary>

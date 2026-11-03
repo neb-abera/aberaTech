@@ -77,19 +77,21 @@ public sealed class FakeNotion : HttpMessageHandler
         return (id, source);
     }
 
-    public string Row(string databaseId, string sourceId, string title)
+    public string Row(string databaseId, string sourceId, string title, JsonObject? properties = null)
     {
         var id = NextId();
+        var all = new JsonObject
+        {
+            ["Name"] = new JsonObject { ["id"] = "title", ["type"] = "title", ["title"] = new JsonArray(Run(title)) }
+        };
+        foreach (var (name, value) in properties ?? []) all[name] = value?.DeepClone();
         _pages[id] = new JsonObject
         {
             ["object"] = "page",
             ["id"] = id,
             ["in_trash"] = false,
             ["parent"] = new JsonObject { ["type"] = "data_source_id", ["data_source_id"] = sourceId, ["database_id"] = databaseId },
-            ["properties"] = new JsonObject
-            {
-                ["Name"] = new JsonObject { ["id"] = "title", ["type"] = "title", ["title"] = new JsonArray(Run(title)) }
-            }
+            ["properties"] = all
         };
         _children[id] = [];
         _sources[sourceId].Add(id);
@@ -287,6 +289,22 @@ public sealed class FakeNotion : HttpMessageHandler
         notion.Text(lessons, "heading_2", Run("Treadmill or outdoors"));
         notion.Text(lessons, "paragraph", Run("Set the treadmill to 1% incline for outdoor-equivalent effort."));
 
+        // The marksmanship plan, a root of its own, with its training log.
+        var plan = notion.Page("President's Hundred pistol plan", id: SampleMarksmanship);
+        notion.Text(plan, "heading_2", Run("Bottom line"));
+        notion.Text(plan, "paragraph", Run("The goal is 342 at Camp Perry."));
+        var (log, logSource) = notion.Database(plan, "Pistol training log");
+        notion.Row(log, logSource, "Baseline President's course", new JsonObject
+        {
+            ["Type"] = new JsonObject { ["type"] = "select", ["select"] = new JsonObject { ["name"] = "Baseline" } },
+            ["Date"] = new JsonObject { ["type"] = "date", ["date"] = new JsonObject { ["start"] = "2026-11-21", ["end"] = null } },
+            ["Slow fire"] = new JsonObject { ["type"] = "number", ["number"] = 150 },
+            ["Timed"] = new JsonObject { ["type"] = "number", ["number"] = 85 },
+            ["Rapid"] = new JsonObject { ["type"] = "number", ["number"] = 80 },
+            ["Total"] = new JsonObject { ["type"] = "formula", ["formula"] = new JsonObject { ["type"] = "number", ["number"] = 315 } },
+            ["Notes"] = new JsonObject { ["type"] = "rich_text", ["rich_text"] = new JsonArray(Run("Slow fire lost the most.")) }
+        });
+
         if (root != SampleRoot) throw new InvalidOperationException("The sample's root is always the first id.");
         return notion;
     }
@@ -296,4 +314,7 @@ public sealed class FakeNotion : HttpMessageHandler
 
     /// <summary>The lessons page of <see cref="Sample"/>, which compose.yaml names as Notion__FitnessLessonsPageId.</summary>
     public const string SampleLessons = "0000f17e-0000-0000-0000-000000000000";
+
+    /// <summary>The marksmanship plan of <see cref="Sample"/>, which compose.yaml names as Notion__MarksmanshipPlanPageId.</summary>
+    public const string SampleMarksmanship = "0000a3c0-0000-0000-0000-000000000000";
 }
