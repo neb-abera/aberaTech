@@ -81,7 +81,7 @@ public sealed class AlertsOptions
     /// The zone for the alert text and for "06:00 tomorrow" when the feed
     /// does not name one. Google's feed always does (X-WR-TIMEZONE, the
     /// calendar's default zone), so this is a fallback. Unset, the fallback
-    /// is UTC. Each event's own times come from its own TZID either way.
+    /// is America/New_York. Each event's own times come from its own TZID either way.
     /// </summary>
     public string? TimeZone { get; init; }
 

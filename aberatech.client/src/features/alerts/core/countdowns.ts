@@ -1,6 +1,7 @@
 /**
  * Countdowns: a label and an instant, with the zone the date is written
- * in. Stored on the server. /dates and the paired phone show the time left.
+ * in. Stored on the server, each with an event at its target on Google
+ * Calendar. /dates and the paired phone show the time left.
  */
 
 import { changeState, type StateChangeResult } from "./api";
@@ -13,6 +14,10 @@ export interface Countdown {
   /** The IANA zone the target's date and time are written in. */
   timeZone: string;
   updatedAt: string;
+  /** Its calendar event rings as an alarm at the target. An older server leaves it out. */
+  alarm?: boolean;
+  /** False for a countdown saved before countdowns made calendar events. Its next save makes one. */
+  onCalendar?: boolean;
 }
 
 /** What a create or an update sends. */
@@ -21,6 +26,8 @@ export interface CountdownFields {
   /** ISO 8601 with its offset. */
   targetAt: string;
   timeZone: string;
+  /** Ring an alarm at the target, on the phone and through Pushover, until it is stopped. */
+  alarm: boolean;
 }
 
 /** What the server takes. It checks the same numbers. */

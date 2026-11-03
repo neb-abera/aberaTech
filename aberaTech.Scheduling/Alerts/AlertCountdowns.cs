@@ -6,15 +6,21 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>
 /// A countdown: a label, the instant it counts to, and the zone the owner
 /// set it in. The page and the paired phone show the time left, or the
-/// time since once it has passed. Nothing on the server fires it.
+/// time since once it has passed. Each has an event at its target on the
+/// Google Calendar the alerts read. With Alarm on, that event is an alarm:
+/// it rings on the phone and through Pushover until it is stopped.
 /// </summary>
 /// <param name="TimeZone">An IANA zone id. The target's date and time are written in it.</param>
+/// <param name="Alarm">The calendar event rings as an alarm at the target.</param>
+/// <param name="CalendarEventId">The event's iCalUID on Google Calendar. Null for a countdown saved before countdowns made events.</param>
 public sealed record AlertCountdown(
     Guid Id,
     string Label,
     Instant TargetAt,
     string TimeZone,
-    Instant UpdatedAt);
+    Instant UpdatedAt,
+    bool Alarm = false,
+    string? CalendarEventId = null);
 
 /// <summary>The bounds of a countdown, and the check a create or an update passes before it is stored.</summary>
 public static class AlertCountdowns
@@ -35,6 +41,9 @@ public static class AlertCountdowns
 
     /// <summary>The latest target taken.</summary>
     public static readonly Instant Latest = Instant.FromUtc(2200, 1, 1, 0, 0);
+
+    /// <summary>How long a countdown's calendar event lasts, the same as a new event's default on the phone.</summary>
+    public static readonly Duration EventLength = Duration.FromMinutes(30);
 
     /// <summary>
     /// The fields that are wrong, by the name the body spells them, or the
@@ -73,7 +82,7 @@ public static class AlertCountdowns
 
         if (errors.Count > 0) return (errors, null);
 
-        return (errors, new AlertCountdown(id, label, target!.Value, request.TimeZone!, now));
+        return (errors, new AlertCountdown(id, label, target!.Value, request.TimeZone!, now, request.Alarm ?? false));
     }
 
     /// <summary>The order the status lists them in: the target, then the label.</summary>
@@ -88,4 +97,5 @@ public static class AlertCountdowns
 
 /// <summary>A countdown as the page and the phone send it. Every field is checked by <see cref="AlertCountdowns.Validate"/>.</summary>
 /// <param name="TargetAt">ISO 8601 with its offset, such as 2026-11-20T09:00:00+03:00.</param>
-public sealed record CountdownRequest(string? Label, string? TargetAt, string? TimeZone);
+/// <param name="Alarm">Ring at the target. Left out, a create is off and an update keeps the saved choice, so an older phone app changes nothing it does not send.</param>
+public sealed record CountdownRequest(string? Label, string? TargetAt, string? TimeZone, bool? Alarm = null);

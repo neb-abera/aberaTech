@@ -115,3 +115,56 @@ test("the owner adds a countdown, sees it tick, edits it and deletes it, and the
   await expect(page.getByText("No countdowns.")).toBeVisible();
   expect(await phoneSees(page)).toEqual([]);
 });
+
+test("a countdown with its alarm switch on is saved on the calendar with its alarm, and Edit switches it off", async ({
+  page,
+}) => {
+  // What Google is sent is the server suite's (AlertCountdownRouteTests):
+  // the fake Google Calendar is owner-alerts.spec.ts's state, which it
+  // resets while this file runs beside it.
+  await signIn(page);
+  await clear(page);
+  await page.reload();
+
+  const add = page.getByRole("form", { name: "Add countdown" });
+  // A new countdown starts in the phone's zone, or New York with no phone.
+  const status = await (await page.request.get("/api/alerts/status")).json();
+  await expect(add.getByLabel("Time zone")).toHaveValue(status.defaultTimeZone);
+  await add.getByLabel("Label").fill("Flight");
+  await add.getByLabel("Date").fill("2030-05-01");
+  await add.getByLabel(/^Time\s*\*?$/).fill("07:30");
+  await add.getByLabel("Time zone").fill("America/New_York");
+  await add.getByRole("switch", { name: "Alarm at this time" }).check();
+  await add.getByRole("button", { name: "Add countdown" }).click();
+
+  const item = page.getByRole("listitem", { name: "Flight" });
+  await expect(item.getByTestId("countdown-alarm")).toHaveText(
+    "Alarm at this time",
+  );
+  await expect(item.getByTestId("countdown-off-calendar")).toHaveCount(0);
+  const saved = async () =>
+    (await (await page.request.get("/api/alerts/status")).json()).countdowns;
+  expect(await saved()).toEqual([
+    expect.objectContaining({ label: "Flight", alarm: true, onCalendar: true }),
+  ]);
+
+  await item.getByRole("button", { name: "Edit Flight" }).click();
+  const edit = page.getByRole("form", { name: "Edit countdown" });
+  await expect(
+    edit.getByRole("switch", { name: "Alarm at this time" }),
+  ).toBeChecked();
+  await edit.getByRole("switch", { name: "Alarm at this time" }).uncheck();
+  await edit.getByRole("button", { name: "Save countdown" }).click();
+  await expect(item.getByTestId("countdown-alarm")).toHaveCount(0);
+  expect(await saved()).toEqual([
+    expect.objectContaining({
+      label: "Flight",
+      alarm: false,
+      onCalendar: true,
+    }),
+  ]);
+
+  await item.getByRole("button", { name: "Delete Flight" }).click();
+  await item.getByRole("button", { name: "Yes, delete Flight" }).click();
+  await expect(page.getByText("No countdowns.")).toBeVisible();
+});

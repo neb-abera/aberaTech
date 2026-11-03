@@ -622,7 +622,7 @@ export default function AlertSettingsForm({
           error={Boolean(error("timeZone"))}
           helperText={
             error("timeZone") ??
-            "Blank is UTC. A time zone database name, such as America/New_York."
+            "Blank is America/New_York. A time zone database name, such as Asia/Amman."
           }
           sx={{ maxWidth: "28rem" }}
         />

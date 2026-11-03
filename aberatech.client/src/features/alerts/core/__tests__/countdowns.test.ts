@@ -42,6 +42,7 @@ const fields = {
   label: "Home",
   targetAt: "2027-03-01T09:00:00+03:00",
   timeZone: "Asia/Amman",
+  alarm: true,
 };
 
 const stub = (answer: unknown) => {
