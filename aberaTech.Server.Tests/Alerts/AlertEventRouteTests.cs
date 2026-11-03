@@ -275,6 +275,32 @@ public sealed class AlertEventRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task A_new_alarm_that_rings_at_the_start_is_listed_sent_and_stopped_at_its_start()
+    {
+        // The phone's New calendar event rings at the start by default.
+        using var phone = await PhoneAsync();
+        using var created = await phone.PostAsJsonAsync(
+            "/api/alerts/events", NewEvent(startsAt: "2026-10-28T11:00:00-04:00", leadMinutes: 0));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var start = Instant.FromUtc(2026, 10, 28, 15, 0);
+
+        _clock.Now = start;
+        await Worker.TickAsync(CancellationToken.None);
+
+        Assert.Equal("Dentist", Assert.Single(_pushover.Requests).Form["title"]);
+        var listed = (await StateOf(await phone.GetAsync("/api/alerts/status"))).GetProperty("alerts").EnumerateArray()
+            .Single(alert => alert.GetProperty("title").GetString() == "Dentist");
+        using var stopped = await phone.PostAsJsonAsync(
+            "/api/alerts/ack", new { key = listed.GetProperty("key").GetString(), via = "phone" });
+        Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);
+
+        _clock.Now = start + AlertPlanner.AtStartWindow;
+        Assert.DoesNotContain(
+            (await StateOf(await phone.GetAsync("/api/alerts/status"))).GetProperty("alerts").EnumerateArray(),
+            alert => alert.GetProperty("title").GetString() == "Dentist");
+    }
+
+    [Fact]
     public async Task A_second_replica_lists_the_new_event_from_the_database()
     {
         using var owner = Owner();

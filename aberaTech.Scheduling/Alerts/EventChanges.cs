@@ -51,8 +51,21 @@ public sealed record AlertEventChange(
     bool Recurring = false,
     string? PickedLocation = null)
 {
-    /// <summary>The later of the two starts: past it, nothing the change hides or moves can alert.</summary>
-    public Instant Until => StartsAt is { } moved && moved > OriginalStartsAt ? moved : OriginalStartsAt;
+    /// <summary>
+    /// The later of the two starts: past it, nothing the change hides or
+    /// moves can alert. A deletion, or an edit whose alert is at its start,
+    /// holds <see cref="AlertPlanner.AtStartWindow"/> longer, for an alert
+    /// at the start is due that long after it.
+    /// </summary>
+    public Instant Until
+    {
+        get
+        {
+            var later = StartsAt is { } moved && moved > OriginalStartsAt ? moved : OriginalStartsAt;
+            var atStart = Deleted || (AlertAt is { } alertAt && StartsAt is { } start && alertAt >= start);
+            return atStart ? later + AlertPlanner.AtStartWindow : later;
+        }
+    }
 
     /// <summary>An occurrence this change is for: the picked one, or for a series, any of the event's.</summary>
     public bool Picks(PlannedAlert alert) =>

@@ -126,6 +126,52 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
+    public async Task An_alarm_at_the_start_goes_at_the_start()
+    {
+        // "Rings at the start": the phone's default for a new event. Until
+        // 2026-11-03 the start ended the alert the moment it came, and
+        // Pushover never sent it.
+        var box = New(feed: CriticalStandup(Popup("PT0M")));
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        box.Clock.Now = Start;
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var sent = Assert.Single(box.Pushover.Requests);
+        Assert.Equal("2", sent.Form["priority"]);
+    }
+
+    [Fact]
+    public async Task An_alarm_at_the_start_waits_its_backup_delay_and_still_goes()
+    {
+        var box = New(feed: CriticalStandup(Popup("PT0M")));
+        await box.Store.SaveSettingsAsync(WithBackup(AlertSettings.MaxBackupDelaySeconds), Eight, CancellationToken.None);
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        var backup = Start + Duration.FromSeconds(AlertSettings.MaxBackupDelaySeconds);
+        box.Clock.Now = Start;
+        await box.Worker.TickAsync(CancellationToken.None);
+        box.Clock.Now = backup - Duration.FromSeconds(1);
+        var wake = await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Empty(box.Pushover.Requests);
+        Assert.Equal(backup, wake);
+
+        box.Clock.Now = backup;
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Single(box.Pushover.Requests);
+    }
+
+    [Fact]
+    public async Task An_alarm_at_the_start_is_never_sent_once_its_window_has_passed()
+    {
+        var box = New(feed: CriticalStandup(Popup("PT0M")), now: Start + AlertPlanner.AtStartWindow);
+
+        await box.Worker.TickAsync(CancellationToken.None);
+
+        Assert.Empty(box.Pushover.Requests);
+    }
+
+    [Fact]
     public async Task Mute_is_read_just_before_the_send_so_a_mute_after_the_read_still_holds()
     {
         var box = New();

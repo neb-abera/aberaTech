@@ -139,8 +139,9 @@ public sealed record AlertSettings(
     /// When the Pushover message for an alert goes. An alarm waits
     /// <see cref="BackupDelaySeconds"/> after its time, so a paired phone
     /// rings first and Pushover follows only if nobody acknowledged it. The
-    /// wait never runs past one minute before the start: the plan drops an
-    /// event once it starts, and a backup after that would never go. A
+    /// wait never runs past one minute before the alert stops being due
+    /// (<see cref="PlannedAlert.Until"/>): the plan drops it then, and a
+    /// backup after that would never go. A
     /// notification, or a delay of 0, goes at the alert's own time.
     /// </summary>
     /// <remarks>
@@ -153,7 +154,7 @@ public sealed record AlertSettings(
         if (type != AlertTypes.Alarm || BackupDelaySeconds <= 0) return alert.AlertAt;
 
         var backup = alert.AlertAt + Duration.FromSeconds(BackupDelaySeconds);
-        var latest = alert.StartsAt - LatestBackupBeforeStart;
+        var latest = alert.Until - LatestBackupBeforeStart;
         if (backup <= latest) return backup;
         return latest > alert.AlertAt ? latest : alert.AlertAt;
     }

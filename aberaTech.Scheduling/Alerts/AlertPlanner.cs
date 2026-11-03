@@ -49,7 +49,15 @@ public sealed record PlannedAlert(
     bool Critical = false,
     Instant? EndsAt = null,
     bool Recurring = false,
-    bool Routine = false);
+    bool Routine = false)
+{
+    /// <summary>
+    /// When the alert stops being due: the event's start, or for an alert
+    /// at or after the start ("Rings at the start"), <see cref="AlertPlanner.AtStartWindow"/>
+    /// after the alert. Until then it is listed, sent and acknowledged.
+    /// </summary>
+    public Instant Until => AlertAt < StartsAt ? StartsAt : AlertAt + AlertPlanner.AtStartWindow;
+}
 
 /// <summary>
 /// One read of the calendar: the alerts in the window, the calendar's own
@@ -86,6 +94,15 @@ public static partial class AlertPlanner
     /// description. It is left off the title the phone shows.
     /// </summary>
     public const string CriticalMark = "#critical";
+
+    /// <summary>
+    /// How long an alert at or after its event's start stays due: the
+    /// longest backup delay and the minute a backup keeps clear of the end.
+    /// Without it an alert at the start was past its start the moment it
+    /// came, and the server never sent it.
+    /// </summary>
+    public static readonly Duration AtStartWindow =
+        Duration.FromSeconds(AlertSettings.MaxBackupDelaySeconds) + AlertSettings.LatestBackupBeforeStart;
 
     /// <summary>The mark as a word of its own: not "#criticality", not "a#critical", any case.</summary>
     [GeneratedRegex(@"(?<![\w#])#critical(?!\w)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
@@ -194,7 +211,7 @@ public static partial class AlertPlanner
 
         var startTime = occurrence.Period.StartTime;
         var start = ToInstant(startTime, zone);
-        if (start <= now || start > horizon) return null;
+        if (start > horizon) return null;
 
         var end = occurrence.Period.EffectiveEndTime is { } endTime ? ToInstant(endTime, zone) : start;
         // An event with neither DTEND nor DURATION has no end to show.
@@ -206,7 +223,7 @@ public static partial class AlertPlanner
         var summary = calendarEvent.Summary ?? "";
         var critical = Mark().IsMatch(summary) || Mark().IsMatch(calendarEvent.Description ?? "");
 
-        return new PlannedAlert(
+        var alert = new PlannedAlert(
             Key(calendarEvent.Uid, start),
             DisplayTitle(summary),
             string.IsNullOrWhiteSpace(calendarEvent.Location) ? null : calendarEvent.Location.Trim(),
@@ -217,6 +234,7 @@ public static partial class AlertPlanner
             critical,
             shownEnd,
             calendarEvent.RecurrenceRule is not null || calendarEvent.RecurrenceIdentifier is not null);
+        return alert.Until <= now ? null : alert;
     }
 
     private static Instant? EarliestReminder(CalendarEvent calendarEvent, Instant start, Instant end, DateTimeZone zone)

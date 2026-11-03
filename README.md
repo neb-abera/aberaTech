@@ -575,7 +575,7 @@ every other replica reads it at the start of its next pass.
 | Alert for all-day events | off | |
 | Time zone | blank, UTC | a time zone database name |
 | Your addresses | none | up to 10 |
-| Pushover backup after | 0 s | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start |
+| Pushover backup after | 0 s | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start. An alert that rings at the start stays due for 16 minutes after it, so its backup still goes |
 | Alarm sound (On the phone) | iPhone default | iPhone default, Pulse, Chime, Rise, Siren or Beacon |
 | Snooze (On the phone) | 9 min | 1 to 30 min |
 
