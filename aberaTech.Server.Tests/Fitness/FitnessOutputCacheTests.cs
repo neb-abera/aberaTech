@@ -27,7 +27,6 @@ public sealed class FitnessOutputCacheTests
     [Theory]
     [InlineData("/api/fitness/summary")]
     [InlineData("/api/fitness/digest")]
-    [InlineData("/api/fitness/readiness/outlook?weeklyHours=6")]
     public async Task A_repeat_visit_is_answered_without_the_database(string path)
     {
         using var app = new FitnessApp();
@@ -42,19 +41,6 @@ public sealed class FitnessOutputCacheTests
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Equal(first, await second.Content.ReadAsStringAsync());
         Assert.Equal(0, app.Commands.Count);
-    }
-
-    [Fact]
-    public async Task A_different_question_is_not_answered_from_the_last_one()
-    {
-        using var app = new FitnessApp();
-        await app.SeedAsync(FitnessSeed.AthleteAsync);
-        using var client = app.Factory.CreateClient();
-
-        var six = await client.GetStringAsync("/api/fitness/readiness/outlook?weeklyHours=6");
-        var twelve = await client.GetStringAsync("/api/fitness/readiness/outlook?weeklyHours=12");
-
-        Assert.NotEqual(six, twelve);
     }
 
     [Fact]

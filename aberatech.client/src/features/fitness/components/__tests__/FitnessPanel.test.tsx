@@ -56,7 +56,6 @@ const emptySummary = {
     female: null,
     availableHoursPerWeek: 7,
     sustainedWeeklyHours: null,
-    selectionDate: null,
     ltHr: null,
   },
   aerobicTrend: [
@@ -129,8 +128,6 @@ const emptySummary = {
   deficiencySpread: 0.147,
   activityCount: 25,
   readiness: {
-    selectionDate: null,
-    gates: [],
     ruck: {
       referenceLoadKg: 20.41,
       ruckEfficiency: 0.67,

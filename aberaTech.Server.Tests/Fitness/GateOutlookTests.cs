@@ -35,35 +35,6 @@ public sealed class GateOutlookTests
         new(metric, metric, comparison, target, unit, "test");
 
     [Fact]
-    public void Every_forecast_line_carries_its_own_gates_standard()
-    {
-        // The competitive row and the prep row both have a five-mile line,
-        // at 35:00 and 45:00. Printing the wrong one under the right
-        // probability is how "competitive" came to read as 45:00.
-        var gates = GateOutlook.Evaluate(Context(), null);
-
-        foreach (var gate in gates)
-        {
-            var definition = SelectionReadiness.Gates.Single(g => g.Id == gate.GateId);
-            foreach (var line in gate.Lines)
-            {
-                var requirement = definition.Requirements.Single(r => r.Metric == line.Metric);
-                Assert.Equal(requirement.Target, line.Target);
-                Assert.Equal(requirement.Unit, line.Unit);
-                Assert.Equal(requirement.Comparison, line.Comparison);
-            }
-        }
-
-        var competitive = gates.Single(g => g.GateId == "sfas-competitive");
-        Assert.Equal(35 * 60, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunFiveMile).Target);
-        Assert.Equal(2 * 3600 + 45 * 60, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RuckTwelveMileAt45).Target);
-        Assert.Equal(13 * 60 + 30, competitive.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunTwoMile).Target);
-
-        var prep = gates.Single(g => g.GateId == "selection-prep-entry");
-        Assert.Equal(45 * 60, prep.Lines.Single(l => l.Metric == SelectionReadiness.Metrics.RunFiveMile).Target);
-    }
-
-    [Fact]
     public void A_two_mile_already_inside_the_standard_is_near_certain_and_a_hard_one_is_not()
     {
         var context = Context();
@@ -161,47 +132,4 @@ public sealed class GateOutlookTests
         Assert.Contains("the log has 0", blank.Evidence);
     }
 
-    [Fact]
-    public void A_gates_chance_is_the_product_of_its_forecast_lines_and_its_date_counts_back_from_selection()
-    {
-        var selection = new LocalDate(2028, 4, 1);
-        var gates = GateOutlook.Evaluate(Context(), selection);
-
-        var dayOne = Assert.Single(gates, g => g.GateId == "sfas-day-one");
-        Assert.Equal(selection.PlusWeeks(-dayOne.WeeksBeforeSelection), dayOne.DueOn);
-        Assert.True(dayOne.MonthsAway > 6);
-
-        // The runs and the ruck are forecast from the trajectory; the reps have
-        // no history here, so the gate's chance covers only the forecast lines.
-        Assert.True(dayOne.Forecast > 0);
-        Assert.True(dayOne.Forecast < dayOne.Total);
-        var expected = dayOne.Lines.Where(l => l.Probability is not null).Aggregate(1.0, (acc, l) => acc * l.Probability!.Value);
-        Assert.Equal(expected, dayOne.Probability!.Value, precision: 9);
-    }
-
-    [Fact]
-    public void Without_a_selection_date_every_gate_is_asked_a_year_out()
-    {
-        var gates = GateOutlook.Evaluate(Context(), null);
-        Assert.All(gates, g => Assert.Null(g.DueOn));
-        Assert.All(gates, g => Assert.Equal(GateOutlook.DefaultHorizonMonths, g.MonthsAway));
-    }
-
-    [Fact]
-    public void The_earliest_selection_date_is_set_by_the_slowest_gate()
-    {
-        var soon = new GateOutlookResult("a", "A", 4, null, 12, 0.9, 1, 1, 1.0, []);
-        var later = new GateOutlookResult("b", "B", 52, null, 12, 0.9, 1, 1, 3.0, []);
-        var unforecast = new GateOutlookResult("c", "C", 0, null, 12, null, 0, 2, null, []);
-
-        var earliest = GateOutlook.EarliestSelection([soon, later, unforecast], Today);
-
-        Assert.NotNull(earliest);
-        Assert.Equal("b", earliest!.Value.GateId);
-        Assert.Equal(Today.PlusDays((int)Math.Ceiling(3.0 * 30.4375)).PlusWeeks(52), earliest.Value.Date);
-
-        // A forecast gate that never gets ready means there is no date to name.
-        var never = new GateOutlookResult("d", "D", 0, null, 12, 0.1, 1, 1, null, []);
-        Assert.Null(GateOutlook.EarliestSelection([soon, never], Today));
-    }
 }

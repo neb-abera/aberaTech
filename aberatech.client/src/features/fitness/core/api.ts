@@ -35,8 +35,6 @@ export interface SettingsDto {
   /** The clamp the server applies, so the page can offer the range it honours. */
   maxWeightAdjustmentFraction: number;
   homeAltitudeMeters: number;
-  /** The date the readiness gates count back from, if named. */
-  selectionDate: string | null;
   /** The lactate-threshold heart rate, when a test has set it. */
   ltHr: number | null;
 }
@@ -59,7 +57,6 @@ export interface SettingsUpdate {
   homeAltitudeMeters: number;
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
-  selectionDate: string | null;
   ltHr: number | null;
 }
 
@@ -789,34 +786,6 @@ export interface Standing {
   on: string | null;
 }
 
-export type GateStatus = "Pass" | "Fail" | "Unknown";
-
-export interface RequirementResult {
-  metric: string;
-  label: string;
-  comparison: "AtLeast" | "AtMost";
-  target: number;
-  unit: string;
-  citationId: string;
-  status: GateStatus;
-  current: Standing | null;
-  gap: string;
-}
-
-/** One published standard on the way to selection, scored and dated. */
-export interface Gate {
-  id: string;
-  name: string;
-  purpose: string;
-  weeksBeforeSelection: number;
-  dueOn: string | null;
-  status: GateStatus;
-  passed: number;
-  known: number;
-  requirements: RequirementResult[];
-  untracked: string[];
-}
-
 export interface RuckPoint {
   month: string;
   medianSecPerKm: number;
@@ -893,71 +862,8 @@ export interface AftResult {
   steps: Step[];
 }
 
-/** Everything between the athlete and a selection slot, as the log sees it. */
-/** One gate line, looked at by its due date. */
-export interface OutlookLine {
-  metric: string;
-  label: string;
-  probability: number | null;
-  method: "trajectory" | "trend" | "held" | "none";
-  evidence: string;
-  projected: number | null;
-  readyInMonths: number | null;
-  hoursToReach: number | null;
-  unit: string;
-  comparison: "AtLeast" | "AtMost";
-  target: number;
-}
-
-/** One gate, looked at by its due date. */
-export interface OutlookGate {
-  id: string;
-  name: string;
-  weeksBeforeSelection: number;
-  dueOn: string | null;
-  monthsAway: number;
-  probability: number | null;
-  forecast: number;
-  total: number;
-  readyInMonths: number | null;
-  lines: OutlookLine[];
-}
-
-/** The gates as a forecast, under one training week. */
-export interface Outlook {
-  selectionDate: string | null;
-  weeklyHours: number;
-  measuredWeeklyHours: number;
-  /** The hours a week the profile says can be trained: the slider's start. */
-  plannedWeeklyHours: number;
-  /** Where the week being asked about came from, in words. */
-  hoursBasis: string;
-  compliance: number;
-  startVdot: number;
-  gates: OutlookGate[];
-  earliestSelectionDate: string | null;
-  bindingGate: string | null;
-  /** Every number the forecast is computed from, with where each came from. */
-  inputs: string[];
-  assumptions: string[];
-}
-
-export function fetchOutlook(
-  weeklyHours: number | null,
-  compliance: number,
-  signal?: AbortSignal,
-): Promise<Outlook> {
-  const query = new URLSearchParams({ compliance: String(compliance) });
-  if (weeklyHours !== null) query.set("weeklyHours", String(weeklyHours));
-  return get<Outlook>(
-    `/api/fitness/readiness/outlook?${query.toString()}`,
-    signal,
-  );
-}
-
+/** The readouts behind the goals, as the log has them. */
 export interface Readiness {
-  selectionDate: string | null;
-  gates: Gate[];
   ruck: RuckReport;
   calisthenics: CalisthenicsReport;
   body: BodyReport;

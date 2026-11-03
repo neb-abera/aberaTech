@@ -12,13 +12,11 @@ public sealed class SummaryEndpointTests : IDisposable
 {
     private readonly FitnessApp _app = new();
 
-    // The digest and the outlook are written from the same log as the summary,
-    // so they were restructured with it and are pinned with it.
+    // The digest is written from the same log as the summary, so it was
+    // restructured with it and is pinned with it.
     [Theory]
     [InlineData("/api/fitness/summary", "summary.json")]
     [InlineData("/api/fitness/digest", "digest.json")]
-    [InlineData("/api/fitness/readiness/outlook", "outlook.json")]
-    [InlineData("/api/fitness/readiness/outlook?weeklyHours=9&compliance=0.8", "outlook-named-week.json")]
     public async Task The_payload_for_a_known_athlete_is_the_recorded_one(string path, string golden)
     {
         await _app.SeedAsync(FitnessSeed.AthleteAsync);
@@ -61,7 +59,7 @@ public sealed class SummaryEndpointTests : IDisposable
         Assert.True(root.GetProperty("durability").GetProperty("days").GetArrayLength() > 0);
 
         var readiness = root.GetProperty("readiness");
-        Assert.True(readiness.GetProperty("gates").GetArrayLength() > 0);
+        Assert.False(readiness.TryGetProperty("gates", out _));
         Assert.True(readiness.GetProperty("ruck").GetProperty("marches").GetArrayLength() > 0);
         Assert.True(readiness.GetProperty("calisthenics").GetProperty("latest").GetArrayLength() > 0);
         Assert.True(readiness.GetProperty("body").GetProperty("points").GetArrayLength() > 0);
@@ -100,7 +98,6 @@ public sealed class SummaryEndpointTests : IDisposable
 
     [Theory]
     [InlineData("/api/fitness/digest", 6)]
-    [InlineData("/api/fitness/readiness/outlook", 5)]
     public async Task The_pages_written_from_the_same_log_read_it_once_too(string path, int commands)
     {
         await _app.SeedAsync(FitnessSeed.AthleteAsync);

@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
-import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -15,15 +14,12 @@ import type {
   AftResult,
   BodyReport,
   CalisthenicsReport,
-  Gate,
-  GateStatus,
   Readiness,
   RuckReport,
 } from "../core/api";
 import {
   formatDistance,
   formatLoad,
-  formatRequirement,
   formatSeconds,
   kgToLb,
   metricLabel,
@@ -31,9 +27,8 @@ import {
 import MathPanel from "./MathPanel";
 
 /**
- * The selection gates, scored from the log: every published standard between
- * the athlete and a slot, with a date, and the rucking, calisthenics, body
- * composition and fitness-test readouts the gates are scored from.
+ * The readouts behind the goals: rucking, calisthenics, body composition and
+ * the fitness tests, as the log has them.
  */
 export default function ReadinessPanel({
   readiness,
@@ -42,153 +37,11 @@ export default function ReadinessPanel({
 }) {
   return (
     <Stack spacing={3}>
-      {readiness.selectionDate === null && (
-        <Alert severity="info">
-          No selection date set. The gates below are scored but undated; name
-          the SFRE date in the athlete profile on the Data tab and each gate
-          gets its due date.
-        </Alert>
-      )}
-
-      {readiness.gates.map((gate) => (
-        <GateCard key={gate.id} gate={gate} />
-      ))}
-
       <RuckCard ruck={readiness.ruck} />
       <CalisthenicsCard calisthenics={readiness.calisthenics} />
       <BodyCard body={readiness.body} />
       <AftCard results={readiness.aftResults} />
     </Stack>
-  );
-}
-
-function statusColor(status: GateStatus): "success" | "error" | "default" {
-  if (status === "Pass") return "success";
-  if (status === "Fail") return "error";
-  return "default";
-}
-
-function statusLabel(status: GateStatus): string {
-  if (status === "Pass") return "pass";
-  if (status === "Fail") return "short";
-  return "unknown";
-}
-
-function GateCard({ gate }: { gate: Gate }) {
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1, mb: 0.5 }}
-        >
-          <Typography variant="h6">{gate.name}</Typography>
-          <Chip
-            size="small"
-            label={statusLabel(gate.status)}
-            color={statusColor(gate.status)}
-          />
-          <Chip
-            size="small"
-            variant="outlined"
-            label={`${gate.passed} of ${gate.requirements.length} clear`}
-          />
-          {gate.dueOn !== null && (
-            <Chip size="small" variant="outlined" label={`due ${gate.dueOn}`} />
-          )}
-        </Stack>
-        <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-          {gate.purpose}
-          {gate.dueOn === null &&
-            gate.weeksBeforeSelection > 0 &&
-            ` Cleared ${gate.weeksBeforeSelection} weeks before selection.`}
-        </Typography>
-
-        <Box sx={{ overflowX: "auto" }}>
-          <Table size="small" sx={{ minWidth: 640 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Requirement</TableCell>
-                <TableCell align="right">Standard</TableCell>
-                <TableCell align="right">You</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Basis</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {gate.requirements.map((r) => (
-                <TableRow key={r.metric}>
-                  <TableCell>
-                    {r.label}{" "}
-                    <Link
-                      href={`#source-${r.citationId}`}
-                      underline="hover"
-                      variant="caption"
-                    >
-                      [{r.citationId}]
-                    </Link>
-                  </TableCell>
-                  <TableCell align="right">
-                    {r.comparison === "AtLeast" ? "≥ " : "≤ "}
-                    {formatRequirement(r.unit, r.target)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {r.current === null
-                      ? "—"
-                      : formatRequirement(r.unit, r.current.value)}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={statusLabel(r.status)}
-                      color={statusColor(r.status)}
-                    />{" "}
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      {r.gap}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {r.current === null ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        not in the log
-                      </Typography>
-                    ) : (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {r.current.basis === "Measured"
-                          ? "measured"
-                          : "modelled"}
-                        {" — "}
-                        {r.current.evidence}
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Box>
-
-        {gate.untracked.length > 0 && (
-          <Typography
-            variant="caption"
-            sx={{ color: "text.secondary", display: "block", mt: 1 }}
-          >
-            Not scored from the log: {gate.untracked.join(", ")}.
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -215,7 +68,7 @@ function RuckCard({ ruck }: { ruck: RuckReport }) {
             </>
           )}
           . A timed ruck of your own outranks this; record the load on each ruck
-          on the Data tab and the gates use the clock instead.
+          on the Data tab and the goals use the clock instead.
         </Typography>
 
         {ruck.rucksWithoutLoad > 0 && (
@@ -295,7 +148,7 @@ function CalisthenicsCard({
       <CardContent>
         <Typography variant="h6">Calisthenics</Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-          Best recent set of each movement the gates count, read out of the
+          Best recent set of each movement the goals count, read out of the
           strength log by name. Log pull-ups, push-ups, sit-ups and the plank as
           their own exercises and they land here.
         </Typography>

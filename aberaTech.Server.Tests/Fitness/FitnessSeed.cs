@@ -32,8 +32,7 @@ internal static class FitnessSeed
             PastPeakSeconds = 750,
             PastPeakYear = 2019,
             PastPeakWeightKg = 78,
-            HomeAltitudeMeters = 300,
-            SelectionDate = today.PlusWeeks(30)
+            HomeAltitudeMeters = 300
         });
 
         for (var day = 182; day >= 1; day--)

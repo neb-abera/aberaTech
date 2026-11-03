@@ -74,7 +74,7 @@ export default function AftEntry({ onSaved }: { onSaved: () => void }) {
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
           The five raw results as taken. Scored against the published tables on
-          your age band, and used as measurements by the readiness gates.
+          your age band, and used as measurements on the Goals tab.
         </Typography>
         <Stack spacing={2}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

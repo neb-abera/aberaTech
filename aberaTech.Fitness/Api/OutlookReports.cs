@@ -1,60 +1,10 @@
-using System.Globalization;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
 using NodaTime;
 
 namespace aberaTech.Fitness.Api;
 
-/// <summary>One gate line, looked at by its due date.</summary>
-public sealed record OutlookLineDto(
-    string Metric,
-    string Label,
-    double? Probability,
-    string Method,
-    string Evidence,
-    double? Projected,
-    double? ReadyInMonths,
-    double? HoursToReach,
-    string Unit,
-    string Comparison,
-    double Target);
-
-/// <summary>One gate, looked at by its due date.</summary>
-public sealed record OutlookGateDto(
-    string Id,
-    string Name,
-    int WeeksBeforeSelection,
-    string? DueOn,
-    double MonthsAway,
-    double? Probability,
-    int Forecast,
-    int Total,
-    double? ReadyInMonths,
-    IReadOnlyList<OutlookLineDto> Lines);
-
-/// <summary>The gates as a forecast, under one training week.</summary>
-/// <param name="WeeklyHours">The running hours the forecast was made at.</param>
-/// <param name="MeasuredWeeklyHours">The running hours the log shows, for the slider's starting point.</param>
-/// <param name="PlannedWeeklyHours">The running hours the profile says the athlete can train, the slider's starting point.</param>
-/// <param name="HoursBasis">Where the week being asked about came from, in words.</param>
-/// <param name="EarliestSelectionDate">The first selection date by which every forecast gate is ready.</param>
-/// <param name="BindingGate">The gate that sets that date.</param>
-/// <param name="Inputs">Every number the forecast is computed from, with where each came from.</param>
-public sealed record OutlookDto(
-    string? SelectionDate,
-    double WeeklyHours,
-    double MeasuredWeeklyHours,
-    double PlannedWeeklyHours,
-    string HoursBasis,
-    double Compliance,
-    double StartVdot,
-    IReadOnlyList<OutlookGateDto> Gates,
-    string? EarliestSelectionDate,
-    string? BindingGate,
-    IReadOnlyList<string> Inputs,
-    IReadOnlyList<string> Assumptions);
-
-/// <summary>Builds the gate forecast out of the fitted model and the log's histories.</summary>
+/// <summary>The inputs a goal forecast is made from: the fitted model, the week, and the log's histories.</summary>
 internal static class OutlookReports
 {
     /// <summary>
@@ -77,19 +27,6 @@ internal static class OutlookReports
         if (planMinutesPerWeek > 0)
             return (planMinutesPerWeek / 60.0, $"the profile's planned {planMinutesPerWeek:0} minutes a week");
         return (measured, "what the log's last eight weeks show, because the profile names no week");
-    }
-
-    public static async Task<OutlookDto> BuildAsync(
-        FitnessDbContext database,
-        double? weeklyHours,
-        double compliance,
-        Instant now,
-        CancellationToken cancellationToken)
-    {
-        var history = await TrainingHistory.LoadAsync(database, cancellationToken);
-        var evidence = await ReadinessEvidence.LoadAsync(database, cancellationToken);
-
-        return Build(history, evidence, weeklyHours, compliance, now.InUtc().Date, now);
     }
 
     /// <summary>Everything one forecast is asked against: the athlete, the week, the readings.</summary>
@@ -141,89 +78,4 @@ internal static class OutlookReports
         return new Frame(athlete, p, measured, hours, basis, schedule, readings, context);
     }
 
-    /// <summary>The outlook, from a log that has already been read.</summary>
-    internal static OutlookDto Build(
-        TrainingHistory history,
-        ReadinessEvidence evidence,
-        double? weeklyHours,
-        double compliance,
-        LocalDate today,
-        Instant now)
-    {
-        var frame = FrameFor(history, evidence, weeklyHours, compliance, today, now);
-        var (athlete, p, measured, hours, basis, schedule, _, context) = frame;
-        var row = athlete.Row;
-        var weight = evidence.LatestWeight;
-
-        var gates = GateOutlook.Evaluate(context, row.SelectionDate);
-        var earliest = GateOutlook.EarliestSelection(gates, today);
-
-        var inputs = new List<string>
-        {
-            row.VdotMeasuredOn is { } measuredOn
-                ? Text($"Anchor: VDOT {p.StartVdot:0.0}, from the {measuredOn:yyyy-MM-dd} time trial in the profile.")
-                : Text($"Anchor: VDOT {p.StartVdot:0.0}, from the profile; no time trial date is set."),
-            athlete.ReclaimVdot is { } reclaim
-                ? Text($"Reclaim ceiling: VDOT {reclaim:0.0}, from the lifetime best in the profile; fitness held before comes back faster.")
-                : "Reclaim ceiling: none; no lifetime best is set in the profile.",
-            Text($"Trajectory: rate {athlete.Fit.RatePerMonth.Value:0.000} per month, responsiveness {athlete.Fit.Responsiveness.Value:0.00}, fitted to the log (the Banister model)."),
-            Text($"Running hours: {hours:0.0} h a week, {basis}. The log's last eight weeks average {measured:0.0} h."),
-            Text($"Weeks kept: {Format.Percent(compliance)}; the planned week is multiplied by it before the forecast, so 75% of 7 h is asked as 5.25 h."),
-            weight is { } w
-                ? Text($"Bodyweight: {w.WeightKg:0.0} kg, weighed {w.Date:yyyy-MM-dd}; the ruck lines read through it.")
-                : "Bodyweight: none logged; the ruck lines cannot be forecast.",
-            Text($"Home altitude: {row.HomeAltitudeMeters:0} m; run times are corrected for it."),
-            row.SelectionDate is { } selection
-                ? Text($"Selection date: {selection:yyyy-MM-dd}; each gate is due the number of weeks before it that its standard is meant to be in hand.")
-                : Text($"Selection date: none set; every gate is asked about {GateOutlook.DefaultHorizonMonths:0} months out."),
-            Text($"Today: {today:yyyy-MM-dd}.")
-        };
-
-        var assumptions = new List<string>
-        {
-            Text($"Running lines are asked of the Banister trajectory from VDOT {p.StartVdot:0.0} at {schedule.Target.RunningHours:0.0} h/week ({Format.Percent(compliance)} of {hours:0.0} h kept), split the way the model would advise; the spread is the fit's covariance plus its residual."),
-            "Rucks are read through the load-carriage model at the current bodyweight; a timed twelve-mile in the log would outrank it.",
-            Text($"Every other line is a straight line through its own dated readings ({GateOutlook.MinimumTrendPoints}+ over {GateOutlook.MinimumTrendSpanDays}+ days), with the regression's prediction interval as the spread."),
-            "A gate's chance is the product of its lines', as if independent. They are not, so it is a floor, and it covers only the lines that could be forecast.",
-            row.SelectionDate is null
-                ? Text($"No selection date is set, so every gate is asked about {GateOutlook.DefaultHorizonMonths:0} months out.")
-                : "Each gate's date counts back from the selection date by the weeks its standard is meant to be in hand."
-        };
-
-        return new OutlookDto(
-            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            hours,
-            measured,
-            row.AvailableHoursPerWeek,
-            basis,
-            compliance,
-            p.StartVdot,
-            gates.Select(g => new OutlookGateDto(
-                g.GateId,
-                g.Name,
-                g.WeeksBeforeSelection,
-                g.DueOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                g.MonthsAway,
-                g.Probability,
-                g.Forecast,
-                g.Total,
-                g.ReadyInMonths,
-                // The line's own standard. This used to be looked up by
-                // metric across all gates, first match wins, so the
-                // competitive row printed the day-one two-mile and the prep
-                // five-mile while its probabilities were computed against
-                // its own, harder, numbers.
-                g.Lines.Select(l =>
-                {
-                    return new OutlookLineDto(
-                        l.Metric, l.Label, l.Probability, l.Method, l.Evidence, l.Projected, l.ReadyInMonths, l.HoursToReach,
-                        l.Unit, l.Comparison.ToString(), l.Target);
-                }).ToArray())).ToArray(),
-            earliest?.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            earliest?.GateId,
-            inputs,
-            assumptions);
-    }
-
-    private static string Text(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
 }

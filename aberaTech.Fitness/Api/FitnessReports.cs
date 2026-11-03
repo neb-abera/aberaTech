@@ -100,10 +100,7 @@ public static class FitnessReports
             .Select(l => new LedgerEntry(l.Id, l.MadeOn, l.TargetDate, l.DistanceMeters, l.PredictedSeconds, l.ActualSeconds))
             .OrderBy(l => l.TargetDate)
             .ToArray();
-        var nextTest = row.SelectionDate is { } selection
-            ? SelectionReadiness.Gates.Select(g => selection.PlusWeeks(-g.WeeksBeforeSelection)).Where(d => d > today).DefaultIfEmpty(selection).Min()
-            : (LocalDate?)null;
-        findings.AddRange(Ledger.Highlights(ledger, nextTest, today));
+        findings.AddRange(Ledger.Highlights(ledger, null, today));
 
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
@@ -788,7 +785,6 @@ public static class FitnessReports
             row.GoalWeightKg,
             BodyMass.MaxAdjustmentFraction,
             row.HomeAltitudeMeters,
-            row.SelectionDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             row.LtHr);
     }
 
@@ -817,10 +813,14 @@ public static class FitnessReports
         return weeks;
     }
 
+    /// <summary>The lifts the goals workbook names; any other exercise stays in the log and raises nothing.</summary>
+    internal static readonly string[] TrackedLifts = ["deadlift", "bench press", "front squat", "back squat"];
+
     private static IReadOnlyList<E1RmDto> StrengthTrend(IReadOnlyList<DatedSet> sets, DateTimeZone zone)
     {
         return sets
             .Where(x => OneRepMax.IsEstimable(x.Set.WeightKg, x.Set.Reps))
+            .Where(x => TrackedLifts.Any(lift => ReadinessReports.IsLift(x.Set.Exercise, lift)))
             .GroupBy(x => (Exercise: x.Set.Exercise, Date: x.StartedAt.InZone(zone).Date))
             .Select(g => new E1RmDto(
                 g.Key.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),

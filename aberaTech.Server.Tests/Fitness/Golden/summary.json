@@ -17,7 +17,6 @@
     "goalWeightKg": null,
     "maxWeightAdjustmentFraction": 0.1,
     "homeAltitudeMeters": 300,
-    "selectionDate": "2027-01-11",
     "ltHr": 172
   },
   "aerobicTrend": [
@@ -182,29 +181,14 @@
       "e1RmKg": 123.1
     },
     {
-      "date": "2025-12-19",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2025-12-21",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 143.8
     },
     {
       "date": "2025-12-21",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2025-12-21",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 93.8
-    },
-    {
-      "date": "2025-12-21",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2025-12-26",
@@ -217,29 +201,14 @@
       "e1RmKg": 124
     },
     {
-      "date": "2025-12-26",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2025-12-28",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 144.7
     },
     {
       "date": "2025-12-28",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2025-12-28",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 94.2
-    },
-    {
-      "date": "2025-12-28",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-01-02",
@@ -252,29 +221,14 @@
       "e1RmKg": 125
     },
     {
-      "date": "2026-01-02",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-01-04",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 145.6
     },
     {
       "date": "2026-01-04",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-01-04",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 94.7
-    },
-    {
-      "date": "2026-01-04",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-01-09",
@@ -287,29 +241,14 @@
       "e1RmKg": 126
     },
     {
-      "date": "2026-01-09",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-01-11",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 146.6
     },
     {
       "date": "2026-01-11",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-01-11",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 95.2
-    },
-    {
-      "date": "2026-01-11",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-01-16",
@@ -322,29 +261,14 @@
       "e1RmKg": 127
     },
     {
-      "date": "2026-01-16",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-01-18",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 147.5
     },
     {
       "date": "2026-01-18",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-01-18",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 95.7
-    },
-    {
-      "date": "2026-01-18",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-01-23",
@@ -357,29 +281,14 @@
       "e1RmKg": 128
     },
     {
-      "date": "2026-01-23",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-01-25",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 148.4
     },
     {
       "date": "2026-01-25",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-01-25",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 96.2
-    },
-    {
-      "date": "2026-01-25",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-01-30",
@@ -392,29 +301,14 @@
       "e1RmKg": 128.9
     },
     {
-      "date": "2026-01-30",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-02-01",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 149.3
     },
     {
       "date": "2026-02-01",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-02-01",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 96.7
-    },
-    {
-      "date": "2026-02-01",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-02-06",
@@ -427,29 +321,14 @@
       "e1RmKg": 129.9
     },
     {
-      "date": "2026-02-06",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-02-08",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 150.3
     },
     {
       "date": "2026-02-08",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-02-08",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 97.2
-    },
-    {
-      "date": "2026-02-08",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-02-13",
@@ -462,29 +341,14 @@
       "e1RmKg": 130.9
     },
     {
-      "date": "2026-02-13",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-02-15",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 151.2
     },
     {
       "date": "2026-02-15",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-02-15",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 97.7
-    },
-    {
-      "date": "2026-02-15",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-02-20",
@@ -497,29 +361,14 @@
       "e1RmKg": 131.9
     },
     {
-      "date": "2026-02-20",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-02-22",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 152.1
     },
     {
       "date": "2026-02-22",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-02-22",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 98.2
-    },
-    {
-      "date": "2026-02-22",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-02-27",
@@ -532,29 +381,14 @@
       "e1RmKg": 132.9
     },
     {
-      "date": "2026-02-27",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-03-01",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 153
     },
     {
       "date": "2026-03-01",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-03-01",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 98.7
-    },
-    {
-      "date": "2026-03-01",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-03-06",
@@ -567,29 +401,14 @@
       "e1RmKg": 133.8
     },
     {
-      "date": "2026-03-06",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-03-08",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 154
     },
     {
       "date": "2026-03-08",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-03-08",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 99.1
-    },
-    {
-      "date": "2026-03-08",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-03-13",
@@ -602,29 +421,14 @@
       "e1RmKg": 134.8
     },
     {
-      "date": "2026-03-13",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-03-15",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 154.9
     },
     {
       "date": "2026-03-15",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-03-15",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 99.6
-    },
-    {
-      "date": "2026-03-15",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-03-20",
@@ -637,29 +441,14 @@
       "e1RmKg": 135.8
     },
     {
-      "date": "2026-03-20",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-03-22",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 155.8
     },
     {
       "date": "2026-03-22",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-03-22",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 100.1
-    },
-    {
-      "date": "2026-03-22",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-03-27",
@@ -672,29 +461,14 @@
       "e1RmKg": 136.8
     },
     {
-      "date": "2026-03-27",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-03-29",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 156.7
     },
     {
       "date": "2026-03-29",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-03-29",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 100.6
-    },
-    {
-      "date": "2026-03-29",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-04-03",
@@ -707,29 +481,14 @@
       "e1RmKg": 137.8
     },
     {
-      "date": "2026-04-03",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-04-05",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 157.7
     },
     {
       "date": "2026-04-05",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-04-05",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 101.1
-    },
-    {
-      "date": "2026-04-05",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-04-10",
@@ -742,29 +501,14 @@
       "e1RmKg": 138.7
     },
     {
-      "date": "2026-04-10",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-04-12",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 158.6
     },
     {
       "date": "2026-04-12",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-04-12",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 101.6
-    },
-    {
-      "date": "2026-04-12",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-04-17",
@@ -777,29 +521,14 @@
       "e1RmKg": 139.7
     },
     {
-      "date": "2026-04-17",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-04-19",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 159.5
     },
     {
       "date": "2026-04-19",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-04-19",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 102.1
-    },
-    {
-      "date": "2026-04-19",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-04-24",
@@ -812,29 +541,14 @@
       "e1RmKg": 140.7
     },
     {
-      "date": "2026-04-24",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-04-26",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 160.4
     },
     {
       "date": "2026-04-26",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-04-26",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 102.6
-    },
-    {
-      "date": "2026-04-26",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-05-01",
@@ -847,29 +561,14 @@
       "e1RmKg": 141.7
     },
     {
-      "date": "2026-05-01",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-05-03",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 161.3
     },
     {
       "date": "2026-05-03",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-05-03",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 103.1
-    },
-    {
-      "date": "2026-05-03",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-05-08",
@@ -882,29 +581,14 @@
       "e1RmKg": 142.7
     },
     {
-      "date": "2026-05-08",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-05-10",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 162.3
     },
     {
       "date": "2026-05-10",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-05-10",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 103.6
-    },
-    {
-      "date": "2026-05-10",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-05-15",
@@ -917,29 +601,14 @@
       "e1RmKg": 143.6
     },
     {
-      "date": "2026-05-15",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-05-17",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 163.2
     },
     {
       "date": "2026-05-17",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-05-17",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 104
-    },
-    {
-      "date": "2026-05-17",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-05-22",
@@ -952,29 +621,14 @@
       "e1RmKg": 144.6
     },
     {
-      "date": "2026-05-22",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-05-24",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 164.1
     },
     {
       "date": "2026-05-24",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-05-24",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 104.5
-    },
-    {
-      "date": "2026-05-24",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-05-29",
@@ -987,29 +641,14 @@
       "e1RmKg": 145.6
     },
     {
-      "date": "2026-05-29",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-05-31",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 165
     },
     {
       "date": "2026-05-31",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-05-31",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 105
-    },
-    {
-      "date": "2026-05-31",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-06-05",
@@ -1022,29 +661,14 @@
       "e1RmKg": 146.6
     },
     {
-      "date": "2026-06-05",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-06-07",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 166
     },
     {
       "date": "2026-06-07",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-06-07",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 105.5
-    },
-    {
-      "date": "2026-06-07",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     },
     {
       "date": "2026-06-12",
@@ -1057,54 +681,39 @@
       "e1RmKg": 147.6
     },
     {
-      "date": "2026-06-12",
-      "exercise": "Bulgarian Split Squat",
-      "e1RmKg": 32
-    },
-    {
       "date": "2026-06-14",
       "exercise": "Deadlift (Barbell)",
       "e1RmKg": 166.9
     },
     {
       "date": "2026-06-14",
-      "exercise": "Romanian Deadlift (Barbell)",
-      "e1RmKg": 114
-    },
-    {
-      "date": "2026-06-14",
       "exercise": "Bench Press (Barbell)",
       "e1RmKg": 106
-    },
-    {
-      "date": "2026-06-14",
-      "exercise": "Incline Bench Press (Dumbbell)",
-      "e1RmKg": 40
     }
   ],
   "highlights": [
     {
       "kind": "strength-pr",
-      "headline": "Front Squat (Barbell): new estimated 1RM 117",
-      "evidence": "Previous best 116; Epley estimate from 2026-06-12.",
+      "headline": "Front Squat (Barbell): new estimated 1RM 258 lb",
+      "evidence": "Previous best 256 lb; Epley estimate from 2026-06-12.",
       "positive": true
     },
     {
       "kind": "strength-pr",
-      "headline": "Squat (Barbell): new estimated 1RM 148",
-      "evidence": "Previous best 147; Epley estimate from 2026-06-12.",
+      "headline": "Squat (Barbell): new estimated 1RM 325 lb",
+      "evidence": "Previous best 323 lb; Epley estimate from 2026-06-12.",
       "positive": true
     },
     {
       "kind": "strength-pr",
-      "headline": "Deadlift (Barbell): new estimated 1RM 167",
-      "evidence": "Previous best 166; Epley estimate from 2026-06-14.",
+      "headline": "Deadlift (Barbell): new estimated 1RM 368 lb",
+      "evidence": "Previous best 366 lb; Epley estimate from 2026-06-14.",
       "positive": true
     },
     {
       "kind": "strength-pr",
-      "headline": "Bench Press (Barbell): new estimated 1RM 106",
-      "evidence": "Previous best 106; Epley estimate from 2026-06-14.",
+      "headline": "Bench Press (Barbell): new estimated 1RM 234 lb",
+      "evidence": "Previous best 233 lb; Epley estimate from 2026-06-14.",
       "positive": true
     },
     {
@@ -1152,18 +761,18 @@
     }
   ],
   "measuredDose": {
-    "easyHours": 3.565380208333332,
+    "easyHours": 3.565380208333333,
     "thresholdHours": 0,
     "intervalHours": 0.36249999999999993,
     "strengthHours": 1.8333333333333328,
-    "runningHours": 3.927880208333332,
-    "strain": 7.946630208333331,
+    "runningHours": 3.927880208333333,
+    "strain": 7.946630208333332,
     "easyShare": 0.9077110347635029,
     "zones": [
       {
         "zone": "Easy",
-        "hours": 3.565380208333332,
-        "strain": 3.565380208333332,
+        "hours": 3.565380208333333,
+        "strain": 3.565380208333333,
         "marginalVdotPerHour": 1.5193376120951454
       },
       {
@@ -1197,732 +806,6 @@
   "deficiencySpread": 0.2223611111111112,
   "activityCount": 156,
   "readiness": {
-    "selectionDate": "2027-01-11",
-    "gates": [
-      {
-        "id": "aft-combat",
-        "name": "AFT combat standard",
-        "purpose": "The fitness test every combat specialty has to pass, and the score the recruiter sees first.",
-        "weeksBeforeSelection": 52,
-        "dueOn": "2026-01-12",
-        "status": "Pass",
-        "passed": 2,
-        "known": 2,
-        "requirements": [
-          {
-            "metric": "aft-lowest-event",
-            "label": "Lowest AFT event",
-            "comparison": "AtLeast",
-            "target": 60,
-            "unit": "pts",
-            "citationId": "army-aft-2025",
-            "status": "Pass",
-            "current": {
-              "metric": "aft-lowest-event",
-              "value": 88,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 28 pts"
-          },
-          {
-            "metric": "aft-total",
-            "label": "AFT total",
-            "comparison": "AtLeast",
-            "target": 350,
-            "unit": "pts",
-            "citationId": "army-aft-2025",
-            "status": "Pass",
-            "current": {
-              "metric": "aft-total",
-              "value": 469,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 119 pts"
-          }
-        ],
-        "untracked": []
-      },
-      {
-        "id": "sfas-day-one",
-        "name": "SFAS day-one minimums",
-        "purpose": "Under any of these on the first morning and the course is over before it starts. A year out, these should already be comfortable.",
-        "weeksBeforeSelection": 52,
-        "dueOn": "2026-01-12",
-        "status": "Pass",
-        "passed": 3,
-        "known": 3,
-        "requirements": [
-          {
-            "metric": "run-2mi",
-            "label": "Two-mile run",
-            "comparison": "AtMost",
-            "target": 912,
-            "unit": "s",
-            "citationId": "sfas-day-one",
-            "status": "Pass",
-            "current": {
-              "metric": "run-2mi",
-              "value": 900,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 0:12"
-          },
-          {
-            "metric": "hand-release-push-ups",
-            "label": "Hand-release push-ups",
-            "comparison": "AtLeast",
-            "target": 28,
-            "unit": "reps",
-            "citationId": "sfas-day-one",
-            "status": "Pass",
-            "current": {
-              "metric": "hand-release-push-ups",
-              "value": 45,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 17 reps"
-          },
-          {
-            "metric": "pull-ups",
-            "label": "Pull-ups",
-            "comparison": "AtLeast",
-            "target": 6,
-            "unit": "reps",
-            "citationId": "sfas-day-one",
-            "status": "Pass",
-            "current": {
-              "metric": "pull-ups",
-              "value": 18,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-14",
-              "on": "2026-06-14"
-            },
-            "gap": "clear by 12 reps"
-          }
-        ],
-        "untracked": []
-      },
-      {
-        "id": "selection-prep-entry",
-        "name": "Selection Prep entry test",
-        "purpose": "What Evoke expects before the final fifteen-week block; it has to be passed before that block can start.",
-        "weeksBeforeSelection": 20,
-        "dueOn": "2026-08-24",
-        "status": "Fail",
-        "passed": 5,
-        "known": 7,
-        "requirements": [
-          {
-            "metric": "run-2mi",
-            "label": "Two-mile run",
-            "comparison": "AtMost",
-            "target": 840,
-            "unit": "s",
-            "citationId": "evoke-selection-prep",
-            "status": "Fail",
-            "current": {
-              "metric": "run-2mi",
-              "value": 900,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 1:00"
-          },
-          {
-            "metric": "run-5mi",
-            "label": "Five-mile run",
-            "comparison": "AtMost",
-            "target": 2700,
-            "unit": "s",
-            "citationId": "evoke-selection-prep",
-            "status": "Pass",
-            "current": {
-              "metric": "run-5mi",
-              "value": 2198.9844000269504,
-              "basis": "Modeled",
-              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
-              "on": null
-            },
-            "gap": "clear by 8:21"
-          },
-          {
-            "metric": "ruck-12mi-35lb",
-            "label": "Twelve-mile ruck at 35 lb",
-            "comparison": "AtMost",
-            "target": 10800,
-            "unit": "s",
-            "citationId": "evoke-selection-prep",
-            "status": "Fail",
-            "current": {
-              "metric": "ruck-12mi-35lb",
-              "value": 10814.79168,
-              "basis": "Measured",
-              "evidence": "12.05-mile at 46 lb on 2026-04-29",
-              "on": "2026-04-29"
-            },
-            "gap": "short by 0:15"
-          },
-          {
-            "metric": "hand-release-push-ups",
-            "label": "Hand-release push-ups",
-            "comparison": "AtLeast",
-            "target": 40,
-            "unit": "reps",
-            "citationId": "evoke-selection-prep",
-            "status": "Pass",
-            "current": {
-              "metric": "hand-release-push-ups",
-              "value": 45,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 5 reps"
-          },
-          {
-            "metric": "pull-ups",
-            "label": "Pull-ups",
-            "comparison": "AtLeast",
-            "target": 10,
-            "unit": "reps",
-            "citationId": "evoke-selection-prep",
-            "status": "Pass",
-            "current": {
-              "metric": "pull-ups",
-              "value": 18,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-14",
-              "on": "2026-06-14"
-            },
-            "gap": "clear by 8 reps"
-          },
-          {
-            "metric": "front-squat-3rm-bw",
-            "label": "Front squat 3RM",
-            "comparison": "AtLeast",
-            "target": 1,
-            "unit": "xbw",
-            "citationId": "evoke-selection-prep",
-            "status": "Pass",
-            "current": {
-              "metric": "front-squat-3rm-bw",
-              "value": 1.308108108108108,
-              "basis": "Modeled",
-              "evidence": "235 lb for 3, from an Epley estimate of 258 lb on 2026-06-12, over 179 lb bodyweight",
-              "on": "2026-06-12"
-            },
-            "gap": "clear by 0.31\u00D7 bodyweight"
-          },
-          {
-            "metric": "deadlift-3rm-bw",
-            "label": "Deadlift 3RM",
-            "comparison": "AtLeast",
-            "target": 1.5,
-            "unit": "xbw",
-            "citationId": "evoke-selection-prep",
-            "status": "Pass",
-            "current": {
-              "metric": "deadlift-3rm-bw",
-              "value": 1.7199017199017197,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16, over 179 lb bodyweight",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 0.22\u00D7 bodyweight"
-          }
-        ],
-        "untracked": []
-      },
-      {
-        "id": "sfre-prerequisites",
-        "name": "SFRE prerequisites",
-        "purpose": "What a Guard Special Forces company publishes as the price of a seat at its readiness evaluation, the gate to an SFAS slot.",
-        "weeksBeforeSelection": 8,
-        "dueOn": "2026-11-16",
-        "status": "Fail",
-        "passed": 0,
-        "known": 4,
-        "requirements": [
-          {
-            "metric": "run-2mi",
-            "label": "Two-mile run",
-            "comparison": "AtMost",
-            "target": 822,
-            "unit": "s",
-            "citationId": "guard-sfre-prereqs",
-            "status": "Fail",
-            "current": {
-              "metric": "run-2mi",
-              "value": 900,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 1:18"
-          },
-          {
-            "metric": "push-ups",
-            "label": "Push-ups in two minutes",
-            "comparison": "AtLeast",
-            "target": 64,
-            "unit": "reps",
-            "citationId": "guard-sfre-prereqs",
-            "status": "Fail",
-            "current": {
-              "metric": "push-ups",
-              "value": 48,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-12",
-              "on": "2026-06-12"
-            },
-            "gap": "short by 16 reps"
-          },
-          {
-            "metric": "sit-ups",
-            "label": "Sit-ups in two minutes",
-            "comparison": "AtLeast",
-            "target": 72,
-            "unit": "reps",
-            "citationId": "guard-sfre-prereqs",
-            "status": "Fail",
-            "current": {
-              "metric": "sit-ups",
-              "value": 55,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-12",
-              "on": "2026-06-12"
-            },
-            "gap": "short by 17 reps"
-          },
-          {
-            "metric": "ruck-12mi-45lb",
-            "label": "Twelve-mile ruck at 45 lb dry",
-            "comparison": "AtMost",
-            "target": 10800,
-            "unit": "s",
-            "citationId": "guard-sfre-prereqs",
-            "status": "Fail",
-            "current": {
-              "metric": "ruck-12mi-45lb",
-              "value": 10814.79168,
-              "basis": "Measured",
-              "evidence": "12.05-mile at 46 lb on 2026-04-29",
-              "on": "2026-04-29"
-            },
-            "gap": "short by 0:15"
-          }
-        ],
-        "untracked": [
-          "Rope climb",
-          "100 m swim",
-          "Pull-ups (no count published)"
-        ]
-      },
-      {
-        "id": "evoke-sfas-ready",
-        "name": "Evoke coaches\u0027 SFAS-ready numbers",
-        "purpose": "Where the Selection Prep block is meant to leave you, from what Jack Kuenzle and Scott Johnston told an SFAS candidate on Evoke\u0027s forum, with the lifting numbers Kuenzle attributes to Vince Paikowski. No ruck line on purpose: the best ruckers Kuenzle ever saw never trained with a ruck and were simply the best runners, so the aerobic-threshold pace is the number that moves the ruck; the ruck itself is scored on the competitive row.",
-        "weeksBeforeSelection": 4,
-        "dueOn": "2026-12-14",
-        "status": "Fail",
-        "passed": 2,
-        "known": 6,
-        "requirements": [
-          {
-            "metric": "aet-pace",
-            "label": "Aerobic-threshold pace on the flat",
-            "comparison": "AtMost",
-            "target": 480,
-            "unit": "s/mi",
-            "citationId": "evoke-sfas-ready",
-            "status": "Fail",
-            "current": {
-              "metric": "aet-pace",
-              "value": 531.1438704,
-              "basis": "Measured",
-              "evidence": "median pace at 150 bpm over 4 runs in 2026-06",
-              "on": "2026-06-01"
-            },
-            "gap": "short by 0:51/mile"
-          },
-          {
-            "metric": "run-5mi",
-            "label": "Five-mile run",
-            "comparison": "AtMost",
-            "target": 2100,
-            "unit": "s",
-            "citationId": "evoke-sfas-ready",
-            "status": "Fail",
-            "current": {
-              "metric": "run-5mi",
-              "value": 2198.9844000269504,
-              "basis": "Modeled",
-              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
-              "on": null
-            },
-            "gap": "short by 1:39"
-          },
-          {
-            "metric": "pull-ups",
-            "label": "Strict pull-ups",
-            "comparison": "AtLeast",
-            "target": 15,
-            "unit": "reps",
-            "citationId": "evoke-sfas-ready",
-            "status": "Pass",
-            "current": {
-              "metric": "pull-ups",
-              "value": 18,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-14",
-              "on": "2026-06-14"
-            },
-            "gap": "clear by 3 reps"
-          },
-          {
-            "metric": "push-ups",
-            "label": "Push-ups in two minutes",
-            "comparison": "AtLeast",
-            "target": 80,
-            "unit": "reps",
-            "citationId": "evoke-sfas-ready",
-            "status": "Fail",
-            "current": {
-              "metric": "push-ups",
-              "value": 48,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-12",
-              "on": "2026-06-12"
-            },
-            "gap": "short by 32 reps"
-          },
-          {
-            "metric": "deadlift-3rm-lb",
-            "label": "Deadlift 3RM",
-            "comparison": "AtLeast",
-            "target": 350,
-            "unit": "lb",
-            "citationId": "evoke-sfas-ready",
-            "status": "Fail",
-            "current": {
-              "metric": "deadlift-3rm-lb",
-              "value": 308.647167052,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 41 lb (19 kg)"
-          },
-          {
-            "metric": "back-squat-5rm-lb",
-            "label": "Back squat 5RM",
-            "comparison": "AtLeast",
-            "target": 250,
-            "unit": "lb",
-            "citationId": "evoke-sfas-ready",
-            "status": "Pass",
-            "current": {
-              "metric": "back-squat-5rm-lb",
-              "value": 278.84066920526396,
-              "basis": "Modeled",
-              "evidence": "279 lb for 5, from an Epley estimate of 325 lb on 2026-06-12",
-              "on": "2026-06-12"
-            },
-            "gap": "clear by 29 lb (13 kg)"
-          }
-        ],
-        "untracked": [
-          "Deadlift \u002B squat \u002B overhead press total of 750 lb"
-        ]
-      },
-      {
-        "id": "sfas-competitive",
-        "name": "Competitive at selection",
-        "purpose": "The row selected candidates sit on. The minimums get you in the door; these are what the cadre see from someone who belongs there.",
-        "weeksBeforeSelection": 0,
-        "dueOn": "2027-01-11",
-        "status": "Fail",
-        "passed": 3,
-        "known": 6,
-        "requirements": [
-          {
-            "metric": "run-2mi",
-            "label": "Two-mile run",
-            "comparison": "AtMost",
-            "target": 810,
-            "unit": "s",
-            "citationId": "sfas-day-one",
-            "status": "Fail",
-            "current": {
-              "metric": "run-2mi",
-              "value": 900,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 1:30"
-          },
-          {
-            "metric": "run-5mi",
-            "label": "Five-mile run",
-            "comparison": "AtMost",
-            "target": 2100,
-            "unit": "s",
-            "citationId": "sfas-competitive",
-            "status": "Fail",
-            "current": {
-              "metric": "run-5mi",
-              "value": 2198.9844000269504,
-              "basis": "Modeled",
-              "evidence": "modelled from your VDOT 44.0 anchor of 2026-05-06",
-              "on": null
-            },
-            "gap": "short by 1:39"
-          },
-          {
-            "metric": "ruck-12mi-45lb",
-            "label": "Twelve-mile ruck at 45 lb",
-            "comparison": "AtMost",
-            "target": 9900,
-            "unit": "s",
-            "citationId": "sfas-competitive",
-            "status": "Fail",
-            "current": {
-              "metric": "ruck-12mi-45lb",
-              "value": 10814.79168,
-              "basis": "Measured",
-              "evidence": "12.05-mile at 46 lb on 2026-04-29",
-              "on": "2026-04-29"
-            },
-            "gap": "short by 15:15"
-          },
-          {
-            "metric": "pull-ups",
-            "label": "Pull-ups",
-            "comparison": "AtLeast",
-            "target": 12,
-            "unit": "reps",
-            "citationId": "sfas-competitive",
-            "status": "Pass",
-            "current": {
-              "metric": "pull-ups",
-              "value": 18,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-14",
-              "on": "2026-06-14"
-            },
-            "gap": "clear by 6 reps"
-          },
-          {
-            "metric": "hand-release-push-ups",
-            "label": "Hand-release push-ups",
-            "comparison": "AtLeast",
-            "target": 40,
-            "unit": "reps",
-            "citationId": "sfas-day-one",
-            "status": "Pass",
-            "current": {
-              "metric": "hand-release-push-ups",
-              "value": 45,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "clear by 5 reps"
-          },
-          {
-            "metric": "body-fat",
-            "label": "Body fat",
-            "comparison": "AtMost",
-            "target": 15,
-            "unit": "%",
-            "citationId": "farina-sfas-body",
-            "status": "Pass",
-            "current": {
-              "metric": "body-fat",
-              "value": 14.92,
-              "basis": "Measured",
-              "evidence": "weigh-in of 2026-06-15",
-              "on": "2026-06-15"
-            },
-            "gap": "clear by 0.1%"
-          }
-        ],
-        "untracked": [
-          "Land navigation, day and night",
-          "Back-to-back days under load"
-        ]
-      },
-      {
-        "id": "own-standards",
-        "name": "Your own 2027 standards",
-        "purpose": "The essential rows of the physical fitness goals workbook, scored from the log; the rows under \u0022non-essential\u0022 are left alone on purpose. It is the one row with a grip line: no selection publishes a grip standard, and the farmer\u0027s carry is the grip-endurance test that most resembles what selection actually asks of the hands.",
-        "weeksBeforeSelection": 0,
-        "dueOn": "2027-01-11",
-        "status": "Fail",
-        "passed": 1,
-        "known": 8,
-        "requirements": [
-          {
-            "metric": "farmer-carry-1.5bw-m",
-            "label": "Farmer\u0027s carry at 1.5\u00D7 bodyweight",
-            "comparison": "AtLeast",
-            "target": 100,
-            "unit": "m",
-            "citationId": "neb-fitness-goals",
-            "status": "Unknown",
-            "current": null,
-            "gap": "nothing in the log scores this yet"
-          },
-          {
-            "metric": "pull-ups",
-            "label": "Pull-ups",
-            "comparison": "AtLeast",
-            "target": 15,
-            "unit": "reps",
-            "citationId": "neb-fitness-goals",
-            "status": "Pass",
-            "current": {
-              "metric": "pull-ups",
-              "value": 18,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-14",
-              "on": "2026-06-14"
-            },
-            "gap": "clear by 3 reps"
-          },
-          {
-            "metric": "push-ups",
-            "label": "Push-ups in two minutes",
-            "comparison": "AtLeast",
-            "target": 80,
-            "unit": "reps",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "push-ups",
-              "value": 48,
-              "basis": "Measured",
-              "evidence": "best set in the strength log, 2026-06-12",
-              "on": "2026-06-12"
-            },
-            "gap": "short by 32 reps"
-          },
-          {
-            "metric": "hand-release-push-ups",
-            "label": "Hand-release push-ups",
-            "comparison": "AtLeast",
-            "target": 62,
-            "unit": "reps",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "hand-release-push-ups",
-              "value": 45,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 17 reps"
-          },
-          {
-            "metric": "deadlift-3rm-lb",
-            "label": "Deadlift 3RM",
-            "comparison": "AtLeast",
-            "target": 350,
-            "unit": "lb",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "deadlift-3rm-lb",
-              "value": 308.647167052,
-              "basis": "Measured",
-              "evidence": "AFT of 2026-05-16",
-              "on": "2026-05-16"
-            },
-            "gap": "short by 41 lb (19 kg)"
-          },
-          {
-            "metric": "bench-1rm-bw",
-            "label": "Bench press 1RM",
-            "comparison": "AtLeast",
-            "target": 1.5,
-            "unit": "xbw",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "bench-1rm-bw",
-              "value": 1.3022522522522524,
-              "basis": "Modeled",
-              "evidence": "234 lb for 1, from an Epley estimate of 234 lb on 2026-06-14, over 179 lb bodyweight",
-              "on": "2026-06-14"
-            },
-            "gap": "short by 0.20\u00D7 bodyweight"
-          },
-          {
-            "metric": "front-squat-1rm-bw",
-            "label": "Front squat 1RM",
-            "comparison": "AtLeast",
-            "target": 1.5,
-            "unit": "xbw",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "front-squat-1rm-bw",
-              "value": 1.438918918918919,
-              "basis": "Modeled",
-              "evidence": "258 lb for 1, from an Epley estimate of 258 lb on 2026-06-12, over 179 lb bodyweight",
-              "on": "2026-06-12"
-            },
-            "gap": "short by 0.06\u00D7 bodyweight"
-          },
-          {
-            "metric": "bodyweight-lb",
-            "label": "Bodyweight",
-            "comparison": "AtMost",
-            "target": 170,
-            "unit": "lb",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "bodyweight-lb",
-              "value": 179.45628141452002,
-              "basis": "Measured",
-              "evidence": "weigh-in of 2026-06-15",
-              "on": "2026-06-15"
-            },
-            "gap": "short by 9 lb (4 kg)"
-          },
-          {
-            "metric": "body-fat",
-            "label": "Body fat",
-            "comparison": "AtMost",
-            "target": 10,
-            "unit": "%",
-            "citationId": "neb-fitness-goals",
-            "status": "Fail",
-            "current": {
-              "metric": "body-fat",
-              "value": 14.92,
-              "basis": "Measured",
-              "evidence": "weigh-in of 2026-06-15",
-              "on": "2026-06-15"
-            },
-            "gap": "short by 4.9%"
-          }
-        ],
-        "untracked": []
-      }
-    ],
     "ruck": {
       "referenceLoadKg": 20.411656650451594,
       "ruckEfficiency": 0.67,

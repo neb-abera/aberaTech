@@ -176,30 +176,6 @@ public static class Citations
         2025,
         "https://www.army.mil/e2/downloads/rv7/aft/AFT_Scoring_Scales_250601.pdf");
 
-    public static readonly Citation SfasDayOne = new(
-        "sfas-day-one",
-        "The day-one assessment at Special Forces Assessment and Selection drops anyone under 28 hand-release push-ups, 6 pull-ups or a 15:12 two-mile; sub-13:32, 30+, 12+ and a sub-15:00/mile ruck are what selected candidates look like.",
-        "Task & Purpose's reporting of the standards published by the 1st Special Warfare Training Group, as briefed to candidates.",
-        "Special Forces Assessment and Selection: everything you need to know",
-        2024,
-        "https://taskandpurpose.com/military-life/special-forces-assessment-selection-green-beret/");
-
-    public static readonly Citation EvokeSelectionPrep = new(
-        "evoke-selection-prep",
-        "The entry test for the final fifteen-week selection block: 12 miles at 35 lb under 3:00, a two-mile under 14:00, five miles under 45:00, 40 hand-release push-ups, 10 pull-ups, a bodyweight front-squat triple and a 1.5× bodyweight deadlift triple.",
-        "Evoke Endurance's military coaching team — Vince Paikowski, Jack Kuenzle and Scott Johnston — the plan this athlete is training on.",
-        "Selection Prep 2.0 training plan",
-        2025,
-        "https://evokeendurance.com/training-plans/selection-prep-2-0/");
-
-    public static readonly Citation GuardSfrePrerequisites = new(
-        "guard-sfre-prereqs",
-        "A National Guard Special Forces company's readiness evaluation expects a 13:42 two-mile, 64 push-ups and 72 sit-ups in two minutes, 12 miles at 45 lb dry under three hours, pull-ups, a rope climb and a 100 m swim.",
-        "Company C, 1st Battalion, 19th Special Forces Group (California Army National Guard) — one of the units that gates the Guard's SFAS slots with this evaluation.",
-        "Special Forces Readiness Evaluation flyer",
-        2022,
-        "https://calguard.ca.gov/wp-content/uploads/sites/62/2022/07/SFRE_FlyerSepNov2022Updated.pdf");
-
     public static readonly Citation SfasCompetitive = new(
         "sfas-competitive",
         "Competitive at selection means a five-mile at or under 35:00, twelve miles at 45 lb at or under 2:45, twelve or more pull-ups and a fitness test well above the floor; the minimums are the price of entry, not the target.",
@@ -279,7 +255,7 @@ public static class Citations
         UphillAthleteAet, CuretonSparling, Epley, Brzycki, CogganPmc,
         RonnestadStrength, GabbettWorkload, NonlinearRegression,
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
-        SfasDayOne, EvokeSelectionPrep, GuardSfrePrerequisites, SfasCompetitive,
+        SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
         MaffetoneMaf, FosterMonotony, FbiPft
     ];

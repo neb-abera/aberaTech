@@ -29,7 +29,6 @@ const settings: SettingsDto = {
   goalWeightKg: null,
   maxWeightAdjustmentFraction: 0.1,
   homeAltitudeMeters: 15,
-  selectionDate: null,
 };
 
 afterEach(() => {

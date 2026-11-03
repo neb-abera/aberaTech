@@ -41,23 +41,7 @@ public sealed record LineOutlook(
     string Unit,
     Comparison Comparison);
 
-/// <summary>One gate, looked at by its due date.</summary>
-/// <param name="Probability">The product of the forecast lines' probabilities, treating them as independent.</param>
-/// <param name="Forecast">How many lines carry a probability.</param>
-/// <param name="ReadyInMonths">When the last forecast line reaches the ready probability; null when one never does.</param>
-public sealed record GateOutlookResult(
-    string GateId,
-    string Name,
-    int WeeksBeforeSelection,
-    LocalDate? DueOn,
-    double MonthsAway,
-    double? Probability,
-    int Forecast,
-    int Total,
-    double? ReadyInMonths,
-    IReadOnlyList<LineOutlook> Lines);
-
-/// <summary>Everything a forecast of the gates is made from.</summary>
+/// <summary>Everything a forecast of a goal is made from.</summary>
 /// <param name="P">The athlete's trajectory.</param>
 /// <param name="Fit">The fit the trajectory came from, for its covariance.</param>
 /// <param name="Schedule">The week being asked about.</param>
@@ -113,7 +97,7 @@ public static class GateOutlook
     /// <summary>…spanning at least this long, or it is a couple of days, not a trend.</summary>
     public const int MinimumTrendSpanDays = 42;
 
-    /// <summary>When no selection date is named, every gate is asked about this far out.</summary>
+    /// <summary>When the workbook names no year, every goal is asked about this far out.</summary>
     public const double DefaultHorizonMonths = 12;
 
     /// <summary>How far ahead a trend is searched for its ready date.</summary>
@@ -121,53 +105,6 @@ public static class GateOutlook
 
     private const double DaysPerMonth = 30.4375;
     private static readonly double TwelveMiles = 12 * Vdot.MileMeters;
-
-    public static IReadOnlyList<GateOutlookResult> Evaluate(OutlookContext context, LocalDate? selectionDate)
-    {
-        return SelectionReadiness.Gates
-            .Select(gate =>
-            {
-                var dueOn = selectionDate?.PlusWeeks(-gate.WeeksBeforeSelection);
-                var months = dueOn is { } due
-                    ? Math.Max(0, Period.Between(context.Today, due, PeriodUnits.Days).Days / DaysPerMonth)
-                    : DefaultHorizonMonths;
-
-                var lines = gate.Requirements.Select(r => Line(r, months, context)).ToArray();
-                var forecast = lines.Where(l => l.Probability is not null).ToArray();
-
-                double? probability = forecast.Length == 0
-                    ? null
-                    : forecast.Aggregate(1.0, (acc, l) => acc * l.Probability!.Value);
-
-                double? ready = forecast.Length == 0 ? null
-                    : forecast.Any(l => l.ReadyInMonths is null) ? null
-                    : forecast.Max(l => l.ReadyInMonths!.Value);
-
-                return new GateOutlookResult(
-                    gate.Id, gate.Name, gate.WeeksBeforeSelection, dueOn, months,
-                    probability, forecast.Length, lines.Length, ready, lines);
-            })
-            .ToArray();
-    }
-
-    /// <summary>
-    /// The earliest selection date by which every gate that can be forecast
-    /// is ready, and the gate that sets it. Null when some forecast gate
-    /// never gets there.
-    /// </summary>
-    public static (LocalDate Date, string GateId)? EarliestSelection(
-        IReadOnlyList<GateOutlookResult> gates, LocalDate today)
-    {
-        (LocalDate Date, string GateId)? latest = null;
-        foreach (var gate in gates.Where(g => g.Forecast > 0))
-        {
-            if (gate.ReadyInMonths is not { } ready) return null;
-            var date = today.PlusDays((int)Math.Ceiling(ready * DaysPerMonth)).PlusWeeks(gate.WeeksBeforeSelection);
-            if (latest is null || date > latest.Value.Date) latest = (date, gate.GateId);
-        }
-
-        return latest;
-    }
 
     public static LineOutlook Line(Requirement requirement, double months, OutlookContext context)
     {
