@@ -1,5 +1,10 @@
 import { useTheme } from "@mui/material/styles";
-import type { AerobicPoint, ProjectionPoint, WeekVolume } from "../core/api";
+import type {
+  AerobicPoint,
+  DayVolume,
+  ProjectionPoint,
+  WeekVolume,
+} from "../core/api";
 import { formatPace } from "../core/format";
 
 /**
@@ -204,6 +209,119 @@ export function VolumeChart({
       >
         plan {Math.round(planMinutes)}m
       </text>
+    </svg>
+  );
+}
+
+/** The sum of each window of `size` days ending on that day; null until a full window exists. */
+export function rollingSums(
+  days: DayVolume[],
+  size: number,
+): (number | null)[] {
+  let sum = 0;
+  return days.map((day, i) => {
+    sum += day.minutes;
+    if (i >= size) sum -= days[i - size].minutes;
+    return i >= size - 1 ? sum : null;
+  });
+}
+
+/**
+ * Rolling endurance minutes: each day's last seven days, and the last 28
+ * days as a weekly average, against the plan. No calendar edge, so the
+ * line does not drop every Monday.
+ */
+export function RollingVolumeChart({
+  days,
+  planMinutes,
+}: {
+  days: DayVolume[];
+  planMinutes: number;
+}) {
+  const theme = useTheme();
+  if (days.length < 7) {
+    return null;
+  }
+
+  const seven = rollingSums(days, 7);
+  const month = rollingSums(days, 28).map((v) => (v === null ? null : v / 4));
+  const values = [...seven, ...month].filter((v): v is number => v !== null);
+  const top = Math.max(planMinutes * 1.3, ...values);
+  const y = scale(0, top, HEIGHT - MARGIN.bottom, MARGIN.top);
+  const x = scale(0, days.length - 1, MARGIN.left, WIDTH - MARGIN.right);
+
+  const path = (series: (number | null)[]) =>
+    series
+      .map((v, i) => (v === null ? null : `${x(i)},${y(v)}`))
+      .filter((p): p is string => p !== null)
+      .map((p, i) => `${i === 0 ? "M" : "L"}${p}`)
+      .join(" ");
+
+  const last = days.length - 1;
+  return (
+    <svg
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      width="100%"
+      role="img"
+      aria-label="Rolling seven-day and 28-day endurance minutes against the plan target"
+    >
+      <Axis
+        color={theme.palette.text.secondary}
+        position={MARGIN.left - 8}
+        ticks={[0, planMinutes, top].map((v) => ({
+          at: y(v),
+          label: `${Math.round(v)}m`,
+        }))}
+      />
+      <Axis
+        x
+        color={theme.palette.text.secondary}
+        position={HEIGHT - MARGIN.bottom + 18}
+        ticks={[0, last].map((i) => ({
+          at: x(i),
+          label: days[i].date.slice(5),
+        }))}
+      />
+      <path
+        d={path(seven)}
+        fill="none"
+        stroke={theme.palette.primary.main}
+        strokeWidth={2}
+      />
+      <path
+        d={path(month)}
+        fill="none"
+        stroke={theme.palette.text.secondary}
+        strokeWidth={2}
+        strokeDasharray="2 3"
+      />
+      <line
+        x1={MARGIN.left}
+        x2={WIDTH - MARGIN.right}
+        y1={y(planMinutes)}
+        y2={y(planMinutes)}
+        stroke={theme.palette.info.main}
+        strokeDasharray="6 4"
+        strokeWidth={2}
+      />
+      <text
+        x={WIDTH - MARGIN.right + 6}
+        y={y(planMinutes) + 4}
+        fontSize={11}
+        fill={theme.palette.info.main}
+      >
+        plan {Math.round(planMinutes)}m
+      </text>
+      {seven[last] !== null && (
+        <text
+          x={WIDTH - MARGIN.right + 6}
+          y={y(seven[last] ?? 0) + 4}
+          fontSize={11}
+          fill={theme.palette.primary.main}
+        >
+          7 d {Math.round(seven[last] ?? 0)}m
+        </text>
+      )}
     </svg>
   );
 }

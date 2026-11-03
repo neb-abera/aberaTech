@@ -64,6 +64,8 @@ public static class FitnessReports
 
         var weeks = WeeklyVolumes(
             history.Activities.Where(a => a.Sport == "run" || a.Sport == "ruck").ToList(), zone);
+        var days = DailyVolumes(
+            history.Activities.Where(a => a.Sport == "run" || a.Sport == "ruck").ToList(), zone, today);
 
         var strength = StrengthTrend(evidence.Sets, zone);
 
@@ -107,6 +109,7 @@ public static class FitnessReports
             trend.Select(p => new AerobicPointDto(
                 $"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount, p.IndoorRuns)).ToArray(),
             weeks,
+            days,
             strength,
             findings.Select(h => new HighlightDto(h.Kind, h.Headline, h.Evidence, h.Positive)).ToArray(),
             paces,
@@ -786,6 +789,34 @@ public static class FitnessReports
             BodyMass.MaxAdjustmentFraction,
             row.HomeAltitudeMeters,
             row.LtHr);
+    }
+
+    /// <summary>Days kept for the rolling windows: 26 weeks, the span the weekly chart shows.</summary>
+    internal const int DailyVolumeDays = 182;
+
+    /// <summary>
+    /// Endurance minutes per day for the last <see cref="DailyVolumeDays"/>
+    /// days, ending today. A rolling seven- or 28-day window is then a sum
+    /// over consecutive entries, with no calendar edge splitting a block.
+    /// </summary>
+    internal static IReadOnlyList<DayVolumeDto> DailyVolumes(List<Activity> endurance, DateTimeZone zone, LocalDate today)
+    {
+        var first = today.PlusDays(-(DailyVolumeDays - 1));
+        var byDay = endurance
+            .Select(a => (Day: a.StartedAt.InZone(zone).Date, a.DurationSeconds))
+            .Where(a => a.Day >= first && a.Day <= today)
+            .GroupBy(a => a.Day)
+            .ToDictionary(g => g.Key, g => g.Sum(a => a.DurationSeconds) / 60.0);
+
+        var days = new List<DayVolumeDto>(DailyVolumeDays);
+        for (var day = first; day <= today; day = day.PlusDays(1))
+        {
+            days.Add(new DayVolumeDto(
+                day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                byDay.TryGetValue(day, out var minutes) ? Math.Round(minutes, 1) : 0));
+        }
+
+        return days;
     }
 
     private static IReadOnlyList<WeekVolumeDto> WeeklyVolumes(List<Activity> endurance, DateTimeZone zone)

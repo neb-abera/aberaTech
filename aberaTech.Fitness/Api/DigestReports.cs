@@ -48,10 +48,13 @@ internal static class DigestReports
         lines.Add("");
 
         // What was done.
+        // Rolling windows first: a seven-day block is the same length every
+        // day, where a calendar week is short until Sunday.
+        var rolling = Rolling.Of(summary.DailyVolume);
         var thisWeek = summary.WeeklyVolume.LastOrDefault();
-        var lastWeek = summary.WeeklyVolume.Count >= 2 ? summary.WeeklyVolume[^2] : null;
         lines.Add("TRAINING");
-        lines.Add(Text($"  Endurance: {thisWeek?.Minutes ?? 0:0} min this week so far, {lastWeek?.Minutes ?? 0:0} min last week, plan {settings.PlanMinutesPerWeek:0}."));
+        lines.Add(Text($"  Endurance: {rolling.Last7:0} min in the last 7 days, {rolling.Previous7:0} min the 7 before, {rolling.Last28PerWeek:0} min/wk over 28 days; plan {settings.PlanMinutesPerWeek:0}/wk."));
+        lines.Add(Text($"  Calendar week so far: {(thisWeek?.WeekStart == weekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ? thisWeek.Minutes : 0):0} min."));
         var dose = summary.MeasuredDose;
         lines.Add(Text($"  8-week average: {dose.RunningHours:0.0} h/wk running ({Format.Percent(dose.EasyShare)} easy), {dose.StrengthHours:0.0} h strength."));
 
