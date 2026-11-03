@@ -26,6 +26,7 @@ const plan: TrainingPlan = {
   url: "https://www.notion.so/planid",
   sections: [{ heading: "About the plan", paragraphs: ["Two weeks."] }],
   files: [{ id: "file-id", name: "guide.pdf" }],
+  pages: [{ id: "page-id", title: "Plan analysis" }],
   workouts: [
     {
       id: "run",
@@ -83,10 +84,10 @@ const settle = async () => {
 
 function mount(
   route: string,
-  answer: () => ReturnType<typeof respond>,
+  answer: (url: string) => ReturnType<typeof respond>,
   today = "2026-11-10",
 ) {
-  fetchMock = vi.fn(async () => answer());
+  fetchMock = vi.fn(async (url: string) => answer(String(url)));
   vi.stubGlobal("fetch", fetchMock);
   render(
     <MemoryRouter initialEntries={[route]}>
@@ -231,6 +232,42 @@ describe("the owner", () => {
       within(week).getByText("Nothing is planned this week."),
     ).toBeTruthy();
     expect(screen.getByText(/^4 weeks, 3 workouts and 1 notes\./)).toBeTruthy();
+  });
+
+  it("lists the pages the plan links and opens one in place", async () => {
+    mount("/training-plan", (url) =>
+      url === "/api/training-plan/pages/page-id"
+        ? respond(200, {
+            id: "page-id",
+            title: "Plan analysis",
+            blocks: [
+              { type: "paragraph", text: [{ text: "Three build weeks." }] },
+            ],
+          })
+        : owner(),
+    );
+    await settle();
+    const nav = screen.getByRole("navigation", { name: "Related pages" });
+    fireEvent.click(within(nav).getByRole("link", { name: "Plan analysis" }));
+    await settle();
+    const article = screen.getByRole("article", { name: "Linked page" });
+    expect(
+      within(article).getByRole("heading", { name: "Plan analysis" }),
+    ).toBeTruthy();
+    expect(within(article).getByText("Three build weeks.")).toBeTruthy();
+    expect(
+      within(article)
+        .getByRole("link", { name: "Back to the plan" })
+        .getAttribute("href"),
+    ).toBe("/training-plan");
+  });
+
+  it("says so when a linked page is gone", async () => {
+    mount("/training-plan?page=gone", (url) =>
+      url.includes("/pages/") ? respond(404) : owner(),
+    );
+    await settle();
+    expect(screen.getByText("The plan does not link that page.")).toBeTruthy();
   });
 
   it("opens the first week before the plan starts", async () => {

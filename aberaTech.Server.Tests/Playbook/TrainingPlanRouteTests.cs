@@ -58,7 +58,8 @@ public sealed class TrainingPlanRouteTests : IDisposable
     [
         ["GET", "/api/training-plan"],
         ["GET", $"/api/training-plan/files/{FakeNotion.SamplePlan}"],
-        ["GET", $"/api/training-plan/files/{FakeNotion.SamplePlan}:0"]
+        ["GET", $"/api/training-plan/files/{FakeNotion.SamplePlan}:0"],
+        ["GET", $"/api/training-plan/pages/{FakeNotion.SamplePlanGuide}"]
     ];
 
     [Theory]
@@ -96,7 +97,8 @@ public sealed class TrainingPlanRouteTests : IDisposable
         Assert.Equal("Sample training plan", plan.GetProperty("title").GetString());
         var section = plan.GetProperty("sections").EnumerateArray().Single();
         Assert.Equal("About the plan", section.GetProperty("heading").GetString());
-        Assert.Equal(["Two made-up weeks of base training."], section.GetProperty("paragraphs").EnumerateArray().Select(p => p.GetString()));
+        Assert.Equal(["Two made-up weeks of base training.", "Sample guide. A guide for beginners."],
+            section.GetProperty("paragraphs").EnumerateArray().Select(p => p.GetString()));
         // A file inside a toggle is named by the toggle, so two files with one name stay apart.
         Assert.Equal(["plan-guide.pdf", "Block 1 introduction", "Block 3 introduction"],
             plan.GetProperty("files").EnumerateArray().Select(f => f.GetProperty("name").GetString()));
@@ -143,10 +145,10 @@ public sealed class TrainingPlanRouteTests : IDisposable
             .Select(row => row.GetProperty("id").GetString()!).ToList();
         var requests = _notion.Requests.Select(seen => seen.Request).ToList();
         Assert.DoesNotContain(requests, request => rows.Any(row => request.Contains(row, StringComparison.Ordinal)));
-        // The page, its blocks (four lists of two), each toggle's blocks (one
+        // The page, its blocks (five lists of two), each toggle's blocks (one
         // list each), two databases, and the queries (three pages of
         // workouts, one of notes).
-        Assert.Equal(1 + 4 + 2 + 2 + 3 + 1, requests.Count);
+        Assert.Equal(1 + 5 + 2 + 2 + 3 + 1, requests.Count);
 
         // A second read within the cache window asks Notion nothing.
         await PlanAsync(owner);
@@ -213,6 +215,42 @@ public sealed class TrainingPlanRouteTests : IDisposable
         }
 
         Assert.DoesNotContain(_notion.Requests, seen => seen.Request.StartsWith("GET /secure/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task The_plan_lists_the_pages_it_mentions_and_its_subpages_and_opens_each()
+    {
+        using var owner = Owner();
+
+        var plan = await PlanAsync(owner);
+
+        var pages = plan.GetProperty("pages").EnumerateArray().ToList();
+        Assert.Equal(["Sample guide", "Sample analysis"], pages.Select(p => p.GetProperty("title").GetString()));
+        Assert.Equal(FakeNotion.SamplePlanGuide, pages[0].GetProperty("id").GetString());
+
+        var guide = await owner.GetFromJsonAsync<JsonElement>($"/api/training-plan/pages/{FakeNotion.SamplePlanGuide.Replace("-", "")}");
+        Assert.Equal("Sample guide", guide.GetProperty("title").GetString());
+        Assert.Contains("Start with four easy runs a week.", guide.GetProperty("blocks").GetRawText());
+
+        var analysis = await owner.GetFromJsonAsync<JsonElement>($"/api/training-plan/pages/{pages[1].GetProperty("id").GetString()}");
+        Assert.Equal("Sample analysis", analysis.GetProperty("title").GetString());
+        Assert.Contains("Three build weeks, then a deload.", analysis.GetProperty("blocks").GetRawText());
+    }
+
+    [Fact]
+    public async Task A_page_the_plan_does_not_link_is_not_found_and_never_read()
+    {
+        using var owner = Owner();
+        var elsewhere = _notion.Page("Somewhere else");
+        _notion.Text(elsewhere, "paragraph", FakeNotion.Run("Not the plan's."));
+
+        foreach (var id in new[] { elsewhere, FakeNotion.SampleRoot, FakeNotion.SamplePlan, "not-an-id" })
+        {
+            using var response = await owner.GetAsync($"/api/training-plan/pages/{id}");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        Assert.DoesNotContain(_notion.Requests, seen => seen.Request.Contains($"/v1/blocks/{elsewhere}/children", StringComparison.Ordinal));
     }
 
     [Fact]

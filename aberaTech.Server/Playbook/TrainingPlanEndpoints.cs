@@ -36,6 +36,27 @@ public static class TrainingPlanEndpoints
                 },
                 context));
 
+        // A page the plan links, as blocks: read by the playbook's reader,
+        // rooted at that page. Any other page is 404, whatever the token reaches.
+        group.MapGet("/pages/{id}", (string id, HttpContext context, NotionClient notion, Microsoft.Extensions.Caching.Memory.IMemoryCache cache, ILogger<TrainingPlanReader> logger, CancellationToken cancellationToken) =>
+            PlaybookEndpoints.Answer(
+                options.HasTrainingPlan,
+                NotConfigured,
+                () => context.RequestServices.GetRequiredService<TrainingPlanReader>(),
+                logger,
+                async reader =>
+                {
+                    if (!NotionIds.TryNormalize(id, out var pageId)) return Results.NotFound();
+                    var plan = await reader.ReadAsync(cancellationToken);
+                    if (plan.Pages.All(link => link.Id != pageId)) return Results.NotFound();
+
+                    var pageReader = new PlaybookReader(notion, cache, options, pageId, "training-plan-page:" + pageId);
+                    var tree = await pageReader.TreeAsync(cancellationToken);
+                    var page = await pageReader.PageAsync(tree.Root.Id, cancellationToken);
+                    return page is null ? Results.NotFound() : Results.Json(page, PlaybookJson.Options);
+                },
+                context));
+
         group.MapGet("/files/{id}", (string id, HttpContext context, NotionClient notion, ILogger<TrainingPlanReader> logger, CancellationToken cancellationToken) =>
             PlaybookEndpoints.Answer(
                 options.HasTrainingPlan,
