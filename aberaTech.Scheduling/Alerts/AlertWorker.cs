@@ -111,7 +111,7 @@ public sealed class AlertDispatcher(
         var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
 
         var now = clock.GetCurrentInstant();
-        if (alert.StartsAt <= now) return DeliveryOutcome.Started;
+        if (alert.Until <= now) return DeliveryOutcome.Started;
         if (await store.IsSkippedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Skipped;
         if (await store.IsAcknowledgedAsync(alert.Key, cancellationToken)) return DeliveryOutcome.Acknowledged;
         if (await store.MutedUntilAsync(cancellationToken) is { } until && until > now) return DeliveryOutcome.Muted;
@@ -306,7 +306,7 @@ public sealed class CalendarAlertWorker(
             foreach (var alert in plan)
             {
                 now = clock.GetCurrentInstant();
-                if (alert.AlertAt > now || alert.StartsAt <= now || _handled.Contains(alert.Key)) continue;
+                if (alert.AlertAt > now || alert.Until <= now || _handled.Contains(alert.Key)) continue;
 
                 try
                 {
