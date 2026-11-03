@@ -25,6 +25,7 @@ import DataPanel from "./DataPanel";
 import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
 import GoalsPanel from "./GoalsPanel";
+import LessonsCard from "./LessonsCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
@@ -210,6 +211,7 @@ export default function FitnessPanel() {
         <Stack spacing={3}>
           <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
           <Workbench summary={summary} />
+          <LessonsCard />
         </Stack>
       </Section>
       <Section index={2} tab={tab} visited={visited}>

@@ -352,6 +352,13 @@ if (adminOptions.IsConfigured)
     builder.Services.TryAddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<NotionClient>();
     builder.Services.AddScoped<PlaybookReader>();
+    // The fitness console's lessons page: the same reader, rooted there.
+    builder.Services.AddKeyedScoped(PlaybookEndpoints.LessonsReader, (services, _) => new PlaybookReader(
+        services.GetRequiredService<NotionClient>(),
+        services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+        notionOptions,
+        notionOptions.FitnessLessonsPageId,
+        PlaybookEndpoints.LessonsReader));
     // A hung Notion must not hold the request for the framework's 100 s.
     builder.Services.AddHttpClient(NotionClient.ApiClient, client => client.Timeout = TimeSpan.FromSeconds(30));
     // A file streams for as long as it takes; only the headers are bounded.
@@ -643,6 +650,7 @@ else
 if (adminOptions.IsConfigured)
 {
     app.MapPlaybookEndpoints(notionOptions);
+    app.MapFitnessLessonsEndpoints(notionOptions);
 }
 else
 {

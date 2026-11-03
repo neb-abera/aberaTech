@@ -50,6 +50,7 @@ public sealed class PlaybookRouteTests : IDisposable
         var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
         settings["Notion:Token"] = token;
         settings["Notion:PlaybookPageId"] = root;
+        settings["Notion:FitnessLessonsPageId"] = FakeNotion.SampleLessons;
         return settings;
     }
 
@@ -68,7 +69,8 @@ public sealed class PlaybookRouteTests : IDisposable
     [
         ["GET", "/api/playbook"],
         ["GET", $"/api/playbook/pages/{FakeNotion.SampleRoot}"],
-        ["GET", "/api/playbook/files/00000002-0000-0000-0000-000000000000"]
+        ["GET", "/api/playbook/files/00000002-0000-0000-0000-000000000000"],
+        ["GET", "/api/fitness/lessons"]
     ];
 
     [Theory]
@@ -213,6 +215,49 @@ public sealed class PlaybookRouteTests : IDisposable
         using var response = await owner.GetAsync($"/api/playbook/pages/{id}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_owner_reads_the_fitness_lessons_page_as_blocks()
+    {
+        using var owner = Owner();
+
+        var lessons = await owner.GetFromJsonAsync<JsonElement>("/api/fitness/lessons");
+
+        Assert.True(lessons.GetProperty("configured").GetBoolean());
+        var page = lessons.GetProperty("page");
+        Assert.Equal("Military athlete: fitness plan lessons learned", page.GetProperty("title").GetString());
+        var first = page.GetProperty("blocks")[0];
+        Assert.Equal("heading", first.GetProperty("type").GetString());
+        Assert.Equal(1, first.GetProperty("level").GetInt32());
+        Assert.Equal("Running", first.GetProperty("text")[0].GetProperty("text").GetString());
+    }
+
+    [Fact]
+    public async Task The_playbook_cannot_reach_the_lessons_page_and_the_lessons_route_cannot_reach_the_playbook()
+    {
+        using var owner = Owner();
+
+        using var throughPlaybook = await owner.GetAsync($"/api/playbook/pages/{FakeNotion.SampleLessons}");
+        var lessons = await owner.GetFromJsonAsync<JsonElement>("/api/fitness/lessons");
+
+        Assert.Equal(HttpStatusCode.NotFound, throughPlaybook.StatusCode);
+        Assert.DoesNotContain("Field notes", lessons.GetRawText(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Without_a_lessons_page_the_route_says_what_to_set_and_asks_notion_nothing()
+    {
+        var settings = Settings();
+        settings["Notion:FitnessLessonsPageId"] = null;
+        using var app = App(settings, _notion);
+        using var owner = app.CreateClient().SignedInAs(app.Factory.Services, AdminRouteTests.Owner);
+
+        var lessons = await owner.GetFromJsonAsync<JsonElement>("/api/fitness/lessons");
+
+        Assert.False(lessons.GetProperty("configured").GetBoolean());
+        Assert.Contains("Notion__FitnessLessonsPageId", lessons.GetProperty("message").GetString());
+        Assert.Empty(_notion.Requests);
     }
 
     [Fact]
