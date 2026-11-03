@@ -97,7 +97,9 @@ public sealed class TrainingPlanRouteTests : IDisposable
         var section = plan.GetProperty("sections").EnumerateArray().Single();
         Assert.Equal("About the plan", section.GetProperty("heading").GetString());
         Assert.Equal(["Two made-up weeks of base training."], section.GetProperty("paragraphs").EnumerateArray().Select(p => p.GetString()));
-        Assert.Equal(["plan-guide.pdf"], plan.GetProperty("files").EnumerateArray().Select(f => f.GetProperty("name").GetString()));
+        // A file inside a toggle is named by the toggle, so two files with one name stay apart.
+        Assert.Equal(["plan-guide.pdf", "Block 1 introduction", "Block 3 introduction"],
+            plan.GetProperty("files").EnumerateArray().Select(f => f.GetProperty("name").GetString()));
 
         // Five workouts across three pages of results, in date and day order.
         var workouts = plan.GetProperty("workouts").EnumerateArray().ToList();
@@ -141,9 +143,10 @@ public sealed class TrainingPlanRouteTests : IDisposable
             .Select(row => row.GetProperty("id").GetString()!).ToList();
         var requests = _notion.Requests.Select(seen => seen.Request).ToList();
         Assert.DoesNotContain(requests, request => rows.Any(row => request.Contains(row, StringComparison.Ordinal)));
-        // The page, its blocks (three lists of two), two databases, and the
-        // queries (three pages of workouts, one of notes).
-        Assert.Equal(1 + 3 + 2 + 3 + 1, requests.Count);
+        // The page, its blocks (four lists of two), each toggle's blocks (one
+        // list each), two databases, and the queries (three pages of
+        // workouts, one of notes).
+        Assert.Equal(1 + 4 + 2 + 2 + 3 + 1, requests.Count);
 
         // A second read within the cache window asks Notion nothing.
         await PlanAsync(owner);
@@ -158,7 +161,12 @@ public sealed class TrainingPlanRouteTests : IDisposable
         var planFile = plan.GetProperty("files")[0].GetProperty("id").GetString();
         var noteFile = plan.GetProperty("notes")[0].GetProperty("files")[0].GetProperty("id").GetString();
 
-        foreach (var (id, name, start) in new[] { (planFile, "plan-guide.pdf", "%PDF-1.4\n%guide"), (noteFile, "intro.pdf", "%PDF-1.4\n%intro") })
+        var toggled = plan.GetProperty("files")[2].GetProperty("id").GetString();
+        foreach (var (id, name, start) in new[]
+                 {
+                     (planFile, "plan-guide.pdf", "%PDF-1.4\n%guide"), (noteFile, "intro.pdf", "%PDF-1.4\n%intro"),
+                     (toggled, "For best results.pdf", "%PDF-1.4\n%block3")
+                 })
         {
             using var response = await owner.GetAsync($"/api/training-plan/files/{Uri.EscapeDataString(id!)}");
 
@@ -193,9 +201,12 @@ public sealed class TrainingPlanRouteTests : IDisposable
             ["Attachments"] = FakeNotion.Column.Files(_notion.FileEntry("other.pdf", "application/pdf", "%PDF"u8.ToArray()))
         });
         var paragraph = _notion.Text(FakeNotion.SamplePlan, "paragraph", FakeNotion.Run("Just text"));
+        // A file in a toggle on another page.
+        var otherToggle = _notion.Block(elsewhere, "heading_4", new JsonObject { ["rich_text"] = new JsonArray(FakeNotion.Run("Elsewhere")), ["is_toggleable"] = true });
+        var toggledOutside = _notion.File(otherToggle, "pdf", "toggled.pdf", "application/pdf", "%PDF"u8.ToArray());
         var note = plan.GetProperty("notes")[0].GetProperty("id").GetString();
 
-        foreach (var id in new[] { outsideBlock, $"{outsideRow}:0", $"{workout}:0", $"{note}:1", $"{note}:-1", paragraph, "not-an-id", $"{note}:0:0" })
+        foreach (var id in new[] { outsideBlock, toggledOutside, $"{outsideRow}:0", $"{workout}:0", $"{note}:1", $"{note}:-1", paragraph, "not-an-id", $"{note}:0:0" })
         {
             using var response = await owner.GetAsync($"/api/training-plan/files/{Uri.EscapeDataString(id)}");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

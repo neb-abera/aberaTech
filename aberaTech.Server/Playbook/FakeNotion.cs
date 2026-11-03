@@ -350,6 +350,14 @@ public sealed class FakeNotion : HttpMessageHandler
         notion.Text(plan, "heading_3", Run("About the plan"));
         notion.Text(plan, "paragraph", Run("Two made-up weeks of base training."));
         notion.File(plan, "pdf", "plan-guide.pdf", "application/pdf", Encoding.ASCII.GetBytes("%PDF-1.4\n%guide\n"));
+        // Two attachments in toggles, as the owner's plan page holds them: the
+        // same file name twice, told apart by the toggle's title.
+        foreach (var (title, body) in new[] { ("Block 1 introduction", "%PDF-1.4\n%block1\n"), ("Block 3 introduction", "%PDF-1.4\n%block3\n") })
+        {
+            var toggle = notion.Block(plan, "heading_4", new JsonObject { ["rich_text"] = new JsonArray(Run(title)), ["is_toggleable"] = true });
+            notion.Text(toggle, "paragraph", Run("Attached to: a plan note."));
+            notion.File(toggle, "pdf", "For best results.pdf", "application/pdf", Encoding.ASCII.GetBytes(body));
+        }
 
         var (workouts, workoutsSource) = notion.Database(plan, TrainingPlanReader.WorkoutsTitle);
         void Workout(string title, string date, int week, int day, string weekday, string sport, int order, double? minutes, double? tss, string description, string comments = "", string structure = "") =>

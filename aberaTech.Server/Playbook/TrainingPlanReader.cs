@@ -55,7 +55,7 @@ public sealed record PlanDownload(Uri Address, string Name);
 /// hundred rows: about ten for the Evoke plan's 749 workouts and 99 notes.
 /// Row bodies are never read, because every column the page shows is a
 /// property. A renamed or deleted column reads as empty, never as an error.
-/// A file is served only from a file block whose parent is the plan page,
+/// A file is served only from a file block on the plan page or in a toggle on it,
 /// or from the Attachments column of a row in the plan's own notes
 /// database. Its address is asked fresh, since a signed address expires
 /// after an hour.
@@ -100,6 +100,24 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
             else if (FileTypes.Contains(type))
             {
                 files.Add(new PlanFile(id, FileName(payload) ?? "file"));
+            }
+
+            // A toggle holds its attachment one level down. The file takes the
+            // toggle's title, so two files with one name stay apart.
+            if (type is not ("child_page" or "child_database")
+                && block.TryGetProperty("has_children", out var nested) && nested.ValueKind == JsonValueKind.True)
+            {
+                var label = Plain(payload, "rich_text");
+                var inside = new List<PlanFile>();
+                foreach (var child in await notion.ChildrenAsync(id, cancellationToken))
+                {
+                    var childType = Str(child, "type");
+                    if (childType is null || !FileTypes.Contains(childType) || Str(child, "id") is not { } childId
+                        || !child.TryGetProperty(childType, out var childPayload)) continue;
+                    inside.Add(new PlanFile(childId, FileName(childPayload) ?? "file"));
+                }
+
+                files.AddRange(inside.Count == 1 && label.Length > 0 ? [inside[0] with { Name = label }] : inside);
             }
             else if (type == "child_database" && NotionIds.TryNormalize(id, out var databaseId))
             {
@@ -167,8 +185,7 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
             var block = await notion.BlockAsync(blockId, fresh: true, cancellationToken);
             var type = Str(block, "type");
             if (type is null || !FileTypes.Contains(type) || !block.TryGetProperty(type, out var payload)) return null;
-            if (!block.TryGetProperty("parent", out var parent) || Str(parent, "page_id") is not { } parentId
-                || !NotionIds.TryNormalize(parentId, out var parentPage) || parentPage != Root) return null;
+            if (!await OnPlanPageAsync(block, cancellationToken)) return null;
             return Address(payload) is { } address ? new PlanDownload(address, FileName(payload) ?? "file") : null;
         }
 
@@ -188,6 +205,18 @@ public sealed class TrainingPlanReader(NotionClient notion, NotionOptions option
 
         var file = list[index];
         return Address(file) is { } url ? new PlanDownload(url, Str(file, "name") ?? "file") : null;
+    }
+
+    /// <summary>A block on the plan page, or inside a block that is: one level, as a toggle holds an attachment.</summary>
+    private async Task<bool> OnPlanPageAsync(JsonElement block, CancellationToken cancellationToken)
+    {
+        if (!block.TryGetProperty("parent", out var parent) || parent.ValueKind != JsonValueKind.Object) return false;
+        if (Str(parent, "page_id") is { } pageId) return NotionIds.TryNormalize(pageId, out var page) && page == Root;
+        if (Str(parent, "block_id") is not { } blockId || !NotionIds.TryNormalize(blockId, out var holderId)) return false;
+
+        var holder = await notion.BlockAsync(holderId, fresh: false, cancellationToken);
+        return holder.TryGetProperty("parent", out var up) && up.ValueKind == JsonValueKind.Object
+               && Str(up, "page_id") is { } upPage && NotionIds.TryNormalize(upPage, out var root) && root == Root;
     }
 
     private async Task<string?> NotesSourceAsync(CancellationToken cancellationToken)
