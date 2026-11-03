@@ -10,6 +10,7 @@ import { planDocumentKey } from "../features/plan/core/document";
 import { playbookTreeUrl } from "../features/playbook/core/api";
 import { documentUrl } from "../features/progress/core/documents";
 import { scheduleStateUrl } from "../features/scheduling/hooks/useSchedule";
+import { trainingPlanUrl } from "../features/training-plan/core/api";
 import { accountUrl } from "../hooks/useAccount";
 import { earlyRequestScript } from "./earlyRequest";
 import { guides, primaryAction, projects } from "./sections";
@@ -92,6 +93,7 @@ export const pageRequests: Record<string, { url: string; zone?: boolean }> = {
   "/network": { url: accountUrl },
   "/playbook": { url: playbookTreeUrl },
   "/marksmanship": { url: marksmanshipUrl },
+  "/training-plan": { url: trainingPlanUrl },
   // The schedule asks for its day in the viewer's zone.
   "/schedule": { url: scheduleStateUrl, zone: true },
 };
@@ -155,6 +157,10 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Marksmanship",
     description:
       "The owner's President's Hundred plan and training log, read live.",
+  },
+  "/training-plan": {
+    title: "Training plan",
+    description: "The owner's training plan, read live from Notion.",
   },
 };
 

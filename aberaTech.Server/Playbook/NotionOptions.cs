@@ -33,6 +33,13 @@ public sealed class NotionOptions
     /// </summary>
     public string? MarksmanshipPlanPageId { get; init; }
 
+    /// <summary>
+    /// The page /training-plan shows: "Military Athlete Foundational Plan
+    /// v1.1 (Evoke Endurance)" in Notes, with its Workouts and Plan notes
+    /// databases. The integration has to be shared with it. Optional.
+    /// </summary>
+    public string? TrainingPlanPageId { get; init; }
+
     /// <summary>The API's origin. A test points it at a fake.</summary>
     public string BaseUrl { get; init; } = "https://api.notion.com";
 
@@ -54,6 +61,9 @@ public sealed class NotionOptions
 
     public bool HasMarksmanshipPlan =>
         !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(MarksmanshipPlanPageId, out _);
+
+    public bool HasTrainingPlan =>
+        !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(TrainingPlanPageId, out _);
 }
 
 /// <summary>Notion ids are UUIDs, written with or without dashes. One spelling is used everywhere here.</summary>

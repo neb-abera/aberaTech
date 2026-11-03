@@ -120,6 +120,7 @@ describe("the prerendered head", () => {
       "/network": earlyRequestScript("/api/scheduling/admin/me"),
       "/playbook": earlyRequestScript("/api/playbook"),
       "/marksmanship": earlyRequestScript("/api/marksmanship"),
+      "/training-plan": earlyRequestScript("/api/training-plan"),
       "/schedule": earlyRequestScript("/api/scheduling/state", { zone: true }),
     };
     for (const [path, script] of Object.entries(first)) {

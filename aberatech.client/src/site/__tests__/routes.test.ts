@@ -107,6 +107,7 @@ describe("the app bar", () => {
         "/network",
         "/playbook",
         "/marksmanship",
+        "/training-plan",
       ]),
     );
   });

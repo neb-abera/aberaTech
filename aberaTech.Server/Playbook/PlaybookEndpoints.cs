@@ -133,8 +133,9 @@ public static class PlaybookEndpoints
         NotionOptions options, ILogger logger, Func<PlaybookReader, Task<IResult>> read, HttpContext context) =>
         Answer(options.IsConfigured, NotConfigured, () => context.RequestServices.GetRequiredService<PlaybookReader>(), logger, read, context);
 
-    private static async Task<IResult> Answer(
-        bool configured, string notConfigured, Func<PlaybookReader> reader, ILogger logger, Func<PlaybookReader, Task<IResult>> read, HttpContext context)
+    /// <summary>The not-connected answer, then the read, with Notion's failures mapped the same way for every page that reads Notion.</summary>
+    internal static async Task<IResult> Answer<TReader>(
+        bool configured, string notConfigured, Func<TReader> reader, ILogger logger, Func<TReader, Task<IResult>> read, HttpContext context)
     {
         if (!configured)
         {
@@ -165,7 +166,7 @@ public static class PlaybookEndpoints
     }
 
     /// <summary>The file's own type, except one a browser would run. It is an attachment either way.</summary>
-    private static string ContentType(HttpResponseMessage response)
+    internal static string ContentType(HttpResponseMessage response)
     {
         var type = response.Content.Headers.ContentType?.MediaType;
         return type is null or "text/html" or "image/svg+xml" or "application/xhtml+xml" or "text/xml" or "application/xml"
