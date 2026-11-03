@@ -179,3 +179,45 @@ public sealed class GoalEndpointTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
+
+/// <summary>
+/// Microsoft's redirect back to the callback carries no owner cookie: the
+/// cookie is SameSite=Strict and the navigation is cross-site. On 2026-11-03
+/// the callback answered 401 there, and iPhone Safari offered the empty body
+/// as a download.
+/// </summary>
+public sealed class OneDriveCallbackTests
+{
+    private static FitnessApp OwnerOnlyApp() => new(builder =>
+    {
+        builder.UseSetting("Fitness:DevelopmentOwner", "false");
+        builder.UseSetting("Fitness:AllowedEmails:0", "owner@example.com");
+        builder.UseSetting("Admin:GoogleClientId", "test-client");
+        builder.UseSetting("Admin:GoogleClientSecret", "test-secret");
+        builder.UseSetting("Admin:AllowedEmails:0", "owner@example.com");
+        builder.UseSetting("OneDrive:ClientId", "client");
+        builder.UseSetting("OneDrive:ClientSecret", "secret");
+    });
+
+    private static HttpClient NoRedirects(FitnessApp app) =>
+        app.Factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+    [Fact]
+    public async Task The_connect_route_stays_the_owners()
+    {
+        using var app = OwnerOnlyApp();
+        var response = await NoRedirects(app).GetAsync(new Uri("/api/fitness/onedrive/connect", UriKind.Relative));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/api/fitness/onedrive/callback?code=abc&state=forged")]
+    [InlineData("/api/fitness/onedrive/callback?error=access_denied")]
+    public async Task Without_the_owner_cookie_the_callback_answers_with_a_redirect_to_the_page(string path)
+    {
+        using var app = OwnerOnlyApp();
+        var response = await NoRedirects(app).GetAsync(new Uri(path, UriKind.Relative));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/fitness?onedrive=refused", response.Headers.Location?.OriginalString);
+    }
+}

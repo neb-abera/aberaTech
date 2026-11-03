@@ -116,7 +116,14 @@ public static class GoalEndpoints
             }
 
             return Results.Redirect("/fitness?onedrive=connected");
-        });
+        })
+        // Microsoft's redirect back is a cross-site navigation, and the owner
+        // cookie is SameSite=Strict, so the browser leaves it off. Owner-only
+        // here answered 401 with an empty body, which iPhone Safari offered as
+        // a file named "callback". The state carries the proof instead: only
+        // the owner-only connect route mints it, Data Protection seals it, it
+        // expires, and it holds the PKCE verifier the code is bound to.
+        .AllowAnonymous();
 
         api.MapPost("/onedrive/disconnect", async (FitnessDbContext database, WorkbookCache cache, CancellationToken cancellationToken) =>
         {
