@@ -234,6 +234,7 @@ services:
       # page id is the sample's root. Nothing is sent to Notion.
       Notion__Token: 'development-placeholder'
       Notion__PlaybookPageId: '00000001-0000-0000-0000-000000000000'
+      Notion__FitnessLessonsPageId: '0000f17e-0000-0000-0000-000000000000'
       Notion__Fake: 'true'
       # Bookings and queue joins get five a minute per address. The suite
       # books once in each of five browsers and joins and leaves the queue

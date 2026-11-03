@@ -19,6 +19,13 @@ public sealed class NotionOptions
     /// <summary>The root page. Every page and file the endpoints serve sits under it.</summary>
     public string? PlaybookPageId { get; init; }
 
+    /// <summary>
+    /// The page the fitness console's Plan tab shows as lessons learned:
+    /// "Military athlete: fitness plan lessons learned" in Notes. The
+    /// integration has to be shared with it. Optional.
+    /// </summary>
+    public string? FitnessLessonsPageId { get; init; }
+
     /// <summary>The API's origin. A test points it at a fake.</summary>
     public string BaseUrl { get; init; } = "https://api.notion.com";
 
@@ -34,6 +41,9 @@ public sealed class NotionOptions
 
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(PlaybookPageId, out _);
+
+    public bool HasFitnessLessons =>
+        !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(FitnessLessonsPageId, out _);
 }
 
 /// <summary>Notion ids are UUIDs, written with or without dashes. One spelling is used everywhere here.</summary>

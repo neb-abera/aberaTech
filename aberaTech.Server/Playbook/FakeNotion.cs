@@ -39,9 +39,9 @@ public sealed class FakeNotion : HttpMessageHandler
     /// <summary>The next answer is a 429 with this Retry-After, once per call.</summary>
     public void Throttle(TimeSpan retryAfter) => _throttles.Enqueue(retryAfter);
 
-    public string Page(string title, string? parentBlockId = null)
+    public string Page(string title, string? parentBlockId = null, string? id = null)
     {
-        var id = NextId();
+        id ??= NextId();
         _pages[id] = new JsonObject
         {
             ["object"] = "page",
@@ -281,10 +281,19 @@ public sealed class FakeNotion : HttpMessageHandler
         notion.Text(letter, "paragraph", Run("Dear reader,"));
         notion.Row(database, source, "Meeting template");
 
+        // The fitness lessons page, a root of its own, as it sits in Notes.
+        var lessons = notion.Page("Military athlete: fitness plan lessons learned", id: SampleLessons);
+        notion.Text(lessons, "heading_1", Run("Running"));
+        notion.Text(lessons, "heading_2", Run("Treadmill or outdoors"));
+        notion.Text(lessons, "paragraph", Run("Set the treadmill to 1% incline for outdoor-equivalent effort."));
+
         if (root != SampleRoot) throw new InvalidOperationException("The sample's root is always the first id.");
         return notion;
     }
 
     /// <summary>The root page of <see cref="Sample"/>, which compose.yaml names as Notion__PlaybookPageId.</summary>
     public const string SampleRoot = "00000001-0000-0000-0000-000000000000";
+
+    /// <summary>The lessons page of <see cref="Sample"/>, which compose.yaml names as Notion__FitnessLessonsPageId.</summary>
+    public const string SampleLessons = "0000f17e-0000-0000-0000-000000000000";
 }

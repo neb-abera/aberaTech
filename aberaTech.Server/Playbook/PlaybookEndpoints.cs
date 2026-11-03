@@ -18,6 +18,11 @@ public static class PlaybookEndpoints
 {
     public const string NotConfigured = "Notion is not connected. Set Notion__Token and Notion__PlaybookPageId on the container app.";
 
+    public const string LessonsNotConfigured = "The lessons page is not connected. Set Notion__FitnessLessonsPageId on the container app and share the page with the integration.";
+
+    /// <summary>The keyed service name of the reader rooted at the fitness lessons page.</summary>
+    public const string LessonsReader = "fitness-lessons";
+
     public static IEndpointRouteBuilder MapPlaybookEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
     {
         var group = routes
@@ -57,6 +62,32 @@ public static class PlaybookEndpoints
     }
 
     /// <summary>
+    /// The fitness console's lessons learned: one Notion page, read live,
+    /// for the Plan tab. Same owner policy and the same failure answers as
+    /// the playbook. Only that page is served.
+    /// </summary>
+    public static IEndpointRouteBuilder MapFitnessLessonsEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
+    {
+        routes.MapGet("/api/fitness/lessons", (HttpContext context, ILogger<PlaybookReader> logger, CancellationToken cancellationToken) =>
+                Answer(
+                    options.HasFitnessLessons,
+                    LessonsNotConfigured,
+                    () => context.RequestServices.GetRequiredKeyedService<PlaybookReader>(LessonsReader),
+                    logger,
+                    async reader =>
+                    {
+                        var tree = await reader.TreeAsync(cancellationToken);
+                        var page = await reader.PageAsync(tree.Root.Id, cancellationToken);
+                        return Results.Json(new { configured = true, page }, PlaybookJson.Options);
+                    },
+                    context))
+            .RequireAuthorization(AdminAuth.PolicyName)
+            .WithTags("Playbook");
+
+        return routes;
+    }
+
+    /// <summary>
     /// Deployed without sign-in: there is no owner to show the playbook to.
     /// The page asks and is told so. Anonymous because it discloses nothing.
     /// </summary>
@@ -66,17 +97,21 @@ public static class PlaybookEndpoints
         return routes;
     }
 
+    private static Task<IResult> Answer(
+        NotionOptions options, ILogger logger, Func<PlaybookReader, Task<IResult>> read, HttpContext context) =>
+        Answer(options.IsConfigured, NotConfigured, () => context.RequestServices.GetRequiredService<PlaybookReader>(), logger, read, context);
+
     private static async Task<IResult> Answer(
-        NotionOptions options, ILogger logger, Func<PlaybookReader, Task<IResult>> read, HttpContext context)
+        bool configured, string notConfigured, Func<PlaybookReader> reader, ILogger logger, Func<PlaybookReader, Task<IResult>> read, HttpContext context)
     {
-        if (!options.IsConfigured)
+        if (!configured)
         {
-            return Results.Json(new { configured = false, message = NotConfigured });
+            return Results.Json(new { configured = false, message = notConfigured });
         }
 
         try
         {
-            return await read(context.RequestServices.GetRequiredService<PlaybookReader>());
+            return await read(reader());
         }
         catch (NotionThrottledException throttled)
         {

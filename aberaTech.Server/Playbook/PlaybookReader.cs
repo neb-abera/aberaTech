@@ -26,8 +26,30 @@ public sealed record PlaybookFile(Uri Address, string Name);
 /// Anything else is null, which the endpoints answer with 404, whatever
 /// the token could reach.
 /// </remarks>
-public sealed class PlaybookReader(NotionClient notion, IMemoryCache cache, NotionOptions options)
+public sealed class PlaybookReader
 {
+    private readonly NotionClient notion;
+    private readonly IMemoryCache cache;
+    private readonly NotionOptions options;
+    private readonly string? rootPageId;
+    private readonly string cacheKey;
+
+    /// <summary>The playbook, rooted at <see cref="NotionOptions.PlaybookPageId"/>.</summary>
+    public PlaybookReader(NotionClient notion, IMemoryCache cache, NotionOptions options)
+        : this(notion, cache, options, options.PlaybookPageId, "playbook")
+    {
+    }
+
+    /// <summary>Another tree under its own root, such as the fitness lessons page. The tree is still the allowlist.</summary>
+    public PlaybookReader(NotionClient notion, IMemoryCache cache, NotionOptions options, string? rootPageId, string cacheKey)
+    {
+        this.notion = notion;
+        this.cache = cache;
+        this.options = options;
+        this.rootPageId = rootPageId;
+        this.cacheKey = cacheKey;
+    }
+
     /// <summary>How deep pages nest before the tree stops looking.</summary>
     public const int MaxDepth = 12;
 
@@ -46,10 +68,10 @@ public sealed class PlaybookReader(NotionClient notion, IMemoryCache cache, Noti
 
     public async Task<PlaybookTree> TreeAsync(CancellationToken cancellationToken)
     {
-        const string key = "playbook:tree";
+        var key = cacheKey + ":tree";
         if (cache.TryGetValue(key, out PlaybookTree? hit) && hit is not null) return hit;
 
-        NotionIds.TryNormalize(options.PlaybookPageId, out var rootId);
+        NotionIds.TryNormalize(rootPageId, out var rootId);
         var root = await notion.PageAsync(rootId, cancellationToken);
         var pages = new Dictionary<string, PlaybookNode>();
         var databases = new Dictionary<string, PlaybookNode>();
