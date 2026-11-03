@@ -80,21 +80,18 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
     <>
       <TableRow sx={{ "& > td": { borderBottom: open ? 0 : undefined } }}>
         <TableCell component="th" scope="row" sx={{ pl: 0 }}>
-          <Typography variant="body2">{row.label}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {row.current
-              ? `${row.current.basis === "Modeled" ? "estimated, " : ""}${row.current.on ?? "from the model"}`
-              : row.metric
-                ? "untested"
-                : "not measured yet"}
-          </Typography>
+          {row.label}
         </TableCell>
-        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+        <TableCell
+          align="right"
+          sx={{ whiteSpace: "nowrap" }}
+          title={row.current?.evidence}
+        >
           {row.current
-            ? formatGoalValue(row.unit, row.current.value)
+            ? `${row.current.basis === "Modeled" ? "≈ " : ""}${formatGoalValue(row.unit, row.current.value)}`
             : row.metric
               ? "untested"
-              : "—"}
+              : "not measured"}
           {test ? <Points value={row.pointsNow} /> : null}
         </TableCell>
         <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
@@ -148,11 +145,11 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 <Typography variant="body2" color="text.secondary">
                   {forecast.evidence}
                 </Typography>
-                {row.current ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Now: {row.current.evidence}.
-                  </Typography>
-                ) : null}
+                <Typography variant="body2" color="text.secondary">
+                  {row.current
+                    ? `Now: ${row.current.evidence}${row.current.basis === "Modeled" ? " (≈ marks a modelled value)" : ""}.`
+                    : "Now: nothing in the log measures this yet."}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Sheet row {row.row}
                   {row.baseline !== null
@@ -178,7 +175,7 @@ function SectionCard({ section }: { section: GoalSection }) {
   const headingId = `goal-section-${section.name.replace(/\W+/g, "-").toLowerCase()}`;
   return (
     <Card variant="outlined" component="section" aria-labelledby={headingId}>
-      <CardContent>
+      <CardContent sx={{ "&:last-child": { pb: 1.5 } }}>
         <Stack
           direction="row"
           sx={{
@@ -204,7 +201,11 @@ function SectionCard({ section }: { section: GoalSection }) {
             </Typography>
           ) : null}
         </Stack>
-        <Table size="small" aria-labelledby={headingId}>
+        <Table
+          size="small"
+          aria-labelledby={headingId}
+          sx={{ "& td, & th": { py: 0.5 } }}
+        >
           <TableHead>
             <TableRow>
               <TableCell sx={{ pl: 0 }}>Event</TableCell>
@@ -234,6 +235,26 @@ function SectionCard({ section }: { section: GoalSection }) {
       </CardContent>
     </Card>
   );
+}
+
+/** The sections in order, as two columns of about the same number of rows. */
+export function splitByRows(sections: GoalSection[]): GoalSection[][] {
+  if (sections.length < 2) return [sections];
+  const sizes = sections.map((s) => s.rows.length + 1);
+  const total = sizes.reduce((a, b) => a + b, 0);
+  // The cut that leaves the two columns closest to equal.
+  let best = 1;
+  let bestGap = Number.POSITIVE_INFINITY;
+  let left = 0;
+  for (let cut = 1; cut < sections.length; cut++) {
+    left += sizes[cut - 1];
+    const gap = Math.abs(total - 2 * left);
+    if (gap < bestGap) {
+      bestGap = gap;
+      best = cut;
+    }
+  }
+  return [sections.slice(0, best), sections.slice(best)];
 }
 
 function SourceLine({ goals }: { goals: Goals }) {
@@ -315,6 +336,10 @@ export default function GoalsPanel() {
   return (
     <Stack spacing={2}>
       <SourceLine goals={goals} />
+      {/* Two columns split by row count, in the sheet's order: the first
+          sections down the left until it holds half the rows, the rest down
+          the right. Every engine lays this out the same way, which CSS
+          columns did not. */}
       <Box
         sx={{
           display: "grid",
@@ -323,8 +348,12 @@ export default function GoalsPanel() {
           alignItems: "start",
         }}
       >
-        {goals.sections.map((section) => (
-          <SectionCard key={section.name} section={section} />
+        {splitByRows(goals.sections).map((column) => (
+          <Stack key={column[0]?.name ?? "empty"} spacing={2}>
+            {column.map((section) => (
+              <SectionCard key={section.name} section={section} />
+            ))}
+          </Stack>
         ))}
       </Box>
     </Stack>

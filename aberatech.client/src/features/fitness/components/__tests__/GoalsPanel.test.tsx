@@ -8,7 +8,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GoalRow, GoalSection, Goals } from "../../core/api";
-import GoalsPanel, { formatGoalValue, goalTag } from "../GoalsPanel";
+import GoalsPanel, {
+  formatGoalValue,
+  goalTag,
+  splitByRows,
+} from "../GoalsPanel";
 
 afterEach(() => {
   cleanup();
@@ -229,5 +233,32 @@ describe("goal values", () => {
     expect(
       goalTag(row({ row: 20, label: "Farmer carry", goalColumn: "D" })),
     ).toBe("ideal");
+  });
+});
+
+describe("columns", () => {
+  it("splits the sections in order at about half the rows", () => {
+    const named = (name: string, n: number): GoalSection => ({
+      name,
+      test: null,
+      pointsNow: null,
+      pointsGoal: null,
+      pointsMax: null,
+      scoringNote: null,
+      rows: Array.from({ length: n }, (_, i) =>
+        row({ row: i, label: `${name} ${i}` }),
+      ),
+    });
+    const columns = splitByRows([
+      named("Run", 4),
+      named("AFT", 5),
+      named("FBI", 4),
+      named("Body", 2),
+      named("Strength", 4),
+    ]);
+    expect(columns.map((c) => c.map((s) => s.name))).toEqual([
+      ["Run", "AFT"],
+      ["FBI", "Body", "Strength"],
+    ]);
   });
 });
