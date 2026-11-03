@@ -130,9 +130,9 @@ describe("Edit", () => {
       within(dialog).getByLabelText(label) as HTMLInputElement;
     expect(field(/^Title/).value).toBe("Standup");
     expect(field(/^Starts/).value).toBe("2026-10-28T09:00");
-    expect(field(/^Duration in minutes/).value).toBe("30");
+    expect(field(/^Length$/).value).toBe("30");
     expect(field(/^Location/).value).toBe("Room 1");
-    expect(field(/^Reminder in minutes before/).value).toBe("15");
+    expect(field(/^Reminder before$/).value).toBe("15");
     // Not a repeating event: no choice of which.
     expect(within(dialog).queryByText("All events")).toBeNull();
 
@@ -152,16 +152,31 @@ describe("Edit", () => {
     expect(onSaved).toHaveBeenCalledWith(state, "Standup late is changed.");
   });
 
+  it("shows a two-hour event as 2 hours and sends nothing for it unchanged", async () => {
+    const long = {
+      ...standup,
+      endsAt: new Date(start.getTime() + 120 * 60_000).toISOString(),
+    };
+    const { edit, dialog } = renderEdit(long, { ok: true, state });
+    expect(
+      (within(dialog).getByLabelText(/^Length$/) as HTMLInputElement).value,
+    ).toBe("2");
+    expect(
+      within(dialog).getByRole("combobox", { name: "Length unit" }).textContent,
+    ).toBe("hours");
+    await click(within(dialog).getByRole("button", { name: "Save" }));
+    expect("durationMinutes" in edit.mock.calls[0][0]).toBe(false);
+  });
+
   it("sends a new length and a new reminder, and an empty location as none", async () => {
     const { edit, dialog } = renderEdit(standup, { ok: true, state });
 
-    fireEvent.change(within(dialog).getByLabelText(/^Duration in minutes/), {
+    fireEvent.change(within(dialog).getByLabelText(/^Length$/), {
       target: { value: "45" },
     });
-    fireEvent.change(
-      within(dialog).getByLabelText(/^Reminder in minutes before/),
-      { target: { value: "20" } },
-    );
+    fireEvent.change(within(dialog).getByLabelText(/^Reminder before$/), {
+      target: { value: "20" },
+    });
     fireEvent.change(within(dialog).getByLabelText(/^Location/), {
       target: { value: "  " },
     });
@@ -182,11 +197,7 @@ describe("Edit", () => {
     expect(thisEvent.checked).toBe(true);
     // No end and no reminder of its own: both start empty and are left out.
     expect(
-      (
-        within(dialog).getByLabelText(
-          /^Duration in minutes/,
-        ) as HTMLInputElement
-      ).value,
+      (within(dialog).getByLabelText(/^Length$/) as HTMLInputElement).value,
     ).toBe("");
 
     await click(within(dialog).getByLabelText("All events"));

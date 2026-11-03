@@ -485,9 +485,9 @@ test.describe("/alerts", () => {
       return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}`;
     });
     await form.getByLabel(/^Starts/).fill(start);
-    await form.getByLabel(/^Duration in minutes/).fill("45");
+    await form.getByLabel(/^Length$/).fill("45");
     await form.getByLabel(/^Location/).fill("Main St");
-    await form.getByLabel(/^Reminder in minutes before/).fill("20");
+    await form.getByLabel(/^Reminder before$/).fill("20");
     await expect(
       form.getByRole("button", { name: "New event type Ring until stopped" }),
     ).toHaveAttribute("aria-pressed", "true");

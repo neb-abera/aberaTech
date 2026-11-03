@@ -23,6 +23,7 @@ import {
   editEvent,
 } from "../core/api";
 import { newEventBounds } from "./NewEventForm";
+import SpanInput from "./SpanInput";
 
 /** "2026-10-28T09:00": an instant as a datetime-local input shows it, in this browser's zone. */
 export function localInput(iso: string): string {
@@ -214,22 +215,15 @@ export function EditEventDialog({
               )}
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <TextField
-              label="Duration in minutes"
-              type="number"
-              value={duration}
-              onChange={(event) => setDuration(event.target.value)}
+            <SpanInput
+              label="Length"
+              minutes={duration}
+              onChange={setDuration}
               error={Boolean(errors.durationMinutes)}
               helperText={help(
                 "durationMinutes",
-                `${newEventBounds.duration.min} to ${newEventBounds.duration.max}. Empty keeps the length.`,
+                `${newEventBounds.duration.min} minutes to ${newEventBounds.duration.max / 60} hours. Empty keeps the length.`,
               )}
-              slotProps={{
-                htmlInput: {
-                  min: newEventBounds.duration.min,
-                  max: newEventBounds.duration.max,
-                },
-              }}
             />
             <TextField
               label="Location"
@@ -242,22 +236,15 @@ export function EditEventDialog({
               )}
               slotProps={{ htmlInput: { maxLength: newEventBounds.location } }}
             />
-            <TextField
-              label="Reminder in minutes before"
-              type="number"
-              value={lead}
-              onChange={(event) => setLead(event.target.value)}
+            <SpanInput
+              label="Reminder before"
+              minutes={lead}
+              onChange={setLead}
               error={Boolean(errors.leadMinutes)}
               helperText={help(
                 "leadMinutes",
-                `${newEventBounds.lead.min} to ${newEventBounds.lead.max}. Empty keeps the event's reminders.`,
+                `0 to ${newEventBounds.lead.max / 60} hours. Empty keeps the event's reminders.`,
               )}
-              slotProps={{
-                htmlInput: {
-                  min: newEventBounds.lead.min,
-                  max: newEventBounds.lead.max,
-                },
-              }}
             />
             {problem && <Alert severity="warning">{problem}</Alert>}
           </Stack>

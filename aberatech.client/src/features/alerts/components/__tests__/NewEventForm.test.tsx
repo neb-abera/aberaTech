@@ -65,7 +65,7 @@ describe("New event", () => {
   it("sends the title, the start as an instant, the duration, the location, the type and the lead", async () => {
     const { create, onCreated } = renderForm({ ok: true, state });
     expect((screen.getByLabelText(/^Starts/) as HTMLInputElement).value).toBe(
-      "2026-10-28T09:00",
+      "2026-10-28T08:30",
     );
 
     fireEvent.change(screen.getByLabelText(/^Title/), {
@@ -74,10 +74,10 @@ describe("New event", () => {
     fireEvent.change(screen.getByLabelText(/^Location/), {
       target: { value: "Main St" },
     });
-    fireEvent.change(screen.getByLabelText(/^Duration in minutes/), {
+    fireEvent.change(screen.getByLabelText(/^Length$/), {
       target: { value: "45" },
     });
-    fireEvent.change(screen.getByLabelText(/^Reminder in minutes before/), {
+    fireEvent.change(screen.getByLabelText(/^Reminder before$/), {
       target: { value: "20" },
     });
     fireEvent.click(
@@ -87,7 +87,7 @@ describe("New event", () => {
 
     expect(create).toHaveBeenCalledWith({
       title: "Dentist",
-      startsAt: new Date(2026, 9, 28, 9, 0).toISOString(),
+      startsAt: new Date(2026, 9, 28, 8, 30).toISOString(),
       durationMinutes: 45,
       location: "Main St",
       type: "notification",
@@ -110,7 +110,9 @@ describe("New event", () => {
         .getAttribute("aria-pressed"),
     ).toBe("true");
     expect(
-      screen.getByText("0 to 1440. Empty uses the default lead, 10."),
+      screen.getByText(
+        "0 to 24 hours. Empty uses the default lead, 10 minutes.",
+      ),
     ).toBeTruthy();
     fireEvent.change(screen.getByLabelText(/^Title/), {
       target: { value: "Call" },
@@ -121,6 +123,31 @@ describe("New event", () => {
     expect(sent.type).toBe("alarm");
     expect(sent.location).toBeNull();
     expect("leadMinutes" in sent).toBe(false);
+  });
+
+  it("takes the length and the reminder in hours or days and sends minutes", async () => {
+    const { create } = renderForm({ ok: true, state });
+    fireEvent.change(screen.getByLabelText(/^Title/), {
+      target: { value: "Flight" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Length$/), {
+      target: { value: "15" },
+    });
+    fireEvent.mouseDown(screen.getByRole("combobox", { name: "Length unit" }));
+    fireEvent.click(screen.getByRole("option", { name: "hours" }));
+    fireEvent.change(screen.getByLabelText(/^Reminder before$/), {
+      target: { value: "1" },
+    });
+    fireEvent.mouseDown(
+      screen.getByRole("combobox", { name: "Reminder before unit" }),
+    );
+    fireEvent.click(screen.getByRole("option", { name: "days" }));
+    await press();
+
+    expect(create.mock.calls[0][0]).toMatchObject({
+      durationMinutes: 900,
+      leadMinutes: 1440,
+    });
   });
 
   it("shows each field the server refused under its input", async () => {

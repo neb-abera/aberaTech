@@ -14,6 +14,7 @@ import {
   type NewEvent,
 } from "../core/api";
 import { typeLabels } from "../core/settings";
+import SpanInput from "./SpanInput";
 
 /** What the server takes. It checks the same numbers. */
 export const newEventBounds = {
@@ -24,11 +25,11 @@ export const newEventBounds = {
   daysAhead: 366,
 } as const;
 
-/** "2026-10-28T09:00" for the next whole hour, in this browser's zone. */
-function nextHour(now: Date): string {
+/** "2026-10-28T08:30" for the next whole or half hour, in this browser's zone. */
+function nextHalfHour(now: Date): string {
   const next = new Date(now.getTime());
-  next.setMinutes(0, 0, 0);
-  next.setHours(next.getHours() + 1);
+  next.setSeconds(0, 0);
+  next.setMinutes(next.getMinutes() < 30 ? 30 : 60);
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}T${pad(next.getHours())}:${pad(next.getMinutes())}`;
 }
@@ -50,7 +51,7 @@ export default function NewEventForm({
   now?: () => Date;
 }) {
   const [title, setTitle] = React.useState("");
-  const [when, setWhen] = React.useState(() => nextHour(now()));
+  const [when, setWhen] = React.useState(() => nextHalfHour(now()));
   const [duration, setDuration] = React.useState("30");
   const [location, setLocation] = React.useState("");
   const [type, setType] = React.useState<AlertType>("alarm");
@@ -143,22 +144,15 @@ export default function NewEventForm({
             )}
             slotProps={{ inputLabel: { shrink: true } }}
           />
-          <TextField
-            label="Duration in minutes"
-            type="number"
-            value={duration}
-            onChange={(event) => setDuration(event.target.value)}
+          <SpanInput
+            label="Length"
+            minutes={duration}
+            onChange={setDuration}
             error={Boolean(errors.durationMinutes)}
             helperText={help(
               "durationMinutes",
-              `${newEventBounds.duration.min} to ${newEventBounds.duration.max}.`,
+              `${newEventBounds.duration.min} minutes to ${newEventBounds.duration.max / 60} hours.`,
             )}
-            slotProps={{
-              htmlInput: {
-                min: newEventBounds.duration.min,
-                max: newEventBounds.duration.max,
-              },
-            }}
           />
         </Stack>
         <TextField
@@ -193,23 +187,16 @@ export default function NewEventForm({
             />
           ))}
         </Stack>
-        <TextField
-          label="Reminder in minutes before"
-          type="number"
-          value={lead}
+        <SpanInput
+          label="Reminder before"
+          minutes={lead}
           placeholder={String(defaultLead)}
-          onChange={(event) => setLead(event.target.value)}
+          onChange={setLead}
           error={Boolean(errors.leadMinutes)}
           helperText={help(
             "leadMinutes",
-            `${newEventBounds.lead.min} to ${newEventBounds.lead.max}. Empty uses the default lead, ${defaultLead}.`,
+            `0 to ${newEventBounds.lead.max / 60} hours. Empty uses the default lead, ${defaultLead} minutes.`,
           )}
-          slotProps={{
-            htmlInput: {
-              min: newEventBounds.lead.min,
-              max: newEventBounds.lead.max,
-            },
-          }}
         />
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           The event goes on the Google calendar the alerts read, with one
