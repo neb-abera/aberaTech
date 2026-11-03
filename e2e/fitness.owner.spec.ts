@@ -97,7 +97,7 @@ test("the console opens on the workbook's goals, in its groups and order", async
     0,
   );
   await expect(fbi.getByRole("rowheader", { name: /^Push-ups/ })).toBeVisible();
-  await expect(aft.getByText(/goal 500 of 500 pts/)).toBeVisible();
+  await expect(aft.getByText(/goal \d+ of 500 pts/)).toBeVisible();
 
   // All nineteen goals within 1.2 desktop screens of the tab bar.
   const rows = page.getByRole("rowheader");

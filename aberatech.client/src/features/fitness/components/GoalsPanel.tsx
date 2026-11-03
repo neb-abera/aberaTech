@@ -106,7 +106,6 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
             <Chip
               size="small"
               label={tag}
-              color="warning"
               variant="outlined"
               sx={{ ml: 0.75, height: 20 }}
             />
