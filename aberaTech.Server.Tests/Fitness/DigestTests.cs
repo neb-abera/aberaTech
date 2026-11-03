@@ -12,11 +12,24 @@ public sealed class DigestTests
 {
     private static readonly LocalDate Today = new(2026, 9, 9); // a Wednesday
 
+    /// <summary>
+    /// 28 days to <see cref="Today"/>: 85 minutes in the last seven, 210 in
+    /// the seven before, and 105 in the fortnight before that, 400 in all.
+    /// </summary>
+    private static DayVolumeDto[] Days()
+    {
+        var minutes = new Dictionary<int, double> { [0] = 45, [3] = 40, [8] = 70, [10] = 70, [12] = 70, [20] = 105 };
+        return Enumerable.Range(0, 28).Reverse()
+            .Select(back => new DayVolumeDto(Today.PlusDays(-back).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), minutes.GetValueOrDefault(back)))
+            .ToArray();
+    }
+
     private static SummaryDto Summary() =>
         new(
             new SettingsDto(152, 340, 160, 35.4, "2026-04-03", 79.4, 1991, null, 7, null, null, null, null, null, null, 0.1, 15, 168),
             [new AerobicPointDto("2026-07", 447, 2, 0), new AerobicPointDto("2026-08", 410, 11, 4)],
             [new WeekVolumeDto("2026-08-31", 210), new WeekVolumeDto("2026-09-07", 85)],
+            Days(),
             [],
             [
                 new HighlightDto("aerobic-gain", "Aerobic base up 8% month over month", "Median pace 7:27/km → 6:50/km.", true),
@@ -65,7 +78,8 @@ public sealed class DigestTests
         var text = digest.Text;
 
         Assert.Contains("week of 2026-09-07", text);
-        Assert.Contains("Endurance: 85 min this week so far, 210 min last week, plan 160.", text);
+        Assert.Contains("Endurance: 85 min in the last 7 days, 210 min the 7 before, 100 min/wk over 28 days; plan 160/wk.", text);
+        Assert.Contains("Calendar week so far: 85 min.", text);
         Assert.Contains("3.5 h/wk running (89% easy), 1.2 h strength", text);
         Assert.Contains("acute:chronic 1.33, monotony 1.4, 4 days of impact in a row, 1 rest days in 7", text);
         Assert.Contains("AeT pace at 152 bpm: 6:50/km over 11 runs in 2026-08 (8.3% vs 2026-07), 4 on a treadmill", text);
@@ -126,5 +140,35 @@ public sealed class DigestTests
         Assert.False(FitnessEndpoints.DigestKeyAllows("Bearer short", "short"));
         Assert.False(new FitnessOptions { DigestKey = "short" }.HasDigestKey);
         Assert.True(new FitnessOptions { DigestKey = key }.HasDigestKey);
+    }
+}
+
+public sealed class DailyVolumeTests
+{
+    [Fact]
+    public void The_series_is_182_days_ending_today_with_empty_days_at_zero()
+    {
+        var zone = NodaTime.DateTimeZone.Utc;
+        var today = new LocalDate(2026, 9, 9);
+        aberaTech.Fitness.Data.Activity Run(LocalDate day, double minutes) => new()
+        {
+            Id = Guid.NewGuid(),
+            Source = "test",
+            Sport = "run",
+            Name = "Run",
+            StartedAt = day.AtMidnight().InUtc().ToInstant().Plus(Duration.FromHours(7)),
+            DurationSeconds = minutes * 60
+        };
+
+        var days = aberaTech.Fitness.Api.FitnessReports.DailyVolumes(
+            [Run(today, 30), Run(today, 15), Run(today.PlusDays(-6), 40), Run(today.PlusDays(-200), 99)], zone, today);
+
+        Assert.Equal(182, days.Count);
+        Assert.Equal("2026-09-09", days[^1].Date);
+        Assert.Equal(45, days[^1].Minutes);
+        Assert.Equal(40, days[^7].Minutes);
+        Assert.Equal(85, aberaTech.Fitness.Api.Rolling.Of(days).Last7);
+        Assert.Equal(0, aberaTech.Fitness.Api.Rolling.Of(days).Previous7);
+        Assert.DoesNotContain(days, d => d.Minutes == 99);
     }
 }

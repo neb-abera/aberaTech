@@ -20,7 +20,7 @@ import {
   type Summary,
 } from "../core/api";
 import { formatPace, kgToLb } from "../core/format";
-import { AerobicTrendChart, VolumeChart } from "./charts";
+import { AerobicTrendChart } from "./charts";
 import DataPanel from "./DataPanel";
 import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
@@ -30,6 +30,7 @@ import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
 import ThresholdsCard from "./ThresholdsCard";
+import TrainingDoseCard from "./TrainingDoseCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -367,19 +368,11 @@ function Dashboard({
         </Card>
       )}
 
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h6">Training dose</Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-            Weekly endurance minutes against the plan&apos;s{" "}
-            {Math.round(summary.settings.planMinutesPerWeek)}.
-          </Typography>
-          <VolumeChart
-            weeks={summary.weeklyVolume}
-            planMinutes={summary.settings.planMinutesPerWeek}
-          />
-        </CardContent>
-      </Card>
+      <TrainingDoseCard
+        days={summary.dailyVolume}
+        weeks={summary.weeklyVolume}
+        planMinutes={summary.settings.planMinutesPerWeek}
+      />
 
       <DurabilityCard durability={summary.durability} />
 

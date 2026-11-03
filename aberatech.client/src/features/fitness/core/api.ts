@@ -95,6 +95,12 @@ export interface WeekVolume {
   minutes: number;
 }
 
+/** Endurance minutes on one day; the series ends today and has no gaps. */
+export interface DayVolume {
+  date: string;
+  minutes: number;
+}
+
 export interface E1RmPoint {
   date: string;
   exercise: string;
@@ -180,6 +186,7 @@ export interface Summary {
   settings: SettingsDto;
   aerobicTrend: AerobicPoint[];
   weeklyVolume: WeekVolume[];
+  dailyVolume: DayVolume[];
   strengthTrend: E1RmPoint[];
   highlights: Highlight[];
   trainingPaces: TrainingPace[];

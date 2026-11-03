@@ -77,6 +77,10 @@ const emptySummary = {
     steps: [],
   },
   weeklyVolume: [{ weekStart: "2026-08-24", minutes: 85 }],
+  dailyVolume: Array.from({ length: 28 }, (_, i) => ({
+    date: `2026-08-${String(i + 1).padStart(2, "0")}`,
+    minutes: i === 27 ? 45 : i === 20 ? 70 : 0,
+  })),
   strengthTrend: [
     { date: "2026-08-19", exercise: "Bench Press (Barbell)", e1RmKg: 89 },
   ],

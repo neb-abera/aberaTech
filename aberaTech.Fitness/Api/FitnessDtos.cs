@@ -18,6 +18,9 @@ public sealed record ThresholdSuggestionDto(int? AetHr, int? LtHr, double? LtSec
 
 public sealed record WeekVolumeDto(string WeekStart, double Minutes);
 
+/// <summary>Endurance minutes on one day, zero on a day with none, so a rolling sum is a plain window.</summary>
+public sealed record DayVolumeDto(string Date, double Minutes);
+
 public sealed record E1RmDto(string Date, string Exercise, double E1RmKg);
 
 public sealed record HighlightDto(string Kind, string Headline, string Evidence, bool Positive);
@@ -156,6 +159,7 @@ public sealed record SummaryDto(
     SettingsDto Settings,
     IReadOnlyList<AerobicPointDto> AerobicTrend,
     IReadOnlyList<WeekVolumeDto> WeeklyVolume,
+    IReadOnlyList<DayVolumeDto> DailyVolume,
     IReadOnlyList<E1RmDto> StrengthTrend,
     IReadOnlyList<HighlightDto> Highlights,
     IReadOnlyList<TrainingPaceDto> TrainingPaces,
