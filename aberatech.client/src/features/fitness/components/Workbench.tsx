@@ -49,6 +49,96 @@ import PredictionLedger from "./PredictionLedger";
 import { parseDistance } from "./ProjectionPanel";
 import Tornado from "./Tornado";
 
+/** A week of training the workbench can start from. */
+interface Dose {
+  label: string;
+  weeklyHours: number;
+  strengthHours: number;
+  source: string;
+}
+
+/** Neb's default, 2026-11-03: eight hours of running and three of lifting. */
+const ATHLETIC: Dose = {
+  label: "Athletic",
+  weeklyHours: 8,
+  strengthHours: 3,
+  source: "8 h running, 3 h lifting",
+};
+
+/**
+ * The Evoke Endurance Military Athlete Foundational Plan v1.1, averaged over
+ * its 41 weeks (2026-11-02 to 2027-08-15) from the TrainingPeaks export:
+ * running 3.9 h a week (3.0 at the start, 6.6 at the peak) plus 0.3 h of
+ * rucking, and 2.5 h of strength, muscular endurance and core.
+ */
+const EVOKE: Dose = {
+  label: "Evoke plan",
+  weeklyHours: 4.2,
+  strengthHours: 2.5,
+  source: "41-week average: 3.9 h running, 0.3 h rucking, 2.5 h strength",
+};
+
+/**
+ * A number box that can be cleared and retyped. The draft is text, and only
+ * a value inside the range reaches the scenario, so deleting the digits shows
+ * an empty box rather than a zero that comes back.
+ */
+export function NumberInput({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onCommit,
+  disabled,
+  helperText,
+  sx,
+}: {
+  label?: string;
+  value: number | null;
+  min: number;
+  max: number;
+  step: number;
+  onCommit: (value: number) => void;
+  disabled?: boolean;
+  helperText?: string;
+  sx?: object;
+}) {
+  const shown = value === null ? "" : String(value);
+  const [draft, setDraft] = React.useState(shown);
+  const [editing, setEditing] = React.useState(false);
+
+  return (
+    <TextField
+      fullWidth={!sx}
+      size="small"
+      type="number"
+      label={label}
+      disabled={disabled}
+      helperText={helperText}
+      sx={sx}
+      value={editing ? draft : shown}
+      slotProps={{ htmlInput: { min, max, step } }}
+      onFocus={() => {
+        setDraft(shown);
+        setEditing(true);
+      }}
+      onBlur={() => setEditing(false)}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        const parsed = Number(event.target.value);
+        if (
+          event.target.value.trim() !== "" &&
+          Number.isFinite(parsed) &&
+          parsed >= min &&
+          parsed <= max
+        )
+          onCommit(parsed);
+      }}
+    />
+  );
+}
+
 /** What the workbench can be asked to work out. */
 const UNKNOWNS: {
   key: FactorName | "RaceTime";
@@ -57,7 +147,6 @@ const UNKNOWNS: {
 }[] = [
   { key: "RaceTime", label: "Race time", hint: "everything else fixed" },
   { key: "WeeklyHours", label: "Weekly hours", hint: "hours the target needs" },
-  { key: "Compliance", label: "Compliance", hint: "share of sessions kept" },
   { key: "Months", label: "Date", hint: "when it arrives" },
   { key: "RaceMassKg", label: "Race weight", hint: "weight it would take" },
   {
@@ -130,16 +219,15 @@ export default function Workbench({ summary }: { summary: Summary }) {
   const [state, setState] = React.useState<WorkbenchState>({
     distanceMeters: 5 * 1609.344,
     months: 18,
-    weeklyHours: Math.max(
-      3,
-      Number(summary.measuredDose.runningHours.toFixed(1)) || 6,
-    ),
-    compliance: 0.85,
+    weeklyHours: ATHLETIC.weeklyHours,
+    // The hours here are the hours trained, so every one of them counts.
+    // Keeping to a written plan is the plan editor's compliance, not this.
+    compliance: 1,
     raceMassLb:
       (summary.settings.goalWeightKg
         ? Math.round(kgToLb(summary.settings.goalWeightKg))
         : null) ?? currentMassLb,
-    strengthHours: Number(summary.measuredDose.strengthHours.toFixed(1)),
+    strengthHours: ATHLETIC.strengthHours,
     targetSeconds: 34 * 60,
     // Nothing here is read off the log. A projection is of a plan, and the
     // plan starts when it starts.
@@ -163,6 +251,22 @@ export default function Workbench({ summary }: { summary: Summary }) {
   const [ledger, setLedger] = React.useState<LockedPrediction[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
+  const sensitivities =
+    result?.sensitivities.filter((x) => x.factor !== "Compliance") ?? [];
+  const logged: Dose = {
+    label: "Your log",
+    weeklyHours: Number(summary.measuredDose.runningHours.toFixed(1)),
+    strengthHours: Number(summary.measuredDose.strengthHours.toFixed(1)),
+    source: "8-week average from your imports",
+  };
+  const doses = [ATHLETIC, EVOKE, logged];
+  const applyDose = (dose: Dose) =>
+    setState((previous) => ({
+      ...previous,
+      weeklyHours: dose.weeklyHours,
+      strengthHours: dose.strengthHours,
+    }));
+
   const signature = `${JSON.stringify(toRequest(state))}|${unknown}`;
   const locked = lockedSignature === signature;
 
@@ -182,13 +286,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
   // The factor being solved for is an output, so it cannot also be an axis to
   // drag along — picking a value for it would be picking the answer.
   const axisChoices = (
-    [
-      "WeeklyHours",
-      "Compliance",
-      "Months",
-      "RaceMassKg",
-      "StrengthHours",
-    ] as FactorName[]
+    ["WeeklyHours", "Months", "RaceMassKg", "StrengthHours"] as FactorName[]
   ).filter(
     (factor) =>
       factor !== unknown &&
@@ -367,6 +465,35 @@ export default function Workbench({ summary }: { summary: Summary }) {
             </Grid>
           </Grid>
 
+          <Stack
+            direction="row"
+            sx={{ flexWrap: "wrap", alignItems: "center", mt: 2 }}
+          >
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", mr: 1 }}
+            >
+              Start from
+            </Typography>
+            {doses.map((dose) => {
+              const on =
+                state.weeklyHours === dose.weeklyHours &&
+                state.strengthHours === dose.strengthHours;
+              return (
+                <Chip
+                  key={dose.label}
+                  size="small"
+                  label={`${dose.label}: ${dose.weeklyHours} h run, ${dose.strengthHours} h strength`}
+                  title={dose.source}
+                  variant={on ? "filled" : "outlined"}
+                  color={on ? "primary" : "default"}
+                  onClick={() => applyDose(dose)}
+                  sx={{ mr: 0.5, mb: 0.5 }}
+                />
+              );
+            })}
+          </Stack>
+
           <Grid container spacing={2} sx={{ mt: 1 }}>
             {UNKNOWNS.filter((o) => o.key !== "RaceTime").map((option) => {
               const factor = option.key as FactorName;
@@ -411,31 +538,27 @@ export default function Workbench({ summary }: { summary: Summary }) {
                           </strong>
                         </Typography>
                       ) : (
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
+                        <NumberInput
                           disabled={disabled}
                           value={
-                            factor === "Compliance"
-                              ? Math.round(state.compliance * 100)
-                              : factor === "RaceMassKg"
-                                ? (state.raceMassLb ?? "")
-                                : factorValue(factor)
+                            factor === "RaceMassKg"
+                              ? state.raceMassLb
+                              : factorValue(factor)
                           }
-                          slotProps={{
-                            htmlInput: {
-                              step: factor === "Compliance" ? 5 : 0.5,
-                            },
-                          }}
-                          onChange={(event) => {
-                            const raw = Number(event.target.value);
-                            if (factor === "Compliance")
-                              set("compliance", raw / 100);
-                            else if (factor === "RaceMassKg")
-                              set("raceMassLb", raw);
-                            else setFactor(factor, raw);
-                          }}
+                          min={factor === "RaceMassKg" ? 80 : 0}
+                          max={
+                            factor === "RaceMassKg"
+                              ? 400
+                              : factor === "Months"
+                                ? 120
+                                : 40
+                          }
+                          step={0.5}
+                          onCommit={(value) =>
+                            factor === "RaceMassKg"
+                              ? set("raceMassLb", Math.round(value))
+                              : setFactor(factor, value)
+                          }
                         />
                       )}
                       <Typography
@@ -493,15 +616,13 @@ export default function Workbench({ summary }: { summary: Summary }) {
               spacing={2}
               sx={{ mb: 2 }}
             >
-              <TextField
-                size="small"
-                type="number"
+              <NumberInput
                 label="Starting at (h/week)"
                 value={state.startHours ?? 0}
-                slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
-                onChange={(event) =>
-                  set("startHours", Math.max(0, Number(event.target.value)))
-                }
+                min={0}
+                max={40}
+                step={0.5}
+                onCommit={(value) => set("startHours", value)}
                 helperText={
                   summary.measuredDose.runningHours > 0
                     ? `Your log shows ${summary.measuredDose.runningHours.toFixed(1)} h/week — a suggestion, not the answer`
@@ -509,15 +630,13 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 }
                 sx={{ width: 240 }}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberInput
                 label="Build at (% a week)"
                 value={state.rampPercent}
-                slotProps={{ htmlInput: { min: 1, max: 50, step: 1 } }}
-                onChange={(event) =>
-                  set("rampPercent", Math.max(1, Number(event.target.value)))
-                }
+                min={1}
+                max={50}
+                step={1}
+                onCommit={(value) => set("rampPercent", value)}
                 helperText="10% a week is the usual caution"
                 sx={{ width: 200 }}
               />
@@ -594,7 +713,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 moving.
               </Typography>
               <Tornado
-                sensitivities={result.sensitivities}
+                sensitivities={sensitivities}
                 baselineSeconds={result.predicted.median}
               />
               <Table size="small" sx={{ mt: 1 }}>
@@ -608,7 +727,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {result.sensitivities.map((s) => (
+                  {sensitivities.map((s) => (
                     <TableRow key={s.factor}>
                       <TableCell>{s.label}</TableCell>
                       <TableCell align="right">
