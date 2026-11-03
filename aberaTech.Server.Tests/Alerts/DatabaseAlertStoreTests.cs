@@ -147,7 +147,7 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         await using (var context = Context())
         {
             Assert.True(await new DatabaseAlertStore(context).AddCountdownAsync(
-                Countdown("Home", id: id) with { Alarm = true, CalendarEventId = "home@google.com" }, CancellationToken.None));
+                Countdown("Home", id: id) with { Alarm = true, CalendarEventId = "home@google.com", Repeat = CountdownRepeats.Yearly }, CancellationToken.None));
         }
 
         var later = Now + Duration.FromMinutes(5);
@@ -156,8 +156,8 @@ public sealed class DatabaseAlertStoreTests : IDisposable
             var store = new DatabaseAlertStore(context);
             var read = Assert.Single(await store.CountdownsAsync(CancellationToken.None));
             Assert.Equal(
-                (id, "Home", Instant.FromUtc(2027, 3, 1, 6, 0), "Asia/Amman", Now, true, "home@google.com"),
-                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt, read.Alarm, read.CalendarEventId));
+                (id, "Home", Instant.FromUtc(2027, 3, 1, 6, 0), "Asia/Amman", Now, true, "home@google.com", "yearly"),
+                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt, read.Alarm, read.CalendarEventId, read.Repeat));
 
             Assert.True(await store.UpdateCountdownAsync(
                 new AlertCountdown(id, "Leave", Instant.FromUtc(2027, 1, 10, 13, 0), "America/New_York", later, false, "leave@google.com"),
@@ -170,8 +170,8 @@ public sealed class DatabaseAlertStoreTests : IDisposable
             var store = new DatabaseAlertStore(context);
             var read = Assert.Single(await store.CountdownsAsync(CancellationToken.None));
             Assert.Equal(
-                (id, "Leave", Instant.FromUtc(2027, 1, 10, 13, 0), "America/New_York", later, false, "leave@google.com"),
-                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt, read.Alarm, read.CalendarEventId));
+                (id, "Leave", Instant.FromUtc(2027, 1, 10, 13, 0), "America/New_York", later, false, "leave@google.com", "none"),
+                (read.Id, read.Label, read.TargetAt, read.TimeZone, read.UpdatedAt, read.Alarm, read.CalendarEventId, read.Repeat));
             Assert.Equal(Now, (await context.AlertCountdowns.AsNoTracking().SingleAsync()).CreatedAt);
 
             Assert.True(await store.DeleteCountdownAsync(id, CancellationToken.None));

@@ -143,13 +143,17 @@ public sealed class DatabaseAlertCalendarGrant(SchedulingDbContext database, Goo
 }
 
 /// <summary>An event the owner or a paired phone asked for, before Google has it.</summary>
+/// <param name="Recurrence">An RRULE line for an event that repeats. Null for one that does not.</param>
+/// <param name="TimeZone">The zone a repeating event repeats in. Google needs it for a recurrence.</param>
 public sealed record NewAlertEvent(
     string Title,
     string? Location,
     Instant StartsAt,
     Instant EndsAt,
     int LeadMinutes,
-    string Type);
+    string Type,
+    string? Recurrence = null,
+    string? TimeZone = null);
 
 /// <summary>How a create went: the stored event, or a message and whether it is a conflict (409) or Google's refusal (502).</summary>
 public sealed record CreateOutcome(CreatedAlertEvent? Event, string? Problem, bool Conflict);
@@ -312,8 +316,9 @@ public sealed class GoogleAlertEvents(
             summary = request.Title,
             location = request.Location,
             description = critical ? AlertPlanner.CriticalMark : null,
-            start = new { dateTime = InstantPattern.ExtendedIso.Format(request.StartsAt) },
-            end = new { dateTime = InstantPattern.ExtendedIso.Format(request.EndsAt) },
+            start = Point(request.StartsAt, request.TimeZone),
+            end = Point(request.EndsAt, request.TimeZone),
+            recurrence = request.Recurrence is { } rule ? new[] { rule } : null,
             reminders = new { useDefault = false, overrides = new[] { new { method = "popup", minutes = request.LeadMinutes } } }
         }, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
 
@@ -527,6 +532,16 @@ public sealed class GoogleAlertEvents(
             return (null, null, null, null, CalendarWriteMessages.Unreachable);
         }
     }
+
+    /// <summary>A start or end for events.insert: UTC, or the wall-clock time in a named zone, which a recurrence needs.</summary>
+    private static Dictionary<string, string> Point(Instant at, string? timeZone) =>
+        timeZone is not null && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) is { } zone
+            ? new Dictionary<string, string>
+            {
+                ["dateTime"] = OffsetDateTimePattern.Rfc3339.Format(at.InZone(zone).ToOffsetDateTime()),
+                ["timeZone"] = timeZone
+            }
+            : new Dictionary<string, string> { ["dateTime"] = InstantPattern.ExtendedIso.Format(at) };
 
     /// <summary>The new end: the start plus the new length, or plus the event's own length when none was given.</summary>
     private static Instant? Ends(Instant start, int? minutes, Instant? oldStart, Instant? oldEnd) =>

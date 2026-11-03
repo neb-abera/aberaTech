@@ -167,6 +167,8 @@ describe("the form", () => {
       targetAt: "2027-03-01T09:00:00+03:00",
       timeZone: "Asia/Amman",
       alarm: false,
+      repeat: "none",
+      repeatEvery: 1,
     });
     expect(onState).toHaveBeenCalledWith(state([home]));
     expect(screen.getByText("Home is added.")).toBeTruthy();
@@ -240,6 +242,8 @@ describe("the form", () => {
       targetAt: "2026-11-11T15:00:00+03:00",
       timeZone: "Asia/Amman",
       alarm: false,
+      repeat: "none",
+      repeatEvery: 1,
     });
     expect(screen.getByRole("form", { name: "Add countdown" })).toBeTruthy();
   });
@@ -336,6 +340,69 @@ describe("the calendar and the alarm", () => {
     expect(api.update).toHaveBeenCalledWith(
       home.id,
       expect.objectContaining({ alarm: true }),
+    );
+  });
+});
+
+describe("repeats", () => {
+  const chooseUnit = async (name: string) => {
+    // MUI's select opens on the press of the button, not the click.
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByRole("combobox", { name: "Unit" }));
+    });
+    await press(screen.getByRole("option", { name }));
+  };
+
+  it("sends every so many of a unit and lists it", async () => {
+    const { api } = mount([{ ...home, repeat: "weekly", repeatEvery: 2 }]);
+
+    expect(
+      within(screen.getByRole("listitem", { name: "Home" })).getByTestId(
+        "countdown-repeat",
+      ).textContent,
+    ).toBe("Every 2 weeks");
+    expect((field("Repeats every") as HTMLInputElement).disabled).toBe(true);
+    type("Date", "2027-03-01");
+    await chooseUnit("hour");
+    type("Repeats every", "2");
+    await press(screen.getByRole("button", { name: "Add countdown" }));
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ repeat: "hourly", repeatEvery: 2 }),
+    );
+  });
+
+  it("names the units in the plural for more than one", async () => {
+    mount([]);
+    await chooseUnit("year");
+    type("Repeats every", "3");
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByRole("combobox", { name: "Unit" }));
+    });
+    expect(screen.getByRole("option", { name: "years" })).toBeTruthy();
+  });
+
+  it("refuses an interval that is not a whole number from 1 to 999", async () => {
+    const { api } = mount([]);
+    type("Date", "2027-03-01");
+    await chooseUnit("day");
+    type("Repeats every", "0");
+    await press(screen.getByRole("button", { name: "Add countdown" }));
+
+    expect(screen.getByText("A whole number, 1 to 999.")).toBeTruthy();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it("opens Edit on the saved unit and interval", async () => {
+    const { api } = mount([{ ...home, repeat: "monthly", repeatEvery: 6 }]);
+
+    await press(screen.getByRole("button", { name: "Edit Home" }));
+    expect((field("Repeats every") as HTMLInputElement).value).toBe("6");
+    await press(screen.getByRole("button", { name: "Save countdown" }));
+
+    expect(api.update).toHaveBeenCalledWith(
+      home.id,
+      expect.objectContaining({ repeat: "monthly", repeatEvery: 6 }),
     );
   });
 });

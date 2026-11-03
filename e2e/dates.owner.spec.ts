@@ -135,6 +135,9 @@ test("a countdown with its alarm switch on is saved on the calendar with its ala
   await add.getByLabel(/^Time\s*\*?$/).fill("07:30");
   await add.getByLabel("Time zone").fill("America/New_York");
   await add.getByRole("switch", { name: "Alarm at this time" }).check();
+  await add.getByRole("combobox", { name: "Unit" }).click();
+  await page.getByRole("option", { name: "week" }).click();
+  await add.getByLabel("Repeats every").fill("2");
   await add.getByRole("button", { name: "Add countdown" }).click();
 
   const item = page.getByRole("listitem", { name: "Flight" });
@@ -142,10 +145,19 @@ test("a countdown with its alarm switch on is saved on the calendar with its ala
     "Alarm at this time",
   );
   await expect(item.getByTestId("countdown-off-calendar")).toHaveCount(0);
+  await expect(item.getByTestId("countdown-repeat")).toHaveText(
+    "Every 2 weeks",
+  );
   const saved = async () =>
     (await (await page.request.get("/api/alerts/status")).json()).countdowns;
   expect(await saved()).toEqual([
-    expect.objectContaining({ label: "Flight", alarm: true, onCalendar: true }),
+    expect.objectContaining({
+      label: "Flight",
+      alarm: true,
+      onCalendar: true,
+      repeat: "weekly",
+      repeatEvery: 2,
+    }),
   ]);
 
   await item.getByRole("button", { name: "Edit Flight" }).click();

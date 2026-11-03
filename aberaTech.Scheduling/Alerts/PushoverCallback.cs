@@ -86,6 +86,7 @@ public static class PushoverCallback
         var now = clock.GetCurrentInstant();
         if (await store.AcknowledgeAsync(delivery.Key, delivery.StartsAt, AlertAcknowledgementVia.Pushover, now, cancellationToken))
         {
+            await OneTimeAlarms.ForgetAcknowledgedAsync(store, now, cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
         }
         else

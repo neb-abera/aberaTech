@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261103170455_CountdownCalendarEvents";
+    public override string LastMigrationId => "20261103195359_CountdownRepeat";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -89,6 +89,18 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasMaxLength(60)
                     .HasColumnType("character varying(60)");
+
+                b.Property<string>("Repeat")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)")
+                    .HasDefaultValue("none");
+
+                b.Property<int>("RepeatEvery")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
                 b.Property<Instant>("TargetAt")
                     .HasColumnType("timestamp with time zone");

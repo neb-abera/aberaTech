@@ -115,7 +115,7 @@ public sealed class AlertCountdownRouteTests : IDisposable
         Assert.True(state.TryGetProperty("routines", out _));
         var countdown = Assert.Single(state.GetProperty("countdowns").EnumerateArray());
         Assert.Equal(
-            ["id", "label", "targetAt", "timeZone", "updatedAt", "alarm", "onCalendar"],
+            ["id", "label", "targetAt", "timeZone", "updatedAt", "alarm", "onCalendar", "repeat", "repeatEvery"],
             countdown.EnumerateObject().Select(field => field.Name));
         Assert.True(countdown.GetProperty("id").GetGuid() != Guid.Empty);
         Assert.Equal("Home", countdown.GetProperty("label").GetString());
@@ -615,6 +615,146 @@ public sealed class AlertCountdownRouteTests : IDisposable
         var alert = Assert.Single(alerts);
         Assert.Equal(Instant.FromUtc(2026, 10, 28, 16, 0).ToDateTimeOffset(), alert.GetProperty("alertAt").GetDateTimeOffset());
         Assert.Equal(AlertTypes.Alarm, alert.GetProperty("type").GetString());
+    }
+
+    // ------------------------------------------------------------------ one-time alarms delete themselves
+
+    private static string WithRepeat(string label, string targetAt, string repeat, bool alarm = false) =>
+        $"{{\"label\":\"{label}\",\"targetAt\":\"{targetAt}\",\"timeZone\":\"America/New_York\",\"alarm\":{(alarm ? "true" : "false")},\"repeat\":\"{repeat}\"}}";
+
+    private async Task<string> KeyOfAsync(HttpClient client, string title) =>
+        (await StatusAsync(client)).GetProperty("alerts").EnumerateArray()
+        .Single(alert => alert.GetProperty("title").GetString() == title).GetProperty("key").GetString()!;
+
+    [Fact]
+    public async Task A_one_time_countdown_alarm_deletes_the_countdown_once_stopped_and_keeps_the_event()
+    {
+        using var phone = await PhoneAsync();
+        await Send(phone, "POST", "/api/alerts/countdowns", Body(label: "Leave", targetAt: "2026-10-28T14:00:00Z", alarm: true));
+        await Send(phone, "POST", "/api/alerts/countdowns", Body(label: "Quiet", targetAt: "2026-10-28T14:00:00Z"));
+        var uid = _google.Inserted[0];
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 14, 0, 30);
+        var key = await KeyOfAsync(phone, "Leave");
+
+        using var stopped = await Send(phone, "POST", "/api/alerts/ack", $"{{\"key\":\"{key}\",\"via\":\"phone\"}}");
+
+        Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);
+        Assert.Equal(["Quiet"], (await CountdownsIn(stopped)).Select(countdown => countdown.GetProperty("label").GetString()));
+        Assert.NotNull(_google.Master(uid));
+    }
+
+    [Fact]
+    public async Task A_countdown_alarm_is_kept_until_it_is_stopped()
+    {
+        using var owner = Owner();
+        await Send(owner, "POST", "/api/alerts/countdowns", Body(label: "Leave", targetAt: "2026-10-28T14:00:00Z", alarm: true));
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 15, 0);
+        await _app.Factory.Services.GetRequiredService<CalendarAlertWorker>().TickAsync(CancellationToken.None);
+
+        Assert.Single(await _store.CountdownsAsync(CancellationToken.None));
+    }
+
+    // ------------------------------------------------------------------ countdowns that repeat
+
+    [Fact]
+    public async Task A_yearly_countdown_counts_to_its_next_date_and_its_event_repeats_from_there()
+    {
+        using var owner = Owner();
+
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns",
+            WithRepeat("Wedding anniversary", "2019-12-30T00:00:00-05:00", "yearly", alarm: true));
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var countdown = (await CountdownsIn(created)).Single();
+        Assert.Equal("yearly", countdown.GetProperty("repeat").GetString());
+        Assert.Equal(Instant.FromUtc(2026, 12, 30, 5, 0).ToDateTimeOffset(), countdown.GetProperty("targetAt").GetDateTimeOffset());
+        var uid = OnlyEvent();
+        Assert.Equal(["RRULE:FREQ=YEARLY"], _google.Recurrence(uid));
+        Assert.Equal(Instant.FromUtc(2026, 12, 30, 5, 0), _google.Master(uid)!.Value.Start);
+        Assert.Contains(AlertPlanner.CriticalMark, _google.Description(uid), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_repeating_countdown_moves_to_the_next_date_once_its_time_comes_and_is_never_deleted()
+    {
+        using var phone = await PhoneAsync();
+        await Send(phone, "POST", "/api/alerts/countdowns", WithRepeat("Standup", "2026-10-28T10:00:00-04:00", "weekly", alarm: true));
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 14, 0, 30);
+        var key = await KeyOfAsync(phone, "Standup");
+
+        using var stopped = await Send(phone, "POST", "/api/alerts/ack", $"{{\"key\":\"{key}\",\"via\":\"phone\"}}");
+
+        var countdown = (await CountdownsIn(stopped)).Single();
+        Assert.Equal(Instant.FromUtc(2026, 11, 4, 15, 0).ToDateTimeOffset(), countdown.GetProperty("targetAt").GetDateTimeOffset());
+    }
+
+    [Fact]
+    public async Task Editing_a_repeating_countdown_makes_its_series_again_and_delete_deletes_the_series()
+    {
+        using var owner = Owner();
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns", WithRepeat("Birthday", "1991-10-07T09:00:00-04:00", "yearly"));
+        var id = (await CountdownsIn(created)).Single().GetProperty("id").GetGuid();
+        var first = OnlyEvent();
+
+        using var edited = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}", Body(label: "Neb's birthday", targetAt: "1991-10-07T09:00:00-04:00", timeZone: "America/New_York"));
+
+        Assert.Equal(HttpStatusCode.OK, edited.StatusCode);
+        // No repeat in the body keeps the saved one.
+        Assert.Equal("yearly", (await CountdownsIn(edited)).Single().GetProperty("repeat").GetString());
+        Assert.Null(_google.Master(first));
+        var second = Assert.Single(_google.Inserted, uid => _google.Master(uid) is not null);
+        Assert.Equal("Neb's birthday", _google.Master(second)!.Value.Summary);
+        Assert.Equal(Instant.FromUtc(2027, 10, 7, 13, 0), _google.Master(second)!.Value.Start);
+
+        using var deleted = await Send(owner, "DELETE", $"/api/alerts/countdowns/{id}", null);
+        Assert.Equal(HttpStatusCode.OK, deleted.StatusCode);
+        Assert.Null(_google.Master(second));
+    }
+
+    [Fact]
+    public async Task Every_two_hours_counts_two_hours_on_and_tells_Google_the_interval()
+    {
+        using var owner = Owner();
+
+        using var created = await Send(owner, "POST", "/api/alerts/countdowns",
+            "{\"label\":\"Meds\",\"targetAt\":\"2026-10-28T08:00:00Z\",\"timeZone\":\"America/New_York\",\"repeat\":\"hourly\",\"repeatEvery\":2}");
+
+        var countdown = (await CountdownsIn(created)).Single();
+        Assert.Equal(2, countdown.GetProperty("repeatEvery").GetInt32());
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 14, 0).ToDateTimeOffset(), countdown.GetProperty("targetAt").GetDateTimeOffset());
+        Assert.Equal(["RRULE:FREQ=HOURLY;INTERVAL=2"], _google.Recurrence(OnlyEvent()));
+
+        // An update without the interval keeps it.
+        var id = countdown.GetProperty("id").GetGuid();
+        using var renamed = await Send(owner, "PUT", $"/api/alerts/countdowns/{id}",
+            "{\"label\":\"Pills\",\"targetAt\":\"2026-10-28T08:00:00Z\",\"timeZone\":\"America/New_York\"}");
+        Assert.Equal(2, (await CountdownsIn(renamed)).Single().GetProperty("repeatEvery").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1000)]
+    public async Task An_interval_outside_1_to_999_is_400(int every)
+    {
+        using var owner = Owner();
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns",
+            $"{{\"targetAt\":\"2027-01-01T00:00:00Z\",\"timeZone\":\"UTC\",\"repeat\":\"daily\",\"repeatEvery\":{every}}}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").TryGetProperty("repeatEvery", out _));
+    }
+
+    [Fact]
+    public async Task A_repeat_the_page_would_not_send_is_400()
+    {
+        using var owner = Owner();
+
+        using var response = await Send(owner, "POST", "/api/alerts/countdowns", WithRepeat("X", "2027-01-01T00:00:00Z", "fortnightly"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").TryGetProperty("repeat", out _));
+        Assert.Empty(_google.Inserted);
     }
 
     // ------------------------------------------------------------------ the zone a new one starts in

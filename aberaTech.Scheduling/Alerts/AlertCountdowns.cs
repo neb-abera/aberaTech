@@ -13,6 +13,9 @@ namespace aberaTech.Scheduling.Alerts;
 /// <param name="TimeZone">An IANA zone id. The target's date and time are written in it.</param>
 /// <param name="Alarm">The calendar event rings as an alarm at the target.</param>
 /// <param name="CalendarEventId">The event's iCalUID on Google Calendar. Null for a countdown saved before countdowns made events.</param>
+/// <param name="TargetAt">The date as set. For one that repeats, the first date of the series.</param>
+/// <param name="Repeat">The unit, one of <see cref="CountdownRepeats.Choices"/>. A repeating countdown's event repeats too.</param>
+/// <param name="RepeatEvery">How many units between two dates, 1 to <see cref="CountdownRepeats.MaxEvery"/>.</param>
 public sealed record AlertCountdown(
     Guid Id,
     string Label,
@@ -20,7 +23,14 @@ public sealed record AlertCountdown(
     string TimeZone,
     Instant UpdatedAt,
     bool Alarm = false,
-    string? CalendarEventId = null);
+    string? CalendarEventId = null,
+    string Repeat = CountdownRepeats.None,
+    int RepeatEvery = 1)
+{
+    /// <summary>The date it counts to now: the target, or for one that repeats, the next date in the series.</summary>
+    public Instant NextAt(Instant now) =>
+        CountdownRepeats.Next(TargetAt, Repeat, RepeatEvery, DateTimeZoneProviders.Tzdb.GetZoneOrNull(TimeZone) ?? DateTimeZone.Utc, now);
+}
 
 /// <summary>The bounds of a countdown, and the check a create or an update passes before it is stored.</summary>
 public static class AlertCountdowns
@@ -80,9 +90,21 @@ public static class AlertCountdowns
             errors["timeZone"] = ["A time zone from the tz database, such as Asia/Amman."];
         }
 
+        if (request.Repeat is { } repeat && !CountdownRepeats.Choices.Contains(repeat))
+        {
+            errors["repeat"] = ["\"none\", \"hourly\", \"daily\", \"weekly\", \"monthly\" or \"yearly\"."];
+        }
+
+        if (request.RepeatEvery is { } every && every is < 1 or > CountdownRepeats.MaxEvery)
+        {
+            errors["repeatEvery"] = [$"1 to {CountdownRepeats.MaxEvery}."];
+        }
+
         if (errors.Count > 0) return (errors, null);
 
-        return (errors, new AlertCountdown(id, label, target!.Value, request.TimeZone!, now, request.Alarm ?? false));
+        return (errors, new AlertCountdown(
+            id, label, target!.Value, request.TimeZone!, now, request.Alarm ?? false, null,
+            request.Repeat ?? CountdownRepeats.None, request.RepeatEvery ?? 1));
     }
 
     /// <summary>The order the status lists them in: the target, then the label.</summary>
@@ -98,4 +120,7 @@ public static class AlertCountdowns
 /// <summary>A countdown as the page and the phone send it. Every field is checked by <see cref="AlertCountdowns.Validate"/>.</summary>
 /// <param name="TargetAt">ISO 8601 with its offset, such as 2026-11-20T09:00:00+03:00.</param>
 /// <param name="Alarm">Ring at the target. Left out, a create is off and an update keeps the saved choice, so an older phone app changes nothing it does not send.</param>
-public sealed record CountdownRequest(string? Label, string? TargetAt, string? TimeZone, bool? Alarm = null);
+/// <param name="Repeat">The unit, one of <see cref="CountdownRepeats.Choices"/>. Left out, a create does not repeat and an update keeps the saved choice.</param>
+/// <param name="RepeatEvery">How many units between two dates. Left out, a create takes 1 and an update keeps the saved number.</param>
+public sealed record CountdownRequest(
+    string? Label, string? TargetAt, string? TimeZone, bool? Alarm = null, string? Repeat = null, int? RepeatEvery = null);
