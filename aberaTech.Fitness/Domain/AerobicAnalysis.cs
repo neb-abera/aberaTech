@@ -8,8 +8,9 @@ public sealed record SteadyRun(LocalDate Date, double DistanceMeters, double Sec
 
 /// <summary>One month's aerobic fitness, as the median normalized pace.</summary>
 /// <param name="IndoorRuns">How many of the month's runs were on a treadmill.</param>
+/// <param name="LastRun">The month's latest counted run, the date its median is current to.</param>
 public sealed record MonthlyAerobicPoint(
-    int Year, int Month, double MedianNormalizedSecPerKm, int RunCount, int IndoorRuns = 0);
+    int Year, int Month, double MedianNormalizedSecPerKm, int RunCount, int IndoorRuns = 0, LocalDate? LastRun = null);
 
 /// <summary>
 /// Aerobic-base analysis: pace-at-heart-rate over time, and the aerobic
@@ -80,7 +81,7 @@ public static class AerobicAnalysis
                     .OrderBy(x => x)
                     .ToArray();
                 return new MonthlyAerobicPoint(
-                    g.Key.Year, g.Key.Month, Median(normalized), normalized.Length, g.Count(r => r.Indoor));
+                    g.Key.Year, g.Key.Month, Median(normalized), normalized.Length, g.Count(r => r.Indoor), g.Max(r => r.Date));
             })
             .ToArray();
     }
