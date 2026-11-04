@@ -126,6 +126,10 @@ public static class ActivityStore
         // on the page.
         existing.LoadKg = activity.LoadKg ?? existing.LoadKg;
         existing.Indoor = activity.Indoor ?? existing.Indoor;
+        existing.FirstHalfHr = activity.FirstHalfHr ?? existing.FirstHalfHr;
+        existing.SecondHalfHr = activity.SecondHalfHr ?? existing.SecondHalfHr;
+        existing.FirstHalfMetersPerSecond = activity.FirstHalfMetersPerSecond ?? existing.FirstHalfMetersPerSecond;
+        existing.SecondHalfMetersPerSecond = activity.SecondHalfMetersPerSecond ?? existing.SecondHalfMetersPerSecond;
 
         // Laps travel with the record that carries them; a file without laps
         // must not erase the ones a richer file brought.

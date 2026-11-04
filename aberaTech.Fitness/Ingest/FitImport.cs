@@ -68,7 +68,61 @@ public static class FitImport
             });
         }
 
+        Halves(messages.RecordMesgs, activity);
+
         return activity;
+    }
+
+    /// <summary>
+    /// Splits the second-by-second records at the midpoint of the recording
+    /// and stores each half's average heart rate and speed. Heart rate is
+    /// averaged over time, so a watch that records every few seconds weighs
+    /// each sample by how long it stood. Speed is distance over time, from the
+    /// distance field the watch accumulates.
+    /// </summary>
+    internal static void Halves(IEnumerable<RecordMesg> records, Activity activity)
+    {
+        var points = records
+            .Select(r => (Time: r.GetTimestamp()?.GetDateTime(), Hr: (double?)r.GetHeartRate(), Distance: (double?)r.GetDistance()))
+            .Where(p => p.Time is not null)
+            .Select(p => (Seconds: (p.Time!.Value - System.DateTime.UnixEpoch).TotalSeconds, p.Hr, p.Distance))
+            .OrderBy(p => p.Seconds)
+            .ToArray();
+        if (points.Length < 4) return;
+
+        var start = points[0].Seconds;
+        var end = points[^1].Seconds;
+        var middle = (start + end) / 2;
+        if (end - start < 2 * 60) return;
+
+        double? MeanHr(double from, double to)
+        {
+            double weighted = 0, span = 0;
+            for (var i = 0; i < points.Length - 1; i++)
+            {
+                var a = Math.Max(points[i].Seconds, from);
+                var b = Math.Min(points[i + 1].Seconds, to);
+                if (b <= a || points[i].Hr is not > 0) continue;
+                weighted += points[i].Hr!.Value * (b - a);
+                span += b - a;
+            }
+
+            return span > 0 ? weighted / span : null;
+        }
+
+        double? DistanceAt(double at)
+        {
+            var before = points.LastOrDefault(p => p.Seconds <= at && p.Distance is not null);
+            return before.Distance;
+        }
+
+        double? Speed(double from, double to) =>
+            DistanceAt(from) is { } a && DistanceAt(to) is { } b && b > a ? (b - a) / (to - from) : null;
+
+        activity.FirstHalfHr = MeanHr(start, middle);
+        activity.SecondHalfHr = MeanHr(middle, end);
+        activity.FirstHalfMetersPerSecond = Speed(start, middle);
+        activity.SecondHalfMetersPerSecond = Speed(middle, end);
     }
 
     /// <summary>Whether the sub-sport says the session was indoors; null when it says nothing.</summary>

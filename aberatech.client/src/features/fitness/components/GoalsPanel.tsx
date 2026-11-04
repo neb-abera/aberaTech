@@ -19,6 +19,7 @@ import {
   fetchGoals,
   type GoalRow,
   type GoalSection,
+  type GoalStandard,
   type Goals,
   oneDriveConnectUrl,
 } from "../core/api";
@@ -49,6 +50,19 @@ export function formatGoalValue(unit: string, value: number): string {
     default:
       return String(Number(value.toFixed(2)));
   }
+}
+
+/**
+ * An outside standard as a tag beside the goal: who sets it, at what level,
+ * and the number when it differs from the goal ("FBI max 20"). When the goal
+ * is that standard, the tag names it without repeating the number.
+ */
+export function standardLabel(row: GoalRow, standard: GoalStandard): string {
+  const level = standard.level.replace(/\s*\(.*\)$/, "");
+  const same = row.goal !== null && Math.abs(row.goal - standard.value) < 0.05;
+  return same
+    ? `${standard.source} ${level}`
+    : `${standard.source} ${level} ${formatGoalValue(row.unit, standard.value)}`;
 }
 
 /** The tag a goal earns from the athlete's own note in column I. */
@@ -179,6 +193,24 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
               sx={{ ml: 0.75, height: 20 }}
             />
           ) : null}
+          {(row.standards ?? [])
+            .filter((standard) => standardLabel(row, standard) !== tag)
+            .map((standard) => (
+              <Tooltip
+                key={standard.source}
+                title={standard.note}
+                placement="top"
+                arrow
+              >
+                <Chip
+                  size="small"
+                  label={standardLabel(row, standard)}
+                  variant="outlined"
+                  tabIndex={0}
+                  sx={{ ml: 0.75, height: 20 }}
+                />
+              </Tooltip>
+            ))}
         </TableCell>
         <TableCell align="right" sx={{ pr: 0, whiteSpace: WRAP_ON_PHONE }}>
           {forecast ? (

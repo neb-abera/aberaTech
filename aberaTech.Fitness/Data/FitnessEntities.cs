@@ -50,6 +50,21 @@ public class Activity
 
     /// <summary>The laps the watch recorded, when the source carried them.</summary>
     public List<Lap> Laps { get; set; } = [];
+
+    /// <summary>
+    /// The recording split in two at its midpoint: average heart rate and
+    /// speed of each half, read from the second-by-second records of the FIT
+    /// file. A heart-rate drift test is read from these, the way Evoke reads
+    /// it in TrainingPeaks, so no laps are needed. Null when the file carried
+    /// no records.
+    /// </summary>
+    public double? FirstHalfHr { get; set; }
+
+    public double? SecondHalfHr { get; set; }
+
+    public double? FirstHalfMetersPerSecond { get; set; }
+
+    public double? SecondHalfMetersPerSecond { get; set; }
 }
 
 /// <summary>

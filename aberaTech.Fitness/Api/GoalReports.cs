@@ -35,6 +35,13 @@ public sealed record GoalForecastDto(
 /// <param name="PointsNow">Test points the current value earns, on a test row.</param>
 /// <param name="PointsGoal">Test points the goal earns.</param>
 /// <param name="Note">Column I, the athlete's evidence note.</param>
+/// <summary>An outside standard for the same event, labelled with who sets it and at what level.</summary>
+/// <param name="Source">FBI or AFT.</param>
+/// <param name="Level">The level, such as max (10 pts).</param>
+/// <param name="Value">The standard in the row's unit.</param>
+/// <param name="Note">The table and the band it was read from.</param>
+public sealed record StandardDto(string Source, string Level, double Value, string Note);
+
 public sealed record GoalRowDto(
     int Row,
     string Label,
@@ -50,7 +57,8 @@ public sealed record GoalRowDto(
     int? PointsNow,
     int? PointsGoal,
     GoalForecastDto? Forecast,
-    string? Note);
+    string? Note,
+    IReadOnlyList<StandardDto>? Standards = null);
 
 /// <summary>One group of rows: a section of the workbook, or a test scored the way its graders score it.</summary>
 /// <param name="Test">aft or fbi for a test, null otherwise.</param>
@@ -205,6 +213,22 @@ internal static class GoalReports
             pointsGoal = goal is { } fg ? Fbi.Points(fbiEvent, fg, female) : null;
         }
 
+        // Every published standard for the event, so a goal set from one
+        // source (Evoke, say) still shows what the FBI or the Army asks for.
+        var standards = new List<StandardDto>();
+        var sex = female ? "women" : "men";
+        if (definition.FbiEvent is { } fbiStandard)
+        {
+            standards.Add(new StandardDto("FBI", $"max ({Fbi.MaxPoints} pts)", Fbi.RawFor(fbiStandard, Fbi.MaxPoints, female),
+                Text($"FBI Physical Fitness Test, {sex}: the {Fbi.MaxPoints}-point row, the most one event scores.")));
+        }
+
+        if (definition.Aft is { } aftStandard && Aft.RawFor(aftStandard, Aft.MaxPoints, ageThen, female) is { } aftMax)
+        {
+            standards.Add(new StandardDto("AFT", $"max ({Aft.MaxPoints} pts)", aftMax,
+                Text($"Army Fitness Test, {sex}, age {ageThen} at the due date: the {Aft.MaxPoints}-point row.")));
+        }
+
         GoalForecastDto? forecast = null;
         if (goal is { } target)
         {
@@ -235,7 +259,8 @@ internal static class GoalReports
             pointsNow,
             pointsGoal,
             forecast,
-            workbookRow.Evidence), (pointsNow, pointsGoal));
+            workbookRow.Evidence,
+            standards), (pointsNow, pointsGoal));
     }
 
     private static GoalSectionDto Section(

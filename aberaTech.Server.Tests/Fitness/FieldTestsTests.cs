@@ -49,7 +49,7 @@ public sealed class FieldTestsTests
         Assert.NotNull(test);
         Assert.True(test!.Indoor);
         Assert.Null(test.DriftPercent);
-        Assert.Contains("no laps", test.Evidence);
+        Assert.Contains("drift could not be read", test.Evidence);
     }
 
     [Fact]
@@ -185,4 +185,25 @@ public sealed class FieldTestsTests
 
         Assert.Null(FieldTests.Suggest([aet, lt], Bands, 340, Day));
     }
+
+    [Fact]
+    public void A_drift_test_needs_no_laps_when_the_recording_has_its_halves()
+    {
+        // Evoke reads the drift from the whole recording, not from laps.
+        // Outdoors: 3.0 m/s at 145 bpm, then 2.95 m/s at 148 bpm.
+        var halves = new RecordingHalves(145, 148, 3.0, 2.95);
+        var outdoor = Run("HR drift test", 3600, 333, 146) with { Halves = halves };
+
+        var test = FieldTests.AsAetTest(outdoor, Bands);
+
+        var early = 3.0 / 145;
+        var late = 2.95 / 148;
+        Assert.Equal((early - late) / early, test!.DriftPercent!.Value, precision: 6);
+        Assert.Contains("read from the full recording", test.Evidence);
+
+        // Indoors the belt holds the speed: 140 then 147 bpm is a 5.0% rise.
+        var indoor = Run("HR drift test", 3600, 400, 143, indoor: true) with { Halves = new RecordingHalves(140, 147, null, null) };
+        Assert.Equal(7.0 / 140, FieldTests.AsAetTest(indoor, Bands)!.DriftPercent!.Value, precision: 6);
+    }
 }
+

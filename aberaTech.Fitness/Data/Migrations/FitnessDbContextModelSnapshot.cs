@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261102145914_OneDriveConnection";
+    public override string LastMigrationId => "20261104065448_RecordingHalves";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -47,6 +47,12 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(128)
                     .HasColumnType("character varying(128)");
 
+                b.Property<double?>("FirstHalfHr")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("FirstHalfMetersPerSecond")
+                    .HasColumnType("double precision");
+
                 b.Property<bool?>("Indoor")
                     .HasColumnType("boolean");
 
@@ -60,6 +66,12 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasMaxLength(256)
                     .HasColumnType("character varying(256)");
+
+                b.Property<double?>("SecondHalfHr")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("SecondHalfMetersPerSecond")
+                    .HasColumnType("double precision");
 
                 b.Property<string>("Source")
                     .IsRequired()

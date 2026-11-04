@@ -60,6 +60,10 @@ public static class Fbi
         return fbiEvent == FbiEvent.PullUps ? 0 : FloorPoints;
     }
 
+    /// <summary>The raw performance that scores <paramref name="points"/>, in the table's own units.</summary>
+    public static double RawFor(FbiEvent fbiEvent, int points, bool female) =>
+        Table(fbiEvent, female).First(row => row.Points == points).Threshold;
+
     private static (int Points, double Threshold)[] Table(FbiEvent fbiEvent, bool female) => (fbiEvent, female) switch
     {
         (FbiEvent.PullUps, false) => [(10, 20), (9, 18), (8, 16), (7, 14), (6, 12), (5, 10), (4, 8), (3, 6), (2, 4), (1, 2), (0, 0)],
