@@ -522,6 +522,7 @@ public static class AlertsRegistration
         services.AddSingleton<AlertsStatus>();
         services.AddSingleton<AlertDispatcher>();
         services.AddSingleton<PushoverSounds>();
+        services.AddSingleton<PushoverDevices>();
         services.AddSingleton<CalendarAlertWorker>();
         services.AddHostedService(provider => provider.GetRequiredService<CalendarAlertWorker>());
 

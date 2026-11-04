@@ -689,3 +689,18 @@ export function formatClock(iso: string, timeZone: string): string {
   }
   return format.format(new Date(iso));
 }
+
+/** The devices Pushover delivers to. Known is false when Pushover could not be asked. */
+export type PushoverDevicesView = { known: boolean; devices: string[] };
+
+export async function fetchPushoverDevices(): Promise<PushoverDevicesView | null> {
+  try {
+    const response = await fetch("/api/alerts/pushover", {
+      credentials: "same-origin",
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as PushoverDevicesView;
+  } catch {
+    return null;
+  }
+}

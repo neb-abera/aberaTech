@@ -197,6 +197,60 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     public static bool IsReceipt(string? value) =>
         value is { Length: > 0 and <= MaxReceiptLength } && value.All(char.IsAsciiLetterOrDigit);
 
+    public const string ValidateEndpoint = "https://api.pushover.net/1/users/validate.json";
+
+    /// <summary>
+    /// The names of the devices that receive messages for the user key.
+    /// Empty when Pushover says the user has no active device, which is what
+    /// it says once the app's trial ends without a licence or the phone signs
+    /// out. Null when Pushover cannot be reached or answers otherwise. The
+    /// form carries the keys in the body, never the URL.
+    /// </summary>
+    public async Task<IReadOnlyList<string>?> DevicesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["token"] = options.PushoverAppToken ?? "",
+                ["user"] = options.PushoverUserKey ?? ""
+            });
+            using var response = await http.PostAsync(ValidateEndpoint, content, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (body.Length > 16_384) return null;
+            using var json = JsonDocument.Parse(body);
+            var root = json.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return null;
+            if (root.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Array
+                && errors.EnumerateArray().Any(error => error.ValueKind == JsonValueKind.String
+                                                        && error.GetString()!.Contains("no active devices", StringComparison.OrdinalIgnoreCase)))
+            {
+                return [];
+            }
+
+            if (!response.IsSuccessStatusCode
+                || !root.TryGetProperty("devices", out var devices)
+                || devices.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            return [.. devices.EnumerateArray().Where(device => device.ValueKind == JsonValueKind.String).Select(device => device.GetString()!).Take(20)];
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// The account's sound list as name and description, in Pushover's
     /// order. Null when Pushover cannot be reached or answers with anything

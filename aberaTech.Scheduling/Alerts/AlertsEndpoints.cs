@@ -68,6 +68,13 @@ public static class AlertsEndpoints
         // Pushover's acknowledgement callback: anonymous, checked with Pushover itself.
         routes.MapPushoverCallback();
 
+        // The devices Pushover delivers to. Empty means every Pushover
+        // message goes nowhere, though Pushover answers each send with success.
+        shared.MapGet("/pushover", async (PushoverDevices pushover, CancellationToken cancellationToken) =>
+            await pushover.CurrentAsync(cancellationToken) is { } names
+                ? Results.Ok(new PushoverView(true, names))
+                : Results.Ok(new PushoverView(false, [])));
+
         shared.MapGet("/status", async (AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
             Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken)));
 
@@ -1111,6 +1118,9 @@ public static class AlertsEndpoints
     /// lists their rings from the one ringing now to 24 hours ahead.
     /// Countdowns lists every countdown by target and label.
     /// </summary>
+    /// <summary>Known is false when Pushover could not be asked.</summary>
+    public sealed record PushoverView(bool Known, IReadOnlyList<string> Devices);
+
     public sealed record AlertsState(
         bool Configured,
         string TimeZone,
