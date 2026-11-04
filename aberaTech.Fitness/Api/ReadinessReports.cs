@@ -122,6 +122,7 @@ internal static class ReadinessReports
         // The fitness test, scored on the published tables.
         var aftResults = evidence.AftResults.Select(r => Score(r, row, today)).ToArray();
         AftMeasurements(aftResults, since, latestWeight, measurements, histories);
+        FbiMeasurements(evidence.FbiResults ?? [], measurements, histories);
 
         // Body composition, and what the selection cohort made of it.
         var body = BodyReport(evidence.BodyMetrics, since, measurements, histories);
@@ -449,6 +450,50 @@ internal static class ReadinessReports
     /// measurement window says so in its evidence, because a gate scored from a
     /// months-old card is a different thing from one scored from last week's.
     /// </summary>
+    /// <summary>
+    /// The FBI test's events as measurements: the latest result for each event
+    /// that was run. A test outranks a training set and the model.
+    /// </summary>
+    internal static void FbiMeasurements(
+        IReadOnlyList<FbiResult> results,
+        Dictionary<string, Measurement> measurements,
+        Dictionary<string, List<DatedValue>>? histories = null)
+    {
+        void Event(string metric, Func<FbiResult, double?> read, bool lowerIsBetter)
+        {
+            foreach (var result in results)
+            {
+                if (read(result) is { } value && histories is not null) Record(histories, metric, result.Date, value);
+            }
+
+            if (results.FirstOrDefault(r => read(r) is not null) is not { } latest) return;
+
+            // Better of the test and a measured training PR (a pull-up to
+            // standard counts); a modelled value always gives way.
+            Prefer(measurements, metric, read(latest)!.Value, lowerIsBetter, Text($"FBI PFT of {latest.Date:yyyy-MM-dd}"), latest.Date);
+        }
+
+        Event(SelectionReadiness.Metrics.PullUps, r => r.PullUps, lowerIsBetter: false);
+        Event(SelectionReadiness.Metrics.Sprint300m, r => r.Sprint300mSeconds, lowerIsBetter: true);
+        Event(SelectionReadiness.Metrics.PushUps, r => r.PushUps, lowerIsBetter: false);
+        Event(SelectionReadiness.Metrics.RunOneAndHalfMile, r => r.Run1_5MileSeconds, lowerIsBetter: true);
+    }
+
+    /// <summary>One FBI test with its points, the events not run left out of the total.</summary>
+    internal static FbiResultDto ScoreFbi(FbiResult result, bool female)
+    {
+        int? Points(FbiEvent fbiEvent, double? raw) => raw is { } r ? Fbi.Points(fbiEvent, r, female) : null;
+        var pull = Points(FbiEvent.PullUps, result.PullUps);
+        var sprint = Points(FbiEvent.Sprint300m, result.Sprint300mSeconds);
+        var push = Points(FbiEvent.PushUps, result.PushUps);
+        var run = Points(FbiEvent.Run1_5Mile, result.Run1_5MileSeconds);
+        int?[] all = [pull, sprint, push, run];
+        return new FbiResultDto(
+            result.Id, result.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            result.PullUps, result.Sprint300mSeconds, result.PushUps, result.Run1_5MileSeconds,
+            pull, sprint, push, run, all.Sum(p => p ?? 0), all.Count(p => p is not null));
+    }
+
     internal static void AftMeasurements(
         IReadOnlyList<AftResultDto> results,
         LocalDate since,

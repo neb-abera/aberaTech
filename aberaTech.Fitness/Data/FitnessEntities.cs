@@ -161,6 +161,26 @@ public class AftResult
     public double TwoMileSeconds { get; set; }
 }
 
+/// <summary>
+/// One FBI Physical Fitness Test, as taken. An event left blank was not
+/// run. FBI push-ups are their own technique, so only this sets them
+/// (Neb, 2026-11-04).
+/// </summary>
+public class FbiResult
+{
+    public Guid Id { get; set; }
+
+    public LocalDate Date { get; set; }
+
+    public int? PullUps { get; set; }
+
+    public double? Sprint300mSeconds { get; set; }
+
+    public int? PushUps { get; set; }
+
+    public double? Run1_5MileSeconds { get; set; }
+}
+
 /// <summary>A dated bodyweight observation. Entered by hand; nutrition lives elsewhere.</summary>
 public class BodyMetric
 {

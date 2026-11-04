@@ -940,6 +940,32 @@ export async function saveAftResult(
   return (await response.json()) as AftResult;
 }
 
+/** An FBI test as entered: a blank event was not run. */
+export interface FbiResultUpdate {
+  date: string;
+  pullUps: number | null;
+  sprint300mSeconds: number | null;
+  pushUps: number | null;
+  run1_5MileSeconds: number | null;
+}
+
+export interface FbiResult extends FbiResultUpdate {
+  id: string;
+  pullUpPoints: number | null;
+  sprintPoints: number | null;
+  pushUpPoints: number | null;
+  runPoints: number | null;
+  total: number;
+  eventsRun: number;
+}
+
+export async function saveFbiResult(
+  update: FbiResultUpdate,
+): Promise<FbiResult> {
+  const response = await send("/api/fitness/fbi", "POST", update);
+  return (await response.json()) as FbiResult;
+}
+
 export async function deleteAftResult(id: string): Promise<void> {
   const response = await fetch(`/api/fitness/aft/${encodeURIComponent(id)}`, {
     method: "DELETE",

@@ -34,6 +34,7 @@ import {
 } from "../core/api";
 import { formatSeconds, lbToKg } from "../core/format";
 import AftEntry from "./AftEntry";
+import FbiEntry from "./FbiEntry";
 import LoadField from "./LoadField";
 import ProfileCard from "./ProfileCard";
 
@@ -256,6 +257,7 @@ export default function DataPanel({
       {/* A fitness test is a measurement the goals rank above the
           model with. */}
       <AftEntry onSaved={onDataChanged} />
+      <FbiEntry onSaved={onDataChanged} />
 
       <Card variant="outlined">
         <CardContent>

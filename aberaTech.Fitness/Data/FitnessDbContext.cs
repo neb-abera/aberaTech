@@ -11,6 +11,7 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<AthleteSettings> Settings => Set<AthleteSettings>();
     public DbSet<LockedPrediction> Predictions => Set<LockedPrediction>();
     public DbSet<AftResult> AftResults => Set<AftResult>();
+    public DbSet<FbiResult> FbiResults => Set<FbiResult>();
     public DbSet<Lap> Laps => Set<Lap>();
     public DbSet<SyncState> SyncStates => Set<SyncState>();
     public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
@@ -66,6 +67,10 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
 
         // One test per day; a second entry that day is a correction.
         modelBuilder.Entity<AftResult>()
+            .HasIndex(r => r.Date)
+            .IsUnique();
+
+        modelBuilder.Entity<FbiResult>()
             .HasIndex(r => r.Date)
             .IsUnique();
 

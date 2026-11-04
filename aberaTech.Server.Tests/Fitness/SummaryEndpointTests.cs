@@ -91,13 +91,14 @@ public sealed class SummaryEndpointTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         // Settings, the weigh-ins, the activities with their laps, the
-        // strength sets, the fitness tests and the ledger: one each. It was
-        // eighteen, most of them re-reading the same activities.
-        Assert.Equal(6, _app.Commands.Count);
+        // strength sets, the AFT results, the FBI results and the ledger:
+        // one each. It was eighteen, most of them re-reading the same
+        // activities.
+        Assert.Equal(7, _app.Commands.Count);
     }
 
     [Theory]
-    [InlineData("/api/fitness/digest", 6)]
+    [InlineData("/api/fitness/digest", 7)]
     public async Task The_pages_written_from_the_same_log_read_it_once_too(string path, int commands)
     {
         await _app.SeedAsync(FitnessSeed.AthleteAsync);

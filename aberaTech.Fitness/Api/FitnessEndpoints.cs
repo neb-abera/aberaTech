@@ -370,6 +370,50 @@ public static class FitnessEndpoints
             return Results.Ok(ReadinessReports.Score(existing, row, today));
         });
 
+        // The FBI test, entered by hand like the AFT. The only source for FBI
+        // push-ups: training push-ups are a different technique.
+        api.MapPost("/fbi", async (FbiResultUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var date = ParseDate(update.Date);
+            if (date is null) return Fail("A test needs a date.");
+            if (update is { PullUps: null, Sprint300mSeconds: null, PushUps: null, Run1_5MileSeconds: null })
+            {
+                return Fail("Enter at least one event.");
+            }
+
+            if (update.PullUps is < 0 or > 100 || update.PushUps is < 0 or > 200
+                || update.Sprint300mSeconds is < 30 or > 180 || update.Run1_5MileSeconds is < 300 or > 1800)
+            {
+                return Fail("One of those results is outside anything the tables score.");
+            }
+
+            var existing = await database.FbiResults.SingleOrDefaultAsync(r => r.Date == date, cancellationToken);
+            if (existing is null)
+            {
+                existing = new FbiResult { Id = Guid.NewGuid(), Date = date.Value };
+                database.FbiResults.Add(existing);
+            }
+
+            existing.PullUps = update.PullUps;
+            existing.Sprint300mSeconds = update.Sprint300mSeconds;
+            existing.PushUps = update.PushUps;
+            existing.Run1_5MileSeconds = update.Run1_5MileSeconds;
+            await database.SaveChangesAsync(cancellationToken);
+
+            var row = await database.Settings.AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
+            return Results.Ok(ReadinessReports.ScoreFbi(existing, row?.Female ?? false));
+        });
+
+        api.MapDelete("/fbi/{id:guid}", async (Guid id, FitnessDbContext database, CancellationToken cancellationToken) =>
+        {
+            var existing = await database.FbiResults.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (existing is null) return Results.NotFound();
+
+            database.FbiResults.Remove(existing);
+            await database.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
+        });
+
         api.MapDelete("/aft/{id:guid}", async (Guid id, FitnessDbContext database, CancellationToken cancellationToken) =>
         {
             var existing = await database.AftResults.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);

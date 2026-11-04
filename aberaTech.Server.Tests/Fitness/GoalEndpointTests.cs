@@ -187,6 +187,31 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task An_fbi_test_sets_the_fbi_push_ups_and_scores_the_events_run()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var client = app.Factory.CreateClient();
+
+        var saved = await client.PostAsJsonAsync("/api/fitness/fbi",
+            new { date = "2026-06-10", pullUps = (int?)null, sprint300mSeconds = 44.1, pushUps = 52, run1_5MileSeconds = (double?)null });
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var result = await saved.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(2, result.GetProperty("eventsRun").GetInt32());
+        Assert.Equal(5, result.GetProperty("pushUpPoints").GetInt32());
+
+        var goals = await GoalsAsync(app);
+        var fbi = goals.GetProperty("sections").EnumerateArray().Single(s => s.GetProperty("test").GetString() == "fbi");
+        var pushUps = fbi.GetProperty("rows").EnumerateArray().Single(r => r.GetProperty("label").GetString() == "Push-ups");
+        Assert.Equal(52, pushUps.GetProperty("current").GetProperty("value").GetDouble());
+        Assert.Equal("Measured", pushUps.GetProperty("current").GetProperty("basis").GetString());
+        Assert.Equal(5, pushUps.GetProperty("pointsNow").GetInt32());
+
+        var empty = await client.PostAsJsonAsync("/api/fitness/fbi", new { date = "2026-06-11" });
+        Assert.Equal(HttpStatusCode.BadRequest, empty.StatusCode);
+    }
+
+    [Fact]
     public async Task Each_event_shows_every_published_standard_with_its_source_and_level()
     {
         using var app = App();
