@@ -691,7 +691,11 @@ export function formatClock(iso: string, timeZone: string): string {
 }
 
 /** The devices Pushover delivers to. Known is false when Pushover could not be asked. */
-export type PushoverDevicesView = { known: boolean; devices: string[] };
+export type PushoverDevicesView = {
+  known: boolean;
+  devices: string[];
+  licensed: boolean;
+};
 
 export async function fetchPushoverDevices(): Promise<PushoverDevicesView | null> {
   try {

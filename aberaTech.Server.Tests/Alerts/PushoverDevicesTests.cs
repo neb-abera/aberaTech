@@ -11,7 +11,7 @@ namespace aberaTech.Server.Tests.Alerts;
 /// </summary>
 public sealed class PushoverDevicesTests
 {
-    private static async Task<(IReadOnlyList<string>? Devices, RecordingHandler Handler)> Read(HttpStatusCode status, string body)
+    private static async Task<(PushoverAccount? Devices, RecordingHandler Handler)> Read(HttpStatusCode status, string body)
     {
         var handler = new RecordingHandler(() => RecordingHandler.Text(status, body, "application/json"));
         var services = new ServiceCollection();
@@ -24,8 +24,9 @@ public sealed class PushoverDevicesTests
     [Fact]
     public async Task A_valid_user_lists_its_devices_and_the_keys_go_in_the_body()
     {
-        var (devices, handler) = await Read(HttpStatusCode.OK, "{\"status\":1,\"group\":0,\"devices\":[\"iphone17pro\"],\"request\":\"r\"}");
-        Assert.Equal(["iphone17pro"], devices);
+        var (devices, handler) = await Read(HttpStatusCode.OK, "{\"status\":1,\"group\":0,\"devices\":[\"iphone17pro\"],\"licenses\":[\"iOS\"],\"request\":\"r\"}");
+        Assert.Equal(["iphone17pro"], devices!.Devices);
+        Assert.True(devices.Licensed);
         var sent = Assert.Single(handler.Requests);
         Assert.Equal(PushoverClient.ValidateEndpoint, sent.Url.ToString());
         Assert.Equal("user", sent.Form["user"]);
@@ -38,7 +39,15 @@ public sealed class PushoverDevicesTests
             HttpStatusCode.BadRequest,
             "{\"user\":\"valid, but has no active devices\",\"devices\":[],\"errors\":[\"user is valid but has no active devices\"],\"status\":0,\"request\":\"r\"}");
         Assert.NotNull(devices);
-        Assert.Empty(devices);
+        Assert.Empty(devices.Devices);
+    }
+
+    [Fact]
+    public async Task A_device_with_no_licence_is_on_the_trial()
+    {
+        var (devices, _) = await Read(HttpStatusCode.OK, "{\"status\":1,\"devices\":[\"iphone\"],\"licenses\":[],\"request\":\"r\"}");
+        Assert.Equal(["iphone"], devices!.Devices);
+        Assert.False(devices.Licensed);
     }
 
     [Fact]

@@ -71,9 +71,9 @@ public static class AlertsEndpoints
         // The devices Pushover delivers to. Empty means every Pushover
         // message goes nowhere, though Pushover answers each send with success.
         shared.MapGet("/pushover", async (PushoverDevices pushover, CancellationToken cancellationToken) =>
-            await pushover.CurrentAsync(cancellationToken) is { } names
-                ? Results.Ok(new PushoverView(true, names))
-                : Results.Ok(new PushoverView(false, [])));
+            await pushover.CurrentAsync(cancellationToken) is { } account
+                ? Results.Ok(new PushoverView(true, account.Devices, account.Licensed))
+                : Results.Ok(new PushoverView(false, [], false)));
 
         shared.MapGet("/status", async (AlertsStatus status, PushoverSounds sounds, IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
             Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken)));
@@ -1119,7 +1119,7 @@ public static class AlertsEndpoints
     /// Countdowns lists every countdown by target and label.
     /// </summary>
     /// <summary>Known is false when Pushover could not be asked.</summary>
-    public sealed record PushoverView(bool Known, IReadOnlyList<string> Devices);
+    public sealed record PushoverView(bool Known, IReadOnlyList<string> Devices, bool Licensed);
 
     public sealed record AlertsState(
         bool Configured,

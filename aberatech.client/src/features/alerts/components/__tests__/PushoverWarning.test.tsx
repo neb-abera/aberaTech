@@ -5,7 +5,9 @@ import PushoverWarning from "../PushoverWarning";
 
 afterEach(() => cleanup());
 
-const show = async (answer: { known: boolean; devices: string[] } | null) => {
+const show = async (
+  answer: { known: boolean; devices: string[]; licensed: boolean } | null,
+) => {
   await act(async () => {
     render(<PushoverWarning read={async () => answer} />);
   });
@@ -13,15 +15,20 @@ const show = async (answer: { known: boolean; devices: string[] } | null) => {
 
 describe("Pushover warning", () => {
   it("says so when Pushover has no device", async () => {
-    await show({ known: true, devices: [] });
+    await show({ known: true, devices: [], licensed: false });
     expect(screen.getByText("Pushover has no device")).toBeTruthy();
   });
 
-  it("says nothing with a device, or when Pushover could not be asked", async () => {
-    await show({ known: true, devices: ["iphone"] });
+  it("warns while the device is on the trial", async () => {
+    await show({ known: true, devices: ["iphone"], licensed: false });
+    expect(screen.getByText("Pushover is on its 30-day trial")).toBeTruthy();
+  });
+
+  it("says nothing with a licensed device, or when Pushover could not be asked", async () => {
+    await show({ known: true, devices: ["iphone"], licensed: true });
     expect(screen.queryByText("Pushover has no device")).toBeNull();
     cleanup();
-    await show({ known: false, devices: [] });
+    await show({ known: false, devices: [], licensed: false });
     expect(screen.queryByText("Pushover has no device")).toBeNull();
     cleanup();
     await show(null);

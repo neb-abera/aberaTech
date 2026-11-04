@@ -74,6 +74,13 @@ public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? Expi
 /// A timeout is not: the first request may have been delivered, and one
 /// alert means one.
 /// </remarks>
+/// <summary>
+/// The devices Pushover delivers to, and whether the account holds a licence.
+/// A device with no licence is on Pushover's 30-day trial, and Pushover stops
+/// delivering to it when the trial ends.
+/// </summary>
+public sealed record PushoverAccount(IReadOnlyList<string> Devices, bool Licensed);
+
 public sealed class PushoverClient(HttpClient http, AlertsOptions options)
 {
     public const string Endpoint = "https://api.pushover.net/1/messages.json";
@@ -206,7 +213,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// out. Null when Pushover cannot be reached or answers otherwise. The
     /// form carries the keys in the body, never the URL.
     /// </summary>
-    public async Task<IReadOnlyList<string>?> DevicesAsync(CancellationToken cancellationToken)
+    public async Task<PushoverAccount?> DevicesAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -225,7 +232,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
                 && errors.EnumerateArray().Any(error => error.ValueKind == JsonValueKind.String
                                                         && error.GetString()!.Contains("no active devices", StringComparison.OrdinalIgnoreCase)))
             {
-                return [];
+                return new PushoverAccount([], false);
             }
 
             if (!response.IsSuccessStatusCode
@@ -235,7 +242,12 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
                 return null;
             }
 
-            return [.. devices.EnumerateArray().Where(device => device.ValueKind == JsonValueKind.String).Select(device => device.GetString()!).Take(20)];
+            var licensed = root.TryGetProperty("licenses", out var licenses)
+                           && licenses.ValueKind == JsonValueKind.Array
+                           && licenses.GetArrayLength() > 0;
+            return new PushoverAccount(
+                [.. devices.EnumerateArray().Where(device => device.ValueKind == JsonValueKind.String).Select(device => device.GetString()!).Take(20)],
+                licensed);
         }
         catch (HttpRequestException)
         {
