@@ -163,6 +163,10 @@ export default function PhonesSection({
         drop it, most of all after the app is swiped away, so the phone also
         updates when opened and in the background.
       </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+        A phone that has not checked in for 12 hours gets one Pushover warning
+        that names it. It may be off, out of battery, or missing the app.
+      </Typography>
       {pushMissing.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
           Pushes are off. The server is missing {pushMissing.join(", ")}.

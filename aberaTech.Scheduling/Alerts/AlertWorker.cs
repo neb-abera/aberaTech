@@ -325,6 +325,15 @@ public sealed class CalendarAlertWorker(
                 }
             }
 
+            try
+            {
+                await PhoneWatch.CheckAsync(scopes, settings, status.Snapshot().Zone, clock.GetCurrentInstant(), logger, cancellationToken);
+            }
+            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogWarning("The quiet phone check failed ({Failure}).", exception.GetType().Name);
+            }
+
             now = clock.GetCurrentInstant();
             var next = _lastRead.Value + settings.Poll;
             foreach (var alert in plan)
