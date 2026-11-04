@@ -202,14 +202,17 @@ internal static class GoalReports
             : null;
 
         int? pointsNow = null, pointsGoal = null;
+
+        // A training set is a floor for the test, so it is not scored as one.
+        var scored = current is { Basis: not Basis.Training } ? current : null;
         if (test == AftTest && definition.Aft is { } aftEvent)
         {
-            pointsNow = current is not null ? Aft.Points(aftEvent, current.Value, ageNow, female) : null;
+            pointsNow = scored is not null ? Aft.Points(aftEvent, scored.Value, ageNow, female) : null;
             pointsGoal = goal is { } ag ? Aft.Points(aftEvent, ag, ageThen, female) : null;
         }
         else if (test == FbiTest && definition.FbiEvent is { } fbiEvent)
         {
-            pointsNow = current is not null ? Fbi.Points(fbiEvent, current.Value, female) : null;
+            pointsNow = scored is not null ? Fbi.Points(fbiEvent, scored.Value, female) : null;
             pointsGoal = goal is { } fg ? Fbi.Points(fbiEvent, fg, female) : null;
         }
 

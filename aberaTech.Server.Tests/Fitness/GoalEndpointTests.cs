@@ -135,6 +135,35 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task A_training_set_is_a_floor_for_the_test_and_earns_no_points()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        await app.SeedAsync(database =>
+        {
+            var session = new Activity
+            {
+                Id = Guid.NewGuid(),
+                Source = "hevy",
+                Sport = "strength",
+                Name = "Upper",
+                StartedAt = FitnessApp.Now - Duration.FromDays(1),
+                DurationSeconds = 1800
+            };
+            database.Activities.Add(session);
+            database.StrengthSets.Add(new StrengthSet { Id = Guid.NewGuid(), ActivityId = session.Id, Exercise = "Push Up", SetIndex = 0, WeightKg = 0, Reps = 12 });
+            return Task.CompletedTask;
+        });
+        var goals = await GoalsAsync(app);
+
+        var fbi = goals.GetProperty("sections").EnumerateArray().Single(s => s.GetProperty("test").GetString() == "fbi");
+        var pushUps = fbi.GetProperty("rows").EnumerateArray().Single(r => r.GetProperty("label").GetString() == "Push-ups");
+
+        Assert.Equal("Training", pushUps.GetProperty("current").GetProperty("basis").GetString());
+        Assert.Equal(JsonValueKind.Null, pushUps.GetProperty("pointsNow").ValueKind);
+    }
+
+    [Fact]
     public async Task Each_event_shows_every_published_standard_with_its_source_and_level()
     {
         using var app = App();

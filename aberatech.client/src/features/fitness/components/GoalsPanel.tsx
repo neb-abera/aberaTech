@@ -101,7 +101,9 @@ export function latestDetail(
   const kind =
     current.basis === "Modeled"
       ? "Modelled, not done as this event"
-      : "Measured";
+      : current.basis === "Training"
+        ? "From training, a floor for the test and not a test result"
+        : "Measured";
   if (!current.on) return `${kind}: ${current.evidence}.`;
   const date = new Date(`${current.on}T12:00:00`).toLocaleDateString("en-US", {
     day: "numeric",
@@ -152,10 +154,13 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 sx={{ cursor: "help" }}
               >
                 {formatGoalValue(row.unit, row.current.value)}
-                {row.current.basis === "Modeled" ? (
+                {row.current.basis === "Modeled" ||
+                row.current.basis === "Training" ? (
                   <Chip
                     size="small"
-                    label="modelled"
+                    label={
+                      row.current.basis === "Modeled" ? "modelled" : "training"
+                    }
                     variant="outlined"
                     sx={{ ml: 0.5, height: 20 }}
                   />
@@ -230,10 +235,12 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
           ) : null}
         </TableCell>
       </TableRow>
-      {forecast ? (
+      {/* The drawer row exists only while open: a closed one still took the
+          table's cell padding, 9 px a goal and 171 px across nineteen. */}
+      {forecast && open ? (
         <TableRow>
           <TableCell colSpan={4} sx={{ py: 0, px: 0 }}>
-            <Collapse in={open} unmountOnExit>
+            <Collapse in={open} appear>
               <Box id={detailId} sx={{ py: 1.5 }}>
                 <Typography variant="body2">
                   {forecast.projected !== null

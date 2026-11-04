@@ -7,7 +7,14 @@ namespace aberaTech.Fitness.Domain;
 public enum Basis
 {
     Measured,
-    Modeled
+    Modeled,
+
+    /// <summary>
+    /// The best set or effort in training: a floor for the test, not a test
+    /// result, so it earns no test points. On 2026-11-04 a 12-rep set of
+    /// push-ups scored -2 FBI points as if it were the one-minute test.
+    /// </summary>
+    Training
 }
 
 /// <summary>The athlete's current standing on one metric.</summary>

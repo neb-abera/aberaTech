@@ -269,8 +269,8 @@ internal static class ReadinessReports
 
             latest.Add(new BestSetDto(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), metric, point.Value));
             measurements[metric] = new Measurement(
-                metric, point.Value, Basis.Measured,
-                Text($"best set in the strength log, {point.Date:yyyy-MM-dd}"), point.Date);
+                metric, point.Value, Basis.Training,
+                Text($"best set in training, {point.Date:yyyy-MM-dd}: a floor for the test, not a test result"), point.Date);
         }
 
         return new CalisthenicsDto(
