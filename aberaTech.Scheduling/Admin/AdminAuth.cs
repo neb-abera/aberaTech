@@ -11,6 +11,9 @@ namespace aberaTech.Scheduling.Admin;
 /// <summary>Google sign-in, narrowed to the accounts that may run the queue.</summary>
 public static class AdminAuth
 {
+    /// <summary>How long an owner session lasts without a request; each request renews it.</summary>
+    public static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(14);
+
     public const string PolicyName = "scheduling-admin";
 
     public const string SignInPath = "/api/scheduling/admin/sign-in";
@@ -71,13 +74,22 @@ public static class AdminAuth
                 // it.
                 cookie.Cookie.SameSite = SameSiteMode.Strict;
 
-                cookie.ExpireTimeSpan = TimeSpan.FromHours(12);
+                // A persistent cookie with a 14-day sliding life. Until
+                // 2026-11-04 the sign-in was a session cookie with no expiry,
+                // so a browser restart signed the owner out: the box's
+                // Chrome lost it three times that day. Sign-out still ends
+                // every session on the server through the session version.
+                cookie.ExpireTimeSpan = SessionLifetime;
                 cookie.SlidingExpiration = true;
 
                 // Sign-out ends the session on the server as well as in the
                 // browser. Each ticket carries the account's session version
                 // and every request checks it (AdminSessions.cs).
-                cookie.Events.OnSigningIn = AdminSessions.StampAsync;
+                cookie.Events.OnSigningIn = context =>
+                {
+                    context.Properties.IsPersistent = true;
+                    return AdminSessions.StampAsync(context);
+                };
                 cookie.Events.OnValidatePrincipal = AdminSessions.ValidateAsync;
 
                 // An API, so both failure modes are status codes rather than
