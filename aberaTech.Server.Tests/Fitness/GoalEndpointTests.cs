@@ -135,6 +135,28 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task Each_event_shows_every_published_standard_with_its_source_and_level()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var goals = await GoalsAsync(app);
+
+        var rows = goals.GetProperty("sections").EnumerateArray()
+            .SelectMany(s => s.GetProperty("rows").EnumerateArray())
+            .ToDictionary(r => r.GetProperty("label").GetString()!);
+
+        // The pull-up goal is Evoke's 15; the FBI's 10-point row is 20 for men.
+        var pullUps = Assert.Single(rows["Pull-ups"].GetProperty("standards").EnumerateArray());
+        Assert.Equal("FBI", pullUps.GetProperty("source").GetString());
+        Assert.Equal("max (10 pts)", pullUps.GetProperty("level").GetString());
+        Assert.Equal(20, pullUps.GetProperty("value").GetDouble());
+
+        // An AFT event carries the Army's 100-point standard for the due-date age band.
+        var pushUps = Assert.Single(rows["HR pushups"].GetProperty("standards").EnumerateArray());
+        Assert.Equal("AFT", pushUps.GetProperty("source").GetString());
+    }
+
+    [Fact]
     public async Task A_lift_the_workbook_does_not_name_appears_nowhere()
     {
         using var app = App();

@@ -968,6 +968,16 @@ export interface GoalRow {
   pointsGoal: number | null;
   forecast: GoalForecast | null;
   note: string | null;
+  /** Published standards for the same event, each named by its source and level. */
+  standards?: GoalStandard[] | null;
+}
+
+/** An outside standard: the FBI's or the Army's, at a named level. */
+export interface GoalStandard {
+  source: string;
+  level: string;
+  value: number;
+  note: string;
 }
 
 /** One group of rows, or a test scored the way its graders score it. */

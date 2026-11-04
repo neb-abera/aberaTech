@@ -762,7 +762,10 @@ public static class FitnessReports
             a.DurationSeconds,
             a.AverageHr,
             a.Indoor,
-            a.Laps.OrderBy(l => l.Index).Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr)).ToArray()));
+            a.Laps.OrderBy(l => l.Index).Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr)).ToArray(),
+            a.FirstHalfHr is { } first && a.SecondHalfHr is { } second
+                ? new RecordingHalves(first, second, a.FirstHalfMetersPerSecond, a.SecondHalfMetersPerSecond)
+                : null));
 
         var bands = Bands(row);
         var tests = FieldTests.Detect(candidates, bands, row.StartVdot);

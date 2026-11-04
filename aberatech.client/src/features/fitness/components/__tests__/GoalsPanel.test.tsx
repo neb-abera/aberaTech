@@ -15,6 +15,7 @@ import GoalsPanel, {
   goalTag,
   latestDetail,
   splitByRows,
+  standardLabel,
 } from "../GoalsPanel";
 
 afterEach(() => {
@@ -313,5 +314,15 @@ describe("columns", () => {
     ).toBe(
       "Modelled, not done as this event Apr 3, 2026 (214 days ago): modelled from your VDOT 37.5 anchor of 2026-04-03.",
     );
+  });
+
+  it("labels each outside standard by its source and level", () => {
+    const pullUps = {
+      ...row({ row: 30, label: "Pull-ups", goal: 15 }),
+      unit: "reps",
+    } as GoalRow;
+    const fbi = { source: "FBI", level: "max (10 pts)", value: 20, note: "" };
+    expect(standardLabel(pullUps, fbi)).toBe("FBI max 20");
+    expect(standardLabel({ ...pullUps, goal: 20 }, fbi)).toBe("FBI max");
   });
 });

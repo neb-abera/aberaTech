@@ -167,7 +167,8 @@ export default function ThresholdsCard({
           <li>
             On a treadmill at 2%, run 60 minutes without touching the speed or
             incline. Outdoors, run 30 to 45 minutes on a track or flat loop,
-            never an out-and-back. Keep auto-lap on.
+            never an out-and-back. No laps needed: the page splits the recording
+            in half itself.
           </li>
           <li>
             The drift between the halves is the verdict. 5% or less: that heart

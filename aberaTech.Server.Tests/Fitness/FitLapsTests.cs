@@ -83,4 +83,33 @@ public sealed class FitLapsTests
     {
         Assert.Equal(expected, FitImport.IsIndoor(subSport));
     }
+
+    [Fact]
+    public void The_recording_is_split_at_its_midpoint_into_two_halves()
+    {
+        // An hour, one record a second: 140 bpm and 3.0 m/s for the first
+        // half, 146 bpm and 2.9 m/s for the second.
+        var start = new System.DateTime(2026, 11, 16, 6, 0, 0, DateTimeKind.Utc);
+        var records = new List<RecordMesg>();
+        var meters = 0.0;
+        for (var second = 0; second <= 3600; second++)
+        {
+            var first = second < 1800;
+            var record = new RecordMesg();
+            record.SetTimestamp(new Dynastream.Fit.DateTime(start.AddSeconds(second)));
+            record.SetHeartRate((byte)(first ? 140 : 146));
+            record.SetDistance((float)meters);
+            records.Add(record);
+            meters += first ? 3.0 : 2.9;
+        }
+
+        var activity = new aberaTech.Fitness.Data.Activity { Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "" };
+        FitImport.Halves(records, activity);
+
+        Assert.Equal(140, activity.FirstHalfHr!.Value, precision: 1);
+        Assert.Equal(146, activity.SecondHalfHr!.Value, precision: 1);
+        Assert.Equal(3.0, activity.FirstHalfMetersPerSecond!.Value, precision: 2);
+        Assert.Equal(2.9, activity.SecondHalfMetersPerSecond!.Value, precision: 2);
+    }
 }
+

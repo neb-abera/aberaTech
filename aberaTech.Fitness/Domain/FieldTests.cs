@@ -12,7 +12,11 @@ public sealed record FieldTestRun(
     double Seconds,
     int? AverageHr,
     bool? Indoor,
-    IReadOnlyList<LoggedLap> Laps);
+    IReadOnlyList<LoggedLap> Laps,
+    RecordingHalves? Halves = null);
+
+/// <summary>The recording split at its midpoint: each half's average heart rate and speed.</summary>
+public sealed record RecordingHalves(double FirstHr, double SecondHr, double? FirstMetersPerSecond, double? SecondMetersPerSecond);
 
 /// <summary>A field test the log turned out to contain.</summary>
 /// <param name="Kind">aet or threshold.</param>
@@ -126,16 +130,21 @@ public static class FieldTests
         if (!AetName.IsMatch(run.Name)) return null;
 
         var indoor = run.Indoor == true;
-        var drift = indoor ? HeartRateDrift(run.Laps) : Drift(run.Laps);
+
+        // The whole recording first, as Evoke reads it in TrainingPeaks; laps
+        // only for a run imported before the halves were kept.
+        var fromRecording = HalvesDrift(run.Halves, indoor);
+        var drift = fromRecording ?? (indoor ? HeartRateDrift(run.Laps) : Drift(run.Laps));
+        var readFrom = fromRecording is not null ? "read from the full recording" : "read from the laps";
         var pace = run.Seconds / (run.DistanceMeters.Value / 1000.0);
         var how = indoor
             ? "Named as a heart-rate drift test, indoors (drift is the heart-rate rise at a fixed belt speed)"
             : "Named as a heart-rate drift test, outdoors (drift is pace-to-heart-rate decoupling)";
         var verdict = drift switch
         {
-            null => "no laps with two 10-minute halves, so drift could not be read",
-            <= DriftLimit => $"pace-to-HR drift {drift:0.0%}, inside the 5% line: {hr} bpm is at or below your AeT",
-            _ => $"pace-to-HR drift {drift:0.0%}, past the 5% line: {hr} bpm is above your AeT"
+            null => "the file carried neither second-by-second records nor laps, so drift could not be read",
+            <= DriftLimit => $"drift {drift:0.0%} {readFrom}, inside the 5% line: {hr} bpm is at or below your AeT",
+            _ => $"drift {drift:0.0%} {readFrom}, past the 5% line: {hr} bpm is above your AeT"
         };
 
         return new FieldTest(
@@ -248,6 +257,22 @@ public static class FieldTests
 
         var early = SpeedPerBeat(first);
         var late = SpeedPerBeat(second);
+        return (early - late) / early;
+    }
+
+    /// <summary>
+    /// Drift from the recording's two halves. Indoors the belt holds the
+    /// speed, so it is the heart-rate rise. Outdoors it is pace-to-heart-rate
+    /// decoupling: speed per beat in the first half against the second.
+    /// </summary>
+    public static double? HalvesDrift(RecordingHalves? halves, bool indoor)
+    {
+        if (halves is null || halves.FirstHr <= 0 || halves.SecondHr <= 0) return null;
+        if (indoor) return (halves.SecondHr - halves.FirstHr) / halves.FirstHr;
+        if (halves.FirstMetersPerSecond is not > 0 || halves.SecondMetersPerSecond is not > 0) return null;
+
+        var early = halves.FirstMetersPerSecond.Value / halves.FirstHr;
+        var late = halves.SecondMetersPerSecond.Value / halves.SecondHr;
         return (early - late) / early;
     }
 
