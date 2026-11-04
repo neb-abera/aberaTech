@@ -325,4 +325,16 @@ describe("columns", () => {
     expect(standardLabel(pullUps, fbi)).toBe("FBI max 20");
     expect(standardLabel({ ...pullUps, goal: 20 }, fbi)).toBe("FBI max");
   });
+
+  it("tags a goal set at the FBI 10-point mark as FBI max, though its note names Evoke too", () => {
+    expect(
+      goalTag(
+        row({
+          row: 12,
+          label: "Pull-ups",
+          note: "2027 goal 20 is the FBI PFT 10-point mark, the harder standard. Evoke's standard is 15 strict pull-ups (Kuenzle and Johnston).",
+        }),
+      ),
+    ).toBe("FBI max");
+  });
 });
