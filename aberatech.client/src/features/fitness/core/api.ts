@@ -90,6 +90,23 @@ export interface ThresholdSuggestion {
   basis: string;
 }
 
+/** The short-term AeT pace forecast, or what it still needs. */
+export interface AerobicOutlook {
+  ready: boolean;
+  qualifyingWeeks: number;
+  weeksNeeded: number;
+  runsPerWeek: number;
+  referenceHr: number;
+  weeks: { weekStart: string; medianSecPerKm: number; runs: number }[];
+  slopeSecPerKmPerWeek: number | null;
+  ahead: {
+    weeksAhead: number;
+    secPerKm: number;
+    lowSecPerKm: number;
+    highSecPerKm: number;
+  }[];
+}
+
 export interface WeekVolume {
   weekStart: string;
   minutes: number;
@@ -187,6 +204,7 @@ export interface Summary {
   aerobicTrend: AerobicPoint[];
   weeklyVolume: WeekVolume[];
   dailyVolume: DayVolume[];
+  aerobicOutlook?: AerobicOutlook | null;
   strengthTrend: E1RmPoint[];
   highlights: Highlight[];
   trainingPaces: TrainingPace[];
@@ -541,6 +559,18 @@ export const syncHevy = () => runSync("/api/fitness/ingest/hevy/sync");
 
 export const syncIntervalsIcu = () =>
   runSync("/api/fitness/ingest/intervals-icu/sync");
+
+/** Sets only the running hours a week the Goals forecasts assume. */
+export async function saveAvailableHours(hours: number): Promise<void> {
+  const response = await fetch("/api/fitness/settings/available-hours", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hours }),
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+}
 
 export async function saveSettings(update: SettingsUpdate): Promise<void> {
   const response = await fetch("/api/fitness/settings", {

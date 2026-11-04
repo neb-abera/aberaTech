@@ -3040,5 +3040,71 @@
         "citationId": "foster-monotony"
       }
     ]
+  },
+  "aerobicOutlook": {
+    "ready": false,
+    "qualifyingWeeks": 0,
+    "weeksNeeded": 6,
+    "runsPerWeek": 3,
+    "referenceHr": 150,
+    "weeks": [
+      {
+        "weekStart": "2026-03-30",
+        "medianSecPerKm": 347.1625,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-04-06",
+        "medianSecPerKm": 351.0425,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-04-13",
+        "medianSecPerKm": 344.97249999999997,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-04-20",
+        "medianSecPerKm": 341.9125,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-04-27",
+        "medianSecPerKm": 338.8825,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-05-04",
+        "medianSecPerKm": 332.9225,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-05-11",
+        "medianSecPerKm": 336.76750000000004,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-05-18",
+        "medianSecPerKm": 340.5075,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-05-25",
+        "medianSecPerKm": 334.5075,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-06-01",
+        "medianSecPerKm": 331.51750000000004,
+        "runs": 2
+      },
+      {
+        "weekStart": "2026-06-08",
+        "medianSecPerKm": 328.5575,
+        "runs": 2
+      }
+    ],
+    "slopeSecPerKmPerWeek": null,
+    "ahead": []
   }
 }

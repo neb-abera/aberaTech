@@ -22,8 +22,10 @@ import {
   type GoalStandard,
   type Goals,
   oneDriveConnectUrl,
+  saveAvailableHours,
 } from "../core/api";
 import { formatChance, formatSeconds } from "../core/format";
+import { NumberInput } from "./NumberInput";
 
 /** A goal's number in the unit the athlete wrote it in. */
 export function formatGoalValue(unit: string, value: number): string {
@@ -379,7 +381,65 @@ export function splitByRows(sections: GoalSection[]): GoalSection[][] {
   return [sections.slice(0, best), sections.slice(best)];
 }
 
-function SourceLine({ goals }: { goals: Goals }) {
+/**
+ * The running hours a week the forecasts assume, edited where the forecasts
+ * are read. Saving sends the hours alone and reads the goals again.
+ */
+function HoursControl({
+  hours,
+  onSaved,
+}: {
+  hours: number;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = React.useState(hours);
+  const [status, setStatus] = React.useState<string | null>(null);
+  const changed = Math.abs(value - hours) > 1e-9;
+
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+      <Box sx={{ width: 150 }}>
+        <NumberInput
+          label="Running h/week"
+          value={value}
+          min={0}
+          max={40}
+          step={0.5}
+          onCommit={setValue}
+        />
+      </Box>
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={!changed}
+        onClick={() => {
+          setStatus("Saving…");
+          saveAvailableHours(value)
+            .then(() => {
+              setStatus(null);
+              onSaved();
+            })
+            .catch(() => setStatus("Not saved"));
+        }}
+      >
+        Save
+      </Button>
+      {status ? (
+        <Typography variant="caption" color="text.secondary" role="status">
+          {status}
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
+function SourceLine({
+  goals,
+  onHoursSaved,
+}: {
+  goals: Goals;
+  onHoursSaved: () => void;
+}) {
   const { source } = goals;
   if (!source.configured) {
     return (
@@ -413,14 +473,25 @@ function SourceLine({ goals }: { goals: Goals }) {
           {read ? ` Showing the goals as read ${read}.` : ""}
         </Alert>
       ) : null}
-      <Typography variant="body2" color="text.secondary">
-        Goals for {goals.dueOn ?? "the sheet's year"}, read from{" "}
-        {source.origin === "OneDrive"
-          ? "physical fitness goals.xlsx in OneDrive"
-          : "the local workbook"}
-        {read ? ` at ${read}` : ""}. Forecasts assume{" "}
-        {goals.weeklyHours.toFixed(1)} h of running a week, {goals.weekBasis}.
-      </Typography>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Goals for {goals.dueOn ?? "the sheet's year"}, read from{" "}
+          {source.origin === "OneDrive"
+            ? "physical fitness goals.xlsx in OneDrive"
+            : "the local workbook"}
+          {read ? ` at ${read}` : ""}. Forecasts assume the running hours a week
+          at the right.
+        </Typography>
+        <HoursControl
+          key={goals.weeklyHours}
+          hours={goals.weeklyHours}
+          onSaved={onHoursSaved}
+        />
+      </Stack>
     </>
   );
 }
@@ -434,7 +505,10 @@ export default function GoalsPanel() {
   const [goals, setGoals] = React.useState<Goals | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
+  const [version, setVersion] = React.useState(0);
+
   React.useEffect(() => {
+    void version;
     const controller = new AbortController();
     fetchGoals(controller.signal)
       .then(setGoals)
@@ -443,7 +517,7 @@ export default function GoalsPanel() {
         setError(e instanceof Error ? e.message : String(e));
       });
     return () => controller.abort();
-  }, []);
+  }, [version]);
 
   if (error)
     return <Alert severity="error">The goals did not load: {error}</Alert>;
@@ -457,7 +531,7 @@ export default function GoalsPanel() {
 
   return (
     <Stack spacing={2}>
-      <SourceLine goals={goals} />
+      <SourceLine goals={goals} onHoursSaved={() => setVersion((v) => v + 1)} />
       {/* Two columns split by row count, in the sheet's order: the first
           sections down the left until it holds half the rows, the rest down
           the right. Every engine lays this out the same way, which CSS

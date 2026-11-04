@@ -42,22 +42,26 @@ function sent(spy: ReturnType<typeof vi.fn>) {
 }
 
 describe("ProfileCard", () => {
-  it("saves the hours alone, and the anchor race is not sent again", async () => {
+  it("saves the biggest week alone, and the anchor race is not sent again", async () => {
     const fetch = vi
       .fn()
       .mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetch);
     render(<ProfileCard settings={settings} onSaved={() => undefined} />);
 
-    const hours = screen.getByRole("region", { name: "Training hours" });
-    fireEvent.change(within(hours).getByLabelText("Hours you can train"), {
-      target: { value: "8" },
-    });
+    const hours = screen.getByRole("region", { name: "Training history" });
+    fireEvent.change(
+      within(hours).getByLabelText("Biggest week you have held (h)"),
+      {
+        target: { value: "8" },
+      },
+    );
     fireEvent.click(within(hours).getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const body = sent(fetch);
-    expect(body.availableHoursPerWeek).toBe(8);
+    expect(body.sustainedWeeklyHours).toBe(8);
+    expect(body.availableHoursPerWeek).toBe(7);
     expect(body.anchorSeconds).toBeNull();
     expect(body.vdotMeasuredOn).toBe("2026-04-03");
     expect(body.pastPeakSeconds).toBe(765);
