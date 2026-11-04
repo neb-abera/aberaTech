@@ -1,11 +1,13 @@
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { fetchPushoverDevices, type PushoverDevicesView } from "../core/api";
 
 /**
  * A red warning when Pushover has no device to deliver to, and an
- * orange one while its device is on the trial. Pushover answers
+ * orange one while its device is on the trial. Otherwise one line names the
+ * devices it delivers to. Pushover answers
  * every send with success then, so the page's "sent" says nothing about the
  * phone.
  */
@@ -43,5 +45,9 @@ export default function PushoverWarning({
         licence in the Pushover app before then.
       </Alert>
     );
-  return null;
+  return (
+    <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+      Pushover delivers to {view.devices.join(", ")}, licensed.
+    </Typography>
+  );
 }

@@ -25,8 +25,11 @@ describe("Pushover warning", () => {
   });
 
   it("says nothing with a licensed device, or when Pushover could not be asked", async () => {
-    await show({ known: true, devices: ["iphone"], licensed: true });
+    await show({ known: true, devices: ["Neb_iphone"], licensed: true });
     expect(screen.queryByText("Pushover has no device")).toBeNull();
+    expect(
+      screen.getByText("Pushover delivers to Neb_iphone, licensed."),
+    ).toBeTruthy();
     cleanup();
     await show({ known: false, devices: [], licensed: false });
     expect(screen.queryByText("Pushover has no device")).toBeNull();
