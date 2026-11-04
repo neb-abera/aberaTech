@@ -71,6 +71,28 @@ public sealed class ActivityStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task A_fit_file_fills_in_the_export_row_of_the_same_run_and_keeps_its_name()
+    {
+        var summary = Run("garmin-export", "a1", Start, 3600, 10_000);
+        summary.Name = "HR drift test";
+        await UpsertAsync([summary]);
+
+        var file = Run("garmin-fit", $"fit:{Start}", Start, 3600, 10_000);
+        file.FirstHalfHr = 140;
+        file.SecondHalfHr = 146;
+        file.FirstHalfMetersPerSecond = 2.8;
+        file.SecondHalfMetersPerSecond = 2.75;
+        var outcome = await UpsertAsync([file]);
+
+        Assert.Equal(0, outcome.Added);
+        var stored = Assert.Single(await AllAsync());
+        Assert.Equal("garmin-export", stored.Source);
+        Assert.Equal("HR drift test", stored.Name);
+        Assert.Equal(140, stored.FirstHalfHr);
+        Assert.Equal(2.75, stored.SecondHalfMetersPerSecond);
+    }
+
+    [Fact]
     public async Task One_stale_row_is_superseded_once_however_many_records_replace_it()
     {
         await UpsertAsync([Run("garmin-csv", "c1", Start + Duration.FromHours(9), 3600, 10_010)]);

@@ -135,7 +135,7 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task A_training_set_is_a_floor_for_the_test_and_earns_no_points()
+    public async Task Training_push_ups_never_stand_for_a_test_and_a_training_pull_up_to_standard_counts()
     {
         using var app = App();
         await SeedAsync(app);
@@ -151,16 +151,22 @@ public sealed class GoalEndpointTests : IDisposable
                 DurationSeconds = 1800
             };
             database.Activities.Add(session);
+            // Metronome push-ups to failure, then on the knees: training, not the test.
             database.StrengthSets.Add(new StrengthSet { Id = Guid.NewGuid(), ActivityId = session.Id, Exercise = "Push Up", SetIndex = 0, WeightKg = 0, Reps = 12 });
+            database.StrengthSets.Add(new StrengthSet { Id = Guid.NewGuid(), ActivityId = session.Id, Exercise = "Pull Up", SetIndex = 1, WeightKg = 0, Reps = 13 });
             return Task.CompletedTask;
         });
         var goals = await GoalsAsync(app);
 
         var fbi = goals.GetProperty("sections").EnumerateArray().Single(s => s.GetProperty("test").GetString() == "fbi");
-        var pushUps = fbi.GetProperty("rows").EnumerateArray().Single(r => r.GetProperty("label").GetString() == "Push-ups");
+        var rows = fbi.GetProperty("rows").EnumerateArray().ToDictionary(r => r.GetProperty("label").GetString()!);
 
-        Assert.Equal("Training", pushUps.GetProperty("current").GetProperty("basis").GetString());
-        Assert.Equal(JsonValueKind.Null, pushUps.GetProperty("pointsNow").ValueKind);
+        Assert.Equal(JsonValueKind.Null, rows["Push-ups"].GetProperty("current").ValueKind);
+        Assert.Equal(JsonValueKind.Null, rows["Push-ups"].GetProperty("pointsNow").ValueKind);
+
+        var pullUps = rows["Pull-ups"].GetProperty("current");
+        Assert.Equal("Measured", pullUps.GetProperty("basis").GetString());
+        Assert.True(pullUps.GetProperty("value").GetDouble() >= 13);
     }
 
     [Fact]

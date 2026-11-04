@@ -71,6 +71,11 @@ public static class ActivityStore
                 foreach (var stale in candidates.Matching(activity, SameSession.LocalClock))
                 {
                     if (!removed.Add(stale.Id)) continue;
+
+                    // A FIT file carries no name, and the name is what marks
+                    // a run as a test. The row it replaces keeps both.
+                    if (string.IsNullOrWhiteSpace(activity.Name) && !string.IsNullOrWhiteSpace(stale.Name)) activity.Name = stale.Name;
+                    activity.LoadKg ??= stale.LoadKg;
                     database.Activities.Remove(stale);
                     superseded++;
                 }
@@ -79,6 +84,20 @@ public static class ActivityStore
             var existing = activity.ExternalId is null
                 ? null
                 : existingByKey.GetValueOrDefault((activity.Source, activity.ExternalId));
+
+            // The same session already stored from another true-clock source,
+            // such as a Garmin export summary when the run's FIT file comes
+            // in: the file adds what the summary lacked (laps, the recording's
+            // halves) to that row, so a run is never stored twice.
+            if (existing is null && SameSession.TrueClock.Contains(activity.Source)
+                && candidates.Matching(activity, SameSession.TrueClock)
+                    .FirstOrDefault(c => c.Source != activity.Source && !removed.Contains(c.Id)
+                                         && Math.Abs((c.StartedAt - activity.StartedAt).TotalSeconds) <= SameInstantSeconds) is { } twin)
+            {
+                Enrich(twin, activity);
+                skipped++;
+                continue;
+            }
 
             if (existing is null)
             {
@@ -111,6 +130,36 @@ public static class ActivityStore
     /// matches nothing and fails the whole save. Left empty, the key is
     /// generated and the row inserted.
     /// </remarks>
+    /// <summary>Two true-clock records of one session start within this many seconds of each other.</summary>
+    public const double SameInstantSeconds = 120;
+
+    /// <summary>Fills in what a richer record of the same session carries, keeping the stored row's identity and name.</summary>
+    private static void Enrich(Activity stored, Activity richer)
+    {
+        stored.Indoor ??= richer.Indoor;
+        stored.AverageHr ??= richer.AverageHr;
+        stored.MaxHr ??= richer.MaxHr;
+        stored.FirstHalfHr ??= richer.FirstHalfHr;
+        stored.SecondHalfHr ??= richer.SecondHalfHr;
+        stored.FirstHalfMetersPerSecond ??= richer.FirstHalfMetersPerSecond;
+        stored.SecondHalfMetersPerSecond ??= richer.SecondHalfMetersPerSecond;
+
+        if (stored.Laps.Count == 0)
+        {
+            foreach (var lap in richer.Laps)
+            {
+                stored.Laps.Add(new Lap
+                {
+                    ActivityId = stored.Id,
+                    Index = lap.Index,
+                    DistanceMeters = lap.DistanceMeters,
+                    Seconds = lap.Seconds,
+                    AverageHr = lap.AverageHr
+                });
+            }
+        }
+    }
+
     private static void Overwrite(Activity existing, Activity activity)
     {
         existing.StartedAt = activity.StartedAt;
@@ -227,6 +276,7 @@ public static class ActivityStore
         var to = incoming.Max(a => a.StartedAt) + SameSession.ClockTolerance;
 
         var rows = await database.Activities
+            .Include(a => a.Laps)
             .Where(a => sources.Contains(a.Source) && a.StartedAt >= from && a.StartedAt <= to)
             .OrderBy(a => a.StartedAt)
             .ToListAsync(cancellationToken);
