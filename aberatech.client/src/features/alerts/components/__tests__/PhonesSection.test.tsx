@@ -283,6 +283,11 @@ describe("pushes", () => {
         "A push asks the phone to update its alarms at once. iOS can delay or drop it, most of all after the app is swiped away, so the phone also updates when opened and in the background.",
       ),
     ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "A phone that has not checked in for 12 hours gets one Pushover warning that names it. It may be off, out of battery, or missing the app.",
+      ),
+    ).toBeTruthy();
     expect(screen.queryByText(/Pushes are off/)).toBeNull();
   });
 
