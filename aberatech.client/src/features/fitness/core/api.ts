@@ -788,7 +788,7 @@ export async function deleteLockedPrediction(id: string): Promise<void> {
 export interface Standing {
   metric: string;
   value: number;
-  basis: "Measured" | "Modeled";
+  basis: "Measured" | "Modeled" | "Training";
   evidence: string;
   on: string | null;
 }
