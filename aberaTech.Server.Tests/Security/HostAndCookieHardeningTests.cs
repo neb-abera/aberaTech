@@ -176,6 +176,25 @@ public sealed class AdminCookieTests : IDisposable
         Assert.False(response.Headers.Contains("Set-Cookie") && response.Headers.GetValues("Set-Cookie").Any(value => value.StartsWith("abera.admin=", StringComparison.Ordinal)));
     }
 
+    [Fact]
+    public async Task A_sign_in_survives_a_browser_restart_for_fourteen_days_of_quiet()
+    {
+        // Until 2026-11-04 the cookie carried no expiry, so every Chrome
+        // restart on the box signed the owner out.
+        var options = Options();
+        Assert.Equal(TimeSpan.FromDays(14), options.ExpireTimeSpan);
+        Assert.True(options.SlidingExpiration);
+
+        var http = new DefaultHttpContext { RequestServices = _app.Factory.Services };
+        var scheme = new AuthenticationScheme(CookieAuthenticationDefaults.AuthenticationScheme, null, typeof(CookieAuthenticationHandler));
+        var properties = new AuthenticationProperties();
+        var signingIn = new CookieSigningInContext(http, scheme, options, new ClaimsPrincipal(new ClaimsIdentity()), properties, new CookieOptions());
+
+        await options.Events.SigningIn(signingIn);
+
+        Assert.True(properties.IsPersistent);
+    }
+
     private CookieAuthenticationOptions Options() =>
         _app.Factory.Services
             .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
