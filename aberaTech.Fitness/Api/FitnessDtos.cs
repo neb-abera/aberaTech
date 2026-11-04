@@ -343,3 +343,11 @@ public sealed record AerobicOutlookDto(
     IReadOnlyList<WeekPaceDto> Weeks,
     double? SlopeSecPerKmPerWeek,
     IReadOnlyList<PacePointDto> Ahead);
+
+/// <summary>An FBI test as entered: any event may be blank, at least one is not.</summary>
+public sealed record FbiResultUpdate(string Date, int? PullUps, double? Sprint300mSeconds, int? PushUps, double? Run1_5MileSeconds);
+
+/// <summary>An FBI test as stored, with each event's points and the total of the events run.</summary>
+public sealed record FbiResultDto(
+    Guid Id, string Date, int? PullUps, double? Sprint300mSeconds, int? PushUps, double? Run1_5MileSeconds,
+    int? PullUpPoints, int? SprintPoints, int? PushUpPoints, int? RunPoints, int Total, int EventsRun);

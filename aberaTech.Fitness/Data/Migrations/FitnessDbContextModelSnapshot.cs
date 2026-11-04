@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261104065448_RecordingHalves";
+    public override string LastMigrationId => "20261104101459_FbiResults";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -214,6 +214,35 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("BodyMetrics");
+            });
+
+        modelBuilder.Entity("aberaTech.Fitness.Data.FbiResult", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<LocalDate>("Date")
+                    .HasColumnType("date");
+
+                b.Property<int?>("PullUps")
+                    .HasColumnType("integer");
+
+                b.Property<int?>("PushUps")
+                    .HasColumnType("integer");
+
+                b.Property<double?>("Run1_5MileSeconds")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("Sprint300mSeconds")
+                    .HasColumnType("double precision");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Date")
+                    .IsUnique();
+
+                b.ToTable("FbiResults");
             });
 
         modelBuilder.Entity("aberaTech.Fitness.Data.Goal", b =>

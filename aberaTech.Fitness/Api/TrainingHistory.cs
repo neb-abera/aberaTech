@@ -41,7 +41,8 @@ internal sealed record DatedSet(StrengthSet Set, Instant StartedAt);
 internal sealed record ReadinessEvidence(
     IReadOnlyList<DatedSet> Sets,
     IReadOnlyList<BodyMetric> BodyMetrics,
-    IReadOnlyList<AftResult> AftResults)
+    IReadOnlyList<AftResult> AftResults,
+    IReadOnlyList<FbiResult>? FbiResults = null)
 {
     /// <summary>The most recent weigh-in; the weigh-ins are held oldest first.</summary>
     public BodyMetric? LatestWeight => BodyMetrics.Count > 0 ? BodyMetrics[^1] : null;
@@ -61,6 +62,10 @@ internal sealed record ReadinessEvidence(
             .OrderByDescending(r => r.Date)
             .ToListAsync(cancellationToken);
 
-        return new ReadinessEvidence(sets, bodyMetrics, aftResults);
+        var fbiResults = await database.FbiResults.AsNoTracking()
+            .OrderByDescending(r => r.Date)
+            .ToListAsync(cancellationToken);
+
+        return new ReadinessEvidence(sets, bodyMetrics, aftResults, fbiResults);
     }
 }
