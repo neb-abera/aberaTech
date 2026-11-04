@@ -61,6 +61,8 @@ export function formatGoalValue(unit: string, value: number): string {
  */
 export function standardLabel(row: GoalRow, standard: GoalStandard): string {
   const level = standard.level.replace(/\s*\(.*\)$/, "");
+  if (standard.display)
+    return `${standard.source} ${level} ${standard.display}`;
   const same = row.goal !== null && Math.abs(row.goal - standard.value) < 0.05;
   return same
     ? `${standard.source} ${level}`
@@ -71,10 +73,11 @@ export function standardLabel(row: GoalRow, standard: GoalStandard): string {
 export function goalTag(row: GoalRow): string | null {
   const note = row.note ?? "";
   if (/inferred/i.test(note)) return "inferred";
-  // The note's own claim decides: "FBI PFT 10-point mark" names the FBI
-  // even when it also mentions Evoke's lower standard (pull-ups, 2026-11-04).
+  // The note's own claim decides: "FBI PFT 10-point mark" names the FBI.
   if (/FBI PFT (maximum|10-point mark)/i.test(note)) return "FBI max";
-  if (/Evoke/i.test(note)) return "Evoke";
+  // Evoke is tagged from its published standards (the server's list),
+  // never from a note that merely mentions it: the back squat note names
+  // Evoke's 250 x5 beside a 315 goal that is not Evoke's.
   if (row.goalColumn === "D") return "ideal";
   return null;
 }

@@ -40,7 +40,8 @@ public sealed record GoalForecastDto(
 /// <param name="Level">The level, such as max (10 pts).</param>
 /// <param name="Value">The standard in the row's unit.</param>
 /// <param name="Note">The table and the band it was read from.</param>
-public sealed record StandardDto(string Source, string Level, double Value, string Note);
+/// <param name="Display">The standard as written when the row's unit cannot carry it, such as 250 lb x5 on a one-rep-max row.</param>
+public sealed record StandardDto(string Source, string Level, double Value, string Note, string? Display = null);
 
 public sealed record GoalRowDto(
     int Row,
@@ -167,6 +168,17 @@ internal static class GoalReports
             sections.Select(s => Section(s.Name, s.Test, s.Rows, s.Points, female, ageNow, ageThen)).ToArray());
     }
 
+    private static readonly Dictionary<string, StandardDto> EvokeStandards = new()
+    {
+        [SelectionReadiness.Metrics.AerobicThresholdPace] = new("Evoke", "SFAS-ready", 480,
+            "Jack Kuenzle, repeated by Scott Johnston (Evoke Endurance forum, 2023): at least below an 8:00 mile at aerobic threshold on the flat."),
+        [SelectionReadiness.Metrics.DeadliftTripleLb] = new("Evoke", "SFAS-ready", 350,
+            "Vince Paikowski, through Jack Kuenzle (Evoke Endurance forum, 2023): deadlift 350 lb for 3."),
+        [SelectionReadiness.Metrics.BackSquatLb] = new("Evoke", "SFAS-ready", 250,
+            "Vince Paikowski, through Jack Kuenzle (Evoke Endurance forum, 2023): back squat 250 lb for 5, about 292 lb as a one-rep max by Epley.",
+            "250 lb ×5"),
+    };
+
     private static string? TestOf(string sheetGroup) =>
         sheetGroup.TrimStart().StartsWith("AFT", StringComparison.OrdinalIgnoreCase) ? AftTest
         : sheetGroup.TrimStart().StartsWith("FBI", StringComparison.OrdinalIgnoreCase) ? FbiTest
@@ -231,6 +243,12 @@ internal static class GoalReports
             standards.Add(new StandardDto("AFT", $"max ({Aft.MaxPoints} pts)", aftMax,
                 Text($"Army Fitness Test, {sex}, age {ageThen} at the due date: the {Aft.MaxPoints}-point row.")));
         }
+
+        // Evoke's coaches' standards, attributed as verified word for word in
+        // the Evoke forum thread on 2026-09-07. The thread's 5 mi in 35:00,
+        // 15 pull-ups, and 80 push-ups were its original poster's, not
+        // Evoke's, so they are not tagged.
+        if (EvokeStandards.TryGetValue(definition.Metric, out var evoke)) standards.Add(evoke);
 
         GoalForecastDto? forecast = null;
         if (goal is { } target)
