@@ -68,17 +68,31 @@ internal static class ReadinessReports
         measurements[SelectionReadiness.Metrics.RunOneAndHalfMile] = Modeled(
             SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence);
 
-        // The pace held at the reference heart rate is the aerobic-threshold
-        // pace the coaches ask about, if the reference is set at that
-        // threshold — which is what the setting is for.
-        if (aerobicTrend.Count > 0)
+        // Aerobic-threshold pace. Measured only by a heart-rate drift test he
+        // named as one, held inside the 5% line. Without a test, the pace at
+        // his AeT heart rate across the month's easy runs is an estimate of
+        // it, and is shown as modelled.
+        var aetTest = FitnessReports.FieldTestsIn(history.Activities, row, today).Tests
+            .LastOrDefault(t => t.Kind == FieldTests.AetKind
+                                && t.Date >= today.PlusDays(-FieldTests.SuggestionWindowDays)
+                                && t.DriftPercent is <= FieldTests.DriftLimit);
+        if (aetTest is not null)
+        {
+            measurements[SelectionReadiness.Metrics.AerobicThresholdPace] = new Measurement(
+                SelectionReadiness.Metrics.AerobicThresholdPace,
+                aetTest.SecPerKm * Vdot.MileMeters / 1000,
+                Basis.Measured,
+                Text($"heart-rate drift test of {aetTest.Date:yyyy-MM-dd}: {aetTest.AverageHr} bpm, drift {aetTest.DriftPercent:0.0%}{(aetTest.Indoor ? ", treadmill" : "")}"),
+                aetTest.Date);
+        }
+        else if (aerobicTrend.Count > 0)
         {
             var month = aerobicTrend[^1];
             measurements[SelectionReadiness.Metrics.AerobicThresholdPace] = new Measurement(
                 SelectionReadiness.Metrics.AerobicThresholdPace,
                 month.MedianNormalizedSecPerKm * Vdot.MileMeters / 1000,
-                Basis.Measured,
-                Text($"median pace at {row.ReferenceHr} bpm over {month.RunCount} runs in {month.Year:0000}-{month.Month:00}"),
+                Basis.Modeled,
+                Text($"no drift test yet; median pace of {month.RunCount} easy runs in {month.Year:0000}-{month.Month:00}, scaled to {row.ReferenceHr} bpm"),
                 // The last run counted, so the Goals tab ages it from that
                 // run rather than from the first of the month.
                 month.LastRun ?? new LocalDate(month.Year, month.Month, 1));
@@ -376,10 +390,12 @@ internal static class ReadinessReports
 
         if (!name.Contains(lift)) return false;
 
-        // A Romanian or stiff-leg deadlift is an accessory, not the pull the
-        // standard is written for.
+        // A Romanian, stiff-leg, or straight-leg deadlift is an accessory, not
+        // the pull the standard is written for. Hevy names one "Straight Leg
+        // Deadlift", which the digest reported as a deadlift PR on 2026-11-04.
         return lift != "deadlift"
-               || !(name.Contains("romanian") || name.Contains("stiff") || name.Contains("single leg") || name.Contains("single-leg"));
+               || !(name.Contains("romanian") || name.Contains("stiff") || name.Contains("straight")
+                    || name.Contains("rdl") || name.Contains("single leg") || name.Contains("single-leg"));
     }
 
     /// <summary>One test scored on the athlete's band and scale, as of today.</summary>

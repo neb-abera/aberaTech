@@ -310,8 +310,12 @@ function Dashboard({
         <CardContent>
           <Typography variant="h6">Aerobic base</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-            Monthly median pace, HR-normalized to {summary.settings.referenceHr}{" "}
-            bpm. Falling is fitness.
+            Whether your aerobic engine is growing between drift tests. Each
+            month, every steady easy run&apos;s pace is scaled to your AeT heart
+            rate ({summary.settings.referenceHr} bpm), and the median is
+            plotted. Falling is fitness. Evoke measures improvement the same
+            way: the same heart rate, more distance. It is an estimate from
+            training runs, so it never sets your thresholds.
             {summary.deficiencySpread !== null && (
               <>
                 {" "}

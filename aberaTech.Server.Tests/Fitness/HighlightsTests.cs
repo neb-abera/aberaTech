@@ -126,4 +126,48 @@ public sealed class AnchorHighlightTests
         Assert.Equal("anchor-stale", stale!.Kind);
         Assert.Contains("120 days", stale.Headline);
     }
+
+    [Fact]
+    public void A_lift_not_done_in_two_weeks_is_not_news()
+    {
+        // April's deadlift beat March's. On 2026-11-04 that is not a new PR.
+        var history = new[]
+        {
+            new E1RmPoint(new LocalDate(2026, 3, 10), "Deadlift (Barbell)", 112),
+            new E1RmPoint(new LocalDate(2026, 4, 10), "Deadlift (Barbell)", 127),
+        };
+
+        Assert.Contains(Highlights.Build([], [], 160, history), h => h.Kind == "strength-pr");
+        Assert.DoesNotContain(Highlights.Build([], [], 160, history, new LocalDate(2026, 11, 4)), h => h.Kind == "strength-pr");
+        Assert.Contains(Highlights.Build([], [], 160, history, new LocalDate(2026, 4, 20)), h => h.Kind == "strength-pr");
+    }
+
+    [Fact]
+    public void Weeks_with_nothing_logged_count_as_zero_up_to_last_week()
+    {
+        // Two weeks at plan in September, nothing since. In November that is
+        // a gap, not a streak.
+        var weeks = new[]
+        {
+            new WeekVolume(new LocalDate(2026, 9, 7), 200),
+            new WeekVolume(new LocalDate(2026, 9, 14), 200),
+        };
+
+        var now = Highlights.Build([], weeks, 160, [], new LocalDate(2026, 11, 4));
+        Assert.DoesNotContain(now, h => h.Kind == "volume-streak");
+        Assert.Contains(now, h => h.Kind == "volume-gap");
+    }
+
+    [Fact]
+    public void An_aerobic_change_from_months_ago_is_not_reported()
+    {
+        var trend = new[]
+        {
+            new MonthlyAerobicPoint(2026, 4, 450, 4),
+            new MonthlyAerobicPoint(2026, 5, 420, 4),
+        };
+
+        Assert.Contains(Highlights.Build(trend, [], 160, []), h => h.Kind == "aerobic-gain");
+        Assert.Empty(Highlights.Build(trend, [], 160, [], new LocalDate(2026, 11, 4)));
+    }
 }

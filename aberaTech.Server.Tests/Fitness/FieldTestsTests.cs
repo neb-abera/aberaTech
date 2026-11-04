@@ -22,12 +22,12 @@ public sealed class FieldTestsTests
         new(Guid.NewGuid(), Day, name, seconds / secPerKm * 1000, seconds, hr, indoor, laps ?? []);
 
     [Fact]
-    public void A_steady_hour_near_the_aet_heart_rate_is_an_aet_test_and_its_drift_is_read_from_the_laps()
+    public void A_named_outdoor_drift_test_reads_its_drift_from_the_laps()
     {
         // Four 15-minute laps: the second half is a shade slower at a shade
         // higher heart rate — 3.5% decoupling, inside the line.
         var laps = Laps(900, (400, 150), (400, 151), (405, 153), (408, 154));
-        var run = Run("Morning Run", 3600, 403, 152, laps);
+        var run = Run("HR drift test", 3600, 403, 152, laps);
 
         var test = FieldTests.AsAetTest(run, Bands);
 
@@ -53,13 +53,32 @@ public sealed class FieldTestsTests
     }
 
     [Fact]
-    public void A_short_run_or_an_interval_workout_is_not_an_aet_test()
+    public void A_training_run_is_never_an_aet_test_however_close_to_the_aet_it_sat()
     {
-        Assert.Null(FieldTests.AsAetTest(Run("Run", 1500, 400, 152), Bands));
+        // The same steady hour at the AeT heart rate, named as a training run.
+        // Until 2026-11-04 this was read as a test and moved the thresholds.
+        var laps = Laps(900, (400, 150), (400, 151), (405, 153), (408, 154));
+        Assert.Null(FieldTests.AsAetTest(Run("Aerobic base run Zone 2", 3600, 403, 152, laps), Bands));
+        Assert.Null(FieldTests.AsAetTest(Run("Morning Run", 3600, 403, 152, laps), Bands));
 
-        // Repeats with recoveries: paces all over the place at the AeT average.
-        var repeats = Laps(300, (280, 170), (520, 135), (280, 172), (520, 138), (280, 173), (520, 140), (280, 174));
-        Assert.Null(FieldTests.AsAetTest(Run("Run", 2100, 400, 152, repeats), Bands));
+        // A named test shorter than the protocol's 30 minutes is not one either.
+        Assert.Null(FieldTests.AsAetTest(Run("HR drift test", 1500, 400, 152), Bands));
+    }
+
+    [Fact]
+    public void An_indoor_drift_test_reads_the_heart_rate_rise_at_a_fixed_belt_speed()
+    {
+        // Treadmill at one speed for an hour: 140 bpm the first half, 146 the
+        // second. The watch's pace is ignored. 6 / 140 = 4.3% drift.
+        var laps = Laps(900, (400, 139), (395, 141), (410, 145), (390, 147));
+        var run = Run("Aerobic threshold test, treadmill", 3600, 400, 143, laps, indoor: true);
+
+        var test = FieldTests.AsAetTest(run, Bands);
+
+        Assert.NotNull(test);
+        Assert.Equal(6.0 / 140, test!.DriftPercent!.Value, precision: 6);
+        Assert.Contains("fixed belt speed", test.Evidence);
+        Assert.Contains("inside the 5% line", test.Evidence);
     }
 
     [Fact]
@@ -79,29 +98,29 @@ public sealed class FieldTestsTests
     }
 
     [Fact]
-    public void An_unnamed_steady_run_at_threshold_pace_with_the_heart_rate_to_match_is_a_threshold_test()
+    public void A_tempo_run_is_not_a_threshold_test_and_a_named_five_mile_time_trial_is()
     {
         var threshold = TrainingPaces.For(Vdot).Single(b => b.Zone == "T");
         var pace = threshold.SlowSecPerKm - 2;
         var laps = Laps(300, (pace, 166), (pace, 168), (pace, 169), (pace, 170), (pace, 171));
-        var run = Run("Tempo", 1500, pace, 169, laps);
 
-        Assert.NotNull(FieldTests.AsThresholdTest(run, Bands, Vdot));
+        Assert.Null(FieldTests.AsThresholdTest(Run("Tempo", 1500, pace, 169, laps), Bands, Vdot));
 
-        // The same effort at an easy heart rate is a fast easy run, not a test.
-        Assert.Null(FieldTests.AsThresholdTest(run with { AverageHr = 150 }, Bands, Vdot));
-
-        // And indoors the pace is not trusted to say it was threshold.
-        Assert.Null(FieldTests.AsThresholdTest(run with { Indoor = true }, Bands, Vdot));
+        // Evoke's Block 3 test: a 5-mile time trial, about 44 minutes here.
+        var fiveMile = Laps(330, (330, 160), (330, 168), (330, 171), (330, 172), (330, 173), (330, 173), (330, 174), (330, 174));
+        var test = FieldTests.AsThresholdTest(Run("5 mile time trial", 2640, 330, 171, fiveMile), Bands, Vdot);
+        Assert.NotNull(test);
+        Assert.Contains("final 20 min", test!.Evidence);
     }
 
     [Fact]
     public void Detect_orders_by_date_and_prefers_the_threshold_reading_for_a_hard_run()
     {
         var aet = Run("MAF test", 3600, 420, 152) with { Date = Day.PlusDays(-10) };
+        var training = Run("Aerobic base run", 3600, 420, 152) with { Date = Day.PlusDays(-5) };
         var tt = Run("LTHR test", 1800, 295, 172);
 
-        var tests = FieldTests.Detect([tt, aet], Bands, Vdot);
+        var tests = FieldTests.Detect([tt, training, aet], Bands, Vdot);
 
         Assert.Equal([FieldTests.AetKind, FieldTests.ThresholdKind], tests.Select(t => t.Kind));
     }
