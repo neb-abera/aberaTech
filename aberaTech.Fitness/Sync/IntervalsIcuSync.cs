@@ -25,6 +25,9 @@ public sealed class IntervalsIcuSync(
     /// <summary>New activities per run. A first sync of years of history takes several runs, on purpose.</summary>
     public const int MaxNewPerRun = 40;
 
+    /// <summary>Older runs re-read per run to add the recording's halves.</summary>
+    public const int MaxBackfillPerRun = 20;
+
     /// <summary>
     /// How far back every listing reaches; the FIT upload covers anything older.
     /// </summary>
@@ -54,6 +57,19 @@ public sealed class IntervalsIcuSync(
                     .Select(a => a.ExternalId!)
                     .ToListAsync(cancellationToken))
                 .ToHashSet();
+
+            // Runs stored before the recording's halves were kept are read
+            // again from their file, a few a run, so a drift test from
+            // before 2026-11-04 can be analyzed like one from after.
+            var withoutHalves = (await database.Activities
+                    .Where(a => a.Source == IntervalsIcuMapping.Source && a.ExternalId != null
+                                && (a.Sport == "run" || a.Sport == "ruck") && a.AverageHr != null && a.FirstHalfHr == null)
+                    .OrderByDescending(a => a.StartedAt)
+                    .Select(a => a.ExternalId!)
+                    .Take(MaxBackfillPerRun)
+                    .ToListAsync(cancellationToken))
+                .ToHashSet();
+            known.ExceptWith(withoutHalves);
 
             var batch = new List<Activity>();
             var fetched = 0;

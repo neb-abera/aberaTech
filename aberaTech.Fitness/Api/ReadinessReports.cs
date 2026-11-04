@@ -268,9 +268,25 @@ internal static class ReadinessReports
             if (Calisthenics.Best(best, metric, since) is not { } point) continue;
 
             latest.Add(new BestSetDto(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), metric, point.Value));
-            measurements[metric] = new Measurement(
-                metric, point.Value, Basis.Training,
-                Text($"best set in training, {point.Date:yyyy-MM-dd}: a floor for the test, not a test result"), point.Date);
+
+            // Neb, 2026-11-04. A pull-up done to standard in training is a
+            // pull-up, so a training PR counts. Push-ups are not: he trains
+            // them to a metronome and finishes on his knees, and the FBI
+            // push-up and the AFT hand-release push-up are each their own
+            // technique. Only a recorded test sets either. A plank held in
+            // training is a floor for the test.
+            if (metric == Calisthenics.PullUps)
+            {
+                measurements[metric] = new Measurement(
+                    metric, point.Value, Basis.Measured,
+                    Text($"best set to standard in training, {point.Date:yyyy-MM-dd}"), point.Date);
+            }
+            else if (metric is not (Calisthenics.PushUps or Calisthenics.HandReleasePushUps))
+            {
+                measurements[metric] = new Measurement(
+                    metric, point.Value, Basis.Training,
+                    Text($"best hold in training, {point.Date:yyyy-MM-dd}: a floor for the test, not a test result"), point.Date);
+            }
         }
 
         return new CalisthenicsDto(
