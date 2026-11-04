@@ -59,4 +59,21 @@ describe("OutlookCard", () => {
     expect(screen.getByText(/In 4 weeks/).textContent).toContain("10:04/mi");
     expect(screen.getByText(/Faster by 8.0 s\/mi a week/)).toBeTruthy();
   });
+
+  it("says 1 week, not 1 weeks", () => {
+    render(
+      <OutlookCard
+        outlook={{
+          ...base,
+          ready: false,
+          qualifyingWeeks: 5,
+          slopeSecPerKmPerWeek: null,
+          ahead: [],
+        }}
+      />,
+    );
+    expect(screen.getByText(/Needs more data/).textContent).toContain(
+      "get there in 1 week.",
+    );
+  });
 });

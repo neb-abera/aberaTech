@@ -7,6 +7,10 @@ import { formatSeconds } from "../core/format";
 
 const MILE_KM = 1.609344;
 
+export function weeksLabel(weeks: number): string {
+  return weeks === 1 ? "1 week" : `${weeks} weeks`;
+}
+
 function perMile(secPerKm: number): string {
   return `${formatSeconds(secPerKm * MILE_KM)}/mi`;
 }
@@ -33,7 +37,7 @@ export default function OutlookCard({
             weeks in the last 12 each hold {outlook.runsPerWeek} or more easy
             runs. {outlook.qualifyingWeeks} of {outlook.weeksNeeded} so far. The
             plan&apos;s 4 to 5 runs a week get there in{" "}
-            {outlook.weeksNeeded - outlook.qualifyingWeeks} weeks.
+            {weeksLabel(outlook.weeksNeeded - outlook.qualifyingWeeks)}.
           </Typography>
         ) : (
           <>
