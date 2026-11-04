@@ -265,6 +265,12 @@ public sealed class GoalEndpointTests : IDisposable
         Assert.Equal("max (10 pts)", pullUps.GetProperty("level").GetString());
         Assert.Equal(20, pullUps.GetProperty("value").GetDouble());
 
+        // Evoke's coaches' standards, and only theirs: the 15 pull-ups were a forum poster's.
+        Assert.DoesNotContain(rows["Pull-ups"].GetProperty("standards").EnumerateArray(), x => x.GetProperty("source").GetString() == "Evoke");
+        var deadlift = rows["Max 3 rep deadlift"].GetProperty("standards").EnumerateArray().ToList();
+        Assert.Contains(deadlift, x => x.GetProperty("source").GetString() == "Evoke" && x.GetProperty("value").GetDouble() == 350);
+        Assert.Contains(deadlift, x => x.GetProperty("source").GetString() == "AFT");
+
         // An AFT event carries the Army's 100-point standard for the due-date age band.
         var pushUps = Assert.Single(rows["HR pushups"].GetProperty("standards").EnumerateArray());
         Assert.Equal("AFT", pushUps.GetProperty("source").GetString());

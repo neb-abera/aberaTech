@@ -337,4 +337,39 @@ describe("columns", () => {
       ),
     ).toBe("FBI max");
   });
+
+  it("tags Evoke from its standards, with the set count where the row is a one-rep max", () => {
+    const squat = {
+      ...row({
+        row: 21,
+        label: "Back Squat",
+        goal: 315,
+        note: "beats Evoke's 250 lb x5",
+      }),
+      unit: "lb",
+    } as GoalRow;
+    expect(goalTag(squat)).toBeNull();
+    expect(
+      standardLabel(squat, {
+        source: "Evoke",
+        level: "SFAS-ready",
+        value: 250,
+        note: "",
+        display: "250 lb ×5",
+      }),
+    ).toBe("Evoke SFAS-ready 250 lb ×5");
+
+    const aet = {
+      ...row({ row: 6, label: "Aerobic threshold pace", goal: 480 }),
+      unit: "s/mi",
+    } as GoalRow;
+    expect(
+      standardLabel(aet, {
+        source: "Evoke",
+        level: "SFAS-ready",
+        value: 480,
+        note: "",
+      }),
+    ).toBe("Evoke SFAS-ready");
+  });
 });

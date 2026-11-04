@@ -1034,6 +1034,8 @@ export interface GoalStandard {
   level: string;
   value: number;
   note: string;
+  /** The standard as written when the row's unit cannot carry it (250 lb ×5). */
+  display?: string | null;
 }
 
 /** One group of rows, or a test scored the way its graders score it. */
