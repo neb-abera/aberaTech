@@ -82,6 +82,9 @@ public static class FitImport
     /// </summary>
     internal static void Halves(IEnumerable<RecordMesg> records, Activity activity)
     {
+        // The file was read, whatever it held, so the sync need not read it again.
+        activity.RecordsVersion = CurrentRecordsVersion;
+
         var points = records
             .Select(r => (Time: r.GetTimestamp()?.GetDateTime(), Hr: (double?)r.GetHeartRate(), Distance: (double?)r.GetDistance()))
             .Where(p => p.Time is not null)
@@ -119,10 +122,48 @@ public static class FitImport
         double? Speed(double from, double to) =>
             DistanceAt(from) is { } a && DistanceAt(to) is { } b && b > a ? (b - a) / (to - from) : null;
 
+        BestEfforts(points.Where(p => p.Distance is not null).Select(p => (p.Seconds, p.Distance!.Value)).ToArray(), activity);
+
         activity.FirstHalfHr = MeanHr(start, middle);
         activity.SecondHalfHr = MeanHr(middle, end);
         activity.FirstHalfMetersPerSecond = Speed(start, middle);
         activity.SecondHalfMetersPerSecond = Speed(middle, end);
+    }
+
+    /// <summary>The reading of the records this importer writes: halves and best efforts.</summary>
+    public const int CurrentRecordsVersion = 2;
+
+    public const double Mile = 1609.344;
+
+    /// <summary>
+    /// The fastest continuous stretch of each goal distance, by two pointers
+    /// over the cumulative distance. The time across the stretch is taken
+    /// between the first record at or past its start and the first record at
+    /// or past its end, so a gap in the records can only make it slower.
+    /// </summary>
+    internal static void BestEfforts(IReadOnlyList<(double Seconds, double Meters)> points, Activity activity)
+    {
+        double? Fastest(double meters)
+        {
+            if (points.Count < 2 || points[^1].Meters - points[0].Meters < meters) return null;
+            double? best = null;
+            var j = 0;
+            for (var i = 0; i < points.Count; i++)
+            {
+                if (j < i) j = i;
+                while (j < points.Count && points[j].Meters - points[i].Meters < meters) j++;
+                if (j == points.Count) break;
+                var time = points[j].Seconds - points[i].Seconds;
+                if (time > 0 && (best is null || time < best)) best = time;
+            }
+
+            return best;
+        }
+
+        activity.Best1_5MileSeconds = Fastest(1.5 * Mile);
+        activity.Best2MileSeconds = Fastest(2 * Mile);
+        activity.Best5MileSeconds = Fastest(5 * Mile);
+        activity.Best10MileSeconds = Fastest(10 * Mile);
     }
 
     /// <summary>Whether the sub-sport says the session was indoors; null when it says nothing.</summary>

@@ -212,6 +212,43 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task A_fast_stretch_in_training_counts_toward_a_run_goal_and_a_slow_one_does_not()
+    {
+        using var app = App();
+        await SeedAsync(app);
+
+        // An easy run whose fastest 2 miles is slower than the reading already held.
+        await app.SeedAsync(database =>
+        {
+            database.Activities.Add(new Activity
+            {
+                Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "Easy",
+                StartedAt = FitnessApp.Now - Duration.FromDays(4), DurationSeconds = 3600,
+                DistanceMeters = 9000, Best2MileSeconds = 20 * 60, RecordsVersion = 2
+            });
+            return Task.CompletedTask;
+        });
+        var before = await GoalsAsync(app);
+        string Basis(JsonElement goals) => goals.GetProperty("sections").EnumerateArray().SelectMany(s => s.GetProperty("rows").EnumerateArray())
+            .Single(r => r.GetProperty("label").GetString() == "2 mile run").GetProperty("current").GetProperty("evidence").GetString()!;
+        Assert.DoesNotContain("inside a training run", Basis(before));
+
+        // A track session with a 2-mile stretch at 12:00 beats it.
+        await app.SeedAsync(database =>
+        {
+            database.Activities.Add(new Activity
+            {
+                Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "Track",
+                StartedAt = FitnessApp.Now - Duration.FromDays(2), DurationSeconds = 2400,
+                DistanceMeters = 8000, Best2MileSeconds = 12 * 60, RecordsVersion = 2
+            });
+            return Task.CompletedTask;
+        });
+        var after = await GoalsAsync(app);
+        Assert.Contains("fastest 2 mi inside a training run", Basis(after));
+    }
+
+    [Fact]
     public async Task Each_event_shows_every_published_standard_with_its_source_and_level()
     {
         using var app = App();
