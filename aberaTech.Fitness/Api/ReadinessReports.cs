@@ -68,6 +68,31 @@ internal static class ReadinessReports
         measurements[SelectionReadiness.Metrics.RunOneAndHalfMile] = Modeled(
             SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence);
 
+        // A fast stretch inside a training run counts toward the run goals
+        // (Neb, 2026-11-04), but only when it beats what the goal already
+        // reads: the fastest 2 miles of an easy run say nothing about a race.
+        foreach (var (metric, best, miles) in new (string, Func<Activity, double?>, string)[]
+                 {
+                     (SelectionReadiness.Metrics.RunOneAndHalfMile, a => a.Best1_5MileSeconds, "1.5 mi"),
+                     (SelectionReadiness.Metrics.RunTwoMile, a => a.Best2MileSeconds, "2 mi"),
+                     (SelectionReadiness.Metrics.RunFiveMile, a => a.Best5MileSeconds, "5 mi"),
+                     (SelectionReadiness.Metrics.RunTenMile, a => a.Best10MileSeconds, "10 mi")
+                 })
+        {
+            var fastest = history.Activities
+                .Where(a => a.Sport == "run" && best(a) is > 0)
+                .Select(a => (Activity: a, Seconds: best(a)!.Value, Date: a.StartedAt.InZone(zone).Date))
+                .Where(x => x.Date >= since)
+                .OrderBy(x => x.Seconds)
+                .FirstOrDefault();
+            if (fastest.Activity is null) continue;
+            if (measurements.TryGetValue(metric, out var held) && held.Value <= fastest.Seconds) continue;
+
+            measurements[metric] = new Measurement(metric, fastest.Seconds, Basis.Measured,
+                Text($"fastest {miles} inside a training run, {fastest.Date:yyyy-MM-dd}{(fastest.Activity.Indoor == true ? ", treadmill" : "")}"),
+                fastest.Date);
+        }
+
         // Aerobic-threshold pace. Measured only by a heart-rate drift test he
         // named as one, held inside the 5% line. Without a test, the pace at
         // his AeT heart rate across the month's easy runs is an estimate of

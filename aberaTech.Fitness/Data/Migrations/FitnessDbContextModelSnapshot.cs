@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261104101459_FbiResults";
+    public override string LastMigrationId => "20261104140318_RunBestEfforts";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -36,6 +36,18 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<int?>("AverageHr")
                     .HasColumnType("integer");
+
+                b.Property<double?>("Best10MileSeconds")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("Best1_5MileSeconds")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("Best2MileSeconds")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("Best5MileSeconds")
+                    .HasColumnType("double precision");
 
                 b.Property<double?>("DistanceMeters")
                     .HasColumnType("double precision");
@@ -66,6 +78,9 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasMaxLength(256)
                     .HasColumnType("character varying(256)");
+
+                b.Property<int>("RecordsVersion")
+                    .HasColumnType("integer");
 
                 b.Property<double?>("SecondHalfHr")
                     .HasColumnType("double precision");

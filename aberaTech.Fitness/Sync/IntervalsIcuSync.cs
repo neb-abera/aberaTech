@@ -58,12 +58,13 @@ public sealed class IntervalsIcuSync(
                     .ToListAsync(cancellationToken))
                 .ToHashSet();
 
-            // Runs stored before the recording's halves were kept are read
-            // again from their file, a few a run, so a drift test from
-            // before 2026-11-04 can be analyzed like one from after.
+            // Runs stored before the current reading of the records (the
+            // halves, then the best efforts) are read again from their file,
+            // a few a run, so older runs are analyzed like new ones.
             var withoutHalves = (await database.Activities
                     .Where(a => a.Source == IntervalsIcuMapping.Source && a.ExternalId != null
-                                && (a.Sport == "run" || a.Sport == "ruck") && a.AverageHr != null && a.FirstHalfHr == null)
+                                && (a.Sport == "run" || a.Sport == "ruck") && a.AverageHr != null
+                                && a.RecordsVersion < Ingest.FitImport.CurrentRecordsVersion)
                     .OrderByDescending(a => a.StartedAt)
                     .Select(a => a.ExternalId!)
                     .Take(MaxBackfillPerRun)

@@ -133,6 +133,17 @@ public static class ActivityStore
     /// <summary>Two true-clock records of one session start within this many seconds of each other.</summary>
     public const double SameInstantSeconds = 120;
 
+    /// <summary>A newer reading of the records replaces an older one; no reading leaves the stored one.</summary>
+    private static void CopyBestEfforts(Activity stored, Activity incoming)
+    {
+        if (incoming.RecordsVersion < stored.RecordsVersion || incoming.RecordsVersion == 0) return;
+        stored.RecordsVersion = incoming.RecordsVersion;
+        stored.Best1_5MileSeconds = incoming.Best1_5MileSeconds;
+        stored.Best2MileSeconds = incoming.Best2MileSeconds;
+        stored.Best5MileSeconds = incoming.Best5MileSeconds;
+        stored.Best10MileSeconds = incoming.Best10MileSeconds;
+    }
+
     /// <summary>Fills in what a richer record of the same session carries, keeping the stored row's identity and name.</summary>
     private static void Enrich(Activity stored, Activity richer)
     {
@@ -143,6 +154,7 @@ public static class ActivityStore
         stored.SecondHalfHr ??= richer.SecondHalfHr;
         stored.FirstHalfMetersPerSecond ??= richer.FirstHalfMetersPerSecond;
         stored.SecondHalfMetersPerSecond ??= richer.SecondHalfMetersPerSecond;
+        CopyBestEfforts(stored, richer);
 
         if (stored.Laps.Count == 0)
         {
@@ -179,6 +191,7 @@ public static class ActivityStore
         existing.SecondHalfHr = activity.SecondHalfHr ?? existing.SecondHalfHr;
         existing.FirstHalfMetersPerSecond = activity.FirstHalfMetersPerSecond ?? existing.FirstHalfMetersPerSecond;
         existing.SecondHalfMetersPerSecond = activity.SecondHalfMetersPerSecond ?? existing.SecondHalfMetersPerSecond;
+        CopyBestEfforts(existing, activity);
 
         // Laps travel with the record that carries them; a file without laps
         // must not erase the ones a richer file brought.

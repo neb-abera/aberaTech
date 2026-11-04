@@ -111,5 +111,36 @@ public sealed class FitLapsTests
         Assert.Equal(3.0, activity.FirstHalfMetersPerSecond!.Value, precision: 2);
         Assert.Equal(2.9, activity.SecondHalfMetersPerSecond!.Value, precision: 2);
     }
+
+    [Fact]
+    public void The_fastest_stretch_of_each_goal_distance_is_found_inside_the_run()
+    {
+        // 6 miles: easy at 4 m/s (6:42/mi), with a hard 2 miles at 5 m/s
+        // (5:22/mi) in the middle. The fastest 2 miles is the hard block.
+        var points = new List<(double Seconds, double Meters)>();
+        double t = 0, m = 0;
+        void Run(double meters, double speed)
+        {
+            for (var step = 0; step < meters; step += 10)
+            {
+                t += 10 / speed;
+                m += 10;
+                points.Add((t, m));
+            }
+        }
+        points.Add((0, 0));
+        Run(2 * FitImport.Mile, 4);
+        Run(2 * FitImport.Mile, 5);
+        Run(2 * FitImport.Mile, 4);
+
+        var activity = new aberaTech.Fitness.Data.Activity { Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "" };
+        FitImport.BestEfforts(points, activity);
+
+        Assert.Equal(2 * FitImport.Mile / 5, activity.Best2MileSeconds!.Value, 0);
+        Assert.True(activity.Best1_5MileSeconds < activity.Best2MileSeconds);
+        // The best 5 miles takes the hard 2 and 3 easy miles around it.
+        Assert.InRange(activity.Best5MileSeconds!.Value, 2 * FitImport.Mile / 5 + 3 * FitImport.Mile / 4 - 5, 2 * FitImport.Mile / 5 + 3 * FitImport.Mile / 4 + 5);
+        Assert.Null(activity.Best10MileSeconds);
+    }
 }
 

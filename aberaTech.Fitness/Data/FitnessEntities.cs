@@ -65,6 +65,27 @@ public class Activity
     public double? FirstHalfMetersPerSecond { get; set; }
 
     public double? SecondHalfMetersPerSecond { get; set; }
+
+    /// <summary>
+    /// The fastest continuous 1.5, 2, 5, and 10 miles inside the run, in
+    /// seconds, read from the FIT records. A fast stretch in training counts
+    /// toward the run goals (Neb, 2026-11-04). Null when the run was shorter
+    /// or the file carried no records.
+    /// </summary>
+    public double? Best1_5MileSeconds { get; set; }
+
+    public double? Best2MileSeconds { get; set; }
+
+    public double? Best5MileSeconds { get; set; }
+
+    public double? Best10MileSeconds { get; set; }
+
+    /// <summary>
+    /// Which reading of the FIT records this row holds: 0 none, 1 the halves,
+    /// 2 the halves and the best efforts. The sync re-reads rows below the
+    /// current version from their files.
+    /// </summary>
+    public int RecordsVersion { get; set; }
 }
 
 /// <summary>
