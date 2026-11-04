@@ -73,7 +73,8 @@ public static class FitnessReports
             trend,
             weeks.Select(w => new WeekVolume(LocalDatePattern(w.WeekStart), w.Minutes)).ToArray(),
             settings.PlanMinutesPerWeek,
-            strength.Select(s => new E1RmPoint(LocalDatePattern(s.Date), s.Exercise, s.E1RmKg)).ToArray());
+            strength.Select(s => new E1RmPoint(LocalDatePattern(s.Date), s.Exercise, s.E1RmKg)).ToArray(),
+            today);
 
         double? spread = null;
         if (settings.LtSecondsPerKm is { } lt && trend.Count > 0)
@@ -748,7 +749,7 @@ public static class FitnessReports
     private static HeartRateBands Bands(AthleteSettings row) => new(row.ReferenceHr, row.LtHr);
 
     /// <summary>The field tests the log contains, and what they say the thresholds are.</summary>
-    private static (IReadOnlyList<FieldTest> Tests, ThresholdSuggestion? Suggestion) FieldTestsIn(
+    internal static (IReadOnlyList<FieldTest> Tests, ThresholdSuggestion? Suggestion) FieldTestsIn(
         IReadOnlyList<Activity> activities, AthleteSettings row, LocalDate today)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];

@@ -39,27 +39,32 @@ public sealed record FieldTest(
 public sealed record ThresholdSuggestion(int? AetHr, int? LtHr, double? LtSecPerKm, string Reason, string Basis);
 
 /// <summary>
-/// Finds the field tests inside an ordinary log, so the thresholds the models
-/// run on are measured rather than typed once and forgotten.
+/// Finds the field tests the athlete ran and named, so the thresholds the
+/// models run on are measured by the protocol written for them.
 /// </summary>
 /// <remarks>
-/// <b>Aerobic-threshold test.</b> A run of thirty minutes or more held at the
-/// aerobic-threshold heart rate — Maffetone's MAF test, Uphill Athlete's
-/// heart-rate-drift test. Recognised by its name, or by an average heart
-/// rate within a few beats of the profile's AeT on a steady run. When laps
-/// allow it, the pace-to-heart-rate decoupling between the two halves is the
-/// verdict: 5% or less and the heart rate was at or below the aerobic
-/// threshold; more and it was above it (Johnston; Friel).
+/// <b>A test counts only when its name says it was one.</b> A training run
+/// is not a test, however close it sat to a threshold: it has no settled
+/// warm-up, no fixed speed, and no intent to measure. Until 2026-11-04 an
+/// unnamed steady run near the AeT heart rate, or a tempo run at threshold
+/// pace, was read as a test and moved the thresholds. Neb ruled that out.
 ///
-/// <b>Lactate-threshold test.</b> A continuous hard effort of twenty to
-/// forty-five minutes — Friel's 30-minute time trial. Recognised by its
-/// name, or by a steady run held at threshold pace with the heart rate to
-/// match. The lactate-threshold heart rate is the average of the final
-/// twenty minutes, not of the whole, because the first ten are the climb.
+/// <b>Aerobic-threshold test.</b> Evoke's heart-rate drift test (Military
+/// Athlete Foundational Plan, weeks 3 and 13 and Block 2 test week): warm up
+/// at least 10 to 15 minutes at nose-breathing effort, find the pace where
+/// the heart rate holds within 2 to 3 beats for 3 minutes, then run 60
+/// minutes on a treadmill at 2% without touching the speed, or 30 to 45
+/// minutes on a flat loop or track outdoors. The recording that is read is
+/// the test alone, so the warm-up is saved as its own activity first.
+/// Indoors the belt holds the pace, so the drift is the rise in heart rate
+/// between the halves. Outdoors it is Friel's pace-to-heart-rate decoupling.
+/// 5% or less and the starting heart rate was at or below the AeT. More and
+/// it was above it (Johnston; Friel).
 ///
-/// A run whose name says what it was is believed; a run that merely looks
-/// like a test is reported as one with the evidence attached, so the athlete
-/// can disagree.
+/// <b>Lactate-threshold test.</b> Evoke's 5-mile time trial, or Friel's
+/// 30-minute time trial: an even, all-out effort of twenty to fifty minutes.
+/// The lactate-threshold heart rate is the average of the final twenty
+/// minutes, because the first ten are the climb.
 ///
 /// Citations: <see cref="Citations.UphillAthleteHrDrift"/>,
 /// <see cref="Citations.FrielLthr"/>, <see cref="Citations.MaffetoneMaf"/>.
@@ -83,7 +88,7 @@ public static class FieldTests
 
     /// <summary>Bounds of a continuous lactate-threshold effort.</summary>
     public const double MinimumThresholdSeconds = 18 * 60;
-    public const double MaximumThresholdSeconds = 45 * 60;
+    public const double MaximumThresholdSeconds = 50 * 60;
 
     /// <summary>The window of a threshold test whose heart rate is the measurement.</summary>
     public const double ThresholdTailSeconds = 20 * 60;
@@ -95,11 +100,11 @@ public static class FieldTests
     public const int SuggestionWindowDays = 120;
 
     private static readonly Regex AetName = new(
-        @"\b(maf|aet|aerobic[- ]threshold|hr[- ]drift|heart[- ]rate[- ]drift)\b",
+        @"\b(maf[- ]test|aet[- ]test|aerobic[- ]threshold[- ]test|(hr|heart[- ]rate)[- ]drift([- ]test)?|drift[- ]test)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static readonly Regex ThresholdName = new(
-        @"\b(lthr|lactate|threshold[- ]test|time[- ]trial|tt|30[- ]?min(ute)?[- ]test)\b",
+        @"\b(lthr|lactate[- ]threshold[- ]test|lt[- ]test|threshold[- ]test|time[- ]trial|tt|30[- ]?min(ute)?[- ]test)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     /// <summary>Every test in the runs given, oldest first.</summary>
@@ -118,19 +123,17 @@ public static class FieldTests
         if (run.DistanceMeters is not > 0 || run.Seconds < MinimumAetSeconds) return null;
         if (run.AverageHr is not { } hr || hr <= 0) return null;
 
-        var named = AetName.IsMatch(run.Name);
-        var session = Session(run);
-        if (!named && (Math.Abs(hr - bands.AetHr) > AetHrTolerance || !SessionMix.IsSteady(session, bands)))
-        {
-            return null;
-        }
+        if (!AetName.IsMatch(run.Name)) return null;
 
-        var drift = Drift(run.Laps);
+        var indoor = run.Indoor == true;
+        var drift = indoor ? HeartRateDrift(run.Laps) : Drift(run.Laps);
         var pace = run.Seconds / (run.DistanceMeters.Value / 1000.0);
-        var how = named ? "Named as an aerobic-threshold test" : $"Held within {AetHrTolerance} bpm of your AeT";
+        var how = indoor
+            ? "Named as a heart-rate drift test, indoors (drift is the heart-rate rise at a fixed belt speed)"
+            : "Named as a heart-rate drift test, outdoors (drift is pace-to-heart-rate decoupling)";
         var verdict = drift switch
         {
-            null => "no laps, so drift could not be read",
+            null => "no laps with two 10-minute halves, so drift could not be read",
             <= DriftLimit => $"pace-to-HR drift {drift:0.0%}, inside the 5% line: {hr} bpm is at or below your AeT",
             _ => $"pace-to-HR drift {drift:0.0%}, past the 5% line: {hr} bpm is above your AeT"
         };
@@ -147,20 +150,13 @@ public static class FieldTests
         if (run.AverageHr is not { } hr || hr <= 0) return null;
 
         var pace = run.Seconds / (run.DistanceMeters.Value / 1000.0);
-        var named = ThresholdName.IsMatch(run.Name);
-        if (!named)
-        {
-            var threshold = TrainingPaces.For(vdot).Single(b => b.Zone == "T");
-            var atPace = run.Indoor != true && pace <= threshold.SlowSecPerKm;
-            var atHeart = hr > bands.EasyCeiling;
-            if (!(atPace && atHeart) || !SessionMix.IsSteady(Session(run), null)) return null;
-        }
+        if (!ThresholdName.IsMatch(run.Name)) return null;
 
         // Friel: the last twenty minutes, when the laps let us take them.
         var tail = Tail(run.Laps, ThresholdTailSeconds);
         var ltHr = tail?.Hr ?? hr;
         var ltPace = tail?.SecPerKm ?? pace;
-        var how = named ? "Named as a threshold test" : "A steady effort at threshold pace with the heart rate to match";
+        const string how = "Named as a threshold test";
         var window = tail is null ? "whole run (no laps to take the last 20 min from)" : "final 20 min";
 
         return new FieldTest(
@@ -253,6 +249,32 @@ public static class FieldTests
         var early = SpeedPerBeat(first);
         var late = SpeedPerBeat(second);
         return (early - late) / early;
+    }
+
+    /// <summary>
+    /// The rise in average heart rate from the first half to the second, for
+    /// a test run at one fixed treadmill speed. A watch's indoor pace is an
+    /// estimate, so the belt's constant speed stands in for it.
+    /// </summary>
+    public static double? HeartRateDrift(IReadOnlyList<LoggedLap> laps)
+    {
+        var usable = laps.Where(l => l.Seconds > 0 && l.AverageHr is > 0).ToArray();
+        if (usable.Length < 2) return null;
+
+        var total = usable.Sum(l => l.Seconds);
+        var first = new List<LoggedLap>();
+        var second = new List<LoggedLap>();
+        var elapsed = 0.0;
+        foreach (var lap in usable)
+        {
+            (elapsed < total / 2 ? first : second).Add(lap);
+            elapsed += lap.Seconds;
+        }
+
+        if (first.Sum(l => l.Seconds) < MinimumHalfSeconds || second.Sum(l => l.Seconds) < MinimumHalfSeconds) return null;
+
+        static double Hr(List<LoggedLap> half) => half.Sum(l => l.AverageHr!.Value * l.Seconds) / half.Sum(l => l.Seconds);
+        return (Hr(second) - Hr(first)) / Hr(first);
     }
 
     private static double SpeedPerBeat(List<LoggedLap> laps)

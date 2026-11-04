@@ -145,12 +145,49 @@ export default function ThresholdsCard({
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h6">Thresholds</Typography>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          Your aerobic threshold (AeT) is the top of zone 2. Easy runs stay at
+          or below it, the Aerobic base trend is scaled to it, and the Goals tab
+          measures your AeT pace with it. Your lactate threshold (LT) is where
+          threshold work ends. Both are set by a test you run and name. A
+          training run never changes them.
+        </Typography>
+        <Typography variant="subtitle2" component="h3">
+          AeT: Evoke&apos;s heart-rate drift test
+        </Typography>
+        <Typography component="ol" variant="body2" sx={{ pl: 2.5, mt: 0.5 }}>
+          <li>
+            Warm up 10 to 15 minutes at nose-breathing effort. Find the pace
+            where your heart rate holds within 2 to 3 beats for 3 minutes.
+          </li>
+          <li>
+            Save the warm-up. Start a new run and name it{" "}
+            <strong>HR drift test</strong>, so this page reads the test alone.
+          </li>
+          <li>
+            On a treadmill at 2%, run 60 minutes without touching the speed or
+            incline. Outdoors, run 30 to 45 minutes on a track or flat loop,
+            never an out-and-back. Keep auto-lap on.
+          </li>
+          <li>
+            The drift between the halves is the verdict. 5% or less: that heart
+            rate is at or below your AeT. More: it was above it, so retest 5
+            beats lower.
+          </li>
+        </Typography>
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+          The plan schedules it in week 3 (16 Nov 2026) and week 13 (25 Jan
+          2027), then about every 6 weeks. Until the first test, Evoke&apos;s
+          Block 1 runs at MAF, 180 minus your age, within 10 beats below it.
+        </Typography>
+        <Typography variant="subtitle2" component="h3">
+          LT: the 5-mile time trial
+        </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-          Aerobic threshold (AeT) is the heart rate the trend normalizes to and
-          the ceiling of easy; lactate threshold (LT) is where threshold ends.
-          Treadmill sessions are placed by these, since the belt&apos;s pace
-          cannot be trusted. Set them by test: an hour at AeT with the drift
-          read from laps, a 30-minute time trial for LT.
+          Warm up well, run 5 miles at an even all-out pace, and name it{" "}
+          <strong>5 mile time trial</strong>. The last 20 minutes set your LT
+          heart rate and pace. The plan runs it in the Block 2 test week (10 May
+          2027).
         </Typography>
 
         <form onSubmit={submit}>

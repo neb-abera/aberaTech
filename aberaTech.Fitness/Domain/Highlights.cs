@@ -28,19 +28,71 @@ public static class Highlights
     /// <summary>Fractional pace change below which two months are treated as equal.</summary>
     private const double AerobicNoiseFloor = 0.02;
 
+    /// <summary>
+    /// How recent a lift session has to be for its PR or slide to be news.
+    /// The digest is weekly, so two weeks covers the week it reports and the
+    /// one before. On 2026-11-04 the digest called April's deadlift a new PR,
+    /// because no deadlift had been logged since.
+    /// </summary>
+    public const int RecentDays = 14;
+
+    /// <param name="today">
+    /// When given, only what happened lately is reported: a lift session or a
+    /// month of runs older than that says nothing new. Tests of the rules
+    /// alone leave it out.
+    /// </param>
     public static IReadOnlyList<Highlight> Build(
         IReadOnlyList<MonthlyAerobicPoint> aerobicTrend,
         IReadOnlyList<WeekVolume> recentWeeks,
         double planMinutesPerWeek,
-        IReadOnlyList<E1RmPoint> e1RmHistory)
+        IReadOnlyList<E1RmPoint> e1RmHistory,
+        LocalDate? today = null)
     {
         var highlights = new List<Highlight>();
+
+        if (today is { } day)
+        {
+            // A month counts while it is this month or last month.
+            var lastMonth = day.PlusMonths(-1);
+            if (aerobicTrend.Count > 0
+                && !((aerobicTrend[^1].Year == day.Year && aerobicTrend[^1].Month == day.Month)
+                     || (aerobicTrend[^1].Year == lastMonth.Year && aerobicTrend[^1].Month == lastMonth.Month)))
+            {
+                aerobicTrend = [];
+            }
+
+            e1RmHistory = e1RmHistory
+                .GroupBy(p => p.Exercise)
+                .Where(g => g.Max(p => p.Date) >= day.PlusDays(-RecentDays))
+                .SelectMany(g => g)
+                .ToArray();
+
+            recentWeeks = CompletedWeeks(recentWeeks, day);
+        }
 
         AddAerobic(highlights, aerobicTrend);
         AddVolume(highlights, recentWeeks, planMinutesPerWeek);
         AddStrength(highlights, e1RmHistory);
 
         return highlights;
+    }
+
+    /// <summary>
+    /// The weeks up to last week, with a week nothing was logged in counted
+    /// as zero. The weekly series stops at the last week with an activity,
+    /// so without this a streak or gap from months ago reads as current.
+    /// </summary>
+    private static IReadOnlyList<WeekVolume> CompletedWeeks(IReadOnlyList<WeekVolume> weeks, LocalDate today)
+    {
+        var thisWeek = today.PlusDays(-(((int)today.DayOfWeek - 1 + 7) % 7));
+        var done = weeks.Where(w => w.WeekStart < thisWeek).ToList();
+        if (done.Count == 0) return done;
+        for (var week = done[^1].WeekStart.PlusDays(7); week < thisWeek; week = week.PlusDays(7))
+        {
+            done.Add(new WeekVolume(week, 0));
+        }
+
+        return done;
     }
 
     private static void AddAerobic(List<Highlight> highlights, IReadOnlyList<MonthlyAerobicPoint> trend)
