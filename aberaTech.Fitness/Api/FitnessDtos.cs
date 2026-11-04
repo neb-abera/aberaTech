@@ -170,7 +170,8 @@ public sealed record SummaryDto(
     ReadinessDto Readiness,
     IReadOnlyList<FieldTestDto> FieldTests,
     ThresholdSuggestionDto? ThresholdSuggestion,
-    DurabilityDto Durability);
+    DurabilityDto Durability,
+    AerobicOutlookDto? AerobicOutlook = null);
 
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
 public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On);
@@ -319,3 +320,26 @@ public sealed record LockPredictionRequest(
     string? Note = null);
 
 public sealed record ScorePredictionRequest(double ActualSeconds, string? Note = null);
+
+/// <summary>The running hours a week the Goals forecasts assume.</summary>
+public sealed record AvailableHoursUpdate(double Hours);
+
+/// <summary>One week of the short-term outlook: median pace at the AeT heart rate and its run count.</summary>
+public sealed record WeekPaceDto(string WeekStart, double MedianSecPerKm, int Runs);
+
+/// <summary>A projected pace and its 80% range, so many weeks ahead.</summary>
+public sealed record PacePointDto(int WeeksAhead, double SecPerKm, double LowSecPerKm, double HighSecPerKm);
+
+/// <summary>
+/// The short-term AeT pace forecast. Not ready until enough weeks hold
+/// enough steady runs; then a straight line with its 80% range.
+/// </summary>
+public sealed record AerobicOutlookDto(
+    bool Ready,
+    int QualifyingWeeks,
+    int WeeksNeeded,
+    int RunsPerWeek,
+    int ReferenceHr,
+    IReadOnlyList<WeekPaceDto> Weeks,
+    double? SlopeSecPerKmPerWeek,
+    IReadOnlyList<PacePointDto> Ahead);

@@ -1,5 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -26,11 +27,14 @@ import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
 import GoalsPanel from "./GoalsPanel";
 import LessonsCard from "./LessonsCard";
+import OutlookCard from "./OutlookCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
+import TestProtocolCard from "./TestProtocolCard";
 import ThresholdsCard from "./ThresholdsCard";
 import TrainingDoseCard from "./TrainingDoseCard";
+import TrainingPacesCard from "./TrainingPacesCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -210,6 +214,9 @@ export default function FitnessPanel() {
       </Section>
       <Section index={1} tab={tab} visited={visited}>
         <Stack spacing={3}>
+          <OutlookCard outlook={summary.aerobicOutlook} />
+          <TrainingPacesCard summary={summary} />
+          <TestProtocolCard />
           <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />
           <Workbench summary={summary} />
           <LessonsCard />
@@ -237,6 +244,36 @@ export default function FitnessPanel() {
         <SourcesPanel />
       </Section>
     </Stack>
+  );
+}
+
+/** Months, and easy runs in each, before the monthly trend says anything. */
+export const TREND_MONTHS = 2;
+export const TREND_RUNS = 4;
+
+/**
+ * The monthly trend, kept closed until two months hold four easy runs each:
+ * a median of one or two runs is noise. It says what it is waiting for, and
+ * can still be opened.
+ */
+function GatedTrend({ points }: { points: Summary["aerobicTrend"] }) {
+  const [shown, setShown] = React.useState(false);
+  const enough = points.filter((p) => p.runs >= TREND_RUNS).length;
+  if (enough >= TREND_MONTHS || shown) {
+    return <AerobicTrendChart points={points} />;
+  }
+  return (
+    <Alert
+      severity="info"
+      action={
+        <Button color="inherit" size="small" onClick={() => setShown(true)}>
+          Show anyway
+        </Button>
+      }
+    >
+      Needs more data: {TREND_MONTHS} months with {TREND_RUNS} or more easy runs
+      each. {enough} so far.
+    </Alert>
   );
 }
 
@@ -327,7 +364,7 @@ function Dashboard({
               </>
             )}
           </Typography>
-          <AerobicTrendChart points={summary.aerobicTrend} />
+          <GatedTrend points={summary.aerobicTrend} />
         </CardContent>
       </Card>
 
@@ -337,40 +374,6 @@ function Dashboard({
         suggestion={summary.thresholdSuggestion}
         onSaved={onSettingsChanged}
       />
-
-      {summary.trainingPaces.length > 0 && (
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6">
-              Today&apos;s training paces (Daniels)
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-              Prescriptions, not predictions: the pace each kind of session
-              should happen at, from your current VDOT{" "}
-              {summary.settings.startVdot.toFixed(0)}. Bands, not laps to hit to
-              the second.
-            </Typography>
-            <Stack spacing={0.5}>
-              {summary.trainingPaces.map((pace) => (
-                <Typography key={pace.zone} variant="body2">
-                  <strong>
-                    {pace.zone} · {pace.name}:
-                  </strong>{" "}
-                  {formatPace(pace.slowSecPerKm)} –{" "}
-                  {formatPace(pace.fastSecPerKm)}{" "}
-                  <Typography
-                    component="span"
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {pace.purpose}
-                  </Typography>
-                </Typography>
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
 
       <TrainingDoseCard
         days={summary.dailyVolume}

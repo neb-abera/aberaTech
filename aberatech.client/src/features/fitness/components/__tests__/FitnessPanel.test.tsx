@@ -231,9 +231,14 @@ describe("FitnessPanel", () => {
     mount("/fitness?tab=log");
 
     await screen.findByText(/aerobic base up 8%/i);
+    await screen.findByText(/over the 10% deficiency line/i);
+    // The paces are a prescription, so they moved to the Plan tab.
+    expect(screen.queryByText(/training paces \(daniels\)/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Plan" }));
     await screen.findByText(/training paces \(daniels\)/i);
     await screen.findByText(/7:26\/km – 6:13\/km/);
-    await screen.findByText(/over the 10% deficiency line/i);
+    await screen.findByText(/Threshold tests/);
 
     await waitFor(() => {
       // Four tabs: the goals, the plan and its solver, the log, the sources.

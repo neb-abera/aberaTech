@@ -170,6 +170,23 @@ public sealed class GoalEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task The_goals_tab_sets_the_running_hours_alone()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var client = app.Factory.CreateClient();
+
+        var response = await client.PutAsJsonAsync("/api/fitness/settings/available-hours", new { hours = 8.5 });
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var goals = await GoalsAsync(app);
+        Assert.Equal(8.5, goals.GetProperty("weeklyHours").GetDouble());
+
+        var refused = await client.PutAsJsonAsync("/api/fitness/settings/available-hours", new { hours = 41 });
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+    }
+
+    [Fact]
     public async Task Each_event_shows_every_published_standard_with_its_source_and_level()
     {
         using var app = App();

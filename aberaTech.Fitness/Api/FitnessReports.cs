@@ -136,8 +136,20 @@ public static class FitnessReports
                 durability.RestDaysLast7,
                 durability.DaysOfLog,
                 durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
-                Steps(durability.Steps)));
+                Steps(durability.Steps)),
+            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, Bands(row)), settings.ReferenceHr, today), settings.ReferenceHr));
     }
+
+    private static AerobicOutlookDto Outlook(AerobicOutlookResult result, int referenceHr) =>
+        new(
+            result.Ready,
+            result.QualifyingWeeks,
+            AerobicOutlook.WeeksNeeded,
+            AerobicOutlook.RunsPerWeek,
+            referenceHr,
+            result.Weeks.Select(w => new WeekPaceDto(w.WeekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), w.MedianSecPerKm, w.Runs)).ToArray(),
+            result.SlopeSecPerKmPerWeek,
+            result.Ahead.Select(a => new PacePointDto(a.WeeksAhead, a.SecPerKm, a.LowSecPerKm, a.HighSecPerKm)).ToArray());
 
     public static async Task<PredictionDto> PredictionsAsync(
         FitnessDbContext database,

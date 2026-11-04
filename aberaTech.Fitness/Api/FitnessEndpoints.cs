@@ -463,6 +463,25 @@ public static class FitnessEndpoints
             return Results.NoContent();
         });
 
+        // The one setting the Goals tab edits in place: the running hours its
+        // forecasts assume. Nothing else is sent, so nothing else can change.
+        api.MapPut("/settings/available-hours", async (AvailableHoursUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
+        {
+            if (update.Hours is < 0 or > 40 || double.IsNaN(update.Hours)) return Fail("Hours a week are 0-40.");
+
+            var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
+            if (row is null)
+            {
+                row = new AthleteSettings { Id = 1 };
+                database.Settings.Add(row);
+            }
+
+            row.AvailableHoursPerWeek = update.Hours;
+            await database.SaveChangesAsync(cancellationToken);
+            cache.Invalidate();
+            return Results.NoContent();
+        });
+
         api.MapPost("/body-metrics", async (BodyMetricUpdate update, FitnessDbContext database, CancellationToken cancellationToken) =>
         {
             var date = ParseDate(update.Date);

@@ -121,7 +121,25 @@ function show(factor: FactorName, spread: SpreadValue): string {
  * which factor to move next and the field that shows what moving two at once
  * would do.
  */
+/** Weeks out of the last 12, each with this many runs, before the fit to history means anything. */
+export const HISTORY_WEEKS = 8;
+export const HISTORY_RUNS = 2;
+
+/** Weeks among the last 12 holding at least HISTORY_RUNS days with running. */
+export function consistentWeeksOf(summary: Summary): number {
+  const days = summary.dailyVolume ?? [];
+  let count = 0;
+  for (let w = 0; w < 12; w++) {
+    const end = days.length - w * 7;
+    const week = days.slice(Math.max(0, end - 7), end);
+    if (week.filter((d) => d.minutes > 0).length >= HISTORY_RUNS) count++;
+  }
+  return count;
+}
+
 export default function Workbench({ summary }: { summary: Summary }) {
+  const consistentWeeks = consistentWeeksOf(summary);
+  const historyReady = consistentWeeks >= HISTORY_WEEKS;
   const currentMassLb = summary.settings.currentWeightKg
     ? Math.round(kgToLb(summary.settings.currentWeightKg))
     : null;
@@ -560,6 +578,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
             control={
               <Switch
                 checked={state.useHistory}
+                disabled={!historyReady && !state.useHistory}
                 onChange={(event) => set("useHistory", event.target.checked)}
               />
             }
@@ -573,6 +592,9 @@ export default function Workbench({ summary }: { summary: Summary }) {
             variant="caption"
             sx={{ display: "block", color: "text.secondary" }}
           >
+            {historyReady
+              ? ""
+              : `Needs more data: ${HISTORY_WEEKS} of the last 12 weeks with ${HISTORY_RUNS} or more runs. ${consistentWeeks} so far. `}
             Off by default. Months with almost no training carry almost no
             information about how you respond to training, and improvement
             during a return is detraining unwinding rather than a training

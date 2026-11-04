@@ -132,10 +132,8 @@ export default function ProfileCard({
   settings: SettingsDto;
   onSaved: () => void;
 }) {
-  // Training hours.
-  const [availableHours, setAvailableHours] = React.useState(
-    String(settings.availableHoursPerWeek),
-  );
+  // Training history. The hours a week to train are set on the Goals tab,
+  // beside the forecasts that use them.
   const [sustainedHours, setSustainedHours] = React.useState(
     settings.sustainedWeeklyHours === null
       ? ""
@@ -200,16 +198,6 @@ export default function ProfileCard({
   };
 
   const saveHours = () => {
-    const hours = Number(availableHours);
-    if (
-      availableHours.trim() === "" ||
-      !Number.isFinite(hours) ||
-      hours < 0 ||
-      hours > 40
-    ) {
-      setHoursStatus({ ok: false, text: "Hours you can train must be 0-40." });
-      return;
-    }
     const sustained = Number(sustainedHours);
     if (
       sustainedHours.trim() !== "" &&
@@ -219,11 +207,8 @@ export default function ProfileCard({
       return;
     }
     void send(
-      {
-        availableHoursPerWeek: hours,
-        sustainedWeeklyHours: sustainedHours.trim() === "" ? null : sustained,
-      },
-      `Saved the hours: ${hours} h a week to train. Nothing else changed.`,
+      { sustainedWeeklyHours: sustainedHours.trim() === "" ? null : sustained },
+      "Saved the biggest week. Nothing else changed.",
       setHoursStatus,
     );
   };
@@ -322,20 +307,11 @@ export default function ProfileCard({
 
         <Stack spacing={2.5} divider={<Divider flexItem />}>
           <Part
-            title="Training hours"
-            help="The Goals forecasts assume the hours you can train."
+            title="Training history"
+            help="The hours a week to train are set on the Goals tab, beside its forecasts."
             status={hoursStatus}
             onSave={saveHours}
           >
-            <TextField
-              label="Hours you can train"
-              type="number"
-              value={availableHours}
-              onChange={(event) => setAvailableHours(event.target.value)}
-              helperText="Running hours a week"
-              slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
-              sx={{ width: 200 }}
-            />
             <TextField
               label="Biggest week you have held (h)"
               type="number"
