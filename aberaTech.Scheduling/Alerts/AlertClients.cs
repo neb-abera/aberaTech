@@ -74,6 +74,13 @@ public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? Expi
 /// A timeout is not: the first request may have been delivered, and one
 /// alert means one.
 /// </remarks>
+/// <summary>
+/// The devices Pushover delivers to, and whether the account holds a licence.
+/// A device with no licence is on Pushover's 30-day trial, and Pushover stops
+/// delivering to it when the trial ends.
+/// </summary>
+public sealed record PushoverAccount(IReadOnlyList<string> Devices, bool Licensed);
+
 public sealed class PushoverClient(HttpClient http, AlertsOptions options)
 {
     public const string Endpoint = "https://api.pushover.net/1/messages.json";
@@ -196,6 +203,65 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// <summary>Letters and digits, at most <see cref="MaxReceiptLength"/>, so it is safe in a URL path.</summary>
     public static bool IsReceipt(string? value) =>
         value is { Length: > 0 and <= MaxReceiptLength } && value.All(char.IsAsciiLetterOrDigit);
+
+    public const string ValidateEndpoint = "https://api.pushover.net/1/users/validate.json";
+
+    /// <summary>
+    /// The names of the devices that receive messages for the user key.
+    /// Empty when Pushover says the user has no active device, which is what
+    /// it says once the app's trial ends without a licence or the phone signs
+    /// out. Null when Pushover cannot be reached or answers otherwise. The
+    /// form carries the keys in the body, never the URL.
+    /// </summary>
+    public async Task<PushoverAccount?> DevicesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["token"] = options.PushoverAppToken ?? "",
+                ["user"] = options.PushoverUserKey ?? ""
+            });
+            using var response = await http.PostAsync(ValidateEndpoint, content, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (body.Length > 16_384) return null;
+            using var json = JsonDocument.Parse(body);
+            var root = json.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return null;
+            if (root.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Array
+                && errors.EnumerateArray().Any(error => error.ValueKind == JsonValueKind.String
+                                                        && error.GetString()!.Contains("no active devices", StringComparison.OrdinalIgnoreCase)))
+            {
+                return new PushoverAccount([], false);
+            }
+
+            if (!response.IsSuccessStatusCode
+                || !root.TryGetProperty("devices", out var devices)
+                || devices.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            var licensed = root.TryGetProperty("licenses", out var licenses)
+                           && licenses.ValueKind == JsonValueKind.Array
+                           && licenses.GetArrayLength() > 0;
+            return new PushoverAccount(
+                [.. devices.EnumerateArray().Where(device => device.ValueKind == JsonValueKind.String).Select(device => device.GetString()!).Take(20)],
+                licensed);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
 
     /// <summary>
     /// The account's sound list as name and description, in Pushover's

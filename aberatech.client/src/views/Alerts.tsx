@@ -1,5 +1,6 @@
 import PageShell from "../components/PageShell";
 import AlertsPanel from "../features/alerts/components/AlertsPanel";
+import PushoverWarning from "../features/alerts/components/PushoverWarning";
 
 /**
  * The owner's calendar alerts: on or muted, the next ones, and the buttons.
@@ -8,6 +9,7 @@ import AlertsPanel from "../features/alerts/components/AlertsPanel";
 export default function Alerts(props: { disableCustomTheme?: boolean }) {
   return (
     <PageShell {...props} maxWidth="md" title="Alerts">
+      <PushoverWarning />
       <AlertsPanel />
     </PageShell>
   );

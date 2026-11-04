@@ -126,6 +126,7 @@ public sealed class RouteTableTests
     /// <summary>The /api/alerts routes a paired phone may call. Every other one is the owner's cookie alone.</summary>
     private static readonly string[] PhoneRoutes =
     [
+        "GET /api/alerts/pushover",
         "GET /api/alerts/status",
         "POST /api/alerts/mute",
         "POST /api/alerts/unmute",
