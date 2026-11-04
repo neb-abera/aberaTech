@@ -87,9 +87,9 @@ public sealed class DigestTests
         Assert.Contains("AeT–LT spread 15% (over the 10% line: base volume)", text);
         Assert.Contains("a test suggests AeT 158 bpm", text);
         Assert.Contains("GOALS (due 2027-12-31)", text);
-        Assert.Contains("  Army Fitness Test: 428 now, goal 500 of 500 pts", text);
-        Assert.Contains("    2 mile run: 16:49 now, goal 12:15, 34% by the due date at 7.0 h/wk.", text);
-        Assert.Contains("    Farmer carry 1.5x bw m: untested now, goal 100 m.", text);
+        Assert.Contains("  Army Fitness Test: latest 428, goal 500 of 500 pts", text);
+        Assert.Contains("    2 mile run: latest 16:49 (measured 2026-04-03), goal 12:15, 34% by the due date at 7.0 h/wk.", text);
+        Assert.Contains("    Farmer carry 1.5x bw m: untested, goal 100 m.", text);
         Assert.DoesNotContain("GATES", text);
         Assert.DoesNotContain("selection", text, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("- Nothing locked in the prediction ledger.", text);
@@ -141,6 +141,12 @@ public sealed class DigestTests
         Assert.False(new FitnessOptions { DigestKey = "short" }.HasDigestKey);
         Assert.True(new FitnessOptions { DigestKey = key }.HasDigestKey);
     }
+    [Fact]
+    public void Nothing_in_the_digest_says_now()
+    {
+        var text = DigestReports.Compose(Summary(), Goals(), Today).Text;
+        Assert.DoesNotMatch(@"\bnow\b", text);
+    }
 }
 
 public sealed class DailyVolumeTests
@@ -171,4 +177,5 @@ public sealed class DailyVolumeTests
         Assert.Equal(0, aberaTech.Fitness.Api.Rolling.Of(days).Previous7);
         Assert.DoesNotContain(days, d => d.Minutes == 99);
     }
+
 }

@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DigestCard from "../DigestCard";
 
@@ -9,7 +15,7 @@ afterEach(() => {
 });
 
 describe("DigestCard", () => {
-  it("shows the digest text the endpoint serves", async () => {
+  it("starts closed and shows the digest text when opened", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -24,8 +30,21 @@ describe("DigestCard", () => {
 
     render(<DigestCard />);
 
-    expect(await screen.findByText(/Endurance: 85 min this week/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
+    const copy = screen.getByRole("button", { name: "Copy" });
+    await waitFor(() =>
+      expect((copy as HTMLButtonElement).disabled).toBe(false),
+    );
+    expect(screen.queryByText(/Endurance: 85 min this week/)).toBeNull();
+
+    const show = screen.getByRole("button", { name: "Show" });
+    expect(show.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(show);
+    expect(screen.getByText(/Endurance: 85 min this week/)).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "Hide" })
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
   });
 
   it("stands when the digest fails", async () => {

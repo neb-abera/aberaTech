@@ -15,6 +15,8 @@ export default function DigestCard() {
   const [digest, setDigest] = React.useState<Digest | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  // Closed by default: the cards below show the same numbers (Neb, 2026-11-04).
+  const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -56,21 +58,31 @@ export default function DigestCard() {
           <Typography variant="h6">This week, in one page</Typography>
           <Button
             size="small"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="weekly-digest-text"
+          >
+            {open ? "Hide" : "Show"}
+          </Button>
+          <Button
+            size="small"
             onClick={() => void copy()}
             disabled={digest === null}
           >
             {copied ? "Copied" : "Copy"}
           </Button>
         </Stack>
-        <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-          The same text the digest endpoint serves to the morning brief.
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          The text your morning brief gets. The cards below show the same
+          numbers.
         </Typography>
-        {digest === null ? (
+        {!open ? null : digest === null ? (
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
             Writing it up…
           </Typography>
         ) : (
           <Typography
+            id="weekly-digest-text"
             component="pre"
             variant="body2"
             sx={{
@@ -78,6 +90,7 @@ export default function DigestCard() {
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
               fontSize: 12,
               m: 0,
+              mt: 1,
             }}
           >
             {digest.text}

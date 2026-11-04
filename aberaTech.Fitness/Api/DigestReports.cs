@@ -71,7 +71,7 @@ internal static class DigestReports
             var change = previous is null ? "" : Text($" ({Format.Percent((previous.MedianSecPerKm - latest.MedianSecPerKm) / previous.MedianSecPerKm, 1)} vs {previous.Month})");
             lines.Add(Text($"  AeT pace at {settings.ReferenceHr} bpm: {Format.Pace(latest.MedianSecPerKm)}/km over {latest.Runs} runs in {latest.Month}{change}{(latest.IndoorRuns > 0 ? Text($", {latest.IndoorRuns} on a treadmill") : "")}."));
         }
-        lines.Add(Text($"  VDOT anchor {settings.StartVdot:0.0}{(settings.VdotMeasuredOn is { } on ? Text($" from {on}") : "")}; 2-mile now ≈ {Format.Clock(Vdot.MinutesFor(2 * Vdot.MileMeters, settings.StartVdot) * 60)}."));
+        lines.Add(Text($"  VDOT anchor {settings.StartVdot:0.0}{(settings.VdotMeasuredOn is { } on ? Text($" from {on}") : "")}; its 2-mile equivalent is {Format.Clock(Vdot.MinutesFor(2 * Vdot.MileMeters, settings.StartVdot) * 60)}."));
         if (summary.DeficiencySpread is { } spread)
         {
             lines.Add(Text($"  AeT–LT spread {Format.Percent(spread)} ({(spread > AerobicAnalysis.DeficiencyThreshold ? "over the 10% line: base volume" : "inside the 10% line")})."));
@@ -95,13 +95,17 @@ internal static class DigestReports
         {
             lines.Add(section.Test is null
                 ? Text($"  {section.Name}")
-                : Text($"  {section.Name}: {(section.PointsNow is { } pn ? pn.ToString(CultureInfo.InvariantCulture) : "not all events tested")} now, goal {(section.PointsGoal is { } pg ? pg.ToString(CultureInfo.InvariantCulture) : "n/a")} of {section.PointsMax} pts"));
+                : Text($"  {section.Name}: latest {(section.PointsNow is { } pn ? pn.ToString(CultureInfo.InvariantCulture) : "not all events tested")}, goal {(section.PointsGoal is { } pg ? pg.ToString(CultureInfo.InvariantCulture) : "n/a")} of {section.PointsMax} pts"));
             foreach (var row in section.Rows)
             {
-                var now = row.Current is { } c ? SelectionReadiness.Describe(row.Unit, c.Value) : "untested";
+                // "Latest" with its date: a reading can be months old, and
+                // "now" read as today (Neb, 2026-11-04).
+                var latest = row.Current is { } c
+                    ? Text($"latest {SelectionReadiness.Describe(row.Unit, c.Value)} ({(c.Basis == "Modeled" ? "modelled" : "measured")}{(c.On is { } readOn ? Text($" {readOn}") : "")})")
+                    : "untested";
                 var goal = row.Goal is { } g ? SelectionReadiness.Describe(row.Unit, g) : "blank";
                 var chance = row.Forecast?.Probability is { } p ? Text($", {Format.Percent(p)} by the due date at {goals.WeeklyHours:0.0} h/wk") : "";
-                lines.Add(Text($"    {row.Label}: {now} now, goal {goal}{chance}."));
+                lines.Add(Text($"    {row.Label}: {latest}, goal {goal}{chance}."));
             }
         }
         lines.Add("");
