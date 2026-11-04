@@ -71,7 +71,9 @@ export function standardLabel(row: GoalRow, standard: GoalStandard): string {
 export function goalTag(row: GoalRow): string | null {
   const note = row.note ?? "";
   if (/inferred/i.test(note)) return "inferred";
-  if (/FBI PFT maximum/i.test(note)) return "FBI max";
+  // The note's own claim decides: "FBI PFT 10-point mark" names the FBI
+  // even when it also mentions Evoke's lower standard (pull-ups, 2026-11-04).
+  if (/FBI PFT (maximum|10-point mark)/i.test(note)) return "FBI max";
   if (/Evoke/i.test(note)) return "Evoke";
   if (row.goalColumn === "D") return "ideal";
   return null;
