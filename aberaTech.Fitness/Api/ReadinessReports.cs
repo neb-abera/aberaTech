@@ -60,13 +60,13 @@ internal static class ReadinessReports
 
         // Runs: the anchor says what a race would be today, at home altitude.
         measurements[SelectionReadiness.Metrics.RunTwoMile] = Modeled(
-            SelectionReadiness.Metrics.RunTwoMile, RaceSeconds(2 * Vdot.MileMeters, row), anchorEvidence);
+            SelectionReadiness.Metrics.RunTwoMile, RaceSeconds(2 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
         measurements[SelectionReadiness.Metrics.RunFiveMile] = Modeled(
-            SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence);
+            SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
         measurements[SelectionReadiness.Metrics.RunTenMile] = Modeled(
-            SelectionReadiness.Metrics.RunTenMile, RaceSeconds(10 * Vdot.MileMeters, row), anchorEvidence);
+            SelectionReadiness.Metrics.RunTenMile, RaceSeconds(10 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
         measurements[SelectionReadiness.Metrics.RunOneAndHalfMile] = Modeled(
-            SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence);
+            SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
 
         // A fast stretch inside a training run counts toward the run goals
         // (Neb, 2026-11-04), but only when it beats what the goal already
@@ -251,7 +251,8 @@ internal static class ReadinessReports
                 measurements[metric] = Modeled(
                     metric,
                     LoadCarriage.PredictSeconds(row.StartVdot, body, loadKg, TwelveMiles),
-                    Text($"load-carriage model from your VDOT {row.StartVdot:0.0} at {body * BodyMass.PoundsPerKg:0} lb bodyweight; no timed twelve-mile at this load in the last {MeasurementWindowDays} days"));
+                    Text($"load-carriage model from your VDOT {row.StartVdot:0.0} at {body * BodyMass.PoundsPerKg:0} lb bodyweight; no timed twelve-mile at this load in the last {MeasurementWindowDays} days"),
+                    row.VdotMeasuredOn);
             }
         }
 
@@ -622,8 +623,8 @@ internal static class ReadinessReports
             leanMass is { } lm ? BodyComposition.SelectionRateByLeanMass(lm) : null);
     }
 
-    private static Measurement Modeled(string metric, double value, string evidence) =>
-        new(metric, value, Basis.Modeled, evidence);
+    private static Measurement Modeled(string metric, double value, string evidence, LocalDate? on = null) =>
+        new(metric, value, Basis.Modeled, evidence, on);
 
     private static StandingDto Dto(Measurement m) =>
         new(m.Metric, m.Value, m.Basis.ToString(), m.Evidence, m.On?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));

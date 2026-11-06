@@ -11,6 +11,7 @@ import type { GoalRow, GoalSection, Goals } from "../../core/api";
 import GoalsPanel, {
   ageLabel,
   daysSince,
+  forecastDataLine,
   formatGoalValue,
   goalTag,
   latestDetail,
@@ -66,6 +67,9 @@ const sections: GoalSection[] = [
           method: "trajectory",
           evidence: "Needs VDOT 48.1.",
           hoursToReach: 8.5,
+          dataThrough: "2026-11-05",
+          needsData:
+            "a new time trial, because the VDOT anchor of 2026-04-03 is 217 days old",
         },
       }),
     ],
@@ -138,9 +142,42 @@ const connected: Goals = {
   weeklyHours: 7,
   weekBasis: "the hours a week the profile says you can train",
   sections,
+  modelledAt: "2026-11-06T09:30:00Z",
+  workoutsThrough: "2026-11-05",
 };
 
 describe("GoalsPanel", () => {
+  it("says when the forecasts were modelled and which forecasts need more data", async () => {
+    serve(connected);
+    render(<GoalsPanel />);
+
+    const modelled = await screen.findByTestId("modelled-at");
+    expect(modelled.textContent).toMatch(
+      /^Modelled Nov 6, 2026, \d{2}:\d{2} (AM|PM) from workouts through Nov 5, 2026\.$/,
+    );
+
+    const needs = screen.getByLabelText(
+      "Needs more data: a new time trial, because the VDOT anchor of 2026-04-03 is 217 days old.",
+    );
+    expect(needs.dataset.testid).toBe("needs-data");
+
+    fireEvent.click(screen.getByRole("button", { name: /^Forecast for/ }));
+    expect(screen.getByTestId("forecast-data").textContent).toBe(
+      "Modelled from data through Nov 5, 2026. Needs more data: a new time trial, because the VDOT anchor of 2026-04-03 is 217 days old.",
+    );
+  });
+
+  it("shows no needs-data mark on a forecast whose data are enough", async () => {
+    const enough = structuredClone(connected);
+    const forecast = enough.sections[0].rows[0].forecast;
+    if (forecast) forecast.needsData = null;
+    serve(enough);
+    render(<GoalsPanel />);
+
+    await screen.findByTestId("modelled-at");
+    expect(screen.queryByTestId("needs-data")).toBeNull();
+  });
+
   it("shows each section of the workbook in its order, tests with their points", async () => {
     serve(connected);
     render(<GoalsPanel />);
@@ -312,7 +349,7 @@ describe("columns", () => {
         new Date(2026, 10, 3),
       ),
     ).toBe(
-      "Modelled, not done as this event Apr 3, 2026 (214 days ago): modelled from your VDOT 37.5 anchor of 2026-04-03.",
+      "Modelled, not done as this event, from data through Apr 3, 2026 (214 days ago): modelled from your VDOT 37.5 anchor of 2026-04-03.",
     );
   });
 
@@ -371,5 +408,37 @@ describe("columns", () => {
         note: "",
       }),
     ).toBe("Evoke SFAS-ready");
+  });
+});
+
+describe("forecastDataLine", () => {
+  it("names the data date alone when nothing more is needed", () => {
+    expect(
+      forecastDataLine({
+        probability: 0.5,
+        projected: null,
+        method: "trend",
+        evidence: "",
+        hoursToReach: null,
+        dataThrough: "2026-10-30",
+        needsData: null,
+      }),
+    ).toBe("Modelled from data through Oct 30, 2026.");
+  });
+
+  it("says when a forecast has no dated data", () => {
+    expect(
+      forecastDataLine({
+        probability: null,
+        projected: null,
+        method: "none",
+        evidence: "",
+        hoursToReach: null,
+        needsData:
+          "3 dated readings over 42 days to make a trend; the log has 0",
+      }),
+    ).toBe(
+      "Modelled with no dated data. Needs more data: 3 dated readings over 42 days to make a trend; the log has 0.",
+    );
   });
 });

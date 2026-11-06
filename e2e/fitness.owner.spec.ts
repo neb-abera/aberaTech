@@ -105,6 +105,11 @@ test("the console opens on the workbook's goals, in its groups and order", async
   await expect(fbi.getByRole("rowheader", { name: /^Push-ups/ })).toBeVisible();
   await expect(aft.getByText(/goal \d+ of 500 pts/)).toBeVisible();
 
+  // When the forecasts were worked out, and from which workouts.
+  await expect(page.getByTestId("modelled-at")).toHaveText(
+    /^Modelled [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{2}:\d{2} (AM|PM)( from workouts through [A-Z][a-z]{2} \d{1,2}, \d{4})?\.$/,
+  );
+
   // All nineteen goals within 1.2 desktop screens of the tab bar.
   const rows = page.getByRole("rowheader");
   await expect(rows).toHaveCount(19);

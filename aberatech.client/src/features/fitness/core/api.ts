@@ -1003,6 +1003,10 @@ export interface GoalForecast {
   method: "trajectory" | "trend" | "held" | "none";
   evidence: string;
   hoursToReach: number | null;
+  /** The date of the newest reading the forecast was made from. */
+  dataThrough?: string | null;
+  /** What the forecast still needs to be trusted; null when it has enough. */
+  needsData?: string | null;
 }
 
 /** One essential workbook row, against the log. */
@@ -1055,6 +1059,10 @@ export interface Goals {
   weeklyHours: number;
   weekBasis: string;
   sections: GoalSection[];
+  /** When the server worked the forecasts out, as an ISO instant. */
+  modelledAt?: string | null;
+  /** The date of the newest workout in the log. */
+  workoutsThrough?: string | null;
 }
 
 export function fetchGoals(signal?: AbortSignal): Promise<Goals> {
