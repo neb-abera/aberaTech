@@ -36,7 +36,7 @@
   <ItemGroup>
     <!-- Garmin's own FIT decoder, published by Garmin on NuGet. Parsing the
          binary FIT format by hand is how you get subtly wrong heart-rate data;
-         the vendor's decoder is the one engine for that behaviour. -->
+         the vendor's decoder is the one engine for that behavior. -->
     <PackageReference Include="Garmin.FIT.Sdk" />
     <!-- Microsoft's Open XML SDK reads the goals workbook. The .xlsx format
          is a zip of XML parts with shared strings and styles; the vendor's
