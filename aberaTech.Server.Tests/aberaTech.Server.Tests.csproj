@@ -14,7 +14,7 @@
     <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
     <UseMicrosoftTestingPlatformRunner>false</UseMicrosoftTestingPlatformRunner>
     <!-- xUnit1051 asks every call that takes a CancellationToken to pass
-         TestContext.Current.CancellationToken, so a cancelled run stops
+         TestContext.Current.CancellationToken, so a canceled run stops
          sooner. It fired on 229 call sites when xunit.v3 arrived. It changes
          how fast an aborted run exits, never what a test proves, so it is off
          here rather than failing the build under TreatWarningsAsErrors. -->
