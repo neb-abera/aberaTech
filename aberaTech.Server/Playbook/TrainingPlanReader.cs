@@ -24,7 +24,7 @@ public sealed record PlanWorkout(
     string? Sport,
     int? Order,
     double? Minutes,
-    double? Kilometres,
+    double? Kilometers,
     double? Tss,
     double? IntensityFactor,
     string Description,

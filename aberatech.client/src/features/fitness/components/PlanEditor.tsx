@@ -180,7 +180,7 @@ export default function PlanEditor({
                 }
               />
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                Split to maximise the ceiling it supports, which lands near 80%
+                Split to maximize the ceiling it supports, which lands near 80%
                 easy — the distribution the elite-endurance literature observes,
                 arrived at rather than assumed.
               </Typography>

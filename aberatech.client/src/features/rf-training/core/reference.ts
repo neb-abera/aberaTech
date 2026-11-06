@@ -83,7 +83,7 @@ export const decibels: { db: number; ratio: string }[] = [
 export const bandLengths = [1.9, 3.6, 7.1, 10.1, 14.2, 18.1, 21.3, 28.5].map(
   (mhz) => ({
     mhz,
-    metres: 300 / mhz,
+    meters: 300 / mhz,
     halfWaveFeet: 468 / mhz,
     legFeet: 234 / mhz,
     ocfFeet: 0.14 * (468 / mhz),

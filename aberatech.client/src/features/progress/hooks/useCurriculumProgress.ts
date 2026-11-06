@@ -3,7 +3,7 @@ import {
   addAttempt,
   type CurriculumDocument,
   clearDone,
-  normaliseCurriculum,
+  normalizeCurriculum,
   removeAttempt,
   toggleDone,
 } from "../core/curriculum";
@@ -14,23 +14,23 @@ import { useOwnerDocument } from "./useOwnerDocument";
  * The owner's progress through one plan: the ticks and the gate log, loaded
  * once from the server and saved a beat after each change.
  *
- * A plan that keeps more than that passes its own `normalise`, which must
- * at least do what `normaliseCurriculum` does, and reads the rest from
+ * A plan that keeps more than that passes its own `normalize`, which must
+ * at least do what `normalizeCurriculum` does, and reads the rest from
  * `document`.
  */
 export function useCurriculumProgress<
   T extends CurriculumDocument = CurriculumDocument,
 >(
   key: string,
-  normalise: (value: Partial<T> | null) => T = normaliseCurriculum as (
+  normalize: (value: Partial<T> | null) => T = normalizeCurriculum as (
     value: Partial<T> | null,
   ) => T,
 ) {
   const { status, value, set, saving } = useOwnerDocument<T>(key);
-  const document = normalise(value);
+  const document = normalize(value);
   const change = useCallback(
-    (fn: (current: T) => T) => set((current) => fn(normalise(current))),
-    [set, normalise],
+    (fn: (current: T) => T) => set((current) => fn(normalize(current))),
+    [set, normalize],
   );
 
   return {

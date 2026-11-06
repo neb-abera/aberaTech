@@ -52,7 +52,7 @@ export default function CourseChip({
   const isBroken = ctx.broken.has(code);
   const isNeeded = ctx.needed.has(code);
   const isFocus = model.focus === code;
-  const colour = courseColorVar(course.areas, model.areas);
+  const color = courseColorVar(course.areas, model.areas);
 
   const borderColour = isBroken
     ? "error.main"
@@ -114,7 +114,7 @@ export default function CourseChip({
           borderColor: borderColour,
           borderWidth: isBroken || isFocus || isNeeded ? 2 : 1,
           borderStyle: blocked ? "dashed" : "solid",
-          backgroundColor: `color-mix(in srgb, ${colour} var(--planner-chip-tint), transparent)`,
+          backgroundColor: `color-mix(in srgb, ${color} var(--planner-chip-tint), transparent)`,
           cursor: canDrag ? "grab" : "pointer",
           opacity: blocked && !rescuable ? 0.62 : 1,
           userSelect: "none",
@@ -129,7 +129,7 @@ export default function CourseChip({
             alignSelf: "stretch",
             minHeight: 18,
             borderRadius: 2,
-            backgroundColor: colour,
+            backgroundColor: color,
             flexShrink: 0,
           }}
         />

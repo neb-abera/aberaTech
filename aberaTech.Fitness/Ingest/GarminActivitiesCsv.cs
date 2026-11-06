@@ -109,7 +109,7 @@ public static class GarminActivitiesCsv
     private static double? ParseKilometers(string value)
     {
         // Garmin can write "3.02" or "3,02" depending on account locale, and
-        // thousands separators on long rides. Normalise the comma-decimal case.
+        // thousands separators on long rides. Normalize the comma-decimal case.
         var cleaned = value.Trim().Replace("\"", "");
         if (cleaned.Length == 0 || cleaned == "--") return null;
         if (cleaned.Contains(',') && !cleaned.Contains('.')) cleaned = cleaned.Replace(',', '.');

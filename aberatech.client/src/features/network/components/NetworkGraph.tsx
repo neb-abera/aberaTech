@@ -137,7 +137,7 @@ export default function NetworkGraph({
           const faint = dimmed.has(node.id);
           const isLit = lit === node.id;
           const near = neighbours.has(node.id);
-          const colour = colorOf(node.sector);
+          const color = colorOf(node.sector);
           const standing = node.status ? ring[node.status] : ring.none;
           const hoverLabel =
             !faint && !captioned.has(node.id) && (isLit || near);
@@ -168,7 +168,7 @@ export default function NetworkGraph({
               {(isLit || near) && (
                 <circle
                   r={node.r + 7}
-                  fill={colour}
+                  fill={color}
                   fillOpacity={isLit ? 0.3 : 0.15}
                 />
               )}
@@ -181,9 +181,9 @@ export default function NetworkGraph({
                       width={node.r * 2}
                       height={node.r * 2}
                       rx={3}
-                      fill={colour}
+                      fill={color}
                       fillOpacity={0.18}
-                      stroke={colour}
+                      stroke={color}
                       strokeWidth={2.5}
                     />
                     <rect
@@ -191,25 +191,25 @@ export default function NetworkGraph({
                       y={-node.r * 0.35}
                       width={node.r * 0.7}
                       height={node.r * 0.7}
-                      fill={colour}
+                      fill={color}
                     />
                   </>
                 ) : (
                   <>
                     <circle
                       r={node.r}
-                      fill={colour}
+                      fill={color}
                       fillOpacity={0.18}
-                      stroke={colour}
+                      stroke={color}
                       strokeWidth={2.5}
                     />
-                    <circle r={node.r * 0.35} fill={colour} />
+                    <circle r={node.r * 0.35} fill={color} />
                   </>
                 )
               ) : (
                 <circle
                   r={node.r}
-                  fill={colour}
+                  fill={color}
                   fillOpacity={node.status === "connected" ? 1 : 0.75}
                   stroke={standing.color}
                   strokeWidth={standing.width}

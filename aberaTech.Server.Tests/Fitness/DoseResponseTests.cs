@@ -14,7 +14,7 @@ public sealed class DoseResponseTests
     public void Optimal_split_of_a_normal_week_reproduces_the_eighty_twenty_distribution()
     {
         // Seiler's finding, not an assumption baked into the allocator: given
-        // eight hours and told to maximise the ceiling, the model spends them
+        // eight hours and told to maximize the ceiling, the model spends them
         // the way elite endurance athletes are observed to.
         var dose = DoseResponse.Allocate(8).Dose;
 

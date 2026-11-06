@@ -52,7 +52,7 @@ public static class LoadCarriage
     /// <summary>The dry ruck weight selection times at: 45 lb.</summary>
     public const double ReferenceLoadKg = 45 / BodyMass.PoundsPerKg;
 
-    /// <summary>Energy released per litre of oxygen at a mixed fuel, in joules.</summary>
+    /// <summary>Energy released per liter of oxygen at a mixed fuel, in joules.</summary>
     public const double JoulesPerLitreOxygen = 20_900;
 
     /// <summary>The share of running VDOT a loaded march can sustain.</summary>

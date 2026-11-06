@@ -83,11 +83,11 @@ export default function DevBoxPanel() {
   const running = power !== null && isRunning(power);
   React.useEffect(() => {
     if (!waiting && !running) return;
-    let cancelled = false;
+    let canceled = false;
     let timer = 0;
     const tick = async () => {
       const next = await refresh();
-      if (cancelled) return;
+      if (canceled) return;
       if (next.status === "error") {
         // One missed answer does not end the wait. Ask again.
         timer = window.setTimeout(tick, waiting ? pollEvery : refreshEvery);
@@ -105,7 +105,7 @@ export default function DevBoxPanel() {
     };
     timer = window.setTimeout(tick, waiting ? pollEvery : refreshEvery);
     return () => {
-      cancelled = true;
+      canceled = true;
       window.clearTimeout(timer);
     };
   }, [waiting, running, starting, refresh]);

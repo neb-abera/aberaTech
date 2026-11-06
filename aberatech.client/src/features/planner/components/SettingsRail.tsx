@@ -57,7 +57,7 @@ export default function SettingsRail({ model, update }: SettingsRailProps) {
           <AreaToggle
             key={name}
             name={name}
-            colour={areaColorVar(name)}
+            color={areaColorVar(name)}
             count={
               model.data.areas[name].filter((c) => model.data.get(c)).length
             }
@@ -76,7 +76,7 @@ export default function SettingsRail({ model, update }: SettingsRailProps) {
           <AreaToggle
             key={name}
             name={name.replace(" (transcript)", "")}
-            colour={areaColorVar("Computer Engineering")}
+            color={areaColorVar("Computer Engineering")}
             count={
               model.data.concentrations[name].filter((c) => model.data.get(c))
                 .length
@@ -328,13 +328,13 @@ function Section({
 
 function AreaToggle({
   name,
-  colour,
+  color,
   count,
   checked,
   onChange,
 }: {
   name: string;
-  colour: string;
+  color: string;
   count: number;
   checked: boolean;
   onChange: () => void;
@@ -356,7 +356,7 @@ function AreaToggle({
               width: 10,
               height: 10,
               borderRadius: "50%",
-              backgroundColor: colour,
+              backgroundColor: color,
               flexShrink: 0,
             }}
           />

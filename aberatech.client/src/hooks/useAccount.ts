@@ -58,14 +58,14 @@ export function useAccount(): { signedIn: boolean; resolved: boolean } {
   const [state, setState] = useState({ signedIn: false, resolved: false });
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
 
     void accountSignedIn().then((value) => {
-      if (!cancelled) setState({ signedIn: value, resolved: true });
+      if (!canceled) setState({ signedIn: value, resolved: true });
     });
 
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 

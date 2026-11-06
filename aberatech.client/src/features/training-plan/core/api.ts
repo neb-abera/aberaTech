@@ -36,7 +36,7 @@ export interface PlanWorkout {
   sport?: string;
   order?: number;
   minutes?: number;
-  kilometres?: number;
+  kilometers?: number;
   tss?: number;
   intensityFactor?: number;
   description: string;

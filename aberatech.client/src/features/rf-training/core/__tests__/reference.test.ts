@@ -16,7 +16,7 @@ describe("the reference cards", () => {
       expect(band.halfWaveFeet).toBeCloseTo(468 / band.mhz, 6);
       expect(band.legFeet).toBeCloseTo(band.halfWaveFeet / 2, 6);
       expect(band.ocfFeet).toBeCloseTo(0.14 * band.halfWaveFeet, 6);
-      expect(band.metres).toBeCloseTo(300 / band.mhz, 6);
+      expect(band.meters).toBeCloseTo(300 / band.mhz, 6);
     }
   });
 

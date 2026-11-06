@@ -358,7 +358,7 @@ function WorkoutItem({ workout }: { workout: PlanWorkout }) {
   const facts = [
     workout.sport,
     formatMinutes(workout.minutes),
-    workout.kilometres ? `${workout.kilometres} km` : "",
+    workout.kilometers ? `${workout.kilometers} km` : "",
     workout.tss !== undefined ? `${workout.tss} TSS` : "",
   ].filter(Boolean);
   return (

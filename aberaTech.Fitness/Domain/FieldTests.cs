@@ -23,7 +23,7 @@ public sealed record RecordingHalves(double FirstHr, double SecondHr, double? Fi
 /// <param name="SecPerKm">The pace held, over the part of the run that is the measurement.</param>
 /// <param name="AverageHr">The heart rate held, likewise.</param>
 /// <param name="DriftPercent">Pace-to-heart-rate decoupling between the halves, when laps allowed it.</param>
-/// <param name="Evidence">How it was recognised and what it showed, in one sentence.</param>
+/// <param name="Evidence">How it was recognized and what it showed, in one sentence.</param>
 public sealed record FieldTest(
     string Kind,
     Guid ActivityId,

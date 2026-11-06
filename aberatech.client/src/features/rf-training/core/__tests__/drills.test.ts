@@ -99,8 +99,8 @@ describe("generators", () => {
       const f = Number(problem.prompt.match(/of ([\d.]+) MHz/)?.[1]);
       within1pct(value, 300 / f);
     } else {
-      const metres = Number(problem.prompt.match(/of ([\d.]+) m/)?.[1]);
-      within1pct(value, 300 / metres);
+      const meters = Number(problem.prompt.match(/of ([\d.]+) m/)?.[1]);
+      within1pct(value, 300 / meters);
     }
   });
 

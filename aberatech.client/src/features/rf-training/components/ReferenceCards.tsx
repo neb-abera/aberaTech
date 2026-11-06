@@ -93,7 +93,7 @@ export default function ReferenceCards() {
             {bandLengths.map((band) => (
               <TableRow key={band.mhz}>
                 <TableCell>{band.mhz}</TableCell>
-                <TableCell align="right">{band.metres.toFixed(1)}</TableCell>
+                <TableCell align="right">{band.meters.toFixed(1)}</TableCell>
                 <TableCell align="right">{feet(band.halfWaveFeet)}</TableCell>
                 <TableCell align="right">{feet(band.legFeet)}</TableCell>
                 <TableCell align="right">{feet(band.ocfFeet)}</TableCell>

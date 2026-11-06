@@ -9,19 +9,19 @@ import {
   type Block,
   clearDone,
   emptyCurriculum,
-  normaliseCurriculum,
+  normalizeCurriculum,
   removeAttempt,
   tasksOf,
   toggleDone,
 } from "../curriculum";
 
-describe("normaliseCurriculum", () => {
+describe("normalizeCurriculum", () => {
   it("makes nothing into an empty document", () => {
-    expect(normaliseCurriculum(null)).toEqual(emptyCurriculum());
+    expect(normalizeCurriculum(null)).toEqual(emptyCurriculum());
   });
 
   it("keeps what is well formed and drops what is not", () => {
-    const loaded = normaliseCurriculum({
+    const loaded = normalizeCurriculum({
       done: ["a", 3, "b"] as unknown as string[],
       gates: {
         wire: [
@@ -39,7 +39,7 @@ describe("normaliseCurriculum", () => {
 
   it("treats a gates value that is not an object as no attempts", () => {
     expect(
-      normaliseCurriculum({ gates: [] as unknown as Record<string, never> })
+      normalizeCurriculum({ gates: [] as unknown as Record<string, never> })
         .gates,
     ).toEqual({});
   });

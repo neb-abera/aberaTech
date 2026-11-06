@@ -175,7 +175,7 @@ public static class ModelFit
             }
         }
 
-        return Summarise(theta, ordered, priorMean, priorSd);
+        return Summarize(theta, ordered, priorMean, priorSd);
     }
 
     /// <summary>The answer when there is not enough history to say anything else.</summary>
@@ -204,7 +204,7 @@ public static class ModelFit
             Steps: steps);
     }
 
-    private static FitResult Summarise(
+    private static FitResult Summarize(
         double[] theta, IReadOnlyList<FitObservation> data, double[] priorMean, double[] priorSd)
     {
         var residuals = Residuals(theta, data);
