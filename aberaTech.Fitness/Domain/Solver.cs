@@ -107,7 +107,7 @@ public sealed record SolverContext(
     }
 }
 
-/// <summary>A distribution, summarised the way the page shows it.</summary>
+/// <summary>A distribution, summarized the way the page shows it.</summary>
 /// <param name="Median">The middle of the draws.</param>
 /// <param name="Low">10th percentile.</param>
 /// <param name="High">90th percentile.</param>

@@ -24,18 +24,18 @@ const resolved = {
 const AA_NORMAL_TEXT = 4.5;
 
 /** `hsl(h, s%, l%)`, `hsla(...)` or `rgba(r, g, b, a)` to [r, g, b, a], 0..1. */
-const parse = (colour: string): [number, number, number, number] => {
-  const rgba = colour.match(
+const parse = (color: string): [number, number, number, number] => {
+  const rgba = color.match(
     /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)/,
   );
   if (rgba) {
     const [r, g, b] = [rgba[1], rgba[2], rgba[3]].map((n) => Number(n) / 255);
     return [r, g, b, rgba[4] === undefined ? 1 : Number(rgba[4])];
   }
-  const hsl = colour.match(
+  const hsl = color.match(
     /hsla?\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%(?:[,/\s]+([\d.]+))?\s*\)/,
   );
-  if (!hsl) throw new Error(`contrast test cannot read the color ${colour}`);
+  if (!hsl) throw new Error(`contrast test cannot read the color ${color}`);
   const [h, s, l] = [
     Number(hsl[1]) / 360,
     Number(hsl[2]) / 100,
@@ -86,7 +86,7 @@ describe("scheme contrast", () => {
       "background.default": palette.background.default,
       "background.paper": palette.background.paper,
     };
-    for (const [role, colour] of Object.entries({
+    for (const [role, color] of Object.entries({
       primary: palette.text.primary,
       secondary: palette.text.secondary,
       disabled: palette.text.disabled,
@@ -94,7 +94,7 @@ describe("scheme contrast", () => {
       for (const [surface, background] of Object.entries(surfaces)) {
         it(`${scheme}: text.${role} on ${surface} meets WCAG AA`, () => {
           expect(
-            contrast(colour as string, background as string),
+            contrast(color as string, background as string),
           ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
         });
       }

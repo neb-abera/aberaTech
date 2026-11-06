@@ -44,12 +44,12 @@ import type { Theme } from "@mui/material/styles";
  * override, so a page that has not yet run the color-scheme script paints
  * as dark.
  */
-const bloom = (colour: string) =>
-  `radial-gradient(ellipse 80% 325px at 50% -130px, ${colour}, transparent)`;
+const bloom = (color: string) =>
+  `radial-gradient(ellipse 80% 325px at 50% -130px, ${color}, transparent)`;
 
 /** Blue at the top edge, the page color from 96px to the end. */
-const wash = (colour: string, page: string) =>
-  `linear-gradient(${colour}, ${page} 96px)`;
+const wash = (color: string, page: string) =>
+  `linear-gradient(${color}, ${page} 96px)`;
 
 /** On the root while the page is scrolled away from its top. */
 export const SCROLLED = "data-scrolled";
@@ -58,9 +58,9 @@ const glow = { dark: "hsl(210, 100%, 10%)", light: "hsl(210, 100%, 94%)" };
 
 export const canvasBackground = (theme: Theme) => {
   const page = theme.vars?.palette.background.default ?? "transparent";
-  const paint = (colour: string) => ({
-    backgroundColor: colour,
-    backgroundImage: `${bloom(colour)}, ${wash(colour, page)}`,
+  const paint = (color: string) => ({
+    backgroundColor: color,
+    backgroundImage: `${bloom(color)}, ${wash(color, page)}`,
     // A root box of fractional height (1185.55px on /guides) ends inside the
     // last row of pixels, and WebKit blends the canvas blue into it. The wash
     // runs 1px past the box so the last row is the page color.

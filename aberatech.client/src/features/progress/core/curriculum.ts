@@ -71,7 +71,7 @@ export const emptyCurriculum = (): CurriculumDocument => ({
 });
 
 /** Whatever came back, made whole: a missing or malformed part is empty. */
-export function normaliseCurriculum(
+export function normalizeCurriculum(
   value: Partial<CurriculumDocument> | null,
 ): CurriculumDocument {
   return {

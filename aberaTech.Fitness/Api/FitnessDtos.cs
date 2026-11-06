@@ -46,7 +46,7 @@ public sealed record SettingsDto(
     double? GoalWeightKg,
     /// <summary>
     /// The clamp the server applies to a weight adjustment, served so the page
-    /// can offer exactly the range the model will honour rather than a range
+    /// can offer exactly the range the model will honor rather than a range
     /// that silently gets clamped to a different answer.
     /// </summary>
     double MaxWeightAdjustmentFraction,

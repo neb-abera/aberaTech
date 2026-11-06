@@ -234,7 +234,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
   // answer on arrival still made the box compute every superseded one, and
   // they queue against the ones the reader is waiting for.
   React.useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const stop = new AbortController();
     const handle = window.setTimeout(() => {
       setBusy(true);
@@ -246,23 +246,23 @@ export default function Workbench({ summary }: { summary: Summary }) {
         stop.signal,
       )
         .then((answer) => {
-          if (!cancelled) {
+          if (!canceled) {
             setResult(answer);
             setError(null);
           }
         })
-        .catch(() => !cancelled && setError("Could not work that out."))
-        .finally(() => !cancelled && setBusy(false));
+        .catch(() => !canceled && setError("Could not work that out."))
+        .finally(() => !canceled && setBusy(false));
     }, 350);
     return () => {
-      cancelled = true;
+      canceled = true;
       window.clearTimeout(handle);
       stop.abort();
     };
   }, [state, unknown]);
 
   React.useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const stop = new AbortController();
     const handle = window.setTimeout(() => {
       fetchSurface(
@@ -272,26 +272,26 @@ export default function Workbench({ summary }: { summary: Summary }) {
         unknown === "RaceTime" ? null : state.targetSeconds,
         stop.signal,
       )
-        .then((grid) => !cancelled && setSurface(grid))
+        .then((grid) => !canceled && setSurface(grid))
         .catch(() => undefined);
     }, 450);
     return () => {
-      cancelled = true;
+      canceled = true;
       window.clearTimeout(handle);
       stop.abort();
     };
   }, [state, plotAcross, plotDown, unknown]);
 
   React.useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const stop = new AbortController();
     const handle = window.setTimeout(() => {
       fetchMeasurementPlan(toRequest(state), stop.signal)
-        .then((next) => !cancelled && setPlan(next))
+        .then((next) => !canceled && setPlan(next))
         .catch(() => undefined);
     }, 600);
     return () => {
-      cancelled = true;
+      canceled = true;
       window.clearTimeout(handle);
       stop.abort();
     };

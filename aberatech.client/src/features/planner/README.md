@@ -85,6 +85,6 @@ can be rewritten without re-verifying the rules.
 
 ## Data
 
-`data/catalog.json` is generated from the JHU e-catalogue PDF. Regenerating it
+`data/catalog.json` is generated from the PDF of the JHU `e-catalogue`. Regenerating it
 is a separate offline step. The regression test keeps a bad regeneration from
 shipping.

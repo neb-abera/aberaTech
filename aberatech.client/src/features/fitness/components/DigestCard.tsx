@@ -19,16 +19,16 @@ export default function DigestCard() {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     fetchDigest()
       .then((d) => {
-        if (!cancelled) setDigest(d);
+        if (!canceled) setDigest(d);
       })
       .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
+        if (!canceled) setError(e.message);
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 

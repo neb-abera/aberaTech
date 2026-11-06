@@ -80,10 +80,10 @@ describe("canvas background", () => {
     mount();
     document.documentElement.setAttribute("data-mui-color-scheme", "light");
     scrollTo(400);
-    const colour = root().backgroundColor;
+    const color = root().backgroundColor;
     document.documentElement.removeAttribute("data-mui-color-scheme");
 
-    expect(colour).toBe("var(--template-palette-background-default)");
+    expect(color).toBe("var(--template-palette-background-default)");
   });
 
   it("leaves the body transparent so it does not cover the glow", () => {

@@ -90,10 +90,10 @@ public sealed class SchedulingRouteTests : IDisposable
 
         Assert.DoesNotContain(startsAt, await SlotsOnAsync(visitor, date));
 
-        using var cancelled = await visitor.DeleteAsync($"/api/scheduling/book/{id}");
+        using var canceled = await visitor.DeleteAsync($"/api/scheduling/book/{id}");
         using var again = await visitor.DeleteAsync($"/api/scheduling/book/{id}");
 
-        Assert.Equal(HttpStatusCode.NoContent, cancelled.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, canceled.StatusCode);
         // A second press of the same link is the usual case, not an error.
         Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
         Assert.Contains(startsAt, await SlotsOnAsync(visitor, date));

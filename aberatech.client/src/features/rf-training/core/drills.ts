@@ -157,26 +157,26 @@ const bandsMHz = [
 
 export function wavelengthProblem(random: Random, id: string): Problem {
   const f = pick(random, bandsMHz);
-  const metres = 300 / f;
+  const meters = 300 / f;
   if (random() < 0.5) {
     return {
       id,
       kind: "wavelength",
       prompt: `What is the wavelength of ${f} MHz, in meters?`,
-      answer: round(metres, 2),
+      answer: round(meters, 2),
       unit: "m",
       tolerance: 0.02,
-      explanation: `λ = 300 / ${f} = ${round(metres, 2)} m.`,
+      explanation: `λ = 300 / ${f} = ${round(meters, 2)} m.`,
     };
   }
   return {
     id,
     kind: "wavelength",
-    prompt: `A wavelength of ${round(metres, 2)} m is what frequency, in megahertz?`,
+    prompt: `A wavelength of ${round(meters, 2)} m is what frequency, in megahertz?`,
     answer: round(f, 2),
     unit: "MHz",
     tolerance: 0.02,
-    explanation: `f = 300 / ${round(metres, 2)} = ${round(f, 2)} MHz.`,
+    explanation: `f = 300 / ${round(meters, 2)} = ${round(f, 2)} MHz.`,
   };
 }
 

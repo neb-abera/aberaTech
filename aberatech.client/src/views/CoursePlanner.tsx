@@ -23,7 +23,7 @@ export default function CoursePlanner(props: { disableCustomTheme?: boolean }) {
             target="_blank"
             rel="noopener"
           >
-            JHU e-catalogue
+            JHU course catalog
           </Link>
           . Check anything that matters with your adviser before you register.
         </>

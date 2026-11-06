@@ -103,5 +103,5 @@ public sealed class TwilioMessageSender(
     }
 
     /// <summary>A short, bounded excerpt of an error body, safe to store.</summary>
-    private static string Summarise(string body) => body.Length <= 200 ? body : body[..200];
+    private static string Summarize(string body) => body.Length <= 200 ? body : body[..200];
 }

@@ -985,10 +985,10 @@ test.describe("/alerts", () => {
       acknowledgedVia: "browser",
     });
     // Pushover's repeats for it were canceled.
-    const cancelled = await (
+    const canceled = await (
       await page.request.get("/api/alerts/fake/cancelled")
     ).json();
-    expect(cancelled.length).toBe(cancelledBefore + 1);
+    expect(canceled.length).toBe(cancelledBefore + 1);
 
     // Still on, and nothing rings: the one due alarm is answered.
     await page.reload();
@@ -1050,10 +1050,10 @@ test.describe("/alerts", () => {
       ),
     ).toMatchObject({ acknowledged: true, acknowledgedVia: "browser" });
     // Pushover's repeats for it were canceled.
-    const cancelled = await (
+    const canceled = await (
       await page.request.get("/api/alerts/fake/cancelled")
     ).json();
-    expect(cancelled.length).toBe(cancelledBefore + 1);
+    expect(canceled.length).toBe(cancelledBefore + 1);
 
     await page.reload();
     await expect(ringing).toHaveCount(0);

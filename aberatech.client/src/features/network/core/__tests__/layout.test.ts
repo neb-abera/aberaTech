@@ -85,7 +85,7 @@ describe("layout", () => {
 
   it("gathers each sector into its own region", () => {
     const { nodes } = layout(crowd(60, 12));
-    const centres = ["s1", "s2", "s3"].map((sector) =>
+    const centers = ["s1", "s2", "s3"].map((sector) =>
       centroid(nodes.filter((node) => node.sector === sector)),
     );
     // The three centroids are well apart, and every node is nearer its own
@@ -93,14 +93,14 @@ describe("layout", () => {
     for (let i = 0; i < 3; i++)
       for (let j = i + 1; j < 3; j++)
         expect(
-          Math.hypot(centres[i].x - centres[j].x, centres[i].y - centres[j].y),
+          Math.hypot(centers[i].x - centers[j].x, centers[i].y - centers[j].y),
         ).toBeGreaterThan(150);
     const strays = nodes.filter((node) => {
       const own = ["s1", "s2", "s3"].indexOf(node.sector);
       const distance = (c: { x: number; y: number }) =>
         Math.hypot(node.x - c.x, node.y - c.y);
-      return centres.some(
-        (c, k) => k !== own && distance(c) < distance(centres[own]),
+      return centers.some(
+        (c, k) => k !== own && distance(c) < distance(centers[own]),
       );
     });
     // A person who belongs to another sector's organization sits between

@@ -128,6 +128,8 @@ budget: ## Page weight: the production client build against scripts/page-budgets
 prose: ## Writing rules (.vale/styles/Abera): the Markdown, then the prerendered pages
 	./scripts/check-prose.sh --self-test
 	./scripts/check-prose.sh
+	./scripts/check-american-spelling.sh --self-test
+	./scripts/check-american-spelling.sh
 	$(DOCKER) build --target clientprose -f $(DOCKERFILE) .
 
 # The Playwright image is the FROM line of e2e/Dockerfile, pinned by tag and

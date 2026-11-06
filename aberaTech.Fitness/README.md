@@ -40,7 +40,7 @@ sourced predictions out.
   Pandolf load-carriage model through the run engine, calisthenics from the
   best recent bodyweight set in the strength log, strength from the Epley
   triple, and the fitness test from the tables the Army published. Every line
-  says whether its number was measured or modelled, and every line that the
+  says whether its number was measured or modeled, and every line that the
   log cannot score is listed rather than dropped.
 - **Reads the pack**: a ruck's load is parsed from the activity name
   ("Ruck 45lb", "12 mi @ 20 kg") or typed per ruck on the page, kept in
@@ -169,7 +169,7 @@ than guessing.
 A projection is of a plan, so the plan's starting conditions are stated. Three
 inputs the athlete gives rather than the model guesses:
 
-- **the week to start from**, if a build-up is being modelled at all.
+- **the week to start from**, if a build-up is being modeled at all.
 - **the build-up rate**, which defaults to none: a plan is projected as
   written, trained in full from the first week.
 - **whether the imported months count as evidence** about how this athlete
@@ -204,7 +204,7 @@ and a plan may still ramp beyond it. What it stops is a ceiling calculated from
 volume nobody has reason to think this athlete could carry. The effect is large:
 the maximum reachable ceiling is 49.9 for an athlete who has sustained four
 hours a week, 60.0 at fourteen, and 64.4 when nothing is stated. An unstated
-week keeps the previous behaviour and says so in the assumptions.
+week keeps the previous behavior and says so in the assumptions.
 
 ### Losing it
 

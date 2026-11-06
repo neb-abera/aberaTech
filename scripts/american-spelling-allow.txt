@@ -1,0 +1,35 @@
+# Outside values that keep their British spelling. One per line:
+# path<TAB>extended regex the line must match<TAB>why.
+# scripts/check-american-spelling.sh reads this file.
+.github/workflows/lighthouse-nightly.yml	result != 'cancelled'	GitHub Actions job result value
+aberaTech.Scheduling/Alerts/AlertPlanner.cs	"CANCELLED"	iCalendar STATUS value
+aberaTech.Scheduling/Alerts/CalendarWrites.cs	== "cancelled"	Google Calendar event status value
+aberaTech.Scheduling/Alerts/AlertsEndpoints.cs	/fake/cancelled	test fake that mirrors Google Calendar's cancelled status
+aberaTech.Scheduling/Alerts/FakeAlertServices.cs	.	test fake that mirrors Google Calendar's cancelled status and STATUS:CANCELLED
+aberaTech.Scheduling/Alerts/FakeGoogleCalendar.cs	Cancelled	fake of Google Calendar, named for its cancelled status
+aberaTech.Server.Tests/Alerts/AlertEventEditRouteTests.cs	_google\.Cancelled	the Google Calendar fake's name
+aberaTech.Server.Tests/Alerts/AlertPlannerTests.cs	STATUS:CANCELLED|cancelled@google\.com	iCalendar STATUS value and a Google event uid
+aberaTech.Server.Tests/Alerts/AlertsDevelopmentTests.cs	E2E cancelled	the fake's fixture event title
+aberaTech.Server.Tests/Alerts/CalendarWriteTests.cs	\\"cancelled\\"	Google Calendar event status value
+aberaTech.Scheduling/Api/SchedulingEndpoints.cs	Cancelled|"cancelled"	stored column Appointment.Cancelled and enum values NotificationKind.Cancelled and QueueEntryState.Cancelled
+aberaTech.Scheduling/Calendar/DatabaseBusySource.cs	appointment\.Cancelled	stored column Appointment.Cancelled
+aberaTech.Scheduling/Data/SchedulingEntities.cs	public bool Cancelled	stored column Appointment.Cancelled
+aberaTech.Scheduling/Domain/MessageComposer.cs	NotificationKind\.Cancelled	stored enum value
+aberaTech.Scheduling/Domain/NotificationPolicy.cs	Cancelled = 7	stored enum value
+aberaTech.Scheduling/Domain/QueueProjection.cs	Cancelled = 3	stored enum value
+aberaTech.Server.Tests/Domain/MessageComposerTests.cs	NotificationKind\.Cancelled	stored enum value
+aberaTech.Server.Tests/Domain/QueueProjectionTests.cs	QueueEntryState\.Cancelled	stored enum value
+aberaTech.Server.Tests/Security/QueueEntryCapabilityTests.cs	"cancelled"	quotes the stored queue state
+aberatech.client/src/features/scheduling/core/messages.ts	Cancelled:	the server's enum value as a key
+aberatech.client/src/features/scheduling/core/__tests__/messages.test.ts	kindLabel\("Cancelled"\)	the server's enum value
+aberatech.client/src/features/fitness/components/ProjectionPanel.tsx	metres	accepts the unit as a British user types it
+aberatech.client/src/features/planner/core/__tests__/links.test.ts	e-catalogue\.jhu\.edu	JHU's URL
+aberatech.client/src/features/planner/core/links.ts	e-catalogue\.jhu\.edu	JHU's URL
+aberatech.client/src/features/planner/core/rules.ts	JHU e-catalogue	JHU's name for its catalog
+aberatech.client/tools/check-course-links.mjs	e-catalogue\.jhu\.edu	JHU's URL
+aberatech.client/src/features/rf-training/core/plan.ts	id: "licence	stored progress ids
+aberatech.client/src/theme/customizations/inputs.tsx	palette\.grey	MUI palette key
+aberatech.client/src/theme/customizations/navigation.tsx	palette\.grey	MUI palette key
+aberatech.client/src/theme/themePrimitives.ts	grey: \{	MUI palette key
+e2e/owner-alerts.spec.ts	E2E cancelled|/fake/cancelled	the Google Calendar fake's fixture title and route
+aberatech.client/src/views/CoursePlanner.tsx	e-catalogue\.jhu\.edu	JHU's URL

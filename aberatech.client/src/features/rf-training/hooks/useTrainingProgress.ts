@@ -1,6 +1,6 @@
 import {
   type CurriculumDocument,
-  normaliseCurriculum,
+  normalizeCurriculum,
 } from "../../progress/core/curriculum";
 import { useCurriculumProgress } from "../../progress/hooks/useCurriculumProgress";
 import type { Result } from "../core/drills";
@@ -27,9 +27,9 @@ const empty = (): TrainingDocument => ({
 });
 
 /** Whatever came back, made whole: a missing or malformed part is empty. */
-function normalise(value: Partial<TrainingDocument> | null): TrainingDocument {
+function normalize(value: Partial<TrainingDocument> | null): TrainingDocument {
   return {
-    ...normaliseCurriculum(value),
+    ...normalizeCurriculum(value),
     drills: Array.isArray(value?.drills) ? value.drills : [],
   };
 }
@@ -37,7 +37,7 @@ function normalise(value: Partial<TrainingDocument> | null): TrainingDocument {
 export function useTrainingProgress() {
   const progress = useCurriculumProgress<TrainingDocument>(
     documentKey,
-    normalise,
+    normalize,
   );
 
   return {

@@ -40,14 +40,14 @@ test("/guides: every row of cards is centered, including a short one", async ({
 
   const left = Math.min(...boxes.map((box) => box.x));
   const right = Math.max(...boxes.map((box) => box.x + box.width));
-  const centre = (left + right) / 2;
+  const center = (left + right) / 2;
 
   for (const [top, row] of rows) {
     const rowLeft = Math.min(...row.map((box) => box.x));
     const rowRight = Math.max(...row.map((box) => box.x + box.width));
     expect(
-      Math.abs((rowLeft + rowRight) / 2 - centre),
-      `the row at y=${top} spans ${rowLeft} to ${rowRight}, center ${centre}`,
+      Math.abs((rowLeft + rowRight) / 2 - center),
+      `the row at y=${top} spans ${rowLeft} to ${rowRight}, center ${center}`,
     ).toBeLessThanOrEqual(1);
   }
 });

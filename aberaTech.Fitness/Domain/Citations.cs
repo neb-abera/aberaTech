@@ -114,7 +114,7 @@ public static class Citations
 
     public static readonly Citation CogganPmc = new(
         "coggan-training-load",
-        "Chronic and acute training load (CTL/ATL) summarise the dose the body is adapting to; ramping chronic load gradually is what the body absorbs.",
+        "Chronic and acute training load (CTL/ATL) summarize the dose the body is adapting to; ramping chronic load gradually is what the body absorbs.",
         "Andrew Coggan, PhD, and Hunter Allen — the physiologist-coach pair behind the performance-management model most endurance platforms implement.",
         "Training and Racing with a Power Meter (VeloPress)",
         2010,

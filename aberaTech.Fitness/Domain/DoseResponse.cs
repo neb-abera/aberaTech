@@ -55,7 +55,7 @@ public sealed record DoseLimits(
 /// line has no ceiling, and extrapolating one is what let this calculator once
 /// answer "45.8 hours a week" for a time no human has run.
 ///
-/// <b>Allocation.</b> Splitting H hours to maximise C is a constrained optimum,
+/// <b>Allocation.</b> Splitting H hours to maximize C is a constrained optimum,
 /// and the Lagrangian conditions are what make it explainable. Stationarity
 /// gives r·bᵢ·e^(−hᵢ/sᵢ) = λ + μ·cᵢ, so at the optimum every zone in use
 /// returns the same ceiling per hour once its recovery cost is priced at μ.
@@ -213,7 +213,7 @@ public static class DoseResponse
 
     /// <summary>
     /// Split <paramref name="runningHours"/> between the running zones to
-    /// maximise the ceiling, subject to the weekly recovery budget.
+    /// maximize the ceiling, subject to the weekly recovery budget.
     /// </summary>
     /// <remarks>
     /// Solved from the Lagrangian conditions rather than by search: with

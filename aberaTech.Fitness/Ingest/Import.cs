@@ -15,7 +15,7 @@ public sealed record ImportResult(string Kind, IReadOnlyList<Activity> Activitie
 /// knowing that Garmin's "Export Your Data" archive is not the same thing as
 /// the Connect website's activities CSV — and the archive, the thing Garmin
 /// emails you, fitted none of the three. So nothing is asked: the bytes are
-/// sniffed, an archive is walked, and whatever is recognised inside it is
+/// sniffed, an archive is walked, and whatever is recognized inside it is
 /// imported.
 ///
 /// Content decides, never the file name. A name is a claim the uploader makes;

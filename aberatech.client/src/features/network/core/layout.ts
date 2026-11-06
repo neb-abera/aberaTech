@@ -69,7 +69,7 @@ const organizationRadius = 13;
 /** A person's node grows with the tier: 7 px at tier 1, 15 px at tier 5. */
 export const personRadius = (tier: number): number => 5 + 2 * tier;
 
-const centre = { x: width / 2, y: height / 2 };
+const center = { x: width / 2, y: height / 2 };
 const margin = 34;
 const passes = 320;
 const edgeLength = 42;
@@ -110,8 +110,8 @@ export function layout(document: NetworkDocument): Layout {
     const share = (weight.get(sector.id) ?? 2) / total;
     const reach = 0.58 + Math.min(0.3, share * 1.4);
     anchor.set(sector.id, {
-      x: centre.x + (width / 2 - margin) * reach * 1.05 * Math.cos(mid),
-      y: centre.y + (height / 2 - margin) * reach * Math.sin(mid),
+      x: center.x + (width / 2 - margin) * reach * 1.05 * Math.cos(mid),
+      y: center.y + (height / 2 - margin) * reach * Math.sin(mid),
     });
     start += span;
   }
@@ -123,7 +123,7 @@ export function layout(document: NetworkDocument): Layout {
     nodes.push(node);
   };
   for (const org of document.organizations) {
-    const at = anchor.get(org.sector) ?? centre;
+    const at = anchor.get(org.sector) ?? center;
     const angle = hashUnit(`o:${org.id}`) * 2 * Math.PI;
     const distance = 30 + hashUnit(`d:${org.id}`) * 70;
     place({
@@ -141,7 +141,7 @@ export function layout(document: NetworkDocument): Layout {
     const home = person.orgs.find((org) => orgIds.has(org));
     const near = home
       ? nodes[index.get(home) ?? 0]
-      : (anchor.get(person.sector) ?? centre);
+      : (anchor.get(person.sector) ?? center);
     const angle = hashUnit(`p:${person.id}`) * 2 * Math.PI;
     const distance = home ? edgeLength : 20 + hashUnit(`q:${person.id}`) * 60;
     place({
@@ -188,7 +188,7 @@ function relax(
     // Toward the sector's anchor, organizations harder than people.
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
-      const at = anchor.get(node.sector) ?? centre;
+      const at = anchor.get(node.sector) ?? center;
       const pull = node.kind === "organization" ? 0.04 : 0.03;
       vx[i] += (at.x - node.x) * pull;
       vy[i] += (at.y - node.y) * pull;

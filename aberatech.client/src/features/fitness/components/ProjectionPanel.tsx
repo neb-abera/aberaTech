@@ -78,7 +78,7 @@ export default function ProjectionPanel({
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const stop = new AbortController();
     const handle = window.setTimeout(() => {
       const weightKg =
@@ -94,19 +94,19 @@ export default function ProjectionPanel({
         stop.signal,
       )
         .then((result) => {
-          if (!cancelled) {
+          if (!canceled) {
             setPrediction(result);
             setError(null);
           }
         })
         .catch(() => {
-          if (!cancelled) {
+          if (!canceled) {
             setError("Could not compute the projection.");
           }
         });
     }, 250);
     return () => {
-      cancelled = true;
+      canceled = true;
       window.clearTimeout(handle);
       stop.abort();
     };
@@ -155,7 +155,7 @@ export default function ProjectionPanel({
               reclaim — that best was itself run at a bodyweight. The range is
               the ±
               {Math.round(summary.settings.maxWeightAdjustmentFraction * 100)}%
-              the model will honour; past that the fat-mass-only assumption has
+              the model will honor; past that the fat-mass-only assumption has
               nothing behind it.
               {summary.settings.pastPeakWeightKg === null && (
                 <>
