@@ -174,7 +174,9 @@ public sealed record SummaryDto(
     AerobicOutlookDto? AerobicOutlook = null);
 
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
-public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On);
+/// <param name="Source">Where the data came from.</param>
+/// <param name="Model">The model that made a modeled value, with its author and year.</param>
+public sealed record StandingDto(string Metric, double Value, string Basis, string Evidence, string? On, string? Source = null, string? Model = null);
 
 /// <summary>A month of rucking, as a median pace at the reference heart rate and load.</summary>
 public sealed record RuckPointDto(string Month, double MedianSecPerKm, int Rucks);

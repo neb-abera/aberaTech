@@ -26,7 +26,7 @@ public sealed record AerobicOutlookResult(
 /// line is fitted to what the plan says should improve. A straight line is
 /// the least a few points can support. It says where the last weeks point,
 /// and its range widens with how much the weeks scatter around it. It is an
-/// estimate from training runs and is labelled so. It never sets a threshold.
+/// estimate from training runs and is labeled so. It never sets a threshold.
 /// </remarks>
 public static class AerobicOutlook
 {

@@ -76,7 +76,7 @@ public sealed record FitResult(
 /// model has no closed-form derivatives — the prediction is an ODE solve — so
 /// the Jacobian is central differences, which for three parameters costs six
 /// integrations per iteration and is exact to about seven digits. The penalty
-/// term is a Gaussian prior on each parameter centred on the literature value,
+/// term is a Gaussian prior on each parameter centered on the literature value,
 /// which is what stops four noisy months from concluding an athlete is twice
 /// as trainable as anyone alive. With no data the fit returns the prior; with
 /// a long history the prior washes out. <see cref="FitResult.DataWeight"/>

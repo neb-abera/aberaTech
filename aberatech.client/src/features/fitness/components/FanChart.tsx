@@ -10,7 +10,7 @@ const MARGIN = { top: 16, right: 84, bottom: 34, left: 62 };
  * Predicted race time over the coming months, with the 80% band around it.
  *
  * Faster is up, because that is the direction improvement feels like; the axis
- * is therefore inverted against the numbers, and labelled in times rather than
+ * is therefore inverted against the numbers, and labeled in times rather than
  * seconds so nobody has to do the conversion in their head.
  */
 export default function FanChart({

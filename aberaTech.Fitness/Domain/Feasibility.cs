@@ -313,7 +313,7 @@ public static class Feasibility
         // construction, and saying so is more use than dressing 50% up as
         // either confidence or doubt.
         var confidence = probability >= 0.65
-            ? "and the fitted uncertainty puts the odds in your favour"
+            ? "and the fitted uncertainty puts the odds in your favor"
             : probability > 0.35
                 ? "which lands the projection on your date exactly — even odds, so hours above this buy the margin"
                 : probability >= LongShot

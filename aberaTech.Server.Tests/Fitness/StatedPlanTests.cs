@@ -90,7 +90,7 @@ public sealed class StatedPlanTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void A_returning_athlete_can_refuse_to_be_modelled_on_their_layoff()
+    public void A_returning_athlete_can_refuse_to_be_modeled_on_their_layoff()
     {
         // Months of almost no training carry almost no information about how
         // this athlete responds to training, and what looks like improvement is

@@ -100,7 +100,7 @@ export function metricLabel(metric: string): string {
 
 const MILE_METERS = 1609.344;
 
-/** Distance units an athlete actually types, and what one of each is in metres. */
+/** Distance units an athlete actually types, and what one of each is in meters. */
 export const DISTANCE_UNITS = {
   mi: MILE_METERS,
   km: 1000,
@@ -118,8 +118,8 @@ export function fromMeters(meters: number, unit: DistanceUnit): number {
 }
 
 /**
- * Metres as the unit the distance was probably meant in: whole and half miles
- * read as miles, round kilometres as kilometres, anything else as metres.
+ * Meters as the unit the distance was probably meant in: whole and half miles
+ * read as miles, round kilometers as kilometers, anything else as meters.
  */
 export function formatDistance(meters: number): string {
   const miles = meters / MILE_METERS;
@@ -153,7 +153,7 @@ export function parseClock(text: string): number | null {
   return Number.isFinite(seconds) && seconds > 0 ? seconds : null;
 }
 
-/** Seconds per kilometre expressed per mile, for a runner who thinks in miles. */
+/** Seconds per kilometer expressed per mile, for a runner who thinks in miles. */
 export function perMile(secPerKm: number): number {
   return secPerKm * (MILE_METERS / 1000);
 }

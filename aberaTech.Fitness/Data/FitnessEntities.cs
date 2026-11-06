@@ -227,7 +227,7 @@ public class Goal
     public required string Metric { get; set; }
 
     /// <summary>
-    /// The distance for a timed running goal, in metres. Any distance, not
+    /// The distance for a timed running goal, in meters. Any distance, not
     /// only the ones with a preset; null for goals that are not races.
     /// </summary>
     public double? DistanceMeters { get; set; }
@@ -330,7 +330,7 @@ public class AthleteSettings
 /// A model that has never been checked against an outcome is a calculator with
 /// good manners. This one had grown considerably without ever having made a
 /// prediction anybody later compared to reality — and the way that gets fixed
-/// is not more modelling, it is writing one down and waiting.
+/// is not more modeling, it is writing one down and waiting.
 ///
 /// The scenario is stored alongside the answer because a prediction is only
 /// meaningful with its assumptions attached: what it assumed about training,

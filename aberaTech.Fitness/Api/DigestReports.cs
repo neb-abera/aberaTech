@@ -101,7 +101,7 @@ internal static class DigestReports
                 // "Latest" with its date: a reading can be months old, and
                 // "now" read as today (Neb, 2026-11-04).
                 var latest = row.Current is { } c
-                    ? Text($"latest {SelectionReadiness.Describe(row.Unit, c.Value)} ({(c.Basis switch { "Modeled" => "modelled", "Training" => "from training", _ => "measured" })}{(c.On is { } readOn ? Text($" {readOn}") : "")})")
+                    ? Text($"latest {SelectionReadiness.Describe(row.Unit, c.Value)} ({(c.Basis switch { "Modeled" => "modeled", "Training" => "from training", _ => "measured" })}{(c.On is { } readOn ? Text($" {readOn}") : "")})")
                     : "untested";
                 var goal = row.Goal is { } g ? SelectionReadiness.Describe(row.Unit, g) : "blank";
                 var chance = row.Forecast?.Probability is { } p ? Text($", {Format.Percent(p)} by the due date at {goals.WeeklyHours:0.0} h/wk") : "";

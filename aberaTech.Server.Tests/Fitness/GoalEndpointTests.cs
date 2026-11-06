@@ -329,21 +329,23 @@ public sealed class GoalEndpointTests : IDisposable
             .Where(f => f.ValueKind == JsonValueKind.Object);
 
     [Fact]
-    public async Task The_goals_say_when_they_were_modelled_and_from_which_workouts()
+    public async Task The_goals_say_when_they_were_modeled_and_from_which_workouts()
     {
         using var app = App();
         await SeedAsync(app);
         var goals = await GoalsAsync(app);
 
         Assert.Equal(FitnessApp.Now.ToString("uuuu-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture),
-            goals.GetProperty("modelledAt").GetString());
+            goals.GetProperty("modeledAt").GetString());
 
         // The seed logs a run a day back; the Hevy session is three days back.
         var through = LocalDatePattern(goals.GetProperty("workoutsThrough").GetString()!);
         Assert.InRange(through, (FitnessApp.Now - Duration.FromDays(3)).InUtc().Date, FitnessApp.Now.InUtc().Date);
 
         var trajectory = Forecasts(goals).First(f => f.GetProperty("method").GetString() == "trajectory");
-        Assert.Equal(goals.GetProperty("workoutsThrough").GetString(), trajectory.GetProperty("dataThrough").GetString());
+        // A running forecast reads the runs, so its data end at the last run.
+        Assert.InRange(LocalDatePattern(trajectory.GetProperty("dataThrough").GetString()!),
+            (FitnessApp.Now - Duration.FromDays(3)).InUtc().Date, through);
     }
 
     [Fact]
@@ -378,6 +380,40 @@ public sealed class GoalEndpointTests : IDisposable
         var bare = Forecasts(goals).Where(f => f.GetProperty("method").GetString() is "none" or "held").ToArray();
         Assert.NotEmpty(bare);
         Assert.All(bare, f => Assert.StartsWith("3 dated readings over 42 days to make a trend; the log has ", f.GetProperty("needsData").GetString()));
+    }
+
+    [Fact]
+    public async Task Every_number_names_its_source_and_a_modeled_one_its_model()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var goals = await GoalsAsync(app);
+
+        var rows = goals.GetProperty("sections").EnumerateArray()
+            .SelectMany(s => s.GetProperty("rows").EnumerateArray())
+            .ToArray();
+        var standings = rows.Select(r => r.GetProperty("current"))
+            .Where(c => c.ValueKind == JsonValueKind.Object)
+            .ToArray();
+
+        Assert.NotEmpty(standings);
+        Assert.All(standings, c => Assert.False(string.IsNullOrWhiteSpace(c.GetProperty("source").GetString())));
+        Assert.All(standings.Where(c => c.GetProperty("basis").GetString() == "Modeled"),
+            c => Assert.False(string.IsNullOrWhiteSpace(c.GetProperty("model").GetString())));
+        Assert.All(standings.Where(c => c.GetProperty("basis").GetString() == "Measured"),
+            c => Assert.Equal(JsonValueKind.Null, c.GetProperty("model").ValueKind));
+
+        var aftPushUps = rows.Single(r => r.GetProperty("label").GetString() == "HR pushups").GetProperty("current");
+        Assert.Equal("an AFT entered on the Log tab", aftPushUps.GetProperty("source").GetString());
+
+        var trajectory = Forecasts(goals).First(f => f.GetProperty("method").GetString() == "trajectory");
+        Assert.StartsWith("Banister impulse-response training model (Banister 1975, Busso 2003)", trajectory.GetProperty("model").GetString());
+        Assert.StartsWith("runs from ", trajectory.GetProperty("sources").GetString());
+        Assert.Contains("the time trial of ", trajectory.GetProperty("sources").GetString());
+        Assert.True(LocalDatePattern(trajectory.GetProperty("dataFrom").GetString()!) <= LocalDatePattern(trajectory.GetProperty("dataThrough").GetString()!));
+
+        Assert.All(Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trend"),
+            f => Assert.StartsWith("Ordinary least-squares straight line", f.GetProperty("model").GetString()));
     }
 
     private static LocalDate LocalDatePattern(string text) =>

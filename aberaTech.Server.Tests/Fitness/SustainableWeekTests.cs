@@ -7,7 +7,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// The recovery budget was a constant, so the model believed a beginner could
 /// hold a full-time athlete's volume as readily as someone years into
 /// consistent base. What grows with training age is the capacity to absorb
-/// load, and the athlete is asked for it rather than it being modelled from a
+/// load, and the athlete is asked for it rather than it being modeled from a
 /// proxy.
 /// </summary>
 public sealed class SustainableWeekTests(ITestOutputHelper output)
@@ -63,7 +63,7 @@ public sealed class SustainableWeekTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void An_unstated_week_keeps_the_previous_behaviour()
+    public void An_unstated_week_keeps_the_previous_behavior()
     {
         // Back-compatible by construction: a profile that has never answered
         // gets exactly the budget it got before, and the assumptions say so.

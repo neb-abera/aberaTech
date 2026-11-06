@@ -22,7 +22,7 @@ public static class Altitude
     /// <summary>Below this elevation the aerobic cost is lost in the noise.</summary>
     public const double FreeMeters = 600;
 
-    /// <summary>Fractional slowdown per metre above <see cref="FreeMeters"/>.</summary>
+    /// <summary>Fractional slowdown per meter above <see cref="FreeMeters"/>.</summary>
     public const double CostPerMeter = 0.0000183;
 
     /// <summary>The fractional time penalty for racing at <paramref name="altitudeMeters"/>.</summary>

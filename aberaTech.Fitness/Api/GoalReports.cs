@@ -20,6 +20,9 @@ public sealed record GoalSourceDto(
 /// <summary>The forecast for one goal on its due date, from the training week the Plan tab states.</summary>
 /// <param name="DataThrough">The date of the newest reading the forecast was made from.</param>
 /// <param name="NeedsData">What the forecast still needs to be trusted, or null when its data are enough and current.</param>
+/// <param name="DataFrom">The date of the oldest reading the forecast was made from.</param>
+/// <param name="Sources">Where those readings came from.</param>
+/// <param name="Model">The model that made the forecast, with its authors and years; null when nothing was forecast.</param>
 public sealed record GoalForecastDto(
     double? Probability,
     double? Projected,
@@ -27,7 +30,10 @@ public sealed record GoalForecastDto(
     string Evidence,
     double? HoursToReach,
     string? DataThrough = null,
-    string? NeedsData = null);
+    string? NeedsData = null,
+    string? DataFrom = null,
+    string? Sources = null,
+    string? Model = null);
 
 /// <summary>One essential workbook row, against the log.</summary>
 /// <param name="Row">The sheet row, for "see row 7".</param>
@@ -39,7 +45,7 @@ public sealed record GoalForecastDto(
 /// <param name="PointsNow">Test points the current value earns, on a test row.</param>
 /// <param name="PointsGoal">Test points the goal earns.</param>
 /// <param name="Note">Column I, the athlete's evidence note.</param>
-/// <summary>An outside standard for the same event, labelled with who sets it and at what level.</summary>
+/// <summary>An outside standard for the same event, labeled with who sets it and at what level.</summary>
 /// <param name="Source">FBI or AFT.</param>
 /// <param name="Level">The level, such as max (10 pts).</param>
 /// <param name="Value">The standard in the row's unit.</param>
@@ -80,7 +86,7 @@ public sealed record GoalSectionDto(
     string? ScoringNote,
     IReadOnlyList<GoalRowDto> Rows);
 
-/// <param name="ModelledAt">When the forecasts were worked out. They are worked out again whenever the log or the sheet changes.</param>
+/// <param name="ModeledAt">When the forecasts were worked out. They are worked out again whenever the log or the sheet changes.</param>
 /// <param name="WorkoutsThrough">The date of the newest workout in the log.</param>
 public sealed record GoalsDto(
     GoalSourceDto Source,
@@ -88,7 +94,7 @@ public sealed record GoalsDto(
     double WeeklyHours,
     string WeekBasis,
     IReadOnlyList<GoalSectionDto> Sections,
-    string? ModelledAt = null,
+    string? ModeledAt = null,
     string? WorkoutsThrough = null);
 
 /// <summary>
@@ -134,15 +140,20 @@ internal static class GoalReports
             read.Sheet?.SheetName);
 
         var frame = OutlookReports.FrameFor(history, evidence, weeklyHours, compliance, today, now);
-        var modelledAt = now.ToString("uuuu-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var modeledAt = now.ToString("uuuu-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
         LocalDate? lastWorkout = history.Activities.Count > 0
             ? history.Activities.Max(a => a.StartedAt.InUtc().Date)
             : null;
+        var runs = history.Activities.Where(a => a.Sport == "run").ToArray();
+        var runLog = new RunLog(
+            runs.Length > 0 ? runs.Min(a => a.StartedAt.InUtc().Date) : null,
+            runs.Length > 0 ? runs.Max(a => a.StartedAt.InUtc().Date) : null,
+            runs.Select(a => ReadinessReports.SourceName(a.Source)).Distinct().Order(StringComparer.Ordinal).ToArray());
         var workoutsThrough = lastWorkout?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         if (read.Sheet is not { } sheet)
         {
-            return new GoalsDto(sourceDto, null, frame.Hours, frame.Basis, [], modelledAt, workoutsThrough);
+            return new GoalsDto(sourceDto, null, frame.Hours, frame.Basis, [], modeledAt, workoutsThrough);
         }
 
         var dueOn = sheet.GoalYear is { } year ? new LocalDate(year, 12, 31) : (LocalDate?)null;
@@ -168,7 +179,7 @@ internal static class GoalReports
                 sections.Add(section);
             }
 
-            var (dto, points) = RowFor(workbookRow, definition, test, frame, months, female, ageNow, ageThen, lastWorkout, today);
+            var (dto, points) = RowFor(workbookRow, definition, test, frame, months, female, ageNow, ageThen, runLog, today);
             section.Rows.Add(dto);
             section.Points.Add(points);
         }
@@ -179,7 +190,7 @@ internal static class GoalReports
             frame.Hours,
             frame.Basis,
             sections.Select(s => Section(s.Name, s.Test, s.Rows, s.Points, female, ageNow, ageThen)).ToArray(),
-            modelledAt,
+            modeledAt,
             workoutsThrough);
     }
 
@@ -208,7 +219,7 @@ internal static class GoalReports
         bool female,
         int ageNow,
         int ageThen,
-        LocalDate? lastWorkout,
+        RunLog runLog,
         LocalDate today)
     {
         var unit = definition?.Unit ?? GoalUnit.Reps;
@@ -278,9 +289,9 @@ internal static class GoalReports
                 UnitText(unit),
                 Citations.NebFitnessGoals.Id);
             var line = GateOutlook.Line(requirement, months, frame.Context);
-            var (through, needs) = Freshness(line, definition.Metric, frame, lastWorkout, today);
+            var made = Provenance(line, definition.Metric, frame, runLog, today);
             forecast = new GoalForecastDto(line.Probability, line.Projected, line.Method, line.Evidence, line.HoursToReach,
-                through?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), needs);
+                Iso(made.Through), made.Needs, Iso(made.From), made.Sources, made.Model);
         }
 
         return (new GoalRowDto(
@@ -294,7 +305,7 @@ internal static class GoalReports
             goal,
             goalColumn,
             current is null ? null : new StandingDto(current.Metric, current.Value, current.Basis.ToString(), current.Evidence,
-                current.On?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                current.On?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), current.Source, current.Model),
             met,
             pointsNow,
             pointsGoal,
@@ -326,24 +337,35 @@ internal static class GoalReports
     /// <summary>A reading older than this no longer moves a trend forward.</summary>
     internal const int TrendStaleAfterDays = 120;
 
+    /// <summary>The runs in the log: their first and last dates and where they came from.</summary>
+    internal sealed record RunLog(LocalDate? First, LocalDate? Last, IReadOnlyList<string> Sources);
+
+    /// <summary>How a forecast was made: the dates and sources of its data, its model, and what it still needs.</summary>
+    internal sealed record Made(LocalDate? From, LocalDate? Through, string? Sources, string? Model, string? Needs);
+
+    internal const string TrajectoryModel =
+        "Banister impulse-response training model (Banister 1975, Busso 2003) fitted to your runs by nonlinear least squares (Seber and Wild 1989), turned into times by Daniels and Gilbert VDOT (1979)";
+
+    internal const string TrendModel =
+        "Ordinary least-squares straight line through your dated readings, with its prediction interval";
+
     /// <summary>
-    /// The newest data a forecast was made from, and what it still needs.
-    /// A trajectory line reads every workout through the last one, starts
-    /// from the VDOT anchor, and fits its rate to the months of easy runs;
-    /// it needs a time trial when the anchor is missing or past
+    /// How a forecast was made. A trajectory line reads every run in the
+    /// log, starts from the VDOT anchor, and fits its rate to the months of
+    /// easy runs. It needs a time trial when the anchor is missing or past
     /// <see cref="Highlights.AnchorStaleAfterDays"/> days, and more months
-    /// when fewer than <see cref="ModelFit.MinimumObservations"/> fitted it.
+    /// while fewer than <see cref="ModelFit.MinimumObservations"/> fitted it.
     /// A trend line needs a reading newer than <see cref="TrendStaleAfterDays"/>
-    /// days, and a line with no trend needs the readings that make one.
+    /// days. A line with no trend needs the readings that make one.
     /// </summary>
-    internal static (LocalDate? Through, string? Needs) Freshness(
-        LineOutlook line, string metric, OutlookReports.Frame frame, LocalDate? lastWorkout, LocalDate today)
+    internal static Made Provenance(
+        LineOutlook line, string metric, OutlookReports.Frame frame, RunLog runs, LocalDate today)
     {
-        var histories = frame.Readings.Histories;
-        var history = histories.GetValueOrDefault(metric);
-        LocalDate? lastReading = history is { Count: > 0 } ? history.Max(h => h.Date) : null;
+        var history = frame.Readings.Histories.GetValueOrDefault(metric);
         var current = frame.Readings.Measurements.GetValueOrDefault(metric);
-        if (current?.On is { } on && (lastReading is null || on > lastReading)) lastReading = on;
+        LocalDate? first = history is { Count: > 0 } ? history.Min(h => h.Date) : current?.On;
+        LocalDate? last = history is { Count: > 0 } ? history.Max(h => h.Date) : null;
+        if (current?.On is { } on && (last is null || on > last)) last = on;
 
         switch (line.Method)
         {
@@ -360,21 +382,28 @@ internal static class GoalReports
                 if (months < ModelFit.MinimumObservations)
                     needs.Add(Text($"{ModelFit.MinimumObservations - months} more month{(ModelFit.MinimumObservations - months == 1 ? "" : "s")} of easy runs to fit your own response ({months} of {ModelFit.MinimumObservations}); until then the rate is the literature's"));
 
-                return (lastWorkout, needs.Count == 0 ? null : string.Join("; ", needs));
+                var sources = runs.Sources.Count > 0 ? $"runs from {string.Join(" and ", runs.Sources)}" : "no runs in the log yet";
+                sources += anchoredOn is null ? ", and the default VDOT in your profile" : Text($", and the time trial of {anchoredOn:yyyy-MM-dd} in your profile");
+                var model = metric is SelectionReadiness.Metrics.RuckTwelveMileAt45 or SelectionReadiness.Metrics.RuckTwelveMileAt35
+                    ? TrajectoryModel + ", then the Pandolf load-carriage model (1977)"
+                    : TrajectoryModel;
+
+                return new Made(runs.First, runs.Last, sources, model, needs.Count == 0 ? null : string.Join("; ", needs));
             }
 
             case OutlookMethod.Trend:
-                return lastReading is { } last && Period.Between(last, today, PeriodUnits.Days).Days is var stale && stale > TrendStaleAfterDays
-                    ? (last, Text($"a new reading, because the newest is {stale} days old"))
-                    : (lastReading, null);
+                return new Made(first, last, current?.Source, TrendModel,
+                    last is { } newest && Period.Between(newest, today, PeriodUnits.Days).Days is var stale && stale > TrendStaleAfterDays
+                        ? Text($"a new reading, because the newest is {stale} days old")
+                        : null);
 
             default:
-            {
-                var count = history?.Count ?? 0;
-                return (lastReading, Text($"{GateOutlook.MinimumTrendPoints} dated readings over {GateOutlook.MinimumTrendSpanDays} days to make a trend; the log has {count}"));
-            }
+                return new Made(first, last, current?.Source, null,
+                    Text($"{GateOutlook.MinimumTrendPoints} dated readings over {GateOutlook.MinimumTrendSpanDays} days to make a trend; the log has {history?.Count ?? 0}"));
         }
     }
+
+    private static string? Iso(LocalDate? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string UnitText(GoalUnit unit) => unit switch
     {

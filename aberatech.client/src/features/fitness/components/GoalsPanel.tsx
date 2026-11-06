@@ -7,6 +7,7 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Collapse from "@mui/material/Collapse";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -115,32 +116,116 @@ function agoText(days: number): string {
   return days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
 }
 
-/** The hover text: what the number is, the date it is from, and its source. */
+/** The hover text: what the number is, the date of its data, its source, and its model. */
 export function latestDetail(
   current: NonNullable<GoalRow["current"]>,
   today: Date = new Date(),
 ): string {
-  if (current.basis === "Modeled") {
-    if (!current.on)
-      return `Modelled, not done as this event: ${current.evidence}.`;
-    return `Modelled, not done as this event, from data through ${formatDay(current.on)} (${agoText(daysSince(current.on, today))}): ${current.evidence}.`;
-  }
-  const kind =
-    current.basis === "Training"
-      ? "From training, a floor for the test and not a test result"
-      : "Measured";
-  if (!current.on) return `${kind}: ${current.evidence}.`;
-  return `${kind} ${formatDay(current.on)} (${agoText(daysSince(current.on, today))}): ${current.evidence}.`;
+  const when = current.on
+    ? ` ${formatDay(current.on)} (${agoText(daysSince(current.on, today))})`
+    : "";
+  const lead =
+    current.basis === "Modeled"
+      ? `Modeled, not done as this event${when ? `, from data through${when}` : ""}`
+      : current.basis === "Training"
+        ? `From training${when}, a floor for the test and not a test result`
+        : `Measured${when}`;
+  const parts = [`${lead}: ${current.evidence}.`];
+  if (current.source) parts.push(`Source: ${current.source}.`);
+  if (current.model) parts.push(`Model: ${current.model}.`);
+  return parts.join(" ");
 }
 
-/** The forecast's data line: how recent its data are, and what it still needs. */
+/** The forecast's data line: the dates and sources of its data, and what it still needs. */
 export function forecastDataLine(forecast: GoalForecast): string {
-  const through = forecast.dataThrough
-    ? `Modelled from data through ${formatDay(forecast.dataThrough)}.`
-    : "Modelled with no dated data.";
+  const range =
+    forecast.dataFrom && forecast.dataThrough
+      ? forecast.dataFrom === forecast.dataThrough
+        ? `Data: ${formatDay(forecast.dataThrough)}`
+        : `Data: ${formatDay(forecast.dataFrom)} to ${formatDay(forecast.dataThrough)}`
+      : forecast.dataThrough
+        ? `Data through ${formatDay(forecast.dataThrough)}`
+        : "No dated data";
+  const sources = forecast.sources ? ` Sources: ${forecast.sources}.` : "";
+  const line = `${range}.${sources}`;
   return forecast.needsData
-    ? `${through} Needs more data: ${forecast.needsData}.`
-    : through;
+    ? `${line} Needs more data: ${forecast.needsData}.`
+    : line;
+}
+
+/** The forecast's model line, or what it does without one. */
+export function forecastModelLine(forecast: GoalForecast): string {
+  if (forecast.model) return `Model: ${forecast.model}.`;
+  return forecast.method === "held"
+    ? "No model: the goal is met today and is held, not forecast."
+    : "No model: there is nothing yet to forecast from.";
+}
+
+/** Inferred goals say what inferred means, beside the basis the note gives. */
+export function tagDetail(tag: string, row: GoalRow): string | null {
+  if (tag !== "inferred") return null;
+  return `Inferred: your sheet had no usable number here, so this goal was worked out from your own records.${row.note ? ` Basis: ${row.note}` : ""}`;
+}
+
+/** What each label on this tab means. */
+export const TERMS: ReadonlyArray<{ term: string; meaning: string }> = [
+  {
+    term: "Measured",
+    meaning:
+      "you did the event itself, timed or lifted, on the date shown, or a training set done to the test's standard.",
+  },
+  {
+    term: "Modeled",
+    meaning:
+      "a number worked out by a named model from your other results, not done as this event. Hover over it for the model, its source data, and the date of that data.",
+  },
+  {
+    term: "Training",
+    meaning: "a training set that is a floor for the test, not a test result.",
+  },
+  {
+    term: "Inferred",
+    meaning:
+      "a goal, not a result. Your sheet had no usable number, so the goal was worked out from your own records. Hover over it for the basis.",
+  },
+  {
+    term: "Forecast",
+    meaning:
+      "a model's projection of the goal on the due date. Open it for the model, the dates and sources of its data, and what it still needs.",
+  },
+  {
+    term: "Warning mark",
+    meaning:
+      "the forecast needs more data, such as a new time trial or more weeks of runs. Hover over it for what.",
+  },
+];
+
+function Terms() {
+  return (
+    <Box
+      component="dl"
+      id="goal-terms"
+      data-testid="terms"
+      sx={{
+        m: 0,
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+        columnGap: 3,
+        rowGap: 0.5,
+        typography: "caption",
+        color: "text.secondary",
+        "& dt": { fontWeight: 600, color: "text.primary", display: "inline" },
+        "& dd": { m: 0, display: "inline" },
+      }}
+    >
+      {TERMS.map(({ term, meaning }) => (
+        <div key={term}>
+          <dt>{term}</dt>
+          <dd>: {meaning}</dd>
+        </div>
+      ))}
+    </Box>
+  );
 }
 
 /**
@@ -186,7 +271,7 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                   <Chip
                     size="small"
                     label={
-                      row.current.basis === "Modeled" ? "modelled" : "training"
+                      row.current.basis === "Modeled" ? "modeled" : "training"
                     }
                     variant="outlined"
                     sx={{ ml: 0.5, height: 20 }}
@@ -218,12 +303,15 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
             : "blank in the sheet"}
           {test ? <Points value={row.pointsGoal} /> : null}
           {tag ? (
-            <Chip
-              size="small"
-              label={tag}
-              variant="outlined"
-              sx={{ ml: 0.75, height: 20 }}
-            />
+            <Tooltip title={tagDetail(tag, row) ?? ""} placement="top" arrow>
+              <Chip
+                size="small"
+                label={tag}
+                variant="outlined"
+                tabIndex={0}
+                sx={{ ml: 0.75, height: 20 }}
+              />
+            </Tooltip>
           ) : null}
           {(row.standards ?? [])
             .filter((standard) => standardLabel(row, standard) !== tag)
@@ -309,14 +397,25 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 </Typography>
                 <Typography
                   variant="body2"
+                  color="text.secondary"
+                  data-testid="forecast-model"
+                >
+                  {forecastModelLine(forecast)}
+                </Typography>
+                <Typography
+                  variant="body2"
                   color={forecast.needsData ? "warning.main" : "text.secondary"}
                   data-testid="forecast-data"
                 >
                   {forecastDataLine(forecast)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  data-testid="latest-detail"
+                >
                   {row.current
-                    ? `Latest: ${latestDetail(row.current)}${row.current.basis === "Modeled" ? " Modelled means worked out from other results, not timed or lifted as this event." : ""}`
+                    ? `Latest: ${latestDetail(row.current)}`
                     : "Latest: nothing in the log measures this yet."}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -541,12 +640,12 @@ function SourceLine({
             : "the local workbook"}
           {read ? ` at ${read}` : ""}. Forecasts assume the running hours a week
           at the right.
-          {goals.modelledAt ? (
+          {goals.modeledAt ? (
             <>
               {" "}
-              <span data-testid="modelled-at">
-                Modelled{" "}
-                {new Date(goals.modelledAt).toLocaleString("en-US", {
+              <span data-testid="modeled-at">
+                Modeled{" "}
+                {new Date(goals.modeledAt).toLocaleString("en-US", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
@@ -559,7 +658,11 @@ function SourceLine({
                 .
               </span>
             </>
-          ) : null}
+          ) : null}{" "}
+          <Link href="#goal-terms" data-testid="terms-link">
+            What measured, modeled, and inferred mean
+          </Link>
+          .
         </Typography>
         <HoursControl
           key={goals.weeklyHours}
@@ -632,6 +735,7 @@ export default function GoalsPanel() {
           </Stack>
         ))}
       </Box>
+      <Terms />
     </Stack>
   );
 }

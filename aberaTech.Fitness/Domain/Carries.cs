@@ -20,7 +20,7 @@ public sealed record BestCarry(LocalDate Date, double DistanceMeters, double Tot
 /// went looking (Mountain Tactical Institute) found the farmer's carry the
 /// most practical grip-endurance test and no benchmark to hold it to. The
 /// standard here is the athlete's own — a farmer's carry at one and a half
-/// times bodyweight for a hundred metres — read from the strength log.
+/// times bodyweight for a hundred meters — read from the strength log.
 ///
 /// One convention, stated because it decides the number: lifting apps log a
 /// pair of implements as the weight of one of them, so the total carried is

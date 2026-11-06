@@ -41,7 +41,7 @@ public sealed record LoadedMarch(
 /// <see cref="RuckEfficiency"/>, one number, calibrated so the published
 /// selection benchmark pairs agree with each other — a 15:12 two-mile beside a
 /// three-hour twelve-mile at 45 lb, a 13:30 two-mile beside 2:45 — for an
-/// athlete of ordinary mass. It is a judgement made visible, not a
+/// athlete of ordinary mass. It is a judgment made visible, not a
 /// measurement, and a timed ruck of the athlete's own always outranks it.
 ///
 /// Citations: <see cref="Citations.PandolfLoadCarriage"/>,

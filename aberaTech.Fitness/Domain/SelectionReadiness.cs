@@ -20,10 +20,13 @@ public enum Basis
 /// <summary>The athlete's current standing on one metric.</summary>
 /// <param name="Metric">One of the keys in <see cref="SelectionReadiness.Metrics"/>.</param>
 /// <param name="Value">In the metric's unit: seconds, repetitions, a bodyweight multiple, pounds, points or percent.</param>
-/// <param name="Basis">Measured or modelled.</param>
+/// <param name="Basis">Measured, modeled, or from training.</param>
 /// <param name="Evidence">Where the value came from, in a phrase.</param>
-/// <param name="On">When it was measured, if it was.</param>
-public sealed record Measurement(string Metric, double Value, Basis Basis, string Evidence, LocalDate? On = null);
+/// <param name="On">When it was measured, or the date of the newest data a modeled value was worked out from.</param>
+/// <param name="Source">Where the data came from: Garmin, Hevy, a test entered on the Log tab, the profile.</param>
+/// <param name="Model">The model that turned the data into this value, named with its author and year; null when measured.</param>
+public sealed record Measurement(
+    string Metric, double Value, Basis Basis, string Evidence, LocalDate? On = null, string? Source = null, string? Model = null);
 
 /// <summary>Whether the requirement wants the number at least, or at most, the target.</summary>
 public enum Comparison
@@ -71,7 +74,7 @@ public static class SelectionReadiness
 
         public const string BackSquatFiveLb = "back-squat-5rm-lb";
 
-        /// <summary>Farmer's carry at 1.5× bodyweight, the longest distance held, in metres.</summary>
+        /// <summary>Farmer's carry at 1.5× bodyweight, the longest distance held, in meters.</summary>
         public const string FarmersCarryMeters = "farmer-carry-1.5bw-m";
 
         public const string BodyweightLb = "bodyweight-lb";

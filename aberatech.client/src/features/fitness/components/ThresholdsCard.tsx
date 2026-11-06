@@ -49,7 +49,7 @@ function updateFrom(settings: SettingsDto) {
 }
 
 /**
- * The three numbers every heart-rate judgement runs on — aerobic-threshold
+ * The three numbers every heart-rate judgment runs on — aerobic-threshold
  * HR, lactate-threshold HR, lactate-threshold pace — with the field tests the
  * log contains and what they say those numbers should be. Typed once and
  * forgotten is how thresholds go stale; a test in the log is how they stay

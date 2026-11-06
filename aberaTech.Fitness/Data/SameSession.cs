@@ -19,7 +19,7 @@ public static class SameSession
     /// <summary>Both files round the same recorded time; they do not disagree by more.</summary>
     public const double DurationToleranceSeconds = 2;
 
-    /// <summary>The summary and the CSV round distance differently — metres, not kilometres, apart.</summary>
+    /// <summary>The summary and the CSV round distance differently — meters, not kilometers, apart.</summary>
     public const double DistanceToleranceMeters = 25;
 
     /// <summary>

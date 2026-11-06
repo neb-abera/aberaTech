@@ -43,8 +43,8 @@ export default function OutlookCard({
           <>
             <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
               Pace at {outlook.referenceHr} bpm across {outlook.qualifyingWeeks}{" "}
-              weeks of easy runs, carried ahead on a straight line. Modelled
-              from training runs, so it never sets a threshold.
+              weeks of easy runs, carried ahead on a straight line. Modeled from
+              training runs, so it never sets a threshold.
             </Typography>
             <Stack spacing={0.5}>
               {outlook.ahead.map((point) => (
