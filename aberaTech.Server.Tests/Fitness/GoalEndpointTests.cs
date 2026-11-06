@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
+using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Xunit;
 
@@ -320,6 +321,67 @@ public sealed class GoalEndpointTests : IDisposable
         var response = await app.Factory.CreateClient().GetAsync("/api/fitness/goals?weeklyHours=99", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    private static IEnumerable<JsonElement> Forecasts(JsonElement goals) =>
+        goals.GetProperty("sections").EnumerateArray()
+            .SelectMany(s => s.GetProperty("rows").EnumerateArray())
+            .Select(r => r.GetProperty("forecast"))
+            .Where(f => f.ValueKind == JsonValueKind.Object);
+
+    [Fact]
+    public async Task The_goals_say_when_they_were_modelled_and_from_which_workouts()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var goals = await GoalsAsync(app);
+
+        Assert.Equal(FitnessApp.Now.ToString("uuuu-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture),
+            goals.GetProperty("modelledAt").GetString());
+
+        // The seed logs a run a day back; the Hevy session is three days back.
+        var through = LocalDatePattern(goals.GetProperty("workoutsThrough").GetString()!);
+        Assert.InRange(through, (FitnessApp.Now - Duration.FromDays(3)).InUtc().Date, FitnessApp.Now.InUtc().Date);
+
+        var trajectory = Forecasts(goals).First(f => f.GetProperty("method").GetString() == "trajectory");
+        Assert.Equal(goals.GetProperty("workoutsThrough").GetString(), trajectory.GetProperty("dataThrough").GetString());
+    }
+
+    [Fact]
+    public async Task A_stale_anchor_marks_every_running_forecast_as_needing_a_time_trial()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        await app.SeedAsync(async database =>
+        {
+            var row = await database.Settings.SingleAsync(TestContext.Current.CancellationToken);
+            row.VdotMeasuredOn = FitnessApp.Now.InUtc().Date.PlusDays(-(Highlights.AnchorStaleAfterDays + 30));
+        });
+        var goals = await GoalsAsync(app);
+
+        var running = Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trajectory").ToArray();
+        Assert.NotEmpty(running);
+        Assert.All(running, f => Assert.Contains(
+            $"a new time trial, because the VDOT anchor of {FitnessApp.Now.InUtc().Date.PlusDays(-(Highlights.AnchorStaleAfterDays + 30)):yyyy-MM-dd} is {Highlights.AnchorStaleAfterDays + 30} days old",
+            f.GetProperty("needsData").GetString()));
+    }
+
+    [Fact]
+    public async Task A_fresh_anchor_asks_no_time_trial_and_a_goal_with_no_history_asks_for_readings()
+    {
+        using var app = App();
+        await SeedAsync(app);
+        var goals = await GoalsAsync(app);
+
+        var running = Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trajectory").ToArray();
+        Assert.All(running, f => Assert.DoesNotContain("time trial", f.GetProperty("needsData").GetString() ?? ""));
+
+        var bare = Forecasts(goals).Where(f => f.GetProperty("method").GetString() is "none" or "held").ToArray();
+        Assert.NotEmpty(bare);
+        Assert.All(bare, f => Assert.StartsWith("3 dated readings over 42 days to make a trend; the log has ", f.GetProperty("needsData").GetString()));
+    }
+
+    private static LocalDate LocalDatePattern(string text) =>
+        NodaTime.Text.LocalDatePattern.Iso.Parse(text).Value;
 }
 
 /// <summary>

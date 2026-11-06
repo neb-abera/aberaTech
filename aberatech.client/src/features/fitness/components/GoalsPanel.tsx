@@ -1,3 +1,4 @@
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -17,6 +18,7 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import {
   fetchGoals,
+  type GoalForecast,
   type GoalRow,
   type GoalSection,
   type GoalStandard,
@@ -100,27 +102,45 @@ export function ageLabel(days: number): string {
   return `${Math.round(days / 365.25)}y`;
 }
 
+/** An ISO date as Nov 4, 2026. */
+export function formatDay(on: string): string {
+  return new Date(`${on}T12:00:00`).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function agoText(days: number): string {
+  return days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
+}
+
 /** The hover text: what the number is, the date it is from, and its source. */
 export function latestDetail(
   current: NonNullable<GoalRow["current"]>,
   today: Date = new Date(),
 ): string {
+  if (current.basis === "Modeled") {
+    if (!current.on)
+      return `Modelled, not done as this event: ${current.evidence}.`;
+    return `Modelled, not done as this event, from data through ${formatDay(current.on)} (${agoText(daysSince(current.on, today))}): ${current.evidence}.`;
+  }
   const kind =
-    current.basis === "Modeled"
-      ? "Modelled, not done as this event"
-      : current.basis === "Training"
-        ? "From training, a floor for the test and not a test result"
-        : "Measured";
+    current.basis === "Training"
+      ? "From training, a floor for the test and not a test result"
+      : "Measured";
   if (!current.on) return `${kind}: ${current.evidence}.`;
-  const date = new Date(`${current.on}T12:00:00`).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const days = daysSince(current.on, today);
-  const ago =
-    days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
-  return `${kind} ${date} (${ago}): ${current.evidence}.`;
+  return `${kind} ${formatDay(current.on)} (${agoText(daysSince(current.on, today))}): ${current.evidence}.`;
+}
+
+/** The forecast's data line: how recent its data are, and what it still needs. */
+export function forecastDataLine(forecast: GoalForecast): string {
+  const through = forecast.dataThrough
+    ? `Modelled from data through ${formatDay(forecast.dataThrough)}.`
+    : "Modelled with no dated data.";
+  return forecast.needsData
+    ? `${through} Needs more data: ${forecast.needsData}.`
+    : through;
 }
 
 /**
@@ -240,6 +260,30 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                   : "how"}
             </Button>
           ) : null}
+          {forecast?.needsData ? (
+            <Tooltip
+              title={`Needs more data: ${forecast.needsData}.`}
+              placement="top"
+              arrow
+            >
+              <Box
+                component="span"
+                role="img"
+                tabIndex={0}
+                aria-label={`Needs more data: ${forecast.needsData}.`}
+                data-testid="needs-data"
+                sx={{
+                  display: "inline-flex",
+                  verticalAlign: "middle",
+                  ml: 0.25,
+                  color: "warning.main",
+                  cursor: "help",
+                }}
+              >
+                <WarningAmberOutlined sx={{ fontSize: 18 }} />
+              </Box>
+            </Tooltip>
+          ) : null}
         </TableCell>
       </TableRow>
       {/* The drawer row exists only while open: a closed one still took the
@@ -262,6 +306,13 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {forecast.evidence}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color={forecast.needsData ? "warning.main" : "text.secondary"}
+                  data-testid="forecast-data"
+                >
+                  {forecastDataLine(forecast)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {row.current
@@ -490,6 +541,25 @@ function SourceLine({
             : "the local workbook"}
           {read ? ` at ${read}` : ""}. Forecasts assume the running hours a week
           at the right.
+          {goals.modelledAt ? (
+            <>
+              {" "}
+              <span data-testid="modelled-at">
+                Modelled{" "}
+                {new Date(goals.modelledAt).toLocaleString("en-US", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {goals.workoutsThrough
+                  ? ` from workouts through ${formatDay(goals.workoutsThrough)}`
+                  : ""}
+                .
+              </span>
+            </>
+          ) : null}
         </Typography>
         <HoursControl
           key={goals.weeklyHours}
