@@ -868,7 +868,7 @@ describe("the owner", () => {
     );
     expect(text).toContain("All-day events are left out.");
     expect(text).toContain(
-      "Cancelled events and invitations you declined are left out.",
+      "Canceled events and invitations you declined are left out.",
     );
     expect(text).toContain(
       "An event with no notification in the feed alerts 10 minutes before it starts, the default lead.",

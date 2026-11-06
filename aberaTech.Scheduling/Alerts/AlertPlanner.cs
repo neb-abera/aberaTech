@@ -77,7 +77,7 @@ public sealed class CalendarFeedException(string message, Exception? inner = nul
 /// </summary>
 /// <remarks>
 /// Ical.Net expands the recurrence rules, applies EXDATE and the
-/// RECURRENCE-ID overrides Google writes for a moved or cancelled instance,
+/// RECURRENCE-ID overrides Google writes for a moved or canceled instance,
 /// and resolves TZID through the time zone database, so a daily 09:00 stays
 /// at 09:00 local on both sides of a clock change.
 ///
@@ -90,7 +90,7 @@ public static partial class AlertPlanner
 {
     /// <summary>
     /// The word that makes an event an alarm. Google's iCal feed carries no
-    /// tags or colours, so the mark is text, in the title or the
+    /// tags or colors, so the mark is text, in the title or the
     /// description. It is left off the title the phone shows.
     /// </summary>
     public const string CriticalMark = "#critical";

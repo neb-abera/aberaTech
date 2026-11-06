@@ -6,8 +6,8 @@ import type { RawCatalog } from "../types";
 
 const data = rawCatalog as unknown as RawCatalog;
 
-describe("catalogue links", () => {
-  test("the address is the one the catalogue itself uses for a course", () => {
+describe("catalog links", () => {
+  test("the address is the one the catalog itself uses for a course", () => {
     expect(catalogueUrl("EN.525.614")).toBe(
       "https://e-catalogue.jhu.edu/search/?P=EN.525.614",
     );
@@ -27,7 +27,7 @@ describe("catalogue links", () => {
     expect(linkCheck.total).toBe(Object.keys(data.courses).length);
   });
 
-  test("the recorded catalogue title is the title we show, for every course", () => {
+  test("the recorded catalog title is the title we show, for every course", () => {
     const norm = (s: string) =>
       s
         .replace(/&/g, "and")

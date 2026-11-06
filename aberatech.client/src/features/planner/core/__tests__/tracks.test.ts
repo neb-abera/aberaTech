@@ -1,5 +1,5 @@
 /**
- * Every curated track must be a plan you could actually enrol in. These
+ * Every curated track must be a plan you could actually enroll in. These
  * assertions are the reason the tracks can be trusted: each is scheduled by the
  * real engine and checked against the real degree rules.
  */

@@ -99,7 +99,7 @@ describe("planning with background", () => {
     expect(termOf(r.plan, "A")).toBeLessThan(termOf(r.plan, "B"));
     expect(r.plan.violations()).toEqual([]);
   });
-  test("preparation ids are recognisable so the interface can style them", () => {
+  test("preparation ids are recognizable so the interface can style them", () => {
     expect(prepId("bg_de").startsWith(PREP_PREFIX)).toBe(true);
   });
 });

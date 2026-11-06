@@ -210,9 +210,9 @@ public static class CalendarWriteMessages
 
     public const string NotFound = "Google Calendar has no such event on the connected calendar.";
 
-    public const string OrganisedElsewhere = "Google refused the change: this event is organised by someone else.";
+    public const string OrganisedElsewhere = "Google refused the change: this event is organized by someone else.";
 
-    /// <summary>An edit or a deletion of an invitation: Google lets only its organiser change it.</summary>
+    /// <summary>An edit or a deletion of an invitation: Google lets only its organizer change it.</summary>
     public const string OnlyOrganizer = "Only the organizer can change this event.";
 
     public const string Unreachable = "Google Calendar did not answer.";
@@ -627,8 +627,8 @@ public sealed class GoogleAlertEvents(
             if (!item.TryGetProperty("id", out var id) || id.GetString() is not { Length: > 0 } eventId) continue;
 
             var description = item.TryGetProperty("description", out var text) ? text.GetString() ?? "" : "";
-            // An event this calendar organises says so. One it was invited
-            // to names another organiser and cannot be edited here.
+            // An event this calendar organizes says so. One it was invited
+            // to names another organizer and cannot be edited here.
             var here = !item.TryGetProperty("organizer", out var organizer)
                        || (organizer.TryGetProperty("self", out var self) && self.ValueKind == JsonValueKind.True);
             return (eventId, description, here);
@@ -640,7 +640,7 @@ public sealed class GoogleAlertEvents(
     /// <summary>The master event among what events.list returned for a UID, as <see cref="Series"/> picks it.</summary>
     internal static GoogleEvent? Master(string json) => Items(json).FirstOrDefault(item => item.Master);
 
-    /// <summary>Every event item in an events.list or events.instances answer, cancelled ones left out.</summary>
+    /// <summary>Every event item in an events.list or events.instances answer, canceled ones left out.</summary>
     internal static IReadOnlyList<GoogleEvent> Items(string json)
     {
         using var document = JsonDocument.Parse(json);

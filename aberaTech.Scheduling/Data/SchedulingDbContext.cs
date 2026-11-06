@@ -276,7 +276,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(delivery => delivery.Outcome).HasMaxLength(64).IsRequired();
             entity.Property(delivery => delivery.Receipt).HasMaxLength(PushoverClient.MaxReceiptLength);
             entity.HasIndex(delivery => delivery.ClaimedAt);
-            // Pushover's acknowledgement callback names the receipt alone, so
+            // Pushover's acknowledgment callback names the receipt alone, so
             // one delivery holds it.
             entity.HasIndex(delivery => delivery.Receipt).IsUnique();
         });

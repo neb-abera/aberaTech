@@ -2,16 +2,16 @@ import { expect, type Page, test } from "@playwright/test";
 
 // Every theme variable a page names is defined on the root, in both schemes.
 //
-// The theme writes its colours, shadows and sizes as CSS custom properties
+// The theme writes its colors, shadows and sizes as CSS custom properties
 // (--template-*) and generates only the ones AppTheme's skipThemeVar lets
 // through. A style that names a variable the theme stopped generating loses
-// its value without an error: the colour, border or shadow just goes. This
+// its value without an error: the color, border or shadow just goes. This
 // reads every var(--template-...) in the page's stylesheets and in inline
 // style attributes, and fails on each one the root does not define.
 //
 // A reference written with a fallback, var(--x, value), counts the same. MUI
 // writes the default scheme's value as the fallback, so on the other scheme
-// it is the wrong colour. The two names meant to be undefined are listed
+// it is the wrong color. The two names meant to be undefined are listed
 // below with their reasons.
 //
 // themeVars.ts gives every skipped key that differs by scheme a reference
@@ -121,7 +121,7 @@ test("the scheme menu, a scheme switch and the phone drawer name only defined th
     await page.setViewportSize({ width: 1280, height: 800 });
     await openIn(page, "/", scheme);
 
-    await page.getByRole("button", { name: "Colour scheme" }).first().click();
+    await page.getByRole("button", { name: "Color scheme" }).first().click();
     await expect(page.getByRole("menu")).toBeVisible();
     found.push(...(await undefinedVars(page, `${scheme}, scheme menu open`)));
 
@@ -135,7 +135,7 @@ test("the scheme menu, a scheme switch and the phone drawer name only defined th
       ...(await undefinedVars(page, `${scheme}, switched to ${other}`)),
     );
 
-    await page.getByRole("button", { name: "Colour scheme" }).first().click();
+    await page.getByRole("button", { name: "Color scheme" }).first().click();
     await page
       .getByRole("menuitem", { name: scheme === "dark" ? "Dark" : "Light" })
       .click();

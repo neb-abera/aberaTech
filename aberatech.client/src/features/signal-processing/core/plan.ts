@@ -328,7 +328,7 @@ const beginner: Block[] = [
       },
       {
         id: "filters-fir",
-        text: "Design a windowed-sinc lowpass by hand: sinc, window, truncate, normalise. Compare its response to SciPy's firwin with the same specification and explain every difference.",
+        text: "Design a windowed-sinc lowpass by hand: sinc, window, truncate, normalize. Compare its response to SciPy's firwin with the same specification and explain every difference.",
       },
       {
         id: "filters-notch",
@@ -582,7 +582,7 @@ const journeyman: Block[] = [
       },
       {
         id: "noise-matched",
-        text: "Derive the matched filter, implement it, and measure its signal-to-noise gain on a pulse in white noise against the theory. Then colour the noise and show it stop being optimal.",
+        text: "Derive the matched filter, implement it, and measure its signal-to-noise gain on a pulse in white noise against the theory. Then color the noise and show it stop being optimal.",
       },
       {
         id: "noise-crlb",
@@ -661,11 +661,11 @@ const journeyman: Block[] = [
     tasks: [
       {
         id: "radio-pysdr",
-        text: "Work PySDR end to end with the receiver from the radio plan: IQ sampling, the frequency domain, filtering, digital modulation, pulse shaping, synchronisation, channel coding. Every exercise, against live signals.",
+        text: "Work PySDR end to end with the receiver from the radio plan: IQ sampling, the frequency domain, filtering, digital modulation, pulse shaping, synchronization, channel coding. Every exercise, against live signals.",
       },
       {
         id: "radio-fm",
-        text: "Write a broadcast FM demodulator in NumPy from raw IQ: channel filter, decimate, discriminate, de-emphasise, resample to audio. No signal processing library beyond the FFT.",
+        text: "Write a broadcast FM demodulator in NumPy from raw IQ: channel filter, decimate, discriminate, de-emphasize, resample to audio. No signal processing library beyond the FFT.",
       },
       {
         id: "radio-digital",
@@ -677,7 +677,7 @@ const journeyman: Block[] = [
       },
       {
         id: "radio-ofdm",
-        text: "Build an orthogonal frequency-division multiplexing transmitter and receiver in loopback: cyclic prefix, pilots, channel estimation, equalisation. Then put a multipath channel between them and watch the equaliser earn its keep.",
+        text: "Build an orthogonal frequency-division multiplexing transmitter and receiver in loopback: cyclic prefix, pilots, channel estimation, equalization. Then put a multipath channel between them and watch the equalizer earn its keep.",
       },
       {
         id: "radio-gnuradio",
@@ -685,7 +685,7 @@ const journeyman: Block[] = [
       },
       {
         id: "radio-rice",
-        text: "Read Rice's Digital Communications: A Discrete-Time Approach for the synchronisation chapters. It is the book that treats a receiver as a signal processing problem rather than a communications one.",
+        text: "Read Rice's Digital Communications: A Discrete-Time Approach for the synchronization chapters. It is the book that treats a receiver as a signal processing problem rather than a communications one.",
       },
     ],
     gate: "A demodulator you wrote, no GNU Radio blocks, that decodes a real over-the-air digital signal end to end, with a measured bit error rate in loopback within one decibel of the theoretical curve across the range you tested.",
@@ -703,7 +703,7 @@ const journeyman: Block[] = [
       {
         title: "Digital Communications: A Discrete-Time Approach",
         url: "https://www.pearson.com/en-us/subject-catalog/p/digital-communications-a-discrete-time-approach/P200000003211",
-        note: "Michael Rice. Synchronisation, timing and carrier recovery as discrete-time signal processing. Nothing else covers it as well.",
+        note: "Michael Rice. Synchronization, timing and carrier recovery as discrete-time signal processing. Nothing else covers it as well.",
       },
       {
         title: "GNU Radio tutorials",
@@ -812,11 +812,11 @@ const expert: Block[] = [
     tasks: [
       {
         id: "adaptive-lms",
-        text: "Least mean squares, normalised least mean squares and recursive least squares, from the derivation to code, and their convergence measured against the theory on a channel you defined.",
+        text: "Least mean squares, normalized least mean squares and recursive least squares, from the derivation to code, and their convergence measured against the theory on a channel you defined.",
       },
       {
         id: "adaptive-canceller",
-        text: "An adaptive noise canceller and an acoustic echo canceller on real audio from two microphones, with the misadjustment and convergence time logged against Haykin's predictions.",
+        text: "An adaptive noise canceler and an acoustic echo canceler on real audio from two microphones, with the misadjustment and convergence time logged against Haykin's predictions.",
       },
       {
         id: "adaptive-nonlinear",
@@ -1136,7 +1136,7 @@ export const bookshelf: Book[] = [
     level: "journeyman",
     url: "https://www.pearson.com/en-us/subject-catalog/p/digital-communications-a-discrete-time-approach/P200000003211",
     free: false,
-    why: "Synchronisation as signal processing. The book to read before writing a receiver's timing and carrier recovery.",
+    why: "Synchronization as signal processing. The book to read before writing a receiver's timing and carrier recovery.",
   },
   {
     title: "Foundations of Signal Processing",

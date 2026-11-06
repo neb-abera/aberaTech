@@ -129,9 +129,9 @@ export const gear: GearItem[] = [
 export const plan: Block[] = [
   {
     id: "licence",
-    title: "Licence and the arithmetic",
+    title: "License and the arithmetic",
     weeks: "Weeks 1 to 4",
-    why: "The licence itself is paperwork. The exam pools are the point: they force the mathematics and the regulations that every later block assumes you already have.",
+    why: "The license itself is paperwork. The exam pools are the point: they force the mathematics and the regulations that every later block assumes you already have.",
     tasks: [
       {
         id: "licence-exams",
@@ -150,7 +150,7 @@ export const plan: Block[] = [
         text: "Set up the logbook and the study log. Everything after this is scored from them.",
       },
     ],
-    gate: "General licence in hand, and fifty mixed arithmetic problems in ten minutes with no errors.",
+    gate: "General license in hand, and fifty mixed arithmetic problems in ten minutes with no errors.",
     resources: [
       {
         title: "HamStudy",
@@ -160,7 +160,7 @@ export const plan: Block[] = [
       {
         title: "ARRL licensing, education and training",
         url: "https://www.arrl.org/licensing-education-training",
-        note: "Where the licence manuals and local exam sessions are listed.",
+        note: "Where the license manuals and local exam sessions are listed.",
       },
       {
         title: "CompTIA Network+ exam objectives",
@@ -201,11 +201,11 @@ export const plan: Block[] = [
       },
       {
         id: "wire-ocf",
-        text: "Build a half-wave dipole fed 14 percent from its centre through a 4:1 balun, and confirm on the analyzer that it works on its even harmonics too. Compute the feed point in feet and inches before you cut.",
+        text: "Build a half-wave dipole fed 14 percent from its center through a 4:1 balun, and confirm on the analyzer that it works on its even harmonics too. Compute the feed point in feet and inches before you cut.",
       },
       {
         id: "wire-longwire",
-        text: "Build a long wire, several wavelengths on the band in use, fed at one end against a counterpoise. Log which directions it favours.",
+        text: "Build a long wire, several wavelengths on the band in use, fed at one end against a counterpoise. Log which directions it favors.",
       },
       {
         id: "wire-terminated",
@@ -232,7 +232,7 @@ export const plan: Block[] = [
         text: "Keep a propagation log: time, band, solar flux, what you could and could not hear. Learn the maximum and lowest usable frequencies from your own data before reading about them.",
       },
     ],
-    gate: "Given a frequency and an azimuth to the distant station: compute the length, cut the wire to within three inches of it, erect it broadside to that azimuth by compass, connect the radio and log a contact, all inside thirty minutes, in the dark, by headlamp. Then the same with the off-centre-fed and a terminated wire.",
+    gate: "Given a frequency and an azimuth to the distant station: compute the length, cut the wire to within three inches of it, erect it broadside to that azimuth by compass, connect the radio and log a contact, all inside thirty minutes, in the dark, by headlamp. Then the same with the off-center-fed and a terminated wire.",
     resources: [
       {
         title: "Near vertical incidence skywave",
@@ -266,12 +266,12 @@ export const plan: Block[] = [
       {
         title: "EZNEC",
         url: "https://www.eznec.com/",
-        note: "Free antenna modelling. Model it, predict the impedance and pattern, then build it and measure. The gap is the lesson.",
+        note: "Free antenna modeling. Model it, predict the impedance and pattern, then build it and measure. The gap is the lesson.",
       },
       {
         title: "WebSDR",
         url: "https://websdr.org/",
-        note: "Remote receivers in a browser. Practise tuning, reading a waterfall and hearing NVIS against skip before the rig arrives.",
+        note: "Remote receivers in a browser. Practice tuning, reading a waterfall and hearing NVIS against skip before the rig arrives.",
       },
       {
         title: "KiwiSDR public receivers",
@@ -406,7 +406,7 @@ export const plan: Block[] = [
       },
       {
         id: "spectrum-interference",
-        text: "Learn what interference looks like on the waterfall: broadband noise, a carrier parked on the frequency, sweeping and pulsed sources. When it lands on your own link, recognise it, note the time and the shape, change something (band, antenna, power, timing) and get the traffic through anyway.",
+        text: "Learn what interference looks like on the waterfall: broadband noise, a carrier parked on the frequency, sweeping and pulsed sources. When it lands on your own link, recognize it, note the time and the shape, change something (band, antenna, power, timing) and get the traffic through anyway.",
       },
       {
         id: "spectrum-source",

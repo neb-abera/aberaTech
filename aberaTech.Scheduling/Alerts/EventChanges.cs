@@ -317,7 +317,7 @@ public static class EventMoves
 {
     /// <summary>
     /// Each occurrence the edit is for, before and after. A skip goes with
-    /// the occurrence. So does the send claim and the acknowledgement when
+    /// the occurrence. So does the send claim and the acknowledgment when
     /// the new alert time has already come: the alert went, and the moved
     /// occurrence would otherwise send it a second time at once. A new alert
     /// time still ahead alerts at that time.

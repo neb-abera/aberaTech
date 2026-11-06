@@ -33,7 +33,7 @@ export class Tracks {
 
   /**
    * Schedule a track in its curated order, bumping any course whose prerequisite
-   * is not yet placed. Ordered rather than optimised, because a track's order is
+   * is not yet placed. Ordered rather than optimized, because a track's order is
    * the pedagogy: the receiver tracks walk the signal chain from the antenna inward.
    */
   toPlan(catalog: Catalog, id: string, perTerm = 2): Plan {

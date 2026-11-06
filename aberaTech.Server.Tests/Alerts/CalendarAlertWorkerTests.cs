@@ -921,7 +921,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         box.Pushover.Then(() => RecordingHandler.Text(
             HttpStatusCode.OK, "{\"status\":1,\"request\":\"r\",\"receipt\":\"racereceipt0000000000000000001\"}", "application/json"));
         // The phone answers after the claim and before the receipt is stored:
-        // the acknowledgement finds no receipt to cancel.
+        // the acknowledgment finds no receipt to cancel.
         box.Store.BeforeRecordOutcome = () => box.Store
             .AcknowledgeAsync("standup@google.com|20261028T130000Z", Start, "phone", AlertTime, CancellationToken.None)
             .GetAwaiter().GetResult();
@@ -1135,7 +1135,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             }
             catch (OperationCanceledException)
             {
-                // Npgsql answers a cancelled connect with its own exception.
+                // Npgsql answers a canceled connect with its own exception.
             }
 
             throw new TimeoutException("database down");

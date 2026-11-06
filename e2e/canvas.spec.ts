@@ -3,10 +3,10 @@ import { expect, test } from "@playwright/test";
 
 // Pulling a page past either end (the rubber band on a Mac, an iPhone, or
 // Firefox) shows the browser canvas beyond the page, painted in the root
-// element's colour and nothing else. At the top that colour is the glow's
-// blue, and the page's first row of pixels must be that same colour, edge to
-// edge, or the seam shows as a band. At the bottom it is the page colour, and
-// so is the last row. On 2026-09-27 the last row was the page colour and the
+// element's color and nothing else. At the top that color is the glow's
+// blue, and the page's first row of pixels must be that same color, edge to
+// edge, or the seam shows as a band. At the bottom it is the page color, and
+// so is the last row. On 2026-09-27 the last row was the page color and the
 // canvas below it still blue: the test checked the row and not the gap. On 2026-09-22 the
 // gap was black above a blue page. On 2026-09-24 the page's edge matched a
 // black gap, which is the same defect with the blue taken out. Sampled as
@@ -123,7 +123,7 @@ for (const path of pages) {
 for (const scheme of ["dark", "light"] as const) {
   test.describe(`${scheme} scheme`, () => {
     for (const path of pages) {
-      test(`${path}: the top edge is the canvas colour, the bottom edge the page colour`, async ({
+      test(`${path}: the top edge is the canvas color, the bottom edge the page color`, async ({
         page,
       }) => {
         // The stored choice goes in before the first script runs, so the
@@ -142,7 +142,7 @@ for (const scheme of ["dark", "light"] as const) {
         await painted(page);
 
         const canvas = await canvasColour(page);
-        // Blue, not the page colour: the gap past either end is the point.
+        // Blue, not the page color: the gap past either end is the point.
         expect(
           canvas[2] - canvas[0],
           `the canvas is not blue: ${canvas}`,
@@ -159,7 +159,7 @@ for (const scheme of ["dark", "light"] as const) {
           ).toBe(true);
         }
 
-        // The last row is the page colour: no band at the bottom.
+        // The last row is the page color: no band at the bottom.
         const pageColour = await page.evaluate(() => {
           const probe = document.createElement("div");
           probe.style.backgroundColor =
@@ -186,17 +186,17 @@ for (const scheme of ["dark", "light"] as const) {
           document.documentElement.hasAttribute("data-scrolled"),
         );
         await painted(page);
-        // The gap past the bottom is the canvas: it must be the page colour.
+        // The gap past the bottom is the canvas: it must be the page color.
         const below = await canvasColour(page);
         expect(
           near(below, [pr, pg, pb]),
-          `the canvas past the bottom is ${below}, page colour is ${pageColour}`,
+          `the canvas past the bottom is ${below}, page color is ${pageColour}`,
         ).toBe(true);
         for (const x of [8, width / 2, width - 8]) {
           const bottom = await pixelAt(page, Math.floor(x), height - 1);
           expect(
             near(bottom, [pr, pg, pb]),
-            `bottom edge at x=${x} is ${bottom}, page colour is ${pageColour}`,
+            `bottom edge at x=${x} is ${bottom}, page color is ${pageColour}`,
           ).toBe(true);
         }
         await page.evaluate(() => window.scrollTo(0, 0));
@@ -208,7 +208,7 @@ for (const scheme of ["dark", "light"] as const) {
         await painted(page);
         expect(await canvasColour(page)).toEqual(canvas);
 
-        // Under the bar, at the centre: the glow is there, so the page is
+        // Under the bar, at the center: the glow is there, so the page is
         // not simply flat. Dark tints the blue channel up; light tints red
         // down; either way one channel moves.
         const glow = await pixelAt(page, Math.floor(width / 2), 110);

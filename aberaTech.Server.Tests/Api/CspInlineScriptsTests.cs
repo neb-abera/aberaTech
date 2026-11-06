@@ -70,7 +70,7 @@ public class CspInlineScriptsTests
     public void The_hash_covers_the_exact_bytes_between_the_tags()
     {
         // CSP hashes the script's text verbatim — whitespace included. A
-        // trimmed or normalised hash would not match the browser's.
+        // trimmed or normalized hash would not match the browser's.
         var content = "\n  let x = 1;\n";
         var hashes = CspInlineScripts.HashesIn($"<script>{content}</script>");
 

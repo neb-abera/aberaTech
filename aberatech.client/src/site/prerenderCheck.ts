@@ -18,7 +18,7 @@
 const CLIENT_RENDERED = "<!--$!-->";
 // One token at a time: an invisible block (script, style, template or
 // comment), a tag, or the text between tags. Only the text counts. The
-// markup is read, never rewritten, so nothing here sanitises it.
+// markup is read, never rewritten, so nothing here sanitizes it.
 const TOKEN =
   /<(script|style|template)\b[^>]*>[\s\S]*?<\/\1[^>]*>|<!--[\s\S]*?-->|<[^>]*>|[^<]+/gi;
 const H1 = /<h1\b[^>]*>([\s\S]*?)<\/h1[^>]*>/gi;

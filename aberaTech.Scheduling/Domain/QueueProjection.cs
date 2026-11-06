@@ -65,7 +65,7 @@ public static class QueueProjection
     /// Projects start times for everyone still waiting, in queue order.
     /// </summary>
     /// <param name="entries">
-    /// The whole queue in any order. Cancelled, done and no-show entries are
+    /// The whole queue in any order. Canceled, done and no-show entries are
     /// ignored, which is precisely what makes the line move up when one of them
     /// leaves.
     /// </param>

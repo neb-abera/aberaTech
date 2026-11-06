@@ -12,7 +12,7 @@ export default function Network(props: { disableCustomTheme?: boolean }) {
       {...props}
       maxWidth="xl"
       title="Network"
-      intro="People and organizations, drawn by sector. Colour is the sector, size is how soon to act, the ring is where things stand."
+      intro="People and organizations, drawn by sector. Color is the sector, size is how soon to act, the ring is where things stand."
     >
       <NetworkPanel />
     </PageShell>

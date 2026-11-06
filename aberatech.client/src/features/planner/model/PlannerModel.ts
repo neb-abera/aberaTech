@@ -300,7 +300,7 @@ export class PlannerModel {
       return;
     }
     if (!this.degreePicks.size) {
-      // Materialise the automatic ten so the reader edits from a real starting point.
+      // Materialize the automatic ten so the reader edits from a real starting point.
       this.audit().counted.forEach((c) => {
         this.degreePicks.add(c);
       });

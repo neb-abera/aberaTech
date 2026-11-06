@@ -5,7 +5,7 @@ using Xunit;
 namespace aberaTech.Server.Tests.Alerts;
 
 /// <summary>
-/// Cancelling an emergency message's repeats: one request with the app
+/// Canceling an emergency message's repeats: one request with the app
 /// token, a receipt that is not letters and digits never reaches a URL, and
 /// every failure comes back as a short reason the caller logs.
 /// </summary>

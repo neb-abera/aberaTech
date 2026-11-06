@@ -34,7 +34,7 @@ public sealed class OutboxDispatcher(
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// Messages per tick. Bounded so one backlog cannot monopolise the provider
+    /// Messages per tick. Bounded so one backlog cannot monopolize the provider
     /// or hold a long transaction open across hundreds of HTTP calls.
     /// </summary>
     private const int BatchSize = 20;
@@ -132,7 +132,7 @@ public sealed class OutboxDispatcher(
 
         // FOR UPDATE SKIP LOCKED is the point of the raw SQL: EF cannot express
         // it, and without it two replicas either send the same message twice or
-        // serialise behind each other.
+        // serialize behind each other.
         var claimed = await database.Outbox
             .FromSql(
                 $"""

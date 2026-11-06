@@ -160,7 +160,7 @@ describe("the new generators", () => {
   });
 
   it.each(seeds)(
-    "off-centre feed problems use 0.14 × 468 / f (seed %i)",
+    "off-center feed problems use 0.14 × 468 / f (seed %i)",
     (seed) => {
       const problem = ocfProblem(seededRandom(seed), "p");
       const value = Number(problem.answer);

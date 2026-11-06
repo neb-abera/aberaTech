@@ -130,7 +130,7 @@ public sealed class GoogleCalendarInvites(
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
-            logger.LogWarning(exception, "Google was unreachable cancelling event {EventId}.", googleEventId);
+            logger.LogWarning(exception, "Google was unreachable canceling event {EventId}.", googleEventId);
         }
     }
 

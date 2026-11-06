@@ -53,7 +53,7 @@ public readonly record struct SendResult(
 /// </summary>
 /// <remarks>
 /// An interface rather than a direct Twilio call so the dispatcher's retry and
-/// reconciliation behaviour can be exercised without credentials, a network, or
+/// reconciliation behavior can be exercised without credentials, a network, or
 /// a carrier — and so the site runs end to end in development before any A2P
 /// registration exists.
 /// </remarks>

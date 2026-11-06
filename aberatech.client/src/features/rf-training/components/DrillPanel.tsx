@@ -129,7 +129,7 @@ export default function DrillPanel({
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {count} problems across ten kinds: decibels, wavelength, dipole
-            length, the off-centre feed point, Ohm's law, power budgets,
+            length, the off-center feed point, Ohm's law, power budgets,
             azimuths, Zulu time, one-time pads and subnetting. The clock runs
             from the first problem to the last. Same problems all day. New ones
             tomorrow.

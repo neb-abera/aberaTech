@@ -289,7 +289,7 @@ export async function sendEventTest(key: string): Promise<ActionResult> {
 
 /**
  * Acknowledge a due alarm: it stops ringing here, on a paired phone, and
- * Pushover stops repeating it. The first acknowledgement stands.
+ * Pushover stops repeating it. The first acknowledgment stands.
  */
 export function acknowledgeAlert(
   key: string,
@@ -371,7 +371,7 @@ export type EventWriteResult =
 /**
  * Changes the event on Google Calendar and answers with the state, the
  * change already listed. 404: the alert is no longer listed. 409: Google
- * lets only the organiser change it, or no calendar with edit access.
+ * lets only the organizer change it, or no calendar with edit access.
  */
 export function editEvent(edit: EventEdit): Promise<EventWriteResult> {
   return writeEvent("PUT", "/api/alerts/events", edit, 200);

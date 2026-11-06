@@ -1,9 +1,9 @@
 /**
- * One colour per focus area, in both themes.
+ * One color per focus area, in both themes.
  *
  * The hues and their order come from a categorical palette selected so that
- * adjacent slots stay distinguishable under colour vision deficiency. Colour
- * only ever appears on the mark, never on the text: a chip carries a coloured
+ * adjacent slots stay distinguishable under color vision deficiency. Color
+ * only ever appears on the mark, never on the text: a chip carries a colored
  * key and its label uses the theme's own text tokens, so nothing depends on
  * reading a light hue as type.
  */
@@ -31,7 +31,7 @@ export function areaColor(area: string | undefined, mode: ThemeMode): string {
 }
 
 /**
- * The colour for a course: the first of its areas the reader has turned on, so a
+ * The color for a course: the first of its areas the reader has turned on, so a
  * course listed under two headings keys to the one they are looking at.
  */
 export function courseColor(
@@ -45,8 +45,8 @@ export function courseColor(
 export const AREA_NAMES = Object.keys(SLOTS);
 
 /**
- * The same colours as CSS custom properties, so the stylesheet carries both
- * schemes and the browser picks one. A colour chosen in script would be the
+ * The same colors as CSS custom properties, so the stylesheet carries both
+ * schemes and the browser picks one. A color chosen in script would be the
  * server's guess in the prerendered page and could change at hydration.
  */
 function slotIndex(area: string | undefined): number {
@@ -62,7 +62,7 @@ export function courseColorVar(areas: string[], active: Set<string>): string {
   return areaColorVar(areas.find((a) => active.has(a)) ?? areas[0]);
 }
 
-/** How strongly a chip is tinted with its colour, per scheme. */
+/** How strongly a chip is tinted with its color, per scheme. */
 export const CHIP_TINT: Record<ThemeMode, string> = {
   light: "9%",
   dark: "16%",

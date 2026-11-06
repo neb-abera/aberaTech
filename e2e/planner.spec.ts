@@ -60,7 +60,7 @@ test("the board is readable before any JavaScript runs", async ({
   await context.close();
 });
 
-/** Where the board's landmarks sit, and the first course's colour key. */
+/** Where the board's landmarks sit, and the first course's color key. */
 async function layout(page: Page) {
   const box = async (name: string) => {
     const b = await page
@@ -81,7 +81,7 @@ test("hydration keeps the prerendered board, with no error and no shift", async 
   browser,
 }, testInfo) => {
   // The same viewport with and without script. A board that rendered
-  // differently on the server (a rail sized by a media query, a colour read
+  // differently on the server (a rail sized by a media query, a color read
   // from the theme in script) moves when React takes over, or fails to
   // hydrate and is rebuilt.
   const still = await browser.newContext({

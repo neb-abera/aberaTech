@@ -2,7 +2,7 @@
  * The daily drill: fresh arithmetic across the plan, generated from a seed.
  *
  * Ten kinds, one per thing the plan says must become a reflex: decibels,
- * wavelength, dipole length, the off-centre feed point, Ohm's law, power
+ * wavelength, dipole length, the off-center feed point, Ohm's law, power
  * budgets, azimuths, Zulu time, one-time pads, and subnetting. Every
  * generator is a pure function of a random source, so a session is
  * reproducible from its seed and every answer can be checked against the
@@ -43,7 +43,7 @@ export const kindLabel: Record<DrillKind, string> = {
   db: "Decibels",
   wavelength: "Wavelength",
   dipole: "Dipole length",
-  ocf: "Off-centre feed",
+  ocf: "Off-center feed",
   ohm: "Ohm's law",
   power: "Power budget",
   azimuth: "Azimuth",
@@ -149,7 +149,7 @@ export function dbProblem(random: Random, id: string): Problem {
   };
 }
 
-// Wavelength in metres is 300 divided by the frequency in megahertz. The
+// Wavelength in meters is 300 divided by the frequency in megahertz. The
 // frequencies are the middles of the bands the plan has the reader on.
 const bandsMHz = [
   1.9, 3.6, 7.1, 10.1, 14.2, 18.1, 21.3, 28.5, 50.1, 146, 446,
@@ -162,7 +162,7 @@ export function wavelengthProblem(random: Random, id: string): Problem {
     return {
       id,
       kind: "wavelength",
-      prompt: `What is the wavelength of ${f} MHz, in metres?`,
+      prompt: `What is the wavelength of ${f} MHz, in meters?`,
       answer: round(metres, 2),
       unit: "m",
       tolerance: 0.02,
@@ -249,7 +249,7 @@ export function feetAndInches(feet: number): string {
   return `${whole} ft ${inches} in`;
 }
 
-// The off-centre-fed dipole: a half-wave of wire fed 14 percent from the
+// The off-center-fed dipole: a half-wave of wire fed 14 percent from the
 // middle. The drill asks for the feed point in feet and inches, because the
 // arithmetic that fails in the field is the tenths-of-a-foot conversion.
 export function ocfProblem(random: Random, id: string): Problem {
@@ -263,7 +263,7 @@ export function ocfProblem(random: Random, id: string): Problem {
     return {
       id,
       kind: "ocf",
-      prompt: `A half-wave for ${f} MHz is fed 14 percent from its centre. How far from the centre is the feed point, in feet?`,
+      prompt: `A half-wave for ${f} MHz is fed 14 percent from its center. How far from the center is the feed point, in feet?`,
       answer: round(offset, 1),
       unit: "ft",
       tolerance: 0.02,

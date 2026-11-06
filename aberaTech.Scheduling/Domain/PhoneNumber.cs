@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace aberaTech.Scheduling.Domain;
 
 /// <summary>
-/// A North American phone number, normalised to E.164.
+/// A North American phone number, normalized to E.164.
 /// </summary>
 /// <remarks>
 /// Deliberately narrow. A public form that causes an SMS to be sent is a way
@@ -14,7 +14,7 @@ namespace aberaTech.Scheduling.Domain;
 /// limit, and it costs nothing real: the people this queue is for are soldiers
 /// with US numbers.
 ///
-/// Normalising at the edge also means the rate limiter and the outbox see one
+/// Normalizing at the edge also means the rate limiter and the outbox see one
 /// canonical form. "(913) 499-9497", "913-499-9497" and "+19134999497" must not
 /// be three different identities to a per-number cap, or the cap is decorative.
 /// </remarks>

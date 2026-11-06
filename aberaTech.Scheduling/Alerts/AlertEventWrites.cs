@@ -13,7 +13,7 @@ public static class AlertEventWrites
     /// <summary>
     /// Writes the edit to Google, then stores it, updates a created event
     /// the feed does not have yet, and carries the occurrence's skip, claim
-    /// and acknowledgement. Nothing is stored when Google did not take it.
+    /// and acknowledgment. Nothing is stored when Google did not take it.
     /// </summary>
     /// <param name="before">The plan before the edit.</param>
     /// <param name="zone">The zone to write a time in when Google names none.</param>

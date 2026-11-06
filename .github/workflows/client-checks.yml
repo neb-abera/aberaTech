@@ -478,7 +478,7 @@ jobs:
 
       # Exactly what `make e2e` runs locally: the production image and its
       # database up through compose, and Playwright (in the image that matches
-      # e2e/package.json) dialling the app over the compose network. The
+      # e2e/package.json) dialing the app over the compose network. The
       # delivery bugs that reach production are the ones nothing opened in a
       # browser: an uncompressed bundle, a cookie on an asset, a prerendered
       # page that is blank with JavaScript off.

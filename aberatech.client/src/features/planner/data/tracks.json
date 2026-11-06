@@ -51,7 +51,7 @@
         "name": "Fields and front end",
         "courses": ["EN.525.605", "EN.525.684"]
       },
-      { "name": "Digitisation", "courses": ["EN.525.642", "EN.525.742"] },
+      { "name": "Digitization", "courses": ["EN.525.642", "EN.525.742"] },
       {
         "name": "Demodulation and analysis",
         "courses": ["EN.525.751", "EN.525.752", "EN.525.744"]
@@ -129,11 +129,11 @@
         "courses": ["EN.525.623", "EN.525.620", "EN.525.684", "EN.525.774"]
       },
       {
-        "name": "4. Analogue and instrumentation",
+        "name": "4. Analog and instrumentation",
         "courses": ["EN.525.622", "EN.525.624", "EN.525.657"]
       },
       {
-        "name": "5. Digitisation and programmable logic",
+        "name": "5. Digitization and programmable logic",
         "courses": ["EN.525.642", "EN.525.677", "EN.525.612", "EN.525.742"]
       },
       {

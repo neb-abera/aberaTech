@@ -33,7 +33,7 @@ public sealed class CompositeBusySource(IEnumerable<IBusySource> sources, ILogge
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 // Deliberately not rethrown. If Google is slow or down, the
-                // right behaviour is to keep taking bookings against the times
+                // right behavior is to keep taking bookings against the times
                 // we do know about rather than show an error page — the worst
                 // case is a double booking the host can move, and the best case
                 // of failing hard is nobody can book at all.

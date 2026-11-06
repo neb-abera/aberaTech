@@ -27,7 +27,7 @@ public sealed record RoutineRing(string Key, Guid RoutineId, string Label, Insta
 /// <summary>
 /// The rings of the routine alarms, worked out on the server as the phone
 /// works them out, so the browser and Pushover ring them too and one
-/// acknowledgement stops all of them.
+/// acknowledgment stops all of them.
 /// </summary>
 /// <remarks>
 /// The phone's rules. A routine with days rings on those ISO weekdays. One

@@ -119,7 +119,7 @@ public class AlertDeliveryRecord
 
     /// <summary>
     /// Pushover's receipt for an alarm, which repeats until
-    /// acknowledged. An acknowledgement on /alerts or a paired phone cancels
+    /// acknowledged. An acknowledgment on /alerts or a paired phone cancels
     /// the repeats with it. Null for a notification.
     /// </summary>
     public string? Receipt { get; set; }
@@ -158,7 +158,7 @@ public class AlertDeviceRecord
     public string? TimeZone { get; set; }
 }
 
-/// <summary>One occurrence the owner acknowledged, on a paired phone or in a browser. The first acknowledgement stands.</summary>
+/// <summary>One occurrence the owner acknowledged, on a paired phone or in a browser. The first acknowledgment stands.</summary>
 public class AlertAcknowledgementRecord
 {
     public string OccurrenceKey { get; set; } = string.Empty;

@@ -267,7 +267,7 @@ public static class AdminEndpoints
     /// </summary>
     /// <remarks>
     /// The estimate every queue tool gets wrong by assuming one number fits
-    /// everybody. A first counselling session and a two minute signature are not
+    /// everybody. A first counseling session and a two minute signature are not
     /// the same conversation, and treating them as fifteen minutes each makes
     /// every projection behind them wrong in the same direction.
     ///

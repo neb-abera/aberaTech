@@ -6,7 +6,7 @@ import type { NetworkDocument, Status } from "./model";
  * and a test can say where a node is.
  *
  * A clustered map. Each sector has an anchor on an ellipse around the
- * centre. Organizations and people start near their sector's anchor, then
+ * center. Organizations and people start near their sector's anchor, then
  * a fixed number of passes pull a person toward each organization it
  * belongs to, pull everything gently toward its anchor, push every pair
  * apart so nothing overlaps, and keep the whole thing inside the box. A

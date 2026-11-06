@@ -28,7 +28,7 @@ interface Props {
  * The queue: either the form to join it, or where you stand in it.
  *
  * Note what this never shows: who else is waiting. Position and count only. The
- * people in this queue are being seen for counselling, and who is in line ahead
+ * people in this queue are being seen for counseling, and who is in line ahead
  * of you is not something the person behind you is entitled to know.
  */
 export default function QueuePanel({
@@ -175,7 +175,7 @@ export default function QueuePanel({
           <Box>
             {/* Disabled only while a request is in flight. Not disabled on an
                 empty form: the theme renders a disabled label at 30% white on a
-                12% white ground, which is unreadable, and a greyed button never
+                12% white ground, which is unreadable, and a grayed button never
                 tells anybody what it wants. The fields are `required`, so the
                 browser explains what is missing instead. */}
             <Button

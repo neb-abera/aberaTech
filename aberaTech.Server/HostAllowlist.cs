@@ -32,7 +32,7 @@ public sealed class HostAllowlistOptions
 ///
 /// Nothing here builds a link from the Host header that a visitor then
 /// trusts — the Twilio callback URL is configured, and Google refuses a
-/// redirect URI it was not given — so this is defence in depth against
+/// redirect URI it was not given — so this is defense in depth against
 /// cache poisoning and whatever is written next, not the fix for a hole.
 /// </remarks>
 public static class HostAllowlist

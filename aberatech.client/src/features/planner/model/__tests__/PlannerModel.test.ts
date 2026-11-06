@@ -73,7 +73,7 @@ describe("selection", () => {
     m.selectTrack("sp-rf");
     const before = m.plan.courses();
     m.toggleArea("area", "AI and Autonomous Systems");
-    // The old behaviour pruned here, which only ever removed: the board went
+    // The old behavior pruned here, which only ever removed: the board went
     // from 13 courses to 5 and nothing arrived.
     expect(m.plan.courses()).toEqual(before);
   });
@@ -377,7 +377,7 @@ describe("why a term will or will not take a course", () => {
  * The five admission prerequisites: mathematics through vector calculus and
  * differential equations, calculus-based physics, linear and non-linear
  * circuits, electromagnetics, and signals and systems. Missing ones do not bar
- * enrolment - admission is provisional until they are complete - so every plan
+ * enrollment - admission is provisional until they are complete - so every plan
  * carries the ones the reader neither holds nor covers with a bridge course.
  */
 describe("admission prerequisites", () => {
@@ -510,7 +510,7 @@ describe("auto placement after a removal", () => {
 });
 
 describe("degree picks", () => {
-  test("the first manual pick materialises the automatic ten so editing starts from something real", () => {
+  test("the first manual pick materializes the automatic ten so editing starts from something real", () => {
     const m = rf();
     const extra = m.plan
       .courses()

@@ -1,5 +1,5 @@
 {
-  "about": "The licence basis of every image /transition draws from another site. guides.test.tsx fails when an image or srcset URL on the page has no record here. copied is true only where the owner's terms allow a copy on abera.tech. A hot-linked image keeps its host in the CSP img-src (aberaTech.Server/Program.cs) and in pagePreconnects (src/site/meta.ts).",
+  "about": "The license basis of every image /transition draws from another site. guides.test.tsx fails when an image or srcset URL on the page has no record here. copied is true only where the owner's terms allow a copy on abera.tech. A hot-linked image keeps its host in the CSP img-src (aberaTech.Server/Program.cs) and in pagePreconnects (src/site/meta.ts).",
   "images": [
     {
       "src": "https://www.va.gov/img/design/logo/va-og-image.png",
@@ -26,7 +26,7 @@
       "terms": "https://recruitmilitary.com/terms-use/",
       "checked": "2026-09-26",
       "copied": false,
-      "basis": "The terms prohibit any copying, reproduction or display of site content, logos included, without prior written consent, and grant no licence to any trademark. Read from the Wayback Machine copy of 2026-05-13, because recruitmilitary.com answered 503 to scripted requests. Hot-linked, from the owner's 2047 by 481 file in place of the 6167 by 2778 one."
+      "basis": "The terms prohibit any copying, reproduction or display of site content, logos included, without prior written consent, and grant no license to any trademark. Read from the Wayback Machine copy of 2026-05-13, because recruitmilitary.com answered 503 to scripted requests. Hot-linked, from the owner's 2047 by 481 file in place of the 6167 by 2778 one."
     },
     {
       "src": "https://www.hiringourheroes.org/wp-content/uploads/2022/12/homepage-featured-img-december-2022-1200x800-1-768x512.jpg",
@@ -48,7 +48,7 @@
       "terms": "https://www.upack.com/about-upack/terms-of-use",
       "checked": "2026-09-26",
       "copied": false,
-      "basis": "U-Pack's terms say its site content may not be reproduced, duplicated or copied, and grant no licence to its marks. The banner is creative CJ Affiliate serves for U-Pack. Hot-linked."
+      "basis": "U-Pack's terms say its site content may not be reproduced, duplicated or copied, and grant no license to its marks. The banner is creative CJ Affiliate serves for U-Pack. Hot-linked."
     }
   ]
 }

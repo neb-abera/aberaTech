@@ -65,7 +65,7 @@ public static class TwilioFailure
             return (FailureKind.Permanent, reason);
         }
 
-        // 4xx without a code we recognise is still most likely our fault rather
+        // 4xx without a code we recognize is still most likely our fault rather
         // than a blip, but it is not worth guessing which: rate limiting is a
         // 429 and genuinely worth retrying, and a malformed request will fail
         // identically every time and dead letter soon enough anyway.

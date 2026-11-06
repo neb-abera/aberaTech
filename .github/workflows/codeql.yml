@@ -35,7 +35,7 @@ jobs:
     # The slowest leg of the last 15 runs on master took 207 s. On
     # 2026-11-03 harden-runner could not reach its API, blocked github.com,
     # and checkout's post step hung each time until a 45-minute limit
-    # cancelled it. 15 minutes surfaces that hang 30 minutes sooner.
+    # canceled it. 15 minutes surfaces that hang 30 minutes sooner.
     timeout-minutes: 15
     permissions:
       contents: read

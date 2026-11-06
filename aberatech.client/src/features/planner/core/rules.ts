@@ -3,7 +3,7 @@
  * MS in Electrical and Computer Engineering.
  *
  * Source: JHU e-catalogue, Engineering for Professionals academic regulations and
- * the ECE master's programme page, retrieved August 2026.
+ * the ECE master's program page, retrieved August 2026.
  *
  *  - Ten courses, 30 credits, within five years.
  *  - The five years begin "with the start of the first course applied to the

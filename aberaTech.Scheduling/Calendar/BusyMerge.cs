@@ -2,7 +2,7 @@ using NodaTime;
 
 namespace aberaTech.Scheduling.Calendar;
 
-/// <summary>Normalising overlapping busy periods into a tidy, sorted set.</summary>
+/// <summary>Normalizing overlapping busy periods into a tidy, sorted set.</summary>
 public static class BusyMerge
 {
     /// <summary>

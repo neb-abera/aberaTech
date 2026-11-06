@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 // Five guides in three columns left a hole in the second row, at the right,
-// which reads as a card that failed to load. The rows are centred now, so a
+// which reads as a card that failed to load. The rows are centered now, so a
 // short last row reads as the end of the list.
 //
 // Measured on the cards themselves, in a viewport wide enough for three
-// columns. A container that centres its contents proves nothing: the cards
+// columns. A container that centers its contents proves nothing: the cards
 // are what a reader sees sitting off to one side.
 
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -18,7 +18,7 @@ const guides = [
   "/quantum-cryptography",
 ];
 
-test("/guides: every row of cards is centred, including a short one", async ({
+test("/guides: every row of cards is centered, including a short one", async ({
   page,
 }) => {
   await page.goto("/guides");
@@ -47,7 +47,7 @@ test("/guides: every row of cards is centred, including a short one", async ({
     const rowRight = Math.max(...row.map((box) => box.x + box.width));
     expect(
       Math.abs((rowLeft + rowRight) / 2 - centre),
-      `the row at y=${top} spans ${rowLeft} to ${rowRight}, centre ${centre}`,
+      `the row at y=${top} spans ${rowLeft} to ${rowRight}, center ${centre}`,
     ).toBeLessThanOrEqual(1);
   }
 });

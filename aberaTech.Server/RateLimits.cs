@@ -74,7 +74,7 @@ public static class RateLimits
             // Everything a stranger can call that writes a row or causes a
             // message to be sent. The booking page is public by design, and a
             // public form wired to an SMS provider is a way to spend somebody
-            // else's money; this is the second half of that defence, after
+            // else's money; this is the second half of that defense, after
             // restricting destinations to +1.
             options.AddPolicy(SchedulingEndpoints.PublicWritePolicy, context => PerMinute(context, publicWritePerMinute));
 
@@ -99,7 +99,7 @@ public static class RateLimits
             // more across three engines, so compose raises it there.
             options.AddPolicy(AlertsEndpoints.ActionsPolicy, context => PerMinute(context, alertsPerMinute));
 
-            // Pushover's acknowledgement callback. One post per acknowledged
+            // Pushover's acknowledgment callback. One post per acknowledged
             // alarm, and one a minute while it gets no 2xx. Each post that
             // names a stored receipt asks Pushover once, so this also bounds
             // what a forger can make the server ask.

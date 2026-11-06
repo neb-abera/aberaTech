@@ -100,7 +100,7 @@ site. The history is on the
   nothing by default. The worker reads the
   secret iCal address and sends each alert at its own time. The alert time
   is the event's earliest popup reminder, or the default lead before the
-  start. Cancelled and declined events are skipped. Text and "06:00
+  start. Canceled and declined events are skipped. Text and "06:00
   tomorrow" use the calendar's own zone (`X-WR-TIMEZONE`, then the
   settings' zone, then UTC). Mute, Skip, the settings, each event's type
   and a one-send claim per occurrence are rows in the scheduling database.
@@ -174,7 +174,7 @@ The type comes from the first of these that applies:
 3. The default for unmarked events under Settings: Off unless changed.
 
 Every timed event that starts inside the look-ahead window is planned and
-listed. All-day events are left out unless the setting is on. Cancelled
+listed. All-day events are left out unless the setting is on. Canceled
 events and invitations the owner declined are left out. The alert goes at
 the event's earliest popup notification, else the default lead before the
 start (`AlertPlanner.cs`). An event set to Off is asked again at every
@@ -219,7 +219,7 @@ phone (`CalendarWrites.cs`). All use the connection made on
   the stored type are left alone. The server keeps the change until the
   secret address shows it, or the old and new starts have both passed
   (`EventChanges.cs`, table `AlertEventChanges`). A deleted occurrence is
-  never sent, and a Pushover repeat still running for it is cancelled.
+  never sent, and a Pushover repeat still running for it is canceled.
 
 A write goes only to the calendar the alerts read. The secret address has
 the calendar's id in its path, `calendar/ical/<id>/private-…/basic.ics`.
@@ -235,7 +235,7 @@ rename a calendar.
 | `The connected calendar is not the one alerts read.` | the connection is another account, or the secret address is a secondary calendar |
 | `Google refused the stored calendar sign-in. Connect the calendar again.` | the refresh token was revoked or cannot be read |
 | `Google Calendar has no such event on the connected calendar.` | the UID is not on that calendar |
-| `Google refused the change: this event is organised by someone else.` | an invitation. Only its organiser can edit the description |
+| `Google refused the change: this event is organized by someone else.` | an invitation. Only its organizer can edit the description |
 | `Only the organizer can change this event.` | an edit or a deletion of an invitation |
 | `Google refused the change (HTTP <status>).` | any other refusal |
 | `Google Calendar did not answer.` | a timeout or no connection, after 10 s |
@@ -276,7 +276,7 @@ The event is found by `events.list?iCalUID=`. `occurrence` on a repeating
 event patches or deletes the one instance: `events.instances` with
 `timeMin` at the occurrence's start and `timeMax` one second later lists
 it, and its own id is patched or deleted, which Google keeps as an
-exception or a cancelled instance. `occurrence` on an event that does not
+exception or a canceled instance. `occurrence` on an event that does not
 repeat, and `series`, patch or delete the event itself. A `series` edit
 moves the master's start by the edited occurrence's change in date and
 wall-clock time, in the series' own zone. A daily 09:00 moved to 10:00
@@ -295,7 +295,7 @@ to Wednesday would go on repeating on Tuesdays.
 | `BYDAY` with one ordinal, monthly or in a `BYMONTH` | The new start's ordinal when the old one named the old start. `2TU` on 14 July 2026, moved to the 15th, is `3WE`. Otherwise the ordinal stays and the day moves. |
 | `BYMONTHDAY`, monthly or yearly | One value that named the old start takes the new start's day. `31` moved a day later is `1`. `-1` stays negative inside its month. Other values move by D, clamped to 1 to 31. |
 | `BYMONTH`, yearly | One value that named the old start's month takes the new month. |
-| `EXDATE`, `RDATE` | Each date moves by the same change in date and wall-clock time, so a cancelled occurrence stays cancelled. RFC 5545 section 3.8.5.1 matches an EXDATE by its exact start. |
+| `EXDATE`, `RDATE` | Each date moves by the same change in date and wall-clock time, so a canceled occurrence stays canceled. RFC 5545 section 3.8.5.1 matches an EXDATE by its exact start. |
 | `UNTIL`, `COUNT`, `INTERVAL`, `WKST`, `BYSETPOS`, `BYYEARDAY`, `BYWEEKNO` | Kept. |
 
 A rule with none of these parts, such as `FREQ=DAILY` or `FREQ=WEEKLY`
@@ -322,7 +322,7 @@ When the owner presses Acknowledge in the Pushover app, Pushover posts
 anonymous and believes nothing in the body alone. The receipt must be one
 the server stored for a send, and
 `GET https://api.pushover.net/1/receipts/{receipt}.json` must say
-`acknowledged` is 1. The acknowledgement is then recorded with `via`
+`acknowledged` is 1. The acknowledgment is then recorded with `via`
 `pushover`, and the phones are pushed. The page shows "Acknowledged in
 Pushover".
 
@@ -344,7 +344,7 @@ can be read and changed from any computer. The paired iPhone rings them
 as its own alarms. The server works out the same rings
 (`RoutineRings.cs`) and rings each one as an alarm: through Pushover
 after the backup delay, and in an open tab with Ring in this browser on.
-One acknowledgement anywhere stops all of them (`AlertRoutines.cs`, table
+One acknowledgment anywhere stops all of them (`AlertRoutines.cs`, table
 `AlertRoutines`).
 
 The rings follow the phone's rules. A routine with days rings on those
@@ -535,7 +535,7 @@ Each change pushes the phones.
 A change that alters what a phone should hold sends every phone with a
 push token a background push through Apple's push service
 (`AlertPushes.cs`). The changes are an event's type, Skip and Unskip, Mute
-and Unmute, an acknowledgement from anywhere, a new event, an event edited
+and Unmute, an acknowledgment from anywhere, a new event, an event edited
 or deleted, a routine alarm or a countdown added, changed or deleted, a change to the
 phone's alarm sound or snooze, and a calendar read whose alarms differ
 from the last read. The phone then reads
@@ -629,7 +629,7 @@ so a long sound plays into each 30 s gap. At 30 s Pushover's 50 sounds last
 The paired phone plays the alarm sound for every alarm it rings. The
 sounds are audio files in the app, and the page only names them. Ring in
 this browser keeps its own tone. Snooze delays a calendar alarm on the
-phone by that many minutes. A snooze is not an acknowledgement, and
+phone by that many minutes. A snooze is not an acknowledgment, and
 nothing on the server changes for it.
 
 `GET /api/alerts/status` carries them as `settings.phoneSound` and

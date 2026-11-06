@@ -220,7 +220,7 @@ public sealed class RecurrenceShiftTests
     [Fact]
     public void A_time_move_moves_a_cancelled_occurrence_and_keeps_the_rule()
     {
-        // The cancelled 09:00 would no longer match the series at 10:00, and come back.
+        // The canceled 09:00 would no longer match the series at 10:00, and come back.
         var lines = Rewrite(
             ["RRULE:FREQ=WEEKLY;BYDAY=TU", "EXDATE;TZID=America/New_York:20261103T090000"],
             At(2026, 10, 27, 9), At(2026, 10, 27, 10));

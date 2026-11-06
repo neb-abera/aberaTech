@@ -40,7 +40,7 @@ namespace aberaTech.Scheduling.Alerts;
 /// not write.</item>
 /// <item>EXDATE and RDATE dates move by the same change in date and
 /// wall-clock time as the start, in their own TZID or as UTC, so a
-/// cancelled occurrence stays cancelled and an added one stays added. RFC
+/// canceled occurrence stays canceled and an added one stays added. RFC
 /// 5545 section 3.8.5.1 matches an EXDATE to an occurrence by its exact
 /// start, so a date left behind would no longer match anything. A PERIOD
 /// value is kept.</item>

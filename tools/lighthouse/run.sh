@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# run.sh — collect, gate, upload and summarise, inside the Playwright image
+# run.sh — collect, gate, upload and summarize, inside the Playwright image
 # (its Chromium, the one e2e/Dockerfile pins). `make lighthouse` and
 # `make lighthouse-live` start it. docs/lighthouse.md explains the design.
 #

@@ -157,7 +157,7 @@ test.describe("/alerts", () => {
       standupItem.getByText(/^Sends nothing: the default for unmarked events/),
     ).toBeVisible();
     await expect(list.getByText("Room 4")).toBeVisible();
-    // All-day and cancelled events do not alert.
+    // All-day and canceled events do not alert.
     await expect(page.getByText("E2E holiday")).toHaveCount(0);
     await expect(page.getByText("E2E cancelled")).toHaveCount(0);
     await expect(
@@ -984,7 +984,7 @@ test.describe("/alerts", () => {
       acknowledged: true,
       acknowledgedVia: "browser",
     });
-    // Pushover's repeats for it were cancelled.
+    // Pushover's repeats for it were canceled.
     const cancelled = await (
       await page.request.get("/api/alerts/fake/cancelled")
     ).json();
@@ -1049,7 +1049,7 @@ test.describe("/alerts", () => {
         (item: { key: string }) => item.key === ring?.key,
       ),
     ).toMatchObject({ acknowledged: true, acknowledgedVia: "browser" });
-    // Pushover's repeats for it were cancelled.
+    // Pushover's repeats for it were canceled.
     const cancelled = await (
       await page.request.get("/api/alerts/fake/cancelled")
     ).json();
@@ -1206,7 +1206,7 @@ test.describe("/alerts", () => {
       ),
     ).toBeVisible();
 
-    // Add: 06:30 on Monday, Wednesday and Friday, labelled E2E wake.
+    // Add: 06:30 on Monday, Wednesday and Friday, labeled E2E wake.
     const add = page.getByRole("form", { name: "Add routine alarm" });
     await add.getByLabel("Time").fill("06:30");
     for (const day of ["Monday", "Wednesday", "Friday"])
@@ -1396,7 +1396,7 @@ interface Measured {
 
 /**
  * The contrast of the text in every button on the page, as painted: the
- * text colour composited over each ancestor's background colour, with each
+ * text color composited over each ancestor's background color, with each
  * ancestor's opacity applied as a group, as the browser paints it. A
  * disabled button counts. It still has to be read to know what it is for.
  */
@@ -1408,7 +1408,7 @@ function buttonContrast(page: Page): Promise<Measured[]> {
     canvas.height = 1;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) throw new Error("no 2d canvas");
-    // The browser parses the colour, whatever syntax the style uses.
+    // The browser parses the color, whatever syntax the style uses.
     const parse = (css: string): Rgba => {
       context.clearRect(0, 0, 1, 1);
       context.fillStyle = "#000";
@@ -1446,14 +1446,14 @@ function buttonContrast(page: Page): Promise<Measured[]> {
     const show = (c: Rgba) =>
       `rgb(${c.slice(0, 3).map(Math.round).join(", ")})`;
 
-    // The canvas colour is what shows through a page with no background.
+    // The canvas color is what shows through a page with no background.
     const canvasColour = parse(
       getComputedStyle(document.documentElement).backgroundColor,
     );
     const ground: Rgba =
       canvasColour[3] === 0 ? [255, 255, 255, 1] : canvasColour;
 
-    /** Each colour stop of a gradient background, or none. */
+    /** Each color stop of a gradient background, or none. */
     const stops = (image: string): Rgba[] =>
       image === "none"
         ? []

@@ -59,7 +59,7 @@ public sealed record PushoverResult(bool Ok, string? Error, string? Receipt = nu
 /// How one message is sent: the priority, and for priority 2 how often it
 /// sounds again and when it gives up. A null field is left out of the request.
 /// </summary>
-/// <param name="Callback">For priority 2: where Pushover posts the acknowledgement (<see cref="PushoverCallback"/>).</param>
+/// <param name="Callback">For priority 2: where Pushover posts the acknowledgment (<see cref="PushoverCallback"/>).</param>
 public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? ExpireSeconds, string? Sound, string? Callback = null, string? Url = null);
 
 /// <summary>
@@ -75,8 +75,8 @@ public sealed record PushoverDelivery(int Priority, int? RetrySeconds, int? Expi
 /// alert means one.
 /// </remarks>
 /// <summary>
-/// The devices Pushover delivers to, and whether the account holds a licence.
-/// A device with no licence is on Pushover's 30-day trial, and Pushover stops
+/// The devices Pushover delivers to, and whether the account holds a license.
+/// A device with no license is on Pushover's 30-day trial, and Pushover stops
 /// delivering to it when the trial ends.
 /// </summary>
 public sealed record PushoverAccount(IReadOnlyList<string> Devices, bool Licensed);
@@ -209,7 +209,7 @@ public sealed class PushoverClient(HttpClient http, AlertsOptions options)
     /// <summary>
     /// The names of the devices that receive messages for the user key.
     /// Empty when Pushover says the user has no active device, which is what
-    /// it says once the app's trial ends without a licence or the phone signs
+    /// it says once the app's trial ends without a license or the phone signs
     /// out. Null when Pushover cannot be reached or answers otherwise. The
     /// form carries the keys in the body, never the URL.
     /// </summary>

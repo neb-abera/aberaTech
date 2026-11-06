@@ -149,7 +149,7 @@ describe("the transition guide's mentoring advice", () => {
 
 describe("the transition guide's third-party images", () => {
   // Every image the guide draws from another site, and the URLs its srcset
-  // offers, have a licence record: the owner, the owner's terms, the date
+  // offers, have a license record: the owner, the owner's terms, the date
   // they were read, and whether they allow a copy here.
   const external = async () => {
     const html = await render("/transition");
@@ -162,7 +162,7 @@ describe("the transition guide's third-party images", () => {
     ]);
   };
 
-  it("records the licence basis of every one", async () => {
+  it("records the license basis of every one", async () => {
     const urls = await external();
     const recorded = licences.images.flatMap((image) => [
       image.src,

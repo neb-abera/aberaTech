@@ -56,7 +56,7 @@ export const tasksOf = (plan: Block[]): Task[] =>
 /**
  * What the owner keeps about a plan: the ticked tasks and the attempts at
  * each gate. A plan that keeps more (the radio plan keeps its drill history)
- * extends this and normalises the rest itself.
+ * extends this and normalizes the rest itself.
  */
 export interface CurriculumDocument {
   version: 1;

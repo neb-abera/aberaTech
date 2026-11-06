@@ -11,7 +11,7 @@ import { guides } from "./sections";
  * spinner, which cannot go stale. Unbaked, each was blank until the bundle
  * ran, then "Loading...", then the frame. /planner is baked as the board a
  * first visitor sees: it is drawn from the catalog in the bundle, and its
- * layout and colours follow the screen and the scheme in CSS.
+ * layout and colors follow the screen and the scheme in CSS.
  */
 export const prerenderedRoutes: string[] = [
   "/",

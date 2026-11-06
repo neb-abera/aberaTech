@@ -34,7 +34,7 @@ export default function PushoverWarning({
         <AlertTitle>Pushover has no device</AlertTitle>
         Pushover takes every message and delivers none, so the backup and the
         test buttons reach no phone. Open the Pushover app on the phone, sign
-        in, and buy its licence if the trial has ended.
+        in, and buy its license if the trial has ended.
       </Alert>
     );
   if (!view.licensed)
@@ -42,7 +42,7 @@ export default function PushoverWarning({
       <Alert severity="warning" sx={{ mb: 2 }}>
         <AlertTitle>Pushover is on its 30-day trial</AlertTitle>
         When the trial ends, Pushover stops delivering to the phone. Buy the
-        licence in the Pushover app before then.
+        license in the Pushover app before then.
       </Alert>
     );
   return (

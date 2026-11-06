@@ -51,7 +51,7 @@ Chromium again, so state left by an earlier run cannot pass unseen.
 Traces land in `e2e-test-results/` when it fails.
 
 `e2e/a11y.spec.ts` runs axe over every route in `/app-routes.json`, in both
-colour schemes, and fails on a serious or critical violation. A violation that
+color schemes, and fails on a serious or critical violation. A violation that
 needs a design decision goes in `e2e/a11y-allowlist.json` with the route, the
 rule and the reason. An entry that no longer fires fails as well.
 

@@ -25,7 +25,7 @@ describe("stateChip", () => {
     expect(stateChip("DeadLettered").label).toBe("Not delivered");
   });
 
-  it("colours the terminal failure as the emergency it is", () => {
+  it("colors the terminal failure as the emergency it is", () => {
     // Dead letters are the case the outbox exists to make loud. Everything
     // else can be calm.
     expect(stateChip("DeadLettered").color).toBe("error");

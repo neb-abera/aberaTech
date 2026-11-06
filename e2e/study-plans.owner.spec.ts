@@ -55,7 +55,7 @@ for (const path of plans) {
   });
 }
 
-test("/rf-training: a gate attempt is logged, summarised and removed", async ({
+test("/rf-training: a gate attempt is logged, summarized and removed", async ({
   page,
 }) => {
   await page.goto("/rf-training");

@@ -1,7 +1,7 @@
 /**
  * One course, as a chip.
  *
- * Colour carries the focus area and nothing else: it sits in a key down the left
+ * Color carries the focus area and nothing else: it sits in a key down the left
  * edge, never in the text, so the label stays readable at every hue. State that
  * matters (blocked, applied to the degree, pulled in automatically, breaking a
  * rule) is spelled out in words and in the border, not in hue alone.

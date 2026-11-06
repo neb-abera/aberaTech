@@ -61,11 +61,11 @@ public static class MessageComposer
             NotificationKind.Reminder =>
                 $"Reminder: you're with {hostName} at {at}.",
             NotificationKind.Cancelled =>
-                $"Your {at} with {hostName} has been cancelled.",
+                $"Your {at} with {hostName} has been canceled.",
             NotificationKind.HostBooked =>
                 $"New booking: {at}.",
             NotificationKind.HostCancelled =>
-                $"Cancelled: {at}.",
+                $"Canceled: {at}.",
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown notification kind.")
         };
 

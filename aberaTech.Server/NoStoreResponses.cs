@@ -12,7 +12,7 @@ namespace aberaTech.Server;
 /// the header for files; this is the same decision for endpoints, made once
 /// so a new route cannot forget it.
 ///
-/// The edge honours this only where its own rule does not override the
+/// The edge honors this only where its own rule does not override the
 /// origin, so the cache rule excludes these paths as well. The deploy smoke
 /// test fetches /healthz twice and fails on a HIT, which is how a rule that
 /// drifts back is noticed.

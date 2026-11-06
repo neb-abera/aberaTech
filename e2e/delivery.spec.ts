@@ -242,7 +242,7 @@ for (const path of firstLoad) {
   });
 }
 
-test("switching the colour scheme holds transitions off", async ({ page }) => {
+test("switching the color scheme holds transitions off", async ({ page }) => {
   // AppTheme sets this class on the root for one tick while the scheme
   // changes. The rule it relies on lives in index.html's head, allowed by
   // the CSP by its hash. A CSP refusal or a lost rule shows here as

@@ -63,7 +63,7 @@ describe("normalizeUrl", () => {
 });
 
 describe("addLink and removeLink", () => {
-  it("appends a normalised entry with the date it was added", () => {
+  it("appends a normalized entry with the date it was added", () => {
     const doc = addLink(
       empty,
       {

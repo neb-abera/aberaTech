@@ -5,8 +5,8 @@
  * built a per-course address on ep.jhu.edu by guessing a slug pattern, and got
  * it wrong. Every course link 404ed. The address had never been opened.
  *
- * The rule now is that a link is either measured or it is labelled. The
- * catalogue address below is measured: `npm run check:links` requests all 138
+ * The rule now is that a link is either measured or it is labeled. The
+ * catalog address below is measured: `npm run check:links` requests all 138
  * and asserts the course block it returns carries the same title this catalog
  * holds. `data/link-check.json` is the recorded result of that run, and it is
  * regenerated rather than edited.
@@ -18,7 +18,7 @@ export const CATALOGUE_INDEX =
   "https://e-catalogue.jhu.edu/course-descriptions/electrical_and_computer_engineering/";
 
 /**
- * One course in the JHU academic catalogue. The catalogue's own course bubbles
+ * One course in the JHU academic catalog. The catalog's own course bubbles
  * use this address, so it is the university's link, not a constructed one.
  */
 export function catalogueUrl(code: string): string {
@@ -27,7 +27,7 @@ export function catalogueUrl(code: string): string {
 
 /**
  * The Engineering for Professionals course page, which carries what the
- * catalogue does not: which terms it next runs, the instructor and the cost.
+ * catalog does not: which terms it next runs, the instructor and the cost.
  *
  * The address is derived, not measured: the course number with its dots
  * removed, then the title slugged. Confirmed against Detection & Estimation
@@ -48,10 +48,10 @@ export function professionalsUrl(code: string, title: string): string {
 export function courseLinks(code: string, title: string): CourseLink[] {
   return [
     {
-      label: "Catalogue entry",
+      label: "Catalog entry",
       href: catalogueUrl(code),
       verified: true,
-      note: "the official course description in the JHU academic catalogue",
+      note: "the official course description in the JHU academic catalog",
     },
     {
       label: "Offerings",
