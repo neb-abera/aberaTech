@@ -339,7 +339,7 @@ describe("a due alarm", () => {
     expect(onState).toHaveBeenCalledWith(answered);
   });
 
-  it("an acknowledgement the server refuses says so and keeps ringing", async () => {
+  it("an acknowledgment the server refuses says so and keeps ringing", async () => {
     mount([standup], async () => ({ ok: false, reason: "throttled" }));
     switchOn();
 

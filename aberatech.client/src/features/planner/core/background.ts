@@ -61,13 +61,13 @@ export const COMPOSITE: Record<string, string[]> = {
 };
 
 /**
- * The programme's admission prerequisites, from the ECE master's degree
+ * The program's admission prerequisites, from the ECE master's degree
  * requirements page (ep.jhu.edu, retrieved August 2026): mathematics through
  * vector calculus and differential equations, calculus-based physics, linear
  * and non-linear circuits, electromagnetics, and signals and systems. Each
  * needs a B- or better wherever it is taken.
  *
- * Missing ones do not bar enrolment - admission is provisional until they are
+ * Missing ones do not bar enrollment - admission is provisional until they are
  * complete - so the planner schedules them rather than blocking on them: any
  * item neither ticked nor covered by a planned bridge course travels with
  * every plan as preparation.
@@ -180,7 +180,7 @@ export const PREP_SOURCE: Record<
  * composite that is neither satisfied nor expanded adds no prerequisite at all:
  * the course stays takeable and the interface flags it, because refusing to
  * schedule a course on the strength of a prose sentence about a degree is a
- * judgement the reader should make, not the planner.
+ * judgment the reader should make, not the planner.
  */
 export function withBackground(
   catalog: Catalog,

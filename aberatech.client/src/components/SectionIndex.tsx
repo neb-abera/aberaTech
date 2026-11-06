@@ -22,9 +22,9 @@ interface Props {
 export default function SectionIndex({ title, entries, ...props }: Props) {
   return (
     <PageShell {...props} title={title}>
-      {/* Wrapped and centred rather than a grid. Five guides in three columns
+      {/* Wrapped and centered rather than a grid. Five guides in three columns
           left a hole in the second row, at the right, which reads as a card
-          that failed to load. Centred, a short last row reads as the end of
+          that failed to load. Centered, a short last row reads as the end of
           the list. The basis is the column width the grid gave: the row's
           gaps taken off the width, divided by the columns. */}
       <Box

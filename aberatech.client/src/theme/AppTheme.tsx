@@ -33,7 +33,7 @@ export const DEFAULT_COLOR_SCHEME = "dark";
  * What MUI's disableTransitionOnChange does, without its inline <style>: the
  * CSP allows no style element with text it has not hashed, and that one is
  * written at run time. A class on the root for one tick, and a rule in the
- * page's head, turn every transition off while the colours change,
+ * page's head, turn every transition off while the colors change,
  * so the switch repaints at once instead of animating each surface.
  */
 function SchemeSwitchWithoutTransitions() {
@@ -62,8 +62,8 @@ function SchemeSwitchWithoutTransitions() {
 
 /**
  * Marks the root while the page is scrolled away from its top, so the canvas
- * past the bottom is the page colour and the canvas past the top is the
- * glow. canvasBackground.ts holds the colours.
+ * past the bottom is the page color and the canvas past the top is the
+ * glow. canvasBackground.ts holds the colors.
  */
 function CanvasFollowsScroll() {
   React.useEffect(() => {

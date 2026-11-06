@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
  * The blue glow is the canvas background, not a box inside the page, and the
- * canvas colour is the glow colour, so pulling the page past the top shows
- * blue. The page ends in the page colour, with no band at the bottom. On 2026-09-22 that gap was a near-black band above a blue page, and
+ * canvas color is the glow color, so pulling the page past the top shows
+ * blue. The page ends in the page color, with no band at the bottom. On 2026-09-22 that gap was a near-black band above a blue page, and
  * on 2026-09-24 it was black again with the glow cut into a bar across the
  * page. e2e/canvas.spec.ts proves the pixels; this locks in the styles that
  * produce them.
@@ -25,7 +25,7 @@ function scrollTo(y: number) {
   });
 }
 
-// jsdom sometimes reports the hsl colours as rgb.
+// jsdom sometimes reports the hsl colors as rgb.
 const dark = /hsl\(210, 100%, 10%\)|rgb\(0, 2[56], 51\)/;
 const light = /hsl\(210, 100%, 94%\)|rgb\(224, 240, 255\)/;
 
@@ -42,19 +42,19 @@ function root() {
 }
 
 describe("canvas background", () => {
-  it("fills the canvas with the glow colour, so the gap past either end is blue", () => {
+  it("fills the canvas with the glow color, so the gap past either end is blue", () => {
     mount();
 
     expect(root().backgroundColor).toMatch(dark);
   });
 
-  it("starts the wash on the glow colour and ends it on the page colour", () => {
+  it("starts the wash on the glow color and ends it on the page color", () => {
     mount();
 
     const page = "var(--template-palette-background-default)";
     const image = root().backgroundImage;
     // The bloom is the first layer, the wash under it. The wash is opaque:
-    // the canvas colour shows only in the gap past the page's edges.
+    // the canvas color shows only in the gap past the page's edges.
     expect(
       image.startsWith("radial-gradient(ellipse 80% 325px at 50% -130px,"),
     ).toBe(true);
@@ -63,7 +63,7 @@ describe("canvas background", () => {
     expect(wash.endsWith(`, ${page} 96px)`)).toBe(true);
   });
 
-  it("paints the canvas in the page colour once the page has scrolled, and the glow at the top", () => {
+  it("paints the canvas in the page color once the page has scrolled, and the glow at the top", () => {
     mount();
     const page = "var(--template-palette-background-default)";
 
@@ -76,7 +76,7 @@ describe("canvas background", () => {
     expect(root().backgroundColor).toMatch(dark);
   });
 
-  it("keeps the page colour past the bottom in the light scheme too", () => {
+  it("keeps the page color past the bottom in the light scheme too", () => {
     mount();
     document.documentElement.setAttribute("data-mui-color-scheme", "light");
     scrollTo(400);
@@ -94,7 +94,7 @@ describe("canvas background", () => {
     );
   });
 
-  it("switches the glow with the colour scheme", () => {
+  it("switches the glow with the color scheme", () => {
     mount();
 
     const dim = root().backgroundImage;

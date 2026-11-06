@@ -17,7 +17,7 @@ public sealed class PushoverDevices(IServiceScopeFactory scopes, IClock clock, I
     private PushoverAccount? _devices;
     private Instant _until;
 
-    /// <summary>The devices and the licence. Null when Pushover could not be read.</summary>
+    /// <summary>The devices and the license. Null when Pushover could not be read.</summary>
     public async Task<PushoverAccount?> CurrentAsync(CancellationToken cancellationToken)
     {
         if (clock.GetCurrentInstant() < _until) return _devices;

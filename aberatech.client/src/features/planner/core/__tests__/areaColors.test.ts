@@ -1,5 +1,5 @@
 /**
- * A missing colour used to render a chip with a transparent background, which
+ * A missing color used to render a chip with a transparent background, which
  * reads as an empty term. Every group the catalog uses must have one, in both
  * themes, and the two must differ where the surface differs.
  */
@@ -10,8 +10,8 @@ import type { RawCatalog } from "../types";
 
 const data = rawCatalog as unknown as RawCatalog;
 
-describe("area colours", () => {
-  test("every group in the catalog has a colour assigned", () => {
+describe("area colors", () => {
+  test("every group in the catalog has a color assigned", () => {
     expect(
       Object.keys(data.areas).filter((a) => !AREA_NAMES.includes(a)),
     ).toEqual([]);
@@ -22,7 +22,7 @@ describe("area colours", () => {
       .map((c) => c.code);
     expect(orphans).toEqual([]);
   });
-  test("preparation has its own colour, distinct from every focus area", () => {
+  test("preparation has its own color, distinct from every focus area", () => {
     const prep = areaColor("Preparation", "light");
     const others = AREA_NAMES.filter((a) => a !== "Preparation").map((a) =>
       areaColor(a, "light"),
@@ -43,7 +43,7 @@ describe("area colours", () => {
       areaColor("Signal Processing", "light"),
     );
   });
-  test("every colour is a hex value in both themes", () => {
+  test("every color is a hex value in both themes", () => {
     for (const name of AREA_NAMES) {
       expect(areaColor(name, "light")).toMatch(/^#[0-9a-f]{6}$/);
       expect(areaColor(name, "dark")).toMatch(/^#[0-9a-f]{6}$/);

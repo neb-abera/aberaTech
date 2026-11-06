@@ -5,11 +5,11 @@
  * guessed pattern and never opened, so all 138 were dead. Nothing here asserts
  * that a link works; it asks, and writes down the answer.
  *
- *   node tools/check-course-links.mjs            # catalogue links only
+ *   node tools/check-course-links.mjs            # catalog links only
  *   node tools/check-course-links.mjs --all      # also ep.jhu.edu, needs open egress
  *   node tools/check-course-links.mjs --write    # refresh data/link-check.json
  *
- * Exits non-zero if any catalogue link fails to resolve or returns a course
+ * Exits non-zero if any catalog link fails to resolve or returns a course
  * block whose title differs from the one in data/catalog.json.
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -45,7 +45,7 @@ const offeringsUrl = (code, title) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")}/`;
 
-// The catalogue sits behind a filter that refuses unfamiliar agents with a 403,
+// The catalog sits behind a filter that refuses unfamiliar agents with a 403,
 // which looks exactly like a missing page. Identify as a browser so a real 404
 // stays distinguishable from being turned away at the door.
 const UA =
@@ -92,7 +92,7 @@ for (const code of codes) {
   if (!titleMatches) {
     failures++;
     console.error(
-      `FAIL ${code}: status ${status}, catalogue says ${catalogueTitle ?? "nothing"}, we say ${expected}`,
+      `FAIL ${code}: status ${status}, catalog says ${catalogueTitle ?? "nothing"}, we say ${expected}`,
     );
   }
   results[code] = row;

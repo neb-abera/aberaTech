@@ -104,7 +104,7 @@ export const dataDisplayCustomizations: Components<Theme> = {
         },
         // MUI fades a disabled chip to 38% opacity: its text measured 1.6:1
         // to 2.7:1 on /alerts. A dashed border marks it instead, and the
-        // label takes the disabled text colour, 5.8:1 light and 5.3:1 dark.
+        // label takes the disabled text color, 5.8:1 light and 5.3:1 dark.
         [`&.${chipClasses.disabled}`]: {
           opacity: 1,
           borderStyle: "dashed",

@@ -40,7 +40,7 @@ export default function RingInBrowser({
   acknowledge = acknowledgeAlert,
 }: {
   state: AlertsState;
-  /** The state the server answered the acknowledgement with. */
+  /** The state the server answered the acknowledgment with. */
   onState: (state: AlertsState) => void;
   /** The page asks the server every 15 s while this is on. */
   onEnabledChange: (on: boolean) => void;

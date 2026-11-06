@@ -101,7 +101,7 @@ public sealed class DevelopmentGoogleTests : IDisposable
             Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
         }
 
-        // The reset deletes it from Google, the feed lists it as cancelled,
+        // The reset deletes it from Google, the feed lists it as canceled,
         // and the server stops keeping it.
         using var again = await owner.PostAsync("/api/alerts/fake/reset", null);
         var titles = (await again.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("alerts").EnumerateArray()

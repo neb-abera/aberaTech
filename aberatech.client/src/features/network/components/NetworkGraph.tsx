@@ -31,7 +31,7 @@ const describe = (node: Node): string =>
 
 /**
  * The picture: each sector a tinted hull, organizations as hubs inside it,
- * people around theirs, a line for each membership. Colour is the sector,
+ * people around theirs, a line for each membership. Color is the sector,
  * size is the tier, the ring is where things stand, a square hub is an
  * event. Every node is a button, so the keyboard reaches it and a screen
  * reader hears its name and standing; the list under the picture carries

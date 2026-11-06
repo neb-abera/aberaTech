@@ -196,7 +196,7 @@ export default function AdminPanel() {
               {openError ? <Alert severity="error">{openError}</Alert> : null}
               <TextField
                 label="What is this session?"
-                placeholder="November initial counselling"
+                placeholder="November initial counseling"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 required

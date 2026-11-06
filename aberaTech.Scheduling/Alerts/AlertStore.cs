@@ -7,7 +7,7 @@ namespace aberaTech.Scheduling.Alerts;
 /// <summary>Who acknowledged one occurrence, and when.</summary>
 public sealed record AlertAcknowledgement(Instant At, string Via);
 
-/// <summary>Where an acknowledgement came from.</summary>
+/// <summary>Where an acknowledgment came from.</summary>
 public static class AlertAcknowledgementVia
 {
     /// <summary>A paired phone's alarm.</summary>
@@ -57,7 +57,7 @@ public interface IAlertStore
     /// <summary>True for exactly one caller per key, ever, whatever process it runs in.</summary>
     Task<bool> TryClaimAsync(string key, Instant startsAt, Instant now, CancellationToken cancellationToken);
 
-    /// <param name="receipt">Pushover's receipt for an alarm, kept so an acknowledgement can cancel its repeats.</param>
+    /// <param name="receipt">Pushover's receipt for an alarm, kept so an acknowledgment can cancel its repeats.</param>
     Task RecordOutcomeAsync(string key, string outcome, Instant now, CancellationToken cancellationToken, string? receipt = null);
 
     /// <summary>The claim on one occurrence, or null when nothing was ever claimed for it.</summary>
@@ -71,10 +71,10 @@ public interface IAlertStore
 
     Task<bool> IsAcknowledgedAsync(string key, CancellationToken cancellationToken);
 
-    /// <summary>True for the first acknowledgement of a key. A second one changes nothing and is false.</summary>
+    /// <summary>True for the first acknowledgment of a key. A second one changes nothing and is false.</summary>
     Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken);
 
-    /// <summary>Forgets claims, skips, acknowledgements and held rings from before <paramref name="before"/>. The feed never plans those again.</summary>
+    /// <summary>Forgets claims, skips, acknowledgments and held rings from before <paramref name="before"/>. The feed never plans those again.</summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
 
     /// <summary>Every event the owner chose a type for, by event id.</summary>
@@ -334,7 +334,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken)
     {
         // The key decides, like the claim: the phone and a browser pressing
-        // at once record one acknowledgement, and only the first cancels.
+        // at once record one acknowledgment, and only the first cancels.
         var inserted = await database.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "AlertAcknowledgements" ("OccurrenceKey", "StartsAt", "AcknowledgedAt", "Via")

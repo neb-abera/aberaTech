@@ -86,14 +86,14 @@ public sealed class FakeAlertServices(IClock clock)
 
     public IReadOnlyList<FakeMessage> Sent => [.. _sent];
 
-    /// <summary>The receipts whose repeats were cancelled, oldest first.</summary>
+    /// <summary>The receipts whose repeats were canceled, oldest first.</summary>
     public IReadOnlyList<string> Cancelled => [.. _cancelled];
 
     /// <summary>
     /// Adds an alarm that is due now, until the next <see cref="Reanchor"/>:
     /// "E2E drill", marked #critical, starting in 30 minutes with a reminder
     /// an hour before. Each call is a new event, so an earlier engine's
-    /// acknowledgement of the last one does not carry over.
+    /// acknowledgment of the last one does not carry over.
     /// </summary>
     public void AddDue()
     {
@@ -111,7 +111,7 @@ public sealed class FakeAlertServices(IClock clock)
     /// Places the calendar's events relative to the present minute, and ends
     /// <see cref="Fail"/>. The events created through the page since the last
     /// reset are deleted from the fake Google, and the feed lists them as
-    /// cancelled, as Google's does, so the server stops keeping them. The
+    /// canceled, as Google's does, so the server stops keeping them. The
     /// standing events are put back in the fake Google as they were, at the
     /// new times, whatever an earlier run edited or deleted.
     /// </summary>

@@ -16,7 +16,7 @@ public readonly record struct Slot(Instant Start, Instant End)
 /// </summary>
 /// <remarks>
 /// Pure: no clock, no database, no calendar client. Everything it needs arrives
-/// as an argument, so the daylight saving and boundary behaviour can be tested
+/// as an argument, so the daylight saving and boundary behavior can be tested
 /// exhaustively without standing anything up. The impure edges — reading Google
 /// Calendar, reading the rules — live in the API layer and hand their results
 /// here.

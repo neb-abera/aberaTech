@@ -322,7 +322,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
         Assert.True(ring.GetProperty("acknowledged").GetBoolean());
         Assert.Equal("browser", ring.GetProperty("acknowledgedVia").GetString());
         Assert.Equal(_clock.Now.ToDateTimeOffset(), ring.GetProperty("acknowledgedAt").GetDateTimeOffset());
-        // The acknowledgement's start is the ring's StartsAt.
+        // The acknowledgment's start is the ring's StartsAt.
         Assert.True(await _store.IsAcknowledgedAsync(key, CancellationToken.None));
 
         await Worker.TickAsync(CancellationToken.None);

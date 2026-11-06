@@ -261,7 +261,7 @@ describe("a degree stated as a prerequisite", () => {
 });
 
 /**
- * The programme's admission prerequisites, from the ECE master's degree
+ * The program's admission prerequisites, from the ECE master's degree
  * requirements page. Circuits and signals and systems were missing from the
  * catalog entirely, so no plan ever showed them.
  */

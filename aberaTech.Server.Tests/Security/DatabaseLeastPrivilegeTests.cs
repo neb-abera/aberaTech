@@ -99,7 +99,7 @@ public sealed class DatabaseLeastPrivilegeTests : IDisposable
             await database.SaveChangesAsync();
 
             // Pairing a phone takes an advisory lock in a transaction, and an
-            // acknowledgement is an upsert: both as the runtime role.
+            // acknowledgment is an upsert: both as the runtime role.
             var devices = new aberaTech.Scheduling.Alerts.DatabaseAlertDeviceStore(database);
             var phone = Guid.NewGuid();
             Assert.NotNull(await devices.CreateAsync(

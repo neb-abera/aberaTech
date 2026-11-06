@@ -56,7 +56,7 @@ internal sealed class ExtraEndpoints(params Endpoint[] endpoints) : IStartupFilt
 }
 
 /// <summary>
-/// Authorisation is declared per endpoint and tested over the whole table.
+/// Authorization is declared per endpoint and tested over the whole table.
 /// Every route says who may call it, the check proves it can fail, and an
 /// endpoint that somehow says nothing is closed at runtime as well.
 /// </summary>
@@ -166,7 +166,7 @@ public sealed class RouteTableTests
         string Name(RouteEndpoint endpoint) =>
             $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Single()} {endpoint.RoutePattern.RawText}";
 
-        // One route is anonymous on purpose: Pushover's acknowledgement
+        // One route is anonymous on purpose: Pushover's acknowledgment
         // callback, which Pushover's servers call with no session.
         var anonymous = all.Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null).ToList();
         Assert.Equal([$"POST {PushoverCallback.Path}"], anonymous.Select(Name));

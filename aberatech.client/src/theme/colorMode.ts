@@ -1,4 +1,4 @@
-/** Which colour-scheme choices a visitor is offered, and what to do about stale ones. */
+/** Which color-scheme choices a visitor is offered, and what to do about stale ones. */
 
 export type ColorModeChoice = "system" | "light" | "dark";
 

@@ -23,7 +23,7 @@ public static class ConsentDisclosure
     /// </summary>
     public const string Current =
         "You will get a confirmation, a reminder the day before, a reminder about an hour before, "
-        + "and a message if it is cancelled. Message frequency varies. Message and data rates may apply. "
+        + "and a message if it is canceled. Message frequency varies. Message and data rates may apply. "
         + "Reply HELP for help, STOP to stop. See the text message terms at /sms-terms and the privacy "
         + "policy at /sms-privacy. Your number is used only for this and is never shared for marketing.";
 }

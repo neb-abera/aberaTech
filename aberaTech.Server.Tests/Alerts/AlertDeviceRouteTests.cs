@@ -488,7 +488,7 @@ public sealed class AlertDeviceRouteTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, ack.StatusCode);
         Assert.True(await _store.IsAcknowledgedAsync(key, CancellationToken.None));
-        var failed = Assert.Single(_logs.Entries, entry => entry.Message.Contains("Cancelling the repeats", StringComparison.Ordinal));
+        var failed = Assert.Single(_logs.Entries, entry => entry.Message.Contains("Canceling the repeats", StringComparison.Ordinal));
         Assert.Contains("HTTP 400", failed.Message);
         Assert.DoesNotContain("rcpt30", failed.Everything);
     }

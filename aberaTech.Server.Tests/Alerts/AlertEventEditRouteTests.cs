@@ -354,7 +354,7 @@ public sealed class AlertEventEditRouteTests : IDisposable
 
     /// <summary>
     /// 10:00 New York time every Thursday from 29 October, four times, with
-    /// the 12 November occurrence cancelled. Listed: Thursday 29 October.
+    /// the 12 November occurrence canceled. Listed: Thursday 29 October.
     /// </summary>
     private void Weekly()
     {
@@ -382,7 +382,7 @@ public sealed class AlertEventEditRouteTests : IDisposable
         Assert.Equal("patch-master", write.Kind);
         Assert.Equal("2026-10-30T10:00:00-04:00", write.Start);
         Assert.Equal("America/New_York", write.TimeZone);
-        // COUNT stays. The cancelled Thursday is the cancelled Friday.
+        // COUNT stays. The canceled Thursday is the canceled Friday.
         Assert.Equal(
             ["RRULE:FREQ=WEEKLY;BYDAY=FR;COUNT=4", "EXDATE;TZID=America/New_York:20261113T100000"],
             write.Recurrence);
@@ -406,7 +406,7 @@ public sealed class AlertEventEditRouteTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var write = Assert.Single(_google.Writes);
-        // The cancelled 10:00 Thursday moves to 11:00, so it stays cancelled. The rule is unchanged.
+        // The canceled 10:00 Thursday moves to 11:00, so it stays canceled. The rule is unchanged.
         Assert.Equal(["RRULE:FREQ=WEEKLY;BYDAY=TH;COUNT=4", "EXDATE;TZID=America/New_York:20261112T110000"], write.Recurrence);
     }
 

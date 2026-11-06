@@ -146,7 +146,7 @@ public sealed record AlertSettings(
     /// </summary>
     /// <remarks>
     /// A phone Snooze never delays or stops this backup. Only Stop, a full
-    /// acknowledgement, does. A snooze is a short delay, and the deadline
+    /// acknowledgment, does. A snooze is a short delay, and the deadline
     /// does not move because of it. Neb decided this on 2026-10-10.
     /// </remarks>
     public Instant PushoverAt(PlannedAlert alert, string type)

@@ -56,7 +56,7 @@ public class BusyMergeTests
     [Fact]
     public void Empty_and_backwards_periods_are_discarded()
     {
-        // Google returns zero-length busy blocks for declined and cancelled
+        // Google returns zero-length busy blocks for declined and canceled
         // events; treating one as busy would block a slot for no reason.
         var backwards = new Interval(Instant.FromUtc(2027, 6, 1, 10, 0), Instant.FromUtc(2027, 6, 1, 10, 0));
 

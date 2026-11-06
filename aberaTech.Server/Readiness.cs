@@ -12,7 +12,7 @@ public sealed record ReadinessReport(bool Ready, IReadOnlyList<ReadinessCheck> C
 {
     /// <summary>503 when something configured did not answer, 200 otherwise.</summary>
     /// <remarks>
-    /// Not serialised: the HTTP status already carries it, and a body that
+    /// Not serialized: the HTTP status already carries it, and a body that
     /// repeats it invites the two to disagree.
     /// </remarks>
     [System.Text.Json.Serialization.JsonIgnore]

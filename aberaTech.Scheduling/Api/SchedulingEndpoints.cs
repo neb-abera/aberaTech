@@ -40,7 +40,7 @@ public sealed record SlotView(string StartsAt, string EndsAt, int Minutes);
 /// </summary>
 /// <remarks>
 /// Position and length only. The people in this queue are soldiers being seen
-/// for counselling, and who is waiting to speak to their commander is nobody
+/// for counseling, and who is waiting to speak to their commander is nobody
 /// else's business — so the public projection never carries a name, a phone
 /// number or anything else that identifies who is in front of you.
 /// </remarks>
@@ -396,7 +396,7 @@ public static class SchedulingEndpoints
     {
         // Read-only, but with identity resolution kept: the includes loop back
         // to the entry they started from, and without it that entry would be
-        // materialised twice and stand in the queue twice.
+        // materialized twice and stand in the queue twice.
         var entry = await database.QueueEntries
             .AsNoTrackingWithIdentityResolution()
             .Include(record => record.Session)
@@ -522,7 +522,7 @@ public static class SchedulingEndpoints
 
         // Somebody who replied STOP has told the carrier not to deliver to them.
         // Taking the booking but not the number keeps the appointment while
-        // honouring that, rather than refusing them a time over a texting
+        // honoring that, rather than refusing them a time over a texting
         // preference.
         if (phone is { } wanted && await IsSuppressedAsync(database, wanted.E164, cancellationToken))
         {
@@ -746,7 +746,7 @@ public static class SchedulingEndpoints
     /// <summary>Whether this failure is the overlap constraint rather than anything else.</summary>
     /// <remarks>
     /// 23P01 is exclusion_violation. Matched on the SQLSTATE rather than the
-    /// message text, which is localised and rewordable between releases.
+    /// message text, which is localized and rewordable between releases.
     /// </remarks>
     private static bool IsOverlap(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: "23P01" };
@@ -792,7 +792,7 @@ public static class SchedulingEndpoints
     /// <remarks>
     /// The browser converts to the viewer's zone for display. Sending a
     /// preformatted local time instead would bake the server's idea of the
-    /// visitor's zone into the payload, and be wrong for anybody travelling.
+    /// visitor's zone into the payload, and be wrong for anybody traveling.
     /// </remarks>
     private static string Format(Instant instant) => instant.ToString("uuuu-MM-ddTHH:mm:ss'Z'", null);
 }

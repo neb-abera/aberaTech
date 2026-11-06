@@ -66,7 +66,7 @@ public static partial class SecurityEvents
     public const int AlertsDeviceRefused = 4012;
 
     /// <summary>
-    /// 400, 403 or 404 from Pushover's acknowledgement callback: a body that
+    /// 400, 403 or 404 from Pushover's acknowledgment callback: a body that
     /// is not a receipt, a receipt Pushover says is not acknowledged, or one
     /// this server never sent. Never the receipt.
     /// </summary>
@@ -84,7 +84,7 @@ public static partial class SecurityEvents
     /// <summary>Apple said a phone's push token is dead or not for the app, and it was cleared.</summary>
     public const int AlertsPushTokenCleared = aberaTech.Scheduling.Alerts.AlertPushLog.TokenClearedId;
 
-    /// <summary>An acknowledgement for an occurrence already acknowledged. Written by <see cref="aberaTech.Scheduling.Alerts.AlertAcknowledgementLog"/>: the key, both channels and the seconds between.</summary>
+    /// <summary>An acknowledgment for an occurrence already acknowledged. Written by <see cref="aberaTech.Scheduling.Alerts.AlertAcknowledgementLog"/>: the key, both channels and the seconds between.</summary>
     public const int AlertsAcknowledgementLate = aberaTech.Scheduling.Alerts.AlertAcknowledgementLog.LateId;
 
     /// <summary>
@@ -254,7 +254,7 @@ public static partial class SecurityEvents
         public static partial void AlertsDeviceRefused(ILogger logger, string clientIp, string method, string route, int status);
 
         [LoggerMessage(EventId = SecurityEvents.PushoverCallbackRefused, EventName = nameof(PushoverCallbackRefused), Level = LogLevel.Warning,
-            Message = "Pushover acknowledgement callback refused from {ClientIp} on {Method} {Route} ({Status}).")]
+            Message = "Pushover acknowledgment callback refused from {ClientIp} on {Method} {Route} ({Status}).")]
         public static partial void PushoverCallbackRefused(ILogger logger, string clientIp, string method, string route, int status);
 
         [LoggerMessage(EventId = SecurityEvents.OwnerSignedIn, EventName = nameof(OwnerSignedIn), Level = LogLevel.Information,

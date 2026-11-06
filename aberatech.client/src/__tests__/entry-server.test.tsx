@@ -74,9 +74,9 @@ describe("build-time rendering", () => {
   it("renders the planner board a first visitor sees", async () => {
     // The board is built from the catalog in the bundle, so the build can
     // draw all of it. What only the browser knows (who is asking, the
-    // colour scheme, the width of the screen) must not change the markup,
+    // color scheme, the width of the screen) must not change the markup,
     // or hydration moves the page: the save line says it is checking, and
-    // the colours are CSS variables carrying both schemes.
+    // the colors are CSS variables carrying both schemes.
     const html = await render("/planner");
 
     expect(html).toContain(">Graduate course planner</h1>");
@@ -97,7 +97,7 @@ describe("build-time rendering", () => {
     const html = await render("/rf-training");
 
     expect(html).toContain("Tactically Relevant RF Training");
-    expect(html).toContain("Licence and the arithmetic");
+    expect(html).toContain("License and the arithmetic");
     expect(html).not.toContain("Loading...");
   });
 

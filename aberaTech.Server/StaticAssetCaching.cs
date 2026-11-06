@@ -5,9 +5,9 @@ namespace aberaTech.Server;
 /// and the name of the file actually being served.
 /// </summary>
 /// <remarks>
-/// Both inputs matter: /assets/ is recognised by the request path, but the SPA
+/// Both inputs matter: /assets/ is recognized by the request path, but the SPA
 /// fallback serves index.html under arbitrary route paths, so the shell is
-/// recognised by file name. Without an explicit header the CDN invents its own
+/// recognized by file name. Without an explicit header the CDN invents its own
 /// policy (four hours for everything), which is both too short for hashed
 /// assets and too long to trust for the shell.
 /// </remarks>

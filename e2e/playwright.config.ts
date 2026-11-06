@@ -7,7 +7,7 @@ const owner = /owner.*\.spec\.ts$/;
 // The phones run the specs whose layout changes under 900px: the bar and
 // its menu, the booking calendar and dialog, the planner rail, and axe
 // over every page. The
-// delivery, CSP and canvas specs test the server and the root colour, which
+// delivery, CSP and canvas specs test the server and the root color, which
 // a phone viewport does not change, and would add 2 m 30 s of test time.
 const phone = /(a11y|planner|schedule|smoke)\.spec\.ts$/;
 

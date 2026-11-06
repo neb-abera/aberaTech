@@ -90,7 +90,7 @@ if (adminOptions.IsConfigured)
 }
 
 // One clock, injected everywhere, so that "now" is a dependency rather than an
-// ambient fact. It is what lets the domain tests assert behaviour at a daylight
+// ambient fact. It is what lets the domain tests assert behavior at a daylight
 // saving transition without waiting for March.
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 
@@ -490,7 +490,7 @@ app.UseResponseCompression();
 // Container Apps ingress terminates TLS and forwards over HTTP. Without this,
 // every request appears to come from the ingress over plain HTTP: the rate
 // limiter above partitions everyone into one shared bucket and
-// HTTPS-dependent behaviour never engages. How many forwarded hops to believe
+// HTTPS-dependent behavior never engages. How many forwarded hops to believe
 // is configuration — ClientAddress:ForwardedHops — and ClientAddress.cs is the
 // one place that reads it.
 app.UseClientAddress();
@@ -570,7 +570,7 @@ app.UseStaticFiles(staticFileOptions); // Serves files from wwwroot.
 // WebApplication puts routing at the front of the pipeline, where the SPA
 // fallback endpoint matches every extensionless request — and the static file
 // middleware stands down when an endpoint has already matched, so the
-// prerendered-page rewrite and the default-files behaviour above would both be
+// prerendered-page rewrite and the default-files behavior above would both be
 // dead code and every page would serve the empty shell.
 app.UseRouting();
 
@@ -784,7 +784,7 @@ app.MapSecurityTxt();
 // The status code is the app's own answer, not a blanket 200. app-routes.json
 // is written at build time from site/routes.ts — the list the router itself
 // reads — so a path the app cannot render is a 404 here as well as on screen.
-// A deployment without the manifest keeps the old behaviour rather than
+// A deployment without the manifest keeps the old behavior rather than
 // answering 404 to everything.
 var appRoutes = AppRoutes.Load(app.Environment.WebRootPath);
 

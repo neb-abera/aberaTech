@@ -113,14 +113,14 @@ fails immediately with a credential error rather than falling back to anything.
 | Books a time | Confirmation, with the opt-out | New booking |
 | A day before | Reminder, if it is more than a day away | |
 | An hour before | Reminder | |
-| Cancels, either side | Cancellation | Cancelled |
+| Cancels, either side | Cancellation | Canceled |
 | Joins a queue | Place and estimate, with the opt-out | |
 | Estimate moves past the tolerance | New estimate | |
 | Nearly their turn, and their turn | One each | |
 
 Reminders are ordinary outbox rows with a due time in the future, so they
 inherit the same retries, receipts and dead lettering as everything else and
-need no scheduler. Cancelling deletes the ones that have not gone yet: a
+need no scheduler. Canceling deletes the ones that have not gone yet: a
 reminder for an appointment that is not happening is worse than no reminder.
 
 Only the first message in a thread carries "Reply STOP". Repeating it on every
@@ -131,7 +131,7 @@ doubles both its cost and its consumption of the daily carrier cap.
 
 US A2P 10DLC registration gates this, and owning the code does not dodge it. An
 individual registers a **Sole Proprietor** brand, capped around 3,000 segments a
-day with a 1,000/day T-Mobile sub-limit. That is ample for a counselling
+day with a 1,000/day T-Mobile sub-limit. That is ample for a counseling
 session, and the ceiling to watch if the list ever reaches the hundreds, since
 crossing it means registering as a Standard Brand with an EIN.
 

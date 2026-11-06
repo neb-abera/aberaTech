@@ -18,7 +18,7 @@ public sealed class AdminOptions
     /// An allowlist, not a role claim. Anybody in the world can complete a
     /// Google sign-in, so authentication alone proves only that somebody has
     /// *a* Google account; without this check the admin surface would be open
-    /// to all of them. Authorisation is the allowlist, and it is the only thing
+    /// to all of them. Authorization is the allowlist, and it is the only thing
     /// standing between a stranger and a list of soldiers' phone numbers.
     /// </remarks>
     public string[] AllowedEmails { get; set; } = [];

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Switching between light and dark repaints without animating every colour
+ * Switching between light and dark repaints without animating every color
  * transition on the page, and does it without an inline style element. MUI's
  * own disableTransitionOnChange writes a <style> with text into the head,
  * which the CSP refuses (e2e/csp.spec.ts). A style element in index.html,
@@ -25,7 +25,7 @@ function Switch() {
   return null;
 }
 
-describe("switching the colour scheme", () => {
+describe("switching the color scheme", () => {
   it("holds transitions off for one tick with a class, not an inline style", () => {
     vi.useFakeTimers();
     render(

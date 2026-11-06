@@ -229,7 +229,7 @@ export default function SettingsRail({ model, update }: SettingsRailProps) {
         </Stack>
       </Section>
 
-      <Section title="Behaviour">
+      <Section title="Behavior">
         <FormControlLabel
           sx={{ display: "flex", ml: 0 }}
           control={

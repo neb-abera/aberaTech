@@ -55,7 +55,7 @@ public static class CalendarAdminEndpoints
     /// Overriding the scope on the challenge replaces the handler's list rather
     /// than adding to it, so openid and email are repeated: without them Google
     /// returns no address, the allowlist has nothing to check, and the connect
-    /// succeeds as an authorisation while failing as a sign-in.
+    /// succeeds as an authorization while failing as a sign-in.
     ///
     /// Offline access is what yields a refresh token; without it the grant dies
     /// with the browser session and free/busy stops working the moment the host

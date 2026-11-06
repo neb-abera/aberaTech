@@ -86,7 +86,7 @@ public sealed class AlertsOptions
     public string? TimeZone { get; init; }
 
     /// <summary>
-    /// The owner's addresses, for recognising an invitation he declined. The
+    /// The owner's addresses, for recognizing an invitation he declined. The
     /// feed's own name (X-WR-CALNAME, the address for a primary calendar) is
     /// used as well, so this is only needed for a secondary calendar.
     /// </summary>
@@ -101,14 +101,14 @@ public sealed class AlertsOptions
 
     /// <summary>
     /// The site's public origin, such as https://abera.tech. Every alarm sent
-    /// to Pushover names a callback here, so an acknowledgement in the
+    /// to Pushover names a callback here, so an acknowledgment in the
     /// Pushover app reaches the server. Empty, or anything but an origin,
     /// sends no callback.
     /// </summary>
     public string? PublicOrigin { get; init; }
 
     /// <summary>
-    /// Where Pushover posts an acknowledgement: the origin and
+    /// Where Pushover posts an acknowledgment: the origin and
     /// <see cref="PushoverCallback.Path"/>. Null when <see cref="PublicOrigin"/>
     /// is empty or is not an http or https origin.
     /// </summary>

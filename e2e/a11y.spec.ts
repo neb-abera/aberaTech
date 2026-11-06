@@ -58,7 +58,7 @@ async function settle(page: Page) {
 }
 
 // Both schemes: the site opens dark and a visitor can pick light, and a
-// colour that clears 4.5:1 on one ground can fail on the other.
+// color that clears 4.5:1 on one ground can fail on the other.
 const schemes = ["dark", "light"] as const;
 
 async function violations(page: Page) {
@@ -166,7 +166,7 @@ test("the phone menu passes axe while open, closes, and navigates", async ({
   // The drawer slides in and the backdrop fades. Measured mid-way, a
   // half-faded label fails contrast that the settled menu passes.
   await page.evaluate(() =>
-    // An animation the drawer replaces is cancelled, and a cancelled
+    // An animation the drawer replaces is canceled, and a canceled
     // animation's promise rejects. Settled either way is what counts.
     Promise.all(
       document.getAnimations().map((a) => a.finished.catch(() => undefined)),

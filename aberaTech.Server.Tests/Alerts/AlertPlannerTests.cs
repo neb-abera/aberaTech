@@ -8,7 +8,7 @@ namespace aberaTech.Server.Tests.Alerts;
 /// <summary>
 /// When each alert goes off. A reminder on the event wins over the default
 /// lead, a recurring event alerts once per occurrence at its own local time
-/// on both sides of a clock change, and an all-day, cancelled or declined
+/// on both sides of a clock change, and an all-day, canceled or declined
 /// event does not alert at all.
 /// </summary>
 public sealed class AlertPlannerTests
@@ -170,7 +170,7 @@ public sealed class AlertPlannerTests
         var feed = Ics(
             Event("gone@google.com", "Gone", "20261028T110000", extra: ["STATUS:CANCELLED"]),
             Event("daily@google.com", "Daily", "20261028T090000", "20261028T093000", extra: ["RRULE:FREQ=DAILY"]),
-            // Google writes one cancelled instance of a series as an override
+            // Google writes one canceled instance of a series as an override
             // with the series' UID, the instance's RECURRENCE-ID and STATUS.
             "BEGIN:VEVENT\r\nDTSTART;TZID=America/New_York:20261029T090000\r\nDTEND;TZID=America/New_York:20261029T093000\r\n"
             + "RECURRENCE-ID;TZID=America/New_York:20261029T090000\r\nUID:daily@google.com\r\nSUMMARY:Daily\r\n"

@@ -27,7 +27,7 @@ public sealed class SchedulingOptions
     /// <summary>
     /// The host's own zone. Used to interpret availability rules and as the
     /// fallback for rendering a message when a visitor's browser reported a zone
-    /// this build's tzdb does not recognise.
+    /// this build's tzdb does not recognize.
     /// </summary>
     public string HostZoneId { get; set; } = "America/New_York";
 

@@ -50,7 +50,7 @@ public class Appointment
     public string? Email { get; set; }
 
     /// <summary>
-    /// The Google Calendar event carrying the invite, so cancelling the booking
+    /// The Google Calendar event carrying the invite, so canceling the booking
     /// can cancel the invitation too. Null when no invite was sent — no email
     /// given, no calendar connected, or the grant lacks the events scope.
     /// </summary>
@@ -177,7 +177,7 @@ public class QueueEntryRecord
 }
 
 /// <summary>
-/// The host's stored Google authorisation, so free/busy can be read without him
+/// The host's stored Google authorization, so free/busy can be read without him
 /// being present.
 /// </summary>
 /// <remarks>
@@ -223,7 +223,7 @@ public class HostCalendarCredential
 /// messages have to come out of.
 ///
 /// It also means the suppression survives here rather than living only inside
-/// the provider, which is what "honour opt-outs" is actually asking for.
+/// the provider, which is what "honor opt-outs" is actually asking for.
 /// </remarks>
 public class SmsOptOut
 {

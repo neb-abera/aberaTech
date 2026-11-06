@@ -10,7 +10,7 @@ export const browserDesktopUrl = "https://devbox-desktop.abera.tech";
 /**
  * The way in from a machine where nothing can be installed: a work computer
  * with no admin rights, an inspecting proxy and a filter that drops anything
- * but HTTPS on a categorised host. Chrome Remote Desktop fails there (WebRTC
+ * but HTTPS on a categorized host. Chrome Remote Desktop fails there (WebRTC
  * and Google's relay), and on 2026-09-22 this page was the only thing on the
  * box that opened. Both names go through a Cloudflare Tunnel behind
  * Cloudflare Access: a one-time PIN to an allowed address, then the terminal

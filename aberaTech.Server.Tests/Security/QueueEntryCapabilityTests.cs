@@ -117,7 +117,7 @@ public sealed class QueueEntryCapabilityTests : IDisposable
         var second = await JoinAsync(client, "Two", null);
 
         // Version 4: 122 random bits. A v1 or v7 id shares a timestamp prefix
-        // with its neighbours and can be walked.
+        // with its neighbors and can be walked.
         Assert.All(new[] { first, second }, id => Assert.Equal(4, id.Version));
         Assert.NotEqual(first.ToString()[..8], second.ToString()[..8]);
     }

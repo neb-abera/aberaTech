@@ -28,9 +28,9 @@ export const formulas: Formula[] = [
     note: "Each leg 234 / f. Cut long, trim to the analyzer.",
   },
   {
-    name: "Off-centre feed point",
+    name: "Off-center feed point",
     formula: "0.14 × (468 / f)",
-    note: "From the centre. Tenths of a foot × 12 = inches.",
+    note: "From the center. Tenths of a foot × 12 = inches.",
   },
   {
     name: "Quarter-wave vertical",

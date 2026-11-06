@@ -21,7 +21,7 @@ export interface PageShellProps {
  * Before this the seven pages had four different container widths and three
  * different top paddings between them, so headings sat at a different height
  * and a different left edge on each one. The shell fixes the chrome, the
- * gradient, the spacing above the title and the centred header; the page
+ * gradient, the spacing above the title and the centered header; the page
  * supplies only its own body.
  */
 export default function PageShell({

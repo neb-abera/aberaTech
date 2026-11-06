@@ -14,7 +14,7 @@ namespace aberaTech.Server.Tests.Api;
 /// fallback endpoint matched every extensionless request before the static
 /// file middleware ran — which then stands down when an endpoint has already
 /// matched — so the rewrite to prerendered pages and the default-files
-/// behaviour were both dead code, and every page served the empty shell. The
+/// behavior were both dead code, and every page served the empty shell. The
 /// pipeline order is only testable as a pipeline, so these boot the real one.
 /// </remarks>
 public sealed class StaticPipelineTests : IDisposable

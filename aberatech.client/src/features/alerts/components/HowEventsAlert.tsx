@@ -76,7 +76,7 @@ export default function HowEventsAlert({
             ? "All-day events alert too. Their start is midnight in the calendar's zone."
             : "All-day events are left out. The switch under Settings turns them on."}
         </li>
-        <li>Cancelled events and invitations you declined are left out.</li>
+        <li>Canceled events and invitations you declined are left out.</li>
       </Box>
       <Typography variant="body1" sx={{ fontWeight: 600, mt: 2, mb: 0.5 }}>
         When

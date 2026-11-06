@@ -57,7 +57,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   border: "1px solid",
   // Through the CSS-variable theme, so the glass tints to whichever scheme is
   // actually showing. The static palette here is the dark default, which made
-  // the bar an opaque grey slab on the light background.
+  // the bar an opaque gray slab on the light background.
   borderColor: (theme.vars || theme).palette.divider,
   backgroundColor: theme.vars
     ? `rgba(${theme.vars.palette.background.defaultChannel} / 0.4)`
@@ -98,7 +98,7 @@ export default function AppAppBar() {
           >
             {/* The app bar inherits primary.contrastText, which is near white
                 in both schemes — invisible against a light background. The
-                icon takes the theme's own text colour instead, so it follows
+                icon takes the theme's own text color instead, so it follows
                 whichever scheme is showing. */}
             <FingerprintIcon sx={{ color: "text.primary" }} />
             {/* Three items, and it stays three however many projects there are.

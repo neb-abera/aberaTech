@@ -22,7 +22,7 @@ namespace aberaTech.Scheduling.Alerts;
 /// <see cref="AlertPushWorker"/> pushes the phones. Every action answers with the page's whole state, so the page and
 /// the phone never show a mute or a skip the server did not store.
 ///
-/// One route is anonymous: Pushover's acknowledgement callback
+/// One route is anonymous: Pushover's acknowledgment callback
 /// (<see cref="PushoverCallback"/>), which trusts nothing in its body
 /// until Pushover itself confirms it.
 /// </remarks>
@@ -65,7 +65,7 @@ public static class AlertsEndpoints
             return routes;
         }
 
-        // Pushover's acknowledgement callback: anonymous, checked with Pushover itself.
+        // Pushover's acknowledgment callback: anonymous, checked with Pushover itself.
         routes.MapPushoverCallback();
 
         // The devices Pushover delivers to. Empty means every Pushover
@@ -262,7 +262,7 @@ public static class AlertsEndpoints
         // Acknowledge: the phone's alarm or the browser's ring was answered.
         // An occurrence on the list, or one that was sent and has since
         // dropped off it, so a phone that answers late still counts. The
-        // first acknowledgement stands, and it cancels Pushover's repeats.
+        // first acknowledgment stands, and it cancels Pushover's repeats.
         shared.MapPost("/ack", async (
             AckRequest request,
             AlertPushWorker pushes,
@@ -390,7 +390,7 @@ public static class AlertsEndpoints
         // A deletion of one listed occurrence, or of the whole event. The
         // key travels in the body alone. Kept here until the feed no longer
         // lists it, so it is gone from the list and never alerts. A repeat
-        // Pushover is still making for it is cancelled.
+        // Pushover is still making for it is canceled.
         shared.MapPost("/events/delete", async (
             DeleteEventRequest request,
             AlertDispatcher dispatcher,
@@ -499,7 +499,7 @@ public static class AlertsEndpoints
         }).RequireRateLimiting(ActionsPolicy);
 
         // A deleted routine rings nowhere: Pushover's repeats for a ring
-        // ringing now are cancelled.
+        // ringing now are canceled.
         shared.MapDelete("/routines/{id:guid}", async (
             Guid id,
             AlertDispatcher dispatcher,
@@ -846,7 +846,7 @@ public static class AlertsEndpoints
             // The pushes the fake Apple took, oldest first. Never a token.
             group.MapGet("/fake/pushes", (FakeAlertServices fake) => Results.Ok(fake.Pushes));
 
-            // The receipts whose repeats an acknowledgement cancelled.
+            // The receipts whose repeats an acknowledgment canceled.
             group.MapGet("/fake/cancelled", (FakeAlertServices fake) => Results.Ok(fake.Cancelled));
 
             // The last message the fake Pushover took, so the browser suite

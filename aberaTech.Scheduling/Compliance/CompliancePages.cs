@@ -85,7 +85,7 @@ public static class CompliancePages
 
         <h2>What you will receive</h2>
         <p>A confirmation when you book, a reminder the day before, a reminder about an hour before, and a message if the
-        appointment is cancelled. If you join a queue: a message confirming your place, a message if your estimated time
+        appointment is canceled. If you join a queue: a message confirming your place, a message if your estimated time
         moves by more than about ten minutes, one shortly before your turn, and one when it is your turn.</p>
 
         <h2>How often</h2>

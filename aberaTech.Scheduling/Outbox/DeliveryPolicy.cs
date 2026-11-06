@@ -28,7 +28,7 @@ public enum DeliveryState
 /// </summary>
 /// <remarks>
 /// Pure arithmetic, kept apart from the dispatcher so the schedule can be
-/// asserted directly. The behaviour it encodes is the one the paid tools did
+/// asserted directly. The behavior it encodes is the one the paid tools did
 /// not have: a message that fails is retried on a widening interval, a message
 /// that is accepted but never confirmed is retried too, and a message that
 /// exhausts its attempts is parked in a state that a human is told about rather

@@ -15,7 +15,7 @@ namespace aberaTech.Scheduling.Sms;
 ///
 /// Note what this class does *not* do: decide anything about retries. It reports
 /// what happened and the dispatcher owns the schedule, so all the retry
-/// behaviour lives in one place and is tested without a network.
+/// behavior lives in one place and is tested without a network.
 /// </remarks>
 public sealed class TwilioMessageSender(
     HttpClient http,

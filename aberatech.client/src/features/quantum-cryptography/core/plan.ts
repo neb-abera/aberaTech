@@ -60,7 +60,7 @@ export interface Book {
 /** One row of the standards table: what it is, and where it stands. */
 export interface Standard {
   name: string;
-  /** What the document standardises, in a few words. */
+  /** What the document standardizes, in a few words. */
   what: string;
   /** Final, draft, or a date it takes effect. */
   status: string;
@@ -117,7 +117,7 @@ export const cadence: CadenceItem[] = [
   {
     label: "Read the field",
     detail:
-      "One paper abstract a day from the IACR ePrint listing, and the week's posts on the NIST post-quantum forum. Ten minutes. The point is to recognise names and problems.",
+      "One paper abstract a day from the IACR ePrint listing, and the week's posts on the NIST post-quantum forum. Ten minutes. The point is to recognize names and problems.",
   },
   {
     label: "Review",
@@ -238,7 +238,7 @@ export const stages: Stage[] = [
     title: "Classical cryptography, properly",
     weeks: "Weeks 1 to 20",
     why: "Post-quantum cryptography is classical cryptography with different hardness assumptions. The reductions, the security games, the implementation discipline and the protocol mistakes are all the same, so this stage builds them from the ground up even for someone who has shipped cryptographic code. What was learned on the job is checked against the book here.",
-    exit: "You can write a reduction proof for a symmetric or public-key scheme without the book open, you have implemented RSA, Diffie-Hellman and ECDSA from the definitions and broken each one through a known misuse, and you have modelled a protocol in a prover and watched it find an attack.",
+    exit: "You can write a reduction proof for a symmetric or public-key scheme without the book open, you have implemented RSA, Diffie-Hellman and ECDSA from the definitions and broken each one through a known misuse, and you have modeled a protocol in a prover and watched it find an attack.",
     blocks: [
       {
         id: "maths",
@@ -304,7 +304,7 @@ export const stages: Stage[] = [
           },
           {
             id: "symmetric-boneh",
-            text: "Boneh and Shoup part one alongside, for the same material with more rigour and the game-hopping style used in current papers.",
+            text: "Boneh and Shoup part one alongside, for the same material with more rigor and the game-hopping style used in current papers.",
           },
           {
             id: "symmetric-course",
@@ -920,7 +920,7 @@ export const stages: Stage[] = [
         id: "migration",
         title: "Migration engineering",
         weeks: "Weeks 61 to 68",
-        why: "The job. Hybrid key exchange in real protocols, certificates and signatures, hardware modules and validation, inventory and prioritisation, and the government timelines the work is measured against. The gate is a migration assessment someone else has to read.",
+        why: "The job. Hybrid key exchange in real protocols, certificates and signatures, hardware modules and validation, inventory and prioritization, and the government timelines the work is measured against. The gate is a migration assessment someone else has to read.",
         tasks: [
           {
             id: "migration-hybrid",
@@ -1027,7 +1027,7 @@ export const stages: Stage[] = [
           },
           {
             id: "research-conference",
-            text: "Attend Real World Crypto or the PQCrypto conference, or follow the NIST standardisation conference recordings, and write up three talks that change what you would recommend.",
+            text: "Attend Real World Crypto or the PQCrypto conference, or follow the NIST standardization conference recordings, and write up three talks that change what you would recommend.",
           },
         ],
         gate: "One reproduced paper with a public repository and write-up, one merged pull request to a post-quantum library, and one talk given to the department, all three inside the same six months.",

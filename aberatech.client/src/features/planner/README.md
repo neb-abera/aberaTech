@@ -35,7 +35,7 @@ course is legal in a term.
 | `select.ts` | Which ten courses to apply. |
 | `background.ts` | Prose prerequisites turned into schedulable preparation courses. |
 | `tracks.ts` | The curated tracks and their ordered scheduling. |
-| `catalog.ts`, `links.ts`, `areaColors.ts`, `format.ts` | Lookup, outbound links, colour, formatting. |
+| `catalog.ts`, `links.ts`, `areaColors.ts`, `format.ts` | Lookup, outbound links, color, formatting. |
 
 Three decisions worth knowing before changing anything:
 

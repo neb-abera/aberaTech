@@ -2,9 +2,9 @@
 /**
  * The theme serves both schemes through CSS variables, with dark as the
  * default. A style override that reads `theme.palette.*` directly bakes the
- * dark default's literal colour into BOTH schemes — white button text on the
+ * dark default's literal color into BOTH schemes — white button text on the
  * light background, an opaque dark app bar over a light page. Overrides must
- * emit the variable, so the browser resolves the active scheme's colour.
+ * emit the variable, so the browser resolves the active scheme's color.
  */
 
 import Button from "@mui/material/Button";
@@ -34,7 +34,7 @@ beforeAll(() => {
 }, 30_000);
 
 describe("scheme-aware overrides", () => {
-  it("gives outlined buttons the active scheme’s text colour, not the dark default’s", () => {
+  it("gives outlined buttons the active scheme’s text color, not the dark default’s", () => {
     render(
       <AppTheme>
         <Button variant="outlined">9:00 AM</Button>
@@ -46,7 +46,7 @@ describe("scheme-aware overrides", () => {
     );
   });
 
-  it("gives icon buttons the active scheme’s text colour, not the dark default’s", () => {
+  it("gives icon buttons the active scheme’s text color, not the dark default’s", () => {
     render(
       <AppTheme>
         <IconButton aria-label="Instagram" />

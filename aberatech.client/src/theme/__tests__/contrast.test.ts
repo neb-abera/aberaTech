@@ -1,5 +1,5 @@
 /**
- * Caption colours have to be readable in both schemes. On 2026-09-22 a design
+ * Caption colors have to be readable in both schemes. On 2026-09-22 a design
  * audit measured the light scheme's `text.disabled` at 2.67:1 on the page
  * background: footer column headings, guide-card path labels, the copyright
  * line and PageShell's note were all below the 4.5:1 WCAG AA needs for text
@@ -35,7 +35,7 @@ const parse = (colour: string): [number, number, number, number] => {
   const hsl = colour.match(
     /hsla?\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%(?:[,/\s]+([\d.]+))?\s*\)/,
   );
-  if (!hsl) throw new Error(`contrast test cannot read the colour ${colour}`);
+  if (!hsl) throw new Error(`contrast test cannot read the color ${colour}`);
   const [h, s, l] = [
     Number(hsl[1]) / 360,
     Number(hsl[2]) / 100,

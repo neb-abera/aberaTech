@@ -191,7 +191,7 @@ export default function PlannerBoard() {
   return (
     <PlannerProvider value={ctx}>
       {/*
-        The area colours for both schemes. The default scheme's go on :root,
+        The area colors for both schemes. The default scheme's go on :root,
         so a page read before any script runs (no scheme attribute yet) still
         matches the theme around it.
       */}

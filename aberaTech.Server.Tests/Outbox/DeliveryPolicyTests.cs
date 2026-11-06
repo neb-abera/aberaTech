@@ -5,7 +5,7 @@ using Xunit;
 namespace aberaTech.Server.Tests.Outbox;
 
 /// <summary>
-/// The retry behaviour that the paid tools did not have.
+/// The retry behavior that the paid tools did not have.
 /// </summary>
 public class DeliveryPolicyTests
 {

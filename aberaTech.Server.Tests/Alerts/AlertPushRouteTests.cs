@@ -757,7 +757,7 @@ public sealed class AlertPushRouteTests : IDisposable
             }
             catch (OperationCanceledException)
             {
-                // Npgsql answers a cancelled connect with its own exception.
+                // Npgsql answers a canceled connect with its own exception.
             }
 
             throw new TimeoutException("database down");

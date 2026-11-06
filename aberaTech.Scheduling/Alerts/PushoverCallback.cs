@@ -3,7 +3,7 @@ using NodaTime;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
-/// Pushover's acknowledgement callback (pushover.net/api/receipts, "Callback
+/// Pushover's acknowledgment callback (pushover.net/api/receipts, "Callback
 /// URL"). When the owner acknowledges an alarm in the Pushover app, Pushover
 /// posts the receipt here, and the occurrence counts as acknowledged
 /// everywhere: the browser stops ringing and the phones are pushed.
@@ -22,7 +22,7 @@ public static class PushoverCallback
 
     public const string Policy = "alerts-pushover-callback";
 
-    /// <summary>Callbacks a minute per address. Pushover sends one per acknowledgement, and one more a minute while it gets no 2xx.</summary>
+    /// <summary>Callbacks a minute per address. Pushover sends one per acknowledgment, and one more a minute while it gets no 2xx.</summary>
     public const int DefaultPerMinute = 30;
 
     public static IEndpointRouteBuilder MapPushoverCallback(this IEndpointRouteBuilder routes)
@@ -35,7 +35,7 @@ public static class PushoverCallback
     }
 
     /// <summary>
-    /// 200 {"acknowledged":true} once the acknowledgement is recorded, or was
+    /// 200 {"acknowledged":true} once the acknowledgment is recorded, or was
     /// already. 400 for a body that is not a receipt, 404 for a receipt this
     /// server did not send, 403 when Pushover says it is not acknowledged,
     /// and 503 when Pushover cannot be asked, so it posts again in a minute.

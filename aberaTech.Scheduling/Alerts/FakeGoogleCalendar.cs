@@ -48,7 +48,7 @@ public sealed record FakeGoogleLookup(string MasterId, string TimeMin, string Ti
 /// A recurring event repeats daily on its zone's wall clock, or by the
 /// recurrence lines it was seeded or patched with, expanded by Ical.Net. Its instances
 /// have the ids Google gives them, the master's id and the original start in
-/// UTC. A patched instance moves on its own. A deleted one is cancelled and
+/// UTC. A patched instance moves on its own. A deleted one is canceled and
 /// no longer listed.
 /// </remarks>
 public sealed class FakeGoogleCalendar : IAlertCalendarGrant
@@ -161,7 +161,7 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         lock (_lock) return _events.TryGetValue(uid, out var item) ? Rules(item) : null;
     }
 
-    /// <summary>The ids of a series' instances that are cancelled.</summary>
+    /// <summary>The ids of a series' instances that are canceled.</summary>
     public IReadOnlyList<string> Cancelled(string uid)
     {
         lock (_lock)
@@ -559,7 +559,7 @@ public sealed class FakeGoogleCalendar : IAlertCalendarGrant
         /// <summary>The series' own lines. Null is daily for <see cref="Count"/> days.</summary>
         public List<string>? Recurrence { get; set; }
 
-        /// <summary>Patched or cancelled instances, by original start.</summary>
+        /// <summary>Patched or canceled instances, by original start.</summary>
         public Dictionary<Instant, FakeInstance> Overrides { get; } = [];
     }
 

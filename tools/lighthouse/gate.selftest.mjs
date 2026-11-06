@@ -217,7 +217,7 @@ if (!bytes(1101, false).some((f) => f.includes("set it to 1100")))
   fail("1101 did not ask for 1100");
 if (bytes(1101, true).length > 0) fail("--live applied the headroom rule");
 if (bytes(1500, false, { "lighthouse:/": 1500 }).length > 0)
-  fail("a floor was not honoured");
+  fail("a floor was not honored");
 if (!bytes(undefined, false).some((f) => f.includes("no budget")))
   fail("a missing budget passed");
 

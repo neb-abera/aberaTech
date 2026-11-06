@@ -23,7 +23,7 @@ public sealed record CreatedAlertEvent(
 /// created through /alerts is planned from the stored row until the feed
 /// carries its UID or it starts, whichever comes first. From then on the
 /// feed's copy is the one planned, under the same key, so a skip, a claim
-/// or an acknowledgement carries over.
+/// or an acknowledgment carries over.
 /// </summary>
 public static class CreatedEvents
 {

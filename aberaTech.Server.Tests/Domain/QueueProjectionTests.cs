@@ -5,7 +5,7 @@ using Xunit;
 namespace aberaTech.Server.Tests.Domain;
 
 /// <summary>
-/// The behaviour that makes a queue a queue: when somebody leaves or finishes
+/// The behavior that makes a queue a queue: when somebody leaves or finishes
 /// early, everybody behind them moves up by exactly that much.
 /// </summary>
 public class QueueProjectionTests
@@ -329,7 +329,7 @@ public class QueueProjectionTests
     [Fact]
     public void Lengthening_one_appointment_moves_everyone_behind_by_the_difference()
     {
-        // The reason a per-person length exists at all. A first counselling
+        // The reason a per-person length exists at all. A first counseling
         // session and a two minute signature are not the same conversation, and
         // charging everybody the same fifteen minutes makes every projection
         // behind them wrong in the same direction.

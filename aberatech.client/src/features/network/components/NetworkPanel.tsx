@@ -31,7 +31,7 @@ import {
 } from "../core/model";
 import NetworkGraph from "./NetworkGraph";
 
-/** One colour per sector, in the order the document lists them. */
+/** One color per sector, in the order the document lists them. */
 const palette = [
   "hsl(210, 90%, 60%)",
   "hsl(28, 90%, 58%)",

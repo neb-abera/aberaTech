@@ -122,7 +122,7 @@ public sealed class AlertDispatcher(
         if (!await store.TryClaimAsync(alert.Key, alert.StartsAt, now, cancellationToken)) return DeliveryOutcome.AlreadyClaimed;
 
         var pushover = scope.ServiceProvider.GetRequiredService<PushoverClient>();
-        // An alarm names the callback, so an acknowledgement in the Pushover app reaches every phone and browser.
+        // An alarm names the callback, so an acknowledgment in the Pushover app reaches every phone and browser.
         if (delivery.Priority == PushoverClient.EmergencyPriority) delivery = delivery with { Callback = options.PushoverCallbackUrl() };
         var result = await pushover.SendAsync(
             alert.Title,
@@ -134,7 +134,7 @@ public sealed class AlertDispatcher(
         await store.RecordOutcomeAsync(alert.Key, result.Outcome, done, cancellationToken, result.Receipt);
         status.Sent(new LastSend(done, alert.Title, result.Outcome));
 
-        // Acknowledged while the message was on its way: the acknowledgement
+        // Acknowledged while the message was on its way: the acknowledgment
         // found no receipt to cancel, so cancel here.
         if (result.Receipt is not null && await store.IsAcknowledgedAsync(alert.Key, cancellationToken))
         {
@@ -158,7 +158,7 @@ public sealed class AlertDispatcher(
     /// <summary>
     /// Stops an emergency message from repeating once its occurrence is
     /// acknowledged. Nothing to do when nothing was sent at emergency
-    /// priority. A failure is logged and not thrown: the acknowledgement
+    /// priority. A failure is logged and not thrown: the acknowledgment
     /// stands, and the message stops at its expiry or in the Pushover app.
     /// </summary>
     public async Task CancelRepeatsAsync(string key, CancellationToken cancellationToken)
@@ -172,12 +172,12 @@ public sealed class AlertDispatcher(
         // The start and the outcome, as for a send. Never the receipt.
         if (result.Ok)
         {
-            logger.LogInformation("Repeats cancelled for an acknowledged alert starting at {StartsAt}.", delivery.StartsAt);
+            logger.LogInformation("Repeats canceled for an acknowledged alert starting at {StartsAt}.", delivery.StartsAt);
         }
         else
         {
             logger.LogWarning(
-                "Cancelling the repeats of an acknowledged alert starting at {StartsAt} failed ({Failure}).",
+                "Canceling the repeats of an acknowledged alert starting at {StartsAt} failed ({Failure}).",
                 delivery.StartsAt,
                 result.Error);
         }
