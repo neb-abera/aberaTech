@@ -23,7 +23,7 @@ public sealed class AerobicBaseTests(ITestOutputHelper output)
         output.WriteLine(
             $"90 minutes a week: {unconstrained.EasyShare:P0} easy unconstrained, {capped.EasyShare:P0} capped");
 
-        Assert.True(unconstrained.EasyShare < 0.6, "the behaviour being fixed");
+        Assert.True(unconstrained.EasyShare < 0.6, "the behavior being fixed");
         Assert.True(capped.EasyShare >= 0.89);
         Assert.Equal(1.5, capped.RunningHours, precision: 6);
     }

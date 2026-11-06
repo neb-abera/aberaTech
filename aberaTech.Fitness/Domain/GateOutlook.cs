@@ -80,7 +80,7 @@ public sealed record OutlookContext(
 ///
 /// A gate's probability is the product of its lines', which treats them as
 /// independent. They are not — a stronger athlete is stronger everywhere —
-/// so the product is a floor, and it is labelled with how many of the lines
+/// so the product is a floor, and it is labeled with how many of the lines
 /// it covers.
 ///
 /// Citations: <see cref="Citations.NonlinearRegression"/>,
@@ -251,7 +251,7 @@ public static class GateOutlook
     /// <summary>
     /// Ordinary least squares through the readings, evaluated at a date, with
     /// the prediction-interval spread: residual scatter, widened by how far
-    /// the date sits from the readings' centre. Null when there is no trend
+    /// the date sits from the readings' center. Null when there is no trend
     /// to speak of.
     /// </summary>
     internal static (double Projected, double Sd)? TrendAt(IReadOnlyList<DatedValue> history, LocalDate at)

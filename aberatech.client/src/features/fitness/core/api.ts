@@ -820,7 +820,12 @@ export interface Standing {
   value: number;
   basis: "Measured" | "Modeled" | "Training";
   evidence: string;
+  /** The measurement date, or the newest data a modeled value used. */
   on: string | null;
+  /** Where the data came from: Garmin, Hevy, a test entered on the Log tab. */
+  source?: string | null;
+  /** The model behind a modeled value, with its author and year. */
+  model?: string | null;
 }
 
 export interface RuckPoint {
@@ -1007,6 +1012,12 @@ export interface GoalForecast {
   dataThrough?: string | null;
   /** What the forecast still needs to be trusted; null when it has enough. */
   needsData?: string | null;
+  /** The date of the oldest reading the forecast used. */
+  dataFrom?: string | null;
+  /** Where those readings came from. */
+  sources?: string | null;
+  /** The model that made the forecast, with its authors and years. */
+  model?: string | null;
 }
 
 /** One essential workbook row, against the log. */
@@ -1060,7 +1071,7 @@ export interface Goals {
   weekBasis: string;
   sections: GoalSection[];
   /** When the server worked the forecasts out, as an ISO instant. */
-  modelledAt?: string | null;
+  modeledAt?: string | null;
   /** The date of the newest workout in the log. */
   workoutsThrough?: string | null;
 }

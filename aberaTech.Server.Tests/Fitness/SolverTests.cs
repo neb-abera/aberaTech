@@ -198,7 +198,7 @@ public sealed class SolverTests(ITestOutputHelper output)
     [Fact]
     public void A_solve_stays_within_an_order_of_magnitude_of_interactive()
     {
-        // What is worth catching is a return to the behaviour this replaced,
+        // What is worth catching is a return to the behavior this replaced,
         // where the likelihood was integrated once per observation instead of
         // once per proposal and a fit took thirty-seven seconds. A wall clock
         // cannot tell that from a loaded runner, so the budget is reported

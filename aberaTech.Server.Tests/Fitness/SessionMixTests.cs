@@ -56,7 +56,7 @@ public sealed class SessionMixTests
 
         var week = SessionMix.WeeklyDose(sessions, weeks: 2, vdot: Vdot37);
 
-        // Thirty-six kilometres at 7:00 is 4.2 hours over two weeks.
+        // Thirty-six kilometers at 7:00 is 4.2 hours over two weeks.
         Assert.Equal(2.1, week.EasyHours, precision: 6);
         Assert.Equal(1, week.StrengthHours, precision: 6);
         Assert.Equal(2.1, week.RunningHours, precision: 6);

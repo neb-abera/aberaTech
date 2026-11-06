@@ -437,7 +437,7 @@ public static class Solver
         return grid;
     }
 
-    /// <summary>The draw closest to the posterior's centre, by its parameters.</summary>
+    /// <summary>The draw closest to the posterior's center, by its parameters.</summary>
     public static ParameterDraw Median(SolverContext context)
     {
         var samples = context.Posterior;

@@ -8,7 +8,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// to race lighter raised the starting fitness toward a ceiling that stayed
 /// where it was. That shortened the stretch re-earned at the retraining rate
 /// and made the model gloomier the lighter the athlete planned to be — the
-/// opposite of the physiology it was modelling.
+/// opposite of the physiology it was modeling.
 /// </summary>
 public sealed class RaceWeightTests(ITestOutputHelper output)
 {

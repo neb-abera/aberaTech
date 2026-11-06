@@ -23,7 +23,7 @@ public sealed record TrainingPace(
 /// 59–74%, Marathon 75–84%, Threshold 83–88%, Interval 95–100%, Repetition
 /// ~105–110% — inverted through the same oxygen-cost curve the VDOT score
 /// comes from. Computed this way the paces land within a few seconds per
-/// kilometre of Daniels' printed tables, which carry additional empirical
+/// kilometer of Daniels' printed tables, which carry additional empirical
 /// smoothing; treat these as bands, not laps to hit to the second.
 ///
 /// Citation: <see cref="Citations.DanielsVdot"/>.

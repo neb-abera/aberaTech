@@ -127,7 +127,7 @@ public sealed class SummaryEndpointTests : IDisposable
 /// Two JSON documents, compared value by value. Numbers are equal within a
 /// relative 1e-9: the payload is floating-point arithmetic, and the last bit
 /// of an exponential is allowed to differ between an ARM laptop and an x64
-/// runner without that being a change in behaviour.
+/// runner without that being a change in behavior.
 /// </summary>
 internal static class JsonDifference
 {

@@ -54,19 +54,24 @@ internal static class ReadinessReports
         var measurements = new Dictionary<string, Measurement>();
         var histories = new Dictionary<string, List<DatedValue>>();
 
+        var anchorSource = row.VdotMeasuredOn is null ? "the default VDOT in your profile" : "the time trial in your profile";
         var anchorEvidence = row.VdotMeasuredOn is { } measuredOn
-            ? Text($"modelled from your VDOT {row.StartVdot:0.0} anchor of {measuredOn:yyyy-MM-dd}")
-            : Text($"modelled from the default VDOT {row.StartVdot:0.0} — no time trial recorded");
+            ? Text($"modeled from your VDOT {row.StartVdot:0.0} anchor of {measuredOn:yyyy-MM-dd}")
+            : Text($"modeled from the default VDOT {row.StartVdot:0.0}, with no time trial recorded");
 
         // Runs: the anchor says what a race would be today, at home altitude.
         measurements[SelectionReadiness.Metrics.RunTwoMile] = Modeled(
-            SelectionReadiness.Metrics.RunTwoMile, RaceSeconds(2 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
+            SelectionReadiness.Metrics.RunTwoMile, RaceSeconds(2 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn,
+            anchorSource, Models.Vdot);
         measurements[SelectionReadiness.Metrics.RunFiveMile] = Modeled(
-            SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
+            SelectionReadiness.Metrics.RunFiveMile, RaceSeconds(5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn,
+            anchorSource, Models.Vdot);
         measurements[SelectionReadiness.Metrics.RunTenMile] = Modeled(
-            SelectionReadiness.Metrics.RunTenMile, RaceSeconds(10 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
+            SelectionReadiness.Metrics.RunTenMile, RaceSeconds(10 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn,
+            anchorSource, Models.Vdot);
         measurements[SelectionReadiness.Metrics.RunOneAndHalfMile] = Modeled(
-            SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn);
+            SelectionReadiness.Metrics.RunOneAndHalfMile, RaceSeconds(1.5 * Vdot.MileMeters, row), anchorEvidence, row.VdotMeasuredOn,
+            anchorSource, Models.Vdot);
 
         // A fast stretch inside a training run counts toward the run goals
         // (Neb, 2026-11-04), but only when it beats what the goal already
@@ -90,13 +95,14 @@ internal static class ReadinessReports
 
             measurements[metric] = new Measurement(metric, fastest.Seconds, Basis.Measured,
                 Text($"fastest {miles} inside a training run, {fastest.Date:yyyy-MM-dd}{(fastest.Activity.Indoor == true ? ", treadmill" : "")}"),
-                fastest.Date);
+                fastest.Date,
+                SourceName(fastest.Activity.Source));
         }
 
         // Aerobic-threshold pace. Measured only by a heart-rate drift test he
         // named as one, held inside the 5% line. Without a test, the pace at
         // his AeT heart rate across the month's easy runs is an estimate of
-        // it, and is shown as modelled.
+        // it, and is shown as modeled.
         var aetTest = FitnessReports.FieldTestsIn(history.Activities, row, today).Tests
             .LastOrDefault(t => t.Kind == FieldTests.AetKind
                                 && t.Date >= today.PlusDays(-FieldTests.SuggestionWindowDays)
@@ -108,7 +114,8 @@ internal static class ReadinessReports
                 aetTest.SecPerKm * Vdot.MileMeters / 1000,
                 Basis.Measured,
                 Text($"heart-rate drift test of {aetTest.Date:yyyy-MM-dd}: {aetTest.AverageHr} bpm, drift {aetTest.DriftPercent:0.0%}{(aetTest.Indoor ? ", treadmill" : "")}"),
-                aetTest.Date);
+                aetTest.Date,
+                "a heart-rate drift test you named as one");
         }
         else if (aerobicTrend.Count > 0)
         {
@@ -120,7 +127,9 @@ internal static class ReadinessReports
                 Text($"no drift test yet; median pace of {month.RunCount} easy runs in {month.Year:0000}-{month.Month:00}, scaled to {row.ReferenceHr} bpm"),
                 // The last run counted, so the Goals tab ages it from that
                 // run rather than from the first of the month.
-                month.LastRun ?? new LocalDate(month.Year, month.Month, 1));
+                month.LastRun ?? new LocalDate(month.Year, month.Month, 1),
+                "easy runs from Garmin",
+                Models.HeartRatePace);
         }
 
         // Rucks: a timed twelve-mile at the load beats any estimate; without
@@ -141,7 +150,7 @@ internal static class ReadinessReports
         {
             measurements[SelectionReadiness.Metrics.BodyweightLb] = new Measurement(
                 SelectionReadiness.Metrics.BodyweightLb, weighed.WeightKg * BodyMass.PoundsPerKg, Basis.Measured,
-                Text($"weigh-in of {weighed.Date:yyyy-MM-dd}"), weighed.Date);
+                Text($"weigh-in of {weighed.Date:yyyy-MM-dd}"), weighed.Date, Sources.WeighIn);
         }
 
         // The fitness test, scored on the published tables.
@@ -244,7 +253,8 @@ internal static class ReadinessReports
                 measurements[metric] = new Measurement(
                     metric, scaled, Basis.Measured,
                     Text($"{Format.Distance(best.DistanceMeters.Value)} at {best.LoadKg!.Value * BodyMass.PoundsPerKg:0} lb on {timed.Date:yyyy-MM-dd}"),
-                    timed.Date);
+                    timed.Date,
+                    SourceName(best.Source));
             }
             else if (bodyKg is { } body)
             {
@@ -252,7 +262,9 @@ internal static class ReadinessReports
                     metric,
                     LoadCarriage.PredictSeconds(row.StartVdot, body, loadKg, TwelveMiles),
                     Text($"load-carriage model from your VDOT {row.StartVdot:0.0} at {body * BodyMass.PoundsPerKg:0} lb bodyweight; no timed twelve-mile at this load in the last {MeasurementWindowDays} days"),
-                    row.VdotMeasuredOn);
+                    row.VdotMeasuredOn,
+                    Text($"{(row.VdotMeasuredOn is null ? "the default VDOT" : "the time trial")} in your profile and your latest weigh-in"),
+                    Models.LoadCarriage);
             }
         }
 
@@ -306,13 +318,13 @@ internal static class ReadinessReports
             {
                 measurements[metric] = new Measurement(
                     metric, point.Value, Basis.Measured,
-                    Text($"best set to standard in training, {point.Date:yyyy-MM-dd}"), point.Date);
+                    Text($"best set to standard in training, {point.Date:yyyy-MM-dd}"), point.Date, Sources.Hevy);
             }
             else if (metric is not (Calisthenics.PushUps or Calisthenics.HandReleasePushUps))
             {
                 measurements[metric] = new Measurement(
                     metric, point.Value, Basis.Training,
-                    Text($"best hold in training, {point.Date:yyyy-MM-dd}: a floor for the test, not a test result"), point.Date);
+                    Text($"best hold in training, {point.Date:yyyy-MM-dd}: a floor for the test, not a test result"), point.Date, Sources.Hevy);
             }
         }
 
@@ -343,7 +355,8 @@ internal static class ReadinessReports
         measurements[SelectionReadiness.Metrics.FarmersCarryMeters] = new Measurement(
             SelectionReadiness.Metrics.FarmersCarryMeters, best.DistanceMeters, Basis.Measured,
             Text($"{best.TotalLoadKg * BodyMass.PoundsPerKg:0} lb total ({best.TotalLoadKg / 2 * BodyMass.PoundsPerKg:0} lb a hand, as logged) on {best.Date:yyyy-MM-dd}, against {w.WeightKg * Carries.StandardBodyweightMultiple * BodyMass.PoundsPerKg:0} lb needed at {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"),
-            best.Date);
+            best.Date,
+            Sources.Hevy);
     }
 
     private static void Strength(
@@ -397,14 +410,15 @@ internal static class ReadinessReports
             if (poundsMetric is not null)
             {
                 measurements[poundsMetric] = new Measurement(
-                    poundsMetric, repMaxKg * BodyMass.PoundsPerKg, Basis.Modeled, evidence, recent.Date);
+                    poundsMetric, repMaxKg * BodyMass.PoundsPerKg, Basis.Modeled, evidence, recent.Date, Sources.Hevy, Models.Epley(reps));
             }
 
             if (bodyweightMetric is not null && weight is { } w)
             {
                 measurements[bodyweightMetric] = new Measurement(
                     bodyweightMetric, repMaxKg / w.WeightKg, Basis.Modeled,
-                    Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), recent.Date);
+                    Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), recent.Date,
+                    Text($"{Sources.Hevy} and your latest weigh-in"), Models.Epley(reps));
             }
         }
     }
@@ -495,8 +509,8 @@ internal static class ReadinessReports
             if (results.FirstOrDefault(r => read(r) is not null) is not { } latest) return;
 
             // Better of the test and a measured training PR (a pull-up to
-            // standard counts); a modelled value always gives way.
-            Prefer(measurements, metric, read(latest)!.Value, lowerIsBetter, Text($"FBI PFT of {latest.Date:yyyy-MM-dd}"), latest.Date);
+            // standard counts); a modeled value always gives way.
+            Prefer(measurements, metric, read(latest)!.Value, lowerIsBetter, Text($"FBI PFT of {latest.Date:yyyy-MM-dd}"), latest.Date, Sources.Fbi);
         }
 
         Event(SelectionReadiness.Metrics.PullUps, r => r.PullUps, lowerIsBetter: false);
@@ -548,19 +562,19 @@ internal static class ReadinessReports
         var on = LocalDatePattern(latest.Date);
 
         var evidence = on < since
-            ? Text($"AFT of {latest.Date} ({Period.Between(on, since.PlusDays(MeasurementWindowDays), PeriodUnits.Days).Days} days old — retest to refresh)")
+            ? Text($"AFT of {latest.Date} ({Period.Between(on, since.PlusDays(MeasurementWindowDays), PeriodUnits.Days).Days} days old, retest to refresh)")
             : Text($"AFT of {latest.Date}");
 
-        measurements[SelectionReadiness.Metrics.AftTotal] = new Measurement(SelectionReadiness.Metrics.AftTotal, latest.Total, Basis.Measured, evidence, on);
-        measurements[SelectionReadiness.Metrics.AftLowestEvent] = new Measurement(SelectionReadiness.Metrics.AftLowestEvent, latest.LowestEvent, Basis.Measured, evidence, on);
+        measurements[SelectionReadiness.Metrics.AftTotal] = new Measurement(SelectionReadiness.Metrics.AftTotal, latest.Total, Basis.Measured, evidence, on, Sources.Aft);
+        measurements[SelectionReadiness.Metrics.AftLowestEvent] = new Measurement(SelectionReadiness.Metrics.AftLowestEvent, latest.LowestEvent, Basis.Measured, evidence, on, Sources.Aft);
 
         // A test's events are measurements too, and outrank the model. They
         // outrank a strength-log set only when they are better.
-        Prefer(measurements, SelectionReadiness.Metrics.RunTwoMile, latest.TwoMileSeconds, lowerIsBetter: true, evidence, on);
-        Prefer(measurements, SelectionReadiness.Metrics.HandReleasePushUps, latest.HandReleasePushUps, lowerIsBetter: false, evidence, on);
-        Prefer(measurements, SelectionReadiness.Metrics.Plank, latest.PlankSeconds, lowerIsBetter: false, evidence, on);
-        Prefer(measurements, SelectionReadiness.Metrics.SprintDragCarry, latest.SprintDragCarrySeconds, lowerIsBetter: true, evidence, on);
-        Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleLb, latest.DeadliftKg * BodyMass.PoundsPerKg, lowerIsBetter: false, evidence, on);
+        Prefer(measurements, SelectionReadiness.Metrics.RunTwoMile, latest.TwoMileSeconds, lowerIsBetter: true, evidence, on, Sources.Aft);
+        Prefer(measurements, SelectionReadiness.Metrics.HandReleasePushUps, latest.HandReleasePushUps, lowerIsBetter: false, evidence, on, Sources.Aft);
+        Prefer(measurements, SelectionReadiness.Metrics.Plank, latest.PlankSeconds, lowerIsBetter: false, evidence, on, Sources.Aft);
+        Prefer(measurements, SelectionReadiness.Metrics.SprintDragCarry, latest.SprintDragCarrySeconds, lowerIsBetter: true, evidence, on, Sources.Aft);
+        Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleLb, latest.DeadliftKg * BodyMass.PoundsPerKg, lowerIsBetter: false, evidence, on, Sources.Aft);
 
         // The test's deadlift is a real triple, which the log's Epley estimate
         // only approximates; over the current bodyweight it scores the entry
@@ -568,12 +582,12 @@ internal static class ReadinessReports
         if (weight is { } w)
         {
             Prefer(measurements, SelectionReadiness.Metrics.DeadliftTripleToBodyweight, latest.DeadliftKg / w.WeightKg, lowerIsBetter: false,
-                Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), on);
+                Text($"{evidence}, over {w.WeightKg * BodyMass.PoundsPerKg:0} lb bodyweight"), on, Sources.Aft);
         }
     }
 
     private static void Prefer(
-        Dictionary<string, Measurement> measurements, string metric, double value, bool lowerIsBetter, string evidence, LocalDate on)
+        Dictionary<string, Measurement> measurements, string metric, double value, bool lowerIsBetter, string evidence, LocalDate on, string source)
     {
         if (measurements.TryGetValue(metric, out var current) && current.Basis == Basis.Measured)
         {
@@ -581,7 +595,7 @@ internal static class ReadinessReports
             if (!better) return;
         }
 
-        measurements[metric] = new Measurement(metric, value, Basis.Measured, evidence, on);
+        measurements[metric] = new Measurement(metric, value, Basis.Measured, evidence, on, source);
     }
 
     private static BodyReportDto BodyReport(
@@ -612,7 +626,7 @@ internal static class ReadinessReports
         {
             measurements[SelectionReadiness.Metrics.BodyFat] = new Measurement(
                 SelectionReadiness.Metrics.BodyFat, fatNow, Basis.Measured,
-                Text($"weigh-in of {latestFat.Date:yyyy-MM-dd}"), latestFat.Date);
+                Text($"weigh-in of {latestFat.Date:yyyy-MM-dd}"), latestFat.Date, Sources.WeighIn);
         }
 
         return new BodyReportDto(
@@ -623,11 +637,41 @@ internal static class ReadinessReports
             leanMass is { } lm ? BodyComposition.SelectionRateByLeanMass(lm) : null);
     }
 
-    private static Measurement Modeled(string metric, double value, string evidence, LocalDate? on = null) =>
-        new(metric, value, Basis.Modeled, evidence, on);
+    private static Measurement Modeled(string metric, double value, string evidence, LocalDate? on, string source, string model) =>
+        new(metric, value, Basis.Modeled, evidence, on, source, model);
+
+    /// <summary>Where the data behind a number came from, in the words of the screen it was entered or synced from.</summary>
+    internal static class Sources
+    {
+        public const string Hevy = "Hevy";
+        public const string WeighIn = "a weigh-in entered on the Log tab";
+        public const string Aft = "an AFT entered on the Log tab";
+        public const string Fbi = "an FBI PFT entered on the Log tab";
+    }
+
+    /// <summary>An activity's source as its maker names it.</summary>
+    internal static string SourceName(string source) => source switch
+    {
+        "intervals-icu" => "Garmin, synced through intervals.icu",
+        _ when source.StartsWith("garmin", StringComparison.Ordinal) => "Garmin",
+        _ when source.StartsWith("hevy", StringComparison.Ordinal) => Sources.Hevy,
+        _ => source
+    };
+
+    /// <summary>The models behind modeled numbers, each with its author and year.</summary>
+    internal static class Models
+    {
+        public const string Vdot = "Daniels and Gilbert VDOT race equivalence (1979): the time trial's VDOT gives the equal time at this distance";
+        public const string LoadCarriage = "Pandolf load-carriage model (1977), run on your VDOT and bodyweight";
+        public const string HeartRatePace = "Heart-rate-scaled pace: each easy run's pace times its heart rate over your AeT heart rate, the month's median";
+
+        public static string Epley(int reps) => reps == 1
+            ? "Epley one-rep-max estimate (1985) from your best recent set"
+            : $"Epley one-rep-max estimate (1985) from your best recent set, read back to {reps} reps";
+    }
 
     private static StandingDto Dto(Measurement m) =>
-        new(m.Metric, m.Value, m.Basis.ToString(), m.Evidence, m.On?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        new(m.Metric, m.Value, m.Basis.ToString(), m.Evidence, m.On?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), m.Source, m.Model);
 
     private static LocalDate LocalDatePattern(string isoDate)
     {

@@ -15,7 +15,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// for the same-session check and the keyed lookup, four statements each. A
 /// Garmin export is a few thousand activities, so that was twelve thousand
 /// round trips inside one HTTP request. Nothing about the answers changed when
-/// it was batched, which is exactly why a behaviour test could not have caught
+/// it was batched, which is exactly why a behavior test could not have caught
 /// the regression and a counted one can.
 /// </remarks>
 public sealed class ActivityStoreTests : IDisposable
@@ -257,7 +257,7 @@ public sealed class ActivityStoreTests : IDisposable
     }
 
     private static Activity Run(
-        string source, string externalId, Instant startedAt, double seconds, double metres) =>
+        string source, string externalId, Instant startedAt, double seconds, double meters) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -266,6 +266,6 @@ public sealed class ActivityStoreTests : IDisposable
             StartedAt = startedAt,
             Sport = "run",
             DurationSeconds = seconds,
-            DistanceMeters = metres
+            DistanceMeters = meters
         };
 }

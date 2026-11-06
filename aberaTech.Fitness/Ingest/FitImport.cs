@@ -62,7 +62,7 @@ public static class FitImport
                 Id = Guid.NewGuid(),
                 ActivityId = activity.Id,
                 Index = index++,
-                DistanceMeters = lap.GetTotalDistance() is { } metres and > 0 ? metres : null,
+                DistanceMeters = lap.GetTotalDistance() is { } meters and > 0 ? meters : null,
                 Seconds = seconds,
                 AverageHr = lap.GetAvgHeartRate()
             });

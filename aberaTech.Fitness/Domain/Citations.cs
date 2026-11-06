@@ -27,7 +27,7 @@ public static class Citations
     public static readonly Citation BanisterModel = new(
         "banister-impulse-response",
         "Fitness rises toward a dose-dependent ceiling, fast at first and slower as the gap closes (impulse-response training model).",
-        "Eric Banister and colleagues, the exercise scientists who founded systems modelling of training; extended by Thierry Busso.",
+        "Eric Banister and colleagues, the exercise scientists who founded systems modeling of training; extended by Thierry Busso.",
         "A systems model of training for athletic performance (Aust J Sports Med 7); Busso, Variable dose-response relationship (Med Sci Sports Exerc 35)",
         1975,
         "https://pubmed.ncbi.nlm.nih.gov/12783044/");

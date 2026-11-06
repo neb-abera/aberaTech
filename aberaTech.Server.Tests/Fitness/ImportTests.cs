@@ -10,7 +10,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// <summary>
 /// The archive Garmin actually emails when you ask for your data, and its
 /// units — centimetres, milliseconds, and two epoch clocks where only one is
-/// really UTC. Getting any of those wrong turns a 3 km run into 3 metres or
+/// really UTC. Getting any of those wrong turns a 3 km run into 3 meters or
 /// 30 km, and the resulting VDOT would still look like a number.
 /// </summary>
 public sealed class GarminExportJsonTests

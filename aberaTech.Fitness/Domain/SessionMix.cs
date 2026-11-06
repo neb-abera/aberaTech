@@ -88,7 +88,7 @@ public static class SessionMix
     /// nothing would be worse — it is a large part of this athlete's training
     /// and a large part of the aerobic base it builds.
     ///
-    /// The weight is a judgement, not a measurement, and it is here as one
+    /// The weight is a judgment, not a measurement, and it is here as one
     /// number so it can be argued with rather than buried in a classifier.
     ///
     /// Citation: <see cref="Citations.UphillAthleteAet"/>.
