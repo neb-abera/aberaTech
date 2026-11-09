@@ -32,7 +32,27 @@ public enum NotificationKind
     HostBooked = 8,
 
     /// <summary>Somebody canceled. Sent to the host.</summary>
-    HostCancelled = 9
+    HostCancelled = 9,
+
+    /// <summary>
+    /// The calendar invite for a booking. Not a text: the dispatcher hands it
+    /// to Google Calendar, which emails the visitor.
+    /// </summary>
+    CalendarInvite = 10,
+
+    /// <summary>Withdraws the calendar invite of a canceled booking. Google tells the visitor.</summary>
+    CalendarWithdraw = 11,
+
+    /// <summary>A calendar invite ran out of retries. Sent to the host.</summary>
+    HostInviteFailed = 12
+}
+
+/// <summary>Which provider carries each kind.</summary>
+public static class NotificationKinds
+{
+    /// <summary>Whether Google Calendar carries this kind, rather than an SMS provider.</summary>
+    public static bool IsCalendar(this NotificationKind kind) =>
+        kind is NotificationKind.CalendarInvite or NotificationKind.CalendarWithdraw;
 }
 
 /// <summary>

@@ -1,4 +1,6 @@
+using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Data;
+using aberaTech.Scheduling.Domain;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -125,6 +127,8 @@ public sealed class OutboxDispatcher(
         using var scope = scopeFactory.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<SchedulingDbContext>();
         var sender = scope.ServiceProvider.GetRequiredService<IMessageSender>();
+        var invites = scope.ServiceProvider.GetRequiredService<ICalendarInvites>();
+        var options = scope.ServiceProvider.GetRequiredService<SchedulingOptions>();
 
         var now = clock.GetCurrentInstant();
 
@@ -150,10 +154,21 @@ public sealed class OutboxDispatcher(
         {
             message.Attempts++;
 
+            Appointment? appointment = null;
             SendResult result;
             try
             {
-                result = await sender.SendAsync(message, cancellationToken);
+                if (message.Kind.IsCalendar())
+                {
+                    appointment = await database.Appointments
+                        .FirstOrDefaultAsync(candidate => candidate.Id == message.AppointmentId, cancellationToken);
+
+                    result = await SendCalendarAsync(message, appointment, invites, cancellationToken);
+                }
+                else
+                {
+                    result = await sender.SendAsync(message, cancellationToken);
+                }
             }
             catch (Exception exception)
             {
@@ -173,6 +188,11 @@ public sealed class OutboxDispatcher(
                 message.ProviderMessageId = result.ProviderMessageId;
                 message.NextAttemptAt = null;
                 message.LastError = null;
+
+                if (message.Kind == NotificationKind.CalendarInvite && appointment is not null)
+                {
+                    appointment.GoogleEventId = result.ProviderMessageId;
+                }
             }
             else if (result.Permanent)
             {
@@ -199,10 +219,17 @@ public sealed class OutboxDispatcher(
                     message.Id,
                     message.Kind,
                     result.Error);
+
+                TellHostIfInviteFailed(database, message, appointment, options, now);
             }
             else
             {
                 Fail(message, result.Error ?? "The provider rejected the message.", now);
+
+                if (message.State == DeliveryState.DeadLettered)
+                {
+                    TellHostIfInviteFailed(database, message, appointment, options, now);
+                }
             }
         }
 
@@ -212,6 +239,75 @@ public sealed class OutboxDispatcher(
         }
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    /// <summary>The reason a calendar job is skipped rather than sent.</summary>
+    internal const string CanceledFirst = "The booking was canceled before the invite went out.";
+
+    /// <summary>Hands a calendar job to Google, or says why it cannot go.</summary>
+    private static Task<SendResult> SendCalendarAsync(
+        OutboxMessage message,
+        Appointment? appointment,
+        ICalendarInvites invites,
+        CancellationToken cancellationToken)
+    {
+        if (appointment is null)
+        {
+            return Task.FromResult(SendResult.RejectedPermanently("The booking no longer exists."));
+        }
+
+        if (message.Kind == NotificationKind.CalendarInvite && appointment.Cancelled)
+        {
+            // An invite for a meeting that is not happening is worse than none.
+            return Task.FromResult(SendResult.RejectedPermanently(CanceledFirst));
+        }
+
+        return message.Kind == NotificationKind.CalendarInvite
+            ? invites.InviteAsync(appointment, cancellationToken)
+            : invites.WithdrawAsync(appointment, cancellationToken);
+    }
+
+    /// <summary>
+    /// Texts the host when a booking's invite is out of attempts.
+    /// </summary>
+    /// <remarks>
+    /// The visitor was told an invite is on its way, so the host has to know
+    /// it is not. Queued as an ordinary text in the same save, so it gets the
+    /// texts' own retries. Nothing is sent for a booking canceled first, or
+    /// when no host number is configured.
+    /// </remarks>
+    private static void TellHostIfInviteFailed(
+        SchedulingDbContext database,
+        OutboxMessage message,
+        Appointment? appointment,
+        SchedulingOptions options,
+        Instant now)
+    {
+        if (message.Kind != NotificationKind.CalendarInvite
+            || appointment is null
+            || appointment.Cancelled
+            || !PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
+        {
+            return;
+        }
+
+        database.Outbox.Add(new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            AppointmentId = appointment.Id,
+            Kind = NotificationKind.HostInviteFailed,
+            ToPhoneE164 = hostPhone.Value.E164,
+            Body = MessageComposer.Compose(
+                NotificationKind.HostInviteFailed,
+                options.HostName,
+                appointment.StartsAt,
+                options.HostZone,
+                options.BrandName),
+            State = DeliveryState.Pending,
+            CreatedAt = now,
+            NextAttemptAt = now,
+            IdempotencyKey = $"{appointment.Id}:{NotificationKind.HostInviteFailed}"
+        });
     }
 
     /// <summary>Remembers that a number asked not to be messaged.</summary>
@@ -244,7 +340,7 @@ public sealed class OutboxDispatcher(
         message.LastError = error;
         message.SentAt = null;
 
-        var next = DeliveryPolicy.NextAttemptAt(message.Attempts, now);
+        var next = DeliveryPolicy.NextAttemptAt(message.Attempts, now, message.Kind);
 
         if (next is null)
         {

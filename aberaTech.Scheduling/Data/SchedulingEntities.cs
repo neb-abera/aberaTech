@@ -21,6 +21,47 @@ public class AvailabilityRuleRecord
     public AvailabilityRule ToDomain() => new(Day, StartsAt, EndsAt, ZoneId);
 }
 
+/// <summary>
+/// A link the host hands to one audience, carrying the rules that audience
+/// books under.
+/// </summary>
+/// <remarks>
+/// The row with <see cref="IsDefault"/> set is the rules for /schedule with no
+/// link. It has no key. While it does not exist the deployment's settings are
+/// the default.
+/// </remarks>
+public class BookingLink
+{
+    public Guid Id { get; set; }
+
+    /// <summary>Shown to the host alone, never to a visitor.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>SHA-256 of the key, as lowercase hex. Null for the default row.</summary>
+    public string? KeyHash { get; set; }
+
+    public bool IsDefault { get; set; }
+
+    /// <summary>The first day on the host's calendar this link books. Null is today.</summary>
+    public LocalDate? EarliestDate { get; set; }
+
+    public int HorizonDays { get; set; }
+
+    public int LeadMinutes { get; set; }
+
+    public int AppointmentMinutes { get; set; }
+
+    public bool ShowsQueue { get; set; }
+
+    /// <summary>A link that is off books under the default rules, as an unknown key does.</summary>
+    public bool Active { get; set; } = true;
+
+    public Instant CreatedAt { get; set; }
+
+    public BookingPolicy ToPolicy() =>
+        new(EarliestDate, HorizonDays, LeadMinutes, AppointmentMinutes, ShowsQueue);
+}
+
 /// <summary>A booked appointment.</summary>
 public class Appointment
 {
@@ -43,16 +84,16 @@ public class Appointment
     public string PhoneE164 { get; set; } = string.Empty;
 
     /// <summary>
-    /// Null unless they asked for a calendar invite. Entering an address is the
-    /// ask; there is no separate checkbox, because an optional field left blank
-    /// already says no.
+    /// Where the calendar invite goes. Required on every booking since
+    /// November 2026. Null only on bookings made before then, when the field
+    /// was optional.
     /// </summary>
     public string? Email { get; set; }
 
     /// <summary>
-    /// The Google Calendar event carrying the invite, so canceling the booking
-    /// can cancel the invitation too. Null when no invite was sent — no email
-    /// given, no calendar connected, or the grant lacks the events scope.
+    /// The Google Calendar event carrying the invite. Set once Google confirms
+    /// it. Bookings made since November 2026 use the appointment's own id, so
+    /// a retried invite or a withdrawal never needs this to find the event.
     /// </summary>
     public string? GoogleEventId { get; set; }
 
@@ -89,6 +130,9 @@ public class Appointment
     public Instant CreatedAt { get; set; }
 
     public bool Cancelled { get; set; }
+
+    /// <summary>The link it was booked through. Null for plain /schedule.</summary>
+    public Guid? BookingLinkId { get; set; }
 }
 
 public class QueueSession

@@ -42,7 +42,12 @@ public sealed class AdminRouteTests : IDisposable
         ["PUT", "/api/scheduling/admin/availability"],
         ["GET", "/api/scheduling/admin/calendar"],
         ["POST", "/api/scheduling/admin/calendar/disconnect"],
-        ["GET", "/api/scheduling/admin/calendar/connect"]
+        ["GET", "/api/scheduling/admin/calendar/connect"],
+        ["GET", "/api/scheduling/admin/links"],
+        ["POST", "/api/scheduling/admin/links"],
+        ["PUT", "/api/scheduling/admin/links/default"],
+        ["PUT", "/api/scheduling/admin/links/0f1d2c3b-4a59-4687-9a0b-1c2d3e4f5a6b"],
+        ["POST", "/api/scheduling/admin/links/0f1d2c3b-4a59-4687-9a0b-1c2d3e4f5a6b/key"]
     ];
 
     [Theory]

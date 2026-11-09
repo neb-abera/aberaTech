@@ -1,3 +1,4 @@
+using aberaTech.Scheduling.Domain;
 using aberaTech.Scheduling.Outbox;
 using NodaTime;
 using Xunit;
@@ -92,5 +93,30 @@ public class DeliveryPolicyTests
 
         Assert.False(DeliveryPolicy.ReceiptOverdue(sentAt, Now + Duration.FromMinutes(1)));
         Assert.True(DeliveryPolicy.ReceiptOverdue(sentAt, Now + DeliveryPolicy.ReceiptWindow));
+    }
+
+    [Fact]
+    public void A_calendar_invite_gets_ten_attempts_over_four_hours_fifteen_minutes()
+    {
+        var start = Instant.FromUtc(2026, 11, 9, 12, 0);
+        var at = start;
+        var attempts = 0;
+
+        for (var made = 1; DeliveryPolicy.NextAttemptAt(made, at, NotificationKind.CalendarInvite) is { } next; made++)
+        {
+            at = next;
+            attempts = made;
+        }
+
+        Assert.Equal(DeliveryPolicy.MaxCalendarAttempts - 1, attempts);
+        Assert.Equal(Duration.FromSeconds(30 * 511), at - start);
+        Assert.Null(DeliveryPolicy.NextAttemptAt(DeliveryPolicy.MaxCalendarAttempts, at, NotificationKind.CalendarWithdraw));
+    }
+
+    [Fact]
+    public void A_text_keeps_its_five_attempts()
+    {
+        Assert.Equal(DeliveryPolicy.MaxAttempts, DeliveryPolicy.MaxAttemptsFor(NotificationKind.Reminder));
+        Assert.Null(DeliveryPolicy.NextAttemptAt(DeliveryPolicy.MaxAttempts, Instant.FromUtc(2026, 11, 9, 12, 0), NotificationKind.Booked));
     }
 }

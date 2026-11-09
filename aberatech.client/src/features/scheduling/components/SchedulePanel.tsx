@@ -1,9 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { formatDay, formatTime, viewerZone } from "../core/format";
+import { buildIcs } from "../core/ics";
 import { useSchedule } from "../hooks/useSchedule";
 import QueuePanel from "./QueuePanel";
 import SlotList from "./SlotList";
@@ -69,10 +71,28 @@ export default function SchedulePanel() {
       ) : (
         <>
           {booking ? (
-            <Alert severity="success">
+            <Alert
+              severity="success"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() =>
+                    downloadIcs(
+                      buildIcs({ ...booking, hostName: state.hostName }),
+                    )
+                  }
+                >
+                  Add to calendar
+                </Button>
+              }
+            >
               Booked for {formatDay(booking.startsAt)} at{" "}
-              {formatTime(booking.startsAt)}. A confirmation is on its way to
-              your phone.
+              {formatTime(booking.startsAt)}. A calendar invite is on its way to{" "}
+              {booking.email}.
+              {booking.texted
+                ? " A text confirmation is on its way to your phone."
+                : null}
             </Alert>
           ) : null}
           <SlotList
@@ -95,4 +115,14 @@ export default function SchedulePanel() {
       )}
     </Stack>
   );
+}
+
+/** Hands the browser a calendar file to save or open. */
+function downloadIcs(ics: string) {
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "meeting-with-neb-abera.ics";
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }

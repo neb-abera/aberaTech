@@ -36,7 +36,13 @@ const kinds: Record<string, string> = {
   Cancelled: "Cancellation",
   HostBooked: "New booking, to you",
   HostCancelled: "Cancellation, to you",
+  CalendarInvite: "Calendar invite",
+  CalendarWithdraw: "Invite withdrawn",
+  HostInviteFailed: "Invite failed, to you",
 };
+
+/** The kinds Google Calendar carries rather than a text. */
+const calendarKinds = new Set(["CalendarInvite", "CalendarWithdraw"]);
 
 export function kindLabel(kind: string): string {
   return kinds[kind] ?? kind;
@@ -60,6 +66,20 @@ const states: Record<string, StateChip> = {
   DeadLettered: { label: "Not delivered", color: "error" },
 };
 
-export function stateChip(state: string): StateChip {
+export function stateChip(state: string, kind?: string): StateChip {
+  // Google sends no delivery receipt. Its yes means the event exists and
+  // Google took on emailing the invite, which is all the chip can claim.
+  if (state === "Delivered" && kind && calendarKinds.has(kind)) {
+    return { label: "Google accepted", color: "success" };
+  }
   return states[state] ?? { label: state, color: "default" };
+}
+
+/** The row's title: what it is and who it goes to. A calendar job's body names its address. */
+export function messageTitle(
+  message: Pick<AdminMessage, "kind" | "to" | "body">,
+): string {
+  return calendarKinds.has(message.kind)
+    ? message.body
+    : `${kindLabel(message.kind)} · ${message.to}`;
 }

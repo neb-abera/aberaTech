@@ -44,6 +44,7 @@ public class MessageComposerTests
     [InlineData(NotificationKind.Cancelled)]
     [InlineData(NotificationKind.HostBooked)]
     [InlineData(NotificationKind.HostCancelled)]
+    [InlineData(NotificationKind.HostInviteFailed)]
     public void Every_message_fits_in_one_billable_segment(NotificationKind kind)
     {
         // A body that spills past 160 characters silently doubles both the cost
@@ -72,8 +73,29 @@ public class MessageComposerTests
     private static readonly NotificationKind[] ToHost =
     [
         NotificationKind.HostBooked,
-        NotificationKind.HostCancelled
+        NotificationKind.HostCancelled,
+        NotificationKind.HostInviteFailed
     ];
+
+    /// <summary>The kinds Google Calendar carries. They are not texts and have no body to compose.</summary>
+    private static readonly NotificationKind[] ByCalendar =
+    [
+        NotificationKind.CalendarInvite,
+        NotificationKind.CalendarWithdraw
+    ];
+
+    [Fact]
+    public void A_calendar_kind_is_never_composed_as_a_text()
+    {
+        foreach (var kind in ByCalendar)
+        {
+            Assert.True(kind.IsCalendar());
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                MessageComposer.Compose(kind, "Neb", Start, Zone("America/Chicago"), "aberaTech"));
+        }
+
+        Assert.All(ToVisitor.Concat(ToHost), kind => Assert.False(kind.IsCalendar()));
+    }
 
     [Fact]
     public void Every_message_to_a_visitor_names_the_host_so_it_is_not_read_as_spam()
@@ -126,10 +148,10 @@ public class MessageComposerTests
     }
 
     [Fact]
-    public void Every_kind_is_covered_by_one_of_those_two_lists()
+    public void Every_kind_is_covered_by_one_of_those_lists()
     {
-        // So a kind added later cannot quietly escape both checks.
-        var covered = ToVisitor.Concat(ToHost).ToHashSet();
+        // So a kind added later cannot quietly escape every check.
+        var covered = ToVisitor.Concat(ToHost).Concat(ByCalendar).ToHashSet();
 
         Assert.Equal(Enum.GetValues<NotificationKind>().ToHashSet(), covered);
     }

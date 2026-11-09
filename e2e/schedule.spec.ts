@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
 
 // The one public write path, as a visitor meets it: pick a day, pick a
@@ -173,12 +174,33 @@ test("a visitor books a time with texts and the time is taken", async ({
     .getByRole("checkbox", { name: "Yes, text me about this appointment" })
     .check();
   await dialog.getByLabel("Mobile number").fill(`(202) 555-01${40 + lane}`);
+
+  // Every booking gets a calendar invite, so the address is required: the
+  // browser holds the form until it is filled.
+  const email = dialog.getByRole("textbox", { name: "Email" });
+  await expect(email).toHaveAttribute("required", "");
+  await dialog.getByRole("button", { name: "Book it" }).click();
+  await expect(dialog).toBeVisible();
+  await email.fill(`e2e-${info.project.name}@example.com`);
   await dialog.getByRole("button", { name: "Book it" }).click();
 
   await expect(dialog).toBeHidden();
   const booked = page.getByRole("alert").filter({ hasText: "Booked for" });
   await expect(booked).toContainText(label);
-  await expect(booked).toContainText("A confirmation is on its way");
+  await expect(booked).toContainText(
+    `A calendar invite is on its way to e2e-${info.project.name}@example.com.`,
+  );
+  await expect(booked).toContainText("A text confirmation is on its way");
   // The page asks again after a booking, and the time is gone from the day.
   await expect(slot).toHaveCount(0);
+
+  // The calendar file holds the same time the page showed.
+  const download = page.waitForEvent("download");
+  await booked.getByRole("button", { name: "Add to calendar" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("meeting-with-neb-abera.ics");
+  const ics = (await readFile((await file.path()) as string)).toString();
+  expect(ics).toContain("BEGIN:VEVENT");
+  expect(ics).toMatch(/UID:[0-9a-f]{32}@google\.com/);
+  expect(ics).toMatch(/DTSTART:\d{8}T\d{6}Z/);
 });

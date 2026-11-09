@@ -136,6 +136,7 @@ public static class SchedulingEndpoints
     }
 
     private static async Task<IResult> GetStateAsync(
+        HttpRequest request,
         SchedulingDbContext database,
         SchedulingOptions options,
         IBusySource busySource,
@@ -147,16 +148,21 @@ public static class SchedulingEndpoints
         var viewerZone = ResolveZone(zone, options);
 
         var now = clock.GetCurrentInstant();
+        var (_, policy) = await BookingLinkResolver.ResolveAsync(request, database, options, cancellationToken);
 
         // Past its closing time counts as closed, whatever the flag says. The
         // flag records an intention; the clock records what happened. Leaving a
         // session "open" a day after it ended is the normal case rather than an
         // odd one — closing it is a thing a person has to remember at the end of
         // a long afternoon.
-        var session = await database.QueueSessions
-            .AsNoTracking()
-            .Include(candidate => candidate.Entries)
-            .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
+        // A link whose audience is not in the queue, such as interviewers while
+        // a counseling queue runs, keeps seeing slots.
+        var session = !policy.ShowsQueue
+            ? null
+            : await database.QueueSessions
+                .AsNoTracking()
+                .Include(candidate => candidate.Entries)
+                .FirstOrDefaultAsync(candidate => candidate.Open && candidate.ClosesAt > now, cancellationToken);
 
         if (session is not null)
         {
@@ -188,23 +194,7 @@ public static class SchedulingEndpoints
                     wouldStart < session.ClosesAt)));
         }
 
-        var rules = await database.AvailabilityRules
-            .AsNoTracking()
-            .Where(rule => rule.Active)
-            .ToListAsync(cancellationToken);
-
-        var today = now.InZone(options.HostZone).Date;
-
-        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
-        var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
-
-        var all = SlotPlanner.Plan(
-            rules.Select(rule => rule.ToDomain()),
-            today,
-            today.PlusDays(options.HorizonDays),
-            Duration.FromMinutes(options.DefaultAppointmentMinutes),
-            busy,
-            now + Duration.FromMinutes(options.BookingLeadMinutes));
+        var all = await OfferedAsync(policy, database, options, busySource, now, cancellationToken);
 
         // Grouped in the viewer's zone, not the host's. An evening slot in
         // Washington belongs to the next day for somebody reading in Berlin,
@@ -487,10 +477,10 @@ public static class SchedulingEndpoints
     /// </remarks>
     private static async Task<IResult> BookSlotAsync(
         BookRequest request,
+        HttpRequest http,
         SchedulingDbContext database,
         SchedulingOptions options,
         IBusySource busySource,
-        ICalendarInvites invites,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -504,14 +494,16 @@ public static class SchedulingEndpoints
             return Results.BadRequest(new { error = "Enter a US mobile number, or untick text updates." });
         }
 
-        // Same footing as the number: entering an address is asking for the
-        // invite, leaving the field blank is declining it, and a blank is
-        // never an error.
-        EmailAddress? email = null;
-
-        if (!string.IsNullOrWhiteSpace(request.Email) && !EmailAddress.TryParse(request.Email, out email))
+        // Required. Every booking gets a calendar invite, and the invite needs
+        // somewhere to go.
+        if (string.IsNullOrWhiteSpace(request.Email))
         {
-            return Results.BadRequest(new { error = "That email address does not look right. Clear it, or fix it." });
+            return Results.BadRequest(new { error = "Enter your email, so the calendar invite has somewhere to go." });
+        }
+
+        if (!EmailAddress.TryParse(request.Email, out var email))
+        {
+            return Results.BadRequest(new { error = "That email address does not look right." });
         }
 
         var name = (request.Name ?? string.Empty).Trim();
@@ -537,27 +529,15 @@ public static class SchedulingEndpoints
 
         var now = clock.GetCurrentInstant();
         var zone = ResolveZone(request.ZoneId, options);
-        var length = Duration.FromMinutes(options.DefaultAppointmentMinutes);
+        var (linkId, policy) = await BookingLinkResolver.ResolveAsync(http, database, options, cancellationToken);
+        var length = Duration.FromMinutes(policy.AppointmentMinutes);
         var endsAt = startsAt + length;
 
-        // The slot must be one we actually offered. Without this the endpoint
-        // would accept any instant at all, including outside working hours and
-        // in the past, simply because nothing overlapped it.
-        var rules = await database.AvailabilityRules
-            .AsNoTracking()
-            .Where(rule => rule.Active)
-            .ToListAsync(cancellationToken);
-        var today = now.InZone(options.HostZone).Date;
-        var horizon = new Interval(now, today.PlusDays(options.HorizonDays + 1).AtMidnight().InUtc().ToInstant());
-        var busy = await busySource.GetBusyAsync(horizon, cancellationToken);
-
-        var offered = SlotPlanner.Plan(
-            rules.Select(rule => rule.ToDomain()),
-            today,
-            today.PlusDays(options.HorizonDays),
-            length,
-            busy,
-            now + Duration.FromMinutes(options.BookingLeadMinutes));
+        // The slot must be one this link was offered. Without this the endpoint
+        // would accept any instant at all, including outside working hours, in
+        // the past, or before the link's earliest date, simply because nothing
+        // overlapped it.
+        var offered = await OfferedAsync(policy, database, options, busySource, now, cancellationToken);
 
         if (!offered.Any(slot => slot.Start == startsAt))
         {
@@ -572,15 +552,21 @@ public static class SchedulingEndpoints
             BookedZoneId = zone.Id,
             DisplayName = name,
             PhoneE164 = phone?.E164 ?? string.Empty,
-            Email = email?.Value,
+            Email = email.GetValueOrDefault().Value,
             SmsConsent = request.SmsConsent,
             ConsentedAt = request.SmsConsent ? now : null,
             ConsentDisclosure = request.SmsConsent ? Sms.ConsentDisclosure.Current : null,
             CreatedAt = now,
-            Cancelled = false
+            Cancelled = false,
+            BookingLinkId = linkId
         };
 
         database.Appointments.Add(appointment);
+
+        // The invite is an outbox job in the same commit as the booking. Either
+        // the booking exists and the invite will be retried until Google takes
+        // it, or neither happened.
+        database.Outbox.Add(CalendarJob(appointment, NotificationKind.CalendarInvite, now, now));
 
         // Confirmation now, reminder later. The reminder is not a scheduled job:
         // it is an ordinary outbox row whose NextAttemptAt is in the future, so
@@ -630,17 +616,6 @@ public static class SchedulingEndpoints
             return Results.Conflict(new { error = "That time was just taken. Please pick another." });
         }
 
-        // Only after the booking is committed. An invite for a booking that
-        // then failed to save would announce an appointment that does not
-        // exist, so the order is booking first, courtesy second — and a failed
-        // courtesy leaves the booking standing.
-        if (email is not null
-            && await invites.CreateEventAsync(appointment, cancellationToken) is { } eventId)
-        {
-            appointment.GoogleEventId = eventId;
-            await database.SaveChangesAsync(cancellationToken);
-        }
-
         return Results.Ok(new BookingConfirmation(appointment.Id, Format(startsAt), Format(endsAt)));
     }
 
@@ -663,7 +638,6 @@ public static class SchedulingEndpoints
         Guid appointmentId,
         SchedulingDbContext database,
         SchedulingOptions options,
-        ICalendarInvites invites,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -708,16 +682,18 @@ public static class SchedulingEndpoints
             database.Outbox.Add(forHost);
         }
 
-        await database.SaveChangesAsync(cancellationToken);
-
-        // After the cancellation is committed, for the same reason the invite
-        // followed the booking: Google being down should never block the
-        // cancel, and the event still tells the truth better stale than the
-        // appointment does.
-        if (appointment.GoogleEventId is { } eventId)
+        // Withdrawn by the outbox, so Google being down delays the withdrawal
+        // rather than losing it. Queued whether or not the invite went: the
+        // event's id is the booking's, so deleting one that was never made
+        // is a 404, which counts as done. Half a minute later than now, so an
+        // invite already in flight lands before its withdrawal.
+        if (!string.IsNullOrEmpty(appointment.Email))
         {
-            await invites.DeleteEventAsync(eventId, cancellationToken);
+            database.Outbox.Add(CalendarJob(
+                appointment, NotificationKind.CalendarWithdraw, now, now + Duration.FromSeconds(30)));
         }
+
+        await database.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
     }
@@ -736,6 +712,71 @@ public static class SchedulingEndpoints
             Kind = kind,
             ToPhoneE164 = appointment.PhoneE164,
             Body = MessageComposer.Compose(kind, options.HostName, appointment.StartsAt, zone, options.BrandName),
+            State = DeliveryState.Pending,
+            Attempts = 0,
+            CreatedAt = now,
+            NextAttemptAt = dueAt,
+            IdempotencyKey = $"{appointment.Id}:{kind}"
+        };
+
+    /// <summary>
+    /// Every slot <paramref name="policy"/> may book from <paramref name="now"/>.
+    /// </summary>
+    /// <remarks>
+    /// One path for the page and the booking check, so the times shown and the
+    /// times accepted are the same list. The host's zone is the zone the weekly
+    /// hours are written in, which the host changes on /schedule/admin when he
+    /// travels. The setting is only the fallback before any hours are saved.
+    /// </remarks>
+    private static async Task<IReadOnlyList<Slot>> OfferedAsync(
+        BookingPolicy policy,
+        SchedulingDbContext database,
+        SchedulingOptions options,
+        IBusySource busySource,
+        Instant now,
+        CancellationToken cancellationToken)
+    {
+        var rules = await database.AvailabilityRules
+            .AsNoTracking()
+            .Where(rule => rule.Active)
+            .ToListAsync(cancellationToken);
+
+        var domain = rules.Select(rule => rule.ToDomain()).ToList();
+        var hostZone = domain.FirstOrDefault()?.Zone ?? options.HostZone;
+
+        var window = BookingWindow.For(policy, now, hostZone);
+        if (window.IsEmpty)
+        {
+            return [];
+        }
+
+        var until = hostZone.AtStartOfDay(window.To.PlusDays(1)).ToInstant();
+        var busy = await busySource.GetBusyAsync(FromNowUntil(now, until), cancellationToken);
+
+        return SlotPlanner.Plan(
+            domain,
+            window.From,
+            window.To,
+            Duration.FromMinutes(policy.AppointmentMinutes),
+            busy,
+            window.NotBefore);
+    }
+
+    /// <summary>A calendar job for the outbox: an invite or its withdrawal.</summary>
+    /// <remarks>
+    /// The body is for the host's Messages card. Google writes the email the
+    /// visitor receives.
+    /// </remarks>
+    private static OutboxMessage CalendarJob(Appointment appointment, NotificationKind kind, Instant now, Instant dueAt) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            AppointmentId = appointment.Id,
+            Kind = kind,
+            ToPhoneE164 = string.Empty,
+            Body = kind == NotificationKind.CalendarInvite
+                ? $"Calendar invite to {appointment.Email}"
+                : $"Withdraw the calendar invite to {appointment.Email}",
             State = DeliveryState.Pending,
             Attempts = 0,
             CreatedAt = now,

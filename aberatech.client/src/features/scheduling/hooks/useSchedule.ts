@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requestJson } from "../../../site/earlyRequest";
 import { viewerZone } from "../core/format";
+import { currentLinkKey, linkHeaders } from "../core/link";
 import type {
   BookingConfirmation,
   MyPlace,
@@ -48,15 +49,24 @@ interface Schedule {
     smsConsent: boolean,
     email: string,
   ) => Promise<{ error: string | null }>;
-  booking: BookingConfirmation | null;
+  booking: BookedTime | null;
   selectDate: (date: string) => void;
+}
+
+/** A confirmed booking, with what the visitor asked to be sent. */
+export interface BookedTime extends BookingConfirmation {
+  email: string;
+  texted: boolean;
 }
 
 export function useSchedule(): Schedule {
   const [state, setState] = useState<ScheduleState | null>(null);
   const [place, setPlace] = useState<MyPlace | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [booking, setBooking] = useState<BookingConfirmation | null>(null);
+  const [booking, setBooking] = useState<BookedTime | null>(null);
+  // The booking link this visitor came with. Read once, after the first
+  // render, because the server renderer has no address to read.
+  const linkKey = useRef<string | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   // Guarded for the server renderer, which has no localStorage: the page is
   // rendered in Node by tools/render-copy.mjs so the prose gate can read its
@@ -78,10 +88,21 @@ export function useSchedule(): Schedule {
         const query = new URLSearchParams({ zone: viewerZone() });
         if (date !== null) query.set("date", date);
 
-        const response = await requestJson(
-          `${scheduleStateUrl}?${query}`,
-          signal,
-        );
+        if (linkKey.current === undefined) linkKey.current = currentLinkKey();
+        const url = `${scheduleStateUrl}?${query}`;
+
+        // The head's early request carries no link, so a visitor with one
+        // asks again with it.
+        const response = linkKey.current
+          ? await fetch(url, {
+              credentials: "same-origin",
+              headers: {
+                Accept: "application/json",
+                ...linkHeaders(linkKey.current),
+              },
+              signal,
+            })
+          : await requestJson(url, signal);
         if (!response.ok)
           throw new Error(`The schedule is unavailable (${response.status}).`);
         setState((await response.json()) as ScheduleState);
@@ -174,7 +195,10 @@ export function useSchedule(): Schedule {
     ) => {
       const response = await fetch("/api/scheduling/book", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...linkHeaders(linkKey.current ?? null),
+        },
         body: JSON.stringify({
           startsAt,
           name,
@@ -201,7 +225,8 @@ export function useSchedule(): Schedule {
         return { error: body?.error ?? "Could not book that time." };
       }
 
-      setBooking((await response.json()) as BookingConfirmation);
+      const confirmed = (await response.json()) as BookingConfirmation;
+      setBooking({ ...confirmed, email, texted: smsConsent });
       await refresh();
       return { error: null };
     },

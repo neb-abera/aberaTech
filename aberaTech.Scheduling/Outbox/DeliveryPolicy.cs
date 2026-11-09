@@ -1,3 +1,4 @@
+using aberaTech.Scheduling.Domain;
 using NodaTime;
 
 namespace aberaTech.Scheduling.Outbox;
@@ -71,9 +72,28 @@ public static class DeliveryPolicy
         return Duration.FromSeconds(seconds);
     }
 
+    /// <summary>
+    /// Attempts before a calendar invite is dead lettered.
+    /// </summary>
+    /// <remarks>
+    /// More than a text gets, because an invite stays useful until the
+    /// meeting and the usual cause of failure is one the host fixes by hand:
+    /// a calendar to connect or reconnect. Ten attempts on the same backoff
+    /// span 4 hours 15 minutes.
+    /// </remarks>
+    public const int MaxCalendarAttempts = 10;
+
+    /// <summary>The attempts a message of this kind gets.</summary>
+    public static int MaxAttemptsFor(NotificationKind kind) =>
+        kind.IsCalendar() ? MaxCalendarAttempts : MaxAttempts;
+
     /// <summary>When a message that has just failed its nth attempt should next be tried.</summary>
     public static Instant? NextAttemptAt(int attemptsMade, Instant now) =>
         attemptsMade >= MaxAttempts ? null : now + BackoffFor(attemptsMade);
+
+    /// <summary>When a message of this kind that has just failed its nth attempt should next be tried.</summary>
+    public static Instant? NextAttemptAt(int attemptsMade, Instant now, NotificationKind kind) =>
+        attemptsMade >= MaxAttemptsFor(kind) ? null : now + BackoffFor(attemptsMade);
 
     /// <summary>
     /// Whether a message the provider accepted has waited long enough without a

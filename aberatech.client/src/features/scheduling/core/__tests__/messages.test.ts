@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kindLabel, stateChip } from "../messages";
+import { kindLabel, messageTitle, stateChip } from "../messages";
 
 describe("kindLabel", () => {
   it("names each message the way the host thinks of it, not the enum", () => {
@@ -38,5 +38,31 @@ describe("stateChip", () => {
       label: "Mystery",
       color: "default",
     });
+  });
+});
+
+describe("calendar jobs", () => {
+  it("names the address from the body and claims only what Google said", () => {
+    const invite = {
+      kind: "CalendarInvite",
+      to: "",
+      body: "Calendar invite to ada@example.com",
+    };
+
+    expect(messageTitle(invite)).toBe("Calendar invite to ada@example.com");
+    expect(stateChip("Delivered", "CalendarInvite").label).toBe(
+      "Google accepted",
+    );
+    expect(stateChip("Delivered", "Booked").label).toBe("Delivered");
+    expect(stateChip("DeadLettered", "CalendarInvite").label).toBe(
+      "Not delivered",
+    );
+    expect(kindLabel("HostInviteFailed")).toBe("Invite failed, to you");
+  });
+
+  it("keeps the kind and number for a text", () => {
+    expect(
+      messageTitle({ kind: "Booked", to: "+12025550143", body: "x" }),
+    ).toBe("Booking confirmation · +12025550143");
   });
 });

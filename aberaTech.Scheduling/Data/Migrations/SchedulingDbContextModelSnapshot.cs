@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261103195359_CountdownRepeat";
+    public override string LastMigrationId => "20261109094948_BookingLinks";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -541,6 +541,9 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(64)
                     .HasColumnType("character varying(64)");
 
+                b.Property<Guid?>("BookingLinkId")
+                    .HasColumnType("uuid");
+
                 b.Property<bool>("Cancelled")
                     .HasColumnType("boolean");
 
@@ -613,6 +616,58 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("AvailabilityRules");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Data.BookingLink", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<bool>("Active")
+                    .HasColumnType("boolean");
+
+                b.Property<int>("AppointmentMinutes")
+                    .HasColumnType("integer");
+
+                b.Property<Instant>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<LocalDate?>("EarliestDate")
+                    .HasColumnType("date");
+
+                b.Property<int>("HorizonDays")
+                    .HasColumnType("integer");
+
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
+
+                b.Property<string>("KeyHash")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
+
+                b.Property<int>("LeadMinutes")
+                    .HasColumnType("integer");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(120)
+                    .HasColumnType("character varying(120)");
+
+                b.Property<bool>("ShowsQueue")
+                    .HasColumnType("boolean");
+
+                b.HasKey("Id");
+
+                b.HasIndex("IsDefault")
+                    .IsUnique()
+                    .HasFilter("\"IsDefault\"");
+
+                b.HasIndex("KeyHash")
+                    .IsUnique()
+                    .HasFilter("\"KeyHash\" IS NOT NULL");
+
+                b.ToTable("BookingLinks");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Data.HostCalendarCredential", b =>
