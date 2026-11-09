@@ -500,8 +500,8 @@ public sealed class AlertDeviceRouteTests : IDisposable
         await Worker.TickAsync(CancellationToken.None);
         var key = await KeyOf("Standup");
 
-        // 09:10: the standup has started and is off the list.
-        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        // 09:40: the standup has ended and is off the list.
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 40);
         using var owner = Owner();
         var listed = (await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status")).GetProperty("alerts").EnumerateArray();
         Assert.DoesNotContain(listed, alert => alert.GetProperty("key").GetString() == key);

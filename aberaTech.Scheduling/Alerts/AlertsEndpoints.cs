@@ -950,7 +950,7 @@ public static class AlertsEndpoints
             Alerts:
             [
                 .. plan
-                    .Where(alert => alert.Until > now)
+                    .Where(alert => alert.ListedUntil > now)
                     .Take(Listed)
                     .Select(alert =>
                     {

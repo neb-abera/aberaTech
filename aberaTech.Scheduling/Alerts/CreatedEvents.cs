@@ -59,7 +59,7 @@ public static class CreatedEvents
         var extra = created
             .Where(stored => !feedIds.Contains(stored.EventId) && stored.StartsAt <= horizon)
             .Select(Plan)
-            .Where(alert => alert.Until > now)
+            .Where(alert => alert.ListedUntil > now)
             .Where(alert => !keys.Contains(alert.Key))
             .ToList();
 
@@ -68,9 +68,9 @@ public static class CreatedEvents
             : [.. feed.Concat(extra).OrderBy(alert => alert.AlertAt).ThenBy(alert => alert.StartsAt).ThenBy(alert => alert.Key, StringComparer.Ordinal)];
     }
 
-    /// <summary>The stored rows that are done: the feed has them, or they are no longer due.</summary>
+    /// <summary>The stored rows that are done: the feed has them, or they are over.</summary>
     public static IReadOnlyList<string> Done(IEnumerable<CreatedAlertEvent> created, IReadOnlySet<string> feedIds, Instant now) =>
-        [.. created.Where(stored => feedIds.Contains(stored.EventId) || Plan(stored).Until <= now).Select(stored => stored.EventId)];
+        [.. created.Where(stored => feedIds.Contains(stored.EventId) || Plan(stored).ListedUntil <= now).Select(stored => stored.EventId)];
 
     /// <summary>One stored event as the planner would plan it from the feed: its popup reminder is the alert.</summary>
     public static PlannedAlert Plan(CreatedAlertEvent stored) =>

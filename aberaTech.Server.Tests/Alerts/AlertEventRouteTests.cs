@@ -261,12 +261,19 @@ public sealed class AlertEventRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task The_stored_event_is_dropped_once_it_starts_even_if_the_feed_never_has_it()
+    public async Task The_stored_event_is_listed_until_it_ends_even_if_the_feed_never_has_it()
     {
         using var owner = Owner();
         using var created = await owner.PostAsJsonAsync("/api/alerts/events", NewEvent());
 
+        // 11:00 to 11:30 New York. At the start it is still on the list.
         _clock.Now = Instant.FromUtc(2026, 10, 28, 15, 0);
+        await Worker.ReadNowAsync(CancellationToken.None);
+        Assert.Single(await _store.CreatedEventsAsync(CancellationToken.None));
+        var started = (await owner.GetFromJsonAsync<JsonElement>("/api/alerts/status")).GetProperty("alerts").EnumerateArray();
+        Assert.Contains(started, alert => alert.GetProperty("title").GetString() == "Dentist");
+
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 15, 30);
         await Worker.ReadNowAsync(CancellationToken.None);
 
         Assert.Empty(await _store.CreatedEventsAsync(CancellationToken.None));
@@ -275,7 +282,7 @@ public sealed class AlertEventRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task A_new_alarm_that_rings_at_the_start_is_listed_sent_and_stopped_at_its_start()
+    public async Task A_new_alarm_that_rings_at_the_start_is_sent_once_and_listed_until_its_end()
     {
         // The phone's New calendar event rings at the start by default.
         using var phone = await PhoneAsync();
@@ -294,7 +301,15 @@ public sealed class AlertEventRouteTests : IDisposable
             "/api/alerts/ack", new { key = listed.GetProperty("key").GetString(), via = "phone" });
         Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);
 
+        // Past the window sending stops, and the event stays listed until 11:30.
         _clock.Now = start + AlertPlanner.AtStartWindow;
+        await Worker.TickAsync(CancellationToken.None);
+        Assert.Single(_pushover.Requests);
+        Assert.Contains(
+            (await StateOf(await phone.GetAsync("/api/alerts/status"))).GetProperty("alerts").EnumerateArray(),
+            alert => alert.GetProperty("title").GetString() == "Dentist");
+
+        _clock.Now = start + Duration.FromMinutes(30);
         Assert.DoesNotContain(
             (await StateOf(await phone.GetAsync("/api/alerts/status"))).GetProperty("alerts").EnumerateArray(),
             alert => alert.GetProperty("title").GetString() == "Dentist");
