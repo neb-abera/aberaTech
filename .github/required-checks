@@ -15,6 +15,7 @@ workflow .github/workflows/codeql.yml
 workflow .github/workflows/security-scan.yml
 check Compose database boots healthy
 check End-to-end, in the container
+check Grader verify suite, in the container
 check Lighthouse, in the container
 check Lint and format, in the container
 check Production image, in the container
@@ -23,6 +24,7 @@ check Type check and unit tests, in the container
 check analyze (actions)
 check analyze (csharp)
 check analyze (javascript-typescript)
+check analyze (rust)
 check container scan (trivy)
 check dast (ZAP baseline)
 check dependency review

@@ -136,8 +136,6 @@ them to the C++ refresher. Production sends none.
 
 1. Problem pool and solve log: Mostafa Saad's supervision pool, his time log
    per solve, speed drills, and his weekly checklist.
-2. A Rust grader service beside the site, called by the server, for drills
-   beyond the basics. Not built until Neb approves its cost.
 
 ## Drills
 
@@ -152,3 +150,7 @@ The refresher at the start of Phase 0 adds twelve drills, one or more for
 each C++ and STL topic. Each drill's expected output came from a Python
 model of the task, and a C++ reference solution compiled with gcc 16.2,
 `-O2 -std=c++23`, in a container on the dev box matched it on every test.
+
+With `Training:GraderUrl` set, the server sends the drill to the Rust
+grader (`grader/README.md`), which calls Compiler Explorer and returns a
+verdict per test. Without it, the server calls Compiler Explorer itself.

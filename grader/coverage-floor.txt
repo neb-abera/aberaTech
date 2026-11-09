@@ -1,0 +1,5 @@
+# Line-coverage floor, in percent, for the test suite's coverage of the crate
+# as cargo llvm-cov measures it. Enforced by scripts/verify.sh. Measured at
+# 86.1% when the grader landed. src/main.rs is covered by the executable
+# smoke test, not by cargo test. Raise it as the tests grow.
+80

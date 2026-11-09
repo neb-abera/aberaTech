@@ -1,0 +1,105 @@
+# The grader's half of modern-rust-template's dependabot-toolchain.yml.
+#
+# Dependabot bumps the `FROM rust:` line in grader/Dockerfile and nothing
+# else, so grader/scripts/check-toolchain.sh fails until rust-toolchain.toml
+# and Cargo.toml agree with it. A cargo update moves crates that
+# supply-chain/config.toml exempts by version, so cargo-vet fails until the
+# exemptions move. Each job moves them and commits on the Dependabot branch,
+# signed, through the API, with the Dependabot-namespace token. Every other
+# pull request skips both jobs.
+name: Grader toolchain pins
+on: pull_request
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: sync grader toolchain pins
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]'
+      && github.actor == 'dependabot[bot]'
+      && startsWith(github.event.pull_request.head.ref, 'dependabot/docker/')
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+
+      - name: Checkout the PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+
+      - name: Move the pins to the Dockerfile's Rust version
+        run: ./grader/scripts/sync-toolchain.sh
+
+      - name: Commit the pins that moved, signed, through the API
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEADLINE: Move the grader's toolchain pins to the base image Rust version
+          BODY: Dependabot bumps only grader/Dockerfile, and grader/scripts/check-toolchain.sh fails until rust-toolchain.toml and Cargo.toml agree with it. grader/scripts/sync-toolchain.sh moved them.
+        run: ./grader/scripts/commit-moved.sh grader/rust-toolchain.toml grader/Cargo.toml
+
+  sync-vet:
+    name: sync grader vet exemptions
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]'
+      && github.actor == 'dependabot[bot]'
+      && startsWith(github.event.pull_request.head.ref, 'dependabot/cargo/')
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            static.crates.io:443
+            index.crates.io:443
+            crates.io:443
+            static.rust-lang.org:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+
+      - name: Checkout the PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+
+      - name: Install the pinned cargo-vet
+        working-directory: grader
+        run: |
+          CARGO_VET_VERSION=$(sed -n 's/^ENV CARGO_VET_VERSION=\(.*\)$/\1/p' Dockerfile)
+          cargo install --locked "cargo-vet@$CARGO_VET_VERSION"
+
+      - name: Move the exemptions, refusing a new crate
+        run: ./grader/scripts/sync-vet-exemptions.sh
+
+      - name: Commit the moved exemptions, signed, through the API
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEADLINE: Move the grader's cargo-vet exemptions to the updated versions
+          BODY: The update moved exempted crates to new versions and added none. grader/scripts/sync-vet-exemptions.sh moved the exemptions with cargo vet regenerate exemptions.
+        run: ./grader/scripts/commit-moved.sh grader/supply-chain

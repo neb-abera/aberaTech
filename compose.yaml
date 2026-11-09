@@ -245,11 +245,13 @@ services:
       Notion__MarksmanshipPlanPageId: "0000a3c0-0000-0000-0000-000000000000"
       Notion__TrainingPlanPageId: "0000e70e-0000-0000-0000-000000000000"
       Notion__Fake: "true"
-      # /training's judges and Compiler Explorer in memory (FakeJudges.cs,
-      # FakeCompilerExplorer.cs, Development only). Nothing is sent to
+      # /training's judges in memory (FakeJudges.cs, Development only).
+      # Drills go to the Rust grader below, as in production, and the
+      # grader sends them to a fake Compiler Explorer. Nothing is sent to
       # Codeforces, AtCoder Problems, or Compiler Explorer. The owner suite
       # runs drills on three engines, so drills get a minute's worth.
       Training__Fake: "true"
+      Training__GraderUrl: "http://grader:8080"
       RateLimits__DrillsPerMinute: "60"
       # Bookings and queue joins get five a minute per address. The suite
       # books once in each of five browsers and joins and leaves the queue
@@ -273,6 +275,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      grader:
+        condition: service_healthy
     # Chromium hard-upgrades any host named `app` to HTTPS (the entire .app
     # TLD is HSTS-preloaded, and the bare name matches), which breaks
     # browser-driven tests against http://app:8080 with ERR_SSL_PROTOCOL_ERROR.
@@ -282,6 +286,25 @@ services:
       default:
         aliases:
           - app-under-test
+
+  # The Rust grader (grader/), built as the deploy workflow builds it, and
+  # pointed at the fake Compiler Explorer below. No published port: only the
+  # app calls it, on the compose network, as only the site calls it in
+  # production.
+  grader:
+    build:
+      context: grader
+    environment:
+      GRADER_COMPILER_EXPLORER: "http://fake-compiler-explorer:10240"
+    depends_on:
+      - fake-compiler-explorer
+
+  # Compiler Explorer in memory (grader/tests/common/fake.rs). It runs
+  # nothing, and answers by the same source comments as FakeCompilerExplorer.cs.
+  fake-compiler-explorer:
+    build:
+      context: grader
+      target: fake-compiler-explorer
 
 volumes:
   scheduling-db:

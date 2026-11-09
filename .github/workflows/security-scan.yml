@@ -82,6 +82,32 @@ jobs:
         with:
           sarif_file: trivy.sarif
 
+      # The grader's production image (grader/), scanned the same way. It
+      # deploys from the same workflow, so it is gated the same way.
+      - name: Build the grader image
+        if: always()
+        run: docker build -t scan-target-grader grader
+
+      - name: Scan the grader image for fixable HIGH/CRITICAL CVEs
+        if: always()
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
+        with:
+          version: ${{ steps.pins.outputs.trivy }}
+          image-ref: scan-target-grader
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-grader.sarif
+          limit-severities-for-sarif: true
+          exit-code: "1"
+
+      - name: Upload the grader's findings to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: trivy-grader.sarif
+          category: trivy-grader
+
   # Flags known-vulnerable dependencies introduced by a PR, from the diff of
   # the dependency graph.
   dependency-review:
@@ -137,6 +163,12 @@ jobs:
             LGPL-2.0-only, LGPL-2.0-or-later,
             LGPL-2.1-only, LGPL-2.1-or-later,
             LGPL-3.0-only, LGPL-3.0-or-later
+          # r-efi, through getrandom in the grader's tree, is
+          # "MIT OR Apache-2.0 OR LGPL-2.1-or-later". The action fails a
+          # choice that includes a denied license, so the package is named
+          # here. The grader takes it under MIT or Apache-2.0, and
+          # grader/deny.toml checks the same tree.
+          allow-dependencies-licenses: pkg:cargo/r-efi
 
   dast:
     name: dast (ZAP baseline)

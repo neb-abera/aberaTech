@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [csharp, javascript-typescript, actions]
+        language: [csharp, javascript-typescript, rust, actions]
 
     steps:
       - name: Harden runner

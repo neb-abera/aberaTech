@@ -133,6 +133,7 @@ updates:
       - /aberaTech.Server
       - /.zap
       - /tools/lhci-server
+      - /grader
     schedule:
       interval: weekly
     # A new release gets 5 days of other people finding its bugs and pulled
@@ -157,6 +158,23 @@ updates:
       default-days: 5
     groups:
       compose-non-major:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+  # The grader's crates and its fuzz crate. A cargo update that moves an
+  # exempted crate gets its cargo-vet exemptions moved by
+  # .github/workflows/grader-toolchain.yml.
+  - package-ecosystem: cargo
+    directories:
+      - /grader
+      - /grader/fuzz
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 5
+    groups:
+      grader-cargo-non-major:
         applies-to: version-updates
         update-types:
           - minor

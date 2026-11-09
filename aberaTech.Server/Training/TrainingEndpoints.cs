@@ -44,11 +44,15 @@ public static class TrainingEndpoints
         .WithTags("Training");
 
         // A drill's C++ goes to Compiler Explorer, which compiles and runs
-        // it. Nothing runs here. Owner only, and ten runs a minute.
-        routes.MapPost("/api/training/drills/run", async (DrillRun run, DrillRunner runner, CancellationToken cancellationToken) =>
+        // it. Nothing runs here. With Training:GraderUrl set it goes through
+        // the Rust grader, and without it this process calls Compiler
+        // Explorer itself. Owner only, and ten runs a minute.
+        routes.MapPost("/api/training/drills/run", async (DrillRun run, DrillRunner runner, GraderClient grader, CancellationToken cancellationToken) =>
         {
             if (DrillRunner.Invalid(run) is { } problem) return Results.BadRequest(problem);
-            return Results.Ok(await runner.RunAsync(run, cancellationToken));
+            return Results.Ok(grader.IsConfigured
+                ? await grader.RunAsync(run, cancellationToken)
+                : await runner.RunAsync(run, cancellationToken));
         })
         .RequireAuthorization(AdminAuth.PolicyName)
         .RequireRateLimiting(DrillPolicy)

@@ -1,0 +1,5 @@
+# Size budget for the stripped release binary, in bytes. Enforced by
+# scripts/check-size-budget.sh in the Linux toolchain container.
+#
+# Set about 20% above the measured size (4766976 bytes when this was set).
+5720000

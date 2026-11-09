@@ -1,0 +1,55 @@
+# The drill grader for abera.tech's /training. Generated from
+# modern-rust-template (github.com/neb-abera/modern-rust-template) and kept
+# to its gates: see README.md for which ones run here and why.
+[package]
+name = "grader"
+# The site has no SemVer number (scripts/check-version.sh, scheme: date).
+# A deploy is named by its commit.
+version = "0.0.0"
+edition = "2024"
+# Minimum supported Rust version. Kept in lockstep with rust-toolchain.toml
+# and the Dockerfile base image by scripts/check-toolchain.sh.
+rust-version = "1.99"
+description = "Grades /training drills on Compiler Explorer for abera.tech"
+license = "Apache-2.0"
+repository = "https://github.com/neb-abera/aberaTech"
+publish = false
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "tracing"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync"] }
+tower = { version = "0.5.3", features = ["limit", "load-shed", "timeout", "util"] }
+tower-http = { version = "0.7.1", features = ["limit", "trace", "timeout"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "json", "env-filter", "std"] }
+
+[dev-dependencies]
+criterion = "0.8.2"
+proptest = "1.12.0"
+
+[[bench]]
+name = "outputs"
+harness = false
+
+# Lints are configured here so the same set applies to `cargo clippy`,
+# editors, and CI. Everything is `warn` locally. scripts/verify.sh promotes
+# warnings to errors with RUSTFLAGS="-D warnings".
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+
+[profile.release]
+lto = true
+codegen-units = 1
+overflow-checks = true
+strip = "debuginfo"

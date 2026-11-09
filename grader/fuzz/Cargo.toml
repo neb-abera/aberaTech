@@ -1,0 +1,27 @@
+# cargo-fuzz harness crate. Its own workspace (the empty [workspace] table
+# below), so the fuzz-only dependencies never enter the main crate's tree or
+# lockfile. Run with:  make grader-fuzz
+[package]
+name = "grader-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1"
+
+[dependencies.grader]
+path = ".."
+
+[[bin]]
+name = "inputs"
+path = "fuzz_targets/inputs.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
