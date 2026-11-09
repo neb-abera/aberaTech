@@ -106,6 +106,70 @@ public sealed class TrainingRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task The_band_is_codeforces_problems_rated_the_rating_to_200_above_newest_first_with_no_tags()
+    {
+        using var owner = Owner();
+        using var response = await owner.GetAsync("/api/training/band?rating=800");
+        var text = await response.Content.ReadAsStringAsync();
+        var body = JsonDocument.Parse(text).RootElement;
+
+        Assert.True(body.GetProperty("ok").GetBoolean());
+        Assert.Equal(800, body.GetProperty("from").GetInt32());
+        Assert.Equal(1000, body.GetProperty("to").GetInt32());
+        var problems = body.GetProperty("problems").EnumerateArray().ToList();
+        Assert.Equal(
+            ["2263B", "2262A", "2261A", "2260B", "2259B", "2258A", "2257B", "2256A", "2255A"],
+            problems.Select(p => p.GetProperty("id").GetString()));
+        Assert.Equal("https://codeforces.com/problemset/problem/2260/B", problems[3].GetProperty("url").GetString());
+        Assert.Equal(900, problems[3].GetProperty("rating").GetInt32());
+        Assert.DoesNotContain("tags", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("greedy", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_problemset_is_read_once_an_hour()
+    {
+        using var owner = Owner();
+        await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=800");
+        await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=900");
+        Assert.Single(_judges.Requests, uri => uri.AbsolutePath.EndsWith("/problemset.problems", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("?rating=-1")]
+    [InlineData("?rating=4001")]
+    [InlineData("?rating=abc")]
+    public async Task A_band_without_a_sound_rating_is_refused_and_no_judge_is_asked(string query)
+    {
+        using var owner = Owner();
+        using var response = await owner.GetAsync($"/api/training/band{query}");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(_judges.Requests);
+    }
+
+    [Fact]
+    public async Task The_band_is_the_owners_alone()
+    {
+        using var visitor = _app.CreateClient();
+        using var stranger = _app.CreateClient().SignedInAs(_app.Factory.Services, AdminRouteTests.Stranger);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await visitor.GetAsync("/api/training/band?rating=800")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await stranger.GetAsync("/api/training/band?rating=800")).StatusCode);
+        Assert.Empty(_judges.Requests);
+    }
+
+    [Fact]
+    public async Task A_band_codeforces_cannot_answer_is_reported_not_hidden()
+    {
+        _judges.Down = HttpStatusCode.ServiceUnavailable;
+        using var owner = Owner();
+        var body = await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=800");
+        Assert.False(body.GetProperty("ok").GetBoolean());
+        Assert.Equal("Codeforces answered 503", body.GetProperty("error").GetString());
+        Assert.Empty(body.GetProperty("problems").EnumerateArray());
+    }
+
+    [Fact]
     public async Task A_second_load_within_the_cache_asks_the_judges_nothing()
     {
         using var owner = Owner();

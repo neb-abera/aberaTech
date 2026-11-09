@@ -19,6 +19,8 @@ programming: systems design (9 Nov 2026)". The plan it delivers is
 - `/api/progress/training`: owner only, server side. A visitor never asks
   for it.
 - `/api/training/pool`: Mostafa Saad's pool, owner only, read live.
+- `/api/training/band?rating=`: Codeforces problemset problems rated
+  `rating` to `rating` + 200, owner only, read live, with no tags.
 
 ## Self-paced
 
@@ -156,7 +158,16 @@ server reads his public sheet (the General list, sorted by level) as CSV at
 `/api/training/pool`, owner only, and holds it in memory for at most an hour.
 Nothing is stored. It keeps importance P5 to P3. `core/saad.ts` picks by his
 mix around your level: 1 below, 2 at, 6 slightly above, and 1 far above.
-Solved problems are left out, by the Codeforces API and by the log.
+Solved problems are left out, by the Codeforces API and by the log. Rows
+with no working link (UVA, TJU, LiveArchive, TopCoder) are never picked.
+
+A slot his pool cannot fill takes an unsolved Codeforces problemset problem
+rated your rating to 200 above, from `/api/training/band`, labeled as such
+and with its tags hidden. The server reads `problemset.problems` and holds it
+for an hour. His live pool has no linked problem below level 3, so at 800
+(level 1.50) only the far-above slot is his, and the panel says his pool
+starts near Div. 2 C and opens at about 1350. AtCoder Problems difficulty is
+not read, so AtCoder fills no slot.
 
 Your level is the open band unit's rating (`band-1000` is 1000), else your
 Codeforces rating, else 800. A rating maps to his scale by his table (Div. 2

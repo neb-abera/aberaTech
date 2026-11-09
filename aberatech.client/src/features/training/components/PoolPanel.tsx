@@ -6,7 +6,14 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router";
 import { clock } from "../core/dates";
-import { type Band, mix, type Pick, tableSource } from "../core/saad";
+import {
+  type Band,
+  mix,
+  type Pick,
+  type poolStart,
+  tableSource,
+} from "../core/saad";
+import type { BandAnswer } from "../hooks/useBand";
 import type { PoolAnswer } from "../hooks/usePool";
 
 const bandLabel = Object.fromEntries(
@@ -15,19 +22,33 @@ const bandLabel = Object.fromEntries(
 
 /**
  * This week's ten from Mostafa Saad's pool, by his mix around the current
- * band. Each says its level, its importance, and where it came from.
+ * band. Each says its level, its importance, and where it came from. A
+ * slot his pool cannot fill takes a Codeforces problem in the band, and
+ * says so.
  */
 export default function PoolPanel({
   pool,
   picks,
   level,
   band,
+  bandList,
+  start,
 }: {
   pool: PoolAnswer;
   picks: Pick[];
   level: number;
   band: { rating: number; source: string };
+  bandList: BandAnswer;
+  start: ReturnType<typeof poolStart>;
 }) {
+  const fromSaad = picks.filter((pick) => pick.source === "saad").length;
+  const fromBand = picks.length - fromSaad;
+  const missing = 10 - picks.length;
+  const range = `${band.rating} to ${band.rating + 200}`;
+  const opens =
+    start && start.rating > band.rating
+      ? ` His pool starts near Div. 2 ${start.letter}, at level ${start.level}. It opens to you at a Codeforces rating of about ${start.rating}.`
+      : "";
   return (
     <Paper
       variant="outlined"
@@ -54,6 +75,20 @@ export default function PoolPanel({
               slightly above, and 1 far above. Think 60 to 120 minutes before
               the editorial, then log it.
             </Typography>
+            {fromBand > 0 && (
+              <Alert severity="info" aria-label="Below his pool">
+                {fromSaad === 0
+                  ? `None of Mostafa Saad's pool fits your level yet.${opens} Until then, all ${fromBand} are Codeforces problems rated ${range}, with tags hidden.`
+                  : `His pool has too few problems at your level, so ${fromBand} of the ten are Codeforces problems rated ${range}, with tags hidden.${opens}`}
+              </Alert>
+            )}
+            {missing > 0 && (
+              <Alert severity="warning">
+                {bandList.status === "loading" || bandList.status === "idle"
+                  ? `Reading Codeforces problems rated ${range} for the other ${missing}.`
+                  : `The Codeforces problemset could not be read, so ${missing} of the ten are missing.${opens}`}
+              </Alert>
+            )}
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
               Your level: {level.toFixed(2)}, from {band.rating} ({band.source}
               ). {tableSource} Pool:{" "}
@@ -65,52 +100,79 @@ export default function PoolPanel({
               P3. Solved problems are left out. The order holds for the week.
             </Typography>
             <Stack component="ol" spacing={0.75} sx={{ pl: 2.5, m: 0 }}>
-              {picks.map((pick) => (
-                <Typography
-                  component="li"
-                  variant="body2"
-                  key={pick.problem.code}
-                >
-                  {pick.problem.url ? (
+              {picks.map((pick) =>
+                pick.source === "saad" ? (
+                  <Typography
+                    component="li"
+                    variant="body2"
+                    key={pick.problem.code}
+                  >
+                    <Link
+                      href={pick.problem.url ?? undefined}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {pick.problem.code}
+                    </Link>{" "}
+                    <Chip size="small" label={`level ${pick.problem.level}`} />{" "}
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={`P${pick.problem.importance}`}
+                    />{" "}
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {bandLabel[pick.band]}
+                      {pick.problem.editorial
+                        ? ". His sheet notes an editorial."
+                        : "."}{" "}
+                    </Typography>
+                    <LogIt problem={pick.problem.code} />
+                  </Typography>
+                ) : (
+                  <Typography
+                    component="li"
+                    variant="body2"
+                    key={pick.problem.id}
+                  >
                     <Link
                       href={pick.problem.url}
                       target="_blank"
                       rel="noopener"
                     >
-                      {pick.problem.code}
-                    </Link>
-                  ) : (
-                    pick.problem.code
-                  )}{" "}
-                  <Chip size="small" label={`level ${pick.problem.level}`} />{" "}
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`P${pick.problem.importance}`}
-                  />{" "}
-                  <Typography
-                    component="span"
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {bandLabel[pick.band]}
-                    {pick.nearest ? ", the nearest level left" : ""}
-                    {pick.problem.editorial
-                      ? ". His sheet notes an editorial."
-                      : "."}{" "}
+                      Codeforces {pick.problem.id}
+                    </Link>{" "}
+                    <Chip size="small" label={`rated ${pick.problem.rating}`} />{" "}
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Codeforces problemset, in your band of {range}. Tags
+                      hidden.{" "}
+                    </Typography>
+                    <LogIt problem={pick.problem.id} />
                   </Typography>
-                  <Link
-                    component={RouterLink}
-                    to={`/training?view=log&problem=${encodeURIComponent(pick.problem.code)}`}
-                  >
-                    Log it
-                  </Link>
-                </Typography>
-              ))}
+                ),
+              )}
             </Stack>
           </>
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function LogIt({ problem }: { problem: string }) {
+  return (
+    <Link
+      component={RouterLink}
+      to={`/training?view=log&problem=${encodeURIComponent(problem)}`}
+    >
+      Log it
+    </Link>
   );
 }

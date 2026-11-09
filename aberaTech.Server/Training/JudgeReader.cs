@@ -18,6 +18,12 @@ public sealed record JudgeAnswer(
     IReadOnlyDictionary<string, DateTimeOffset> Solved,
     DateTimeOffset ReadAt);
 
+/// <summary>A Codeforces problemset problem: its id ("2263B"), name, rating and page. Never its tags.</summary>
+public sealed record BandProblem(string Id, string Name, int Rating, string Url);
+
+/// <summary>Codeforces problems rated <paramref name="From"/> to <paramref name="To"/>, newest contest first.</summary>
+public sealed record BandAnswer(bool Ok, string? Error, int From, int To, IReadOnlyList<BandProblem> Problems, DateTimeOffset ReadAt);
+
 /// <summary>A rated contest that has not started.</summary>
 public sealed record UpcomingContest(string Name, DateTimeOffset Start, int DurationMinutes, string Url, string Judge);
 
@@ -139,6 +145,70 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
         {
             return [];
         }
+    }
+
+    /// <summary>The problemset is held this long: a new round adds a few problems a week.</summary>
+    public static readonly TimeSpan ProblemsetFor = TimeSpan.FromHours(1);
+
+    /// <summary>At most this many band problems, from the newest contests.</summary>
+    public const int BandSize = 300;
+
+    /// <summary>
+    /// Codeforces problemset problems rated <paramref name="from"/> to
+    /// <paramref name="to"/>, from problemset.problems. Tags are dropped here,
+    /// so the page cannot show them: the plan's practice in a band is untagged.
+    /// </summary>
+    public async Task<BandAnswer> BandAsync(int from, int to, CancellationToken cancellationToken)
+    {
+        if (cache.TryGetValue("judges:problemset-failed", out string? failed) && failed is not null)
+            return new BandAnswer(false, failed, from, to, [], Now);
+        if (!cache.TryGetValue("judges:problemset", out IReadOnlyList<BandProblem>? all) || all is null)
+        {
+            string error;
+            try
+            {
+                using var document = await CodeforcesCallAsync("problemset.problems", cancellationToken);
+                all = ParseProblemset(document.RootElement);
+                cache.Set("judges:problemset", all, ProblemsetFor);
+                error = "";
+            }
+            catch (JudgeException exception)
+            {
+                error = exception.Message;
+            }
+            catch (Exception exception) when (exception is HttpRequestException or JsonException or KeyNotFoundException or InvalidOperationException or TaskCanceledException)
+            {
+                error = "Codeforces did not answer.";
+            }
+            if (all is null)
+            {
+                // Held for a minute, so a page left open does not ask again
+                // on every load. A request the browser left is not held.
+                if (!cancellationToken.IsCancellationRequested)
+                    cache.Set("judges:problemset-failed", error, TimeSpan.FromMinutes(1));
+                return new BandAnswer(false, error, from, to, [], Now);
+            }
+        }
+        var band = all.Where(problem => problem.Rating >= from && problem.Rating <= to).Take(BandSize).ToList();
+        return new BandAnswer(true, null, from, to, band, Now);
+    }
+
+    /// <summary>Every rated problem with a contest, newest contest first. Tags are not read.</summary>
+    public static IReadOnlyList<BandProblem> ParseProblemset(JsonElement root)
+    {
+        var problems = new List<(int Contest, BandProblem Problem)>();
+        foreach (var problem in root.GetProperty("result").GetProperty("problems").EnumerateArray())
+        {
+            if (!problem.TryGetProperty("contestId", out var contest) || !problem.TryGetProperty("rating", out var rating)) continue;
+            var id = contest.GetInt32();
+            var index = problem.GetProperty("index").GetString() ?? "";
+            problems.Add((id, new BandProblem(
+                $"{id}{index}",
+                problem.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
+                rating.GetInt32(),
+                $"https://codeforces.com/problemset/problem/{id}/{Uri.EscapeDataString(index)}")));
+        }
+        return problems.OrderByDescending(each => each.Contest).Select(each => each.Problem).ToList();
     }
 
     private async Task<JudgeAnswer> Cached(string key, Func<Task<JudgeAnswer>> read, CancellationToken cancellationToken)
