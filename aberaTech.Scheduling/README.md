@@ -120,7 +120,10 @@ page did not offer cannot be booked. The first day is a date in the zone the
 weekly hours are written in.
 
 The link is `/schedule#k=<key>`. The page sends the key in the
-`X-Booking-Link` header. The database holds its SHA-256 and never the key.
+`X-Booking-Link` header. The lookup reads the key's SHA-256. The key is also
+kept encrypted with Data Protection, so the admin card shows every link to
+copy. Off pauses a link. Revoke deletes both and ends the address for good.
+New key issues a new address for the same rules.
 
 ### Calendar invites
 

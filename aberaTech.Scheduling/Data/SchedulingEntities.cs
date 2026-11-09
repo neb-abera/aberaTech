@@ -37,8 +37,24 @@ public class BookingLink
     /// <summary>Shown to the host alone, never to a visitor.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>SHA-256 of the key, as lowercase hex. Null for the default row.</summary>
+    /// <summary>
+    /// SHA-256 of the key, as lowercase hex. The lookup reads this. Null for
+    /// the default row and for a revoked link.
+    /// </summary>
     public string? KeyHash { get; set; }
+
+    /// <summary>
+    /// The key, encrypted with ASP.NET Data Protection, so the host can see
+    /// and copy the link again. Null for the default row, a revoked link, and
+    /// a link made before keys were kept (9 Nov 2026).
+    /// </summary>
+    public string? ProtectedKey { get; set; }
+
+    /// <summary>When the current key was issued.</summary>
+    public Instant? KeyIssuedAt { get; set; }
+
+    /// <summary>When the link was revoked. Its key is destroyed, and only a new key revives it.</summary>
+    public Instant? RevokedAt { get; set; }
 
     public bool IsDefault { get; set; }
 

@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261109094948_BookingLinks";
+    public override string LastMigrationId => "20261109144049_BookingLinkKeptKeys";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -646,6 +646,9 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(64)
                     .HasColumnType("character varying(64)");
 
+                b.Property<Instant?>("KeyIssuedAt")
+                    .HasColumnType("timestamp with time zone");
+
                 b.Property<int>("LeadMinutes")
                     .HasColumnType("integer");
 
@@ -653,6 +656,12 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasMaxLength(120)
                     .HasColumnType("character varying(120)");
+
+                b.Property<string>("ProtectedKey")
+                    .HasColumnType("text");
+
+                b.Property<Instant?>("RevokedAt")
+                    .HasColumnType("timestamp with time zone");
 
                 b.Property<bool>("ShowsQueue")
                     .HasColumnType("boolean");
