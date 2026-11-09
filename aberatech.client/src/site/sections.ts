@@ -111,6 +111,7 @@ export const ownerPages: { label: string; to: string }[] = [
   { label: "Playbook", to: "/playbook" },
   { label: "Marksmanship", to: "/marksmanship" },
   { label: "Training plan", to: "/training-plan" },
+  { label: "Training", to: "/training" },
 ];
 
 /**
@@ -125,8 +126,6 @@ export const notInBar: Record<string, string> = {
     "A project for visitors, reached from Projects in the bar. Its data is the owner's, read on the page itself.",
   "/schedule/admin":
     "The queue's admin, reached from the booking flow and by address. Neb has not asked for it in the bar.",
-  "/training":
-    "The course player's app bar entry lands with its notes, the fourth of its four pull requests. Until then it is reached from /technical.",
 };
 
 /** What to show where space is tight. */

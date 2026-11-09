@@ -16,6 +16,7 @@ import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
 import LessonView from "./LessonView";
 import MapView from "./MapView";
+import NoteField from "./NoteField";
 import TodayView, { type Contest } from "./TodayView";
 import ToolsView from "./ToolsView";
 import UnitView from "./UnitView";
@@ -175,6 +176,14 @@ export default function TrainingPanel() {
           document={document}
           solves={solves}
           change={change}
+          noteFor={(id, label) => (
+            <NoteField
+              id={id}
+              label={label}
+              document={document}
+              change={change}
+            />
+          )}
         />
       ) : place && unitId ? (
         <UnitView

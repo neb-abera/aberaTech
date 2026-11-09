@@ -108,6 +108,7 @@ describe("the app bar", () => {
         "/playbook",
         "/marksmanship",
         "/training-plan",
+        "/training",
       ]),
     );
   });

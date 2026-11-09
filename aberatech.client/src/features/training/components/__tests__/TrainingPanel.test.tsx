@@ -212,4 +212,18 @@ describe("the owner", () => {
     const open = screen.getByRole("article", { name: /Codeforces 2254B/ });
     expect(within(open).getByRole("checkbox")).toBeTruthy();
   });
+
+  it("writes a note on a lesson and it is saved with its time", async () => {
+    visit(null);
+    show("/training?lesson=cp-3");
+    const note = await screen.findByRole("textbox", { name: "Lesson notes" });
+    fireEvent.change(note, { target: { value: "Divide by the symmetries." } });
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    await settle();
+    const body = JSON.parse(String(puts()[puts().length - 1]?.[1]?.body));
+    expect(body.notes["cp-3"].text).toBe("Divide by the symmetries.");
+    expect(await screen.findByText(/^Kept /)).toBeTruthy();
+  });
 });
