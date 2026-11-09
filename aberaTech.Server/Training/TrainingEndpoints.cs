@@ -15,6 +15,9 @@ public static class TrainingEndpoints
 
     public const int DefaultDrillsPerMinute = 10;
 
+    /// <summary>The band above the current rating that practice is drawn from: the plan's rating plus 0 to 200.</summary>
+    public const int BandWidth = 200;
+
     public static IEndpointRouteBuilder MapTrainingEndpoints(this IEndpointRouteBuilder routes)
     {
         routes.MapGet("/api/training/solves", async (string? codeforces, string? atcoder, JudgeReader judges, TimeProvider time, IServiceProvider services, CancellationToken cancellationToken) =>
@@ -38,6 +41,26 @@ public static class TrainingEndpoints
                 contests = contestsTask.Result,
                 // Sample questions under `make e2e` only (FakeAssessment.cs).
                 fixture = services.GetService<FakeAssessment>()?.Fixture,
+            });
+        })
+        .RequireAuthorization(AdminAuth.PolicyName)
+        .WithTags("Training");
+
+        // Codeforces problems in the owner's band, rating to rating + 200,
+        // for the pool's slots that Mostafa Saad's sheet cannot fill.
+        routes.MapGet("/api/training/band", async (int? rating, JudgeReader judges, CancellationToken cancellationToken) =>
+        {
+            if (rating is not { } from || from < 0 || from > 4000)
+                return Results.BadRequest("A rating is a whole number from 0 to 4000.");
+            var answer = await judges.BandAsync(from, from + BandWidth, cancellationToken);
+            return Results.Ok(new
+            {
+                ok = answer.Ok,
+                error = answer.Error,
+                from = answer.From,
+                to = answer.To,
+                readAt = answer.ReadAt,
+                problems = answer.Problems.Select(problem => new { id = problem.Id, name = problem.Name, rating = problem.Rating, url = problem.Url }),
             });
         })
         .RequireAuthorization(AdminAuth.PolicyName)

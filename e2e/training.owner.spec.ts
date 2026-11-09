@@ -436,3 +436,58 @@ test("the pool picks ten by Saad's mix, and a logged solve shows in the week's a
     },
   );
 });
+
+test("below his pool's range, the slots it cannot fill take Codeforces problems in the band, untagged", async ({
+  page,
+}) => {
+  // Level 1.50, from 800. The sheet in memory (FakeSaadSheet.cs) fits 1 at
+  // that level, 2 slightly above, and 1 far above. The other 6 come from the
+  // Codeforces problemset in memory (FakeJudges.cs), rated 800 to 1000,
+  // without 2263B, which the handle solved. UVA 11722 has no link and is
+  // never picked.
+  await open(page, "/training");
+  await withDocument(
+    page,
+    () => ({}),
+    async () => {
+      await page.reload();
+      const pool = page.getByRole("region", { name: "Problem pool" });
+      await expect(pool.getByRole("listitem")).toHaveCount(10, {
+        timeout: 15_000,
+      });
+      await expect(
+        pool.getByRole("alert", { name: "Below his pool" }),
+      ).toContainText(
+        "6 of the ten are Codeforces problems rated 800 to 1000, with tags hidden.",
+      );
+      const band = pool.getByRole("link", { name: /^Codeforces \d+[A-Z]$/ });
+      await expect(band).toHaveCount(6);
+      for (const href of await band.evaluateAll((links) =>
+        links.map((link) => link.getAttribute("href") ?? ""),
+      ))
+        expect(href).toMatch(
+          /^https:\/\/codeforces\.com\/problemset\/problem\/22(5[5-9]|6[0-2])\/[AB]$/,
+        );
+      await expect(
+        pool.getByRole("listitem").filter({ hasText: "Tags hidden." }),
+      ).toHaveCount(6);
+      await expect(
+        pool.getByRole("link", { name: "Codeforces 2263B" }),
+      ).toHaveCount(0);
+      await expect(pool.getByText("UVA 11722")).toHaveCount(0);
+      await expect(pool.getByText("greedy")).toHaveCount(0);
+      await expect(pool).not.toContainText("nearest level");
+
+      const first = pool
+        .getByRole("listitem")
+        .filter({ hasText: "Tags hidden." })
+        .first();
+      const id = (await first.getByRole("link").first().textContent())?.replace(
+        "Codeforces ",
+        "",
+      );
+      await first.getByRole("link", { name: "Log it" }).click();
+      await expect(page).toHaveURL(new RegExp(`view=log&problem=${id}$`));
+    },
+  );
+});

@@ -106,12 +106,34 @@ export const mix: {
   { band: "far", label: "Far above", count: 1, from: 1.5, to: 3 },
 ];
 
-export interface Pick {
-  problem: PoolProblem;
-  band: Band;
-  /** The band had none left, so this is the nearest level outside it. */
-  nearest: boolean;
+/**
+ * A Codeforces problemset problem in the owner's band, from the
+ * problemset.problems API. Its tags are never sent: the plan's practice in
+ * a band is untagged.
+ */
+export interface BandProblem {
+  /** The Codeforces problem id, "2263B". */
+  id: string;
+  name: string;
+  rating: number;
+  url: string;
 }
+
+/** The band list the server read: ratings `from` to `to`. */
+export interface BandList {
+  from: number;
+  to: number;
+  problems: BandProblem[];
+}
+
+export type Pick =
+  | { source: "saad"; problem: PoolProblem; band: Band }
+  | {
+      source: "codeforces";
+      problem: BandProblem;
+      /** The slot of his mix it fills, since his pool had none to fit. */
+      band: Band;
+    };
 
 /** A stable shuffle key: the same order all week, a new one the next. */
 function hash(text: string): number {
@@ -124,57 +146,105 @@ function hash(text: string): number {
 }
 
 /**
- * Ten problems by Saad's mix around `level`, none already solved. Within a
- * band, higher importance first, then a shuffle that holds for the week.
- * A band with too few problems takes the nearest unpicked levels.
+ * Ten problems by Saad's mix around `level`, none already solved and none
+ * without a working link (his UVA, TJU, LiveArchive and TopCoder rows).
+ * Within a band, higher importance first, then a shuffle that holds for
+ * the week. A band his pool cannot fill takes Codeforces problems in the
+ * owner's band, never a level outside it: a far-above problem in a
+ * "slightly above" slot breaks his mix.
  */
 export function pickMix(
   pool: PoolProblem[],
   level: number,
   week: string,
   solved: Set<string>,
+  band: BandProblem[] = [],
 ): Pick[] {
-  const open = pool.filter(
-    (problem) =>
-      !solved.has(problem.code) &&
-      !(problem.codeforces && solved.has(problem.codeforces)),
-  );
+  const open = openPool(pool, solved);
   const order = (a: PoolProblem, b: PoolProblem) =>
     b.importance - a.importance ||
     hash(`${week}:${a.code}`) - hash(`${week}:${b.code}`);
   const taken = new Set<string>();
   const picks: Pick[] = [];
-  for (const band of mix) {
-    const lo = level + band.from;
-    const hi = level + band.to;
+  const short: Band[] = [];
+  for (const slot of mix) {
+    const lo = level + slot.from;
+    const hi = level + slot.to;
     const inside = open
       .filter(
         (problem) =>
           !taken.has(problem.code) &&
           problem.level >= lo &&
-          (band.band === "at" ? problem.level <= hi : problem.level < hi),
+          (slot.band === "at" ? problem.level <= hi : problem.level < hi),
       )
       .sort(order)
-      .slice(0, band.count);
+      .slice(0, slot.count);
     for (const problem of inside) {
       taken.add(problem.code);
-      picks.push({ problem, band: band.band, nearest: false });
+      picks.push({ source: "saad", problem, band: slot.band });
     }
-    const center = level + (band.from + band.to) / 2;
-    const fill = open
-      .filter((problem) => !taken.has(problem.code))
-      .sort(
-        (a, b) =>
-          Math.abs(a.level - center) - Math.abs(b.level - center) ||
-          order(a, b),
-      )
-      .slice(0, band.count - inside.length);
-    for (const problem of fill) {
-      taken.add(problem.code);
-      picks.push({ problem, band: band.band, nearest: true });
-    }
+    for (let i = inside.length; i < slot.count; i += 1) short.push(slot.band);
   }
+  const fill = band
+    .filter(
+      (problem) =>
+        !solved.has(problem.id) &&
+        !open.some((each) => each.codeforces === problem.id),
+    )
+    .sort((a, b) => hash(`${week}:${a.id}`) - hash(`${week}:${b.id}`))
+    .slice(0, short.length);
+  fill.forEach((problem, i) => {
+    picks.push({ source: "codeforces", problem, band: short[i] });
+  });
   return picks;
+}
+
+/** His problems still open to pick: unsolved, with a page to open. */
+function openPool(pool: PoolProblem[], solved: Set<string>): PoolProblem[] {
+  return pool.filter(
+    (problem) =>
+      problem.url !== null &&
+      !solved.has(problem.code) &&
+      !(problem.codeforces && solved.has(problem.codeforces)),
+  );
+}
+
+/** A level on Saad's scale as a Codeforces rating: the inverse of levelOf. */
+export function ratingOf(level: number): number {
+  const first = points[0];
+  if (level <= first.level) return first.rating;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    if (level <= b.level)
+      return (
+        a.rating +
+        ((level - a.level) * (b.rating - a.rating)) / (b.level - a.level)
+      );
+  }
+  const d = points[points.length - 2];
+  const e = points[points.length - 1];
+  return (
+    e.rating + ((level - e.level) * (e.rating - d.rating)) / (e.level - d.level)
+  );
+}
+
+/**
+ * Where his pool starts for the owner: the lowest level of an open, linked
+ * problem, the Div. 2 letter whose range it opens, and the rating that
+ * level maps to, to the nearest 50.
+ */
+export function poolStart(
+  pool: PoolProblem[],
+  solved: Set<string>,
+): { level: number; letter: string; rating: number } | null {
+  const levels = openPool(pool, solved).map((problem) => problem.level);
+  if (levels.length === 0) return null;
+  const level = Math.min(...levels);
+  const letter =
+    [...letterLevels].reverse().find((range) => range.from <= level)?.letter ??
+    "A";
+  return { level, letter, rating: Math.round(ratingOf(level) / 50) * 50 };
 }
 
 /**

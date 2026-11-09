@@ -16,9 +16,10 @@ import { weekStart } from "../core/log";
 import { pace as measurePace } from "../core/pace";
 import { itemStatus, overall, type Solves, unitStates } from "../core/progress";
 import { asDue, dueOn, upcoming } from "../core/reviews";
-import { currentBand, levelOf, pickMix } from "../core/saad";
+import { currentBand, levelOf, pickMix, poolStart } from "../core/saad";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
 import { nextUp } from "../core/today";
+import { useBand } from "../hooks/useBand";
 import { usePool } from "../hooks/usePool";
 import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
@@ -120,12 +121,15 @@ export default function TrainingPanel() {
     ...Object.keys(answer.codeforces?.ok ? answer.codeforces.solved : {}),
     ...document.log.map((solve) => solve.problem),
   ]);
+  const bandList = useBand(owner, band.rating);
   const picks = pickMix(
     pool.problems,
     level,
     weekStart(localDate(now)),
     solvedCodes,
+    bandList.ok ? bandList.problems : [],
   );
+  const start = poolStart(pool.problems, solvedCodes);
   const total = overall(document, solves, states);
   const contests: Contest[] = answer.contests;
   const rating = judgeLine("Codeforces", answer.status, answer.codeforces);
@@ -313,7 +317,14 @@ export default function TrainingPanel() {
           }
           keepGoing={() => setMore((count) => count + 1)}
           pool={
-            <PoolPanel pool={pool} picks={picks} level={level} band={band} />
+            <PoolPanel
+              pool={pool}
+              picks={picks}
+              level={level}
+              band={band}
+              bandList={bandList}
+              start={start}
+            />
           }
         />
       ) : view === "review" && owner ? (
