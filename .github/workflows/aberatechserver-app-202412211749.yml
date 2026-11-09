@@ -265,6 +265,23 @@ jobs:
           tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
 
+      - name: Checkout Source Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The Rust grader first, so the site's new revision starts with an
+      # address that answers. The first run creates the app (internal
+      # ingress, 0 to 1 replicas, 0.25 vCPU, 0.5 GiB). scripts/deploy-grader.sh
+      # has the rest, and its self-test runs in `make lint-ci`.
+      - name: Deploy the grader
+        id: grader
+        run: |
+          az config set extension.use_dynamic_install=yes_without_prompt
+          url=$(./scripts/deploy-grader.sh "${CONTAINER_REGISTRY_LOGIN_SERVER}/${GRADER_IMAGE_NAME}:${GITHUB_SHA}")
+          echo "Grader at ${url}"
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+
       # Step 6: Deploy the Container App with ACR Credentials
       - name: Deploy to Azure Container App
         uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
@@ -277,11 +294,13 @@ jobs:
             # (AcrPull on the registry), configured once on the container app
             # rather than re-written with registry passwords on every deploy.
 
-            # Update the Container App with the new Docker image
+            # Update the Container App with the new Docker image. Drills go
+            # to the grader's internal address (Training:GraderUrl).
             az containerapp update --name ${{ env.CONTAINER_APP_NAME }} \
               --container-name ${{ env.CONTAINER_APP_CONTAINER_NAME }} \
               --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} \
-              --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}
+              --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }} \
+              --set-env-vars "Training__GraderUrl=${{ steps.grader.outputs.url }}"
 
       # `az containerapp update` returns when Azure has accepted the new
       # revision, not when it is running. A revision that crashes on boot

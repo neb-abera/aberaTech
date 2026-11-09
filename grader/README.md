@@ -121,6 +121,15 @@ macOS and Windows builds, since the grader runs on Linux only.
 for `make e2e`, where it runs as its own image stage. It answers by comments
 in the source, the same way the server's `FakeCompilerExplorer.cs` does.
 
+## Deployment
+
+The deploy workflow pushes `abera-grader:<commit>` to the site's registry,
+then `scripts/deploy-grader.sh` puts the Container App `abera-grader` on it
+in the site's environment. The first deploy creates the app: internal
+ingress on port 8080, 0 to 1 replicas, 0.25 vCPU, 0.5 GiB, pulling with its
+own system-assigned identity. The site's revision then gets
+`Training__GraderUrl` set to the grader's internal address.
+
 ## Security
 
 - Submitted code runs on Compiler Explorer. This process only reads its output.
