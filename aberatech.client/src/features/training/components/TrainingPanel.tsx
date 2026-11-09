@@ -12,27 +12,32 @@ import SignInToSee from "../../progress/components/SignInToSee";
 import type { CheckKind } from "../core/assessment";
 import { clock, localDate } from "../core/dates";
 import { applyFixture } from "../core/fixture";
+import { weekStart } from "../core/log";
 import { pace as measurePace } from "../core/pace";
 import { itemStatus, overall, type Solves, unitStates } from "../core/progress";
 import { asDue, dueOn, upcoming } from "../core/reviews";
+import { currentBand, levelOf, pickMix } from "../core/saad";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
 import { nextUp } from "../core/today";
+import { usePool } from "../hooks/usePool";
 import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
 import AssessmentView from "./AssessmentView";
 import LessonView from "./LessonView";
+import LogView from "./LogView";
 import MapView from "./MapView";
 import NoteField from "./NoteField";
 import NotesView from "./NotesView";
+import PoolPanel from "./PoolPanel";
 import ReviewView from "./ReviewView";
 import TodayView, { type Contest } from "./TodayView";
 import ToolsView from "./ToolsView";
 import UnitView from "./UnitView";
 
-type View = "today" | "review" | "map" | "notes" | "tools";
-const views: View[] = ["today", "review", "map", "notes", "tools"];
-/** Views only the owner has: his work, his reviews, his notes. */
-const ownerViews: View[] = ["today", "review", "notes"];
+type View = "today" | "review" | "log" | "map" | "notes" | "tools";
+const views: View[] = ["today", "review", "log", "map", "notes", "tools"];
+/** Views only the owner has: his work, reviews, log, and notes. */
+const ownerViews: View[] = ["today", "review", "log", "notes"];
 
 /** The rating line, with its source and the time it was read. */
 function judgeLine(
@@ -102,6 +107,25 @@ export default function TrainingPanel() {
     ? syllabus.units.findIndex((unit) => unit.id === place.unit.id) + 1
     : 0;
 
+  const pool = usePool(owner);
+  const band = currentBand(
+    syllabus.units.filter(
+      (unit) =>
+        unit.track === "programming" && states.get(unit.id)?.state === "open",
+    ),
+    answer.codeforces?.ok ? answer.codeforces.rating : null,
+  );
+  const level = levelOf(band.rating);
+  const solvedCodes = new Set([
+    ...Object.keys(answer.codeforces?.ok ? answer.codeforces.solved : {}),
+    ...document.log.map((solve) => solve.problem),
+  ]);
+  const picks = pickMix(
+    pool.problems,
+    level,
+    weekStart(localDate(now)),
+    solvedCodes,
+  );
   const total = overall(document, solves, states);
   const contests: Contest[] = answer.contests;
   const rating = judgeLine("Codeforces", answer.status, answer.codeforces);
@@ -212,6 +236,14 @@ export default function TrainingPanel() {
         />
         {owner && (
           <Tab
+            value="log"
+            label="Log"
+            component={RouterLink}
+            to="/training?view=log"
+          />
+        )}
+        {owner && (
+          <Tab
             value="notes"
             label="Notes"
             component={RouterLink}
@@ -280,6 +312,9 @@ export default function TrainingPanel() {
             })
           }
           keepGoing={() => setMore((count) => count + 1)}
+          pool={
+            <PoolPanel pool={pool} picks={picks} level={level} band={band} />
+          }
         />
       ) : view === "review" && owner ? (
         <ReviewView
@@ -289,6 +324,14 @@ export default function TrainingPanel() {
           now={now}
           tomorrow={upcoming(date, document, solves, 1)}
           week={upcoming(date, document, solves, 7)}
+        />
+      ) : view === "log" && owner ? (
+        <LogView
+          document={document}
+          change={change}
+          now={now}
+          initial={params.get("problem") ?? ""}
+          pool={pool.problems}
         />
       ) : view === "notes" && owner ? (
         <NotesView document={document} />

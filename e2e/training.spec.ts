@@ -28,6 +28,10 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
   await expect(page.getByRole("tab", { name: "Next up" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: /^Review/ })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "Notes" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Log" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Problem pool" })).toHaveCount(
+    0,
+  );
 
   await page
     .getByRole("link", { name: "Counting & Probability: counting" })
@@ -42,7 +46,7 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
   await expect(page.getByRole("checkbox")).toHaveCount(0);
 
   // An owner view asked for by address shows the map instead.
-  for (const view of ["review", "notes", "today"]) {
+  for (const view of ["review", "notes", "today", "log"]) {
     await page.goto(`/training?view=${view}`);
     await expect(
       page.getByRole("region", {

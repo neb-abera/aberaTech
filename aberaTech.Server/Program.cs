@@ -402,6 +402,14 @@ if (adminOptions.IsConfigured)
         client.Timeout = TimeSpan.FromSeconds(15);
         client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
     });
+    builder.Services.AddSingleton<SaadPool>();
+    // Mostafa Saad's supervision pool, read from his public sheet. Google
+    // answers the export with a redirect to googleusercontent.com.
+    var saadPool = builder.Services.AddHttpClient(SaadPool.ClientName, client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(20);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
+    });
     builder.Services.AddSingleton<DrillRunner>();
     // Compiler Explorer queues a compile behind the site's own users. A run
     // of a few tests is seconds; a minute is the ceiling.
@@ -421,6 +429,8 @@ if (adminOptions.IsConfigured)
         builder.Services.AddSingleton<FakeCompilerExplorer>();
         compilerExplorer.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeCompilerExplorer>());
         builder.Services.AddSingleton<FakeAssessment>();
+        builder.Services.AddSingleton<FakeSaadSheet>();
+        saadPool.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeSaadSheet>());
     }
 }
 
@@ -703,6 +713,7 @@ if (adminOptions.IsConfigured)
     app.MapMarksmanshipEndpoints(notionOptions);
     app.MapTrainingPlanEndpoints(notionOptions);
     app.MapTrainingEndpoints();
+    app.MapTrainingPoolEndpoints();
 }
 else
 {
