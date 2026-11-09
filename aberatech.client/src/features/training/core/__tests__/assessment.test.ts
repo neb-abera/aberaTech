@@ -111,6 +111,13 @@ const fixture: Fixture = {
 };
 
 beforeAll(() => {
+  // The fixture stands in for the C++ refresher's own questions.
+  const refresher = syllabus.units.find((each) => each.id === "refresh-cpp");
+  if (refresher) {
+    refresher.pretest = undefined;
+    refresher.mastery = undefined;
+    for (const lesson of refresher.lessons) lesson.questions = undefined;
+  }
   applyFixture(fixture);
 });
 
@@ -407,7 +414,11 @@ describe("lesson quizzes", () => {
 describe("the Anki export", () => {
   it("writes a header Anki reads and one quoted line per card", () => {
     const { text, cards } = ankiCsv();
-    expect(cards).toBe(1);
+    const all = syllabus.units
+      .flatMap((each) => each.lessons)
+      .flatMap((lesson) => lesson.questions ?? [])
+      .filter((question) => question.type === "card");
+    expect(cards).toBe(all.length);
     const lines = text.trimEnd().split("\n");
     expect(lines.slice(0, 5)).toEqual([
       "#separator:Comma",
@@ -416,7 +427,7 @@ describe("the Anki export", () => {
       "#deck:abera.tech training",
       "#tags column:3",
     ]);
-    expect(lines[5]).toBe(
+    expect(lines).toContain(
       '"Front","Back, with a ""quote"", and a comma","refresh_cpp refresh_cpp_lambdas"',
     );
   });

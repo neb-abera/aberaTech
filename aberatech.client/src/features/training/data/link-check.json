@@ -1,6 +1,6 @@
 {
   "checkedOn": "2026-11-09",
-  "total": 1561,
+  "total": 1666,
   "about": "How every address in syllabus.json was opened on 9 Nov 2026. fetch: a plain request. browser: Chrome on the dev box, for hosts that refuse plain requests. archive: the Internet Archive, for a page behind a human check. source: the address as AoPS links it on its own videos page.",
   "links": {
     "https://artofproblemsolving.com/alcumus": {
@@ -5053,6 +5053,12 @@
       "status": 200,
       "title": "Main Page - Algorithms for Competitive Programming"
     },
+    "https://cp-algorithms.com/algebra/binary-exp.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Exponentiation - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
     "https://cp-algorithms.com/algebra/discrete-log.html": {
       "how": "fetch",
       "status": 200,
@@ -5063,6 +5069,24 @@
       "status": 200,
       "title": "Discrete Root - Algorithms for Competitive Programming"
     },
+    "https://cp-algorithms.com/algebra/euclid-algorithm.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Euclidean algorithm for computing the greatest common divisor - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
+    "https://cp-algorithms.com/algebra/factorial-divisors.html#composite-k": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Finding Power of Factorial Divisor - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026. The anchor id composite-k is in the page HTML."
+    },
+    "https://cp-algorithms.com/algebra/factorial-divisors.html#prime-k": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Finding Power of Factorial Divisor - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026. The anchor id prime-k is in the page HTML. The section gives Legendre's formula."
+    },
     "https://cp-algorithms.com/algebra/fft.html": {
       "how": "fetch",
       "status": 200,
@@ -5072,6 +5096,18 @@
       "how": "fetch",
       "status": 200,
       "title": "Garner's Algorithm - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/algebra/gray-code.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Gray code - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026. States G(n) = n XOR (n >> 1)."
+    },
+    "https://cp-algorithms.com/algebra/phi-function.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Euler's totient function - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/algebra/polynomial.html": {
       "how": "fetch",
@@ -5093,10 +5129,34 @@
       "status": 200,
       "title": "Deleting from a data structure in O(T(n) log n) - Algorithms for Competitive Programming"
     },
+    "https://cp-algorithms.com/data_structures/disjoint_set_union.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Disjoint Set Union - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
+    "https://cp-algorithms.com/data_structures/fenwick.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Fenwick Tree - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
+    "https://cp-algorithms.com/data_structures/sparse-table.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sparse Table - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
     "https://cp-algorithms.com/data_structures/sqrt-tree.html": {
       "how": "fetch",
       "status": 200,
       "title": "Sqrt Tree - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/data_structures/sqrt_decomposition.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sqrt Decomposition - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/data_structures/treap.html": {
       "how": "fetch",
@@ -5108,10 +5168,22 @@
       "status": 200,
       "title": "Divide and Conquer DP - Algorithms for Competitive Programming"
     },
+    "https://cp-algorithms.com/dynamic_programming/knapsack.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Knapsack Problem - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
     "https://cp-algorithms.com/dynamic_programming/knuth-optimization.html": {
       "how": "fetch",
       "status": 200,
       "title": "Knuth's Optimization - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/dynamic_programming/longest_increasing_subsequence.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Longest increasing subsequence - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/dynamic_programming/profile-dynamics.html": {
       "how": "fetch",
@@ -5143,10 +5215,22 @@
       "status": 200,
       "title": "Point location in O(log n) - Algorithms for Competitive Programming"
     },
+    "https://cp-algorithms.com/graph/01_bfs.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "0-1 BFS - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
     "https://cp-algorithms.com/graph/2SAT.html": {
       "how": "fetch",
       "status": 200,
       "title": "2-SAT - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/graph/bellman_ford.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Bellman-Ford - finding shortest paths with negative weights - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/graph/bridge-searching-online.html": {
       "how": "fetch",
@@ -5172,6 +5256,12 @@
       "how": "fetch",
       "status": 200,
       "title": "Kirchhoff Theorem - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/graph/lca_binary_lifting.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Lowest Common Ancestor - Binary Lifting - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/graph/min_cost_flow.html": {
       "how": "fetch",
@@ -5222,6 +5312,18 @@
       "how": "fetch",
       "status": 200,
       "title": "Finding repetitions - Algorithms for Competitive Programming"
+    },
+    "https://cp-algorithms.com/string/prefix-function.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Prefix function - Knuth-Morris-Pratt - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
+    },
+    "https://cp-algorithms.com/string/string-hashing.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "String Hashing - Algorithms for Competitive Programming",
+      "note": "Opened 9 Nov 2026 with a plain request. Cited without an anchor."
     },
     "https://cp-algorithms.com/string/suffix-array.html": {
       "how": "fetch",
@@ -6119,6 +6221,18 @@
       "status": 200,
       "title": "Ad Hoc Problems · USACO Guide"
     },
+    "https://usaco.guide/bronze/ad-hoc#example---photoshoot-2": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Ad Hoc Problems · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example---photoshoot-2 is in the page HTML."
+    },
+    "https://usaco.guide/bronze/ad-hoc#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Ad Hoc Problems · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
     "https://usaco.guide/bronze/ad-hoc#problems": {
       "how": "fetch",
       "status": 200,
@@ -6139,15 +6253,51 @@
       "status": 200,
       "title": "Casework · USACO Guide"
     },
+    "https://usaco.guide/bronze/casework#solution---sleepy-cow-herding": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Casework · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---sleepy-cow-herding is in the page HTML."
+    },
     "https://usaco.guide/bronze/complete-rec": {
       "how": "fetch",
       "status": 200,
       "title": "Complete Search with Recursion · USACO Guide"
     },
+    "https://usaco.guide/bronze/complete-rec#backtracking": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id backtracking is in the page HTML."
+    },
+    "https://usaco.guide/bronze/complete-rec#generating-subsets-recursively": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id generating-subsets-recursively is in the page HTML."
+    },
+    "https://usaco.guide/bronze/complete-rec#generating-subsets-with-bitmasks": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id generating-subsets-with-bitmasks is in the page HTML."
+    },
+    "https://usaco.guide/bronze/complete-rec#permutations": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id permutations is in the page HTML."
+    },
     "https://usaco.guide/bronze/complete-rec#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Complete Search with Recursion · USACO Guide"
+    },
+    "https://usaco.guide/bronze/complete-rec#solution---chessboard--queens": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---chessboard--queens is in the page HTML."
     },
     "https://usaco.guide/bronze/intro-complete": {
       "how": "fetch",
@@ -6159,10 +6309,22 @@
       "status": 200,
       "title": "Basic Complete Search · USACO Guide"
     },
+    "https://usaco.guide/bronze/intro-complete#solution---maximum-distance": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Basic Complete Search · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---maximum-distance is in the page HTML."
+    },
     "https://usaco.guide/bronze/intro-ds": {
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Data Structures · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-ds#memory-allocation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Data Structures · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id memory-allocation is in the page HTML."
     },
     "https://usaco.guide/bronze/intro-ds#problems": {
       "how": "fetch",
@@ -6173,6 +6335,30 @@
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Graphs · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-graphs#check-your-understanding": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id check-your-understanding is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-graphs#constructing-adjacency-lists": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id constructing-adjacency-lists is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-graphs#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-graphs#livestock-lineup": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id livestock-lineup is in the page HTML."
     },
     "https://usaco.guide/bronze/intro-graphs#problems": {
       "how": "fetch",
@@ -6189,30 +6375,102 @@
       "status": 200,
       "title": "Introduction to Greedy Algorithms · USACO Guide"
     },
+    "https://usaco.guide/bronze/intro-greedy#solution---mad-scientist": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Greedy Algorithms · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---mad-scientist is in the page HTML."
+    },
     "https://usaco.guide/bronze/intro-sets": {
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Sets & Maps · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sets#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-sets#maps": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id maps is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-sets#method-2---hashset": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id method-2---hashset is in the page HTML."
     },
     "https://usaco.guide/bronze/intro-sets#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Sets & Maps · USACO Guide"
     },
+    "https://usaco.guide/bronze/intro-sets#sets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id sets is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-sets#sorted-sets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id sorted-sets is in the page HTML."
+    },
     "https://usaco.guide/bronze/intro-sorting": {
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Sorting · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sorting#dynamic-arrays": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id dynamic-arrays is in the page HTML."
+    },
+    "https://usaco.guide/bronze/intro-sorting#dynamic-arrays-of-pairs--tuples": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id dynamic-arrays-of-pairs--tuples is in the page HTML."
     },
     "https://usaco.guide/bronze/intro-sorting#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Sorting · USACO Guide"
     },
+    "https://usaco.guide/bronze/intro-sorting#sorting-methods": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id sorting-methods is in the page HTML."
+    },
     "https://usaco.guide/bronze/rect-geo": {
       "how": "fetch",
       "status": 200,
       "title": "Rectangle Geometry · USACO Guide"
+    },
+    "https://usaco.guide/bronze/rect-geo#checking-if-two-rectangles-intersect": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Rectangle Geometry · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id checking-if-two-rectangles-intersect is in the page HTML."
+    },
+    "https://usaco.guide/bronze/rect-geo#example---fence-painting": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Rectangle Geometry · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example---fence-painting is in the page HTML."
+    },
+    "https://usaco.guide/bronze/rect-geo#finding-area-of-intersection": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Rectangle Geometry · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id finding-area-of-intersection is in the page HTML."
     },
     "https://usaco.guide/bronze/rect-geo#problems": {
       "how": "fetch",
@@ -6224,6 +6482,12 @@
       "status": 200,
       "title": "Simulation · USACO Guide"
     },
+    "https://usaco.guide/bronze/simulation#example-2": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Simulation · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example-2 is in the page HTML."
+    },
     "https://usaco.guide/bronze/simulation#problems": {
       "how": "fetch",
       "status": 200,
@@ -6234,10 +6498,40 @@
       "status": 200,
       "title": "Time Complexity · USACO Guide"
     },
+    "https://usaco.guide/bronze/time-comp#common-complexities-and-constraints": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id common-complexities-and-constraints is in the page HTML."
+    },
+    "https://usaco.guide/bronze/time-comp#complexity-calculations": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id complexity-calculations is in the page HTML."
+    },
+    "https://usaco.guide/bronze/time-comp#constant-factor": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id constant-factor is in the page HTML."
+    },
+    "https://usaco.guide/bronze/time-comp#formal-definition-of-big-o-notation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id formal-definition-of-big-o-notation is in the page HTML."
+    },
     "https://usaco.guide/bronze/time-comp#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Time Complexity · USACO Guide"
+    },
+    "https://usaco.guide/general/basic-debugging#stress-testing": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Basic Debugging · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id stress-testing is in the page HTML."
     },
     "https://usaco.guide/general/choosing-lang": {
       "how": "fetch",
@@ -6254,6 +6548,30 @@
       "status": 200,
       "title": "C++ With the Command Line · USACO Guide"
     },
+    "https://usaco.guide/general/cpp-command#adjusting-stack-size-mac": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C++ With the Command Line · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id adjusting-stack-size-mac is in the page HTML."
+    },
+    "https://usaco.guide/general/cpp-command#basics-of-compiling--running": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C++ With the Command Line · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id basics-of-compiling--running is in the page HTML."
+    },
+    "https://usaco.guide/general/cpp-command#compiler-options-aka-flags": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C++ With the Command Line · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id compiler-options-aka-flags is in the page HTML."
+    },
+    "https://usaco.guide/general/cpp-command#redirecting-input--output": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C++ With the Command Line · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id redirecting-input--output is in the page HTML."
+    },
     "https://usaco.guide/general/data-types": {
       "how": "fetch",
       "status": 200,
@@ -6264,10 +6582,52 @@
       "status": 200,
       "title": "How to Debug · USACO Guide"
     },
+    "https://usaco.guide/general/debugging-checklist#time-limit-exceeded": {
+      "how": "fetch",
+      "status": 200,
+      "title": "How to Debug · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id time-limit-exceeded is in the page HTML."
+    },
+    "https://usaco.guide/general/debugging-checklist#wrong-answer-or-runtime-error": {
+      "how": "fetch",
+      "status": 200,
+      "title": "How to Debug · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id wrong-answer-or-runtime-error is in the page HTML."
+    },
     "https://usaco.guide/general/debugging-cpp": {
       "how": "fetch",
       "status": 200,
       "title": "Debugging C++ · USACO Guide"
+    },
+    "https://usaco.guide/general/debugging-cpp#-d_glibcxx_debug": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id -d_glibcxx_debug is in the page HTML."
+    },
+    "https://usaco.guide/general/debugging-cpp#-fsanitizeaddress": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id -fsanitizeaddress is in the page HTML."
+    },
+    "https://usaco.guide/general/debugging-cpp#-fsanitizeundefined": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id -fsanitizeundefined is in the page HTML."
+    },
+    "https://usaco.guide/general/debugging-cpp#-wconversion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id -wconversion is in the page HTML."
+    },
+    "https://usaco.guide/general/debugging-cpp#checking-for-out-of-bounds": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id checking-for-out-of-bounds is in the page HTML."
     },
     "https://usaco.guide/general/expected-knowledge": {
       "how": "fetch",
@@ -6279,10 +6639,40 @@
       "status": 200,
       "title": "Fast Input & Output · USACO Guide"
     },
+    "https://usaco.guide/general/fast-io#cintienullptr": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Fast Input & Output · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id cintienullptr is in the page HTML."
+    },
+    "https://usaco.guide/general/fast-io#standard-io": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Fast Input & Output · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id standard-io is in the page HTML."
+    },
     "https://usaco.guide/general/input-output": {
       "how": "fetch",
       "status": 200,
       "title": "Input & Output · USACO Guide"
+    },
+    "https://usaco.guide/general/input-output#example-problem---weird-algorithm": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Input & Output · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example-problem---weird-algorithm is in the page HTML."
+    },
+    "https://usaco.guide/general/input-output#file-io": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Input & Output · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id file-io is in the page HTML."
+    },
+    "https://usaco.guide/general/input-output#standard-io": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Input & Output · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id standard-io is in the page HTML."
     },
     "https://usaco.guide/general/running-code-locally": {
       "how": "fetch",
@@ -6424,10 +6814,28 @@
       "status": 200,
       "title": "Introduction to DP · USACO Guide"
     },
+    "https://usaco.guide/gold/intro-dp#with-dynamic-programming": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to DP · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id with-dynamic-programming is in the page HTML."
+    },
+    "https://usaco.guide/gold/intro-dp#without-dynamic-programming": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to DP · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id without-dynamic-programming is in the page HTML."
+    },
     "https://usaco.guide/gold/intro-sorted-sets": {
       "how": "fetch",
       "status": 200,
       "title": "More Operations on Sorted Sets · USACO Guide"
+    },
+    "https://usaco.guide/gold/intro-sorted-sets#multisets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorted Sets · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id multisets is in the page HTML."
     },
     "https://usaco.guide/gold/intro-sorted-sets#problems": {
       "how": "fetch",
@@ -6804,6 +7212,24 @@
       "status": 200,
       "title": "Binary Search · USACO Guide"
     },
+    "https://usaco.guide/silver/binary-search#example---maximum-median": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example---maximum-median is in the page HTML."
+    },
+    "https://usaco.guide/silver/binary-search#finding-the-maximum-x-such-that-fx--true": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id finding-the-maximum-x-such-that-fx--true is in the page HTML."
+    },
+    "https://usaco.guide/silver/binary-search#mistake-2---not-accounting-for-negative-bounds": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id mistake-2---not-accounting-for-negative-bounds is in the page HTML."
+    },
     "https://usaco.guide/silver/binary-search#problems": {
       "how": "fetch",
       "status": 200,
@@ -6813,6 +7239,18 @@
       "how": "fetch",
       "status": 200,
       "title": "Binary Search on a Sorted Array · USACO Guide"
+    },
+    "https://usaco.guide/silver/binary-search-sorted-array#example---counting-haybales": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search on a Sorted Array · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example---counting-haybales is in the page HTML."
+    },
+    "https://usaco.guide/silver/binary-search-sorted-array#implementation-with-built-in-functions": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search on a Sorted Array · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id implementation-with-built-in-functions is in the page HTML."
     },
     "https://usaco.guide/silver/binary-search-sorted-array#problems": {
       "how": "fetch",
@@ -6824,6 +7262,18 @@
       "status": 200,
       "title": "Flood Fill · USACO Guide"
     },
+    "https://usaco.guide/silver/flood-fill#example---counting-rooms": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Flood Fill · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id example---counting-rooms is in the page HTML."
+    },
+    "https://usaco.guide/silver/flood-fill#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Flood Fill · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
     "https://usaco.guide/silver/flood-fill#problems": {
       "how": "fetch",
       "status": 200,
@@ -6833,6 +7283,30 @@
       "how": "fetch",
       "status": 200,
       "title": "Introduction to Functional Graphs · USACO Guide"
+    },
+    "https://usaco.guide/silver/func-graphs#count-cycles": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id count-cycles is in the page HTML."
+    },
+    "https://usaco.guide/silver/func-graphs#floyds-algorithm": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id floyds-algorithm is in the page HTML."
+    },
+    "https://usaco.guide/silver/func-graphs#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
+    "https://usaco.guide/silver/func-graphs#k-th-successor": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id k-th-successor is in the page HTML."
     },
     "https://usaco.guide/silver/func-graphs#problems": {
       "how": "fetch",
@@ -6844,20 +7318,74 @@
       "status": 200,
       "title": "Graph Traversal · USACO Guide"
     },
+    "https://usaco.guide/silver/graph-traversal#an-issue-with-deep-recursion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id an-issue-with-deep-recursion is in the page HTML."
+    },
+    "https://usaco.guide/silver/graph-traversal#bfs": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id bfs is in the page HTML."
+    },
     "https://usaco.guide/silver/graph-traversal#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Graph Traversal · USACO Guide"
+    },
+    "https://usaco.guide/silver/graph-traversal#queues": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id queues is in the page HTML."
+    },
+    "https://usaco.guide/silver/graph-traversal#solution---building-roads": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---building-roads is in the page HTML."
+    },
+    "https://usaco.guide/silver/graph-traversal#solution---building-teams": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---building-teams is in the page HTML."
     },
     "https://usaco.guide/silver/greedy-sorting": {
       "how": "fetch",
       "status": 200,
       "title": "Greedy Algorithms with Sorting · USACO Guide"
     },
+    "https://usaco.guide/silver/greedy-sorting#coin-change": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id coin-change is in the page HTML."
+    },
+    "https://usaco.guide/silver/greedy-sorting#correct-greedy---earliest-ending-next-event": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id correct-greedy---earliest-ending-next-event is in the page HTML."
+    },
+    "https://usaco.guide/silver/greedy-sorting#knapsack": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id knapsack is in the page HTML."
+    },
     "https://usaco.guide/silver/greedy-sorting#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Greedy Algorithms with Sorting · USACO Guide"
+    },
+    "https://usaco.guide/silver/greedy-sorting#solution---studying-algorithms": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---studying-algorithms is in the page HTML."
     },
     "https://usaco.guide/silver/intro-bitwise": {
       "how": "fetch",
@@ -6869,6 +7397,18 @@
       "status": 200,
       "title": "Intro to Bitwise Operators · USACO Guide"
     },
+    "https://usaco.guide/silver/intro-bitwise#solution---take-a-guess": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intro to Bitwise Operators · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution---take-a-guess is in the page HTML."
+    },
+    "https://usaco.guide/silver/intro-bitwise#xor-operation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intro to Bitwise Operators · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id xor-operation is in the page HTML."
+    },
     "https://usaco.guide/silver/intro-tree": {
       "how": "fetch",
       "status": 200,
@@ -6879,10 +7419,34 @@
       "status": 200,
       "title": "Introduction to Tree Algorithms · USACO Guide"
     },
+    "https://usaco.guide/silver/intro-tree#tree-traversal-order": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Tree Algorithms · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id tree-traversal-order is in the page HTML."
+    },
     "https://usaco.guide/silver/more-prefix-sums": {
       "how": "fetch",
       "status": 200,
       "title": "More on Prefix Sums · USACO Guide"
+    },
+    "https://usaco.guide/silver/more-prefix-sums#2d-prefix-sums": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More on Prefix Sums · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id 2d-prefix-sums is in the page HTML."
+    },
+    "https://usaco.guide/silver/more-prefix-sums#difference-arrays": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More on Prefix Sums · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id difference-arrays is in the page HTML."
+    },
+    "https://usaco.guide/silver/more-prefix-sums#max-subarray-sum": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More on Prefix Sums · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id max-subarray-sum is in the page HTML."
     },
     "https://usaco.guide/silver/more-prefix-sums#problems": {
       "how": "fetch",
@@ -6894,6 +7458,18 @@
       "status": 200,
       "title": "Introduction to Prefix Sums · USACO Guide"
     },
+    "https://usaco.guide/silver/prefix-sums#explanation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Prefix Sums · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id explanation is in the page HTML."
+    },
+    "https://usaco.guide/silver/prefix-sums#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Prefix Sums · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
     "https://usaco.guide/silver/prefix-sums#problems": {
       "how": "fetch",
       "status": 200,
@@ -6904,10 +7480,28 @@
       "status": 200,
       "title": "Priority Queues · USACO Guide"
     },
+    "https://usaco.guide/silver/priority-queues#implementation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Priority Queues · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id implementation is in the page HTML."
+    },
+    "https://usaco.guide/silver/priority-queues#introduction": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Priority Queues · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id introduction is in the page HTML."
+    },
     "https://usaco.guide/silver/priority-queues#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Priority Queues · USACO Guide"
+    },
+    "https://usaco.guide/silver/priority-queues#solution": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Priority Queues · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id solution is in the page HTML."
     },
     "https://usaco.guide/silver/silver-conclusion": {
       "how": "fetch",
@@ -6919,10 +7513,28 @@
       "status": 200,
       "title": "Custom Comparators and Coordinate Compression · USACO Guide"
     },
+    "https://usaco.guide/silver/sorting-custom#comparators": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Custom Comparators and Coordinate Compression · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id comparators is in the page HTML."
+    },
+    "https://usaco.guide/silver/sorting-custom#coordinate-compression": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Custom Comparators and Coordinate Compression · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id coordinate-compression is in the page HTML."
+    },
     "https://usaco.guide/silver/sorting-custom#problems": {
       "how": "fetch",
       "status": 200,
       "title": "Custom Comparators and Coordinate Compression · USACO Guide"
+    },
+    "https://usaco.guide/silver/sorting-custom#sorting-in-descending-order": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Custom Comparators and Coordinate Compression · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id sorting-in-descending-order is in the page HTML."
     },
     "https://usaco.guide/silver/two-pointers": {
       "how": "fetch",
@@ -6933,6 +7545,18 @@
       "how": "fetch",
       "status": 200,
       "title": "Two Pointers · USACO Guide"
+    },
+    "https://usaco.guide/silver/two-pointers#sliding-window": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Two Pointers · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id sliding-window is in the page HTML."
+    },
+    "https://usaco.guide/silver/two-pointers#two-pointers": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Two Pointers · USACO Guide",
+      "note": "Opened 9 Nov 2026. The anchor id two-pointers is in the page HTML."
     },
     "https://web.evanchen.cc/exams/IMO-2010-notes.pdf": {
       "how": "fetch",
@@ -7367,6 +7991,12 @@
       "how": "fetch",
       "status": 200,
       "title": "16.8 — Range-based for loops (for-each) – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/recursion/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "20.3 — Recursion – Learn C++",
+      "note": "Opened 9 Nov 2026."
     },
     "https://www.learncpp.com/cpp-tutorial/signed-integers/": {
       "how": "fetch",

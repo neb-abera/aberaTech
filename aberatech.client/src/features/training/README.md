@@ -135,6 +135,16 @@ A unit takes:
   "minutes", "topics" }`, such as the named Alcumus topics. The page never
   asks for AoPS credentials.
 
+The syllabus holds 991 questions for Phases 0 to 2: 459 cards, 285 number
+answers, 141 choices, 65 proofs, and 41 code questions. 33 programming and
+non-Alcumus math units have a pretest and a mastery check. The 26 units
+Alcumus covers have cards and proofs only, close on their named Alcumus
+topics (`externalMastery`), and place out by AoPS's own test (their
+checkpoint). Practice bands, contests, and timed papers have none: the
+judges and the paper's score test them. Every number answer was computed by
+a script, and every code question's reference solution passed its tests in
+gcc 16.2 on the dev box.
+
 Under `make e2e` the server sends two sample questions
 (`aberaTech.Server/Training/FakeAssessment.cs`), and `core/fixture.ts` adds
 them to the C++ refresher. Production sends none.

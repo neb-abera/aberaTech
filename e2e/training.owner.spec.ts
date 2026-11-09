@@ -288,6 +288,15 @@ test("a failed mastery check shows each wrong answer's reference and opens again
     page,
     () => ({
       items: Object.fromEntries(items.map((id) => [id, { at: ticked }])),
+      // The unit's pretest and each lesson's quiz taken, so the check is next.
+      assessments: Object.fromEntries(
+        [
+          "pretest:refresh-cpp",
+          "quiz:refresh-cpp-types",
+          "quiz:refresh-cpp-strings",
+          "quiz:refresh-cpp-lambdas",
+        ].map((key) => [key, [{ at: ticked, answers: {} }]]),
+      ),
     }),
     async () => {
       await page.reload();
