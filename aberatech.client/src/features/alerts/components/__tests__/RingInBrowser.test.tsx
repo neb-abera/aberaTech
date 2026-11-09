@@ -52,6 +52,7 @@ const standup: AlertItem = {
   acknowledgedVia: null,
   recurring: false,
   endsAt: "2026-10-28T13:30:00+00:00",
+  ringsUntil: "2026-10-28T13:00:00+00:00",
 };
 
 const state = (alerts: AlertItem[]): AlertsState => ({

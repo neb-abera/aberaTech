@@ -297,6 +297,9 @@ public sealed class AlertEventRouteTests : IDisposable
         Assert.Equal("Dentist", Assert.Single(_pushover.Requests).Form["title"]);
         var listed = (await StateOf(await phone.GetAsync("/api/alerts/status"))).GetProperty("alerts").EnumerateArray()
             .Single(alert => alert.GetProperty("title").GetString() == "Dentist");
+        // A browser rings it from the start until the window ends.
+        Assert.Equal(
+            (start + AlertPlanner.AtStartWindow).ToDateTimeOffset(), listed.GetProperty("ringsUntil").GetDateTimeOffset());
         using var stopped = await phone.PostAsJsonAsync(
             "/api/alerts/ack", new { key = listed.GetProperty("key").GetString(), via = "phone" });
         Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);

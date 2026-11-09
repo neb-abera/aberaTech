@@ -972,7 +972,8 @@ public static class AlertsEndpoints
                             acknowledgement?.At.ToDateTimeOffset(),
                             acknowledgement?.Via,
                             alert.Recurring,
-                            alert.EndsAt?.ToDateTimeOffset());
+                            alert.EndsAt?.ToDateTimeOffset(),
+                            alert.Until.ToDateTimeOffset());
                     })
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
@@ -1286,7 +1287,8 @@ public static class AlertsEndpoints
         DateTimeOffset? AcknowledgedAt,
         string? AcknowledgedVia,
         bool Recurring,
-        DateTimeOffset? EndsAt);
+        DateTimeOffset? EndsAt,
+        DateTimeOffset RingsUntil);
 
     /// <summary>
     /// An edit of a listed occurrence. Key, scope, title and startsAt are

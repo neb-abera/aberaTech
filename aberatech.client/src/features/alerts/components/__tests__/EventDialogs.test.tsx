@@ -49,6 +49,7 @@ const standup: AlertItem = {
   acknowledgedVia: null,
   recurring: false,
   endsAt: new Date(start.getTime() + 30 * 60_000).toISOString(),
+  ringsUntil: start.toISOString(),
 };
 const daily: AlertItem = {
   ...standup,

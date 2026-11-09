@@ -1,6 +1,5 @@
 /**
- * Which alarm rings: an alarm whose time has come and whose event has not
- * started, and nothing that is skipped, muted or acknowledged anywhere.
+ * Which alarm rings: an alarm whose time has come and that is still due, and nothing that is skipped, muted or acknowledged anywhere.
  */
 
 import fc from "fast-check";
@@ -25,6 +24,7 @@ const base: AlertItem = {
   acknowledgedVia: null,
   recurring: false,
   endsAt: "2026-10-28T13:30:00Z",
+  ringsUntil: "2026-10-28T13:00:00Z",
 };
 
 const at = (iso: string) => Date.parse(iso);
@@ -35,6 +35,20 @@ describe("dueAlarm", () => {
     expect(dueAlarm([base], at("2026-10-28T12:45:00Z"))).toBe(base);
     expect(dueAlarm([base], at("2026-10-28T12:59:59Z"))).toBe(base);
     expect(dueAlarm([base], at("2026-10-28T13:00:00Z"))).toBeNull();
+  });
+
+  it("rings an alarm at the start until its ringsUntil", () => {
+    // "Rings at the start": the alert is the start. Until 2026-11-09 the
+    // browser stopped at the start and never rang it.
+    const atStart = {
+      ...base,
+      alertAt: "2026-10-28T13:00:00Z",
+      ringsUntil: "2026-10-28T13:16:00Z",
+    };
+    expect(dueAlarm([atStart], at("2026-10-28T12:59:59Z"))).toBeNull();
+    expect(dueAlarm([atStart], at("2026-10-28T13:00:00Z"))).toBe(atStart);
+    expect(dueAlarm([atStart], at("2026-10-28T13:15:59Z"))).toBe(atStart);
+    expect(dueAlarm([atStart], at("2026-10-28T13:16:00Z"))).toBeNull();
   });
 
   it("is the earliest when two are due", () => {
@@ -68,7 +82,7 @@ describe("dueAlarm", () => {
             !acknowledged &&
             type === "alarm" &&
             now >= at(base.alertAt) &&
-            now < at(base.startsAt);
+            now < at(base.ringsUntil);
           expect(rings).toBe(should);
         },
       ),
