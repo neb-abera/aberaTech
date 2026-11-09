@@ -15,7 +15,6 @@ import { linkUrl } from "../core/link";
 import {
   type BookingLink,
   type LinkRules,
-  type NewKey,
   useBookingLinks,
 } from "../hooks/useBookingLinks";
 
@@ -49,13 +48,13 @@ const blankRules: LinkRules = {
  * Booking links: one per audience, each with its own rules.
  *
  * The rules decide which times a visitor holding the link is offered, and the
- * server checks every booking against them. A link carries a key the site
- * keeps only as a hash, so the full link is shown once, when it is made.
+ * server checks every booking against them. Each row shows its link to copy.
+ * Off pauses a link. Revoke ends its address for good, and New key issues a
+ * new address for the same rules.
  */
 export default function BookingLinksCard({ enabled }: { enabled: boolean }) {
-  const { list, error, create, update, saveDefault, newKey } =
+  const { list, error, create, update, saveDefault, newKey, revoke } =
     useBookingLinks(enabled);
-  const [shown, setShown] = React.useState<NewKey | null>(null);
   const [adding, setAdding] = React.useState(false);
 
   if (!enabled || !list) {
@@ -79,24 +78,22 @@ export default function BookingLinksCard({ enabled }: { enabled: boolean }) {
 
           {error ? <Alert severity="error">{error}</Alert> : null}
 
-          {shown ? (
-            <ShownKey shown={shown} onDone={() => setShown(null)} />
-          ) : null}
-
           <LinkRow link={list.default} onSave={(rules) => saveDefault(rules)} />
 
           {list.links.map((link) => (
             <React.Fragment key={link.id}>
               <Divider />
+              {/* Keyed by its key's state, so a new key or a revoke redraws
+                  the row from what the server now holds. */}
               <LinkRow
+                key={`${link.issuedAt}-${link.revokedAt}`}
                 link={link}
                 onSave={(rules) => update(link.id as string, rules)}
                 onNewKey={async () => {
                   const made = await newKey(link.id as string);
-                  if (typeof made === "string") return { error: made };
-                  setShown(made);
-                  return { error: null };
+                  return { error: typeof made === "string" ? made : null };
                 }}
+                onRevoke={() => revoke(link.id as string)}
               />
             </React.Fragment>
           ))}
@@ -104,12 +101,19 @@ export default function BookingLinksCard({ enabled }: { enabled: boolean }) {
           <Divider />
           {adding ? (
             <LinkRow
-              link={{ ...blankRules, id: null, isDefault: false, bookings: 0 }}
+              link={{
+                ...blankRules,
+                id: null,
+                isDefault: false,
+                bookings: 0,
+                key: null,
+                issuedAt: null,
+                revokedAt: null,
+              }}
               isNew
               onSave={async (rules) => {
                 const made = await create(rules);
                 if (typeof made === "string") return { error: made };
-                setShown(made);
                 setAdding(false);
                 return { error: null };
               }}
@@ -128,47 +132,62 @@ export default function BookingLinksCard({ enabled }: { enabled: boolean }) {
   );
 }
 
-/** The full link, once. The site keeps only its hash. */
-function ShownKey({ shown, onDone }: { shown: NewKey; onDone: () => void }) {
-  const url = linkUrl(window.location.origin, shown.key);
+/** "9 Nov 2026" for an instant. */
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** A link's address to copy, or why there is none. */
+function LinkAddress({ link }: { link: BookingLink }) {
   const [copied, setCopied] = React.useState(false);
 
+  if (link.revokedAt) {
+    return (
+      <Typography variant="body2" sx={{ color: "error.main" }}>
+        Revoked {shortDate(link.revokedAt)}. Its address no longer works. Issue
+        a new link to use these rules again.
+      </Typography>
+    );
+  }
+
+  if (!link.key) {
+    return (
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        Made before the site kept links, so it cannot show this one. The address
+        you were given still works. New key gives one you can copy here.
+      </Typography>
+    );
+  }
+
+  const url = linkUrl(window.location.origin, link.key);
   return (
-    <Alert
-      severity="success"
-      action={
-        <Button color="inherit" size="small" onClick={onDone}>
-          Done
-        </Button>
-      }
-    >
-      <Stack spacing={1}>
-        <Typography variant="body2">
-          The link for {shown.link.name}. Copy it now: the site keeps no copy of
-          its key.
-        </Typography>
-        <TextField
-          value={url}
-          size="small"
-          fullWidth
-          label="Link"
-          slotProps={{ htmlInput: { readOnly: true } }}
-          onFocus={(event) => event.target.select()}
-        />
-        <Box>
-          <Button
-            size="small"
-            variant="contained"
-            onClick={async () => {
-              await navigator.clipboard.writeText(url);
-              setCopied(true);
-            }}
-          >
-            {copied ? "Copied" : "Copy link"}
-          </Button>
-        </Box>
-      </Stack>
-    </Alert>
+    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+      <TextField
+        value={url}
+        size="small"
+        fullWidth
+        label="Link"
+        helperText={link.issuedAt ? `Issued ${shortDate(link.issuedAt)}` : null}
+        slotProps={{ htmlInput: { readOnly: true } }}
+        onFocus={(event) => event.target.select()}
+      />
+      <Button
+        size="small"
+        variant="outlined"
+        sx={{ mt: 0.5, flexShrink: 0 }}
+        onClick={async () => {
+          await navigator.clipboard.writeText(url);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </Button>
+    </Box>
   );
 }
 
@@ -177,10 +196,18 @@ interface LinkRowProps {
   isNew?: boolean;
   onSave: (rules: LinkRules) => Promise<{ error: string | null }>;
   onNewKey?: () => Promise<{ error: string | null }>;
+  onRevoke?: () => Promise<{ error: string | null }>;
   onCancel?: () => void;
 }
 
-function LinkRow({ link, isNew, onSave, onNewKey, onCancel }: LinkRowProps) {
+function LinkRow({
+  link,
+  isNew,
+  onSave,
+  onNewKey,
+  onRevoke,
+  onCancel,
+}: LinkRowProps) {
   const [rules, setRules] = React.useState<LinkRules>(link);
   const lead = splitMinutes(link.leadMinutes);
   const [leadAmount, setLeadAmount] = React.useState(String(lead.amount));
@@ -227,6 +254,7 @@ function LinkRow({ link, isNew, onSave, onNewKey, onCancel }: LinkRowProps) {
             control={
               <Switch
                 checked={rules.active}
+                disabled={link.revokedAt !== null}
                 onChange={(event) => {
                   // Moves at once and saves. A refusal puts it back.
                   const before = rules;
@@ -241,6 +269,8 @@ function LinkRow({ link, isNew, onSave, onNewKey, onCancel }: LinkRowProps) {
           />
         )}
       </Box>
+
+      {link.isDefault || isNew ? null : <LinkAddress link={link} />}
 
       {error ? <Alert severity="error">{error}</Alert> : null}
 
@@ -361,7 +391,19 @@ function LinkRow({ link, isNew, onSave, onNewKey, onCancel }: LinkRowProps) {
               if (result.error) setError(result.error);
             }}
           >
-            New key
+            {link.revokedAt ? "Issue a new link" : "New key"}
+          </Button>
+        ) : null}
+        {onRevoke && !link.revokedAt ? (
+          <Button
+            size="small"
+            color="error"
+            onClick={async () => {
+              const result = await onRevoke();
+              if (result.error) setError(result.error);
+            }}
+          >
+            Revoke
           </Button>
         ) : null}
         {status ? (

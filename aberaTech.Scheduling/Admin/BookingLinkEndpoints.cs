@@ -1,6 +1,7 @@
 using aberaTech.Scheduling.Api;
 using aberaTech.Scheduling.Data;
 using aberaTech.Scheduling.Domain;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
@@ -18,7 +19,10 @@ public sealed record BookingLinkRules(
     bool ShowsQueue,
     bool Active = true);
 
-/// <summary>A link as the host sees it. The key is never in it: only its hash is kept.</summary>
+/// <summary>A link as the host sees it, with its key so the page can show the link.</summary>
+/// <param name="Key">The key, for the owner alone. Null for the default row, a revoked link, and a link made before keys were kept.</param>
+/// <param name="IssuedAt">When the current key was issued.</param>
+/// <param name="RevokedAt">When the link was revoked, or null.</param>
 public sealed record BookingLinkView(
     Guid? Id,
     string Name,
@@ -29,11 +33,14 @@ public sealed record BookingLinkView(
     int AppointmentMinutes,
     bool ShowsQueue,
     bool Active,
-    int Bookings);
+    int Bookings,
+    string? Key = null,
+    string? IssuedAt = null,
+    string? RevokedAt = null);
 
 public sealed record BookingLinkList(BookingLinkView Default, IReadOnlyList<BookingLinkView> Links);
 
-/// <summary>A new key. Shown once, when it is made.</summary>
+/// <summary>A new key and the link it belongs to.</summary>
 public sealed record BookingLinkKey(BookingLinkView Link, string Key);
 
 /// <summary>A link's rules after validation.</summary>
@@ -57,6 +64,9 @@ public static class BookingLinkEndpoints
     public const int MaxAppointmentMinutes = 240;
 
     private static readonly LocalDatePattern DatePattern = LocalDatePattern.Iso;
+
+    /// <summary>The Data Protection purpose for kept keys. Changing it makes every kept key unreadable.</summary>
+    internal const string ProtectionPurpose = "aberaTech.Scheduling.BookingLinkKey.v1";
 
     /// <summary>The name the default rules show under.</summary>
     public const string DefaultName = "Plain /schedule, no link";
@@ -124,6 +134,7 @@ public static class BookingLinkEndpoints
         group.MapPut("/default", SaveDefaultAsync);
         group.MapPut("/{linkId:guid}", UpdateAsync);
         group.MapPost("/{linkId:guid}/key", NewKeyAsync);
+        group.MapPost("/{linkId:guid}/revoke", RevokeAsync);
 
         return routes;
     }
@@ -131,8 +142,11 @@ public static class BookingLinkEndpoints
     private static async Task<IResult> ListAsync(
         SchedulingDbContext database,
         SchedulingOptions options,
+        IDataProtectionProvider protection,
         CancellationToken cancellationToken)
     {
+        var protector = protection.CreateProtector(ProtectionPurpose);
+
         var links = await database.BookingLinks
             .AsNoTracking()
             .OrderBy(link => link.CreatedAt)
@@ -154,12 +168,13 @@ public static class BookingLinkEndpoints
 
         return Results.Ok(new BookingLinkList(
             fallback,
-            [.. links.Where(link => !link.IsDefault).Select(link => View(link, Count(link.Id)))]));
+            [.. links.Where(link => !link.IsDefault).Select(link => View(link, Count(link.Id), Reveal(protector, link)))]));
     }
 
     private static async Task<IResult> CreateAsync(
         BookingLinkRules request,
         SchedulingDbContext database,
+        IDataProtectionProvider protection,
         IClock clock,
         CancellationToken cancellationToken)
     {
@@ -169,19 +184,15 @@ public static class BookingLinkEndpoints
             return Results.BadRequest(new { error });
         }
 
-        var key = BookingLinkKeys.NewKey();
-        var link = new BookingLink
-        {
-            Id = Guid.NewGuid(),
-            KeyHash = BookingLinkKeys.Hash(key),
-            CreatedAt = clock.GetCurrentInstant()
-        };
+        var now = clock.GetCurrentInstant();
+        var link = new BookingLink { Id = Guid.NewGuid(), CreatedAt = now };
         Apply(link, rules);
+        var key = Issue(link, protection, now);
 
         database.BookingLinks.Add(link);
         await database.SaveChangesAsync(cancellationToken);
 
-        return Results.Ok(new BookingLinkKey(View(link, 0), key));
+        return Results.Ok(new BookingLinkKey(View(link, 0, key), key));
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -202,6 +213,11 @@ public static class BookingLinkEndpoints
         if (rules is null)
         {
             return Results.BadRequest(new { error });
+        }
+
+        if (link.RevokedAt is not null && rules.Active)
+        {
+            return Results.Conflict(new { error = "A revoked link has no key. Press New key to issue a new link." });
         }
 
         Apply(link, rules);
@@ -252,11 +268,13 @@ public static class BookingLinkEndpoints
     /// </summary>
     /// <remarks>
     /// For a link that reached somebody it should not have. Bookings already
-    /// made through it stay.
+    /// made through it stay. A revoked link comes back on, under the new key.
     /// </remarks>
     private static async Task<IResult> NewKeyAsync(
         Guid linkId,
         SchedulingDbContext database,
+        IDataProtectionProvider protection,
+        IClock clock,
         CancellationToken cancellationToken)
     {
         var link = await database.BookingLinks
@@ -267,14 +285,86 @@ public static class BookingLinkEndpoints
             return Results.NotFound();
         }
 
-        var key = BookingLinkKeys.NewKey();
-        link.KeyHash = BookingLinkKeys.Hash(key);
+        if (link.RevokedAt is not null)
+        {
+            link.RevokedAt = null;
+            link.Active = true;
+        }
+
+        var key = Issue(link, protection, clock.GetCurrentInstant());
         await database.SaveChangesAsync(cancellationToken);
 
         var bookings = await database.Appointments
             .CountAsync(appointment => appointment.BookingLinkId == linkId && !appointment.Cancelled, cancellationToken);
 
-        return Results.Ok(new BookingLinkKey(View(link, bookings), key));
+        return Results.Ok(new BookingLinkKey(View(link, bookings, key), key));
+    }
+
+    /// <summary>
+    /// Revokes a link: its key is destroyed and the link is off.
+    /// </summary>
+    /// <remarks>
+    /// Off pauses a link and On brings the same address back. Revoke ends the
+    /// address for good: nothing is left that matches it. The row stays, with
+    /// its bookings, and New key issues a new address for the same rules.
+    /// </remarks>
+    private static async Task<IResult> RevokeAsync(
+        Guid linkId,
+        SchedulingDbContext database,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        var link = await database.BookingLinks
+            .FirstOrDefaultAsync(candidate => candidate.Id == linkId && !candidate.IsDefault, cancellationToken);
+
+        if (link is null)
+        {
+            return Results.NotFound();
+        }
+
+        link.KeyHash = null;
+        link.ProtectedKey = null;
+        link.KeyIssuedAt = null;
+        link.Active = false;
+        link.RevokedAt ??= clock.GetCurrentInstant();
+        await database.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>Gives a link a new key, kept as a hash for lookup and encrypted for the host's list.</summary>
+    private static string Issue(BookingLink link, IDataProtectionProvider protection, Instant now)
+    {
+        var key = BookingLinkKeys.NewKey();
+        link.KeyHash = BookingLinkKeys.Hash(key);
+        link.ProtectedKey = protection.CreateProtector(ProtectionPurpose).Protect(key);
+        link.KeyIssuedAt = now;
+        return key;
+    }
+
+    /// <summary>
+    /// The kept key, or null when there is none or it cannot be read.
+    /// </summary>
+    /// <remarks>
+    /// A key ring that lost the key that encrypted it gives null rather than
+    /// an error, so one unreadable row does not take the list down. The
+    /// address still works. New key gives one the page can show.
+    /// </remarks>
+    private static string? Reveal(IDataProtector protector, BookingLink link)
+    {
+        if (link.ProtectedKey is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return protector.Unprotect(link.ProtectedKey);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return null;
+        }
     }
 
     private static void Apply(BookingLink link, ValidatedRules rules)
@@ -288,7 +378,7 @@ public static class BookingLinkEndpoints
         link.Active = rules.Active;
     }
 
-    private static BookingLinkView View(BookingLink link, int bookings) => new(
+    private static BookingLinkView View(BookingLink link, int bookings, string? key = null) => new(
         link.IsDefault ? null : link.Id,
         link.Name,
         link.IsDefault,
@@ -298,7 +388,13 @@ public static class BookingLinkEndpoints
         link.AppointmentMinutes,
         link.ShowsQueue,
         link.Active,
-        bookings);
+        bookings,
+        key,
+        Format(link.RevokedAt is null ? link.KeyIssuedAt ?? link.CreatedAt : null),
+        Format(link.RevokedAt));
+
+    private static string? Format(Instant? instant) =>
+        instant?.ToString("uuuu-MM-ddTHH:mm:ss'Z'", null);
 
     private static BookingLinkView FromPolicy(BookingPolicy policy, int bookings) => new(
         null,

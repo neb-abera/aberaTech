@@ -103,6 +103,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(link => link.Name).HasMaxLength(120).IsRequired();
             entity.Property(link => link.KeyHash).HasMaxLength(64);
 
+            // No length cap, as for the calendar token: the ciphertext's size
+            // is the protection format's to decide.
+
             // Every page load with a link looks its key up by hash.
             entity
                 .HasIndex(link => link.KeyHash)

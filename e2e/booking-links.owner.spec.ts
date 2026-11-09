@@ -33,14 +33,19 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
   await card.getByLabel("First day").fill(firstDay);
   await card.getByRole("button", { name: "Make the link" }).click();
 
-  const shown = page.getByRole("alert").filter({ hasText: "Copy it now" });
-  await expect(shown).toBeVisible();
-  const url = await shown.getByLabel("Link").inputValue();
-  expect(url).toMatch(/\/schedule#k=[A-Za-z0-9_-]{22}$/);
-  await shown.getByRole("button", { name: "Done" }).click();
-
-  // The list never shows the key again.
-  await expect(page.getByText(url)).toHaveCount(0);
+  // The new link is listed with its address to copy, and keeps it on a reload.
+  const row = page
+    .getByRole("group", {
+      name: `Rules for E2E interviews ${info.project.name}`,
+    })
+    .last();
+  const address = row.getByRole("textbox", { name: "Link" });
+  await expect(address).toHaveValue(/\/schedule#k=[A-Za-z0-9_-]{22}$/);
+  const url = await address.inputValue();
+  await expect(row.getByText(/^Issued /)).toBeVisible();
+  await expect(row.getByRole("button", { name: "Copy" })).toBeVisible();
+  await page.reload();
+  await expect(address).toHaveValue(url);
 
   const context = await browser.newContext({ timezoneId: "UTC" });
   const visitor = await context.newPage();
@@ -80,13 +85,22 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
   await context.close();
 
   // Off: the link books under the default rules, like an unknown key.
-  const row = page
-    .getByRole("group", {
-      name: `Rules for E2E interviews ${info.project.name}`,
-    })
-    .last();
   const on = row.getByRole("switch", { name: "On" });
   await on.uncheck();
   await expect(on).not.toBeChecked();
   await expect(row.getByRole("status")).toHaveText("Saved");
+
+  // Revoke: the address is gone for good and the row says so.
+  await row.getByRole("button", { name: "Revoke" }).click();
+  await expect(row.getByText(/^Revoked /)).toBeVisible();
+  await expect(row.getByRole("textbox", { name: "Link" })).toHaveCount(0);
+  await expect(row.getByRole("switch", { name: "On" })).toBeDisabled();
+  await expect(
+    row.getByRole("button", { name: "Issue a new link" }),
+  ).toBeVisible();
+  const key = url.split("#k=")[1];
+  const revoked = await page.request.get("/api/scheduling/state?zone=UTC", {
+    headers: { "X-Booking-Link": key },
+  });
+  expect((await revoked.json()).availableDates[0]).toBe(plainFirst);
 });

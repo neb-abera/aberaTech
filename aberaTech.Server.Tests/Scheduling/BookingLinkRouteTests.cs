@@ -133,7 +133,7 @@ public sealed class BookingLinkRouteTests : IDisposable
     }
 
     [PostgresFact]
-    public async Task The_key_is_shown_once_and_a_new_key_stops_the_old_one()
+    public async Task The_owner_sees_every_link_and_never_a_hash_and_a_new_key_stops_the_old_one()
     {
         await OpenEveryDayAsync();
         using var host = Host();
@@ -141,20 +141,73 @@ public sealed class BookingLinkRouteTests : IDisposable
         var (linkId, key) = await CreateLinkAsync(host, "Army", earliest);
 
         var listed = await host.GetStringAsync("/api/scheduling/admin/links");
-        Assert.DoesNotContain(key, listed);
+        var row = Row(JsonDocument.Parse(listed).RootElement, linkId);
+        Assert.Equal(key, row.GetProperty("key").GetString());
+        Assert.NotNull(row.GetProperty("issuedAt").GetString());
         Assert.DoesNotContain(BookingLinkKeys.Hash(key), listed);
-        Assert.Contains("Army", listed);
+
+        // Stored encrypted: the column holds neither the key nor its hash.
+        await using (var scope = Scope(out var database))
+        {
+            var stored = await database.BookingLinks.SingleAsync(link => link.Id == linkId);
+            Assert.NotNull(stored.ProtectedKey);
+            Assert.DoesNotContain(key, stored.ProtectedKey);
+        }
 
         using var rotated = await host.PostAsync($"/api/scheduling/admin/links/{linkId}/key", null);
         Assert.Equal(HttpStatusCode.OK, rotated.StatusCode);
         var newKey = (await rotated.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("key").GetString()!;
         Assert.NotEqual(key, newKey);
+        Assert.Equal(newKey, Row(await host.GetFromJsonAsync<JsonElement>("/api/scheduling/admin/links"), linkId).GetProperty("key").GetString());
 
         using var oldHolder = WithKey(key);
         using var newHolder = WithKey(newKey);
         Assert.True(string.CompareOrdinal(Dates(await StateAsync(oldHolder))[0], Iso(earliest)) < 0);
         Assert.Equal(Iso(earliest), Dates(await StateAsync(newHolder))[0]);
     }
+
+    [PostgresFact]
+    public async Task A_revoked_link_stops_for_good_until_a_new_key_is_issued()
+    {
+        await OpenEveryDayAsync();
+        using var host = Host();
+        var earliest = Today.PlusDays(3);
+        var (linkId, key) = await CreateLinkAsync(host, "Recruiter", earliest);
+
+        using var revoked = await host.PostAsync($"/api/scheduling/admin/links/{linkId}/revoke", null);
+        Assert.Equal(HttpStatusCode.NoContent, revoked.StatusCode);
+
+        var row = Row(await host.GetFromJsonAsync<JsonElement>("/api/scheduling/admin/links"), linkId);
+        Assert.Equal(JsonValueKind.Null, row.GetProperty("key").ValueKind);
+        Assert.False(row.GetProperty("active").GetBoolean());
+        Assert.NotNull(row.GetProperty("revokedAt").GetString());
+
+        using var holder = WithKey(key);
+        Assert.True(string.CompareOrdinal(Dates(await StateAsync(holder))[0], Iso(earliest)) < 0);
+
+        // On cannot bring back an address that no longer exists.
+        using var on = await host.PutAsJsonAsync($"/api/scheduling/admin/links/{linkId}", Rules("Recruiter", earliest));
+        Assert.Equal(HttpStatusCode.Conflict, on.StatusCode);
+
+        await using (var scope = Scope(out var database))
+        {
+            var stored = await database.BookingLinks.SingleAsync(link => link.Id == linkId);
+            Assert.Null(stored.KeyHash);
+            Assert.Null(stored.ProtectedKey);
+        }
+
+        using var reissued = await host.PostAsync($"/api/scheduling/admin/links/{linkId}/key", null);
+        var newKey = (await reissued.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("key").GetString()!;
+        using var newHolder = WithKey(newKey);
+        Assert.Equal(Iso(earliest), Dates(await StateAsync(newHolder))[0]);
+        Assert.True(Row(await host.GetFromJsonAsync<JsonElement>("/api/scheduling/admin/links"), linkId).GetProperty("active").GetBoolean());
+
+        using var missing = await host.PostAsync($"/api/scheduling/admin/links/{Guid.NewGuid()}/revoke", null);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    private static JsonElement Row(JsonElement list, Guid id) =>
+        list.GetProperty("links").EnumerateArray().Single(link => link.GetProperty("id").GetGuid() == id);
 
     [PostgresFact]
     public async Task The_host_cannot_save_rules_that_make_no_sense()

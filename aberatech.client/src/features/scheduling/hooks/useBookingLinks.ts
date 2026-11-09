@@ -15,6 +15,10 @@ export interface BookingLink extends LinkRules {
   id: string | null;
   isDefault: boolean;
   bookings: number;
+  /** The key, for the owner. Null when revoked or made before keys were kept. */
+  key: string | null;
+  issuedAt: string | null;
+  revokedAt: string | null;
 }
 
 interface LinkList {
@@ -145,5 +149,19 @@ export function useBookingLinks(enabled: boolean) {
     [send, reload],
   );
 
-  return { list, error, create, update, saveDefault, newKey };
+  const revoke = useCallback(
+    async (id: string): Promise<Outcome> => {
+      const result = await send(
+        "POST",
+        `/api/scheduling/admin/links/${id}/revoke`,
+        undefined,
+        "Could not revoke the link.",
+      );
+      await reload();
+      return { error: typeof result === "string" ? result : null };
+    },
+    [send, reload],
+  );
+
+  return { list, error, create, update, saveDefault, newKey, revoke };
 }
