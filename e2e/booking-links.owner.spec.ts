@@ -26,7 +26,7 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
   first.setUTCDate(first.getUTCDate() + 3);
   const firstDay = first.toISOString().slice(0, 10);
 
-  await page.getByRole("button", { name: "New link" }).click();
+  await page.getByRole("button", { name: "New link", exact: true }).click();
   await card
     .getByLabel("Name, seen only by you")
     .fill(`E2E interviews ${info.project.name}`);
