@@ -78,12 +78,12 @@ The dose is a vector of hours by intensity, and each zone saturates:
 C(h) = 38 + r · Σ bᵢ·sᵢ·(1 − e^(−hᵢ/sᵢ))
 ```
 
-| Zone | bᵢ (VDOT per hour, first hour) | sᵢ (saturation, h/week) | strain per hour |
-| --- | --- | --- | --- |
-| Easy | 1.960 | 14.0 | 1.0 |
-| Threshold | 2.856 | 1.2 | 2.5 |
-| Interval | 3.373 | 0.6 | 4.5 |
-| Strength | 1.078 | 1.5 | 1.5 |
+| Zone      | bᵢ (VDOT per hour, first hour) | sᵢ (saturation, h/week) | strain per hour |
+| --------- | ------------------------------ | ----------------------- | --------------- |
+| Easy      | 1.960                          | 14.0                    | 1.0             |
+| Threshold | 2.856                          | 1.2                     | 2.5             |
+| Interval  | 3.373                          | 0.6                     | 4.5             |
+| Strength  | 1.078                          | 1.5                     | 1.5             |
 
 The `bᵢ` were fixed by two conditions, both asserted in `DoseResponseTests`:
 the optimal split of an eight-hour week comes out at 80% easy (Seiler's
@@ -96,8 +96,6 @@ calculator once answer "45.8 hours a week" for a five-mile time no human has
 run. `r` is the athlete's responsiveness, fitted from their own history.
 
 ### How the hours get split
-
-
 
 Maximising `C(h)` subject to `Σhᵢ = H` and `Σcᵢhᵢ ≤ Sₘₐₓ` is a constrained
 optimum, solved from the Lagrangian conditions rather than by search:
@@ -117,7 +115,7 @@ zone's first hour looks valuable, and the unconstrained optimum put only 43% of
 the week into easy running. For an athlete whose aerobic threshold already lags
 their lactate threshold by more than about 10% (the Uphill Athlete deficiency
 test the app already computes), that is the opposite of the prescription, since
-the deficit *is* base. So intensity is capped at 10% of running hours for a
+the deficit _is_ base. So intensity is capped at 10% of running hours for a
 deficient athlete and 25% for a sound one, and the same 90-minute week comes
 back 90% easy. The objective is constrained: the hard hours that
 survive are split between threshold and interval exactly as the optimiser chose,
@@ -149,7 +147,7 @@ their own bands), so no date assumes a jump nobody could start.
 
 ### Bodyweight
 
-VDOT is oxygen uptake *per kilogram*, so shedding fat mass leaves the engine's
+VDOT is oxygen uptake _per kilogram_, so shedding fat mass leaves the engine's
 absolute output alone while shrinking the denominator: VDOT scales with the
 inverse of mass (Cureton & Sparling's added-load studies). Clamped to ±10% of
 the starting mass, past which the fat-mass-only assumption has nothing behind
@@ -284,7 +282,7 @@ series read 4% fast is recovered at 0.957.
 **What is and is not identified.** The parameters lie on a ridge: a proxy read
 low, from a low start, approached slowly fits about as well as an accurate one
 from a high start approached fast. The marginals therefore lean on their priors,
-and presenting `k` as *measured* would be dishonest. What survives the ridge is
+and presenting `k` as _measured_ would be dishonest. What survives the ridge is
 the prediction: every combination on it fits the past and they agree closely
 about the future, which is why the predictive intervals are calibrated where the
 marginals are not. A time trial cuts across the ridge, because it observes
@@ -344,16 +342,16 @@ plan not having happened.
 Everything fails closed: with any of these missing, `/api/fitness/*` is never
 mapped and `/api/fitness/me` answers `configured: false`.
 
-| Setting | Meaning |
-| --- | --- |
-| `ConnectionStrings:Fitness` | Postgres database (its own database on the shared server). |
-| `Fitness:AllowedEmails` | The Google accounts allowed in: the athlete. |
-| `Admin:*` (existing) | Provides the Google sign-in schemes. Fitness reuses them. |
-| `Fitness:HevyApiKey` | Optional. Hevy Pro API key. Enables `/api/fitness/sync/hevy`. A container app secret. Keep it out of appsettings. |
-| `Database:UseEntraAuth` | Same switch the scheduling database uses. Applies here too. |
+| Setting                                      | Meaning                                                                                                                                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConnectionStrings:Fitness`                  | Postgres database (its own database on the shared server).                                                                                                                                               |
+| `Fitness:AllowedEmails`                      | The Google accounts allowed in: the athlete.                                                                                                                                                             |
+| `Admin:*` (existing)                         | Provides the Google sign-in schemes. Fitness reuses them.                                                                                                                                                |
+| `Fitness:HevyApiKey`                         | Optional. Hevy Pro API key. Enables `/api/fitness/sync/hevy`. A container app secret. Keep it out of appsettings.                                                                                        |
+| `Database:UseEntraAuth`                      | Same switch the scheduling database uses. Applies here too.                                                                                                                                              |
 | `OneDrive:ClientId`, `OneDrive:ClientSecret` | Optional. The Entra app that reads the goals workbook from the athlete's OneDrive (personal accounts, delegated `Files.Read`). The secret is a container app secret. Without them the Goals tab says so. |
-| `OneDrive:WorkbookPath` | The workbook's path from the drive's root. Defaults to `Documents/physical fitness/physical fitness goals.xlsx`. |
-| `OneDrive:LocalWorkbookPath` | A workbook on disk read instead of OneDrive, for `make up` and the e2e suite. Never set in production. |
+| `OneDrive:WorkbookPath`                      | The workbook's path from the drive's root. Defaults to `Documents/physical fitness/physical fitness goals.xlsx`.                                                                                         |
+| `OneDrive:LocalWorkbookPath`                 | A workbook on disk read instead of OneDrive, for `make up` and the e2e suite. Never set in production.                                                                                                   |
 
 ## Goals
 

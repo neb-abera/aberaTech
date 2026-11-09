@@ -38,8 +38,9 @@ function parseRaceTime(value: string): number | null {
 
 function distanceLabel(meters: number | null): string {
   return (
-    RACE_DISTANCES.find((d) => Math.abs(d.meters - meters!) < 1)?.label ??
-    `${Math.round(meters ?? 0)} m`
+    RACE_DISTANCES.find(
+      (d) => meters !== null && Math.abs(d.meters - meters) < 1,
+    )?.label ?? `${Math.round(meters ?? 0)} m`
   );
 }
 

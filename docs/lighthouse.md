@@ -37,10 +37,10 @@ az containerapp revision restart -g aberatechserver-app-202412211749ResourceGrou
 
 ## What runs
 
-| Where | Trigger | Site | Uploads to |
-|---|---|---|---|
+| Where                                           | Trigger                                  | Site                                                               | Uploads to                                                   |
+| ----------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ |
 | `Lighthouse, in the container`, a job in Checks | every pull request, every push to master | the production image on the compose network, as `make e2e` runs it | aberaTech CI, branch = the pull request's branch or `master` |
-| Lighthouse nightly | 05:23 UTC, and on demand | https://abera.tech | abera.tech production, branch `production` |
+| Lighthouse nightly                              | 05:23 UTC, and on demand                 | https://abera.tech                                                 | abera.tech production, branch `production`                   |
 
 `make lighthouse` and `make lighthouse-live` run the same on the dev box.
 Without `LHCI_TOKEN` they upload nothing and print the tables to
@@ -193,15 +193,15 @@ vCPU seconds and 2,326,493 GiB seconds, at the list rates: $0.000024 a vCPU
 second active, $0.000003 idle, $0.000003 a GiB second. No Requests meter was
 billed, so the site's requests sit inside the free 2 million.
 
-| Item | Arithmetic | A month |
-|---|---|---|
-| Replica time | 610 wakes × 110 s × (0.25 vCPU × $0.000024 + 0.5 GiB × $0.000003) | $0.50 |
-| File operations, pull requests | 371 × (203 × $0.015 + 108 × $0.0015) per 10,000 | $0.12 |
-| File operations, master and nightly | 239 × (454 × $0.015 + 195 × $0.0015) per 10,000 | $0.17 |
-| Stored reports | (0.55 + 0.92 + 0.88) GB × $0.06 | $0.14 |
-| Snapshot | under 0.1 GB changed a day × $0.06 | $0.01 |
-| Image | 80 MB inside the registry's included 10 GB | $0 |
-| Total | | $0.94 |
+| Item                                | Arithmetic                                                        | A month |
+| ----------------------------------- | ----------------------------------------------------------------- | ------- |
+| Replica time                        | 610 wakes × 110 s × (0.25 vCPU × $0.000024 + 0.5 GiB × $0.000003) | $0.50   |
+| File operations, pull requests      | 371 × (203 × $0.015 + 108 × $0.0015) per 10,000                   | $0.12   |
+| File operations, master and nightly | 239 × (454 × $0.015 + 195 × $0.0015) per 10,000                   | $0.17   |
+| Stored reports                      | (0.55 + 0.92 + 0.88) GB × $0.06                                   | $0.14   |
+| Snapshot                            | under 0.1 GB changed a day × $0.06                                | $0.01   |
+| Image                               | 80 MB inside the registry's included 10 GB                        | $0      |
+| Total                               |                                                                   | $0.94   |
 
 - 610 wakes: 371 pull request runs and 208 master runs of Checks in the 31
   days to 2026-09-28, and 31 nights, each counted as its own wake.

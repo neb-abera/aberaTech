@@ -1,7 +1,7 @@
 # Scheduling
 
-One link, `/schedule`, that books time with the host. The server answers *what
-is happening right now* and the page renders it: the queue when a session is
+One link, `/schedule`, that books time with the host. The server answers _what
+is happening right now_ and the page renders it: the queue when a session is
 open, bookable slots otherwise. That is deliberate. The link goes in an email
 signature and in a text to everyone at once, and it cannot be two links the
 reader has to choose between.
@@ -10,7 +10,7 @@ reader has to choose between.
 
 Two failures drove it, and they are what most of the design is answering.
 
-**Time zones.** Availability rules store *civil* time and an IANA zone rather
+**Time zones.** Availability rules store _civil_ time and an IANA zone rather
 than an instant, because "Tuesdays nine to five" survives a daylight saving
 transition even though the elapsed hours it describes do not. Everything
 downstream works in instants. NodaTime throughout rather than `DateTime`, partly
@@ -31,15 +31,15 @@ treated as lost and retried.
 
 ## Shape
 
-| Piece | Job |
-|---|---|
-| `Domain/` | Pure. Availability, slot planning, queue projection, notification policy. No clock, no database, no HTTP |
-| `Data/` | EF Core entities, the `DbContext`, migrations |
-| `Outbox/` | The transactional outbox and the dispatcher that drains it |
-| `Sms/` | Twilio sending and delivery-receipt verification |
-| `Calendar/` | Free/busy from Google, and the local appointment source |
-| `Admin/` | Google sign-in, the allowlist, and the host's queue controls |
-| `Api/` | The public endpoints |
+| Piece       | Job                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| `Domain/`   | Pure. Availability, slot planning, queue projection, notification policy. No clock, no database, no HTTP |
+| `Data/`     | EF Core entities, the `DbContext`, migrations                                                            |
+| `Outbox/`   | The transactional outbox and the dispatcher that drains it                                               |
+| `Sms/`      | Twilio sending and delivery-receipt verification                                                         |
+| `Calendar/` | Free/busy from Google, and the local appointment source                                                  |
+| `Admin/`    | Google sign-in, the allowlist, and the host's queue controls                                             |
+| `Api/`      | The public endpoints                                                                                     |
 
 The domain is a library rather than a folder in the web project for two reasons.
 It is the right shape (it knows nothing about HTTP), and `aberaTech.Server`
@@ -59,7 +59,7 @@ Node installed to run these tests.
 - **No message goes out twice.** A unique idempotency key per logical
   notification, and an idempotency token on the send itself.
 - **Nothing forges a receipt.** Twilio signatures are verified with HMAC-SHA1
-  against the *configured* callback URL (a URL rebuilt from request headers is
+  against the _configured_ callback URL (a URL rebuilt from request headers is
   one the caller controls) and compared in fixed time.
 - **The dispatcher scales past one replica.** Claiming uses
   `SELECT … FOR UPDATE SKIP LOCKED`.
@@ -71,18 +71,18 @@ breaks. With no database the tab explains itself. With no Twilio the dispatcher
 runs against a logging sender. With no Google the admin surface does not exist
 and slots come from rules alone.
 
-| Setting | Purpose |
-|---|---|
-| `ConnectionStrings:Scheduling` | Postgres. Migrations run at start |
-| `Database:UseEntraAuth` | Authenticate as the container's managed identity instead of with a password |
-| `Scheduling:HostName`, `HostZoneId` | Whose queue, and the zone rules are written in |
-| `Scheduling:DefaultWindowDays`, `HorizonDays` | Days sent up front, and the furthest anybody may book |
-| `Twilio:AccountSid`, `AuthToken`, `FromNumber` | Sending |
-| `Twilio:StatusCallbackUrl` | **Required**. Must be the exact public URL, which is what the signature covers |
-| `Scheduling:HostPhoneE164` | Where to text the host about bookings and cancellations. Empty means they are not told |
-| `Scheduling:EarlyReminderLeadMinutes` | How far ahead the first reminder goes out. A day by default |
-| `Admin:GoogleClientId`, `GoogleClientSecret` | OAuth client |
-| `Admin:AllowedEmails` | Who may run the queue. **Empty means nobody** |
+| Setting                                        | Purpose                                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `ConnectionStrings:Scheduling`                 | Postgres. Migrations run at start                                                      |
+| `Database:UseEntraAuth`                        | Authenticate as the container's managed identity instead of with a password            |
+| `Scheduling:HostName`, `HostZoneId`            | Whose queue, and the zone rules are written in                                         |
+| `Scheduling:DefaultWindowDays`, `HorizonDays`  | Days sent up front, and the furthest anybody may book                                  |
+| `Twilio:AccountSid`, `AuthToken`, `FromNumber` | Sending                                                                                |
+| `Twilio:StatusCallbackUrl`                     | **Required**. Must be the exact public URL, which is what the signature covers         |
+| `Scheduling:HostPhoneE164`                     | Where to text the host about bookings and cancellations. Empty means they are not told |
+| `Scheduling:EarlyReminderLeadMinutes`          | How far ahead the first reminder goes out. A day by default                            |
+| `Admin:GoogleClientId`, `GoogleClientSecret`   | OAuth client                                                                           |
+| `Admin:AllowedEmails`                          | Who may run the queue. **Empty means nobody**                                          |
 
 Secrets belong in container app secrets, never `appsettings.json`. The Twilio
 auth token in particular is the key that signs delivery receipts.
@@ -108,15 +108,15 @@ fails immediately with a credential error rather than falling back to anything.
 
 ### What gets sent, and to whom
 
-| Event | Visitor | Host |
-|---|---|---|
-| Books a time | Confirmation, with the opt-out | New booking |
-| A day before | Reminder, if it is more than a day away | |
-| An hour before | Reminder | |
-| Cancels, either side | Cancellation | Canceled |
-| Joins a queue | Place and estimate, with the opt-out | |
-| Estimate moves past the tolerance | New estimate | |
-| Nearly their turn, and their turn | One each | |
+| Event                             | Visitor                                 | Host        |
+| --------------------------------- | --------------------------------------- | ----------- |
+| Books a time                      | Confirmation, with the opt-out          | New booking |
+| A day before                      | Reminder, if it is more than a day away |             |
+| An hour before                    | Reminder                                |             |
+| Cancels, either side              | Cancellation                            | Canceled    |
+| Joins a queue                     | Place and estimate, with the opt-out    |             |
+| Estimate moves past the tolerance | New estimate                            |             |
+| Nearly their turn, and their turn | One each                                |             |
 
 Reminders are ordinary outbox rows with a due time in the future, so they
 inherit the same retries, receipts and dead lettering as everything else and

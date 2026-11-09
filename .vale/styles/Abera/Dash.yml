@@ -3,6 +3,6 @@ message: "No dashes. Split the sentence, or use a comma."
 level: error
 nonword: true
 tokens:
-  - '—'
-  - ' – '
-  - ' -- '
+  - "—"
+  - " – "
+  - " -- "

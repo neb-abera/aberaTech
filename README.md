@@ -156,11 +156,11 @@ again and set `alerts-calendar-ics` with the first command above.
 
 Each event has one of three types (`AlertTypes.cs`):
 
-| Type | Sends |
-|---|---|
+| Type                         | Sends                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
 | Ring until stopped (`alarm`) | one message that rings every repeat until acknowledged, then stops at the stop time |
-| Ring once (`notification`) | one message at the Ring once priority and sound. Never a retry or an expiry |
-| Off (`none`) | nothing. The event is still listed on the page |
+| Ring once (`notification`)   | one message at the Ring once priority and sound. Never a retry or an expiry         |
+| Off (`none`)                 | nothing. The event is still listed on the page                                      |
 
 The type comes from the first of these that applies:
 
@@ -229,16 +229,16 @@ two must match, in any case. `X-WR-CALNAME` is used only for an address of
 another shape, and only when it is an address, because the owner can
 rename a calendar.
 
-| Answer | Why |
-|---|---|
-| `Google Calendar is not connected with edit access.` | no connection, or one made before the events scope. Disconnect and connect again on `/schedule/admin` |
-| `The connected calendar is not the one alerts read.` | the connection is another account, or the secret address is a secondary calendar |
-| `Google refused the stored calendar sign-in. Connect the calendar again.` | the refresh token was revoked or cannot be read |
-| `Google Calendar has no such event on the connected calendar.` | the UID is not on that calendar |
-| `Google refused the change: this event is organized by someone else.` | an invitation. Only its organizer can edit the description |
-| `Only the organizer can change this event.` | an edit or a deletion of an invitation |
-| `Google refused the change (HTTP <status>).` | any other refusal |
-| `Google Calendar did not answer.` | a timeout or no connection, after 10 s |
+| Answer                                                                    | Why                                                                                                   |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `Google Calendar is not connected with edit access.`                      | no connection, or one made before the events scope. Disconnect and connect again on `/schedule/admin` |
+| `The connected calendar is not the one alerts read.`                      | the connection is another account, or the secret address is a secondary calendar                      |
+| `Google refused the stored calendar sign-in. Connect the calendar again.` | the refresh token was revoked or cannot be read                                                       |
+| `Google Calendar has no such event on the connected calendar.`            | the UID is not on that calendar                                                                       |
+| `Google refused the change: this event is organized by someone else.`     | an invitation. Only its organizer can edit the description                                            |
+| `Only the organizer can change this event.`                               | an edit or a deletion of an invitation                                                                |
+| `Google refused the change (HTTP <status>).`                              | any other refusal                                                                                     |
+| `Google Calendar did not answer.`                                         | a timeout or no connection, after 10 s                                                                |
 
 `POST /api/alerts/events` takes `{title, startsAt, durationMinutes,
 location, type, leadMinutes}`. `title` is 1 to 200 characters. `startsAt`
@@ -255,10 +255,10 @@ Each listed alert carries `recurring`, true when the occurrence belongs to
 a series (an RRULE, or a moved occurrence of one), and `endsAt`, ISO 8601
 with its offset, or null when the event has no end.
 
-| Route | Request | Answer |
-|---|---|---|
-| `PUT /api/alerts/events` | `{key, scope, title, startsAt, durationMinutes?, location?, leadMinutes?}` | 200 with the page's whole state, the edit listed |
-| `POST /api/alerts/events/delete` | `{key, scope}` | 200 with the page's whole state, the deleted occurrences gone |
+| Route                            | Request                                                                    | Answer                                                        |
+| -------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `PUT /api/alerts/events`         | `{key, scope, title, startsAt, durationMinutes?, location?, leadMinutes?}` | 200 with the page's whole state, the edit listed              |
+| `POST /api/alerts/events/delete` | `{key, scope}`                                                             | 200 with the page's whole state, the deleted occurrences gone |
 
 `key` is a listed alert's key. It holds the event's UID, so it goes in the
 body. A key in the query string is not read. `scope` is `occurrence` or `series`.
@@ -289,14 +289,14 @@ it (`RecurrenceShift.cs`). A rule that names its days keeps making them
 after DTSTART moves (RFC 5545 section 3.3.10). So a weekly Tuesday moved
 to Wednesday would go on repeating on Tuesdays.
 
-| Part | Rewrite |
-|---|---|
-| `BYDAY` | Every weekday moves by D, modulo 7. `MO,WE,FR` a day earlier is `SU,TU,TH`. |
-| `BYDAY` with one ordinal, monthly or in a `BYMONTH` | The new start's ordinal when the old one named the old start. `2TU` on 14 July 2026, moved to the 15th, is `3WE`. Otherwise the ordinal stays and the day moves. |
-| `BYMONTHDAY`, monthly or yearly | One value that named the old start takes the new start's day. `31` moved a day later is `1`. `-1` stays negative inside its month. Other values move by D, clamped to 1 to 31. |
-| `BYMONTH`, yearly | One value that named the old start's month takes the new month. |
-| `EXDATE`, `RDATE` | Each date moves by the same change in date and wall-clock time, so a canceled occurrence stays canceled. RFC 5545 section 3.8.5.1 matches an EXDATE by its exact start. |
-| `UNTIL`, `COUNT`, `INTERVAL`, `WKST`, `BYSETPOS`, `BYYEARDAY`, `BYWEEKNO` | Kept. |
+| Part                                                                      | Rewrite                                                                                                                                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BYDAY`                                                                   | Every weekday moves by D, modulo 7. `MO,WE,FR` a day earlier is `SU,TU,TH`.                                                                                                    |
+| `BYDAY` with one ordinal, monthly or in a `BYMONTH`                       | The new start's ordinal when the old one named the old start. `2TU` on 14 July 2026, moved to the 15th, is `3WE`. Otherwise the ordinal stays and the day moves.               |
+| `BYMONTHDAY`, monthly or yearly                                           | One value that named the old start takes the new start's day. `31` moved a day later is `1`. `-1` stays negative inside its month. Other values move by D, clamped to 1 to 31. |
+| `BYMONTH`, yearly                                                         | One value that named the old start's month takes the new month.                                                                                                                |
+| `EXDATE`, `RDATE`                                                         | Each date moves by the same change in date and wall-clock time, so a canceled occurrence stays canceled. RFC 5545 section 3.8.5.1 matches an EXDATE by its exact start.        |
+| `UNTIL`, `COUNT`, `INTERVAL`, `WKST`, `BYSETPOS`, `BYYEARDAY`, `BYWEEKNO` | Kept.                                                                                                                                                                          |
 
 A rule with none of these parts, such as `FREQ=DAILY` or `FREQ=WEEKLY`
 with no `BYDAY`, takes its days from DTSTART and is not sent. A move
@@ -326,13 +326,13 @@ the server stored for a send, and
 `pushover`, and the phones are pushed. The page shows "Acknowledged in
 Pushover".
 
-| Answer | When |
-|---|---|
+| Answer                      | When                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------- |
 | 200 `{"acknowledged":true}` | Recorded now, or already acknowledged anywhere. A second post changes nothing |
-| 400 | Not a form, or not exactly one receipt of letters and digits |
-| 403 | Pushover says the receipt is not acknowledged |
-| 404 | A receipt this server never sent. Ten a minute per address, then 429 |
-| 503 | Pushover could not be asked. Pushover posts again a minute later |
+| 400                         | Not a form, or not exactly one receipt of letters and digits                  |
+| 403                         | Pushover says the receipt is not acknowledged                                 |
+| 404                         | A receipt this server never sent. Ten a minute per address, then 429          |
+| 503                         | Pushover could not be asked. Pushover posts again a minute later              |
 
 Thirty posts a minute per address. Each refusal is logged as 4017.
 `POST /api/alerts/ack` still takes `phone` or `browser` alone.
@@ -392,21 +392,21 @@ minute, then label. Each route below needs the owner or a paired phone,
 shares the actions rate limit, and answers with the page's whole state.
 Each change pushes the phones.
 
-| Route | Request | Answer |
-|---|---|---|
-| `POST /api/alerts/routines` | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
-| `PUT /api/alerts/routines/{id}` | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}` | 200. 400 by field. 404 for an unknown id |
-| `DELETE /api/alerts/routines/{id}` | none | 200. 404 for an unknown id |
+| Route                              | Request                                                                                   | Answer                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `POST /api/alerts/routines`        | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
+| `PUT /api/alerts/routines/{id}`    | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}`                     | 200. 400 by field. 404 for an unknown id       |
+| `DELETE /api/alerts/routines/{id}` | none                                                                                      | 200. 404 for an unknown id                     |
 
 ### Playbook: connecting Notion
 
 `/playbook` needs two values. Without both, the page says Notion is not
 connected and the rest of the site runs as before.
 
-| Environment variable | Kind | Value |
-|---|---|---|
-| `Notion__Token` | secret `notion-token` | an internal integration's secret, from notion.so/profile/integrations |
-| `Notion__PlaybookPageId` | setting | the root page's id: the 32 characters at the end of its link |
+| Environment variable     | Kind                  | Value                                                                 |
+| ------------------------ | --------------------- | --------------------------------------------------------------------- |
+| `Notion__Token`          | secret `notion-token` | an internal integration's secret, from notion.so/profile/integrations |
+| `Notion__PlaybookPageId` | setting               | the root page's id: the 32 characters at the end of its link          |
 
 In Notion, open the root page, then ••• > Connections, and add the
 integration. It then reads that page and everything under it.
@@ -434,8 +434,8 @@ the rows of the training log inside it. Set its id, then add the same
 integration to that page under ••• > Connections. Unset, the page says
 what to set.
 
-| Environment variable | Kind | Value |
-|---|---|---|
+| Environment variable             | Kind    | Value              |
+| -------------------------------- | ------- | ------------------ |
 | `Notion__MarksmanshipPlanPageId` | setting | the plan page's id |
 
 `GET /api/marksmanship` answers `{configured, page, tables}`: the page as
@@ -446,8 +446,8 @@ Workouts and Plan notes databases by column. It never opens a row, so
 749 workouts and 99 notes cost about ten calls. Set its id and add the
 integration to the page the same way.
 
-| Environment variable | Kind | Value |
-|---|---|---|
+| Environment variable         | Kind    | Value              |
+| ---------------------------- | ------- | ------------------ |
 | `Notion__TrainingPlanPageId` | setting | the plan page's id |
 
 `GET /api/training-plan` answers `{configured, plan}`.
@@ -460,10 +460,10 @@ Retry-After says for up to 10 s and 3 tries, and follows `has_more` to the
 end of every list. A file's block is read fresh on every download, since
 its signed address lasts an hour.
 
-| Route | Answer |
-|---|---|
-| `GET /api/playbook` | `{configured, root}`: the tree of pages and databases under the root |
-| `GET /api/playbook/pages/{id}` | `{id, title, blocks}`. 404 for a page outside the root |
+| Route                               | Answer                                                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `GET /api/playbook`                 | `{configured, root}`: the tree of pages and databases under the root                               |
+| `GET /api/playbook/pages/{id}`      | `{id, title, blocks}`. 404 for a page outside the root                                             |
 | `GET /api/playbook/files/{blockId}` | the file as an attachment. 404 for a block outside the root or one that is not a file Notion holds |
 
 Each route is the owner's alone. 503 with Retry-After when Notion asks for
@@ -524,11 +524,11 @@ target, then label. Each route below needs the owner or a paired phone,
 shares the actions rate limit, and answers with the page's whole state.
 Each change pushes the phones.
 
-| Route | Request | Answer |
-|---|---|---|
-| `POST /api/alerts/countdowns` | `{label?, targetAt, timeZone, alarm?, repeat?, repeatEvery?}` | 201. 400 by field. 409 with a `detail` past 50 or with no calendar. 502 when Google refuses |
-| `PUT /api/alerts/countdowns/{id}` | `{label?, targetAt, timeZone, alarm?, repeat?, repeatEvery?}` | 200. 400 by field. 404 for an unknown id. 502 when Google refuses. A missing `alarm`, `repeat` or `repeatEvery` keeps the saved one |
-| `DELETE /api/alerts/countdowns/{id}` | none | 200. 404 for an unknown id. 502 when Google refuses |
+| Route                                | Request                                                       | Answer                                                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/alerts/countdowns`        | `{label?, targetAt, timeZone, alarm?, repeat?, repeatEvery?}` | 201. 400 by field. 409 with a `detail` past 50 or with no calendar. 502 when Google refuses                                         |
+| `PUT /api/alerts/countdowns/{id}`    | `{label?, targetAt, timeZone, alarm?, repeat?, repeatEvery?}` | 200. 400 by field. 404 for an unknown id. 502 when Google refuses. A missing `alarm`, `repeat` or `repeatEvery` keeps the saved one |
+| `DELETE /api/alerts/countdowns/{id}` | none                                                          | 200. 404 for an unknown id. 502 when Google refuses                                                                                 |
 
 ### Calendar alerts: phone pushes
 
@@ -550,20 +550,20 @@ tech.abera.alarms`, `apns-collapse-id: plan` and an expiry an hour out.
 Apple's 429 or 5xx is tried once more after 30 s. A 410, or a 400 with
 `BadDeviceToken` or `DeviceTokenNotForTopic`, clears that phone's token.
 
-| Route | Who | Request | Answer |
-|---|---|---|---|
-| `PUT /api/alerts/devices/me/push` | a paired phone's token alone | `{apnsToken, environment}`: lowercase hex, 64 to 200 characters, and `sandbox` or `production` | 204. 400 by field. 403 to the owner's cookie |
-| `DELETE /api/alerts/devices/me/push` | a paired phone's token alone | none | 204. The token is cleared |
-| `GET /api/alerts/devices` | the owner | none | each phone with `push`: true when it has a token. Never the token |
+| Route                                | Who                          | Request                                                                                        | Answer                                                            |
+| ------------------------------------ | ---------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `PUT /api/alerts/devices/me/push`    | a paired phone's token alone | `{apnsToken, environment}`: lowercase hex, 64 to 200 characters, and `sandbox` or `production` | 204. 400 by field. 403 to the owner's cookie                      |
+| `DELETE /api/alerts/devices/me/push` | a paired phone's token alone | none                                                                                           | 204. The token is cleared                                         |
+| `GET /api/alerts/devices`            | the owner                    | none                                                                                           | each phone with `push`: true when it has a token. Never the token |
 
 Three secrets switch pushes on. Without all three, phones still register
 and the Phones section names the missing ones.
 
-| Environment variable | Secret | Value |
-|---|---|---|
-| `Alerts__ApnsKeyP8` | `alerts-apns-key` | the text of `AuthKey_<KEYID>.p8` |
-| `Alerts__ApnsKeyId` | `alerts-apns-key-id` | the key's 10-character id |
-| `Alerts__ApnsTeamId` | `alerts-apns-team-id` | `9K44N8AGF7` |
+| Environment variable | Secret                | Value                            |
+| -------------------- | --------------------- | -------------------------------- |
+| `Alerts__ApnsKeyP8`  | `alerts-apns-key`     | the text of `AuthKey_<KEYID>.p8` |
+| `Alerts__ApnsKeyId`  | `alerts-apns-key-id`  | the key's 10-character id        |
+| `Alerts__ApnsTeamId` | `alerts-apns-team-id` | `9K44N8AGF7`                     |
 
 Run these on the MacBook, where the key was downloaded, with `az` signed
 in. Put the key id in place of `<KEYID>`.
@@ -592,23 +592,23 @@ The Settings section on `/alerts` changes these without a deploy. Save
 stores one row. The replica that took the save plans with it at once, and
 every other replica reads it at the start of its next pass.
 
-| Setting | Default | Bounds |
-|---|---|---|
-| Pushover repeats every | 60 s | 30 to 10800 s |
-| Pushover stops after | 180 min | 1 to 180 min |
-| Sound (Ring until stopped) | the phone's default | one of Pushover's 23 built-in sounds |
-| Ring once priority | Normal | Normal: one sound, follows the phone's settings. High: one sound, even during Pushover's quiet hours |
-| Ring once sound | the phone's default | one of Pushover's 23 built-in sounds |
-| Events with no mark and no type set here | Off | Off or Ring once |
-| Default lead | 10 min | 0 to 1440 min |
-| Check calendar every | 5 min | 1 to 60 min |
-| Look ahead | 48 h | 1 to 336 h |
-| Alert for all-day events | off | |
-| Time zone | blank, UTC | a time zone database name |
-| Your addresses | none | up to 10 |
-| Pushover backup after | 0 s | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start. An alert that rings at the start stays due for 16 minutes after it, so its backup still goes |
-| Alarm sound (On the phone) | iPhone default | iPhone default, Pulse, Chime, Rise, Siren or Beacon |
-| Snooze (On the phone) | 9 min | 1 to 30 min |
+| Setting                                  | Default             | Bounds                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pushover repeats every                   | 60 s                | 30 to 10800 s                                                                                                                                                                                                                                                                              |
+| Pushover stops after                     | 180 min             | 1 to 180 min                                                                                                                                                                                                                                                                               |
+| Sound (Ring until stopped)               | the phone's default | one of Pushover's 23 built-in sounds                                                                                                                                                                                                                                                       |
+| Ring once priority                       | Normal              | Normal: one sound, follows the phone's settings. High: one sound, even during Pushover's quiet hours                                                                                                                                                                                       |
+| Ring once sound                          | the phone's default | one of Pushover's 23 built-in sounds                                                                                                                                                                                                                                                       |
+| Events with no mark and no type set here | Off                 | Off or Ring once                                                                                                                                                                                                                                                                           |
+| Default lead                             | 10 min              | 0 to 1440 min                                                                                                                                                                                                                                                                              |
+| Check calendar every                     | 5 min               | 1 to 60 min                                                                                                                                                                                                                                                                                |
+| Look ahead                               | 48 h                | 1 to 336 h                                                                                                                                                                                                                                                                                 |
+| Alert for all-day events                 | off                 |                                                                                                                                                                                                                                                                                            |
+| Time zone                                | blank, UTC          | a time zone database name                                                                                                                                                                                                                                                                  |
+| Your addresses                           | none                | up to 10                                                                                                                                                                                                                                                                                   |
+| Pushover backup after                    | 0 s                 | 0 to 900 s. A Ring until stopped message waits this long, so a paired phone rings first. It is not sent if the alert is acknowledged by then, and never later than 1 minute before the start. An alert that rings at the start stays due for 16 minutes after it, so its backup still goes |
+| Alarm sound (On the phone)               | iPhone default      | iPhone default, Pulse, Chime, Rise, Siren or Beacon                                                                                                                                                                                                                                        |
+| Snooze (On the phone)                    | 9 min               | 1 to 30 min                                                                                                                                                                                                                                                                                |
 
 Ring until stopped has no priority setting. Every such alert goes to Pushover at its
 priority 2 with `retry` set to the repeat and `expire` set to the stop, so
@@ -637,10 +637,10 @@ nothing on the server changes for it.
 `[{value, label}]`: `default` (iPhone default), `pulse`, `chime`, `rise`,
 `siren` and `beacon`. `bounds.phoneSnoozeMinutes` is `{min: 1, max: 30}`.
 
-| Route | Who | Request | Answer |
-|---|---|---|---|
-| `PUT /api/alerts/settings` | the owner | the whole form, `phoneSound` and `phoneSnoozeMinutes` included | 200 with the page's whole state. 400 by field. 403 to a paired phone |
-| `PUT /api/alerts/phone-settings` | the owner or a paired phone | `{sound, snoozeMinutes}`, both required | 200 with the page's whole state. 400 by field. Every other setting is left as saved |
+| Route                            | Who                         | Request                                                        | Answer                                                                              |
+| -------------------------------- | --------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `PUT /api/alerts/settings`       | the owner                   | the whole form, `phoneSound` and `phoneSnoozeMinutes` included | 200 with the page's whole state. 400 by field. 403 to a paired phone                |
+| `PUT /api/alerts/phone-settings` | the owner or a paired phone | `{sound, snoozeMinutes}`, both required                        | 200 with the page's whole state. 400 by field. Every other setting is left as saved |
 
 Both share the actions rate limit. A save that changes the sound or the
 snooze pushes the phones once. The same values again change nothing and
@@ -661,17 +661,17 @@ quarterly). Scorecard, CodeQL and a Trivy image scan run on schedule.
 
 ## Stages in the Dockerfile
 
-| Stage | What it is |
-|---|---|
-| `clientbase` | the client dependencies, `npm ci` |
-| `clientbuild` | the production bundle and the prerendered pages |
-| `clientbudget` | page weight against `scripts/page-budgets.json`. A leaf |
-| `clientprose` | the writing rules over the prerendered pages. A leaf |
-| `clientdev` | the vite dev server, source bind mounted at run time |
-| `clienttest` | `tsc -b` and the unit tests. A leaf |
-| `clienttools`, `clientlint` | biome over the whole repository. A leaf |
-| `vale` | the prose linter image, read by `scripts/check-prose.sh` |
-| `build`, `servertest`, `publish`, `final` | the .NET server, its tests, and the deployed image |
+| Stage                                     | What it is                                               |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `clientbase`                              | the client dependencies, `npm ci`                        |
+| `clientbuild`                             | the production bundle and the prerendered pages          |
+| `clientbudget`                            | page weight against `scripts/page-budgets.json`. A leaf  |
+| `clientprose`                             | the writing rules over the prerendered pages. A leaf     |
+| `clientdev`                               | the vite dev server, source bind mounted at run time     |
+| `clienttest`                              | `tsc -b` and the unit tests. A leaf                      |
+| `clienttools`, `clientlint`               | biome over the whole repository. A leaf                  |
+| `vale`                                    | the prose linter image, read by `scripts/check-prose.sh` |
+| `build`, `servertest`, `publish`, `final` | the .NET server, its tests, and the deployed image       |
 
 The client stages resolve from `nodebase`, so the tests run on the node that
 builds the artifact.

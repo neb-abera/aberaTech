@@ -3,10 +3,10 @@
 Two identities touch the `scheduling` and `fitness` databases on
 `abera-postgres`. Neither holds a password.
 
-| Identity | Postgres role | Rights | Used by |
-|---|---|---|---|
-| `abera-migrator`, a user-assigned managed identity in the app's resource group | `abera-migrator` | Owns both databases, every table, sequence and the migration history. `USAGE, CREATE` on schema `public` | The `migrate` job of the deploy workflow, and nothing else |
-| The container app's system-assigned identity | `aberatechserver-app-202412211749` | `CONNECT` on each database. `SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE, SELECT` on sequences, `SELECT` on the migration history. No `CREATE`, no `TEMPORARY`, no ownership | Serving requests |
+| Identity                                                                       | Postgres role                      | Rights                                                                                                                                                                             | Used by                                                    |
+| ------------------------------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `abera-migrator`, a user-assigned managed identity in the app's resource group | `abera-migrator`                   | Owns both databases, every table, sequence and the migration history. `USAGE, CREATE` on schema `public`                                                                           | The `migrate` job of the deploy workflow, and nothing else |
+| The container app's system-assigned identity                                   | `aberatechserver-app-202412211749` | `CONNECT` on each database. `SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE, SELECT` on sequences, `SELECT` on the migration history. No `CREATE`, no `TEMPORARY`, no ownership | Serving requests                                           |
 
 `abera-migrator` holds no Azure role. It trusts one thing: a GitHub token for
 this repository's `master` branch, through two federated credentials, one per
@@ -38,12 +38,12 @@ revision serves on the new schema until the new one is ready.
 
 ## The pieces in code
 
-| Piece | What it is |
-|---|---|
-| `dotnet aberaTech.Server.dll migrate` | Applies pending migrations to every configured database as whoever the connection strings name, then exits. Exit code 1 on failure |
-| `dotnet aberaTech.Server.dll migrate list` | Names the pending migrations per database and applies nothing. It does not create the history table |
-| `Database:MigrateOnStart` | `false` by default. `true` in `appsettings.Development.json`, so `make up` and `make dev` migrate as the compose owner |
-| `least-privilege.sql` | Grants the runtime role rows and sequences, now and for tables the owner creates later, and read-only history |
+| Piece                                      | What it is                                                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `dotnet aberaTech.Server.dll migrate`      | Applies pending migrations to every configured database as whoever the connection strings name, then exits. Exit code 1 on failure |
+| `dotnet aberaTech.Server.dll migrate list` | Names the pending migrations per database and applies nothing. It does not create the history table                                |
+| `Database:MigrateOnStart`                  | `false` by default. `true` in `appsettings.Development.json`, so `make up` and `make dev` migrate as the compose owner             |
+| `least-privilege.sql`                      | Grants the runtime role rows and sequences, now and for tables the owner creates later, and read-only history                      |
 
 `DatabaseLeastPrivilegeTests` runs all of it against the compose Postgres
 (`make dbtest`). It migrates as an owner, applies `least-privilege.sql`,
@@ -152,13 +152,13 @@ ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public
 
 Each step has its reverse. Run them newest first.
 
-| To undo | Run |
-|---|---|
-| The leftover default grant | As the gmail admin role, in `scheduling`: `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLES TO "aberatechserver-app-202412211749";` and `... GRANT SELECT, UPDATE, USAGE ON SEQUENCES TO "aberatechserver-app-202412211749";` |
-| The database owner and the admin memberships | As the gmail admin role, in `postgres`: `ALTER DATABASE scheduling OWNER TO facewoofadmin;`, `ALTER DATABASE fitness OWNER TO facewoofadmin;`, then `GRANT "abera-migrator" TO CURRENT_USER WITH ADMIN TRUE, INHERIT FALSE, SET FALSE;` and the same for `"aberatechserver-app-202412211749"` |
-| The app's loss of DDL | `GRANT "abera-migrator" TO "aberatechserver-app-202412211749";` |
-| Migrations outside the app | `az containerapp update -g "$RG" -n aberatechserver-app-202412211749 --set-env-vars Database__MigrateOnStart=true`, with the grant above |
-| The `migrate` job | Revert the workflow change. The app then needs both lines above |
-| The handover | In each database, `REASSIGN OWNED BY "abera-migrator" TO "aberatechserver-app-202412211749";` then `GRANT CREATE ON SCHEMA public TO "aberatechserver-app-202412211749";` |
+| To undo                                      | Run                                                                                                                                                                                                                                                                                                                        |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The leftover default grant                   | As the gmail admin role, in `scheduling`: `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLES TO "aberatechserver-app-202412211749";` and `... GRANT SELECT, UPDATE, USAGE ON SEQUENCES TO "aberatechserver-app-202412211749";` |
+| The database owner and the admin memberships | As the gmail admin role, in `postgres`: `ALTER DATABASE scheduling OWNER TO facewoofadmin;`, `ALTER DATABASE fitness OWNER TO facewoofadmin;`, then `GRANT "abera-migrator" TO CURRENT_USER WITH ADMIN TRUE, INHERIT FALSE, SET FALSE;` and the same for `"aberatechserver-app-202412211749"`                              |
+| The app's loss of DDL                        | `GRANT "abera-migrator" TO "aberatechserver-app-202412211749";`                                                                                                                                                                                                                                                            |
+| Migrations outside the app                   | `az containerapp update -g "$RG" -n aberatechserver-app-202412211749 --set-env-vars Database__MigrateOnStart=true`, with the grant above                                                                                                                                                                                   |
+| The `migrate` job                            | Revert the workflow change. The app then needs both lines above                                                                                                                                                                                                                                                            |
+| The handover                                 | In each database, `REASSIGN OWNED BY "abera-migrator" TO "aberatechserver-app-202412211749";` then `GRANT CREATE ON SCHEMA public TO "aberatechserver-app-202412211749";`                                                                                                                                                  |
 
 None of these touches a row.

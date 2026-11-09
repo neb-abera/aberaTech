@@ -37,7 +37,7 @@ export class Calendar {
     this.termsPerYear = termsPerYear === 2 ? 2 : 3;
     this.cycle = this.termsPerYear === 2 ? CYCLE_2 : CYCLE_3;
     const i = this.cycle.indexOf(startTerm);
-    this.offset = i < 0 ? 0 : i;
+    this.offset = Math.max(i, 0);
     this.startYear = startYear;
   }
 
