@@ -1,12 +1,32 @@
 {
   "checkedOn": "2026-11-09",
-  "total": 1112,
+  "total": 1126,
   "about": "How every address in syllabus.json was opened on 9 Nov 2026. fetch: a plain request. browser: Chrome on the dev box, for hosts that refuse plain requests. archive: the Internet Archive, for a page behind a human check. source: the address as AoPS links it on its own videos page.",
   "links": {
     "https://artofproblemsolving.com/alcumus": {
       "how": "fetch",
       "status": 200,
       "title": "Alcumus"
+    },
+    "https://artofproblemsolving.com/contests/practice": {
+      "how": "browser",
+      "status": 200,
+      "title": "Contests"
+    },
+    "https://artofproblemsolving.com/contests/practice/amc-10-version-b": {
+      "how": "browser",
+      "status": 200,
+      "title": "Contests: 2026 AoPS Practice Competition for the AMC 10"
+    },
+    "https://artofproblemsolving.com/contests/practice/amc-12-version-b": {
+      "how": "browser",
+      "status": 200,
+      "title": "Contests: 2026 AoPS Practice Competition for the AMC 12"
+    },
+    "https://artofproblemsolving.com/school/recommendations": {
+      "how": "fetch",
+      "status": 200,
+      "title": "School - Recommendations"
     },
     "https://artofproblemsolving.com/store/book/aops-vol2": {
       "how": "fetch",
@@ -4121,6 +4141,56 @@
       "how": "fetch",
       "status": 200,
       "title": "CSES - Maximum Manhattan Distances"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-a-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Math 7: Introduction to Algebra (Part 1)"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-b-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Math 7: Introduction to Algebra (Part 2)"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Scholars Math 9: Intermediate Algebra"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-counting-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Scholars Math 9.1: Intermediate Counting & Probability"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-counting-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Scholars Math 7.1: Introduction to Counting & Probability"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-geometry-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Math 8: Introduction to Geometry"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-numbertheory-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Scholars Math 7.2: Introduction to Number Theory"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra1-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Math 6: Prealgebra (Part 1)"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra2-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Math 6: Prealgebra (Part 2)"
+    },
+    "https://data.artofproblemsolving.com/course-docs/diagnostics/precalc-posttest.pdf": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Do You Know?: Scholars Math 10: Precalculus"
     },
     "https://en.cppreference.com/w/cpp": {
       "how": "archive",
