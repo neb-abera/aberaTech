@@ -25,6 +25,7 @@ import {
   trackLabel,
   type Unit,
 } from "../core/syllabus";
+import ChecksPanel from "./ChecksPanel";
 import ItemCard from "./ItemCard";
 import { stateLabel } from "./MapView";
 
@@ -192,6 +193,13 @@ export default function UnitView({
         owner={owner}
         document={document}
         solves={solves}
+        change={change}
+        now={now}
+      />
+      <ChecksPanel
+        unit={unit}
+        owner={owner}
+        document={document}
         change={change}
         now={now}
       />

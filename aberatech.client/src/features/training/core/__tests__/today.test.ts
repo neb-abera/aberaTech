@@ -34,7 +34,9 @@ const ids = (entries: Entry[]) =>
       ? entry.item.id
       : entry.kind === "checkpoint"
         ? `checkpoint:${entry.unit.id}`
-        : entry.review.key,
+        : entry.kind === "check"
+          ? `${entry.check}:${entry.lesson?.id ?? entry.unit.id}`
+          : entry.review.key,
   );
 
 /** Every checkpoint item ticked inside a fresh attempt: the unit is placed out. */

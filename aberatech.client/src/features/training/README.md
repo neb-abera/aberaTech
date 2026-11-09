@@ -12,8 +12,8 @@ programming: systems design (9 Nov 2026)". The plan it delivers is
   and checkpoints. Built on 9 Nov 2026 from the plan and from each source.
 - `data/link-check.json`: how every address in the syllabus was opened, and
   what it answered. A unit test fails on an address with no record.
-- `core/syllabus.ts`: the types, including the question types the
-  assessment increment fills.
+- `core/syllabus.ts`: the types, including the questions and checks
+  (schema below).
 - `core/progress.ts`: the owner's document (key `training` in
   `/api/progress`), item status, checkpoints, and unit states.
 - `/api/progress/training`: owner only, server side. A visitor never asks
@@ -74,16 +74,67 @@ new material waits. Due today is due. Due before today is overdue.
 Notes are searchable under the Notes tab: every word of the query must be in
 the note or its title, with case and accents ignored.
 
+## Assessment
+
+`core/assessment.ts` reads the results. `core/grade.ts` grades short answers
+by value.
+
+- A lesson with questions ends in a quiz. The lesson is done once every item
+  is done and the quiz has been taken, right or wrong.
+- A unit's pretest comes first in Next up. 90% or more places the unit out.
+  An outside placement test, scored by hand at or above its pass mark, does
+  the same.
+- A unit's mastery check comes once its lessons are done. 90% or more closes
+  the unit. Below that, the check opens again 2 days after the attempt. An
+  outside mastery check, ticked by hand with its date, closes the unit the
+  same way, and the unit's lessons then enter review.
+- Every wrong answer shows the right answer, why, and a link to the
+  question's reference. It then comes back in review, in relearning. Every
+  card comes back in review on FSRS.
+- Tools has the cards as a file Anki imports.
+
+### Schema for questions
+
+Extend `data/syllabus.json` with these fields. Each is optional, and the
+types are in `core/syllabus.ts`.
+
+A lesson takes `questions`, a list. Every question has `id` (unique across
+the syllabus), `type`, `prompt`, `why` (shown after any answer), and `ref`,
+the exact place that teaches it: `{ "label", "url", "at" }`, where `at` is
+seconds into a video. A YouTube link opens at that second.
+
+| `type`   | More fields                                       | Graded by                                                            |
+| -------- | ------------------------------------------------- | -------------------------------------------------------------------- |
+| `choice` | `choices` (strings), `answer` (index)             | The page                                                             |
+| `number` | `answer`: `"42"`, `"3/4"`, `"2^10"`, `"n(n+1)/2"` | The page, by value                                                   |
+| `proof`  | `rubric`: the points a correct proof makes        | The owner, each line met or not, with elegance and clarity beside it |
+| `card`   | `back`                                            | The owner's recall, Again to Easy                                    |
+| `code`   | `tests`: `{ "stdin", "stdout" }`, `starter`       | The drill endpoint, every test passing                               |
+
+A short answer may use numbers, `+ - * / ^`, parentheses, `sqrt`, `abs`,
+`sin`, `cos`, `tan`, `ln`, `log`, `exp`, `pi`, and single-letter variables.
+
+A unit takes:
+
+- `pretest`: question ids from its lessons, asked before the unit. They are
+  kept out of the lesson quizzes.
+- `mastery`: question ids from its lessons, asked to close the unit. They
+  are kept out of the lesson quizzes too.
+- `placement`: an outside placement test, `{ "label", "url", "what",
+  "minutes", "pass", "outOf" }`, such as an AoPS course diagnostic.
+- `externalMastery`: an outside mastery check, `{ "label", "url", "what",
+  "minutes", "topics" }`, such as the named Alcumus topics. The page never
+  asks for AoPS credentials.
+
+Under `make e2e` the server sends two sample questions
+(`aberaTech.Server/Training/FakeAssessment.cs`), and `core/fixture.ts` adds
+them to the C++ refresher. Production sends none.
+
 ## Increments not built yet
 
-Each is in the design page, with its requirement.
-
-1. Assessment: multiple choice, short answer, proofs against a rubric,
-   flashcards on FSRS, an Anki export, pretests, and mastery checks. Lessons
-   take `questions`, and units take `pretest` and `mastery`.
-2. Problem pool and solve log: Mostafa Saad's supervision pool, his time log
+1. Problem pool and solve log: Mostafa Saad's supervision pool, his time log
    per solve, speed drills, and his weekly checklist.
-3. A Rust grader service beside the site, called by the server, for drills
+2. A Rust grader service beside the site, called by the server, for drills
    beyond the basics. Not built until Neb approves its cost.
 
 ## Drills

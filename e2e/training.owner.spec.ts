@@ -265,3 +265,92 @@ test("notes are searchable", async ({ page }) => {
     },
   );
 });
+
+test("a failed mastery check shows each wrong answer's reference and opens again 2 days later", async ({
+  page,
+}) => {
+  // Under `make e2e` the server sends two sample questions for the C++
+  // refresher's mastery check (FakeAssessment.cs). Every item of the unit
+  // is ticked, so the check is next.
+  const items = [
+    "refresh-learncpp-ints",
+    "drill-mod-product",
+    "drill-read-eof",
+    "refresh-learncpp-refs",
+    "drill-reverse-words",
+    "refresh-learncpp-lambdas",
+    "drill-struct-sort",
+  ];
+  const ticked = "2026-11-09T10:00:00.000Z";
+  await open(page, "/training");
+  await withDocument(
+    page,
+    () => ({
+      items: Object.fromEntries(items.map((id) => [id, { at: ticked }])),
+    }),
+    async () => {
+      await page.reload();
+      const next = page.getByRole("region", { name: "Next up" });
+      const row = next.getByRole("listitem", { name: /\. Mastery check$/ });
+      await expect(row).toContainText(
+        "Mastery check: Refresher: C++ for contests",
+        { timeout: 15_000 },
+      );
+      await row.getByRole("link", { name: "Start" }).click();
+
+      const check = page.getByRole("region", {
+        name: "Mastery check: Refresher: C++ for contests",
+      });
+      // Wrong on the first.
+      const first = check.getByRole("article", { name: /^Question 1:/ });
+      await first.getByRole("radio", { name: "Their sum" }).check();
+      await first.getByRole("button", { name: "Check" }).click();
+      const feedback = first.getByRole("alert", { name: "Wrong" });
+      await expect(feedback).toContainText(
+        "The right answer: Undefined behavior, often a negative number",
+      );
+      await expect(feedback).toContainText(
+        "Why: Signed overflow is undefined.",
+      );
+      await expect(
+        feedback.getByRole("link", {
+          name: "USACO Guide: Debugging checklist",
+        }),
+      ).toHaveAttribute(
+        "href",
+        "https://usaco.guide/general/debugging-checklist",
+      );
+
+      // Right on the second, by value: 2**64 is 2^64.
+      const second = check.getByRole("article", { name: /^Question 2:/ });
+      const put = saved(page);
+      await second.getByRole("textbox", { name: "Your answer" }).fill("2**64");
+      await second.getByRole("button", { name: "Check" }).click();
+      await expect(second.getByRole("alert", { name: "Right" })).toBeVisible();
+      expect((await put).ok()).toBe(true);
+      await expect(check.getByRole("alert", { name: "Result" })).toContainText(
+        "1 of 2 right (50%). Not mastered. The retest opens Thu 12 Nov 2026.",
+      );
+
+      // The next day: no retest yet, and the missed question is in review.
+      await page.clock.setFixedTime(new Date("2026-11-11T10:00:00"));
+      await page.goto("/training");
+      await expect(
+        next.getByText(/the mastery check retest opens Thu 12 Nov 2026/),
+      ).toBeVisible({ timeout: 15_000 });
+      await expect(
+        next.getByRole("listitem", { name: /\. Mastery check$/ }),
+      ).toHaveCount(0);
+      await expect(
+        next.getByRole("listitem", { name: /\. Review$/ }).first(),
+      ).toContainText("Two ints near 2e9 are added.");
+
+      // Two days after: the retest is back in Next up.
+      await page.clock.setFixedTime(new Date("2026-11-12T10:00:00"));
+      await page.goto("/training");
+      await expect(
+        next.getByRole("listitem", { name: /\. Mastery check$/ }),
+      ).toHaveCount(1, { timeout: 15_000 });
+    },
+  );
+});

@@ -159,5 +159,34 @@ public sealed class TrainingRouteTests : IDisposable
         await Task.CompletedTask;
     }
 
+    [Fact]
+    public async Task Production_sends_no_sample_questions_even_with_the_fake_switch()
+    {
+        using var app = App(_judges, "Production", new() { ["Training:Fake"] = "true" });
+        Assert.Null(app.Factory.Services.GetService<FakeAssessment>());
+        using var owner = app.CreateClient().SignedInAs(app.Factory.Services, AdminRouteTests.Owner);
+        var body = await owner.GetFromJsonAsync<JsonElement>(Path);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("fixture").ValueKind);
+    }
+
+    [Fact]
+    public async Task The_sample_questions_pass_through_when_registered()
+    {
+        // Development with Training:Fake registers FakeAssessment
+        // (Program.cs). Development also migrates on boot, so this registers
+        // it by hand and checks what the endpoint sends.
+        var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
+        using var app = new TestApp(settings, services =>
+        {
+            services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+            services.AddHttpClient(JudgeReader.ClientName).ConfigurePrimaryHttpMessageHandler(() => _judges);
+            services.AddSingleton<FakeAssessment>();
+        }, "Production");
+        using var owner = app.CreateClient().SignedInAs(app.Factory.Services, AdminRouteTests.Owner);
+        var body = await owner.GetFromJsonAsync<JsonElement>(Path);
+        var mastery = body.GetProperty("fixture").GetProperty("units").GetProperty("refresh-cpp").GetProperty("mastery");
+        Assert.Equal(["fixture-overflow", "fixture-power"], mastery.EnumerateArray().Select(id => id.GetString()));
+    }
+
     public void Dispose() => _app.Dispose();
 }

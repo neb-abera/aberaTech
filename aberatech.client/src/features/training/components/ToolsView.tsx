@@ -1,9 +1,11 @@
+import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
+import { ankiCsv } from "../core/assessment";
 import type { TrainingDocument } from "../core/progress";
 import { type Syllabus, syllabus } from "../core/syllabus";
 
@@ -86,6 +88,7 @@ export default function ToolsView({
           </Stack>
         </Paper>
       )}
+      <AnkiExport from={from} />
       <Stack component="ul" spacing={1.5} sx={{ p: 0, m: 0 }}>
         {from.systems.map((system) => (
           <Paper
@@ -115,5 +118,50 @@ export default function ToolsView({
         ))}
       </Stack>
     </Stack>
+  );
+}
+
+/**
+ * Every flashcard in the syllabus as a file Anki imports: File, Import,
+ * then the file. It lands in the deck "abera.tech training", tagged by unit
+ * and lesson.
+ */
+function AnkiExport({ from }: { from: Syllabus }) {
+  const { text, cards } = ankiCsv(from);
+  function download() {
+    const url = URL.createObjectURL(
+      new Blob([text], { type: "text/csv;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "abera-tech-training-cards.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  return (
+    <Paper
+      variant="outlined"
+      component="section"
+      aria-label="Flashcards for Anki"
+      sx={{ p: 2 }}
+    >
+      <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        Flashcards for Anki
+      </Typography>
+      <Typography variant="body2">
+        {cards === 0
+          ? "No flashcards are written yet."
+          : `${cards} cards. In Anki, choose File, Import, and this file. They go to the deck "abera.tech training", tagged by unit and lesson.`}
+      </Typography>
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={cards === 0}
+        onClick={download}
+        sx={{ mt: 1 }}
+      >
+        Download for Anki
+      </Button>
+    </Paper>
   );
 }
