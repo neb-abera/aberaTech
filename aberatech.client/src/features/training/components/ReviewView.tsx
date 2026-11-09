@@ -6,8 +6,9 @@ import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import type { ReactNode } from "react";
+import { useState } from "react";
 import { Link as RouterLink } from "react-router";
+import type { Answer } from "../core/assessment";
 import { longDate } from "../core/dates";
 import type { TrainingDocument } from "../core/progress";
 import {
@@ -21,6 +22,7 @@ import {
   schedulerSource,
 } from "../core/reviews";
 import { countOf, formatMinutes, trackLabel } from "../core/syllabus";
+import QuestionCard from "./QuestionCard";
 
 const grades: { rating: Grade; label: string; meaning: string }[] = [
   { rating: Rating.Again, label: "Again", meaning: "missed it" },
@@ -50,7 +52,6 @@ export default function ReviewView({
   now,
   tomorrow,
   week,
-  extra,
 }: {
   due: Scheduled[];
   document: TrainingDocument;
@@ -59,8 +60,6 @@ export default function ReviewView({
   /** How many come due tomorrow, and over the next seven days. */
   tomorrow: number;
   week: number;
-  /** A renderer for review kinds the assessment increment adds. */
-  extra?: (entry: Scheduled, answer: (rating: Grade) => void) => ReactNode;
 }) {
   const current = due[0];
   const minutes = due.reduce((sum, entry) => sum + entry.source.minutes, 0);
@@ -119,9 +118,15 @@ export default function ReviewView({
             >
               {current.source.title}
             </Typography>
-            {extra?.(current, (rating) =>
-              change((doc) => answer(doc, current, rating, now)),
-            ) ?? (
+            {current.source.question ? (
+              <QuestionReview
+                key={`${current.source.key}-${current.card.reps}`}
+                entry={current}
+                answer={(rating) =>
+                  change((doc) => answer(doc, current, rating, now))
+                }
+              />
+            ) : (
               <>
                 <Typography variant="body2">{instructions(current)}</Typography>
                 {current.source.lesson && (
@@ -191,6 +196,41 @@ export function Grades({
           {grade.label} · {days(next[grade.rating])}
         </Button>
       ))}
+    </Stack>
+  );
+}
+
+/**
+ * A question again: answered and graded as in its quiz, with the same
+ * feedback. Next sends the result to FSRS: a card by its recall, any other
+ * question Good when right and Again when not.
+ */
+function QuestionReview({
+  entry,
+  answer,
+}: {
+  entry: Scheduled;
+  answer: (rating: Grade) => void;
+}) {
+  const [given, setGiven] = useState<Answer | undefined>();
+  const question = entry.source.question;
+  if (!question) return null;
+  const rating: Grade =
+    question.type === "card"
+      ? ((given?.rating ?? Rating.Again) as Grade)
+      : given?.correct
+        ? Rating.Good
+        : Rating.Again;
+  return (
+    <Stack spacing={1.5}>
+      <QuestionCard question={question} answer={given} onAnswer={setGiven} />
+      {given && (
+        <Box>
+          <Button variant="contained" onClick={() => answer(rating)}>
+            Next
+          </Button>
+        </Box>
+      )}
     </Stack>
   );
 }

@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
+import { checkKey, quizQuestions } from "../core/assessment";
 import type { Solves, TrainingDocument } from "../core/progress";
 import {
   formatMinutes,
@@ -71,6 +73,7 @@ export default function LessonView({
           {owner && noteFor ? noteFor(item.id, `Note on ${item.title}`) : null}
         </ItemCard>
       ))}
+      <Quiz lesson={lesson} owner={owner} document={document} />
       {owner && noteFor ? noteFor(lesson.id, `Lesson notes`) : null}
       <Stack
         direction="row"
@@ -91,5 +94,46 @@ export default function LessonView({
         )}
       </Stack>
     </Stack>
+  );
+}
+
+/** The questions the lesson ends with, when it has any. */
+function Quiz({
+  lesson,
+  owner,
+  document,
+}: {
+  lesson: Lesson;
+  owner: boolean;
+  document: TrainingDocument;
+}) {
+  const questions = quizQuestions(lesson);
+  if (questions.length === 0) return null;
+  const attempts = document.assessments[checkKey("quiz", lesson.id)] ?? [];
+  return (
+    <Paper
+      variant="outlined"
+      component="section"
+      aria-label="Quiz"
+      sx={{ p: 2 }}
+    >
+      <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        Quiz, {questions.length} questions
+      </Typography>
+      <Typography variant="body2">
+        The lesson ends here. It is done once every item is done and the quiz is
+        taken. Wrong answers come back in review.
+      </Typography>
+      {owner && (
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          {attempts.length > 0
+            ? `Taken ${attempts.length} time${attempts.length === 1 ? "" : "s"}. `
+            : ""}
+          <Link component={RouterLink} to={`/training?check=quiz:${lesson.id}`}>
+            {attempts.length > 0 ? "Take it again" : "Take the quiz"}
+          </Link>
+        </Typography>
+      )}
+    </Paper>
   );
 }

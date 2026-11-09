@@ -17,7 +17,7 @@ public static class TrainingEndpoints
 
     public static IEndpointRouteBuilder MapTrainingEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/training/solves", async (string? codeforces, string? atcoder, JudgeReader judges, TimeProvider time, CancellationToken cancellationToken) =>
+        routes.MapGet("/api/training/solves", async (string? codeforces, string? atcoder, JudgeReader judges, TimeProvider time, IServiceProvider services, CancellationToken cancellationToken) =>
         {
             if (!string.IsNullOrEmpty(codeforces) && !JudgeReader.IsHandle(codeforces))
                 return Results.BadRequest("A Codeforces handle is 3 to 24 letters, digits, dots, hyphens, or underscores.");
@@ -36,6 +36,8 @@ public static class TrainingEndpoints
                 codeforces = Shape(codeforcesTask.Result),
                 atcoder = Shape(atcoderTask.Result),
                 contests = contestsTask.Result,
+                // Sample questions under `make e2e` only (FakeAssessment.cs).
+                fixture = services.GetService<FakeAssessment>()?.Fixture,
             });
         })
         .RequireAuthorization(AdminAuth.PolicyName)

@@ -36,8 +36,18 @@ function entryKey(entry: Entry): string {
       return `checkpoint-${entry.unit.id}`;
     case "review":
       return entry.review.key;
+    case "check":
+      return `${entry.check}-${entry.lesson?.id ?? entry.unit.id}`;
   }
 }
+
+const checkLabel: Record<string, string> = {
+  pretest: "Pretest",
+  placement: "Placement",
+  quiz: "Quiz",
+  mastery: "Mastery check",
+  "outside-mastery": "Mastery",
+};
 
 function EntryRow({ entry, index }: { entry: Entry; index: number }) {
   let kind: string;
@@ -63,6 +73,29 @@ function EntryRow({ entry, index }: { entry: Entry; index: number }) {
         label: entry.running ? "Continue" : "Start",
       };
       break;
+    case "check": {
+      kind = checkLabel[entry.check];
+      const of = entry.lesson?.title ?? entry.unit.title;
+      title = `${kind}: ${of}`;
+      const page =
+        entry.check === "quiz"
+          ? `/training?check=quiz:${entry.lesson?.id}`
+          : entry.check === "pretest" || entry.check === "mastery"
+            ? `/training?check=${entry.check}:${entry.unit.id}`
+            : `/training?unit=${entry.unit.id}`;
+      detail =
+        entry.check === "pretest"
+          ? `${trackLabel[entry.unit.track]}. Before the unit. 90% or more places you out of it.`
+          : entry.check === "placement"
+            ? `${trackLabel[entry.unit.track]}. ${entry.unit.placement?.label}, scored by hand.`
+            : entry.check === "quiz"
+              ? `${trackLabel[entry.unit.track]} · ${entry.unit.title}. Ends the lesson.`
+              : entry.check === "mastery"
+                ? `${trackLabel[entry.unit.track]}. 90% or more closes the unit.`
+                : `${trackLabel[entry.unit.track]}. ${entry.unit.externalMastery?.label}, ticked by hand.`;
+      open = { to: page, label: "Start" };
+      break;
+    }
     case "review":
       kind = "Review";
       title = entry.review.title;
@@ -319,6 +352,12 @@ export default function TodayView({
         <Alert key={track} severity="info">
           {trackLabel[track]}: this is the last unit written so far. The next
           lessons are written before you reach them.
+        </Alert>
+      ))}
+      {next.retests.map((retest) => (
+        <Alert key={retest.unit.id} severity="info">
+          {retest.unit.title}: the mastery check retest opens{" "}
+          {longDate(retest.opens)}. Review what you missed until then.
         </Alert>
       ))}
       {next.newWaits && (

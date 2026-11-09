@@ -99,10 +99,19 @@ export type Question =
   | (QuestionBase & { type: "choice"; choices: string[]; answer: number })
   | (QuestionBase & {
       type: "number";
-      /** The answer, as an integer, a decimal, or a fraction a/b. */
+      /**
+       * The answer, as an integer, a decimal, a fraction a/b, or an
+       * expression: "2^10", "sqrt(2)/2", "3pi", "n(n+1)/2". Letters other
+       * than pi and the function names are variables, and an answer is
+       * right when it equals this one at several values of them.
+       */
       answer: string;
     })
-  | (QuestionBase & { type: "proof"; rubric: string[] })
+  | (QuestionBase & {
+      type: "proof";
+      /** The points a correct proof makes, each one a line to tick. */
+      rubric: string[];
+    })
   | (QuestionBase & { type: "card"; back: string })
   | (QuestionBase & {
       type: "code";
@@ -149,6 +158,36 @@ export interface Unit {
   pretest?: string[];
   /** Question ids asked to close the unit. 90% closes it. */
   mastery?: string[];
+  /**
+   * Placement taken outside the page, such as an AoPS course diagnostic:
+   * a score entered by hand against a pass mark. Passing places the unit
+   * out, as a passed pretest does.
+   */
+  placement?: ExternalCheck;
+  /**
+   * A mastery check taken outside the page, such as named Alcumus topics
+   * mastered: ticked by hand with its date. It closes the unit as a passed
+   * mastery check does.
+   */
+  externalMastery?: ExternalCheck;
+}
+
+/**
+ * A test the page cannot read, recorded by hand. The page never asks for
+ * the outside system's credentials.
+ */
+export interface ExternalCheck {
+  /** "AoPS Introduction to Algebra diagnostic test", "Alcumus". */
+  label: string;
+  url: string;
+  /** What to do there. */
+  what: string;
+  minutes: number;
+  /** Alcumus topics, by the names Alcumus shows, all to be mastered. */
+  topics?: string[];
+  /** A diagnostic's score that passes, out of `outOf`. */
+  pass?: number;
+  outOf?: number;
 }
 
 /** Monday 1 to Sunday 0, as Date.getDay() counts. */

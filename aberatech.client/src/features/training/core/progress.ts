@@ -8,6 +8,13 @@
  * load and passes it in as `Solves`.
  */
 import {
+  type Attempt,
+  type ExternalRecord,
+  masteryState,
+  placementState,
+  quizTaken,
+} from "./assessment";
+import {
   allItems,
   type Item,
   type Lesson,
@@ -59,6 +66,10 @@ export interface TrainingDocument {
   code: Record<string, string>;
   /** FSRS state by review key (reviews.ts), once a key has been reviewed. */
   cards: Record<string, ReviewCard>;
+  /** Attempts by check key (assessment.ts): quizzes, pretests, mastery checks. */
+  assessments: Record<string, Attempt[]>;
+  /** Outside checks recorded by hand, by "placement:<unit>" or "mastery:<unit>". */
+  external: Record<string, ExternalRecord>;
 }
 
 /**
@@ -94,6 +105,8 @@ export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
   notes: {},
   code: {},
   cards: {},
+  assessments: {},
+  external: {},
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -168,7 +181,47 @@ export function normalizeTraining(
       typeof entry === "string" ? entry : null,
     ),
     cards: entries(value.cards, normalizeCard),
+    assessments: entries(value.assessments, (entry) =>
+      Array.isArray(entry)
+        ? entry.flatMap((attempt) => {
+            const kept = normalizeAttempt(attempt);
+            return kept ? [kept] : [];
+          })
+        : null,
+    ),
+    external: entries(value.external, (entry) => {
+      if (!isRecord(entry) || !isIso(entry.at)) return null;
+      return isNumber(entry.score)
+        ? { at: entry.at, score: entry.score }
+        : { at: entry.at };
+    }),
   };
+}
+
+function normalizeAttempt(value: unknown): Attempt | null {
+  if (!isRecord(value) || !isIso(value.at)) return null;
+  const answers = entries(value.answers, (entry) => {
+    if (!isRecord(entry) || typeof entry.correct !== "boolean") return null;
+    const answer: Attempt["answers"][string] = { correct: entry.correct };
+    if (typeof entry.given === "string")
+      answer.given = entry.given.slice(0, 8000);
+    if (
+      entry.rating === 1 ||
+      entry.rating === 2 ||
+      entry.rating === 3 ||
+      entry.rating === 4
+    )
+      answer.rating = entry.rating;
+    const proof = entry.proof;
+    if (isRecord(proof) && Array.isArray(proof.met))
+      answer.proof = {
+        met: proof.met.map((met) => met === true),
+        elegant: proof.elegant === true,
+        clear: proof.clear === true,
+      };
+    return answer;
+  });
+  return { at: value.at, answers };
 }
 
 const isNumber = (value: unknown): value is number =>
@@ -472,12 +525,14 @@ export function countItems(
   return { done, total: items.length, minutesDone, minutesTotal };
 }
 
+/** Every item done, and its quiz taken when it has one (assessment.ts). */
 export const lessonDone = (
   lesson: Lesson,
   document: TrainingDocument,
   solves: Solves,
 ): boolean =>
-  lesson.items.every((item) => itemStatus(item, document, solves).done);
+  lesson.items.every((item) => itemStatus(item, document, solves).done) &&
+  quizTaken(lesson, document);
 
 export type UnitState =
   /** Its lessons are not written yet. */
@@ -485,8 +540,14 @@ export type UnitState =
   /** The unit before it in its track is not finished. */
   | { state: "waiting"; after: Unit }
   | { state: "open" }
-  | { state: "done" }
-  | { state: "placed"; at: string; started: string };
+  /** Closed: its lessons done, or its mastery check passed. */
+  | { state: "done"; by?: "lessons" | "mastery" }
+  | {
+      state: "placed";
+      at: string;
+      started: string;
+      by?: "checkpoint" | "pretest" | "placement";
+    };
 
 /** Whether the unit counts as finished for what comes after it. */
 export const finished = (state: UnitState): boolean =>
@@ -513,12 +574,31 @@ export function unitStates(
       if (unit.locked) state = { state: "locked", reason: unit.locked };
       else {
         const placed = checkpointState(unit, document, solves, now);
+        const placement = placementState(unit, document, from);
+        const mastery = masteryState(unit, document, from);
+        const mastered = mastery.state === "passed";
+        const needsMastery =
+          (unit.mastery?.length ?? 0) > 0 || !!unit.externalMastery;
         if (placed.state === "passed")
-          state = { state: "placed", at: placed.at, started: placed.started };
+          state = {
+            state: "placed",
+            at: placed.at,
+            started: placed.started,
+            by: "checkpoint",
+          };
+        else if (placement.state === "passed")
+          state = {
+            state: "placed",
+            at: placement.at,
+            started: placement.at,
+            by: placement.by === "outside" ? "placement" : "pretest",
+          };
+        else if (mastered) state = { state: "done", by: "mastery" };
         else if (
+          !needsMastery &&
           unit.lessons.every((lesson) => lessonDone(lesson, document, solves))
         )
-          state = { state: "done" };
+          state = { state: "done", by: "lessons" };
         else if (!previousFinished && previous && !unit.slot)
           state = { state: "waiting", after: previous };
         else state = { state: "open" };

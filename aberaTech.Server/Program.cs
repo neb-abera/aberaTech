@@ -416,6 +416,7 @@ if (adminOptions.IsConfigured)
         judges.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeJudges>());
         builder.Services.AddSingleton<FakeCompilerExplorer>();
         compilerExplorer.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeCompilerExplorer>());
+        builder.Services.AddSingleton<FakeAssessment>();
     }
 }
 

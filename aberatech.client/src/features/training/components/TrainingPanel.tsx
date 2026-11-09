@@ -9,7 +9,9 @@ import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import { Link as RouterLink, useLocation, useSearchParams } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
+import type { CheckKind } from "../core/assessment";
 import { clock, localDate } from "../core/dates";
+import { applyFixture } from "../core/fixture";
 import { pace as measurePace } from "../core/pace";
 import { itemStatus, overall, type Solves, unitStates } from "../core/progress";
 import { asDue, dueOn, upcoming } from "../core/reviews";
@@ -17,6 +19,7 @@ import { formatMinutes, locate, syllabus } from "../core/syllabus";
 import { nextUp } from "../core/today";
 import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
+import AssessmentView from "./AssessmentView";
 import LessonView from "./LessonView";
 import MapView from "./MapView";
 import NoteField from "./NoteField";
@@ -64,6 +67,8 @@ export default function TrainingPanel() {
     document.settings.codeforces,
     document.settings.atcoder,
   );
+  // Sample questions arrive under `make e2e` only (core/fixture.ts).
+  applyFixture(answer.fixture);
   const solves: Solves = answer.solves;
   const now = new Date();
   const states = useMemo(
@@ -71,6 +76,10 @@ export default function TrainingPanel() {
     [document, solves],
   );
 
+  const checkParam = params.get("check");
+  const checkMatch = checkParam
+    ? /^(quiz|pretest|mastery):([\w-]+)$/.exec(checkParam)
+    : null;
   const lessonId = params.get("lesson");
   const unitId = params.get("unit");
   const asked = params.get("view") as View | null;
@@ -216,7 +225,16 @@ export default function TrainingPanel() {
           to="/training?view=tools"
         />
       </Tabs>
-      {place?.lesson && lessonId ? (
+      {checkMatch && owner ? (
+        <AssessmentView
+          key={checkParam}
+          kind={checkMatch[1] as CheckKind}
+          id={checkMatch[2]}
+          document={document}
+          change={change}
+          now={now}
+        />
+      ) : place?.lesson && lessonId ? (
         <LessonView
           unit={place.unit}
           lesson={place.lesson}

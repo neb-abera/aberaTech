@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Contest } from "../components/TodayView";
+import type { Fixture } from "../core/fixture";
 import type { JudgeSolves, Solves } from "../core/progress";
 import { noSolves } from "../core/progress";
 
@@ -21,6 +22,8 @@ export interface SolvesAnswer {
   codeforces: JudgeLine | null;
   atcoder: JudgeLine | null;
   contests: Contest[];
+  /** Sample questions, under `make e2e` only (core/fixture.ts). */
+  fixture?: Fixture | null;
 }
 
 const idle: SolvesAnswer = {
@@ -61,6 +64,7 @@ export function useSolves(
           codeforces?: JudgeLine | null;
           atcoder?: JudgeLine | null;
           contests?: Contest[];
+          fixture?: Fixture | null;
         };
         if (canceled) return;
         const cf = body.codeforces ?? null;
@@ -71,6 +75,7 @@ export function useSolves(
           codeforces: cf,
           atcoder: ac,
           contests: body.contests ?? [],
+          fixture: body.fixture ?? null,
         });
       })
       .catch(() => {

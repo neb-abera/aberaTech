@@ -297,6 +297,7 @@ describe("the units", () => {
       state: "placed",
       at: "2026-11-10T10:20:00.000Z",
       started: now.toISOString(),
+      by: "checkpoint",
     });
     expect(states.get("bronze-1")?.state).toBe("open");
   });

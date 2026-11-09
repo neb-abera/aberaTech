@@ -1,8 +1,10 @@
 /**
  * The review queue: what comes back, and when.
  *
- * Two things come back. A problem marked missed, and a lesson once every
- * item in it is done. Each is a review key: "item:<id>" or "lesson:<id>".
+ * Three things come back. A problem marked missed, a lesson once every
+ * item in it is done (or its unit's mastery check is passed), and a
+ * question: every card, and any other question answered wrong. Each is a
+ * review key: "item:<id>", "lesson:<id>", or "q:<id>".
  * A key's first due date comes from the event itself, a miss rated Again
  * and a finished lesson rated Good, so nothing is stored until the first
  * review. From then on the key keeps its FSRS card in the document's
@@ -25,6 +27,12 @@ import {
   generatorParameters,
   Rating,
 } from "ts-fsrs";
+import {
+  latestAnswers,
+  masteryState,
+  questionMinutes,
+  questionsById,
+} from "./assessment";
 import { localDate, localDateOf } from "./dates";
 import {
   itemStatus,
@@ -36,6 +44,7 @@ import {
   type Item,
   type Lesson,
   locate,
+  type Question,
   type Syllabus,
   syllabus,
   type Track,
@@ -72,7 +81,7 @@ export const reviewMinutes = {
 export const reviewMinutesBasis =
   "A lesson review is 5 min. A problem review is the problem's minutes, at most 15. Both are estimates.";
 
-export type ReviewKind = "lesson" | "item";
+export type ReviewKind = "lesson" | "item" | "question";
 
 export interface ReviewSource {
   key: string;
@@ -84,9 +93,33 @@ export interface ReviewSource {
   unit: Unit;
   lesson?: Lesson;
   item?: Item;
+  question?: Question;
   title: string;
   track: Track;
   minutes: number;
+}
+
+export const questionKey = (id: string): string => `q:${id}`;
+
+function questionSource(
+  question: Question,
+  lesson: Lesson,
+  unit: Unit,
+  at: string,
+  rating: Grade,
+): ReviewSource {
+  return {
+    key: questionKey(question.id),
+    kind: "question",
+    at,
+    rating,
+    unit,
+    lesson,
+    question,
+    title: question.prompt,
+    track: unit.track,
+    minutes: questionMinutes(question),
+  };
 }
 
 export const lessonKey = (id: string): string => `lesson:${id}`;
@@ -160,8 +193,11 @@ export function reviewSources(
   const found = new Map<string, ReviewSource>();
   for (const unit of from.units) {
     if (unit.locked) continue;
+    // A mastery check passed closes the unit, and its lessons enter review.
+    const mastery = masteryState(unit, document, from);
+    const mastered = mastery.state === "passed" ? mastery.at : null;
     for (const lesson of unit.lessons) {
-      const finished = lessonFinished(lesson, document, solves);
+      const finished = lessonFinished(lesson, document, solves) ?? mastered;
       if (finished)
         found.set(
           lessonKey(lesson.id),
@@ -185,6 +221,22 @@ export function reviewSources(
         );
     }
   }
+  const questions = questionsById(from);
+  for (const [id, { answer, at }] of latestAnswers(document)) {
+    const place = questions.get(id);
+    if (!place || place.unit.locked) continue;
+    const rating: Grade | null =
+      place.question.type === "card"
+        ? ((answer.rating ?? (answer.correct ? 3 : 1)) as Grade)
+        : answer.correct
+          ? null
+          : Rating.Again;
+    if (rating === null) continue;
+    found.set(
+      questionKey(id),
+      questionSource(place.question, place.lesson, place.unit, at, rating),
+    );
+  }
   for (const key of Object.keys(document.cards)) {
     if (found.has(key)) continue;
     const source = sourceOfKey(key, document, from);
@@ -202,6 +254,18 @@ function sourceOfKey(
   const [kind, id] = splitKey(key);
   const card = document.cards[key];
   const at = card.last_review ?? card.due;
+  if (kind === "q") {
+    const found = questionsById(from).get(id);
+    return found
+      ? questionSource(
+          found.question,
+          found.lesson,
+          found.unit,
+          at,
+          Rating.Good,
+        )
+      : null;
+  }
   const place = id ? locate(id, from) : null;
   if (!place) return null;
   if (kind === "lesson" && place.lesson && !place.item)
@@ -288,7 +352,12 @@ export function cardOf(
   const stored = document.cards[source.key];
   if (!stored) return rate(null, source.rating, new Date(source.at));
   // Missed again after it was relearned: a new miss, from its last review.
-  if (source.rating === Rating.Again && !stored.relearning) {
+  // A problem's missed mark is cleared when it is relearned, so a mark
+  // there is a new miss. A question's miss is new when it is later than
+  // the card's last review.
+  const newMiss =
+    source.kind === "question" ? source.at > (stored.last_review ?? "") : true;
+  if (source.rating === Rating.Again && !stored.relearning && newMiss) {
     const at = [source.at, stored.last_review ?? source.at].sort()[1];
     return rate(stored, Rating.Again, new Date(at));
   }
