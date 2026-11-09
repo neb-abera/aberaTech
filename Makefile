@@ -117,6 +117,7 @@ lint-ci: ## actionlint on the workflows and their run: blocks, shellcheck on scr
 	./scripts/check-concurrency.sh
 	./scripts/check-version.sh --self-test
 	./scripts/check-version.sh
+	./scripts/deploy-grader.sh --self-test
 
 fmt: ## Rewrite files to match biome
 	$(COMPOSE) build lint
