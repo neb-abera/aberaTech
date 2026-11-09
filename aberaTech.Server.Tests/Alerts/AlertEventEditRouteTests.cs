@@ -235,6 +235,22 @@ public sealed class AlertEventEditRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task A_started_events_start_sent_back_to_the_millisecond_is_its_own_start()
+    {
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        using var phone = await PhoneAsync();
+
+        using var response = await Put(phone, """
+            {"key":"standup@google.com|20261028T130000Z","scope":"occurrence","title":"Standup runs long",
+             "startsAt":"2026-10-28T13:00:00.0004Z","durationMinutes":60}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var write = Assert.Single(_google.Writes);
+        Assert.Equal("2026-10-28T09:00:00-04:00", write.Start);
+    }
+
+    [Fact]
     public async Task A_started_event_cannot_be_moved_to_another_past_time()
     {
         _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);

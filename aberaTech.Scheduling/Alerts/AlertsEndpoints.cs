@@ -1395,7 +1395,13 @@ public static class EventFields
             start = parsed.Value.ToInstant();
         }
 
-        if (start is { } same && same == unchanged) return start;
+        // Within a second is the same start, and the listed one is kept: the
+        // phone sends milliseconds, and this server writes seven digits.
+        if (start is { } same && unchanged is { } listed && same - listed < Duration.FromSeconds(1) && listed - same < Duration.FromSeconds(1))
+        {
+            return listed;
+        }
+
         if (start is not { } startsAt || startsAt <= now || startsAt > now + CreatedEvents.MaxAhead)
         {
             errors["startsAt"] = ["An ISO 8601 time with its offset, in the future and at most 366 days ahead."];
