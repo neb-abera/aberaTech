@@ -524,7 +524,7 @@ jobs:
       LHCI_SERVER_BASE_URL: https://abera-lhci.purpleocean-f7e5c55d.eastus.azurecontainerapps.io
       LHCI_PROJECT: aberatech-ci
       LHCI_BASE_BRANCH: master
-      LHCI_REQUIRE_UPLOAD: '1'
+      LHCI_REQUIRE_UPLOAD: "1"
       LHCI_KEEP_ALL_RUNS: ${{ github.event_name == 'push' && '1' || '' }}
       # Both live in the Actions and the Dependabot secret stores.
       LHCI_TOKEN: ${{ secrets.LHCI_BUILD_TOKEN }}

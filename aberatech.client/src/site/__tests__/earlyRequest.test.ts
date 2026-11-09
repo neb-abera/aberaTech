@@ -58,6 +58,7 @@ describe("earlyRequestScript", () => {
       const fetch = vi.fn(() => Promise.resolve(new Response("{}")));
       const scope: { __earlyRequest?: { url: string } } = {};
       const fakeIntl = {
+        // biome-ignore lint/correctness/noComponentHookFactories: a stand-in for Intl.DateTimeFormat, whose name is capitalized. It is not a component.
         DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: zone }) }),
       };
 

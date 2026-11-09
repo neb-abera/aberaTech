@@ -8,6 +8,8 @@
   "files": {
     "includes": [
       "**",
+      "!.github/PULL_REQUEST_TEMPLATE.md",
+      "!.vale",
       "!**/dist",
       "!**/bin",
       "!**/obj",

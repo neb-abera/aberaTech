@@ -9,7 +9,7 @@ name: Lighthouse nightly
 
 on:
   schedule:
-    - cron: '23 5 * * *'
+    - cron: "23 5 * * *"
   # A run on demand, and the first run after a change here.
   workflow_dispatch:
 
@@ -33,9 +33,9 @@ jobs:
     env:
       LHCI_PROJECT: abera.tech-production
       LHCI_BASE_BRANCH: production
-      LHCI_REQUIRE_UPLOAD: '1'
+      LHCI_REQUIRE_UPLOAD: "1"
       # Every run, so the next night compares medians with medians.
-      LHCI_KEEP_ALL_RUNS: '1'
+      LHCI_KEEP_ALL_RUNS: "1"
       LHCI_TOKEN: ${{ secrets.LHCI_PRODUCTION_BUILD_TOKEN }}
       LHCI_BASIC_AUTH__PASSWORD: ${{ secrets.LHCI_BASIC_AUTH_PASSWORD }}
       LHCI_BUILD_CONTEXT__CURRENT_BRANCH: production

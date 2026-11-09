@@ -36,7 +36,7 @@ services:
       # has; the vite advisories that keep appearing are precisely "any website
       # can reach the dev server" and "server.fs.deny can be bypassed for files
       # under the project root". There is no reason for it to leave the host.
-      - '127.0.0.1:${DEV_PORT:-3000}:3000'
+      - "127.0.0.1:${DEV_PORT:-3000}:3000"
     volumes:
       # Edits on the host reload in the container.
       - ./aberatech.client:/client
@@ -45,7 +45,7 @@ services:
       # path. Remove it with `make clean` after changing dependencies.
       - /client/node_modules
     environment:
-      IN_DOCKER: 'true'
+      IN_DOCKER: "true"
 
   # Runs as the user that owns this directory (HOST_UID/HOST_GID, from the
   # Makefile and .env). As root it left root-owned coverage/ and bin/ behind,
@@ -61,9 +61,9 @@ services:
       - ./aberatech.client:/client
       - /client/node_modules
     environment:
-      IN_DOCKER: 'true'
+      IN_DOCKER: "true"
       HOME: /tmp
-    command: ['npm', 'run', 'test']
+    command: ["npm", "run", "test"]
 
   # Targets clienttools rather than clientlint on purpose: clientlint runs the
   # check as a build step, so building it to rewrite badly formatted files would
@@ -79,7 +79,7 @@ services:
       - /repo/node_modules
     environment:
       HOME: /tmp
-    command: ['npx', 'biome', 'check', '.']
+    command: ["npx", "biome", "check", "."]
 
   # Postgres for the scheduling feature.
   #
@@ -104,14 +104,14 @@ services:
       # projects at once and the default is the one they all reach for first.
       # The server container talks to db:5432 on the compose network regardless;
       # this mapping exists only so a database tool on the host can connect.
-      - '127.0.0.1:${DB_PORT:-5433}:5432'
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     volumes:
       # postgres:18 moved its data directory up a level (major-version
       # subdirectories, docker-library/postgres#1259) and refuses a volume
       # mounted at the old path. Mounting the parent is the 18+ contract.
       - scheduling-db:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U scheduling -d scheduling']
+      test: ["CMD-SHELL", "pg_isready -U scheduling -d scheduling"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -147,8 +147,8 @@ services:
       DOTNET_CLI_HOME: /tmp
       NUGET_PACKAGES: /tmp/nuget
       ABERA_ENFORCE_TIMING: ${ABERA_ENFORCE_TIMING:-}
-      ABERA_TEST_POSTGRES: 'Host=db;Port=5432;Database=postgres;Username=scheduling;Password=scheduling'
-      ABERA_REQUIRE_POSTGRES: '1'
+      ABERA_TEST_POSTGRES: "Host=db;Port=5432;Database=postgres;Username=scheduling;Password=scheduling"
+      ABERA_REQUIRE_POSTGRES: "1"
     # An init process as PID 1, so dotnet is not. As PID 1 it inherits every
     # orphaned build and test process, and on .NET 11.0.0-rc.1 its child
     # reaper fails fast on one it did not start ("Error while reaping child.
@@ -161,11 +161,11 @@ services:
     # reference would otherwise make dotnet probe for node this image lacks.
     command:
       [
-        'dotnet',
-        'test',
-        'aberaTech.Server.Tests/aberaTech.Server.Tests.csproj',
-        '--nologo',
-        '-p:SkipClientProject=true'
+        "dotnet",
+        "test",
+        "aberaTech.Server.Tests/aberaTech.Server.Tests.csproj",
+        "--nologo",
+        "-p:SkipClientProject=true",
       ]
 
   # The whole site as it is deployed — .NET server, built client, database —
@@ -176,7 +176,7 @@ services:
       context: .
       dockerfile: aberaTech.Server/Dockerfile
       args:
-        IN_DOCKER: 'true'
+        IN_DOCKER: "true"
     volumes:
       - ./aberaTech.Server.Tests/Fitness/Fixtures/goals.xlsx:/fixtures/goals.xlsx:ro
     # The app runs as the image's own user, and a checkout with umask 007
@@ -185,73 +185,73 @@ services:
     # group lets that user read it. CI checks out world-readable and needs
     # none. 65534 is nogroup, for a run outside make.
     group_add:
-      - '${HOST_GID:-65534}'
+      - "${HOST_GID:-65534}"
     ports:
-      - '127.0.0.1:${APP_PORT:-8080}:8080'
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
     environment:
       # Development so the availability rules seed themselves and a fresh
       # database produces a page with slots on it rather than an empty state
       # that looks like a bug.
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Scheduling: 'Host=db;Port=5432;Database=scheduling;Username=scheduling;Password=scheduling'
+      ConnectionStrings__Scheduling: "Host=db;Port=5432;Database=scheduling;Username=scheduling;Password=scheduling"
       # The fitness database rides the same local Postgres; EF creates it on
       # first start. DevelopmentOwner skips sign-in — Development only, see
       # FitnessGate — so /fitness works out of the box.
-      ConnectionStrings__Fitness: 'Host=db;Port=5432;Database=fitness;Username=scheduling;Password=scheduling'
-      Fitness__DevelopmentOwner: 'true'
+      ConnectionStrings__Fitness: "Host=db;Port=5432;Database=fitness;Username=scheduling;Password=scheduling"
+      Fitness__DevelopmentOwner: "true"
       # The goals workbook from a file instead of OneDrive: a synthetic copy
       # of the athlete's layout, kept equal to the builder by
       # GoalsFixtureFileTests. Development and the e2e suite only.
-      OneDrive__LocalWorkbookPath: '/fixtures/goals.xlsx'
+      OneDrive__LocalWorkbookPath: "/fixtures/goals.xlsx"
       # The owner pages under `make e2e`: a sign-in that skips Google for
       # the first allowed address, a dev box in memory, and the token the
       # suite's fake agent reports with. All three are Development-only
       # switches (AdminAuth.cs, DevBoxEndpoints.cs) and a test proves
       # Production ignores them. The Google values are placeholders that
       # satisfy "configured"; nothing is sent to Google.
-      Admin__GoogleClientId: 'development-placeholder'
-      Admin__GoogleClientSecret: 'development-placeholder'
-      Admin__AllowedEmails__0: 'owner@example.test'
-      Admin__DevelopmentSignIn: 'true'
-      DevBox__SubscriptionId: 'development'
-      DevBox__Fake: 'true'
-      DevBox__HeartbeatToken: 'development-heartbeat-token'
+      Admin__GoogleClientId: "development-placeholder"
+      Admin__GoogleClientSecret: "development-placeholder"
+      Admin__AllowedEmails__0: "owner@example.test"
+      Admin__DevelopmentSignIn: "true"
+      DevBox__SubscriptionId: "development"
+      DevBox__Fake: "true"
+      DevBox__HeartbeatToken: "development-heartbeat-token"
       # Start, hold and park share five calls a minute in production, and
       # the agent's heartbeat gets ten (RateLimits.cs). The owner suite
       # spends four of each per engine and runs on three engines back to
       # back; against the fake box nothing bills, so both budgets are a
       # minute's worth for all three.
-      RateLimits__DevBoxStartPerMinute: '60'
-      RateLimits__DevBoxHeartbeatPerMinute: '60'
+      RateLimits__DevBoxStartPerMinute: "60"
+      RateLimits__DevBoxHeartbeatPerMinute: "60"
       # /alerts with the calendar and Pushover in memory (FakeAlertServices.cs,
       # Development only). The three values are placeholders that satisfy
       # "configured". Nothing is sent to Google or Pushover. The owner suite
       # presses about 70 buttons per engine on three engines, and the three
       # can finish inside one minute: 3 × 70 = 210, so 600 leaves room.
-      Alerts__CalendarIcsUrl: 'https://calendar.example.test/basic.ics'
-      Alerts__PushoverAppToken: 'development-placeholder'
-      Alerts__PushoverUserKey: 'development-placeholder'
-      Alerts__Fake: 'true'
+      Alerts__CalendarIcsUrl: "https://calendar.example.test/basic.ics"
+      Alerts__PushoverAppToken: "development-placeholder"
+      Alerts__PushoverUserKey: "development-placeholder"
+      Alerts__Fake: "true"
       # The callback each alarm names. The fake Pushover records it and
       # calls nothing. The owner suite posts it as Pushover would.
-      Alerts__PublicOrigin: 'http://localhost:8080'
-      RateLimits__AlertsActionsPerMinute: '600'
+      Alerts__PublicOrigin: "http://localhost:8080"
+      RateLimits__AlertsActionsPerMinute: "600"
       # /playbook with a made-up Notion in memory (FakeNotion.cs, Development
       # only). The token is a placeholder that satisfies "configured" and the
       # page id is the sample's root. Nothing is sent to Notion.
-      Notion__Token: 'development-placeholder'
-      Notion__PlaybookPageId: '00000001-0000-0000-0000-000000000000'
-      Notion__FitnessLessonsPageId: '0000f17e-0000-0000-0000-000000000000'
-      Notion__MarksmanshipPlanPageId: '0000a3c0-0000-0000-0000-000000000000'
-      Notion__TrainingPlanPageId: '0000e70e-0000-0000-0000-000000000000'
-      Notion__Fake: 'true'
+      Notion__Token: "development-placeholder"
+      Notion__PlaybookPageId: "00000001-0000-0000-0000-000000000000"
+      Notion__FitnessLessonsPageId: "0000f17e-0000-0000-0000-000000000000"
+      Notion__MarksmanshipPlanPageId: "0000a3c0-0000-0000-0000-000000000000"
+      Notion__TrainingPlanPageId: "0000e70e-0000-0000-0000-000000000000"
+      Notion__Fake: "true"
       # Bookings and queue joins get five a minute per address. The suite
       # books once in each of five browsers and joins and leaves the queue
       # in three, all from its one container, so it gets a minute's worth.
-      RateLimits__PublicWritePerMinute: '60'
+      RateLimits__PublicWritePerMinute: "60"
       # Sign-in starts get ten a minute per address. Each owner spec signs in
       # from the suite's one container, on three engines in a row.
-      RateLimits__SignInPerMinute: '60'
+      RateLimits__SignInPerMinute: "60"
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #
@@ -259,9 +259,9 @@ services:
       #
       # then book the first slot offered and watch `docker compose logs -f app`
       # for the send two minutes before it starts. Defaults match production.
-      Scheduling__ReminderLeadMinutes: '${REMINDER_LEAD_MINUTES:-60}'
-      Scheduling__EarlyReminderLeadMinutes: '${EARLY_REMINDER_LEAD_MINUTES:-1440}'
-      Scheduling__BookingLeadMinutes: '${BOOKING_LEAD_MINUTES:-30}'
+      Scheduling__ReminderLeadMinutes: "${REMINDER_LEAD_MINUTES:-60}"
+      Scheduling__EarlyReminderLeadMinutes: "${EARLY_REMINDER_LEAD_MINUTES:-1440}"
+      Scheduling__BookingLeadMinutes: "${BOOKING_LEAD_MINUTES:-30}"
     depends_on:
       db:
         condition: service_healthy

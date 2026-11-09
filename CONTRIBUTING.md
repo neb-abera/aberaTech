@@ -82,14 +82,14 @@ with `ABERA_ENFORCE_TIMING=1 make servertest`.
 
 ## Making a change
 
-* Write tests first, from the entry point a user hits (an HTTP request, a page
+- Write tests first, from the entry point a user hits (an HTTP request, a page
   interaction). A change in behavior needs a test that fails without it.
-* Keep pull requests small and single-purpose, and fill in the pull request
+- Keep pull requests small and single-purpose, and fill in the pull request
   template (`.github/PULL_REQUEST_TEMPLATE.md`).
-* Dependency lock files are enforced: `npm ci` and locked-mode NuGet
+- Dependency lock files are enforced: `npm ci` and locked-mode NuGet
   restore fail the build when a manifest and its lock file disagree, so
   commit the regenerated lock file with any dependency change.
-* Nothing merges on a red check. The `master` ruleset requires signed
+- Nothing merges on a red check. The `master` ruleset requires signed
   commits and every PR-gating job: the container test/lint/build jobs and the
   workflow lint from `Checks`, the three CodeQL `analyze` legs, the trivy
   container scan, the ZAP baseline scan and dependency review. A failing

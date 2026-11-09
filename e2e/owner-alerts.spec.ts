@@ -277,6 +277,7 @@ test.describe("/alerts", () => {
     await expect(
       page.getByRole("heading", { name: "Settings", exact: true }),
     ).toBeVisible();
+    // biome-ignore lint/performance/useDomNodeTextContent: the test reads what the owner sees, so rendered text is the point.
     expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
 
     const saved = await page.request.put("/api/alerts/settings", {
@@ -290,6 +291,7 @@ test.describe("/alerts", () => {
     expect(saved.status()).toBe(200);
     expect((await saved.json()).settings).not.toHaveProperty("priority");
     await page.reload();
+    // biome-ignore lint/performance/useDomNodeTextContent: the test reads what the owner sees, so rendered text is the point.
     expect(await page.locator("body").innerText()).not.toMatch(/emergency/i);
     await page
       .getByRole("button", { name: "Test: ring until stopped" })
@@ -1522,7 +1524,10 @@ function buttonContrast(page: Page): Promise<Measured[]> {
     )) {
       const box = button.getBoundingClientRect();
       if (box.width === 0 || box.height === 0) continue;
-      const name = button.getAttribute("aria-label") ?? button.innerText.trim();
+      const name =
+        button.getAttribute("aria-label") ??
+        // biome-ignore lint/performance/useDomNodeTextContent: a button's visible name is its rendered text.
+        button.innerText.trim();
       const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
       const seen = new Set<Element>();
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
