@@ -12,6 +12,7 @@ import SignInToSee from "../../progress/components/SignInToSee";
 import { clock, localDate } from "../core/dates";
 import { pace as measurePace } from "../core/pace";
 import { itemStatus, overall, type Solves, unitStates } from "../core/progress";
+import { asDue, dueOn, upcoming } from "../core/reviews";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
 import { nextUp } from "../core/today";
 import { type JudgeLine, useSolves } from "../hooks/useSolves";
@@ -19,12 +20,16 @@ import { useTraining } from "../hooks/useTraining";
 import LessonView from "./LessonView";
 import MapView from "./MapView";
 import NoteField from "./NoteField";
+import NotesView from "./NotesView";
+import ReviewView from "./ReviewView";
 import TodayView, { type Contest } from "./TodayView";
 import ToolsView from "./ToolsView";
 import UnitView from "./UnitView";
 
-type View = "today" | "map" | "tools";
-const views: View[] = ["today", "map", "tools"];
+type View = "today" | "review" | "map" | "notes" | "tools";
+const views: View[] = ["today", "review", "map", "notes", "tools"];
+/** Views only the owner has: his work, his reviews, his notes. */
+const ownerViews: View[] = ["today", "review", "notes"];
 
 /** The rating line, with its source and the time it was read. */
 function judgeLine(
@@ -71,7 +76,7 @@ export default function TrainingPanel() {
   const asked = params.get("view") as View | null;
   // The owner opens on Today. Everyone else, and the build-time render, on the map.
   const view: View =
-    asked && views.includes(asked) && (asked !== "today" || owner)
+    asked && views.includes(asked) && (!ownerViews.includes(asked) || owner)
       ? asked
       : owner
         ? "today"
@@ -93,9 +98,11 @@ export default function TrainingPanel() {
   const rating = judgeLine("Codeforces", answer.status, answer.codeforces);
   const [more, setMore] = useState(0);
   const date = localDate(now);
+  const due = owner ? dueOn(date, document, solves) : [];
   const next = nextUp(date, document, solves, now, {
     session: document.settings.session,
     more,
+    reviews: due.map(asDue),
   });
   const firstRated = syllabus.units
     .find((unit) => unit.slot === "contest")
@@ -180,12 +187,28 @@ export default function TrainingPanel() {
             to="/training?view=today"
           />
         )}
+        {owner && (
+          <Tab
+            value="review"
+            label={due.length ? `Review (${due.length})` : "Review"}
+            component={RouterLink}
+            to="/training?view=review"
+          />
+        )}
         <Tab
           value="map"
           label="Map"
           component={RouterLink}
           to="/training?view=map"
         />
+        {owner && (
+          <Tab
+            value="notes"
+            label="Notes"
+            component={RouterLink}
+            to="/training?view=notes"
+          />
+        )}
         <Tab
           value="tools"
           label="Tools"
@@ -240,6 +263,17 @@ export default function TrainingPanel() {
           }
           keepGoing={() => setMore((count) => count + 1)}
         />
+      ) : view === "review" && owner ? (
+        <ReviewView
+          due={due}
+          document={document}
+          change={change}
+          now={now}
+          tomorrow={upcoming(date, document, solves, 1)}
+          week={upcoming(date, document, solves, 7)}
+        />
+      ) : view === "notes" && owner ? (
+        <NotesView document={document} />
       ) : view === "tools" ? (
         <ToolsView
           settings={owner ? document.settings : undefined}

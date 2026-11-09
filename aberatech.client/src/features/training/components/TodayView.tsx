@@ -66,10 +66,8 @@ function EntryRow({ entry, index }: { entry: Entry; index: number }) {
     case "review":
       kind = "Review";
       title = entry.review.title;
-      detail = `From ${longDate(entry.review.from)}`;
-      open = entry.review.lesson
-        ? { to: `/training?lesson=${entry.review.lesson.id}`, label: "Open" }
-        : null;
+      detail = `${trackLabel[entry.review.track]} · ${entry.review.unit.title} · in review since ${longDate(entry.review.from)}, due ${longDate(entry.review.due)}`;
+      open = { to: "/training?view=review", label: "Review" };
       break;
   }
 
@@ -323,6 +321,13 @@ export default function TodayView({
           lessons are written before you reach them.
         </Alert>
       ))}
+      {next.newWaits && (
+        <Alert severity="warning">
+          New material waits. {formatMinutes(next.overdue)} of review is
+          overdue, more than one session of {formatMinutes(next.session)}. Clear
+          the overdue reviews first.
+        </Alert>
+      )}
       {next.entries.length === 0 ? (
         <Typography variant="body1">
           Nothing open. Every written unit is done or placed out.

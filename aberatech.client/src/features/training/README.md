@@ -49,18 +49,37 @@ never hold back or count toward a unit.
 
 Minutes for reading are 3 a page, an estimate, and each item says so.
 
+## Review
+
+What comes back, and when, is `core/reviews.ts`. A problem marked missed
+and a lesson once every item in it is done each enter review under a key,
+`item:<id>` or `lesson:<id>`. FSRS schedules each key, through ts-fsrs (MIT)
+with its default parameters, 90% target retention, no fuzz, and whole days.
+The event sets the first date: a miss rates Again (back the next day), a
+finished lesson rates Good (back in 3 days). Each answer after that keeps the
+key's card in `cards`, and the key stays in review at growing intervals.
+
+A miss starts successive relearning. The key is due each day until it is
+answered right on two later days. Only then does a missed problem count again,
+and its missed mark is cleared.
+
+Due reviews come first in Next up, dealt round robin across units. While
+more than one session of review is overdue, Next up lists reviews alone and
+new material waits. Due today is due. Due before today is overdue.
+
+Notes are searchable under the Notes tab: every word of the query must be in
+the note or its title, with case and accents ignored.
+
 ## Increments not built yet
 
 Each is in the design page, with its requirement.
 
-1. Review queue at 2 and 14 days, and the rule that overdue reviews come
-   first. The document keeps `reviews`, and `today()` takes a list of due
-   reviews and puts them first in their track's block.
-2. Assessment: multiple choice, short answer, proofs against a rubric,
+1. Assessment: multiple choice, short answer, proofs against a rubric,
    flashcards on FSRS, an Anki export, pretests, and mastery checks. Lessons
    take `questions`, and units take `pretest` and `mastery`.
-3. Notes search. Notes are kept by lesson and item id in `notes`.
-4. A Rust grader service beside the site, called by the server, for drills
+2. Problem pool and solve log: Mostafa Saad's supervision pool, his time log
+   per solve, speed drills, and his weekly checklist.
+3. A Rust grader service beside the site, called by the server, for drills
    beyond the basics. Not built until Neb approves its cost.
 
 ## Drills
