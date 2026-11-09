@@ -163,6 +163,12 @@ jobs:
             LGPL-2.0-only, LGPL-2.0-or-later,
             LGPL-2.1-only, LGPL-2.1-or-later,
             LGPL-3.0-only, LGPL-3.0-or-later
+          # r-efi, through getrandom in the grader's tree, is
+          # "MIT OR Apache-2.0 OR LGPL-2.1-or-later". The action fails a
+          # choice that includes a denied license, so the package is named
+          # here. The grader takes it under MIT or Apache-2.0, and
+          # grader/deny.toml checks the same tree.
+          allow-dependencies-licenses: pkg:cargo/r-efi
 
   dast:
     name: dast (ZAP baseline)

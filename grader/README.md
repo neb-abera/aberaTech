@@ -28,16 +28,16 @@ one pull request.
 }
 ```
 
-| Field         | Rule                                                               |
-| ------------- | ------------------------------------------------------------------ |
-| `source`      | Not blank, at most 16 KiB                                          |
-| `language`    | `c++`, `c`, or `rust`, as Compiler Explorer names them             |
-| `compiler`    | A Compiler Explorer id: 1 to 40 letters, digits, `.`, `-`, or `_`  |
-| `flags`       | Optional, at most 200 printable ASCII characters                   |
-| `tests`       | 1 to 10                                                            |
-| `stdin`       | At most 4 KiB                                                      |
-| `expected`    | At most 4 KiB                                                      |
-| `timeLimitMs` | 1 to 10000                                                         |
+| Field         | Rule                                                              |
+| ------------- | ----------------------------------------------------------------- |
+| `source`      | Not blank, at most 16 KiB                                         |
+| `language`    | `c++`, `c`, or `rust`, as Compiler Explorer names them            |
+| `compiler`    | A Compiler Explorer id: 1 to 40 letters, digits, `.`, `-`, or `_` |
+| `flags`       | Optional, at most 200 printable ASCII characters                  |
+| `tests`       | 1 to 10                                                           |
+| `stdin`       | At most 4 KiB                                                     |
+| `expected`    | At most 4 KiB                                                     |
+| `timeLimitMs` | 1 to 10000                                                        |
 
 The answer:
 
@@ -46,20 +46,26 @@ The answer:
   "compiled": true,
   "compileError": null,
   "tests": [
-    { "verdict": "pass", "stdout": "5", "message": null, "diff": null, "execMs": 3 }
+    {
+      "verdict": "pass",
+      "stdout": "5",
+      "message": null,
+      "diff": null,
+      "execMs": 3
+    }
   ]
 }
 ```
 
 A verdict is one of these:
 
-| Verdict         | When                                                                          |
-| --------------- | ----------------------------------------------------------------------------- |
-| `pass`          | The output matches                                                            |
-| `wrong_answer`  | It ran in time and printed something else. `diff` names the first line        |
-| `compile_error` | It did not build. `message` and `compileError` hold the compiler's errors     |
-| `runtime_error` | It exited other than 0 or did not start. `message` has the code and stderr    |
-| `time_limit`    | Compiler Explorer stopped it, or `execMs` is over `timeLimitMs`                |
+| Verdict         | When                                                                       |
+| --------------- | -------------------------------------------------------------------------- |
+| `pass`          | The output matches                                                         |
+| `wrong_answer`  | It ran in time and printed something else. `diff` names the first line     |
+| `compile_error` | It did not build. `message` and `compileError` hold the compiler's errors  |
+| `runtime_error` | It exited other than 0 or did not start. `message` has the code and stderr |
+| `time_limit`    | Compiler Explorer stopped it, or `execMs` is over `timeLimitMs`            |
 
 Outputs match when their lines match after trailing ASCII whitespace is
 dropped from each line and blank lines are dropped from the end. A carriage
