@@ -70,7 +70,9 @@ describe("the syllabus", () => {
         expect(item.record).toBe("codeforces");
       }
       if (problem.judge === "atcoder") {
-        expect(problem.id, item.id).toMatch(/^(abc\d+_[a-g]|dp_[a-z])$/);
+        expect(problem.id, item.id).toMatch(
+          /^(abc\d+_[a-g]|dp_[a-z]|(arc|agc)\d+_[a-f]\d?)$/,
+        );
         expect(item.record).toBe("atcoder");
       }
       if (problem.judge === "cses") {
@@ -96,16 +98,12 @@ describe("the syllabus", () => {
     );
   });
 
-  it("writes lessons for Phases 0 to 2 and locks Phase 3 with titles", () => {
+  it("writes lessons for every phase, Phase 3 included, and locks none", () => {
     for (const unit of syllabus.units) {
-      if (unit.phase <= 2) {
-        expect(unit.lessons.length, unit.id).toBeGreaterThan(0);
-        expect(unit.locked, unit.id).toBeUndefined();
-      } else {
-        expect(unit.lessons, unit.id).toEqual([]);
-        expect(unit.locked, unit.id).toMatch(/before Phase 3 starts/);
-      }
+      expect(unit.lessons.length, unit.id).toBeGreaterThan(0);
+      expect(unit.locked, unit.id).toBeUndefined();
     }
+    expect(syllabus.units.filter((unit) => unit.phase === 3).length).toBe(17);
   });
 
   it("gives a checkpoint to every unit of lessons a placement can skip", () => {
@@ -126,6 +124,23 @@ describe("the syllabus", () => {
       "zeitz",
       "edpc",
       "ac-bands",
+      "p3-zeitz-finish",
+      "p3-egmo",
+      "p3-stevens",
+      "p3-khurmi",
+      "p3-rocks",
+      "p3-mathur",
+      "p3-sriram",
+      "p3-otis-excerpts",
+      "p3-isl",
+      "p3-usamo",
+      "p3-imo",
+      "p3-optional-engel",
+      "p3-cpalgo",
+      "p3-arc-old",
+      "p3-div1-virtuals",
+      "p3-div1-hard",
+      "p3-agc",
     ]);
   });
 
@@ -167,6 +182,10 @@ describe("the syllabus", () => {
     const one = syllabus.phases[1];
     expect(one.week.reduce((sum, block) => sum + block.minutes, 0)).toBe(
       one.hoursPerWeek * 60,
+    );
+    const three = syllabus.phases[3];
+    expect(three.week.reduce((sum, block) => sum + block.minutes, 0)).toBe(
+      three.hoursPerWeek * 60,
     );
     const zero = syllabus.phases[0];
     expect(zero.week.reduce((sum, block) => sum + block.minutes, 0)).toBe(
