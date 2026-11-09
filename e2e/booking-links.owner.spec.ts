@@ -85,7 +85,7 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
       name: `Rules for E2E interviews ${info.project.name}`,
     })
     .last();
-  const on = row.getByRole("checkbox", { name: "On" });
+  const on = row.getByRole("switch", { name: "On" });
   await on.uncheck();
   await expect(on).not.toBeChecked();
   await expect(row.getByRole("status")).toHaveText("Saved");
