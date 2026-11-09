@@ -368,13 +368,14 @@ public static class AlertsEndpoints
             CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
-            var (errors, edit) = EditEventRequest.Validate(request, now);
-            if (edit is null) return Results.ValidationProblem(errors);
-
             var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
             var snapshot = status.Snapshot();
             var before = await AlertsPlan.CurrentAsync(snapshot, store, settings, now, cancellationToken);
             var alert = before.FirstOrDefault(planned => planned.Key == request.Key);
+            // A started event is listed until its end. Its start may stay
+            // where it is; a move must still be to the future.
+            var (errors, edit) = EditEventRequest.Validate(request, now, alert?.StartsAt);
+            if (edit is null) return Results.ValidationProblem(errors);
             if (alert is null) return Results.NotFound();
 
             var outcome = await AlertEventWrites.EditAsync(
@@ -1326,14 +1327,16 @@ public static class AlertsEndpoints
 
         public int? LeadMinutes { get; init; }
 
-        public static (Dictionary<string, string[]> Errors, AlertEventEdit? Valid) Validate(EditEventRequest request, Instant now)
+        /// <param name="listedStart">The occurrence's start. A start equal to it passes even once it is past.</param>
+        public static (Dictionary<string, string[]> Errors, AlertEventEdit? Valid) Validate(
+            EditEventRequest request, Instant now, Instant? listedStart = null)
         {
             var errors = new Dictionary<string, string[]>();
             if (!Valid(request.Key)) errors["key"] = ["Required, at most 200 characters."];
             if (request.Scope is not (EventScopes.Occurrence or EventScopes.Series)) errors["scope"] = [EventScopes.Message];
 
             var title = EventFields.Title(request.Title, errors);
-            var start = EventFields.Start(request.StartsAt, now, errors);
+            var start = EventFields.Start(request.StartsAt, now, errors, listedStart);
             if (request.DurationMinutes is { } duration
                 && duration is < CreatedEvents.MinDurationMinutes or > CreatedEvents.MaxDurationMinutes)
             {
@@ -1383,7 +1386,8 @@ public static class EventFields
         return title;
     }
 
-    public static Instant? Start(string? text, Instant now, Dictionary<string, string[]> errors)
+    /// <param name="unchanged">A start that passes even when past: the start of the occurrence being edited.</param>
+    public static Instant? Start(string? text, Instant now, Dictionary<string, string[]> errors, Instant? unchanged = null)
     {
         Instant? start = null;
         if (text is not null && NodaTime.Text.OffsetDateTimePattern.ExtendedIso.Parse(text.Trim()) is { Success: true } parsed)
@@ -1391,6 +1395,7 @@ public static class EventFields
             start = parsed.Value.ToInstant();
         }
 
+        if (start is { } same && same == unchanged) return start;
         if (start is not { } startsAt || startsAt <= now || startsAt > now + CreatedEvents.MaxAhead)
         {
             errors["startsAt"] = ["An ISO 8601 time with its offset, in the future and at most 366 days ahead."];

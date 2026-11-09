@@ -67,6 +67,13 @@ public sealed record AlertEventChange(
         }
     }
 
+    /// <summary>
+    /// When the change stops being needed: <see cref="Until"/>, or the
+    /// edited occurrence's end when that is later, since a started event is
+    /// listed until its end.
+    /// </summary>
+    public Instant ListedUntil => EndsAt is { } end && end > Until ? end : Until;
+
     /// <summary>An occurrence this change is for: the picked one, or for a series, any of the event's.</summary>
     public bool Picks(PlannedAlert alert) =>
         alert.EventId == EventId && (Series || alert.StartsAt == OriginalStartsAt);
@@ -189,7 +196,7 @@ public static class EventChanges
         bool feedRead)
     {
         var done = changes
-            .Where(change => !change.Deleted && (change.Until <= now || Agreed(change, feed)))
+            .Where(change => !change.Deleted && (change.ListedUntil <= now || Agreed(change, feed)))
             .Select(change => change.Id)
             .ToHashSet();
 
