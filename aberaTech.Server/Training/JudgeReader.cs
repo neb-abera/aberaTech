@@ -58,10 +58,10 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
     private DateTimeOffset Now => time.GetUtcNow();
 
     public Task<JudgeAnswer> CodeforcesAsync(string handle, CancellationToken cancellationToken) =>
-        Cached($"judges:codeforces:{handle}", () => ReadCodeforcesAsync(handle, cancellationToken));
+        Cached($"judges:codeforces:{handle}", () => ReadCodeforcesAsync(handle, cancellationToken), cancellationToken);
 
     public Task<JudgeAnswer> AtCoderAsync(string handle, CancellationToken cancellationToken) =>
-        Cached($"judges:atcoder:{handle}", () => ReadAtCoderAsync(handle, cancellationToken));
+        Cached($"judges:atcoder:{handle}", () => ReadAtCoderAsync(handle, cancellationToken), cancellationToken);
 
     public static readonly Uri AtCoderContests = new("https://atcoder.jp/contests/?lang=en");
 
@@ -72,7 +72,10 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
         var codeforces = await UpcomingCodeforcesAsync(cancellationToken);
         var atcoder = await UpcomingAtCoderAsync(cancellationToken);
         var contests = codeforces.Concat(atcoder).OrderBy(contest => contest.Start).Take(10).ToList();
-        cache.Set("judges:contests", (IReadOnlyList<UpcomingContest>)contests, CacheFor);
+        // A request the browser left mid-call reads as an empty list. Keeping
+        // it would hide every round for the next five minutes.
+        if (!cancellationToken.IsCancellationRequested)
+            cache.Set("judges:contests", (IReadOnlyList<UpcomingContest>)contests, CacheFor);
         return contests;
     }
 
@@ -138,12 +141,15 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
         }
     }
 
-    private async Task<JudgeAnswer> Cached(string key, Func<Task<JudgeAnswer>> read)
+    private async Task<JudgeAnswer> Cached(string key, Func<Task<JudgeAnswer>> read, CancellationToken cancellationToken)
     {
         if (cache.TryGetValue(key, out JudgeAnswer? kept) && kept is not null) return kept;
         var answer = await read();
-        // A failure is kept for a minute only, so the next load tries again soon.
-        cache.Set(key, answer, answer.Ok ? CacheFor : TimeSpan.FromMinutes(1));
+        // A request the browser left mid-call reads as a failure. It is not
+        // kept. A real failure is kept for a minute only, so the next load
+        // tries again soon.
+        if (!cancellationToken.IsCancellationRequested)
+            cache.Set(key, answer, answer.Ok ? CacheFor : TimeSpan.FromMinutes(1));
         return answer;
     }
 

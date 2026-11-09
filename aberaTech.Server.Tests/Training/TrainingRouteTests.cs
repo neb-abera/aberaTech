@@ -188,5 +188,20 @@ public sealed class TrainingRouteTests : IDisposable
         Assert.Equal(["fixture-overflow", "fixture-power"], mastery.EnumerateArray().Select(id => id.GetString()));
     }
 
+    [Fact]
+    public async Task A_read_the_caller_abandoned_is_not_kept()
+    {
+        var reader = _app.Factory.Services.GetRequiredService<JudgeReader>();
+        using var gone = new CancellationTokenSource();
+        await gone.CancelAsync();
+        Assert.Empty(await reader.UpcomingAsync(gone.Token));
+        Assert.False((await reader.CodeforcesAsync("Nebikinizer", gone.Token)).Ok);
+
+        // The next caller still gets the rounds and the solves.
+        var contests = await reader.UpcomingAsync(CancellationToken.None);
+        Assert.Equal(["Codeforces Round (Div. 3)", "AtCoder Beginner Contest 999"], contests.Select(contest => contest.Name));
+        Assert.True((await reader.CodeforcesAsync("Nebikinizer", CancellationToken.None)).Ok);
+    }
+
     public void Dispose() => _app.Dispose();
 }
