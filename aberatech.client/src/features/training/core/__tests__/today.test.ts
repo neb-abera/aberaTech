@@ -84,8 +84,8 @@ describe("next up", () => {
         ),
     );
     for (const list of lists) expect(list).toEqual(lists[0]);
-    expect(lists[0]).toContain("checkpoint:cpp-basics");
-    expect(lists[0]).toContain("alcumus-account");
+    expect(lists[0]).toContain("refresh-learncpp-ints");
+    expect(lists[0]).toContain("refresh-alcumus-setup");
   });
 
   it("interleaves the tracks by the plan's split of minutes", () => {
@@ -190,25 +190,31 @@ describe("next up", () => {
 
 describe("unlocks", () => {
   it("open by the unit before finishing or placing out, never by date", () => {
-    const placed = placeOut(emptyTraining(), "cpp-basics");
+    let refreshed = emptyTraining();
+    for (const id of [
+      "refresh-cpp",
+      "refresh-stl",
+      "refresh-complexity",
+      "cpp-toolkit",
+      "refresh-dsa",
+    ])
+      refreshed = finish(refreshed, id);
+    const placed = placeOut(refreshed, "cpp-basics");
     for (const moment of [
       new Date("2026-11-10T08:00:00Z"),
       new Date("2031-01-01T08:00:00Z"),
     ]) {
       expect(
-        unitStates(emptyTraining(), noSolves, moment).get("cpp-toolkit")?.state,
+        unitStates(emptyTraining(), noSolves, moment).get("cpp-basics")?.state,
       ).toBe("waiting");
+      expect(
+        unitStates(refreshed, noSolves, moment).get("cpp-basics")?.state,
+      ).toBe("open");
+      // A Phase 1 unit opens in Phase 0 once the unit before it is placed out.
       const after = unitStates(placed, noSolves, moment);
-      expect(after.get("cpp-toolkit")?.state).toBe("open");
-      expect(after.get("bronze-1")?.state).toBe("waiting");
+      expect(after.get("bronze-1")?.state).toBe("open");
+      expect(after.get("band-900")?.state).toBe("waiting");
     }
-    // A Phase 1 unit opens in Phase 0 once the unit before it is finished.
-    const ready = finish(placed, "cpp-toolkit");
-    expect(
-      unitStates(ready, noSolves, new Date("2026-11-10T08:00:00Z")).get(
-        "bronze-1",
-      )?.state,
-    ).toBe("open");
   });
 
   it("say when a track reaches its last written unit", () => {
