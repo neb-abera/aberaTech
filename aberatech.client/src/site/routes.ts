@@ -60,6 +60,7 @@ export const routes: PageRoute[] = [
   page("/playbook", "Playbook"),
   page("/marksmanship", "Marksmanship"),
   page("/training-plan", "TrainingPlan"),
+  page("/training", "Training"),
 ];
 
 /**
@@ -94,6 +95,8 @@ export const unlisted: Record<string, string> = {
     "The owner's Notion playbook, read live from Notion for a computer that cannot reach it. Same shape as /devbox: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Playbook entry only to the signed-in owner.",
   "/marksmanship":
     "The owner's President's Hundred plan and pistol training log, read live from one Notion page. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Marksmanship entry only to the signed-in owner.",
+  "/training":
+    "The owner's competitive math and programming course player. A visitor sees the syllabus read-only and never the progress or notes. It is linked from /technical, and the app bar shows a Training entry to the signed-in owner.",
   "/training-plan":
     "The owner's training plan, read live from one Notion page and its two databases. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Training plan entry only to the signed-in owner.",
 };

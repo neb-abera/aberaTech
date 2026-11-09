@@ -21,7 +21,7 @@ namespace aberaTech.Fitness.Api;
 public static class ProgressEndpoints
 {
     /// <summary>The documents that exist. Anything else is a 404, not a new row.</summary>
-    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "quantum-cryptography", "planner", "links", "plan", "network"];
+    public static readonly IReadOnlyList<string> Keys = ["rf-training", "signal-processing", "quantum-cryptography", "planner", "links", "plan", "network", "training"];
 
     public const int MaxBytes = 256 * 1024;
 

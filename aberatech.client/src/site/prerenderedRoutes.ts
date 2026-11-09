@@ -30,5 +30,6 @@ export const prerenderedRoutes: string[] = [
   "/playbook",
   "/marksmanship",
   "/training-plan",
+  "/training",
   ...guides.filter((entry) => !entry.external).map((entry) => entry.to),
 ];

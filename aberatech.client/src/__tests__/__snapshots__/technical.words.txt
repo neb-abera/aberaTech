@@ -1,4 +1,4 @@
-5647 words
+5662 words
 1 "LEARNING"
 1 "Quora"
 1 "Reddit"
@@ -37,7 +37,7 @@
 1 (usually
 11 ,
 6 -
-24 .
+25 .
 1 .Net
 4 1
 2 1.
@@ -297,7 +297,7 @@
 1 Most
 5 Moustafa
 2 Moustafa's
-3 My
+4 My
 1 NGC
 2 NOT
 2 Neb
@@ -409,7 +409,7 @@
 14 This
 1 To
 1 Tons
-1 Training
+2 Training
 2 Transition
 3 Try
 1 Tutorial
@@ -492,7 +492,7 @@
 2 amount
 16 an
 1 analyze
-183 and
+184 and
 1 another
 2 answer
 2 answer.
@@ -545,6 +545,7 @@
 3 bar
 2 based
 1 basics
+1 basics,
 15 be
 8 because
 2 become
@@ -643,7 +644,7 @@
 1 compensation
 1 competent
 1 competitions,
-8 competitive
+9 competitive
 1 competitive,
 1 compiled
 1 completion.
@@ -980,7 +981,7 @@
 1 interviews.
 1 interviews:
 1 intimidated
-13 into
+14 into
 4 intro
 1 introduced
 1 introduced,
@@ -990,7 +991,7 @@
 1 intuitive.
 1 investment.
 2 involves
-101 is
+102 is
 1 is.
 4 isn't
 3 isn’t
@@ -1095,7 +1096,7 @@
 1 mastering
 1 material
 1 material.
-5 math
+6 math
 2 math,
 2 mathematical
 4 matter
@@ -1161,7 +1162,7 @@
 1 offer.
 3 often
 1 okay
-55 on
+56 on
 1 on.
 2 once
 15 one
@@ -1195,7 +1196,7 @@
 1 outputs,
 2 outside
 1 overkill
-4 own
+5 own
 1 own,
 2 owns
 1 page
@@ -1206,8 +1207,8 @@
 9 part
 3 pass
 2 passively
-1 past
-1 path
+2 past
+2 path
 1 pattern.
 1 patterns,
 2 pay
@@ -1297,7 +1298,7 @@
 5 programmer.
 1 programmers.
 24 programming
-3 programming,
+4 programming,
 4 programming.
 2 programs
 1 programs,
@@ -1559,7 +1560,7 @@
 2 that,
 1 that.
 1 that’s
-126 the
+127 the
 8 their
 13 them
 1 them.
