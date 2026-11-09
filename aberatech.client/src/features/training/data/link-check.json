@@ -1,12 +1,27 @@
 {
   "checkedOn": "2026-11-09",
-  "total": 698,
+  "total": 1073,
   "about": "How every address in syllabus.json was opened on 9 Nov 2026. fetch: a plain request. browser: Chrome on the dev box, for hosts that refuse plain requests. archive: the Internet Archive, for a page behind a human check. source: the address as AoPS links it on its own videos page.",
   "links": {
     "https://artofproblemsolving.com/alcumus": {
       "how": "fetch",
       "status": 200,
       "title": "Alcumus"
+    },
+    "https://artofproblemsolving.com/store/book/aops-vol2": {
+      "how": "fetch",
+      "status": 200,
+      "title": "the Art of Problem Solving, Volume 2: and Beyond Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/intermediate-algebra": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intermediate Algebra Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/intermediate-counting": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intermediate Counting & Probability Textbook"
     },
     "https://artofproblemsolving.com/store/book/intro-algebra": {
       "how": "fetch",
@@ -18,6 +33,11 @@
       "status": 200,
       "title": "Introduction to Counting & Probability Textbook"
     },
+    "https://artofproblemsolving.com/store/book/intro-geometry": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Geometry Textbook"
+    },
     "https://artofproblemsolving.com/store/book/intro-number-theory": {
       "how": "fetch",
       "status": 200,
@@ -27,6 +47,11 @@
       "how": "fetch",
       "status": 200,
       "title": "Prealgebra Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/precalculus": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Precalculus Textbook"
     },
     "https://artofproblemsolving.com/store/recommendations.php": {
       "how": "fetch",
@@ -1722,6 +1747,11 @@
       "how": "source",
       "note": "The link on AoPS's own videos page, read in Chrome."
     },
+    "https://artofproblemsolving.com/wiki/index.php/AIME_Problems_and_Solutions": {
+      "how": "archive",
+      "status": 200,
+      "note": "Cloudflare asks a browser to prove it is human. The Internet Archive holds a 200 snapshot from 2026-09-29."
+    },
     "https://artofproblemsolving.com/wiki/index.php/AMC_10_Problems_and_Solutions": {
       "how": "archive",
       "status": 200,
@@ -1852,6 +1882,136 @@
       "status": 200,
       "title": "D - Glitchy Robot"
     },
+    "https://atcoder.jp/contests/dp/tasks/dp_a": {
+      "how": "fetch",
+      "status": 200,
+      "title": "A - Frog 1"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_b": {
+      "how": "fetch",
+      "status": 200,
+      "title": "B - Frog 2"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Vacation"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Knapsack 1"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - Knapsack 2"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_f": {
+      "how": "fetch",
+      "status": 200,
+      "title": "F - LCS"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_g": {
+      "how": "fetch",
+      "status": 200,
+      "title": "G - Longest Path"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_h": {
+      "how": "fetch",
+      "status": 200,
+      "title": "H - Grid 1"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_i": {
+      "how": "fetch",
+      "status": 200,
+      "title": "I - Coins"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_j": {
+      "how": "fetch",
+      "status": 200,
+      "title": "J - Sushi"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_k": {
+      "how": "fetch",
+      "status": 200,
+      "title": "K - Stones"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_l": {
+      "how": "fetch",
+      "status": 200,
+      "title": "L - Deque"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_m": {
+      "how": "fetch",
+      "status": 200,
+      "title": "M - Candies"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_n": {
+      "how": "fetch",
+      "status": 200,
+      "title": "N - Slimes"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_o": {
+      "how": "fetch",
+      "status": 200,
+      "title": "O - Matching"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_p": {
+      "how": "fetch",
+      "status": 200,
+      "title": "P - Independent Set"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_q": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Q - Flowers"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_r": {
+      "how": "fetch",
+      "status": 200,
+      "title": "R - Walk"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_s": {
+      "how": "fetch",
+      "status": 200,
+      "title": "S - Digit Sum"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_t": {
+      "how": "fetch",
+      "status": 200,
+      "title": "T - Permutation"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_u": {
+      "how": "fetch",
+      "status": 200,
+      "title": "U - Grouping"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_v": {
+      "how": "fetch",
+      "status": 200,
+      "title": "V - Subtree"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_w": {
+      "how": "fetch",
+      "status": 200,
+      "title": "W - Intervals"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_x": {
+      "how": "fetch",
+      "status": 200,
+      "title": "X - Tower"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_y": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Y - Grid 2"
+    },
+    "https://atcoder.jp/contests/dp/tasks/dp_z": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Z - Frog 3"
+    },
     "https://codeforces.com": {
       "how": "browser",
       "status": 200,
@@ -1861,6 +2021,26 @@
       "how": "browser",
       "status": 200,
       "title": "Contests - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1316/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1316C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1354/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1354C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1538/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1538E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1819/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1819B - Codeforces"
     },
     "https://codeforces.com/problemset/problem/1913/C": {
       "how": "browser",
@@ -1877,10 +2057,70 @@
       "status": 200,
       "title": "Problem - 1927D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/1971/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1971E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1971/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1971F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1979/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1979D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1980/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1980E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1982/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1982D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1986/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1986E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1990/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1990D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/1992/D": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 1992D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1996/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1996D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1996/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1996E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1999/G1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1999G1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1999/G2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1999G2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2000/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2000F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2002/C": {
       "how": "browser",
@@ -1892,10 +2132,30 @@
       "status": 200,
       "title": "Problem - 2004C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2007/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2007C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2008/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2008G - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2009/E": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2009E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2009/G1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2009G1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2010/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2010C2 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2014/D": {
       "how": "browser",
@@ -1907,15 +2167,45 @@
       "status": 200,
       "title": "Problem - 2019B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2021/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2021C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2022/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2022C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2023/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2023B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2024/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2024B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2027/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2027C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2027/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2027D1 - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2031/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2031B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2031/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2031D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2032/C": {
       "how": "browser",
@@ -1927,15 +2217,30 @@
       "status": 200,
       "title": "Problem - 2033D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2033/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2033F - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2034/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2034B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2034/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2034D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2036/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2036C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2036/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2036F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2039/B": {
       "how": "browser",
@@ -1947,10 +2252,30 @@
       "status": 200,
       "title": "Problem - 2039C1 - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2039/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2039D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2040/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2040C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2043/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2043D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2044/E": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2044E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2044/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2044F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2047/B": {
       "how": "browser",
@@ -1961,6 +2286,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2050B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2050/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2050G - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2051/C": {
       "how": "browser",
@@ -1987,10 +2317,30 @@
       "status": 200,
       "title": "Problem - 2056C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2059/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2059C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2060/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2060E - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2063/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2063B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2063/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2063C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2063/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2063D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2064/B": {
       "how": "browser",
@@ -2002,6 +2352,11 @@
       "status": 200,
       "title": "Problem - 2065C2 - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2065/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2065F - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2067/B": {
       "how": "browser",
       "status": 200,
@@ -2012,20 +2367,45 @@
       "status": 200,
       "title": "Problem - 2070B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2070/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2070C - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2071/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2071B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2071/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2071C - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2072/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2072B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2072/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2072F - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2074/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2074C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2074/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2074E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2078/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2078D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2084/B": {
       "how": "browser",
@@ -2036,6 +2416,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2085B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2085/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2085C - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2086/C": {
       "how": "browser",
@@ -2057,6 +2442,21 @@
       "status": 200,
       "title": "Problem - 2093D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2093/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2093E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2093/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2093F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2093/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2093G - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2094/C": {
       "how": "browser",
       "status": 200,
@@ -2066,6 +2466,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2094E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2094/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2094G - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2096/B": {
       "how": "browser",
@@ -2077,10 +2482,30 @@
       "status": 200,
       "title": "Problem - 2104B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2104/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2104E - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2107/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2107B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2108/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2108C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2109/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2109C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2109/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2109D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2110/B": {
       "how": "browser",
@@ -2092,15 +2517,40 @@
       "status": 200,
       "title": "Problem - 2110C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2110/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2110D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2112/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2112C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2112/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2112D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2113/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2113C - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2117/D": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2117D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2117/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2117E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2118/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2118D1 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2119/C": {
       "how": "browser",
@@ -2117,15 +2567,30 @@
       "status": 200,
       "title": "Problem - 2120C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2120/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2120D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2121/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2121C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2121/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2121G - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2122/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2122B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2123/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2123F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2127/B": {
       "how": "browser",
@@ -2157,15 +2622,35 @@
       "status": 200,
       "title": "Problem - 2132C1 - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2132/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2132D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2133/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2133C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2133/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2133D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2137/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2137C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2137/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2137E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2138/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2138C2 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2140/B": {
       "how": "browser",
@@ -2177,6 +2662,11 @@
       "status": 200,
       "title": "Problem - 2143C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2143/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2143D1 - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2145/B": {
       "how": "browser",
       "status": 200,
@@ -2187,15 +2677,35 @@
       "status": 200,
       "title": "Problem - 2145C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2147/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2147C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2147/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2147D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2148/E": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2148E - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2148/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2148F - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2149/D": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2149D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2149/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2149F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2154/B": {
       "how": "browser",
@@ -2211,6 +2721,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2157B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2157/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2157E - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2158/B": {
       "how": "browser",
@@ -2237,10 +2752,35 @@
       "status": 200,
       "title": "Problem - 2161C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2162/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2162E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2163/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2163B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2163/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2163C - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2164/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2164B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2164/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2164D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2167/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2167G - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2169/C": {
       "how": "browser",
@@ -2287,10 +2827,30 @@
       "status": 200,
       "title": "Problem - 2176C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2179/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2179F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2182/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2182E - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2184/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2184C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2184/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2184D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2184/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2184F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2188/B": {
       "how": "browser",
@@ -2306,6 +2866,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2189C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2189/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2189C2 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2193/C": {
       "how": "browser",
@@ -2327,6 +2892,11 @@
       "status": 200,
       "title": "Problem - 2195C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2195/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2195E - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2200/C": {
       "how": "browser",
       "status": 200,
@@ -2336,6 +2906,16 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2200D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2200/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2200F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2201/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2201C - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2204/C": {
       "how": "browser",
@@ -2347,10 +2927,35 @@
       "status": 200,
       "title": "Problem - 2204D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2205/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2205C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2205/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2205D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2207/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2207B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2207/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2207C - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2208/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2208C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2208/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2208D1 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2209/B": {
       "how": "browser",
@@ -2392,15 +2997,35 @@
       "status": 200,
       "title": "Problem - 2218E - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2218/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2218G - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2222/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2222B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2223/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2223B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2225/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2225C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2225/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2225D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2226/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2226D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2227/D": {
       "how": "browser",
@@ -2417,10 +3042,30 @@
       "status": 200,
       "title": "Problem - 2228B - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2228/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2228C2 - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2229/C1": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2229C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2229/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2229D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2229/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2229E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2230/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2230D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2231/B": {
       "how": "browser",
@@ -2431,6 +3076,21 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2231C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2232/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2232C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2233/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2233D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2234/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2234D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2236/C": {
       "how": "browser",
@@ -2457,6 +3117,16 @@
       "status": 200,
       "title": "Problem - 2238C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2238/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2238D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2239/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2239B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2240/B": {
       "how": "browser",
       "status": 200,
@@ -2466,6 +3136,16 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2241C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2241/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2241E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2241/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2241F - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2242/B": {
       "how": "browser",
@@ -2477,15 +3157,45 @@
       "status": 200,
       "title": "Problem - 2242C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2242/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2242D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2244/E": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2244E - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2244/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2244F - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2245/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2245B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2245/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2245D1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2246/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2246D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2247/D1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2247D1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2247/D2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2247D2 - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2248/B": {
       "how": "browser",
@@ -2497,10 +3207,25 @@
       "status": 200,
       "title": "Problem - 2248D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2252/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2252D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2253/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2253B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2253/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2253C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2253/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2253D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2254/B": {
       "how": "browser",
@@ -2522,25 +3247,90 @@
       "status": 200,
       "title": "Problem - 2254D - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2254/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2254/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2255/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2255B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2257/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2257C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2257/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2257D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2258/B2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2258B2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2258/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2258C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2259/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2259E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2259/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2259F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2259/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2259G - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2260/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2260C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2260/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2260D - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2261/C": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2261C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2261/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2261E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2262/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2262B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2263/B": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2263B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2264/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2264D - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2266/E": {
       "how": "browser",
@@ -2552,6 +3342,21 @@
       "status": 200,
       "title": "Problem - 2267C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2267/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2267E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2267/F1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2267F1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2268/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2268B - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2269/B": {
       "how": "browser",
       "status": 200,
@@ -2562,10 +3367,35 @@
       "status": 200,
       "title": "Problem - 2271C - Codeforces"
     },
+    "https://codeforces.com/problemset/problem/2271/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2271D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2273/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2273C - Codeforces"
+    },
     "https://codeforces.com/problemset/problem/2275/D": {
       "how": "browser",
       "status": 200,
       "title": "Problem - 2275D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2275/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2275E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2275/F": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2275F - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2275/G": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2275G - Codeforces"
     },
     "https://codeforces.com/problemset/problem/2276/B": {
       "how": "browser",
@@ -2581,6 +3411,11 @@
       "how": "browser",
       "status": 200,
       "title": "Problem - 2276D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2276/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2276E - Codeforces"
     },
     "https://cp-algorithms.com": {
       "how": "fetch",
@@ -2622,6 +3457,21 @@
       "status": 200,
       "title": "CSES - Stick Lengths"
     },
+    "https://cses.fi/problemset/task/1079": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Binomial Coefficients"
+    },
+    "https://cses.fi/problemset/task/1081": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Common Divisors"
+    },
+    "https://cses.fi/problemset/task/1082": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Sum of Divisors"
+    },
     "https://cses.fi/problemset/task/1083": {
       "how": "fetch",
       "status": 200,
@@ -2647,15 +3497,120 @@
       "status": 200,
       "title": "CSES - Two Sets"
     },
+    "https://cses.fi/problemset/task/1093": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Two Sets II"
+    },
     "https://cses.fi/problemset/task/1094": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Increasing Array"
     },
+    "https://cses.fi/problemset/task/1095": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Exponentiation"
+    },
+    "https://cses.fi/problemset/task/1096": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Throwing Dice"
+    },
+    "https://cses.fi/problemset/task/1097": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Removal Game"
+    },
+    "https://cses.fi/problemset/task/1110": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Minimal Rotation"
+    },
+    "https://cses.fi/problemset/task/1111": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Longest Palindrome"
+    },
+    "https://cses.fi/problemset/task/1130": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Tree Matching"
+    },
+    "https://cses.fi/problemset/task/1131": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Tree Diameter"
+    },
+    "https://cses.fi/problemset/task/1132": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Tree Distances I"
+    },
+    "https://cses.fi/problemset/task/1133": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Tree Distances II"
+    },
+    "https://cses.fi/problemset/task/1135": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distance Queries"
+    },
+    "https://cses.fi/problemset/task/1136": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Paths"
+    },
+    "https://cses.fi/problemset/task/1137": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Subtree Queries"
+    },
+    "https://cses.fi/problemset/task/1138": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Path Queries"
+    },
+    "https://cses.fi/problemset/task/1139": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distinct Colors"
+    },
+    "https://cses.fi/problemset/task/1140": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Projects"
+    },
+    "https://cses.fi/problemset/task/1143": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Hotel Queries"
+    },
+    "https://cses.fi/problemset/task/1144": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Salary Queries"
+    },
+    "https://cses.fi/problemset/task/1145": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Increasing Subsequence"
+    },
     "https://cses.fi/problemset/task/1146": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Counting Bits"
+    },
+    "https://cses.fi/problemset/task/1158": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Book Shop"
+    },
+    "https://cses.fi/problemset/task/1190": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Subarray Sum Queries"
     },
     "https://cses.fi/problemset/task/1192": {
       "how": "fetch",
@@ -2666,6 +3621,31 @@
       "how": "fetch",
       "status": 200,
       "title": "CSES - Labyrinth"
+    },
+    "https://cses.fi/problemset/task/1194": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Monsters"
+    },
+    "https://cses.fi/problemset/task/1195": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Flight Discount"
+    },
+    "https://cses.fi/problemset/task/1196": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Flight Routes"
+    },
+    "https://cses.fi/problemset/task/1197": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Cycle Finding"
+    },
+    "https://cses.fi/problemset/task/1202": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Investigation"
     },
     "https://cses.fi/problemset/task/1617": {
       "how": "fetch",
@@ -2702,6 +3682,41 @@
       "status": 200,
       "title": "CSES - Movie Festival"
     },
+    "https://cses.fi/problemset/task/1633": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Dice Combinations"
+    },
+    "https://cses.fi/problemset/task/1634": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Minimizing Coins"
+    },
+    "https://cses.fi/problemset/task/1635": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Coin Combinations I"
+    },
+    "https://cses.fi/problemset/task/1636": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Coin Combinations II"
+    },
+    "https://cses.fi/problemset/task/1637": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Removing Digits"
+    },
+    "https://cses.fi/problemset/task/1638": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Grid Paths I"
+    },
+    "https://cses.fi/problemset/task/1639": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Edit Distance"
+    },
     "https://cses.fi/problemset/task/1640": {
       "how": "fetch",
       "status": 200,
@@ -2717,32 +3732,377 @@
       "status": 200,
       "title": "CSES - Static Range Sum Queries"
     },
+    "https://cses.fi/problemset/task/1647": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Static Range Minimum Queries"
+    },
+    "https://cses.fi/problemset/task/1648": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Dynamic Range Sum Queries"
+    },
+    "https://cses.fi/problemset/task/1649": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Dynamic Range Minimum Queries"
+    },
     "https://cses.fi/problemset/task/1650": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Range Xor Queries"
+    },
+    "https://cses.fi/problemset/task/1651": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Range Update Queries"
     },
     "https://cses.fi/problemset/task/1652": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Forest Queries"
     },
+    "https://cses.fi/problemset/task/1653": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Elevator Rides"
+    },
+    "https://cses.fi/problemset/task/1664": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Movie Festival Queries"
+    },
     "https://cses.fi/problemset/task/1666": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Building Roads"
+    },
+    "https://cses.fi/problemset/task/1669": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Round Trip"
+    },
+    "https://cses.fi/problemset/task/1671": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Shortest Routes I"
+    },
+    "https://cses.fi/problemset/task/1672": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Shortest Routes II"
+    },
+    "https://cses.fi/problemset/task/1673": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - High Score"
     },
     "https://cses.fi/problemset/task/1674": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Subordinates"
     },
+    "https://cses.fi/problemset/task/1678": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Round Trip II"
+    },
+    "https://cses.fi/problemset/task/1679": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Course Schedule"
+    },
+    "https://cses.fi/problemset/task/1680": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Longest Flight Route"
+    },
+    "https://cses.fi/problemset/task/1681": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Game Routes"
+    },
+    "https://cses.fi/problemset/task/1687": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Company Queries I"
+    },
+    "https://cses.fi/problemset/task/1688": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Company Queries II"
+    },
+    "https://cses.fi/problemset/task/1712": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Exponentiation II"
+    },
+    "https://cses.fi/problemset/task/1713": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Divisors"
+    },
+    "https://cses.fi/problemset/task/1715": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Creating Strings II"
+    },
+    "https://cses.fi/problemset/task/1716": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distributing Apples"
+    },
+    "https://cses.fi/problemset/task/1717": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Christmas Party"
+    },
+    "https://cses.fi/problemset/task/1722": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Fibonacci Numbers"
+    },
+    "https://cses.fi/problemset/task/1731": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Word Combinations"
+    },
+    "https://cses.fi/problemset/task/1732": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Finding Borders"
+    },
+    "https://cses.fi/problemset/task/1733": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Finding Periods"
+    },
+    "https://cses.fi/problemset/task/1734": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distinct Values Queries"
+    },
+    "https://cses.fi/problemset/task/1744": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Rectangle Cutting"
+    },
+    "https://cses.fi/problemset/task/1745": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Money Sums"
+    },
+    "https://cses.fi/problemset/task/1746": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Array Description"
+    },
+    "https://cses.fi/problemset/task/1748": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Increasing Subsequence II"
+    },
+    "https://cses.fi/problemset/task/1749": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - List Removals"
+    },
     "https://cses.fi/problemset/task/1750": {
       "how": "fetch",
       "status": 200,
       "title": "CSES - Planets Queries I"
     },
+    "https://cses.fi/problemset/task/1753": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - String Matching"
+    },
+    "https://cses.fi/problemset/task/2064": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Bracket Sequences I"
+    },
+    "https://cses.fi/problemset/task/2079": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Finding a Centroid"
+    },
+    "https://cses.fi/problemset/task/2080": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Fixed-Length Paths I"
+    },
+    "https://cses.fi/problemset/task/2081": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Fixed-Length Paths II"
+    },
+    "https://cses.fi/problemset/task/2134": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Path Queries II"
+    },
+    "https://cses.fi/problemset/task/2164": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Josephus Queries"
+    },
+    "https://cses.fi/problemset/task/2166": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Prefix Sum Queries"
+    },
+    "https://cses.fi/problemset/task/2181": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Tilings"
+    },
+    "https://cses.fi/problemset/task/2182": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Divisor Analysis"
+    },
+    "https://cses.fi/problemset/task/2185": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Prime Multiples"
+    },
+    "https://cses.fi/problemset/task/2187": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Bracket Sequences II"
+    },
+    "https://cses.fi/problemset/task/2189": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Point Location Test"
+    },
+    "https://cses.fi/problemset/task/2190": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Line Segment Intersection"
+    },
+    "https://cses.fi/problemset/task/2191": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Polygon Area"
+    },
+    "https://cses.fi/problemset/task/2192": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Point in Polygon"
+    },
+    "https://cses.fi/problemset/task/2193": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Polygon Lattice Points"
+    },
+    "https://cses.fi/problemset/task/2194": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Minimum Euclidean Distance"
+    },
+    "https://cses.fi/problemset/task/2195": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Convex Hull"
+    },
+    "https://cses.fi/problemset/task/2206": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Pizzeria Queries"
+    },
+    "https://cses.fi/problemset/task/2209": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Necklaces"
+    },
+    "https://cses.fi/problemset/task/2210": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Grids"
+    },
+    "https://cses.fi/problemset/task/2220": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Numbers"
+    },
+    "https://cses.fi/problemset/task/2413": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Towers"
+    },
+    "https://cses.fi/problemset/task/2416": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Increasing Array Queries"
+    },
+    "https://cses.fi/problemset/task/2417": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Coprime Pairs"
+    },
+    "https://cses.fi/problemset/task/3163": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Range Interval Queries"
+    },
+    "https://cses.fi/problemset/task/3226": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Subarray Sum Queries II"
+    },
+    "https://cses.fi/problemset/task/3304": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Visible Buildings Queries"
+    },
+    "https://cses.fi/problemset/task/3314": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Mountain Range"
+    },
+    "https://cses.fi/problemset/task/3356": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distinct Values Queries II"
+    },
+    "https://cses.fi/problemset/task/3359": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Minimal Grid Path"
+    },
+    "https://cses.fi/problemset/task/3396": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Next Prime"
+    },
+    "https://cses.fi/problemset/task/3397": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Permutation Order"
+    },
+    "https://cses.fi/problemset/task/3398": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Permutation Rounds"
+    },
+    "https://cses.fi/problemset/task/3403": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Longest Common Subsequence"
+    },
+    "https://cses.fi/problemset/task/3410": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Maximum Manhattan Distances"
+    },
     "https://kenkoooo.com/atcoder/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "AtCoder Problems"
+    },
+    "https://kenkoooo.com/atcoder/#/table/": {
       "how": "fetch",
       "status": 200,
       "title": "AtCoder Problems"
@@ -2932,6 +4292,516 @@
       "status": 200,
       "title": "Running Code Locally · USACO Guide"
     },
+    "https://usaco.guide/gold/PURS": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Point Update Range Sum · USACO Guide"
+    },
+    "https://usaco.guide/gold/PURS#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Point Update Range Sum · USACO Guide"
+    },
+    "https://usaco.guide/gold/all-roots": {
+      "how": "fetch",
+      "status": 200,
+      "title": "DP on Trees - Solving For All Roots · USACO Guide"
+    },
+    "https://usaco.guide/gold/all-roots#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "DP on Trees - Solving For All Roots · USACO Guide"
+    },
+    "https://usaco.guide/gold/combo": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Combinatorics · USACO Guide"
+    },
+    "https://usaco.guide/gold/combo#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Combinatorics · USACO Guide"
+    },
+    "https://usaco.guide/gold/custom-cpp-stl": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Sorted Sets with Custom Comparators · USACO Guide"
+    },
+    "https://usaco.guide/gold/custom-cpp-stl#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Sorted Sets with Custom Comparators · USACO Guide"
+    },
+    "https://usaco.guide/gold/digit-dp": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Digit DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/digit-dp#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Digit DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/divisibility": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divisibility · USACO Guide"
+    },
+    "https://usaco.guide/gold/divisibility#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divisibility · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-bitmasks": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Bitmask DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-bitmasks#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Bitmask DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-ranges": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-ranges#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-trees": {
+      "how": "fetch",
+      "status": 200,
+      "title": "DP on Trees - Introduction · USACO Guide"
+    },
+    "https://usaco.guide/gold/dp-trees#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "DP on Trees - Introduction · USACO Guide"
+    },
+    "https://usaco.guide/gold/dsu": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Disjoint Set Union · USACO Guide"
+    },
+    "https://usaco.guide/gold/dsu#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Disjoint Set Union · USACO Guide"
+    },
+    "https://usaco.guide/gold/gold-conclusion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Additional Practice for USACO Gold · USACO Guide"
+    },
+    "https://usaco.guide/gold/hashing": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Hashing · USACO Guide"
+    },
+    "https://usaco.guide/gold/hashing#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Hashing · USACO Guide"
+    },
+    "https://usaco.guide/gold/hashmaps": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Hashmaps · USACO Guide"
+    },
+    "https://usaco.guide/gold/hashmaps#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Hashmaps · USACO Guide"
+    },
+    "https://usaco.guide/gold/intro-dp": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/intro-dp#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/intro-sorted-sets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More Operations on Sorted Sets · USACO Guide"
+    },
+    "https://usaco.guide/gold/intro-sorted-sets#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More Operations on Sorted Sets · USACO Guide"
+    },
+    "https://usaco.guide/gold/knapsack": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Knapsack DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/knapsack#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Knapsack DP · USACO Guide"
+    },
+    "https://usaco.guide/gold/lca-euler": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) LCA with Euler Tour · USACO Guide"
+    },
+    "https://usaco.guide/gold/lca-euler#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) LCA with Euler Tour · USACO Guide"
+    },
+    "https://usaco.guide/gold/lis": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Longest Increasing Subsequence · USACO Guide"
+    },
+    "https://usaco.guide/gold/lis#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Longest Increasing Subsequence · USACO Guide"
+    },
+    "https://usaco.guide/gold/meet-in-the-middle": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Meet In The Middle · USACO Guide"
+    },
+    "https://usaco.guide/gold/meet-in-the-middle#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Meet In The Middle · USACO Guide"
+    },
+    "https://usaco.guide/gold/modular": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Modular Arithmetic · USACO Guide"
+    },
+    "https://usaco.guide/gold/modular#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Modular Arithmetic · USACO Guide"
+    },
+    "https://usaco.guide/gold/mst": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Minimum Spanning Trees · USACO Guide"
+    },
+    "https://usaco.guide/gold/mst#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Minimum Spanning Trees · USACO Guide"
+    },
+    "https://usaco.guide/gold/paths-grids": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Paths on Grids · USACO Guide"
+    },
+    "https://usaco.guide/gold/paths-grids#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Paths on Grids · USACO Guide"
+    },
+    "https://usaco.guide/gold/shortest-paths": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Shortest Paths with Non-Negative Edge Weights · USACO Guide"
+    },
+    "https://usaco.guide/gold/shortest-paths#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Shortest Paths with Non-Negative Edge Weights · USACO Guide"
+    },
+    "https://usaco.guide/gold/sliding-window": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sliding Window · USACO Guide"
+    },
+    "https://usaco.guide/gold/sliding-window#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sliding Window · USACO Guide"
+    },
+    "https://usaco.guide/gold/stacks": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Stacks · USACO Guide"
+    },
+    "https://usaco.guide/gold/stacks#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Stacks · USACO Guide"
+    },
+    "https://usaco.guide/gold/ternary-search": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Optimizing Unimodal Functions · USACO Guide"
+    },
+    "https://usaco.guide/gold/ternary-search#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Optimizing Unimodal Functions · USACO Guide"
+    },
+    "https://usaco.guide/gold/toposort": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Topological Sort · USACO Guide"
+    },
+    "https://usaco.guide/gold/toposort#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Topological Sort · USACO Guide"
+    },
+    "https://usaco.guide/gold/tree-euler": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Euler Tour Technique · USACO Guide"
+    },
+    "https://usaco.guide/gold/tree-euler#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Euler Tour Technique · USACO Guide"
+    },
+    "https://usaco.guide/gold/unweighted-shortest-paths": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Shortest Paths with Unweighted Edges · USACO Guide"
+    },
+    "https://usaco.guide/gold/unweighted-shortest-paths#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Shortest Paths with Unweighted Edges · USACO Guide"
+    },
+    "https://usaco.guide/plat/2DRQ": {
+      "how": "fetch",
+      "status": 200,
+      "title": "2D Range Queries · USACO Guide"
+    },
+    "https://usaco.guide/plat/2DRQ#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "2D Range Queries · USACO Guide"
+    },
+    "https://usaco.guide/plat/DC-DP": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divide & Conquer - DP · USACO Guide"
+    },
+    "https://usaco.guide/plat/DC-DP#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divide & Conquer - DP · USACO Guide"
+    },
+    "https://usaco.guide/plat/DC-SRQ": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divide & Conquer - SRQ · USACO Guide"
+    },
+    "https://usaco.guide/plat/DC-SRQ#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Divide & Conquer - SRQ · USACO Guide"
+    },
+    "https://usaco.guide/plat/PIE": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Inclusion-Exclusion Principle · USACO Guide"
+    },
+    "https://usaco.guide/plat/PIE#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Inclusion-Exclusion Principle · USACO Guide"
+    },
+    "https://usaco.guide/plat/RURQ": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range Update Range Query · USACO Guide"
+    },
+    "https://usaco.guide/plat/RURQ#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range Update Range Query · USACO Guide"
+    },
+    "https://usaco.guide/plat/VT": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Virtual Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/VT#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Virtual Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/binary-jump": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Jumping · USACO Guide"
+    },
+    "https://usaco.guide/plat/binary-jump#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Jumping · USACO Guide"
+    },
+    "https://usaco.guide/plat/bitsets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Bitsets · USACO Guide"
+    },
+    "https://usaco.guide/plat/bitsets#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "(Optional) Bitsets · USACO Guide"
+    },
+    "https://usaco.guide/plat/centroid": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Centroid Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/centroid#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Centroid Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/convex-hull": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Convex Hull · USACO Guide"
+    },
+    "https://usaco.guide/plat/convex-hull#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Convex Hull · USACO Guide"
+    },
+    "https://usaco.guide/plat/convex-hull-trick": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Convex Hull Trick · USACO Guide"
+    },
+    "https://usaco.guide/plat/convex-hull-trick#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Convex Hull Trick · USACO Guide"
+    },
+    "https://usaco.guide/plat/dp-sos": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sum over Subsets DP · USACO Guide"
+    },
+    "https://usaco.guide/plat/dp-sos#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sum over Subsets DP · USACO Guide"
+    },
+    "https://usaco.guide/plat/geo-pri": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Geometry Primitives · USACO Guide"
+    },
+    "https://usaco.guide/plat/geo-pri#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Geometry Primitives · USACO Guide"
+    },
+    "https://usaco.guide/plat/hld": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Heavy-Light Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/hld#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Heavy-Light Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/kruskal-tree": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Kruskal Reconstruction Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/kruskal-tree#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Kruskal Reconstruction Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/matrix-expo": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Matrix Exponentiation · USACO Guide"
+    },
+    "https://usaco.guide/plat/matrix-expo#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Matrix Exponentiation · USACO Guide"
+    },
+    "https://usaco.guide/plat/merging": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Small-To-Large Merging · USACO Guide"
+    },
+    "https://usaco.guide/plat/merging#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Small-To-Large Merging · USACO Guide"
+    },
+    "https://usaco.guide/plat/plat-conclusion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Additional Practice for USACO Platinum · USACO Guide"
+    },
+    "https://usaco.guide/plat/range-sweep": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range Queries with Sweep Line · USACO Guide"
+    },
+    "https://usaco.guide/plat/range-sweep#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Range Queries with Sweep Line · USACO Guide"
+    },
+    "https://usaco.guide/plat/segtree-ext": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More Applications of Segment Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/segtree-ext#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More Applications of Segment Tree · USACO Guide"
+    },
+    "https://usaco.guide/plat/sparse-segtree": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sparse Segment Trees · USACO Guide"
+    },
+    "https://usaco.guide/plat/sparse-segtree#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sparse Segment Trees · USACO Guide"
+    },
+    "https://usaco.guide/plat/sqrt": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Square Root Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/sqrt#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Square Root Decomposition · USACO Guide"
+    },
+    "https://usaco.guide/plat/sweep-line": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sweep Line · USACO Guide"
+    },
+    "https://usaco.guide/plat/sweep-line#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Sweep Line · USACO Guide"
+    },
     "https://usaco.guide/silver/binary-search": {
       "how": "fetch",
       "status": 200,
@@ -3071,6 +4941,11 @@
       "how": "fetch",
       "status": 200,
       "title": "Evan Chen • Olympiad Training for Individual Study (OTIS)"
+    },
+    "https://www.wiley.com/en-us/The+Art+and+Craft+of+Problem+Solving%2C+3rd+Edition-p-9781119239901": {
+      "how": "fetch",
+      "status": 200,
+      "title": "The Art and Craft of Problem Solving, 3rd Edition | Wiley"
     }
   }
 }

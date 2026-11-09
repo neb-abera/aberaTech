@@ -44,6 +44,8 @@ never hold back or count toward a unit.
 | CSES problems                     | cses.fi/problemset                                                     |
 | Codeforces problems and ratings   | The Codeforces API, `problemset.problems`                              |
 | AtCoder problems and difficulties | AtCoder Problems, `problems.json` and `problem-models.json`            |
+| Educational DP Contest tasks      | atcoder.jp/contests/dp/tasks                                           |
+| Zeitz, third edition              | Wiley's table of contents                                              |
 
 Minutes for reading are 3 a page, an estimate, and each item says so.
 

@@ -67,7 +67,7 @@ describe("the syllabus", () => {
         expect(item.record).toBe("codeforces");
       }
       if (problem.judge === "atcoder") {
-        expect(problem.id, item.id).toMatch(/^abc\d+_[a-g]$/);
+        expect(problem.id, item.id).toMatch(/^(abc\d+_[a-g]|dp_[a-z])$/);
         expect(item.record).toBe("atcoder");
       }
       if (problem.judge === "cses") {
@@ -89,14 +89,14 @@ describe("the syllabus", () => {
     );
   });
 
-  it("writes lessons for Phases 0 and 1 and locks Phases 2 and 3 with titles", () => {
+  it("writes lessons for Phases 0 to 2 and locks Phase 3 with titles", () => {
     for (const unit of syllabus.units) {
-      if (unit.phase <= 1) {
+      if (unit.phase <= 2) {
         expect(unit.lessons.length, unit.id).toBeGreaterThan(0);
         expect(unit.locked, unit.id).toBeUndefined();
       } else {
         expect(unit.lessons, unit.id).toEqual([]);
-        expect(unit.locked, unit.id).toMatch(/before Phase [23] starts/);
+        expect(unit.locked, unit.id).toMatch(/before Phase 3 starts/);
       }
     }
   });
@@ -110,10 +110,16 @@ describe("the syllabus", () => {
       "first-contest",
       "amc-baseline",
       "amc12-gate",
+      "otis-apply",
+      "zeitz",
+      "edpc",
+      "ac-bands",
     ]);
   });
 
-  it("takes Phase 1's week from the plan: 6 hours", () => {
+  it("splits each written phase's week to its hours from the plan", () => {
+    const two = syllabus.phases[2];
+    expect(two.week.reduce((sum, block) => sum + block.minutes, 0)).toBe(600);
     const one = syllabus.phases[1];
     expect(one.week.reduce((sum, block) => sum + block.minutes, 0)).toBe(
       one.hoursPerWeek * 60,
