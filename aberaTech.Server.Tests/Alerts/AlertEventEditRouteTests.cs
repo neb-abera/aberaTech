@@ -208,6 +208,50 @@ public sealed class AlertEventEditRouteTests : IDisposable
     }
 
     [Fact]
+    public async Task A_started_event_can_be_edited_while_its_start_stays_and_the_edit_is_listed_until_its_end()
+    {
+        // 09:10 New York: the 09:00 to 09:30 standup has started and is still listed.
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        using var phone = await PhoneAsync();
+
+        using var response = await Put(phone, """
+            {"key":"standup@google.com|20261028T130000Z","scope":"occurrence","title":"Standup runs long",
+             "startsAt":"2026-10-28T09:00:00-04:00","durationMinutes":60}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var edited = ByKey(await AlertsOf(response), StandupKey);
+        Assert.Equal("Standup runs long", edited.GetProperty("title").GetString());
+        Assert.Equal(At(10, 28, 14, 0), edited.GetProperty("endsAt").GetDateTimeOffset());
+        var write = Assert.Single(_google.Writes);
+        Assert.Equal("2026-10-28T09:00:00-04:00", write.Start);
+        Assert.Equal("2026-10-28T10:00:00-04:00", write.End);
+
+        // Past the old end, before the new one: the stale feed still has
+        // the old event, and the stored edit keeps it listed as edited.
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 40);
+        Read();
+        Assert.Equal("Standup runs long", ByKey(await StatusAlerts(), StandupKey).GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task A_started_event_cannot_be_moved_to_another_past_time()
+    {
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 10);
+        using var phone = await PhoneAsync();
+
+        using var response = await Put(phone, """
+            {"key":"standup@google.com|20261028T130000Z","scope":"occurrence","title":"Standup",
+             "startsAt":"2026-10-28T09:05:00-04:00"}
+            """);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        Assert.True(errors.TryGetProperty("startsAt", out _), errors.ToString());
+        Assert.Empty(_google.Writes);
+    }
+
+    [Fact]
     public async Task An_edit_leaves_the_description_the_mark_and_the_stored_type_alone()
     {
         using var owner = Owner();
@@ -526,7 +570,7 @@ public sealed class AlertEventEditRouteTests : IDisposable
     }
 
     [Fact]
-    public async Task The_pending_edit_is_dropped_once_both_starts_have_passed()
+    public async Task The_pending_edit_is_dropped_once_the_edited_event_has_ended()
     {
         using var owner = Owner();
         using var response = await Put(owner, """
@@ -537,7 +581,13 @@ public sealed class AlertEventEditRouteTests : IDisposable
         Read();
         Assert.Single(await _store.EventChangesAsync(CancellationToken.None));
 
+        // Both starts have passed. The moved event runs 09:30 to 10:00 and
+        // is listed until then, so the edit is kept.
         _clock.Now = Instant.FromUtc(2026, 10, 28, 13, 30);
+        Read();
+        Assert.Single(await _store.EventChangesAsync(CancellationToken.None));
+
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 14, 0);
         Read();
         Assert.Empty(await _store.EventChangesAsync(CancellationToken.None));
     }
