@@ -122,12 +122,18 @@ describe("a visitor", () => {
 });
 
 describe("the owner", () => {
-  it("opens on Today, with the plan's block and its first work", async () => {
+  it("opens on Next up, with pace and the scheduled rounds, and keeps going", async () => {
     visit(null);
     show("/training");
-    const today = await screen.findByRole("region", { name: "Today" });
-    expect(within(today).getByText(/Phase \d · week \d+ of \d+/)).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Today" })).toBeTruthy();
+    const next = await screen.findByRole("region", { name: "Next up" });
+    expect(screen.getByRole("tab", { name: "Next up" })).toBeTruthy();
+    expect(within(next).getByRole("region", { name: "Pace" })).toBeTruthy();
+    expect(
+      within(next).getByRole("region", { name: "Scheduled" }),
+    ).toBeTruthy();
+    const before = within(next).getAllByRole("listitem").length;
+    fireEvent.click(within(next).getByRole("button", { name: "Keep going" }));
+    expect(within(next).getAllByRole("listitem").length).toBe(before + 1);
   });
 
   it("ticks an item and it is saved", async () => {

@@ -24,6 +24,8 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
     page.getByRole("region", { name: "Phase 0: DEMOB, return, and placement" }),
   ).toBeVisible();
   await expect(page.getByLabel("Overall progress")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Pace" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Next up" })).toHaveCount(0);
 
   await page
     .getByRole("link", { name: "Counting & Probability: counting" })

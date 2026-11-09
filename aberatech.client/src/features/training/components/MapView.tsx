@@ -152,8 +152,9 @@ function PhaseSection({
         {phase.title}
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.5 }}>
-        {longDate(phase.start)} to {longDate(phase.end)}. {phase.hoursPerWeek}{" "}
-        hours a week, from the plan. {phase.goals.join(" ")}
+        Target dates {longDate(phase.start)} to {longDate(phase.end)}.{" "}
+        {phase.hoursPerWeek} hours a week, from the plan. Units open in order,
+        never by date. {phase.goals.join(" ")}
       </Typography>
       <Stack component="ol" spacing={1.5} sx={{ p: 0, m: 0 }}>
         {units.map((unit, offset) => (

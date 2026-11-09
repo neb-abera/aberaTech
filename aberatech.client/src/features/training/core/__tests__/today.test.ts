@@ -5,17 +5,37 @@ import {
   startCheckpoint,
   type TrainingDocument,
   toggleItem,
+  unitStates,
 } from "../progress";
 import { syllabus } from "../syllabus";
-import { type DueReview, type Entry, today, weekOfPhase } from "../today";
+import {
+  type DueReview,
+  defaultSession,
+  type Entry,
+  interleave,
+  nextUp,
+  trackMinutes,
+  weekOfPhase,
+} from "../today";
 
 const now = new Date("2026-11-10T08:00:00Z");
-const kinds = (entries: Entry[]) => entries.map((entry) => entry.kind);
 const unit = (id: string) => {
   const found = syllabus.units.find((candidate) => candidate.id === id);
   if (!found) throw new Error(id);
   return found;
 };
+const tracks = (entries: Entry[]) =>
+  entries.map((entry) =>
+    entry.kind === "review" ? "review" : entry.unit.track,
+  );
+const ids = (entries: Entry[]) =>
+  entries.map((entry) =>
+    entry.kind === "item"
+      ? entry.item.id
+      : entry.kind === "checkpoint"
+        ? `checkpoint:${entry.unit.id}`
+        : entry.review.key,
+  );
 
 /** Every checkpoint item ticked inside a fresh attempt: the unit is placed out. */
 function placeOut(document: TrainingDocument, id: string): TrainingDocument {
@@ -25,114 +45,125 @@ function placeOut(document: TrainingDocument, id: string): TrainingDocument {
   return next;
 }
 
-describe("today", () => {
-  it("in Phase 0 starts each track with its first checkpoint", () => {
-    // Tue 10 Nov 2026: Phase 0's programming block.
-    const tuesday = today("2026-11-10", emptyTraining(), noSolves, now);
-    expect(tuesday.phase.phase).toBe(0);
-    expect(tuesday.block?.block).toBe("programming");
-    expect(tuesday.entries).toHaveLength(1);
-    expect(tuesday.entries[0]).toMatchObject({
-      kind: "checkpoint",
-      minutes: 30,
-      unit: { id: "cpp-basics" },
+/** Every item of a unit ticked. */
+function finish(document: TrainingDocument, id: string): TrainingDocument {
+  let next = document;
+  for (const lesson of unit(id).lessons)
+    for (const each of lesson.items) next = toggleItem(next, each.id, now);
+  return next;
+}
+
+/** The C++ checkpoint failed and the AMC baseline done: lessons in both tracks. */
+function underway(): TrainingDocument {
+  const before = new Date("2026-11-01T08:00:00Z");
+  let document = startCheckpoint(emptyTraining(), "cpp-basics", before);
+  document = finish(document, "amc-baseline");
+  return startCheckpoint(document, "prealgebra-1", before);
+}
+
+describe("the session length", () => {
+  it("defaults to the plan's self-paced minutes a week over its sessions", () => {
+    // Phase 1: math 60 + 60, programming 60. Three sessions of 60.
+    expect(trackMinutes(syllabus.phases[1])).toEqual({
+      math: 120,
+      programming: 60,
     });
+    expect(defaultSession(syllabus.phases[1])).toBe(60);
+    // Phase 0: math 60, programming 60. Two sessions of 60.
+    expect(defaultSession(syllabus.phases[0])).toBe(60);
+  });
+});
+
+describe("next up", () => {
+  it("is the same list any day of the week", () => {
+    const lists = ["2026-11-09", "2026-11-10", "2026-11-13", "2026-11-14"].map(
+      (date) =>
+        ids(
+          nextUp(date, emptyTraining(), noSolves, now, { session: 600 })
+            .entries,
+        ),
+    );
+    for (const list of lists) expect(list).toEqual(lists[0]);
+    expect(lists[0]).toContain("checkpoint:cpp-basics");
+    expect(lists[0]).toContain("alcumus-account");
   });
 
-  it("goes to the lessons, in order, once the checkpoint was not passed", () => {
-    const failed = startCheckpoint(
-      emptyTraining(),
-      "cpp-basics",
-      new Date("2026-11-03T08:00:00Z"),
+  it("interleaves the tracks by the plan's split of minutes", () => {
+    const queue = (track: "math" | "programming", n: number): Entry[] => {
+      const from = unit(track === "math" ? "cp-counting" : "bronze-1");
+      return Array.from({ length: n }, (_, index) => ({
+        kind: "item" as const,
+        minutes: 30,
+        unit: from,
+        lesson: from.lessons[0],
+        item: { ...from.lessons[0].items[0], id: `${track}-${index}` },
+      }));
+    };
+    const merged = interleave(
+      { math: queue("math", 6), programming: queue("programming", 6) },
+      { math: 120, programming: 60 },
     );
-    const tuesday = today("2026-11-10", failed, noSolves, now);
-    expect(kinds(tuesday.entries)).toEqual(["item", "item", "item"]);
-    // 15 + 20 + 20 = 55 fits in 60. The next, 15, would make 70.
-    expect(tuesday.planned).toBe(55);
-    expect(tuesday.later).toBe(
-      unit("cpp-basics").lessons.flatMap((lesson) => lesson.items).length - 3,
-    );
-  });
-
-  it("moves to the next unit once a unit is placed out, and never schedules it", () => {
-    const placed = placeOut(emptyTraining(), "cpp-basics");
-    const tuesday = today("2026-11-10", placed, noSolves, now);
-    const ids = tuesday.entries.flatMap((entry) =>
-      entry.kind === "item" ? [entry.unit.id] : [],
-    );
-    expect(ids.every((id) => id === "cpp-toolkit")).toBe(true);
-  });
-
-  it("shows the first item even when it alone is longer than the block", () => {
-    // Thu 12 Nov: math, 60 minutes. The AMC 10 baseline's first item is 10
-    // minutes, then the 75 minute paper would make 85: only one fits.
-    const thursday = today("2026-11-12", emptyTraining(), noSolves, now);
-    expect(thursday.block?.block).toBe("math");
-    expect(thursday.entries).toHaveLength(1);
-    const paper = toggleItem(emptyTraining(), "alcumus-account", now);
-    const next = today("2026-11-12", paper, noSolves, now);
-    expect(next.entries).toHaveLength(1);
-    expect(next.planned).toBe(75);
-  });
-
-  it("puts the first rated contest on contest days until it is entered", () => {
-    // Sat 14 Nov.
-    const saturday = today("2026-11-14", emptyTraining(), noSolves, now);
-    expect(saturday.block?.block).toBe("contest");
-    expect(saturday.entries[0]).toMatchObject({
-      kind: "item",
-      item: { id: "usaco-contest-strategy" },
-    });
-    const entered = toggleItem(
-      toggleItem(emptyTraining(), "usaco-contest-strategy", now),
-      "first-rated-contest",
-      now,
-    );
-    expect(kinds(today("2026-11-14", entered, noSolves, now).entries)).toEqual([
-      "contest",
+    // Two math for each programming while both last.
+    expect(tracks(merged).slice(0, 6)).toEqual([
+      "math",
+      "programming",
+      "math",
+      "math",
+      "programming",
+      "math",
     ]);
+    expect(merged).toHaveLength(12);
   });
 
-  it("on a day with no block shows the next one", () => {
-    // Mon 9 Nov has no block. Tuesday is next.
-    const monday = today("2026-11-09", emptyTraining(), noSolves, now);
-    expect(monday.block).toBeNull();
-    expect(monday.entries).toEqual([]);
-    expect(monday.next?.date).toBe("2026-11-10");
-    expect(monday.next?.entries[0].kind).toBe("checkpoint");
+  it("fills one session, and Keep going adds one more each time without limit", () => {
+    const document = underway();
+    const base = nextUp("2027-01-05", document, noSolves, now, {
+      session: 60,
+    });
+    expect(base.entries.length).toBeGreaterThan(0);
+    expect(base.later).toBeGreaterThan(0);
+    const more = nextUp("2027-01-05", document, noSolves, now, {
+      session: 60,
+      more: 1,
+    });
+    expect(more.entries).toHaveLength(base.entries.length + 1);
+    expect(ids(more.entries).slice(0, base.entries.length)).toEqual(
+      ids(base.entries),
+    );
+    const lots = nextUp("2027-01-05", document, noSolves, now, {
+      session: 60,
+      more: 10_000,
+    });
+    expect(lots.later).toBe(0);
+    expect(lots.entries.length).toBe(base.entries.length + base.later);
   });
 
-  it("follows Phase 1's week from the plan", () => {
-    expect(
-      today("2027-01-02", emptyTraining(), noSolves, now).block?.block,
-    ).toBe("contest"); // Saturday
-    expect(
-      today("2027-01-03", emptyTraining(), noSolves, now).block?.block,
-    ).toBe("upsolve"); // Sunday
-    expect(
-      today("2027-01-05", emptyTraining(), noSolves, now).block?.block,
-    ).toBe("math"); // Tuesday
-    expect(
-      today("2027-01-06", emptyTraining(), noSolves, now).block?.block,
-    ).toBe("programming"); // Wednesday
-    expect(
-      today("2027-01-04", emptyTraining(), noSolves, now).block,
-    ).toBeNull(); // Monday
+  it("shows the first item even when it alone is longer than the session", () => {
+    const next = nextUp("2026-11-10", underway(), noSolves, now, {
+      session: 10,
+    });
+    expect(next.entries).toHaveLength(1);
   });
 
-  it("makes every fourth Thursday of Phase 1 a mixed set", () => {
-    // Phase 1 starts Fri 1 Jan 2027. Thu 28 Jan is in week 4.
-    const phase = syllabus.phases[1];
-    expect(weekOfPhase(phase, "2027-01-28")).toBe(4);
-    expect(
-      kinds(today("2027-01-28", emptyTraining(), noSolves, now).entries),
-    ).toEqual(["mixed"]);
-    expect(
-      kinds(today("2027-01-21", emptyTraining(), noSolves, now).entries),
-    ).not.toContain("mixed");
+  it("is the same after a three-week gap: nothing piles up", () => {
+    const document = underway();
+    const before = nextUp("2027-01-05", document, noSolves, now);
+    const after = nextUp("2027-01-26", document, noSolves, now);
+    expect(ids(after.entries)).toEqual(ids(before.entries));
+    expect(after.planned).toBe(before.planned);
   });
 
-  it("takes reviews due in the block's track first, then the work", () => {
+  it("never schedules a placed-out unit or the contest unit", () => {
+    const placed = placeOut(emptyTraining(), "cpp-basics");
+    const next = nextUp("2026-11-10", placed, noSolves, now, { more: 50 });
+    for (const entry of next.entries) {
+      if (entry.kind === "review") continue;
+      expect(entry.unit.id).not.toBe("cpp-basics");
+      expect(entry.unit.slot).toBeUndefined();
+    }
+  });
+
+  it("puts reviews first", () => {
     const review: DueReview = {
       key: "lesson:pre-1:2",
       track: "math",
@@ -142,11 +173,57 @@ describe("today", () => {
       due: "2026-11-12",
       from: "2026-11-10",
     };
-    const other: DueReview = { ...review, key: "x", track: "programming" };
-    const thursday = today("2026-11-12", emptyTraining(), noSolves, now, [
-      review,
-      other,
-    ]);
-    expect(kinds(thursday.entries)).toEqual(["review", "item"]);
+    const next = nextUp("2026-11-12", emptyTraining(), noSolves, now, {
+      reviews: [review],
+    });
+    expect(next.entries[0].kind).toBe("review");
+  });
+
+  it("names the phase's week by its target dates", () => {
+    expect(weekOfPhase(syllabus.phases[1], "2027-01-28")).toBe(4);
+    const next = nextUp("2026-11-10", emptyTraining(), noSolves, now);
+    expect(next.phase.phase).toBe(0);
+    expect(next.week).toBe(1);
+    expect(next.weeks).toBe(8);
+  });
+});
+
+describe("unlocks", () => {
+  it("open by the unit before finishing or placing out, never by date", () => {
+    const placed = placeOut(emptyTraining(), "cpp-basics");
+    for (const moment of [
+      new Date("2026-11-10T08:00:00Z"),
+      new Date("2031-01-01T08:00:00Z"),
+    ]) {
+      expect(
+        unitStates(emptyTraining(), noSolves, moment).get("cpp-toolkit")?.state,
+      ).toBe("waiting");
+      const after = unitStates(placed, noSolves, moment);
+      expect(after.get("cpp-toolkit")?.state).toBe("open");
+      expect(after.get("bronze-1")?.state).toBe("waiting");
+    }
+    // A Phase 1 unit opens in Phase 0 once the unit before it is finished.
+    const ready = finish(placed, "cpp-toolkit");
+    expect(
+      unitStates(ready, noSolves, new Date("2026-11-10T08:00:00Z")).get(
+        "bronze-1",
+      )?.state,
+    ).toBe("open");
+  });
+
+  it("say when a track reaches its last written unit", () => {
+    let document = emptyTraining();
+    const programming = syllabus.units.filter(
+      (each) => each.track === "programming" && !each.locked && !each.slot,
+    );
+    for (const each of programming.slice(0, -1))
+      document = each.checkpoint
+        ? placeOut(document, each.id)
+        : finish(document, each.id);
+    const next = nextUp("2027-06-01", document, noSolves, now);
+    expect(next.lastWritten).toContain("programming");
+    expect(
+      nextUp("2027-06-01", emptyTraining(), noSolves, now).lastWritten,
+    ).toEqual([]);
   });
 });

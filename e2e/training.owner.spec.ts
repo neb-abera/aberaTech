@@ -27,7 +27,7 @@ function saved(page: Page) {
   );
 }
 
-test("the owner reaches /training from the app bar and sees Today", async ({
+test("the owner reaches /training from the app bar and works ahead past a session", async ({
   page,
 }) => {
   await open(page, "/training");
@@ -37,16 +37,19 @@ test("the owner reaches /training from the app bar and sees Today", async ({
     .getByRole("link", { name: "Training", exact: true })
     .click();
   await expect(page).toHaveURL(/\/training$/);
-  const today = page.getByRole("region", { name: "Today" });
+  const next = page.getByRole("region", { name: "Next up" });
   await expect(
-    today.getByRole("heading", {
-      name: /Tue 10 Nov 2026 · Phase 0 · week 1 of 8/,
-    }),
+    next.getByText(/Tue 10 Nov 2026\. Phase 0, week 1 of 8/),
   ).toBeVisible();
-  await expect(today.getByText("Programming: 1 h")).toBeVisible();
-  await expect(today.getByRole("listitem").first()).toContainText(
-    "C++ for contests: the language",
+  await expect(next.getByRole("region", { name: "Pace" })).toBeVisible();
+  await expect(next.getByRole("region", { name: "Scheduled" })).toContainText(
+    "Codeforces Round (Div. 3)",
   );
+
+  const list = next.getByRole("list").first();
+  const before = await list.getByRole("listitem").count();
+  await next.getByRole("button", { name: "Keep going" }).click();
+  await expect(list.getByRole("listitem")).toHaveCount(before + 1);
 });
 
 test("the owner ticks an item and writes a note, and both survive a reload", async ({

@@ -19,7 +19,7 @@ public sealed record JudgeAnswer(
     DateTimeOffset ReadAt);
 
 /// <summary>A rated contest that has not started.</summary>
-public sealed record UpcomingContest(string Name, DateTimeOffset Start, int DurationMinutes, string Url);
+public sealed record UpcomingContest(string Name, DateTimeOffset Start, int DurationMinutes, string Url, string Judge);
 
 /// <summary>
 /// Reads the owner's solves from the Codeforces API and from AtCoder
@@ -63,26 +63,76 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
     public Task<JudgeAnswer> AtCoderAsync(string handle, CancellationToken cancellationToken) =>
         Cached($"judges:atcoder:{handle}", () => ReadAtCoderAsync(handle, cancellationToken));
 
+    public static readonly Uri AtCoderContests = new("https://atcoder.jp/contests/?lang=en");
+
+    /// <summary>The next rounds on both judges, soonest first.</summary>
     public async Task<IReadOnlyList<UpcomingContest>> UpcomingAsync(CancellationToken cancellationToken)
     {
         if (cache.TryGetValue("judges:contests", out IReadOnlyList<UpcomingContest>? kept) && kept is not null) return kept;
+        var codeforces = await UpcomingCodeforcesAsync(cancellationToken);
+        var atcoder = await UpcomingAtCoderAsync(cancellationToken);
+        var contests = codeforces.Concat(atcoder).OrderBy(contest => contest.Start).Take(10).ToList();
+        cache.Set("judges:contests", (IReadOnlyList<UpcomingContest>)contests, CacheFor);
+        return contests;
+    }
+
+    private async Task<IReadOnlyList<UpcomingContest>> UpcomingCodeforcesAsync(CancellationToken cancellationToken)
+    {
         try
         {
             using var document = await CodeforcesCallAsync("contest.list?gym=false", cancellationToken);
-            var contests = document.RootElement.GetProperty("result").EnumerateArray()
+            return document.RootElement.GetProperty("result").EnumerateArray()
                 .Where(contest => contest.GetProperty("phase").GetString() == "BEFORE")
                 .Select(contest => new UpcomingContest(
                     contest.GetProperty("name").GetString() ?? "",
                     DateTimeOffset.FromUnixTimeSeconds(contest.GetProperty("startTimeSeconds").GetInt64()),
                     contest.GetProperty("durationSeconds").GetInt32() / 60,
-                    $"https://codeforces.com/contests/{contest.GetProperty("id").GetInt32()}"))
+                    $"https://codeforces.com/contests/{contest.GetProperty("id").GetInt32()}",
+                    "codeforces"))
                 .OrderBy(contest => contest.Start)
-                .Take(8)
+                .Take(6)
                 .ToList();
-            cache.Set("judges:contests", (IReadOnlyList<UpcomingContest>)contests, CacheFor);
-            return contests;
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or KeyNotFoundException or InvalidOperationException or JudgeException or TaskCanceledException)
+        {
+            return [];
+        }
+    }
+
+    [GeneratedRegex(@"<time class='fixtime fixtime-full'>([^<]+)</time>.*?<a href=""/contests/([a-z0-9_]+)"">([^<]+)</a>.*?<td class=""text-center"">(\d+):(\d\d)</td>", RegexOptions.Singleline)]
+    private static partial Regex AtCoderRow();
+
+    /// <summary>
+    /// AtCoder has no schedule API. Its contest list's "Upcoming Contests"
+    /// table is read: each row's start time, contest link and duration.
+    /// </summary>
+    public static IReadOnlyList<UpcomingContest> ParseAtCoderUpcoming(string html)
+    {
+        var start = html.IndexOf("contest-table-upcoming", StringComparison.Ordinal);
+        if (start < 0) return [];
+        var end = html.IndexOf("contest-table-recent", start, StringComparison.Ordinal);
+        var table = end < 0 ? html[start..] : html[start..end];
+        var contests = new List<UpcomingContest>();
+        foreach (Match row in AtCoderRow().Matches(table))
+        {
+            if (!DateTimeOffset.TryParseExact(row.Groups[1].Value, "yyyy-MM-dd HH:mm:sszzz", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)) continue;
+            var minutes = int.Parse(row.Groups[4].Value, CultureInfo.InvariantCulture) * 60 + int.Parse(row.Groups[5].Value, CultureInfo.InvariantCulture);
+            contests.Add(new UpcomingContest(
+                WebUtility.HtmlDecode(row.Groups[3].Value), at, minutes,
+                $"https://atcoder.jp/contests/{row.Groups[2].Value}", "atcoder"));
+        }
+        return contests;
+    }
+
+    private async Task<IReadOnlyList<UpcomingContest>> UpcomingAtCoderAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await Client.GetAsync(AtCoderContests, cancellationToken);
+            if (!response.IsSuccessStatusCode) return [];
+            return ParseAtCoderUpcoming(await response.Content.ReadAsStringAsync(cancellationToken)).Take(4).ToList();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             return [];
         }
