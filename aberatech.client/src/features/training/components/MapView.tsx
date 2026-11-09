@@ -14,6 +14,8 @@ import {
   type UnitState,
 } from "../core/progress";
 import {
+  checkpointLabel,
+  countOf,
   formatMinutes,
   type Phase,
   type Syllabus,
@@ -104,7 +106,7 @@ function UnitRow({
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {locked
             ? unit.locked
-            : `${unit.lessons.length} lessons, ${formatMinutes(unitMinutes(unit))}${unit.checkpoint ? `. Checkpoint: ${unit.checkpoint.items.length} problems in ${unit.checkpoint.minutes} minutes` : ""}.`}
+            : `${countOf(unit.lessons.length, "lesson")}, ${formatMinutes(unitMinutes(unit))}${unit.checkpoint ? `. Checkpoint: ${checkpointLabel(unit)}` : ""}.`}
         </Typography>
         {owner && !locked && (
           <Box>

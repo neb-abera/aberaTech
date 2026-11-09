@@ -12,6 +12,7 @@ import { Link as RouterLink } from "react-router";
 import { clock, localDateOf, longDate } from "../core/dates";
 import type { Pace } from "../core/pace";
 import {
+  checkpointLabel,
   formatMinutes,
   kindLabel,
   systemOf,
@@ -53,7 +54,7 @@ function EntryRow({ entry, index }: { entry: Entry; index: number }) {
       break;
     case "checkpoint":
       kind = "Checkpoint";
-      title = `${entry.unit.title}: ${entry.unit.checkpoint?.items.length} problems in ${entry.minutes} minutes`;
+      title = `${entry.unit.title}: ${checkpointLabel(entry.unit)}`;
       detail = entry.running
         ? `Running. Time is up at ${clock(entry.running.ends)}.`
         : `${trackLabel[entry.unit.track]}. Pass it to place out of the unit. Its lessons stay open for reference.`;
