@@ -26,6 +26,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<Appointment> Appointments => Set<Appointment>();
 
+    public DbSet<BookingLink> BookingLinks => Set<BookingLink>();
+
     public DbSet<QueueSession> QueueSessions => Set<QueueSession>();
 
     public DbSet<QueueEntryRecord> QueueEntries => Set<QueueEntryRecord>();
@@ -93,6 +95,26 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // Reading the agenda is always "what is on between these two
             // instants", so the index matches the query rather than the key.
             entity.HasIndex(appointment => new { appointment.StartsAt, appointment.EndsAt });
+        });
+
+        builder.Entity<BookingLink>(entity =>
+        {
+            entity.HasKey(link => link.Id);
+            entity.Property(link => link.Name).HasMaxLength(120).IsRequired();
+            entity.Property(link => link.KeyHash).HasMaxLength(64);
+
+            // Every page load with a link looks its key up by hash.
+            entity
+                .HasIndex(link => link.KeyHash)
+                .IsUnique()
+                .HasFilter("\"KeyHash\" IS NOT NULL");
+
+            // One default. Two would make which rules plain /schedule shows
+            // depend on row order.
+            entity
+                .HasIndex(link => link.IsDefault)
+                .IsUnique()
+                .HasFilter("\"IsDefault\"");
         });
 
         builder.Entity<QueueSession>(entity =>

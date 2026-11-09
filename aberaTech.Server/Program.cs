@@ -661,6 +661,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         app.MapAdminAuthEndpoints(adminOptions, app.Environment.IsDevelopment());
         app.MapAdminEndpoints();
         app.MapAvailabilityEndpoints();
+        app.MapBookingLinkEndpoints();
         app.MapCalendarAdminEndpoints();
     }
 }

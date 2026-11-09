@@ -1,4 +1,5 @@
 using aberaTech.Scheduling.Data;
+using aberaTech.Scheduling.Outbox;
 
 namespace aberaTech.Scheduling.Calendar;
 
@@ -7,43 +8,38 @@ namespace aberaTech.Scheduling.Calendar;
 /// </summary>
 /// <remarks>
 /// The invite is a Google Calendar event on the host's calendar with the
-/// visitor as attendee: Google then emails the invitation, so the site needs no
-/// mail server, no sender reputation and no template — and the visitor gets a
-/// real invite they can accept, not an attachment to import.
+/// visitor as attendee. Google then emails the invitation, so the site needs
+/// no mail server, and the visitor gets a real invite they can accept.
 ///
-/// Best effort by contract. A booking whose invite fails is still a booking;
-/// both methods log and return rather than throw, because the calendar is a
-/// courtesy and the appointment is the point.
+/// The outbox dispatcher calls these, never a request handler. Each answer is
+/// a <see cref="SendResult"/>, so an invite is retried, dead lettered and shown
+/// to the host the same way a text is. Google sends no delivery receipt, so a
+/// confirmed result means Google created the event, and nothing more.
 /// </remarks>
 public interface ICalendarInvites
 {
-    /// <summary>
-    /// Creates the event and returns its Google id, or null when no invite
-    /// could be sent — no calendar connected, the grant lacks the events
-    /// scope, or Google refused.
-    /// </summary>
-    Task<string?> CreateEventAsync(Appointment appointment, CancellationToken cancellationToken);
+    /// <summary>Creates the event, or confirms an earlier attempt already did.</summary>
+    Task<SendResult> InviteAsync(Appointment appointment, CancellationToken cancellationToken);
 
-    /// <summary>Cancels the event, which tells Google to notify the attendee.</summary>
-    Task DeleteEventAsync(string googleEventId, CancellationToken cancellationToken);
+    /// <summary>Deletes the event, which tells Google to notify the attendee.</summary>
+    Task<SendResult> WithdrawAsync(Appointment appointment, CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// The invites when Google is not configured: none, quietly.
-/// </summary>
+/// <summary>The invites when Google is not configured: none, and the outbox says so.</summary>
 /// <remarks>
-/// The same shape as the logging SMS sender: the booking path stays exercisable
-/// in development without a Google project, and the email field simply results
-/// in no invite rather than an error.
+/// Refused permanently rather than retried, because no retry can configure a
+/// Google project. The row dead letters at once and the host sees why.
 /// </remarks>
 public sealed class NoCalendarInvites(ILogger<NoCalendarInvites> logger) : ICalendarInvites
 {
-    public Task<string?> CreateEventAsync(Appointment appointment, CancellationToken cancellationToken)
+    public const string Reason = "Google Calendar is not configured on this deployment.";
+
+    public Task<SendResult> InviteAsync(Appointment appointment, CancellationToken cancellationToken)
     {
-        logger.LogInformation(
-            "Google is not configured; no calendar invite for appointment {AppointmentId}.", appointment.Id);
-        return Task.FromResult<string?>(null);
+        logger.LogInformation("No calendar invite for appointment {AppointmentId}: {Reason}", appointment.Id, Reason);
+        return Task.FromResult(SendResult.RejectedPermanently(Reason));
     }
 
-    public Task DeleteEventAsync(string googleEventId, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task<SendResult> WithdrawAsync(Appointment appointment, CancellationToken cancellationToken) =>
+        Task.FromResult(SendResult.RejectedPermanently(Reason));
 }

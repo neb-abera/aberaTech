@@ -34,3 +34,4 @@ aberatech.client/src/theme/themePrimitives.ts	grey: \{	MUI palette key
 e2e/owner-alerts.spec.ts	E2E cancelled|/fake/cancelled	the Google Calendar fake's fixture title and route
 aberatech.client/src/views/CoursePlanner.tsx	e-catalogue\.jhu\.edu	JHU's URL
 aberatech.client/src/features/planner/data/link-check.json	e-catalogue\.jhu\.edu	JHU's URL
+aberaTech.Scheduling/Outbox/OutboxDispatcher.cs	appointment\.Cancelled	stored column Appointment.Cancelled

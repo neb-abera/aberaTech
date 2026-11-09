@@ -13,9 +13,10 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { formatTime } from "../core/format";
-import { type AdminMessage, kindLabel, stateChip } from "../core/messages";
+import { type AdminMessage, messageTitle, stateChip } from "../core/messages";
 import { useAdminQueue } from "../hooks/useAdminQueue";
 import AvailabilityEditor from "./AvailabilityEditor";
+import BookingLinksCard from "./BookingLinksCard";
 
 /**
  * The host's side of the queue: open it, work down the line, close it.
@@ -78,6 +79,8 @@ export default function AdminPanel() {
       </Typography>
 
       <AvailabilityEditor enabled={signedIn} />
+
+      <BookingLinksCard enabled={signedIn} />
 
       <Card variant="outlined">
         <CardContent>
@@ -359,7 +362,7 @@ export default function AdminPanel() {
  * never arrive is the one thing on this page that needs a human.
  */
 function MessageRow({ message }: { message: AdminMessage }) {
-  const chip = stateChip(message.state);
+  const chip = stateChip(message.state, message.kind);
   const isQueued = message.state === "Pending" || message.state === "Failed";
   const when = isQueued
     ? message.dueAt
@@ -380,9 +383,7 @@ function MessageRow({ message }: { message: AdminMessage }) {
       }}
     >
       <Box sx={{ flexGrow: 1, minWidth: 180 }}>
-        <Typography variant="body2">
-          {kindLabel(message.kind)} · {message.to}
-        </Typography>
+        <Typography variant="body2">{messageTitle(message)}</Typography>
         <Typography variant="caption" sx={{ color: "text.secondary" }}>
           {when}
           {message.attempts > 1 ? ` · attempt ${message.attempts}` : ""}

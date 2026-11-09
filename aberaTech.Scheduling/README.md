@@ -106,14 +106,40 @@ Off by default, so a developer machine with a plain connection string keeps
 working unchanged. When it is on and no identity is available the application
 fails immediately with a credential error rather than falling back to anything.
 
+### Booking links
+
+The host gives each audience its own link, made on /schedule/admin. A link
+holds rules: the first day it books, how many days ahead, the notice a time
+needs, the meeting length, and whether an open queue replaces its times.
+Plain /schedule uses the default rules, saved on the same card. Until they
+are saved, the `Scheduling:` settings are the default.
+
+`BookingWindow.For` turns the rules into a first day, a last day and an
+earliest instant. The page and the booking check both call it, so a time the
+page did not offer cannot be booked. The first day is a date in the zone the
+weekly hours are written in.
+
+The link is `/schedule#k=<key>`. The page sends the key in the
+`X-Booking-Link` header. The database holds its SHA-256 and never the key.
+
+### Calendar invites
+
+Every booking needs an email. The booking and its invite job land in one
+commit. The dispatcher hands the job to Google Calendar with the booking's id
+as the event id, so a retry after a lost reply gets 409 and counts as done.
+An invite gets 10 attempts over 4 hours 15 minutes. One that runs out texts
+the host. Canceling queues a withdrawal the same way. Google sends no receipt,
+so the Messages card says "Google accepted" and claims nothing more.
+
 ### What gets sent, and to whom
 
 | Event                             | Visitor                                 | Host        |
 | --------------------------------- | --------------------------------------- | ----------- |
-| Books a time                      | Confirmation, with the opt-out          | New booking |
+| Books a time | Calendar invite by Google. Text confirmation, with the opt-out, if they ticked the box | New booking |
+| Invite runs out of attempts | | Invite failed |
 | A day before                      | Reminder, if it is more than a day away |             |
 | An hour before                    | Reminder                                |             |
-| Cancels, either side              | Cancellation                            | Canceled    |
+| Cancels, either side | Invite withdrawn by Google. Text cancellation | Canceled |
 | Joins a queue                     | Place and estimate, with the opt-out    |             |
 | Estimate moves past the tolerance | New estimate                            |             |
 | Nearly their turn, and their turn | One each                                |             |

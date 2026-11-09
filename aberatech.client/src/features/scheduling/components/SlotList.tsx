@@ -264,16 +264,16 @@ export default function SlotList({
                 />
               ) : null}
 
-              {/* Entering an address is the ask; leaving it blank declines.
-                  Same principle as the number: no checkbox to say yes and a
-                  field to say it again. */}
+              {/* Required: every booking gets a calendar invite. */}
               <TextField
-                label="Email (optional)"
+                label="Email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                required
                 size="small"
                 type="email"
-                helperText="For a Google Calendar invite to this time. Nothing else is sent to it."
+                autoComplete="email"
+                helperText="The calendar invite goes here. Nothing else is sent to it."
                 slotProps={{ htmlInput: { maxLength: 254 } }}
               />
             </Stack>

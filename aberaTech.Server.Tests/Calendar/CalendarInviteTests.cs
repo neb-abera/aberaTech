@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using aberaTech.Scheduling.Calendar;
 using aberaTech.Scheduling.Data;
@@ -66,9 +67,66 @@ public class CalendarInviteTests
     }
 
     [Fact]
-    public void The_created_events_id_is_read_from_googles_response()
+    public void The_event_id_is_the_bookings_id_in_a_form_google_accepts()
     {
-        Assert.Equal("abc123", GoogleCalendarInvites.ParseEventId("""{"id":"abc123","status":"confirmed"}"""));
-        Assert.Null(GoogleCalendarInvites.ParseEventId("""{"status":"confirmed"}"""));
+        var appointment = new Appointment { Id = Guid.Parse("0f1d2c3b-4a59-4687-9a0b-1c2d3e4f5a6b"), Email = "ada@example.com" };
+
+        var id = GoogleCalendarInvites.EventId(appointment);
+        using var body = JsonDocument.Parse(GoogleCalendarInvites.EventBody("Neb Abera", appointment));
+
+        Assert.Equal("0f1d2c3b4a5946879a0b1c2d3e4f5a6b", id);
+        // Google's rule for a caller-chosen id: 5 to 1024 characters of a-v and 0-9.
+        Assert.Matches("^[a-v0-9]{5,1024}$", id);
+        Assert.Equal(id, body.RootElement.GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public void A_booking_made_before_ids_were_chosen_keeps_googles_id()
+    {
+        var appointment = new Appointment { Id = Guid.NewGuid(), GoogleEventId = "abc123googlesown" };
+
+        Assert.Equal("abc123googlesown", GoogleCalendarInvites.EventId(appointment));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.OK, true, false)]
+    // The event exists: an earlier attempt made it and its reply was lost.
+    [InlineData(HttpStatusCode.Conflict, true, false)]
+    [InlineData(HttpStatusCode.BadRequest, false, true)]
+    [InlineData(HttpStatusCode.Unauthorized, false, false)]
+    [InlineData(HttpStatusCode.Forbidden, false, false)]
+    [InlineData(HttpStatusCode.TooManyRequests, false, false)]
+    [InlineData(HttpStatusCode.InternalServerError, false, false)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, false, false)]
+    public void Googles_answer_to_a_create_decides_done_retry_or_stop(HttpStatusCode status, bool done, bool permanent)
+    {
+        var result = GoogleCalendarInvites.InterpretCreate(status, "abc12345");
+
+        Assert.Equal(done, result.Accepted);
+        Assert.Equal(permanent, result.Permanent);
+        if (done)
+        {
+            // No receipt follows from Google, so the row settles here.
+            Assert.True(result.DeliveryConfirmed);
+            Assert.Equal("abc12345", result.ProviderMessageId);
+        }
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NoContent, true)]
+    [InlineData(HttpStatusCode.NotFound, true)]
+    [InlineData(HttpStatusCode.Gone, true)]
+    [InlineData(HttpStatusCode.InternalServerError, false)]
+    public void Googles_answer_to_a_delete_counts_gone_as_done(HttpStatusCode status, bool done)
+    {
+        var result = GoogleCalendarInvites.InterpretDelete(status, "abc12345");
+
+        Assert.Equal(done, result.Accepted);
+        Assert.False(result.Permanent);
+        if (done)
+        {
+            // Not the invite's id, which the outbox already holds once.
+            Assert.Equal("withdraw-abc12345", result.ProviderMessageId);
+        }
     }
 }

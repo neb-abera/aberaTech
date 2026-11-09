@@ -79,7 +79,7 @@ public sealed class SchedulingRouteTests : IDisposable
 
         using var booked = await visitor.PostAsJsonAsync("/api/scheduling/book", new
         {
-            startsAt, name = "Private Snuffy", zoneId = "Etc/UTC", smsConsent = false
+            startsAt, name = "Private Snuffy", zoneId = "Etc/UTC", smsConsent = false, email = "snuffy@example.com"
         });
 
         Assert.Equal(HttpStatusCode.OK, booked.StatusCode);
@@ -112,7 +112,7 @@ public sealed class SchedulingRouteTests : IDisposable
         var (date, startsAt) = await FirstSlotAsync(alice);
         Assert.Equal(HttpStatusCode.OK, (await alice.PostAsJsonAsync("/api/scheduling/book", new
         {
-            startsAt, name = "Alice", zoneId = "Etc/UTC"
+            startsAt, name = "Alice", zoneId = "Etc/UTC", email = "alice@example.com"
         })).StatusCode);
 
         using var guessed = await bob.DeleteAsync($"/api/scheduling/book/{Guid.NewGuid()}");
@@ -129,15 +129,15 @@ public sealed class SchedulingRouteTests : IDisposable
 
         using var past = await visitor.PostAsJsonAsync("/api/scheduling/book", new
         {
-            startsAt = "2020-01-01T09:00:00Z", name = "Private Snuffy", zoneId = "Etc/UTC"
+            startsAt = "2020-01-01T09:00:00Z", name = "Private Snuffy", zoneId = "Etc/UTC", email = "snuffy@example.com"
         });
         using var nameless = await visitor.PostAsJsonAsync("/api/scheduling/book", new
         {
-            startsAt = (await FirstSlotAsync(visitor)).StartsAt, name = "", zoneId = "Etc/UTC"
+            startsAt = (await FirstSlotAsync(visitor)).StartsAt, name = "", zoneId = "Etc/UTC", email = "snuffy@example.com"
         });
         using var garbled = await visitor.PostAsJsonAsync("/api/scheduling/book", new
         {
-            startsAt = "tomorrow-ish", name = "Private Snuffy", zoneId = "Etc/UTC"
+            startsAt = "tomorrow-ish", name = "Private Snuffy", zoneId = "Etc/UTC", email = "snuffy@example.com"
         });
 
         Assert.Equal(HttpStatusCode.Conflict, past.StatusCode);
