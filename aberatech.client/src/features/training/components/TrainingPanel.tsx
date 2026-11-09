@@ -1,17 +1,19 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link as RouterLink, useLocation, useSearchParams } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { clock, localDate } from "../core/dates";
-import { overall, type Solves, unitStates } from "../core/progress";
+import { pace as measurePace } from "../core/pace";
+import { itemStatus, overall, type Solves, unitStates } from "../core/progress";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
-import { today as planToday } from "../core/today";
+import { nextUp } from "../core/today";
 import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
 import LessonView from "./LessonView";
@@ -89,6 +91,29 @@ export default function TrainingPanel() {
   const total = overall(document, solves, states);
   const contests: Contest[] = answer.contests;
   const rating = judgeLine("Codeforces", answer.status, answer.codeforces);
+  const [more, setMore] = useState(0);
+  const date = localDate(now);
+  const next = nextUp(date, document, solves, now, {
+    session: document.settings.session,
+    more,
+  });
+  const firstRated = syllabus.units
+    .find((unit) => unit.slot === "contest")
+    ?.lessons.flatMap((lesson) => lesson.items)
+    .find((item) => item.record === "codeforces-rated");
+  const firstContest = firstRated ? (
+    <Typography variant="body2">
+      First rated contest, a Phase 0 target:{" "}
+      {itemStatus(firstRated, document, solves).done
+        ? "entered."
+        : "not entered yet. "}
+      {!itemStatus(firstRated, document, solves).done && (
+        <Link component={RouterLink} to="/training?unit=first-contest">
+          What to do
+        </Link>
+      )}
+    </Typography>
+  ) : null;
 
   return (
     <Stack spacing={3}>
@@ -150,7 +175,7 @@ export default function TrainingPanel() {
         {owner && (
           <Tab
             value="today"
-            label="Today"
+            label="Next up"
             component={RouterLink}
             to="/training?view=today"
           />
@@ -199,9 +224,21 @@ export default function TrainingPanel() {
         />
       ) : view === "today" && owner ? (
         <TodayView
-          today={planToday(localDate(now), document, solves, now)}
+          next={next}
+          pace={measurePace(date, next.phase, document, solves, states)}
           contests={contests}
           rating={rating}
+          firstContest={firstContest}
+          session={document.settings.session}
+          setSession={(minutes) =>
+            change((current) => {
+              const settings = { ...current.settings };
+              if (minutes === null) delete settings.session;
+              else settings.session = minutes;
+              return { ...current, settings };
+            })
+          }
+          keepGoing={() => setMore((count) => count + 1)}
         />
       ) : view === "tools" ? (
         <ToolsView

@@ -78,10 +78,31 @@ public sealed class TrainingRouteTests : IDisposable
         Assert.True(atcoder.GetProperty("ok").GetBoolean());
         Assert.Empty(atcoder.GetProperty("solved").EnumerateObject());
 
-        var contest = body.GetProperty("contests").EnumerateArray().Single();
-        Assert.Equal("Codeforces Round (Div. 3)", contest.GetProperty("name").GetString());
-        Assert.Equal("https://codeforces.com/contests/2300", contest.GetProperty("url").GetString());
-        Assert.Equal(135, contest.GetProperty("durationMinutes").GetInt32());
+        var contests = body.GetProperty("contests").EnumerateArray().ToList();
+        Assert.Equal(["codeforces", "atcoder"], contests.Select(c => c.GetProperty("judge").GetString()));
+        Assert.Equal("Codeforces Round (Div. 3)", contests[0].GetProperty("name").GetString());
+        Assert.Equal("https://codeforces.com/contests/2300", contests[0].GetProperty("url").GetString());
+        Assert.Equal(135, contests[0].GetProperty("durationMinutes").GetInt32());
+        Assert.Equal("AtCoder Beginner Contest 999", contests[1].GetProperty("name").GetString());
+        Assert.Equal(100, contests[1].GetProperty("durationMinutes").GetInt32());
+    }
+
+    [Fact]
+    public void AtCoders_upcoming_table_is_read_row_by_row()
+    {
+        // Two rows of atcoder.jp/contests/?lang=en as it was on 9 Nov 2026.
+        const string html = """
+            <div id="contest-table-upcoming"> <h3>Upcoming Contests</h3> <table> <tbody> <tr> <td class="text-center"><a href='http://www.timeanddate.com/worldclock/fixedtime.html?iso=20261114T2100&p1=248' target='blank'><time class='fixtime fixtime-full'>2026-11-14 21:00:00+0900</time></a></td> <td ><span aria-hidden='true' data-toggle='tooltip' data-placement='top' title="Algorithm">Ⓐ</span><span class="user-blue">◉</span> <a href="/contests/abc484">AtCoder Beginner Contest 484</a></td> <td class="text-center">01:40</td> <td class="text-center"> - 1999</td> </tr> <tr> <td class="text-center"><a href='http://www.timeanddate.com/worldclock/fixedtime.html?iso=20261122T2100&p1=248' target='blank'><time class='fixtime fixtime-full'>2026-11-22 21:00:00+0900</time></a></td> <td ><span aria-hidden='true' data-toggle='tooltip' data-placement='top' title="Algorithm">Ⓐ</span><span class="div1-target">◉</span> <a href="/contests/arc234">AtCoder Regular Contest++ 234</a></td> <td class="text-center">02:30</td> <td class="text-center">1600 - 2999</td> </tr> </tbody> </table> </div>
+            <div id="contest-table-recent"><a href="/contests/abc483">AtCoder Beginner Contest 483</a></div>
+            """;
+
+        var contests = JudgeReader.ParseAtCoderUpcoming(html);
+
+        Assert.Equal(["AtCoder Beginner Contest 484", "AtCoder Regular Contest++ 234"], contests.Select(c => c.Name));
+        Assert.Equal(new DateTimeOffset(2026, 11, 14, 12, 0, 0, TimeSpan.Zero), contests[0].Start);
+        Assert.Equal([100, 150], contests.Select(c => c.DurationMinutes));
+        Assert.Equal("https://atcoder.jp/contests/arc234", contests[1].Url);
+        Assert.Empty(JudgeReader.ParseAtCoderUpcoming("<html>no table</html>"));
     }
 
     [Fact]

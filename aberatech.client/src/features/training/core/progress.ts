@@ -43,7 +43,12 @@ export interface Note {
 
 export interface TrainingDocument {
   version: 1;
-  settings: { codeforces: string; atcoder: string };
+  settings: {
+    codeforces: string;
+    atcoder: string;
+    /** Minutes in one session of Next up. Unset: the plan's default. */
+    session?: number;
+  };
   items: Record<string, ItemRecord>;
   checkpoints: Record<string, CheckpointAttempt[]>;
   /** Review done, by review key (reviews.ts), an ISO date and time. */
@@ -99,6 +104,11 @@ export function normalizeTraining(
           ? settings.codeforces
           : empty.settings.codeforces,
       atcoder: typeof settings.atcoder === "string" ? settings.atcoder : "",
+      ...(typeof settings.session === "number" &&
+      settings.session >= 10 &&
+      settings.session <= 600
+        ? { session: Math.round(settings.session) }
+        : {}),
     },
     items: entries(value.items, (entry) => {
       if (!isRecord(entry) || !isIso(entry.at)) return null;

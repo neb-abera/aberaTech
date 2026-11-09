@@ -19,6 +19,21 @@ programming: systems design (9 Nov 2026)". The plan it delivers is
 - `/api/progress/training`: owner only, server side. A visitor never asks
   for it.
 
+## Self-paced
+
+Next up is the first screen for the owner. It lists the next unfinished
+work in syllabus order across both tracks, interleaved by the plan's split
+of self-paced minutes between math and programming, and filled to one
+session. The session's default is the plan's self-paced minutes a week over
+its sessions: 60 in Phases 0 and 1. Keep going adds the next item, without
+limit. No date opens or holds back a unit. A phase's dates are its targets.
+
+Pace shows this week's minutes against the plan's, the last 28 days as
+minutes a week, and the day each phase's written work would be done at
+that pace. Contests run at set times, so they sit in a Scheduled panel with
+their start times from the Codeforces API and AtCoder's contest list. They
+never hold back or count toward a unit.
+
 ## How the syllabus was built
 
 | Data                              | Source                                                                 |
