@@ -16,7 +16,9 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
   await openAsOwner(page, "/schedule/admin", "text=Signed in as");
   const card = page.getByRole("group", { name: "Rules for new link" });
 
-  const state = await (await page.request.get("/api/scheduling/state?zone=UTC")).json();
+  const state = await (
+    await page.request.get("/api/scheduling/state?zone=UTC")
+  ).json();
   expect(state.mode, "an open queue replaces the slots").toBe("slots");
   const plainFirst: string = state.availableDates[0];
   // Three days after the first day plain /schedule offers.
@@ -25,7 +27,9 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
   const firstDay = first.toISOString().slice(0, 10);
 
   await page.getByRole("button", { name: "New link" }).click();
-  await card.getByLabel("Name, seen only by you").fill(`E2E interviews ${info.project.name}`);
+  await card
+    .getByLabel("Name, seen only by you")
+    .fill(`E2E interviews ${info.project.name}`);
   await card.getByLabel("First day").fill(firstDay);
   await card.getByRole("button", { name: "Make the link" }).click();
 
@@ -40,9 +44,10 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
 
   const context = await browser.newContext({ timezoneId: "UTC" });
   const visitor = await context.newPage();
-  const asked = visitor.waitForResponse((response) =>
-    response.url().includes("/api/scheduling/state") &&
-    response.request().headers()["x-booking-link"] !== undefined,
+  const asked = visitor.waitForResponse(
+    (response) =>
+      response.url().includes("/api/scheduling/state") &&
+      response.request().headers()["x-booking-link"] !== undefined,
   );
   await visitor.goto(url);
   const linked = await (await asked).json();
@@ -60,18 +65,26 @@ test("a link offers times from its first day, and plain /schedule keeps its own 
     day: "numeric",
     timeZone: "UTC",
   });
-  await expect(visitor.getByRole("heading", { name: label, exact: true })).toBeVisible({
+  await expect(
+    visitor.getByRole("heading", { name: label, exact: true }),
+  ).toBeVisible({
     timeout: 15_000,
   });
 
   // Plain /schedule in a fresh tab still offers the earlier day.
-  const plain = await (await context.newPage()).request.get("/api/scheduling/state?zone=UTC");
+  const plain = await (await context.newPage()).request.get(
+    "/api/scheduling/state?zone=UTC",
+  );
   expect((await plain.json()).availableDates[0]).toBe(plainFirst);
   expect(plainFirst < firstDay).toBe(true);
   await context.close();
 
   // Off: the link books under the default rules, like an unknown key.
-  const row = page.getByRole("group", { name: `Rules for E2E interviews ${info.project.name}` }).last();
+  const row = page
+    .getByRole("group", {
+      name: `Rules for E2E interviews ${info.project.name}`,
+    })
+    .last();
   const on = row.getByRole("checkbox", { name: "On" });
   await on.uncheck();
   await expect(on).not.toBeChecked();
