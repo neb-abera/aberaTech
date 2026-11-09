@@ -6,17 +6,21 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import { Link as RouterLink, useSearchParams } from "react-router";
+import { Link as RouterLink, useLocation, useSearchParams } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
+import { localDate } from "../core/dates";
 import { noSolves, overall, type Solves, unitStates } from "../core/progress";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
+import { today as planToday } from "../core/today";
 import { useTraining } from "../hooks/useTraining";
 import LessonView from "./LessonView";
 import MapView from "./MapView";
+import TodayView, { type Contest } from "./TodayView";
 import ToolsView from "./ToolsView";
 import UnitView from "./UnitView";
 
-type View = "map" | "tools";
+type View = "today" | "map" | "tools";
+const views: View[] = ["today", "map", "tools"];
 
 /**
  * /training: the syllabus as a course player. The address carries the
@@ -30,6 +34,7 @@ export default function TrainingPanel() {
   const training = useTraining();
   const { status, document, change } = training;
   const [params] = useSearchParams();
+  const location = useLocation();
   const owner = status === "owner";
   const solves: Solves = noSolves;
   const now = new Date();
@@ -40,7 +45,14 @@ export default function TrainingPanel() {
 
   const lessonId = params.get("lesson");
   const unitId = params.get("unit");
-  const view: View = params.get("view") === "tools" ? "tools" : "map";
+  const asked = params.get("view") as View | null;
+  // The owner opens on Today. Everyone else, and the build-time render, on the map.
+  const view: View =
+    asked && views.includes(asked) && (asked !== "today" || owner)
+      ? asked
+      : owner
+        ? "today"
+        : "map";
   const unitById = unitId
     ? syllabus.units.find((unit) => unit.id === unitId && !unit.locked)
     : undefined;
@@ -54,13 +66,15 @@ export default function TrainingPanel() {
     : 0;
 
   const total = overall(document, solves, states);
+  const contests: Contest[] = [];
+  const rating = "Codeforces rating is read live once verification lands.";
 
   return (
     <Stack spacing={3}>
       {status === "visitor" && (
         <SignInToSee
           message="The syllabus is public. My progress and notes are mine, so they need my sign-in."
-          returnUrl="/training"
+          returnUrl={encodeURIComponent(location.pathname + location.search)}
         />
       )}
       {status === "error" && (
@@ -91,6 +105,14 @@ export default function TrainingPanel() {
         </Box>
       )}
       <Tabs value={place ? false : view} aria-label="Training views">
+        {owner && (
+          <Tab
+            value="today"
+            label="Today"
+            component={RouterLink}
+            to="/training?view=today"
+          />
+        )}
         <Tab
           value="map"
           label="Map"
@@ -124,6 +146,12 @@ export default function TrainingPanel() {
           state={states.get(place.unit.id)}
           change={change}
           now={now}
+        />
+      ) : view === "today" && owner ? (
+        <TodayView
+          today={planToday(localDate(now), document, solves, now)}
+          contests={contests}
+          rating={rating}
         />
       ) : view === "tools" ? (
         <ToolsView />

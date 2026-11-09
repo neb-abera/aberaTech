@@ -83,7 +83,12 @@ describe("a visitor", () => {
   it("reads a lesson with its pointers and no controls", async () => {
     visit("visitor");
     show("/training?lesson=cp-3");
-    await screen.findByRole("link", { name: "Sign in with Google" });
+    const signIn = await screen.findByRole("link", {
+      name: "Sign in with Google",
+    });
+    expect(signIn.getAttribute("href")).toBe(
+      "/api/scheduling/admin/sign-in?returnUrl=%2Ftraining%3Flesson%3Dcp-3",
+    );
     const read = screen.getByRole("article", {
       name: /Introduction to Counting & Probability, chapter 3/,
     });
@@ -93,6 +98,14 @@ describe("a visitor", () => {
 });
 
 describe("the owner", () => {
+  it("opens on Today, with the plan's block and its first work", async () => {
+    visit(null);
+    show("/training");
+    const today = await screen.findByRole("region", { name: "Today" });
+    expect(within(today).getByText(/Phase \d · week \d+ of \d+/)).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Today" })).toBeTruthy();
+  });
+
   it("ticks an item and it is saved", async () => {
     visit(null);
     show("/training?lesson=cp-3");

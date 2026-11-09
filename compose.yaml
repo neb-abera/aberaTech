@@ -249,9 +249,11 @@ services:
       # books once in each of five browsers and joins and leaves the queue
       # in three, all from its one container, so it gets a minute's worth.
       RateLimits__PublicWritePerMinute: "60"
-      # Sign-in starts get ten a minute per address. Each owner spec signs in
-      # from the suite's one container, on three engines in a row.
-      RateLimits__SignInPerMinute: "60"
+      # Sign-in starts get ten a minute per address. Each owner test signs in
+      # from the suite's one container, on three engines in a row: about 60
+      # an engine, and two engines can finish inside one minute. At 60 the
+      # last Firefox tests stopped at the sign-in page on the dev box.
+      RateLimits__SignInPerMinute: "300"
       # Reminder leads, overridable so a reminder can be watched firing in
       # minutes rather than an hour:
       #
