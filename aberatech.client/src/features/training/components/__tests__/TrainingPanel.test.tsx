@@ -93,6 +93,14 @@ describe("a visitor", () => {
 });
 
 describe("the owner", () => {
+  it("opens on Today, with the plan's block and its first work", async () => {
+    visit(null);
+    show("/training");
+    const today = await screen.findByRole("region", { name: "Today" });
+    expect(within(today).getByText(/Phase \d · week \d+ of \d+/)).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Today" })).toBeTruthy();
+  });
+
   it("ticks an item and it is saved", async () => {
     visit(null);
     show("/training?lesson=cp-3");
