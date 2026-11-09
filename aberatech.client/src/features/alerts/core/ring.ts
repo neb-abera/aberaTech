@@ -30,8 +30,9 @@ export function writeRingPreference(on: boolean): void {
 }
 
 /**
- * The alarm to ring for now: an alarm whose time has come and whose event
- * has not started, not skipped, not muted and not acknowledged anywhere.
+ * The alarm to ring for now: an alarm whose time has come and that is still
+ * due (ringsUntil, the start or a window after an alert at the start), not
+ * skipped, not muted and not acknowledged anywhere.
  * The earliest, when two overlap.
  */
 export function dueAlarm(alerts: AlertItem[], now: number): AlertItem | null {
@@ -40,7 +41,7 @@ export function dueAlarm(alerts: AlertItem[], now: number): AlertItem | null {
     if (alert.type !== "alarm" || alert.skipped || alert.muted) continue;
     if (alert.acknowledged) continue;
     const at = Date.parse(alert.alertAt);
-    if (!(at <= now && now < Date.parse(alert.startsAt))) continue;
+    if (!(at <= now && now < Date.parse(alert.ringsUntil))) continue;
     if (due === null || at < Date.parse(due.alertAt)) due = alert;
   }
   return due;

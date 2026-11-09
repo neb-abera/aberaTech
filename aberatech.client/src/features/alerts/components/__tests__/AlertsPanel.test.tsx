@@ -46,6 +46,7 @@ const standup = {
   acknowledgedVia: null,
   recurring: false,
   endsAt: "2026-10-28T13:30:00+00:00",
+  ringsUntil: "2026-10-28T13:00:00+00:00",
 };
 
 const review = {
@@ -65,6 +66,7 @@ const review = {
   acknowledgedVia: null,
   recurring: true,
   endsAt: null,
+  ringsUntil: "2026-10-28T18:00:00+00:00",
 };
 
 const state = (over: Record<string, unknown> = {}) => ({

@@ -37,6 +37,11 @@ export interface AlertItem {
   recurring: boolean;
   /** The occurrence's end. Null when the calendar gives none. */
   endsAt: string | null;
+  /**
+   * When the alert stops being due: the start, or for an alert at or after
+   * the start, a window after the alert. A browser rings until then.
+   */
+  ringsUntil: string;
 }
 
 /** Where an alarm was answered: a paired phone, Ring in this browser, or the Pushover app. */
