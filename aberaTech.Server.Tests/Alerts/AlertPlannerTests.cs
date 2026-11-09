@@ -223,7 +223,7 @@ public sealed class AlertPlannerTests
     }
 
     [Fact]
-    public void Only_events_that_have_not_started_and_start_within_the_lookahead_are_planned()
+    public void Only_events_that_have_not_ended_and_start_within_the_lookahead_are_planned()
     {
         var feed = Ics(
             Event("past", "past", "20261028T050000"),
@@ -238,6 +238,22 @@ public sealed class AlertPlannerTests
         // not started, and the worker sends it at once.
         Assert.Equal(["late", "tomorrow"], alerts.Select(alert => alert.Title));
         Assert.True(alerts[0].AlertAt < Morning);
+    }
+
+    [Fact]
+    public void A_started_event_stays_planned_until_its_end()
+    {
+        var feed = Ics(
+            Event("running", "running", "20261028T053000", "20261028T063000"),
+            Event("ended", "ended", "20261028T050000", "20261028T060000"));
+
+        var alert = Assert.Single(Plan(feed));
+
+        Assert.Equal("running", alert.Title);
+        Assert.Equal(Instant.FromUtc(2026, 10, 28, 10, 30), alert.ListedUntil);
+        // Sending stopped at the start.
+        Assert.True(alert.Until <= Morning);
+        Assert.Empty(Plan(feed, now: alert.ListedUntil));
     }
 
     [Fact]

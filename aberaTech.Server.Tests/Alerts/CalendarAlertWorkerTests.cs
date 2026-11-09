@@ -1042,7 +1042,7 @@ public sealed class CalendarAlertWorkerTests : IDisposable
     }
 
     [Fact]
-    public async Task A_created_event_is_kept_while_the_feed_cannot_be_read_and_dropped_once_it_starts()
+    public async Task A_created_event_is_kept_while_the_feed_cannot_be_read_and_dropped_once_it_ends()
     {
         var box = New(Standup());
         box.Calendar.Then(() => RecordingHandler.Text(HttpStatusCode.NotFound, ""));
@@ -1052,6 +1052,10 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         Assert.Single(await box.Store.CreatedEventsAsync(CancellationToken.None));
 
         box.Clock.Now = Dentist.StartsAt;
+        await box.Worker.TickAsync(CancellationToken.None);
+        Assert.Single(await box.Store.CreatedEventsAsync(CancellationToken.None));
+
+        box.Clock.Now = Dentist.EndsAt;
         await box.Worker.TickAsync(CancellationToken.None);
         Assert.Empty(await box.Store.CreatedEventsAsync(CancellationToken.None));
     }

@@ -54,9 +54,16 @@ public sealed record PlannedAlert(
     /// <summary>
     /// When the alert stops being due: the event's start, or for an alert
     /// at or after the start ("Rings at the start"), <see cref="AlertPlanner.AtStartWindow"/>
-    /// after the alert. Until then it is listed, sent and acknowledged.
+    /// after the alert. Until then it is sent and acknowledged.
     /// </summary>
     public Instant Until => AlertAt < StartsAt ? StartsAt : AlertAt + AlertPlanner.AtStartWindow;
+
+    /// <summary>
+    /// When the event leaves the list: its end, or <see cref="Until"/> when
+    /// that is later or the feed gives no end. A started event stays on the
+    /// list and the phone until it is over. Sending still stops at <see cref="Until"/>.
+    /// </summary>
+    public Instant ListedUntil => EndsAt is { } end && end > Until ? end : Until;
 }
 
 /// <summary>
@@ -234,7 +241,7 @@ public static partial class AlertPlanner
             critical,
             shownEnd,
             calendarEvent.RecurrenceRule is not null || calendarEvent.RecurrenceIdentifier is not null);
-        return alert.Until <= now ? null : alert;
+        return alert.ListedUntil <= now ? null : alert;
     }
 
     private static Instant? EarliestReminder(CalendarEvent calendarEvent, Instant start, Instant end, DateTimeZone zone)
