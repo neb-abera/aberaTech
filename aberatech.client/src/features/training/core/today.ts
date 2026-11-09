@@ -33,7 +33,7 @@ import {
   unitsOf,
 } from "./syllabus";
 
-/** A review due now, as the review queue hands it over. */
+/** A review due now, as the review queue (reviews.ts) hands it over. */
 export interface DueReview {
   key: string;
   track: Track;
@@ -179,6 +179,13 @@ export interface NextUp {
   later: number;
   /** Tracks whose open unit is the last one written. */
   lastWritten: Track[];
+  /** Minutes of review due before `date`. */
+  overdue: number;
+  /**
+   * More than a session of review is overdue, so new material waits and
+   * the list holds reviews alone.
+   */
+  newWaits: boolean;
 }
 
 /**
@@ -214,7 +221,13 @@ export function nextUp(
     minutes: review.minutes,
     review,
   }));
-  const all = [...reviews, ...interleave(queues, weights)];
+  // Review comes first. While more than a session's worth is overdue, it
+  // is all there is: new material waits until the backlog is under a day.
+  const overdue = (options.reviews ?? [])
+    .filter((review) => review.due < date)
+    .reduce((sum, review) => sum + review.minutes, 0);
+  const newWaits = overdue > session;
+  const all = newWaits ? reviews : [...reviews, ...interleave(queues, weights)];
 
   let planned = 0;
   let count = 0;
@@ -247,5 +260,7 @@ export function nextUp(
     planned,
     later: all.length - entries.length,
     lastWritten,
+    overdue,
+    newWaits,
   };
 }

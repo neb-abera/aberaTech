@@ -26,6 +26,8 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
   await expect(page.getByLabel("Overall progress")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Pace" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "Next up" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: /^Review/ })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Notes" })).toHaveCount(0);
 
   await page
     .getByRole("link", { name: "Counting & Probability: counting" })
@@ -38,5 +40,17 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
     page.getByText(/sections 3\.1 to 3\.5, pp\. 49 to 62/),
   ).toBeVisible();
   await expect(page.getByRole("checkbox")).toHaveCount(0);
+
+  // An owner view asked for by address shows the map instead.
+  for (const view of ["review", "notes", "today"]) {
+    await page.goto(`/training?view=${view}`);
+    await expect(
+      page.getByRole("region", {
+        name: "Phase 0: DEMOB, return, and placement",
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "Review" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Notes" })).toHaveCount(0);
+  }
   expect(asked).toEqual([]);
 });

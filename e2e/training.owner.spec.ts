@@ -136,3 +136,132 @@ test("a drill runs against its tests and shows which failed", async ({
       .getByTestId("item-status"),
   ).toContainText("every test passed on the page");
 });
+
+/**
+ * Replace the owner's training document for one test and put the original
+ * back after, whatever happens in between.
+ */
+async function withDocument(
+  page: Page,
+  change: (current: Record<string, unknown>) => Record<string, unknown>,
+  body: () => Promise<void>,
+) {
+  const url = "/api/progress/training";
+  const got = await page.request.get(url);
+  const original = got.status() === 200 ? await got.text() : null;
+  const current = original ? JSON.parse(original) : {};
+  const put = (data: string) =>
+    page.request.put(url, {
+      data,
+      headers: { "Content-Type": "application/json" },
+    });
+  expect((await put(JSON.stringify(change(current)))).ok()).toBe(true);
+  try {
+    await body();
+  } finally {
+    expect((await put(original ?? "{}")).ok()).toBe(true);
+  }
+}
+
+/** A card overdue since 1 Nov 2026, as FSRS would keep it. */
+const overdueCard = {
+  due: "2026-11-01T12:00:00.000Z",
+  stability: 3.2,
+  difficulty: 5,
+  scheduled_days: 3,
+  learning_steps: 0,
+  reps: 1,
+  lapses: 0,
+  state: 2,
+  last_review: "2026-10-29T12:00:00.000Z",
+};
+
+test("an overdue review backlog holds new material back until it is cleared", async ({
+  page,
+}) => {
+  await open(page, "/training");
+  // Thirteen lesson reviews of 5 min: 65 min overdue, over the 60 min session.
+  const lessons = [
+    "cpp-language",
+    "cpp-compile",
+    "cpp-drills",
+    "cpp-debug",
+    "cpp-toolkit-files",
+    "first-contest-lesson",
+    "lesson-time-comp",
+    "lesson-intro-ds",
+    "lesson-simulation",
+    "band-900-1",
+    "band-900-2",
+    "band-900-3",
+    "lesson-intro-complete",
+  ];
+  await withDocument(
+    page,
+    (current) => ({
+      ...current,
+      cards: Object.fromEntries(
+        lessons.map((id) => [`lesson:${id}`, overdueCard]),
+      ),
+    }),
+    async () => {
+      await page.reload();
+      const next = page.getByRole("region", { name: "Next up" });
+      await expect(
+        next.getByText(/New material waits\. 1 h 5 min of review is overdue/),
+      ).toBeVisible({ timeout: 15_000 });
+      const rows = next.getByRole("list").first().getByRole("listitem");
+      await expect(rows.first()).toHaveAccessibleName("1. Review");
+      const names = await rows.evaluateAll((items) =>
+        items.map((item) => item.getAttribute("aria-label") ?? ""),
+      );
+      expect(names.every((name) => name.endsWith("Review"))).toBe(true);
+
+      // Clear one review: it leaves the queue and the backlog drops to 60 min,
+      // which is no more than a session, so new material comes back.
+      await page.getByRole("tab", { name: "Review (13)" }).click();
+      const review = page.getByRole("region", { name: "Review" });
+      const answered = saved(page);
+      await review.getByRole("button", { name: /^Good: right\./ }).click();
+      expect((await answered).ok()).toBe(true);
+      await expect(
+        page.getByRole("tab", { name: "Review (12)" }),
+      ).toBeVisible();
+      await page.getByRole("tab", { name: "Next up" }).click();
+      await expect(next.getByText(/New material waits/)).toHaveCount(0);
+      // The twelve reviews fill the 60 min session. Keep going reaches new
+      // material, which the backlog held back before.
+      await next.getByRole("button", { name: "Keep going" }).click();
+      await expect(rows.nth(12)).not.toHaveAccessibleName(/Review$/);
+    },
+  );
+});
+
+test("notes are searchable", async ({ page }) => {
+  await open(page, "/training");
+  await withDocument(
+    page,
+    (current) => ({
+      ...current,
+      notes: {
+        ...((current.notes as object) ?? {}),
+        "cp-3": {
+          text: "Stars and bars for e2e.",
+          at: "2026-11-09T10:00:00.000Z",
+        },
+      },
+    }),
+    async () => {
+      await page.goto("/training?view=notes");
+      const notes = page.getByRole("region", { name: "Notes" });
+      await notes
+        .getByRole("searchbox", { name: "Search notes" })
+        .fill("bars e2e");
+      await expect(notes.getByText("Stars and bars for e2e.")).toBeVisible({
+        timeout: 15_000,
+      });
+      await notes.getByRole("link", { name: /Chapter 3/ }).click();
+      await expect(page).toHaveURL(/\/training\?lesson=cp-3$/);
+    },
+  );
+});

@@ -57,6 +57,32 @@ export interface TrainingDocument {
   notes: Record<string, Note>;
   /** The latest source of each drill, by item id. */
   code: Record<string, string>;
+  /** FSRS state by review key (reviews.ts), once a key has been reviewed. */
+  cards: Record<string, ReviewCard>;
+}
+
+/**
+ * One review key's FSRS card, as ts-fsrs keeps it, with dates as ISO
+ * strings. `relearning` is set from a miss until two correct answers on
+ * two later days (reviews.ts).
+ */
+export interface ReviewCard {
+  due: string;
+  stability: number;
+  difficulty: number;
+  scheduled_days: number;
+  learning_steps: number;
+  reps: number;
+  lapses: number;
+  /** ts-fsrs State: 0 new, 1 learning, 2 review, 3 relearning. */
+  state: 0 | 1 | 2 | 3;
+  last_review?: string;
+  relearning?: {
+    /** When it was missed, an ISO date and time. */
+    since: string;
+    /** Local dates after the miss with a correct answer, one per day. */
+    correct: string[];
+  };
 }
 
 export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
@@ -67,6 +93,7 @@ export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
   reviews: {},
   notes: {},
   code: {},
+  cards: {},
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -140,7 +167,54 @@ export function normalizeTraining(
     code: entries(value.code, (entry) =>
       typeof entry === "string" ? entry : null,
     ),
+    cards: entries(value.cards, normalizeCard),
   };
+}
+
+const isNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isDate = (value: unknown): value is string =>
+  typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+function normalizeCard(entry: unknown): ReviewCard | null {
+  if (!isRecord(entry) || !isIso(entry.due)) return null;
+  const numbers = [
+    "stability",
+    "difficulty",
+    "scheduled_days",
+    "learning_steps",
+    "reps",
+    "lapses",
+  ] as const;
+  if (!numbers.every((name) => isNumber(entry[name]))) return null;
+  if (
+    entry.state !== 0 &&
+    entry.state !== 1 &&
+    entry.state !== 2 &&
+    entry.state !== 3
+  )
+    return null;
+  const card: ReviewCard = {
+    due: entry.due,
+    stability: entry.stability as number,
+    difficulty: entry.difficulty as number,
+    scheduled_days: entry.scheduled_days as number,
+    learning_steps: entry.learning_steps as number,
+    reps: entry.reps as number,
+    lapses: entry.lapses as number,
+    state: entry.state,
+  };
+  if (isIso(entry.last_review)) card.last_review = entry.last_review;
+  const relearning = entry.relearning;
+  if (isRecord(relearning) && isIso(relearning.since))
+    card.relearning = {
+      since: relearning.since,
+      correct: Array.isArray(relearning.correct)
+        ? relearning.correct.filter(isDate)
+        : [],
+    };
+  return card;
 }
 
 /**
