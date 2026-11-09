@@ -8,10 +8,11 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { Link as RouterLink, useLocation, useSearchParams } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
-import { localDate } from "../core/dates";
-import { noSolves, overall, type Solves, unitStates } from "../core/progress";
+import { clock, localDate } from "../core/dates";
+import { overall, type Solves, unitStates } from "../core/progress";
 import { formatMinutes, locate, syllabus } from "../core/syllabus";
 import { today as planToday } from "../core/today";
+import { type JudgeLine, useSolves } from "../hooks/useSolves";
 import { useTraining } from "../hooks/useTraining";
 import LessonView from "./LessonView";
 import MapView from "./MapView";
@@ -21,6 +22,20 @@ import UnitView from "./UnitView";
 
 type View = "today" | "map" | "tools";
 const views: View[] = ["today", "map", "tools"];
+
+/** The rating line, with its source and the time it was read. */
+function judgeLine(
+  name: string,
+  status: string,
+  line: JudgeLine | null,
+): string {
+  if (status === "loading" || status === "idle") return `Reading ${name}.`;
+  if (!line) return `No ${name} handle set. Set one under Tools.`;
+  if (!line.ok) return `${name} did not answer. Manual ticks for now.`;
+  const rating =
+    line.rating == null ? "unrated" : `rated ${line.rating}, ${line.rank}`;
+  return `${name} ${line.handle}: ${rating}, ${line.ratedContests} rated contests, ${Object.keys(line.solved).length} problems solved (${name} API, read ${clock(line.readAt)}).`;
+}
 
 /**
  * /training: the syllabus as a course player. The address carries the
@@ -36,11 +51,16 @@ export default function TrainingPanel() {
   const [params] = useSearchParams();
   const location = useLocation();
   const owner = status === "owner";
-  const solves: Solves = noSolves;
+  const answer = useSolves(
+    owner,
+    document.settings.codeforces,
+    document.settings.atcoder,
+  );
+  const solves: Solves = answer.solves;
   const now = new Date();
   const states = useMemo(
     () => unitStates(document, solves, new Date()),
-    [document],
+    [document, solves],
   );
 
   const lessonId = params.get("lesson");
@@ -66,8 +86,8 @@ export default function TrainingPanel() {
     : 0;
 
   const total = overall(document, solves, states);
-  const contests: Contest[] = [];
-  const rating = "Codeforces rating is read live once verification lands.";
+  const contests: Contest[] = answer.contests;
+  const rating = judgeLine("Codeforces", answer.status, answer.codeforces);
 
   return (
     <Stack spacing={3}>
@@ -86,6 +106,27 @@ export default function TrainingPanel() {
         <Alert severity="warning">
           The last change was not saved. It is kept here and sent with the next
           one.
+        </Alert>
+      )}
+      {owner &&
+        answer.status === "ready" &&
+        (
+          [
+            ["Codeforces", answer.codeforces],
+            ["AtCoder Problems", answer.atcoder],
+          ] as const
+        ).map(([name, line]) =>
+          line && !line.ok ? (
+            <Alert key={name} severity="warning">
+              {name} did not answer for {line.handle}: {line.error}. Its
+              problems take manual ticks until it does.
+            </Alert>
+          ) : null,
+        )}
+      {owner && answer.status === "error" && (
+        <Alert severity="warning">
+          The judges could not be read. Their problems take manual ticks until
+          they can.
         </Alert>
       )}
       {owner && (
@@ -154,7 +195,10 @@ export default function TrainingPanel() {
           rating={rating}
         />
       ) : view === "tools" ? (
-        <ToolsView />
+        <ToolsView
+          settings={owner ? document.settings : undefined}
+          change={change}
+        />
       ) : (
         <MapView
           owner={owner}

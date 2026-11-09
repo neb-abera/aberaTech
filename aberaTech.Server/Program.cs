@@ -2,6 +2,7 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using aberaTech.Server;
 using aberaTech.Server.DevBox;
 using aberaTech.Server.Playbook;
+using aberaTech.Server.Training;
 using Azure.Core;
 using Azure.Identity;
 using aberaTech.Scheduling;
@@ -385,6 +386,29 @@ if (adminOptions.IsConfigured)
     }
 }
 
+// ---------------------------------------------------------------- training
+
+// /training reads the owner's solves from Codeforces and AtCoder Problems at
+// request time, owner only. Nothing is stored. Development with
+// Training:Fake answers from memory (FakeJudges.cs), for `make e2e`.
+if (adminOptions.IsConfigured)
+{
+    builder.Services.AddMemoryCache();
+    builder.Services.TryAddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton<JudgeReader>();
+    var judges = builder.Services.AddHttpClient(JudgeReader.ClientName, client =>
+    {
+        // A slow judge must not hold the page for the framework's 100 s.
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
+    });
+    if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Training:Fake"))
+    {
+        builder.Services.AddSingleton<FakeJudges>();
+        judges.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeJudges>());
+    }
+}
+
 // ---------------------------------------------------------------- calendar alerts
 
 // A Pushover message before each event on the owner's Google Calendar, read
@@ -662,11 +686,13 @@ if (adminOptions.IsConfigured)
     app.MapFitnessLessonsEndpoints(notionOptions);
     app.MapMarksmanshipEndpoints(notionOptions);
     app.MapTrainingPlanEndpoints(notionOptions);
+    app.MapTrainingEndpoints();
 }
 else
 {
     app.MapPlaybookUnavailable();
     app.MapTrainingPlanUnavailable();
+    app.MapTrainingUnavailable();
 }
 
 if (adminOptions.IsConfigured)

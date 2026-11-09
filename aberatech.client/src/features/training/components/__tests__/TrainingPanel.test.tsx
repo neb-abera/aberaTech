@@ -20,6 +20,24 @@ import TrainingPanel from "../TrainingPanel";
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
+const judgesUp = {
+  status: 200,
+  body: {
+    configured: true,
+    codeforces: {
+      handle: "Nebikinizer",
+      ok: true,
+      rating: null,
+      ratedContests: 0,
+      solved: { "2263B": "2026-11-10T09:40:00Z" },
+      readAt: "2026-11-10T10:00:00Z",
+    },
+    atcoder: null,
+    contests: [],
+  },
+};
+let judges: { status: number; body: unknown } = judgesUp;
+
 function visit(saved: unknown | "visitor") {
   fetchMock = vi.fn((url: string, options?: RequestInit) => {
     const path = String(url);
@@ -33,6 +51,8 @@ function visit(saved: unknown | "visitor") {
             ? respond(200, saved)
             : respond(404),
       );
+    if (path.startsWith("/api/training/solves"))
+      return Promise.resolve(respond(judges.status, judges.body));
     return Promise.resolve(respond(404));
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -55,6 +75,7 @@ const puts = () =>
   fetchMock.mock.calls.filter(([, options]) => options?.method === "PUT");
 
 beforeEach(() => {
+  judges = judgesUp;
   resetAccountProbeForTests();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
@@ -159,5 +180,36 @@ describe("the owner", () => {
         name: "C++ for contests: the language",
       }),
     ).toBeTruthy();
+  });
+
+  it("sees a Codeforces solve from the API, and an unsolved problem with no tick", async () => {
+    visit(null);
+    show("/training?lesson=band-900-1");
+    const solved = await screen.findByRole("article", {
+      name: /Codeforces 2263B/,
+    });
+    expect(await within(solved).findByText(/\(Codeforces API\)/)).toBeTruthy();
+    expect(within(solved).queryByRole("checkbox")).toBeNull();
+    const open = screen.getByRole("article", { name: /Codeforces 2254B/ });
+    expect(
+      within(open).getByText(/counts when the Codeforces API sees it solved/),
+    ).toBeTruthy();
+    expect(within(open).queryByRole("checkbox")).toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes("/api/training/solves?codeforces=Nebikinizer"),
+      ),
+    ).toBe(true);
+  });
+
+  it("ticks a Codeforces problem by hand when the judges cannot be read", async () => {
+    judges = { status: 502, body: null };
+    visit(null);
+    show("/training?lesson=band-900-1");
+    expect(
+      await screen.findByText(/The judges could not be read/),
+    ).toBeTruthy();
+    const open = screen.getByRole("article", { name: /Codeforces 2254B/ });
+    expect(within(open).getByRole("checkbox")).toBeTruthy();
   });
 });

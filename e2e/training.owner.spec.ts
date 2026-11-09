@@ -1,8 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { openAsOwner } from "./owner-session";
 
-// /training as the owner, against the compose app and the owner document
-// in its database. The clock is
+// /training as the owner, against the compose app: the owner document in
+// its database and the judges in memory (FakeJudges.cs, which says
+// Nebikinizer solved Codeforces 2263B and was wrong on 2254B). The clock is
 // fixed at Tue 10 Nov 2026, a programming day in Phase 0. Every change is
 // undone before the test ends, since the three engines share one server.
 
@@ -53,4 +54,21 @@ test("the owner ticks an item and it survives a reload", async ({ page }) => {
   expect((await put).ok()).toBe(true);
   await page.reload();
   await expect(box).not.toBeChecked({ timeout: 15_000 });
+});
+
+test("a problem Codeforces reports solved shows solved, and an unsolved one stays open", async ({
+  page,
+}) => {
+  await open(page, "/training?lesson=band-900-1");
+  const solved = page.getByRole("article", { name: /Codeforces 2263B/ });
+  await expect(solved.getByTestId("item-status")).toContainText(
+    "(Codeforces API)",
+    { timeout: 15_000 },
+  );
+  await expect(solved.getByRole("checkbox")).toHaveCount(0);
+  const open2254 = page.getByRole("article", { name: /Codeforces 2254B/ });
+  await expect(open2254.getByTestId("item-status")).toContainText(
+    "counts when the Codeforces API sees it solved",
+  );
+  await expect(open2254.getByRole("checkbox")).toHaveCount(0);
 });
