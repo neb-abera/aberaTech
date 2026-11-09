@@ -1,6 +1,6 @@
 {
   "checkedOn": "2026-11-09",
-  "total": 1073,
+  "total": 1112,
   "about": "How every address in syllabus.json was opened on 9 Nov 2026. fetch: a plain request. browser: Chrome on the dev box, for hosts that refuse plain requests. archive: the Internet Archive, for a page behind a human check. source: the address as AoPS links it on its own videos page.",
   "links": {
     "https://artofproblemsolving.com/alcumus": {
@@ -3452,6 +3452,11 @@
       "status": 200,
       "title": "CSES - Two Knights"
     },
+    "https://cses.fi/problemset/task/1073": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Towers"
+    },
     "https://cses.fi/problemset/task/1074": {
       "how": "fetch",
       "status": 200,
@@ -3652,6 +3657,11 @@
       "status": 200,
       "title": "CSES - Bit Strings"
     },
+    "https://cses.fi/problemset/task/1618": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Trailing Zeros"
+    },
     "https://cses.fi/problemset/task/1619": {
       "how": "fetch",
       "status": 200,
@@ -3726,6 +3736,11 @@
       "how": "fetch",
       "status": 200,
       "title": "CSES - Maximum Subarray Sum"
+    },
+    "https://cses.fi/problemset/task/1645": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Nearest Smaller Values"
     },
     "https://cses.fi/problemset/task/1646": {
       "how": "fetch",
@@ -3947,6 +3962,11 @@
       "status": 200,
       "title": "CSES - Josephus Queries"
     },
+    "https://cses.fi/problemset/task/2165": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Tower of Hanoi"
+    },
     "https://cses.fi/problemset/task/2166": {
       "how": "fetch",
       "status": 200,
@@ -4006,6 +4026,11 @@
       "how": "fetch",
       "status": 200,
       "title": "CSES - Convex Hull"
+    },
+    "https://cses.fi/problemset/task/2205": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Gray Code"
     },
     "https://cses.fi/problemset/task/2206": {
       "how": "fetch",
@@ -4096,6 +4121,96 @@
       "how": "fetch",
       "status": 200,
       "title": "CSES - Maximum Manhattan Distances"
+    },
+    "https://en.cppreference.com/w/cpp": {
+      "how": "archive",
+      "status": 200,
+      "title": "C++ reference - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-20."
+    },
+    "https://en.cppreference.com/w/cpp/algorithm/next_permutation": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::next_permutation - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-04-18."
+    },
+    "https://en.cppreference.com/w/cpp/algorithm/partial_sum": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::partial_sum - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-04-29."
+    },
+    "https://en.cppreference.com/w/cpp/algorithm/sort": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::sort - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-21."
+    },
+    "https://en.cppreference.com/w/cpp/algorithm/unique": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::unique - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-03."
+    },
+    "https://en.cppreference.com/w/cpp/container/deque": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::deque - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-21."
+    },
+    "https://en.cppreference.com/w/cpp/container/map": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::map - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-25."
+    },
+    "https://en.cppreference.com/w/cpp/container/priority_queue": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::priority_queue - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-21."
+    },
+    "https://en.cppreference.com/w/cpp/container/set": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::set - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-21."
+    },
+    "https://en.cppreference.com/w/cpp/container/set/lower_bound": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::set<Key,Compare,Allocator>::lower_bound - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-12-08."
+    },
+    "https://en.cppreference.com/w/cpp/container/stack": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::stack - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-21."
+    },
+    "https://en.cppreference.com/w/cpp/container/vector": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::vector - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-26."
+    },
+    "https://en.cppreference.com/w/cpp/language/lambda": {
+      "how": "archive",
+      "status": 200,
+      "title": "Lambda expressions (since C++11) - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-23."
+    },
+    "https://en.cppreference.com/w/cpp/language/types": {
+      "how": "archive",
+      "status": 200,
+      "title": "Fundamental types - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-27."
+    },
+    "https://en.cppreference.com/w/cpp/string/basic_string": {
+      "how": "archive",
+      "status": 200,
+      "title": "std::basic_string - cppreference.com",
+      "note": "Cloudflare holds even the dev box's Chrome at its human check. The Internet Archive holds a 200 snapshot from 2025-05-23."
     },
     "https://kenkoooo.com/atcoder/": {
       "how": "fetch",
@@ -4941,6 +5056,101 @@
       "how": "fetch",
       "status": 200,
       "title": "Evan Chen • Olympiad Training for Individual Study (OTIS)"
+    },
+    "https://www.learncpp.com/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Learn C++ – Skill up with our free tutorials"
+    },
+    "https://www.learncpp.com/cpp-tutorial/fixed-width-integers-and-size-t/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "4.6 — Fixed-width integers and size_t – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "20.6 — Introduction to lambdas (anonymous functions) – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-standard-library-algorithms/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "18.3 — Introduction to standard library algorithms – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-stdstring/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "5.7 — Introduction to std::string – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-stdstring_view/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "5.8 — Introduction to std::string_view – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-stdvector-and-list-constructors/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "16.2 — Introduction to std::vector and list constructors – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/introduction-to-structs-members-and-member-selection/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "13.7 — Introduction to structs, members, and member selection – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/lambda-captures/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "20.7 — Lambda captures – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/lvalue-references/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "12.3 — Lvalue references – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/pass-by-const-lvalue-reference/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "12.6 — Pass by const lvalue reference – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/pass-by-lvalue-reference/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "12.5 — Pass by lvalue reference – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/range-based-for-loops-for-each/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "16.8 — Range-based for loops (for-each) – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/signed-integers/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "4.4 — Signed integers – Learn C++"
+    },
+    "https://www.learncpp.com/cpp-tutorial/unsigned-integers-and-why-to-avoid-them/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "4.5 — Unsigned integers, and why to avoid them – Learn C++"
+    },
+    "https://www.udemy.com/course/cpp-4skills/": {
+      "how": "browser",
+      "status": 200,
+      "title": "Mastering 4 critical SKILLS using C++ 17"
+    },
+    "https://www.udemy.com/course/dscpp-skills/": {
+      "how": "browser",
+      "status": 200,
+      "title": "Mastering critical SKILLS in Data Structures using C++"
+    },
+    "https://www.udemy.com/course/skills-algorithms-cpp/": {
+      "how": "browser",
+      "status": 200,
+      "title": "Mastering critical SKILLS in Algorithms using C++: Part 1"
+    },
+    "https://www.udemy.com/course/skills-algorithms-cpp2/": {
+      "how": "browser",
+      "status": 200,
+      "title": "Mastering critical SKILLS in Algorithms using C++: Part 2"
     },
     "https://www.wiley.com/en-us/The+Art+and+Craft+of+Problem+Solving%2C+3rd+Edition-p-9781119239901": {
       "how": "fetch",

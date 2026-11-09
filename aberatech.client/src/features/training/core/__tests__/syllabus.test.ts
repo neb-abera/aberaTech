@@ -9,6 +9,7 @@ import {
   locate,
   phaseOn,
   syllabus,
+  unitMinutes,
   unitsOf,
 } from "../syllabus";
 
@@ -79,8 +80,12 @@ describe("the syllabus", () => {
     }
   });
 
-  it("starts each track from the basics and keeps them", () => {
-    expect(unitsOf("programming")[0].id).toBe("cpp-basics");
+  it("starts each track with the refresher, then the basics, and keeps them", () => {
+    expect(unitsOf("programming")[0].id).toBe("refresh-cpp");
+    expect(unitsOf("math")[0].id).toBe("refresh-algebra");
+    expect(unitsOf("programming").map((unit) => unit.id)).toContain(
+      "cpp-basics",
+    );
     expect(unitsOf("math").map((unit) => unit.id)).toEqual(
       expect.arrayContaining([
         "prealgebra-1",
@@ -108,7 +113,12 @@ describe("the syllabus", () => {
       .filter((unit) => unit.lessons.length > 0 && !unit.checkpoint)
       .map((unit) => unit.id);
     expect(without).toEqual([
+      "refresh-cpp",
+      "refresh-stl",
+      "refresh-complexity",
       "cpp-toolkit",
+      "refresh-dsa",
+      "refresh-algebra",
       "first-contest",
       "amc-baseline",
       "amc12-gate",
@@ -117,6 +127,38 @@ describe("the syllabus", () => {
       "edpc",
       "ac-bands",
     ]);
+  });
+
+  it("opens Phase 0 with a refresher of 3 to 5 weeks at the plan's pace, before any placement", () => {
+    const refresher = syllabus.units.filter(
+      (unit) => unit.id.startsWith("refresh-") || unit.id === "cpp-toolkit",
+    );
+    const minutes = refresher.reduce((sum, unit) => sum + unitMinutes(unit), 0);
+    const week = syllabus.phases[0].hoursPerWeek * 60;
+    expect(minutes).toBeGreaterThanOrEqual(3 * week);
+    expect(minutes).toBeLessThanOrEqual(5 * week);
+    for (const track of ["math", "programming"] as const) {
+      const units = unitsOf(track).filter((unit) => !unit.slot);
+      const firstPlacement = units.findIndex((unit) => unit.checkpoint);
+      const lastRefresher = Math.max(
+        ...units.map((unit, index) => (refresher.includes(unit) ? index : -1)),
+      );
+      expect(lastRefresher, track).toBeLessThan(firstPlacement);
+    }
+  });
+
+  it("ends every C++ and STL refresher lesson in drills with tests", () => {
+    for (const id of ["refresh-cpp", "refresh-stl"]) {
+      const unit = syllabus.units.find((each) => each.id === id);
+      for (const lesson of unit?.lessons ?? []) {
+        const drills = lesson.items.filter((item) => item.drill);
+        expect(drills.length, lesson.id).toBeGreaterThan(0);
+        for (const item of drills) {
+          expect(item.record, item.id).toBe("drill");
+          expect(item.drill?.tests.length, item.id).toBeGreaterThanOrEqual(3);
+        }
+      }
+    }
   });
 
   it("splits each written phase's week to its hours from the plan", () => {

@@ -46,6 +46,10 @@ never hold back or count toward a unit.
 | AtCoder problems and difficulties | AtCoder Problems, `problems.json` and `problem-models.json`            |
 | Educational DP Contest tasks      | atcoder.jp/contests/dp/tasks                                           |
 | Zeitz, third edition              | Wiley's table of contents                                              |
+| learncpp.com lessons              | learncpp.com's table of contents, by lesson number                     |
+| Saad's Udemy sections and lengths | Each course's public curriculum on Udemy, read in Chrome               |
+| cppreference pages                | Internet Archive snapshots. Cloudflare holds Chrome at a human check.  |
+| Alcumus topics                    | The topic list in Neb's Alcumus, read in Chrome                        |
 
 Minutes for reading are 3 a page, an estimate, and each item says so.
 
@@ -90,3 +94,8 @@ Compiler Explorer's public API (gcc 16.2, `-O2 -std=c++23`), and compares
 the output with the test, ignoring trailing spaces and blank lines. No
 code runs in the site's container. Each drill's expected output came from a
 reference solution compiled and run on the dev box on 9 Nov 2026.
+
+The refresher at the start of Phase 0 adds twelve drills, one or more for
+each C++ and STL topic. Each drill's expected output came from a Python
+model of the task, and a C++ reference solution compiled with gcc 16.2,
+`-O2 -std=c++23`, in a container on the dev box matched it on every test.

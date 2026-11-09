@@ -275,10 +275,11 @@ describe("the units", () => {
 
   it("open one at a time in each track", () => {
     const states = unitStates(emptyTraining(), noSolves, now);
-    expect(states.get("cpp-basics")?.state).toBe("open");
-    expect(states.get("cpp-toolkit")).toMatchObject({ state: "waiting" });
-    expect(states.get("amc-baseline")?.state).toBe("open");
-    expect(states.get("prealgebra-1")).toMatchObject({ state: "waiting" });
+    expect(states.get("refresh-cpp")?.state).toBe("open");
+    expect(states.get("refresh-stl")).toMatchObject({ state: "waiting" });
+    expect(states.get("cpp-basics")).toMatchObject({ state: "waiting" });
+    expect(states.get("refresh-algebra")?.state).toBe("open");
+    expect(states.get("amc-baseline")).toMatchObject({ state: "waiting" });
     expect(states.get("p3-chen")?.state).toBe("locked");
   });
 
@@ -297,7 +298,7 @@ describe("the units", () => {
       at: "2026-11-10T10:20:00.000Z",
       started: now.toISOString(),
     });
-    expect(states.get("cpp-toolkit")?.state).toBe("open");
+    expect(states.get("bronze-1")?.state).toBe("open");
   });
 
   it("count a placed-out unit whole in the overall progress", () => {
