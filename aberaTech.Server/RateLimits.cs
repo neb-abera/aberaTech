@@ -69,6 +69,7 @@ public static class RateLimits
             var startPerMinute = configuration.GetValue("RateLimits:DevBoxStartPerMinute", DefaultDevBoxStartPerMinute);
             var heartbeatPerMinute = configuration.GetValue("RateLimits:DevBoxHeartbeatPerMinute", DefaultDevBoxHeartbeatPerMinute);
             var alertsPerMinute = configuration.GetValue("RateLimits:AlertsActionsPerMinute", AlertsEndpoints.DefaultActionsPerMinute);
+            var drillsPerMinute = configuration.GetValue("RateLimits:DrillsPerMinute", aberaTech.Server.Training.TrainingEndpoints.DefaultDrillsPerMinute);
             var pushoverCallbacksPerMinute = configuration.GetValue("RateLimits:PushoverCallbacksPerMinute", PushoverCallback.DefaultPerMinute);
 
             // Everything a stranger can call that writes a row or causes a
@@ -104,6 +105,11 @@ public static class RateLimits
             // names a stored receipt asks Pushover once, so this also bounds
             // what a forger can make the server ask.
             options.AddPolicy(PushoverCallback.Policy, context => PerMinute(context, pushoverCallbacksPerMinute));
+
+            // /training's drill runs. Each sends one Compiler Explorer call
+            // per test, and that service is shared and free. The owner runs
+            // a drill a few times; ten a minute is a loop.
+            options.AddPolicy(aberaTech.Server.Training.TrainingEndpoints.DrillPolicy, context => PerMinute(context, drillsPerMinute));
         });
 
     /// <summary>Applies <see cref="GuessedRoutes"/>. After routing, which is what names the route.</summary>

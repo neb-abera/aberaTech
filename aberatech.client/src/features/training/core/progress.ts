@@ -50,6 +50,8 @@ export interface TrainingDocument {
   reviews: Record<string, string>;
   /** By lesson id or item id. */
   notes: Record<string, Note>;
+  /** The latest source of each drill, by item id. */
+  code: Record<string, string>;
 }
 
 export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
@@ -59,6 +61,7 @@ export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
   checkpoints: {},
   reviews: {},
   notes: {},
+  code: {},
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -124,6 +127,9 @@ export function normalizeTraining(
         ? { text: entry.text, at: entry.at }
         : null,
     ),
+    code: entries(value.code, (entry) =>
+      typeof entry === "string" ? entry : null,
+    ),
   };
 }
 
@@ -145,7 +151,7 @@ export interface Solves {
 
 export const noSolves: Solves = { codeforces: null, atcoder: null };
 
-export type DoneBy = "manual" | "codeforces" | "atcoder";
+export type DoneBy = "manual" | "codeforces" | "atcoder" | "drill";
 
 export interface ItemStatus {
   done: boolean;
@@ -194,7 +200,7 @@ export function itemStatus(
     return {
       done: true,
       at: record.at,
-      by: "manual",
+      by: item.record === "drill" ? "drill" : "manual",
       missed,
       verified: false,
       score: record.score,
@@ -208,6 +214,7 @@ export function itemStatus(
  * may still be an AtCoder one, so it keeps its tick.
  */
 export function canTick(item: Item, solves: Solves): boolean {
+  if (item.record === "drill") return false;
   if (item.record === "manual" || item.record === "codeforces-rated")
     return true;
   return judgeFor(item, solves) === null;
@@ -236,6 +243,27 @@ export function setMissed(
   if (missed) next.missed = true;
   else delete next.missed;
   return { ...document, items: { ...document.items, [id]: next } };
+}
+
+/** A drill passed every test: done now. */
+export function passDrill(
+  document: TrainingDocument,
+  id: string,
+  now: Date,
+): TrainingDocument {
+  if (document.items[id]) return document;
+  return {
+    ...document,
+    items: { ...document.items, [id]: { at: now.toISOString() } },
+  };
+}
+
+export function setCode(
+  document: TrainingDocument,
+  id: string,
+  source: string,
+): TrainingDocument {
+  return { ...document, code: { ...document.code, [id]: source } };
 }
 
 export function setScore(

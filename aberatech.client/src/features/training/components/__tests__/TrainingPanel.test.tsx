@@ -37,6 +37,7 @@ const judgesUp = {
   },
 };
 let judges: { status: number; body: unknown } = judgesUp;
+let drillRun: { status: number; body: unknown } = { status: 404, body: null };
 
 function visit(saved: unknown | "visitor") {
   fetchMock = vi.fn((url: string, options?: RequestInit) => {
@@ -51,6 +52,8 @@ function visit(saved: unknown | "visitor") {
             ? respond(200, saved)
             : respond(404),
       );
+    if (path === "/api/training/drills/run")
+      return Promise.resolve(respond(drillRun.status, drillRun.body));
     if (path.startsWith("/api/training/solves"))
       return Promise.resolve(respond(judges.status, judges.body));
     return Promise.resolve(respond(404));
@@ -225,5 +228,56 @@ describe("the owner", () => {
     const body = JSON.parse(String(puts()[puts().length - 1]?.[1]?.body));
     expect(body.notes["cp-3"].text).toBe("Divide by the symmetries.");
     expect(await screen.findByText(/^Kept /)).toBeTruthy();
+  });
+
+  it("runs a drill, sees each test, and passing every one marks it done", async () => {
+    drillRun = {
+      status: 200,
+      body: {
+        compiled: true,
+        tests: [
+          { passed: true, actual: "5" },
+          { passed: false, actual: "1", error: null },
+          { passed: true, actual: "999999999999999999" },
+        ],
+      },
+    };
+    visit(null);
+    show("/training?lesson=cpp-drills");
+    const drill = await screen.findByRole("region", {
+      name: "Drill: Read two numbers, print their sum",
+    });
+    const editor = within(drill).getByRole("textbox", { name: "Your C++" });
+    fireEvent.change(editor, { target: { value: "int main() {}" } });
+    fireEvent.click(within(drill).getByRole("button", { name: "Run 3 tests" }));
+    expect(await within(drill).findByText("2 of 3 tests passed.")).toBeTruthy();
+    expect(within(drill).getByText("Test 2: failed")).toBeTruthy();
+    const run = fetchMock.mock.calls.find(
+      ([url]) => String(url) === "/api/training/drills/run",
+    );
+    const sent = JSON.parse(String(run?.[1]?.body));
+    expect(sent.source).toBe("int main() {}");
+    expect(sent.tests).toHaveLength(3);
+
+    drillRun = {
+      status: 200,
+      body: {
+        compiled: true,
+        tests: [
+          { passed: true, actual: "5" },
+          { passed: true, actual: "0" },
+          { passed: true, actual: "999999999999999999" },
+        ],
+      },
+    };
+    fireEvent.click(within(drill).getByRole("button", { name: "Run 3 tests" }));
+    expect(await within(drill).findByText("3 of 3 tests passed.")).toBeTruthy();
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    await settle();
+    const body = JSON.parse(String(puts()[puts().length - 1]?.[1]?.body));
+    expect(body.items["drill-sum"]).toBeTruthy();
+    expect(body.code["drill-sum"]).toBe("int main() {}");
   });
 });

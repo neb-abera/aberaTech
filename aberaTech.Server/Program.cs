@@ -402,10 +402,20 @@ if (adminOptions.IsConfigured)
         client.Timeout = TimeSpan.FromSeconds(15);
         client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
     });
+    builder.Services.AddSingleton<DrillRunner>();
+    // Compiler Explorer queues a compile behind the site's own users. A run
+    // of a few tests is seconds; a minute is the ceiling.
+    var compilerExplorer = builder.Services.AddHttpClient(DrillRunner.ClientName, client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(60);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
+    });
     if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Training:Fake"))
     {
         builder.Services.AddSingleton<FakeJudges>();
         judges.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeJudges>());
+        builder.Services.AddSingleton<FakeCompilerExplorer>();
+        compilerExplorer.ConfigurePrimaryHttpMessageHandler(services => services.GetRequiredService<FakeCompilerExplorer>());
     }
 }
 

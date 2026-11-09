@@ -26,11 +26,13 @@ import {
   kindLabel,
   systemOf,
 } from "../core/syllabus";
+import DrillPanel from "./DrillPanel";
 
 const byLabel: Record<string, string> = {
   manual: "ticked by hand",
   codeforces: "Codeforces API",
   atcoder: "AtCoder Problems API",
+  drill: "every test passed on the page",
 };
 
 export function statusText(status: ItemStatus): string {
@@ -156,6 +158,15 @@ export default function ItemCard({
           </Link>
         ))}
         <Videos item={item} />
+        {item.drill && (
+          <DrillPanel
+            item={item}
+            drill={item.drill}
+            owner={owner}
+            document={document}
+            change={change}
+          />
+        )}
         {owner && (
           <Stack
             direction="row"
@@ -195,7 +206,10 @@ export default function ItemCard({
               sx={{ color: status.done ? "success.main" : "text.secondary" }}
             >
               {statusText(status)}
-              {!tickable && !status.done
+              {item.record === "drill" && !status.done
+                ? " (done when every test passes)"
+                : ""}
+              {!tickable && !status.done && item.record !== "drill"
                 ? ` (counts when the ${item.record === "atcoder" ? "AtCoder Problems" : "Codeforces"} API sees it solved)`
                 : ""}
               {tickable && item.record !== "manual" && item.problem

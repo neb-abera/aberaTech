@@ -9,6 +9,11 @@ import { openAsOwner } from "./owner-session";
 
 const ready = '[aria-label="Overall progress"]';
 
+// One document holds all of /training's state, and each save sends the
+// whole of it. Two tests saving at once would put one's copy over the
+// other's, so this file runs its tests one at a time.
+test.describe.configure({ mode: "serial" });
+
 async function open(page: Page, path: string) {
   await page.clock.setFixedTime(new Date("2026-11-10T10:00:00"));
   await openAsOwner(page, path, ready);
@@ -53,6 +58,12 @@ test("the owner ticks an item and writes a note, and both survive a reload", asy
   });
   const note = page.getByRole("textbox", { name: "Lesson notes" });
   const text = `e2e ${test.info().project.name}`;
+  // A run stopped halfway can leave the tick on a long-lived database.
+  if (await box.isChecked()) {
+    const cleared = saved(page);
+    await box.uncheck();
+    await cleared;
+  }
 
   let put = saved(page);
   await box.check();
@@ -67,6 +78,8 @@ test("the owner ticks an item and writes a note, and both survive a reload", asy
 
   put = saved(page);
   await box.uncheck();
+  expect((await put).ok()).toBe(true);
+  put = saved(page);
   await note.fill("");
   expect((await put).ok()).toBe(true);
   await page.reload();
@@ -89,4 +102,34 @@ test("a problem Codeforces reports solved shows solved, and an unsolved one stay
     "counts when the Codeforces API sees it solved",
   );
   await expect(open2254.getByRole("checkbox")).toHaveCount(0);
+});
+
+test("a drill runs against its tests and shows which failed", async ({
+  page,
+}) => {
+  await open(page, "/training?lesson=cpp-drills");
+  const drill = page.getByRole("region", {
+    name: "Drill: Read two numbers, print their sum",
+  });
+  const editor = drill.getByRole("textbox", { name: "Your C++" });
+
+  // Compiler Explorer is faked under `make e2e` (FakeCompilerExplorer.cs):
+  // "// fake: sum" prints the sum of the input, anything else prints nothing.
+  await editor.fill("int main() {}");
+  await drill.getByRole("button", { name: "Run 3 tests" }).click();
+  await expect(drill.getByText("0 of 3 tests passed.")).toBeVisible();
+  await expect(drill.getByText("Test 1: failed")).toBeVisible();
+
+  await editor.fill("#error broken");
+  await drill.getByRole("button", { name: "Run 3 tests" }).click();
+  await expect(drill.getByText("No test ran.")).toBeVisible();
+
+  await editor.fill("int main() {} // fake: sum");
+  await drill.getByRole("button", { name: "Run 3 tests" }).click();
+  await expect(drill.getByText("3 of 3 tests passed.")).toBeVisible();
+  await expect(
+    page
+      .getByRole("article", { name: "Read two numbers, print their sum" })
+      .getByTestId("item-status"),
+  ).toContainText("every test passed on the page");
 });
