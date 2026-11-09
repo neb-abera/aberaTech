@@ -310,6 +310,7 @@ export default function TodayView({
   session,
   setSession,
   keepGoing,
+  pool,
 }: {
   next: NextUp;
   pace: Pace;
@@ -320,6 +321,8 @@ export default function TodayView({
   session: number | undefined;
   setSession: (minutes: number | null) => void;
   keepGoing: () => void;
+  /** This week's problems from Mostafa Saad's pool. */
+  pool?: ReactNode;
 }) {
   const fallback = next.session;
   return (
@@ -392,6 +395,7 @@ export default function TodayView({
           </Button>
         )}
       </Stack>
+      {pool}
       <PacePanel pace={pace} next={next} />
       <ScheduledPanel contests={contests} firstContest={firstContest} />
     </Stack>

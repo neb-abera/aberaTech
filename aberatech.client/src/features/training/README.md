@@ -18,6 +18,7 @@ programming: systems design (9 Nov 2026)". The plan it delivers is
   `/api/progress`), item status, checkpoints, and unit states.
 - `/api/progress/training`: owner only, server side. A visitor never asks
   for it.
+- `/api/training/pool`: Mostafa Saad's pool, owner only, read live.
 
 ## Self-paced
 
@@ -138,10 +139,27 @@ Under `make e2e` the server sends two sample questions
 (`aberaTech.Server/Training/FakeAssessment.cs`), and `core/fixture.ts` adds
 them to the C++ refresher. Production sends none.
 
-## Increments not built yet
+## Problem pool and solve log
 
-1. Problem pool and solve log: Mostafa Saad's supervision pool, his time log
-   per solve, speed drills, and his weekly checklist.
+Next up lists ten problems a week from Mostafa Saad's supervision pool. The
+server reads his public sheet (the General list, sorted by level) as CSV at
+`/api/training/pool`, owner only, and holds it in memory for at most an hour.
+Nothing is stored. It keeps importance P5 to P3. `core/saad.ts` picks by his
+mix around your level: 1 below, 2 at, 6 slightly above, and 1 far above.
+Solved problems are left out, by the Codeforces API and by the log.
+
+Your level is the open band unit's rating (`band-1000` is 1000), else your
+Codeforces rating, else 800. A rating maps to his scale by his table (Div. 2
+A 1 to 2, B 1.5 to 3, C 3 to 5.5, D 5 to 6.5, E 6 to 7.5) at the median
+Codeforces rating of each Div. 2 letter, read from the Codeforces API on 9 Nov
+2026: A 800, B 1200, C 1600, D 1900, E 2300.
+
+The Log tab keeps his columns per solve: reading, thinking, coding, and
+debugging minutes, submissions, and alone, with a hint, or after the
+editorial. It shows weekly averages, flags reading over 5 minutes and coding
+or debugging over 10 (his marks), times speed drills against his targets
+(Div. 2 A in 5 minutes, B in 10), and holds his weekly checklist from the
+Junior Training Sheet.
 
 ## Drills
 

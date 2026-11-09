@@ -355,3 +355,75 @@ test("a failed mastery check shows each wrong answer's reference and opens again
     },
   );
 });
+
+test("the pool picks ten by Saad's mix, and a logged solve shows in the week's averages", async ({
+  page,
+}) => {
+  // The sheet is in memory under `make e2e` (FakeSaadSheet.cs). The fake
+  // Codeforces handle is unrated and no band unit is open, so the level is
+  // Div. 2 A's: 800, level 1.50.
+  await open(page, "/training");
+  await withDocument(
+    page,
+    () => ({}),
+    async () => {
+      await page.reload();
+      const pool = page.getByRole("region", { name: "Problem pool" });
+      await expect(pool).toContainText("Your level: 1.50, from 800", {
+        timeout: 15_000,
+      });
+      await expect(pool.getByRole("listitem")).toHaveCount(10);
+      await expect(
+        pool.getByRole("link", { name: "CF1-D2-A" }),
+      ).toHaveAttribute("href", "https://codeforces.com/contest/1/problem/A");
+
+      await pool
+        .getByRole("listitem")
+        .filter({ hasText: "CF7-D2-C" })
+        .getByRole("link", { name: "Log it" })
+        .click();
+      await expect(page).toHaveURL(/view=log&problem=CF7-D2-C$/);
+      const form = page.getByRole("region", { name: "Log a solve" });
+      await expect(form.getByRole("textbox", { name: "Problem" })).toHaveValue(
+        "CF7-D2-C",
+      );
+      await expect(form).toContainText("From his pool: level 3, P5.");
+      await form.getByRole("spinbutton", { name: "Reading, min" }).fill("4");
+      await form.getByRole("spinbutton", { name: "Thinking, min" }).fill("30");
+      await form.getByRole("spinbutton", { name: "Coding, min" }).fill("12");
+      await form.getByRole("spinbutton", { name: "Submissions" }).fill("2");
+      await form.getByRole("radio", { name: "With a hint" }).check();
+      const put = saved(page);
+      await form.getByRole("button", { name: "Log it" }).click();
+      expect((await put).ok()).toBe(true);
+
+      const week = page
+        .getByRole("table", { name: "Averages by week" })
+        .getByRole("row")
+        .nth(1);
+      await expect(week).toContainText("9 Nov");
+      await expect(week.getByRole("cell").nth(1)).toHaveText("1");
+      await expect(week.getByRole("cell").nth(2)).toHaveText("4");
+      await expect(week.getByRole("cell").nth(6)).toHaveText("46");
+      await expect(week.getByRole("cell").nth(8)).toHaveText("0, 1, 0");
+
+      // Logged problems leave the pool's picks.
+      await page.getByRole("tab", { name: "Next up" }).click();
+      await expect(
+        page
+          .getByRole("region", { name: "Problem pool" })
+          .getByRole("link", { name: "CF7-D2-C" }),
+      ).toHaveCount(0);
+
+      // The weekly review keeps its ticks.
+      await page.getByRole("tab", { name: "Log" }).click();
+      const review = page.getByRole("region", { name: "Weekly review" });
+      const tick = saved(page);
+      await review
+        .getByRole("checkbox", { name: "Coded within 10 minutes?" })
+        .check();
+      expect((await tick).ok()).toBe(true);
+      await expect(review).toContainText(`1 of 20 held.`);
+    },
+  );
+});

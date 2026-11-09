@@ -14,6 +14,7 @@ import {
   placementState,
   quizTaken,
 } from "./assessment";
+import type { Help, Solve, SpeedDrill } from "./log";
 import {
   allItems,
   type Item,
@@ -70,6 +71,12 @@ export interface TrainingDocument {
   assessments: Record<string, Attempt[]>;
   /** Outside checks recorded by hand, by "placement:<unit>" or "mastery:<unit>". */
   external: Record<string, ExternalRecord>;
+  /** The solve log, oldest first (log.ts). */
+  log: Solve[];
+  /** A speed drill's running timer. */
+  speed?: SpeedDrill;
+  /** Saad's weekly checklist, by the Monday of the week: yes or no per line. */
+  weekly: Record<string, boolean[]>;
 }
 
 /**
@@ -107,6 +114,8 @@ export const emptyTraining = (from: Syllabus = syllabus): TrainingDocument => ({
   cards: {},
   assessments: {},
   external: {},
+  log: [],
+  weekly: {},
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -189,6 +198,27 @@ export function normalizeTraining(
           })
         : null,
     ),
+    log: Array.isArray(value.log)
+      ? value.log.flatMap((entry) => {
+          const kept = normalizeSolve(entry);
+          return kept ? [kept] : [];
+        })
+      : [],
+    ...(isRecord(value.speed) &&
+    (value.speed.drill === "A" || value.speed.drill === "B") &&
+    typeof value.speed.problem === "string" &&
+    isIso(value.speed.started)
+      ? {
+          speed: {
+            drill: value.speed.drill,
+            problem: value.speed.problem.slice(0, 300),
+            started: value.speed.started,
+          },
+        }
+      : {}),
+    weekly: entries(value.weekly, (entry) =>
+      Array.isArray(entry) ? entry.map((answer) => answer === true) : null,
+    ),
     external: entries(value.external, (entry) => {
       if (!isRecord(entry) || !isIso(entry.at)) return null;
       return isNumber(entry.score)
@@ -196,6 +226,34 @@ export function normalizeTraining(
         : { at: entry.at };
     }),
   };
+}
+
+const minutes = (value: unknown): number =>
+  isNumber(value) && value >= 0 ? Math.min(Math.round(value), 24 * 60) : 0;
+
+function normalizeSolve(value: unknown): Solve | null {
+  if (!isRecord(value) || !isIso(value.at) || typeof value.id !== "string")
+    return null;
+  if (typeof value.problem !== "string" || value.problem.trim() === "")
+    return null;
+  const help: Help =
+    value.help === "hint" || value.help === "editorial" ? value.help : "alone";
+  const solve: Solve = {
+    id: value.id.slice(0, 40),
+    at: value.at,
+    problem: value.problem.slice(0, 300),
+    read: minutes(value.read),
+    think: minutes(value.think),
+    code: minutes(value.code),
+    debug: minutes(value.debug),
+    submissions: Math.min(minutes(value.submissions), 999),
+    help,
+  };
+  if (typeof value.url === "string" && /^https:\/\//.test(value.url))
+    solve.url = value.url.slice(0, 300);
+  if (isNumber(value.level)) solve.level = value.level;
+  if (value.drill === "A" || value.drill === "B") solve.drill = value.drill;
+  return solve;
 }
 
 function normalizeAttempt(value: unknown): Attempt | null {
