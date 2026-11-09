@@ -83,7 +83,12 @@ describe("a visitor", () => {
   it("reads a lesson with its pointers and no controls", async () => {
     visit("visitor");
     show("/training?lesson=cp-3");
-    await screen.findByRole("link", { name: "Sign in with Google" });
+    const signIn = await screen.findByRole("link", {
+      name: "Sign in with Google",
+    });
+    expect(signIn.getAttribute("href")).toBe(
+      "/api/scheduling/admin/sign-in?returnUrl=%2Ftraining%3Flesson%3Dcp-3",
+    );
     const read = screen.getByRole("article", {
       name: /Introduction to Counting & Probability, chapter 3/,
     });

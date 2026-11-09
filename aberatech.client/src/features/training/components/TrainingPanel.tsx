@@ -6,7 +6,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import { Link as RouterLink, useSearchParams } from "react-router";
+import { Link as RouterLink, useLocation, useSearchParams } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { localDate } from "../core/dates";
 import { noSolves, overall, type Solves, unitStates } from "../core/progress";
@@ -34,6 +34,7 @@ export default function TrainingPanel() {
   const training = useTraining();
   const { status, document, change } = training;
   const [params] = useSearchParams();
+  const location = useLocation();
   const owner = status === "owner";
   const solves: Solves = noSolves;
   const now = new Date();
@@ -73,7 +74,7 @@ export default function TrainingPanel() {
       {status === "visitor" && (
         <SignInToSee
           message="The syllabus is public. My progress and notes are mine, so they need my sign-in."
-          returnUrl="/training"
+          returnUrl={encodeURIComponent(location.pathname + location.search)}
         />
       )}
       {status === "error" && (
