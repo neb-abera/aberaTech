@@ -174,6 +174,48 @@ describe("the syllabus", () => {
     );
   });
 
+  it("places math by AoPS's own test for each course it has one for", () => {
+    const aops = [
+      "prealgebra",
+      "algebra",
+      "cp",
+      "nt",
+      "geometry",
+      "int-algebra",
+      "int-counting",
+      "precalculus",
+    ];
+    const units = unitsOf("math").filter((unit) =>
+      aops.includes(unit.id.replace(/-[^-]+$/, "")),
+    );
+    expect(units.length).toBe(28);
+    for (const unit of units) {
+      const items = unit.checkpoint?.items ?? [];
+      expect(items.length, unit.id).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(item.system, item.id).toBe("aops-diagnostic");
+        expect(item.url, item.id).toMatch(
+          /^https:\/\/data\.artofproblemsolving\.com\/course-docs\/diagnostics\/[a-z0-9-]+-posttest\.pdf$/,
+        );
+      }
+    }
+  });
+
+  it("names its Alcumus topics, and sends to AoPS videos only for the books that have them", () => {
+    for (const item of items) {
+      if (item.system === "alcumus" && item.id !== "refresh-alcumus-setup") {
+        expect(item.title, item.id).toMatch(/^Alcumus, [A-Za-z &]+: /);
+        expect(item.what, item.id).toMatch(/mastered/);
+      }
+      if (item.system === "aops-video") {
+        expect(item.id, item.id).toMatch(/^(pre|alg|cp)-\d+-watch$/);
+        const ids = (item.videos ?? []).map((video) => video.youtube);
+        expect(new Set(ids).size, item.id).toBe(ids.length);
+      }
+    }
+    expect(JSON.stringify(syllabus)).not.toContain("pick the topic");
+  });
+
   it("has no interview-prep site in it", () => {
     const text = JSON.stringify(syllabus).toLowerCase();
     for (const site of ["leetcode", "hackerrank", "structy", "algomonster"])
@@ -203,9 +245,9 @@ describe("the helpers", () => {
   it("counts in words that agree with the number", () => {
     expect(countOf(1, "lesson")).toBe("1 lesson");
     expect(countOf(4, "lesson")).toBe("4 lessons");
-    const math = syllabus.units.find((unit) => unit.id === "prealgebra-1");
+    const math = syllabus.units.find((unit) => unit.id === "prealgebra-2");
     const code = syllabus.units.find((unit) => unit.id === "bronze-1");
-    expect(math && checkpointLabel(math)).toBe("2 problem sets in 50 minutes");
+    expect(math && checkpointLabel(math)).toBe("2 problem sets in 120 minutes");
     expect(code && checkpointLabel(code)).toBe("3 problems in 60 minutes");
   });
 

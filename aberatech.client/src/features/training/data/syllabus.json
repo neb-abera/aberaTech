@@ -174,6 +174,20 @@
       "records": "Its own progress report. Tick here when done."
     },
     {
+      "id": "aops-diagnostic",
+      "name": "AoPS placement tests",
+      "url": "https://artofproblemsolving.com/school/recommendations",
+      "for": "Math placement: each class's “Do you need this?” test, with its answer key.",
+      "records": "Tick by hand."
+    },
+    {
+      "id": "aops-practice",
+      "name": "AoPS Practice Competitions",
+      "url": "https://artofproblemsolving.com/contests/practice",
+      "for": "Timed AMC 10 and AMC 12 papers AoPS writes each year, scored on its platform.",
+      "records": "Tick by hand, with the score."
+    },
+    {
       "id": "aops-video",
       "name": "AoPS videos",
       "url": "https://artofproblemsolving.com/videos",
@@ -5488,50 +5502,34 @@
       "title": "AMC 10 baseline",
       "lessons": [
         {
-          "id": "alcumus-setup",
-          "title": "Set up Alcumus",
-          "items": [
-            {
-              "id": "alcumus-account",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Sign in to Alcumus",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 10,
-              "record": "manual",
-              "what": "Sign in with your AoPS account, the one on your 2022 book orders."
-            }
-          ]
-        },
-        {
           "id": "amc10-paper",
-          "title": "Sit one AMC 10 paper",
+          "title": "Sit AoPS's AMC 10 practice competition",
           "items": [
             {
               "id": "amc10-sit",
               "kind": "do",
-              "system": "aops-wiki",
-              "title": "The most recent AMC 10A, 75 minutes",
-              "url": "https://artofproblemsolving.com/wiki/index.php/AMC_10_Problems_and_Solutions",
+              "system": "aops-practice",
+              "title": "AoPS 2026 Practice Competition for the AMC 10, 75 minutes",
+              "url": "https://artofproblemsolving.com/contests/practice/amc-10-version-b",
               "minutes": 75,
               "record": "manual",
               "score": true,
-              "what": "Open the newest AMC 10A on the list. Keep only the problems on screen. 75 minutes, no calculator. Score 6 for each right answer and 1.5 for each blank, out of 150."
+              "what": "Register on its page, then take it on AoPS's contest platform in one 75-minute sitting, no calculator. AoPS says its problems differ from the previous two years' practice contests. Record its score out of 150: 6 for each right answer and 1.5 for each blank."
             },
             {
               "id": "amc10-check",
               "kind": "do",
-              "system": "aops-wiki",
-              "title": "Check it against the answer key",
-              "url": "https://artofproblemsolving.com/wiki/index.php/AMC_10_Problems_and_Solutions",
+              "system": "aops-practice",
+              "title": "Read the solutions to what you missed",
+              "url": "https://artofproblemsolving.com/contests/practice/amc-10-version-b",
               "minutes": 30,
               "record": "manual",
-              "what": "Open the same paper's answer key. Mark this item missed and write the numbers you missed in the note. They come back for review."
+              "what": "Read AoPS's solution to each problem you missed or left blank. Mark this item missed and write their numbers in the note. They come back for review."
             }
           ]
         }
       ],
-      "why": "Plan, Phase 0: sit one AMC 10 paper in 75 minutes for a baseline."
+      "why": "Plan, Phase 0: sit one AMC 10 paper in 75 minutes for a baseline. AoPS's practice competition is that paper."
     },
     {
       "id": "prealgebra-1",
@@ -5654,12 +5652,12 @@
               "id": "pre-1-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 1's topic",
+              "title": "Alcumus, Prealgebra: Arithmetic - Addition, Arithmetic - Multiplication, Arithmetic - Negatives, Arithmetic - Subtraction, Arithmetic - Reciprocals, and Arithmetic - Division",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 60,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Arithmetic - Addition, Arithmetic - Multiplication, Arithmetic - Negatives, Arithmetic - Subtraction, Arithmetic - Reciprocals, and Arithmetic - Division until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 6 are mastered."
             }
           ]
         },
@@ -5760,12 +5758,12 @@
               "id": "pre-2-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 2's topic",
+              "title": "Alcumus, Prealgebra: Squares, General Positive Exponents, Order of Operations, and Negative and Zero Exponents",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Squares, General Positive Exponents, Order of Operations, and Negative and Zero Exponents until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -5872,12 +5870,12 @@
               "id": "pre-3-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 3's topic",
+              "title": "Alcumus, Prealgebra: Multiples, Divisibility, Primes and Composites Basics, Prime Factorization, Least Common Multiple, Divisors, and Greatest Common Divisor",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 70,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Multiples, Divisibility, Primes and Composites Basics, Prime Factorization, Least Common Multiple, Divisors, and Greatest Common Divisor until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 7 are mastered."
             }
           ]
         },
@@ -6014,12 +6012,12 @@
               "id": "pre-4-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 4's topic",
+              "title": "Alcumus, Prealgebra: Fraction Multiplication, Fraction Division, Fractions and Exponents, Simplifying Fractions, Fraction Addition and Subtraction, and Mixed Numbers",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 60,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Fraction Multiplication, Fraction Division, Fractions and Exponents, Simplifying Fractions, Fraction Addition and Subtraction, and Mixed Numbers until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 6 are mastered."
             }
           ]
         },
@@ -6162,39 +6160,30 @@
               "id": "pre-5-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 5's topic",
+              "title": "Alcumus, Prealgebra: Expressions, Basic Linear Equations, Advanced Linear Equations, Word Problems, and Inequalities",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 50,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Expressions, Basic Linear Equations, Advanced Linear Equations, Word Problems, and Inequalities until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 5 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-prealgebra-1-3",
+            "id": "check-prealgebra-1-prealgebra1",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Prealgebra (Part 1)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra1-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 144. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-prealgebra-1-5",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 5 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 240. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Prealgebra (Part 1) class, which covers chapters 1 to 7 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar."
           }
         ]
       },
@@ -6309,12 +6298,12 @@
               "id": "pre-6-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 6's topic",
+              "title": "Alcumus, Prealgebra: Decimal Arithmetic, Rounding Decimals, Decimals and Fractions, and Repeating Decimals",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Decimal Arithmetic, Rounding Decimals, Decimals and Fractions, and Repeating Decimals until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -6421,12 +6410,12 @@
               "id": "pre-7-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 7's topic",
+              "title": "Alcumus, Prealgebra: Ratio Basics, Proportions, Unit Conversions, and Speed and Other Rates",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Ratio Basics, Proportions, Unit Conversions, and Speed and Other Rates until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -6509,12 +6498,12 @@
               "id": "pre-8-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 8's topic",
+              "title": "Alcumus, Prealgebra: Simple Percents and Combining Percents",
               "url": "https://artofproblemsolving.com/alcumus",
               "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Simple Percents and Combining Percents until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -6603,12 +6592,12 @@
               "id": "pre-9-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 9's topic",
+              "title": "Alcumus, Prealgebra: Integer Square Roots and Non-integer Square Roots",
               "url": "https://artofproblemsolving.com/alcumus",
               "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Integer Square Roots and Non-integer Square Roots until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -6703,39 +6692,41 @@
               "id": "pre-10-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 10's topic",
+              "title": "Alcumus, Prealgebra: Angle Basics, Parallel Lines and Triangles, and Angles in a Polygon",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Angle Basics, Parallel Lines and Triangles, and Angles in a Polygon until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 120,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-prealgebra-2-8",
+            "id": "check-prealgebra-2-prealgebra1",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 8 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Prealgebra (Part 1)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra1-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 346. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Prealgebra (Part 1) class, which covers chapters 1 to 7 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           },
           {
-            "id": "check-prealgebra-2-10",
+            "id": "check-prealgebra-2-prealgebra2",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 10 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Prealgebra (Part 2)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra2-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 409. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Prealgebra (Part 2) class, which covers chapters 8 to 15 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar."
           }
         ]
       },
@@ -6856,12 +6847,12 @@
               "id": "pre-11-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 11's topic",
+              "title": "Alcumus, Prealgebra: Length and Perimeter, Area, and Circles",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Length and Perimeter, Area, and Circles until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -6986,12 +6977,12 @@
               "id": "pre-12-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 12's topic",
+              "title": "Alcumus, Prealgebra: The Pythagorean Theorem, Special Right Triangles, and Quadrilaterals",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work The Pythagorean Theorem, Special Right Triangles, and Quadrilaterals until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -7080,12 +7071,12 @@
               "id": "pre-13-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 13's topic",
+              "title": "Alcumus, Prealgebra: Basic Statistics and Statistics - Reading Tables or Charts",
               "url": "https://artofproblemsolving.com/alcumus",
               "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Basic Statistics and Statistics - Reading Tables or Charts until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -7204,12 +7195,12 @@
               "id": "pre-14-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 14's topic",
+              "title": "Alcumus, Prealgebra: Counting Lists, Venn Diagrams, The Multiplication Principle in Counting, Permutations, Casework Counting, Counting Pairs, and Basic Probability",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 70,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
+              "what": "In the Prealgebra course, work Counting Lists, Venn Diagrams, The Multiplication Principle in Counting, Permutations, Casework Counting, Counting Pairs, and Basic Probability until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 7 are mastered."
             }
           ]
         },
@@ -7275,44 +7266,24 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 564. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "pre-15-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 15's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Prealgebra course, pick the topic that matches this chapter."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-prealgebra-3-13",
+            "id": "check-prealgebra-3-prealgebra2",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Prealgebra (Part 2)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/prealgebra2-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 505. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-prealgebra-3-15",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Prealgebra, chapter 15 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/prealgebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 564. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Prealgebra (Part 2) class, which covers chapters 8 to 15 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -7343,9 +7314,9 @@
               "id": "alg-1-watch",
               "kind": "watch",
               "system": "aops-video",
-              "title": "AoPS videos for chapter 1, 10 of them",
+              "title": "AoPS videos for chapter 1, 8 of them",
               "url": "https://artofproblemsolving.com/videos/prealgebra/chapter2",
-              "minutes": 56,
+              "minutes": 45,
               "minutesBasis": "The sum of the video lengths on YouTube, read 9 Nov 2026",
               "record": "manual",
               "what": "Watch each after you read its section.",
@@ -7357,19 +7328,7 @@
                   "seconds": 320
                 },
                 {
-                  "title": "1.6 See Prealgebra Chapter 2 for Exponents Review",
-                  "youtube": "67kGn0OTCuI",
-                  "url": "https://artofproblemsolving.com/videos/prealgebra/chapter2",
-                  "seconds": 320
-                },
-                {
                   "title": "1.7 See Prealgebra for Square Roots Review",
-                  "youtube": "yS4cvUWMtjA",
-                  "url": "https://artofproblemsolving.com/videos/prealgebra/chapter9",
-                  "seconds": 317
-                },
-                {
-                  "title": "1.7 See Prealgebra Chapter 9 for Square Roots Review",
                   "youtube": "yS4cvUWMtjA",
                   "url": "https://artofproblemsolving.com/videos/prealgebra/chapter9",
                   "seconds": 317
@@ -7427,12 +7386,12 @@
               "id": "alg-1-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 1's topic",
+              "title": "Alcumus, Algebra: Prerequisites - Arithmetic Review, Prerequisites - Exponent Laws, Prerequisites - Square Roots, and Prerequisites - Fractional Exponents",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Prerequisites - Arithmetic Review, Prerequisites - Exponent Laws, Prerequisites - Square Roots, and Prerequisites - Fractional Exponents until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -7533,12 +7492,12 @@
               "id": "alg-2-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 2's topic",
+              "title": "Alcumus, Algebra: Evaluating Expressions, Simplifying One-Variable Expressions, and One-Variable Distribution",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Evaluating Expressions, Simplifying One-Variable Expressions, and One-Variable Distribution until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -7651,12 +7610,12 @@
               "id": "alg-3-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 3's topic",
+              "title": "Alcumus, Algebra: One-Variable Linear Equations, Word Problems in One Variable, and Linear Equations in Disguise",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work One-Variable Linear Equations, Word Problems in One Variable, and Linear Equations in Disguise until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -7746,17 +7705,6 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 120. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "alg-4-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 4's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
             }
           ]
         },
@@ -7857,12 +7805,12 @@
               "id": "alg-5-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 5's topic",
+              "title": "Alcumus, Algebra: Solving Two-Variable Systems, Two-Variable Word Problems, and Advanced Systems of Equations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Solving Two-Variable Systems, Two-Variable Word Problems, and Advanced Systems of Equations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -7993,39 +7941,30 @@
               "id": "alg-6-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 6's topic",
+              "title": "Alcumus, Algebra: Ratios, Unit Conversions, and Percents",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Ratios, Unit Conversions, and Percents until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-algebra-1-3",
+            "id": "check-algebra-1-algebra-a",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Algebra (Part 1)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-a-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 98. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-algebra-1-6",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 6 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 182. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Algebra (Part 1) class, which covers chapters 1 to 13 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar."
           }
         ]
       },
@@ -8128,12 +8067,12 @@
               "id": "alg-7-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 7's topic",
+              "title": "Alcumus, Algebra: Direct Proportion, Inverse Proportion, and Rate Problems",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Direct Proportion, Inverse Proportion, and Rate Problems until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -8222,12 +8161,12 @@
               "id": "alg-8-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 8's topic",
+              "title": "Alcumus, Algebra: Distance in the Plane, Midpoint of a Segment, Graphing Lines, and Graphing Multiple Lines",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Distance in the Plane, Midpoint of a Segment, Graphing Lines, and Graphing Multiple Lines until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -8322,12 +8261,12 @@
               "id": "alg-9-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 9's topic",
+              "title": "Alcumus, Algebra: Solving Linear Inequalities",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 10,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Solving Linear Inequalities until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -8410,12 +8349,12 @@
               "id": "alg-10-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 10's topic",
+              "title": "Alcumus, Algebra: Multiplying Binomials, Factoring Monic Quadratics, Factoring General Quadratics, and Sum and Product of Roots",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Multiplying Binomials, Factoring Monic Quadratics, Factoring General Quadratics, and Sum and Product of Roots until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -8492,39 +8431,30 @@
               "id": "alg-11-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 11's topic",
+              "title": "Alcumus, Algebra: Square of a Binomial, Difference-of-Squares, Rationalizing Denominators, and Simon's Favorite Factoring Trick",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Square of a Binomial, Difference-of-Squares, Rationalizing Denominators, and Simon's Favorite Factoring Trick until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-algebra-2-9",
+            "id": "check-algebra-2-algebra-a",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 9 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Algebra (Part 1)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-a-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 280. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-algebra-2-11",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 11 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 352. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Algebra (Part 1) class, which covers chapters 1 to 13 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -8615,12 +8545,12 @@
               "id": "alg-12-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 12's topic",
+              "title": "Alcumus, Algebra: Complex Number Arithmetic",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 10,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Complex Number Arithmetic until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -8721,12 +8651,12 @@
               "id": "alg-13-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 13's topic",
+              "title": "Alcumus, Algebra: Quadratic Formula/Discriminant, Completing the Square, Quadratic Optimization, and Advanced Quadratics",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Quadratic Formula/Discriminant, Completing the Square, Quadratic Optimization, and Advanced Quadratics until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -8833,12 +8763,12 @@
               "id": "alg-14-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 14's topic",
+              "title": "Alcumus, Algebra: Graphing Quadratics and Graphing Circles",
               "url": "https://artofproblemsolving.com/alcumus",
               "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Graphing Quadratics and Graphing Circles until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -8957,12 +8887,12 @@
               "id": "alg-15-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 15's topic",
+              "title": "Alcumus, Algebra: Quadratic Inequalities",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 10,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Quadratic Inequalities until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -9087,39 +9017,41 @@
               "id": "alg-16-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 16's topic",
+              "title": "Alcumus, Algebra: Evaluating Functions, Domain and Range, Function Composition, Inverse Functions, and Functional Operations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 50,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Evaluating Functions, Domain and Range, Function Composition, Inverse Functions, and Functional Operations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 5 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 120,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-algebra-3-14",
+            "id": "check-algebra-3-algebra-a",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 14 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Algebra (Part 1)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-a-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 421. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Algebra (Part 1) class, which covers chapters 1 to 13 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the Fundamentals problems and at least half of the Problem Solving problems, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           },
           {
-            "id": "check-algebra-3-16",
+            "id": "check-algebra-3-algebra-b",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 16 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Algebra (Part 2)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-b-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 479. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Algebra (Part 2) class, which covers chapters 13 to 22 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -9222,12 +9154,12 @@
               "id": "alg-17-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 17's topic",
+              "title": "Alcumus, Algebra: Graphing Functions",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 10,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Graphing Functions until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -9298,12 +9230,12 @@
               "id": "alg-18-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 18's topic",
+              "title": "Alcumus, Algebra: Polynomial Basics and Polynomial Multiplication",
               "url": "https://artofproblemsolving.com/alcumus",
               "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Polynomial Basics and Polynomial Multiplication until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -9428,12 +9360,12 @@
               "id": "alg-19-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 19's topic",
+              "title": "Alcumus, Algebra: Exponential and Logarithm Basics, Interest Rates, and Logarithm Basics",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Exponential and Logarithm Basics, Interest Rates, and Logarithm Basics until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -9528,12 +9460,12 @@
               "id": "alg-20-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 20's topic",
+              "title": "Alcumus, Algebra: Radical Expressions and Functions, Absolute Value, Floor and Ceiling, Rational Expressions of Polynomials, and Piecewise-Defined Functions",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 50,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Radical Expressions and Functions, Absolute Value, Floor and Ceiling, Rational Expressions of Polynomials, and Piecewise-Defined Functions until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 5 are mastered."
             }
           ]
         },
@@ -9646,12 +9578,12 @@
               "id": "alg-21-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 21's topic",
+              "title": "Alcumus, Algebra: Arithmetic Sequences, Arithmetic Series, Geometric Sequences, and Geometric Series",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 40,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Arithmetic Sequences, Arithmetic Series, Geometric Sequences, and Geometric Series until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -9722,39 +9654,30 @@
               "id": "alg-22-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 22's topic",
+              "title": "Alcumus, Algebra: Clever Algebraic Manipulations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 10,
+              "minutesBasis": "10 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Algebra course, pick the topic that matches this chapter."
+              "what": "In the Algebra course, work Clever Algebraic Manipulations until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-algebra-4-19",
+            "id": "check-algebra-4-algebra-b",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 19 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Algebra (Part 2)",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/algebra-b-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 553. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-algebra-4-22",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Algebra, chapter 22 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 638. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Algebra (Part 2) class, which covers chapters 13 to 22 of the book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -9875,12 +9798,12 @@
               "id": "cp-1-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 1's topic",
+              "title": "Alcumus, Counting & Probability: Counting Numbers in Lists",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Counting Numbers in Lists until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -9969,12 +9892,12 @@
               "id": "cp-2-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 2's topic",
+              "title": "Alcumus, Counting & Probability: Venn Diagrams, Counting Independent Events, Factorials, Permutations, Casework Counting, Complementary Counting, Constructive Counting, Counting with Restrictions, and Counting with Symmetry",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 135,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Venn Diagrams, Counting Independent Events, Factorials, Permutations, Casework Counting, Complementary Counting, Constructive Counting, Counting with Restrictions, and Counting with Symmetry until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 9 are mastered."
             }
           ]
         },
@@ -10051,12 +9974,12 @@
               "id": "cp-3-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 3's topic",
+              "title": "Alcumus, Counting & Probability: Correcting for Overcounting with Division",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Correcting for Overcounting with Division until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -10139,12 +10062,12 @@
               "id": "cp-4-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 4's topic",
+              "title": "Alcumus, Counting & Probability: Basic Combinations and Computing Combinations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Basic Combinations and Computing Combinations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -10227,12 +10150,12 @@
               "id": "cp-5-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 5's topic",
+              "title": "Alcumus, Counting & Probability: Combinations with Restrictions",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Combinations with Restrictions until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -10303,39 +10226,30 @@
               "id": "cp-6-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 6's topic",
+              "title": "Alcumus, Counting & Probability: Distinguishability",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Distinguishability until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-cp-counting-3",
+            "id": "check-cp-counting-intro-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 62. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-cp-counting-6",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 6 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 108. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -10426,12 +10340,12 @@
               "id": "cp-7-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 7's topic",
+              "title": "Alcumus, Counting & Probability: Basic Probability as Counting and Basic Probability with Combinations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Basic Probability as Counting and Basic Probability with Combinations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -10532,12 +10446,12 @@
               "id": "cp-8-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 8's topic",
+              "title": "Alcumus, Counting & Probability: Probability with Casework, Complementary Probability, Binomial Probability, Multiplying Probabilities, and Advanced Probability with Combinations",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 75,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Probability with Casework, Complementary Probability, Binomial Probability, Multiplying Probabilities, and Advanced Probability with Combinations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 5 are mastered."
             }
           ]
         },
@@ -10602,12 +10516,12 @@
               "id": "cp-9-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 9's topic",
+              "title": "Alcumus, Counting & Probability: Probability - Think About It!",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Probability - Think About It! until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -10672,12 +10586,12 @@
               "id": "cp-10-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 10's topic",
+              "title": "Alcumus, Counting & Probability: Using Geometry in Probability",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Using Geometry in Probability until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -10754,39 +10668,30 @@
               "id": "cp-11-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 11's topic",
+              "title": "Alcumus, Counting & Probability: Expected Value",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Expected Value until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-cp-probability-9",
+            "id": "check-cp-probability-intro-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 9 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 150. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-cp-probability-11",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 11 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 171. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -10859,12 +10764,12 @@
               "id": "cp-12-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 12's topic",
+              "title": "Alcumus, Counting & Probability: Pascal's Triangle",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Pascal's Triangle until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -10936,17 +10841,6 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 205. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "cp-13-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 13's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
             }
           ]
         },
@@ -11035,12 +10929,12 @@
               "id": "cp-14-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 14's topic",
+              "title": "Alcumus, Counting & Probability: Binomial Theorem",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
+              "what": "In the Counting & Probability course, work Binomial Theorem until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -11069,44 +10963,24 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 230. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "cp-15-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 15's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Introduction to Counting & Probability course, pick the topic that matches this chapter."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-cp-pascal-13",
+            "id": "check-cp-pascal-intro-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 205. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-cp-pascal-15",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Counting & Probability, chapter 15 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 230. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -11148,12 +11022,12 @@
               "id": "nt-1-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 1's topic",
+              "title": "Alcumus, Number Theory: Multiples and Divisors",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Multiples and Divisors until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -11187,12 +11061,12 @@
               "id": "nt-2-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 2's topic",
+              "title": "Alcumus, Number Theory: Primes and Composites Basics",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Primes and Composites Basics until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -11226,12 +11100,12 @@
               "id": "nt-3-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 3's topic",
+              "title": "Alcumus, Number Theory: Greatest Common Divisor, Least Common Multiple, Remainders, and The Euclidean Algorithm",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Greatest Common Divisor, Least Common Multiple, Remainders, and The Euclidean Algorithm until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -11265,12 +11139,12 @@
               "id": "nt-4-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 4's topic",
+              "title": "Alcumus, Number Theory: Prime Factorization and LCM/GCD Problem-Solving",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Prime Factorization and LCM/GCD Problem-Solving until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -11304,39 +11178,30 @@
               "id": "nt-5-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 5's topic",
+              "title": "Alcumus, Number Theory: Counting Divisors and Divisor Arithmetic",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Counting Divisors and Divisor Arithmetic until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-nt-divisors-3",
+            "id": "check-nt-divisors-intro-numbertheory",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Number Theory",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-numbertheory-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 60. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-nt-divisors-5",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 5 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 104. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Number Theory class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -11373,17 +11238,6 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 120. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "nt-6-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 6's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
             }
           ]
         },
@@ -11412,17 +11266,6 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The Review Problems and Challenge Problems after the summary on p. 137. Write each solution out. Mark this item missed if you miss any, and note which."
-            },
-            {
-              "id": "nt-7-alcumus",
-              "kind": "do",
-              "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 7's topic",
-              "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
-              "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
             }
           ]
         },
@@ -11456,12 +11299,12 @@
               "id": "nt-8-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 8's topic",
+              "title": "Alcumus, Number Theory: Converting from Base 10, Converting to Base 10, and Base Number Problem-Solving",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Converting from Base 10, Converting to Base 10, and Base Number Problem-Solving until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -11495,12 +11338,12 @@
               "id": "nt-9-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 9's topic",
+              "title": "Alcumus, Number Theory: Base Number Arithmetic",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Base Number Arithmetic until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -11534,12 +11377,12 @@
               "id": "nt-10-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 10's topic",
+              "title": "Alcumus, Number Theory: The Last Digit (Base 10)",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work The Last Digit (Base 10) until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -11573,39 +11416,30 @@
               "id": "nt-11-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 11's topic",
+              "title": "Alcumus, Number Theory: Terminating Decimals and Repeating Decimals",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Terminating Decimals and Repeating Decimals until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-nt-bases-8",
+            "id": "check-nt-bases-intro-numbertheory",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 8 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Number Theory",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-numbertheory-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 161. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-nt-bases-11",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 11 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 212. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Number Theory class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -11647,12 +11481,12 @@
               "id": "nt-12-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 12's topic",
+              "title": "Alcumus, Number Theory: Congruence and Residues, Modular Arithmetic Sums, Modular Arithmetic, and Patterns in Modular Arithmetic",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Congruence and Residues, Modular Arithmetic Sums, Modular Arithmetic, and Patterns in Modular Arithmetic until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -11686,12 +11520,12 @@
               "id": "nt-13-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 13's topic",
+              "title": "Alcumus, Number Theory: Divisibility Rules and Divisibility Problem-Solving",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Divisibility Rules and Divisibility Problem-Solving until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -11725,12 +11559,12 @@
               "id": "nt-14-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 14's topic",
+              "title": "Alcumus, Number Theory: Modular Arithmetic Inverses, Modular Arithmetic Congruences, and Modular Arithmetic Systems",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Modular Arithmetic Inverses, Modular Arithmetic Congruences, and Modular Arithmetic Systems until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -11764,39 +11598,30 @@
               "id": "nt-15-alcumus",
               "kind": "do",
               "system": "alcumus",
-              "title": "Alcumus, 20 minutes on chapter 15's topic",
+              "title": "Alcumus, Number Theory: Perfect Powers and Digits",
               "url": "https://artofproblemsolving.com/alcumus",
-              "minutes": 20,
-              "minutesBasis": "Proposed",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
               "record": "manual",
-              "what": "In the Introduction to Number Theory course, pick the topic that matches this chapter."
+              "what": "In the Number Theory course, work Perfect Powers and Digits until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-nt-modular-13",
+            "id": "check-nt-modular-intro-numbertheory",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Number Theory",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-numbertheory-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 258. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-nt-modular-15",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Number Theory, chapter 15 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-number-theory",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 297. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Number Theory class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -11810,33 +11635,33 @@
       "lessons": [
         {
           "id": "amc12-paper",
-          "title": "Sit one AMC 12 paper",
+          "title": "Sit AoPS's AMC 12 practice competition",
           "items": [
             {
               "id": "amc12-sit",
               "kind": "do",
-              "system": "aops-wiki",
-              "title": "The most recent AMC 12A, 75 minutes",
-              "url": "https://artofproblemsolving.com/wiki/index.php/AMC_12_Problems_and_Solutions",
+              "system": "aops-practice",
+              "title": "AoPS 2026 Practice Competition for the AMC 12, 75 minutes",
+              "url": "https://artofproblemsolving.com/contests/practice/amc-12-version-b",
               "minutes": 75,
               "record": "manual",
               "score": true,
-              "what": "75 minutes, no calculator. Score 6 for each right answer and 1.5 for each blank. Compare with that year's AIME cutoff on the AoPS Wiki."
+              "what": "Register on its page, then take it on AoPS's contest platform in one 75-minute sitting, no calculator. Score 6 for each right answer and 1.5 for each blank. Compare it with that year's AIME cutoff on the AoPS Wiki."
             },
             {
               "id": "amc12-check",
               "kind": "do",
-              "system": "aops-wiki",
-              "title": "Check it against the answer key",
-              "url": "https://artofproblemsolving.com/wiki/index.php/AMC_12_Problems_and_Solutions",
+              "system": "aops-practice",
+              "title": "Read the solutions to what you missed",
+              "url": "https://artofproblemsolving.com/contests/practice/amc-12-version-b",
               "minutes": 30,
               "record": "manual",
-              "what": "Mark this item missed and write the numbers you missed in the note."
+              "what": "Read AoPS's solution to each problem you missed or left blank. Mark this item missed and write their numbers in the note."
             }
           ]
         }
       ],
-      "why": "Plan, target for 30 Sep 2027: AMC 12 score at or above that year's AIME cutoff."
+      "why": "Plan, target for 30 Sep 2027: AMC 12 score at or above that year's AIME cutoff. AoPS's AMC 12 practice competition is the paper."
     },
     {
       "id": "geometry-1",
@@ -11897,6 +11722,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 42. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-2-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Angle Measurement Basics and Angles, Parallel Lines, and Triangles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Angle Measurement Basics and Angles, Parallel Lines, and Triangles until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -11925,6 +11761,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 73. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-3-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Isosceles and Equilateral Triangles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Isosceles and Equilateral Triangles until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -11953,6 +11800,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 92. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-4-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Length and Perimeter and Area Basics",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Length and Perimeter and Area Basics until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -11981,6 +11839,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 124. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-5-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Similar Triangles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Similar Triangles until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -12009,33 +11878,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 162. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-6-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: The Pythagorean Theorem and Special Right Triangles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work The Pythagorean Theorem and Special Right Triangles until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-geometry-1-3",
+            "id": "check-geometry-1-intro-geometry",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Geometry",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-geometry-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 73. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-geometry-1-6",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 6 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 162. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Geometry class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -12072,6 +11943,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 199. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-7-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Bisectors in a Triangle and Triangle Medians and Altitudes",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Bisectors in a Triangle and Triangle Medians and Altitudes until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12100,6 +11982,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 236. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-8-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Quadrilaterals Level 1 and Quadrilaterals Level 2",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Quadrilaterals Level 1 and Quadrilaterals Level 2 until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12128,6 +12021,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 260. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-9-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Polygon Angles and Polygon Length and Area",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Polygon Angles and Polygon Length and Area until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12156,6 +12060,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 280. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-10-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Inequalities in Triangles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Inequalities in Triangles until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -12188,28 +12103,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-geometry-2-8",
+            "id": "check-geometry-2-intro-geometry",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 8 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Geometry",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-geometry-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 236. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-geometry-2-10",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 10 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 280. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Geometry class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -12246,6 +12152,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 299. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-11-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Circle Area and Circumference and Funky Circle Areas",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Circle Area and Circumference and Funky Circle Areas until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12274,6 +12191,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 330. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-12-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Angles in Circles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Angles in Circles until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -12302,33 +12230,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 351. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-13-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Lengths in Circles",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Lengths in Circles until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-geometry-3-12",
+            "id": "check-geometry-3-intro-geometry",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 12 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Geometry",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-geometry-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 330. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-geometry-3-13",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 351. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Geometry class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -12365,6 +12295,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 374. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-14-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Prisms and Pyramids",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Prisms and Pyramids until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12393,6 +12334,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 402. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-15-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Cylinders, Cones, and Spheres",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Cylinders, Cones, and Spheres until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -12421,6 +12373,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 429. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-16-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Transformations",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Transformations until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -12449,6 +12412,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 473. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-17-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Analytic Geometry Level 1 and Analytic Geometry Level 2",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Analytic Geometry Level 1 and Analytic Geometry Level 2 until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12477,6 +12451,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 500. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "geo-18-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Geometry: Right-Triangle Trigonometry and Unit Circle Trigonometry",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Geometry course, work Right-Triangle Trigonometry and Unit Circle Trigonometry until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12537,28 +12522,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-geometry-4-16",
+            "id": "check-geometry-4-intro-geometry",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 16 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Introduction to Geometry",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intro-geometry-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 429. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-geometry-4-19",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Introduction to Geometry, chapter 19 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intro-geometry",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 521. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Introduction to Geometry class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -12595,6 +12571,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 19. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-1-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Systems of Equations",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Systems of Equations until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -12623,6 +12610,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 49. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-2-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Domain and Range, Graphing Functions, Inverse Functions, and Function Composition",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Domain and Range, Graphing Functions, Inverse Functions, and Function Composition until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -12651,6 +12649,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 74. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-3-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Complex Number Arithmetic, Magnitude of Complex Numbers, Basic Complex Numbers, and Advanced Complex Numbers",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Complex Number Arithmetic, Magnitude of Complex Numbers, Basic Complex Numbers, and Advanced Complex Numbers until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -12679,6 +12688,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 102. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-4-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Quadratic Formula / Discriminant, Sum and Product of Roots, and Quadratic Inequalities",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Quadratic Formula / Discriminant, Sum and Product of Roots, and Quadratic Inequalities until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -12707,33 +12727,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 156. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-5-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Parabolas, Circles, Ellipses, Hyperbolas, Advanced Conic Sections, Graphing Quadratics, and Quadratic Optimization",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 105,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Parabolas, Circles, Ellipses, Hyperbolas, Advanced Conic Sections, Graphing Quadratics, and Quadratic Optimization until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 7 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-algebra-1-3",
+            "id": "check-int-algebra-1-intermediate-algebra",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Algebra",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 74. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-algebra-1-5",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 5 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 156. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Algebra class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -12770,6 +12792,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 189. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-6-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Polynomial Division Algorithms, Remainder and Factor Theorem, and Basic Polynomial Forms",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Polynomial Division Algorithms, Remainder and Factor Theorem, and Basic Polynomial Forms until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -12798,6 +12831,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 225. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-7-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Integer / Rational Roots and Basic Polynomial Roots",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Integer / Rational Roots and Basic Polynomial Roots until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12826,6 +12870,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 256. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-8-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Irrational Roots, Complex Roots, Vieta's Formulas, and Advanced Polynomial Roots",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Irrational Roots, Complex Roots, Vieta's Formulas, and Advanced Polynomial Roots until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -12854,6 +12909,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 282. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-9-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Factorization Identities and Advanced Polynomial Forms",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Factorization Identities and Advanced Polynomial Forms until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -12886,28 +12952,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-algebra-2-7",
+            "id": "check-int-algebra-2-intermediate-algebra",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 7 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Algebra",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 225. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-algebra-2-9",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 9 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 282. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Algebra class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -12944,6 +13001,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 331. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-10-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Arithmetic Sequences and Series, Geometric Sequences and Series, and General Sequences and Series",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Arithmetic Sequences and Series, Geometric Sequences and Series, and General Sequences and Series until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -12972,6 +13040,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 365. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-11-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Binomial Theorem and Advanced Algebraic Manipulations",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Binomial Theorem and Advanced Algebraic Manipulations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -13000,6 +13079,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 406. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-12-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: General Inequality Skills, AM-GM Inequality, and Cauchy-Schwarz Inequality",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work General Inequality Skills, AM-GM Inequality, and Cauchy-Schwarz Inequality until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -13032,28 +13122,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-algebra-3-11",
+            "id": "check-int-algebra-3-intermediate-algebra",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 11 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Algebra",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 365. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-algebra-3-12",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 12 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 406. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Algebra class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -13090,6 +13171,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 451. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-13-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Exponents and Logarithms",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Exponents and Logarithms until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -13118,6 +13210,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 473. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-14-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Radicals",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Radicals until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -13146,6 +13249,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 503. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-15-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Graphs of Rational Functions, Basic Rational Function Equations and Inequalities, Advanced Rational Function Equations and Inequalities, and Even and Odd Functions",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Graphs of Rational Functions, Basic Rational Function Equations and Inequalities, Advanced Rational Function Equations and Inequalities, and Even and Odd Functions until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -13174,33 +13288,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 539. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-16-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Piecewise-Defined Functions, Absolute Value, and Floor and Ceiling",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Piecewise-Defined Functions, Absolute Value, and Floor and Ceiling until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-algebra-4-14",
+            "id": "check-int-algebra-4-intermediate-algebra",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 14 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Algebra",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 473. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-algebra-4-16",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 16 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 539. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Algebra class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -13237,6 +13353,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 576. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-17-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Recursively Defined Sequences, Telescoping Series, Partial Fractions, and Advanced Sequences and Series",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Recursively Defined Sequences, Telescoping Series, Partial Fractions, and Advanced Sequences and Series until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -13265,6 +13392,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 606. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-18-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Power Mean Inequality and Advanced Inequalities",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Power Mean Inequality and Advanced Inequalities until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -13293,6 +13431,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 627. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-19-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Basic Functional Equations and Advanced Functional Equations",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Basic Functional Equations and Advanced Functional Equations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -13321,6 +13470,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 665. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "ialg-20-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Intermediate Algebra: Polynomial Interpolation",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Intermediate Algebra course, work Polynomial Interpolation until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -13353,28 +13513,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-algebra-5-18",
+            "id": "check-int-algebra-5-intermediate-algebra",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 18 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Algebra",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-algebra-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 606. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-algebra-5-20",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Algebra, chapter 20 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-algebra",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 665. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Algebra class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -13555,28 +13706,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-counting-1-3",
+            "id": "check-int-counting-1-intermediate-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 79. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-counting-1-5",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 5 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 127. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -13730,28 +13872,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-counting-2-8",
+            "id": "check-int-counting-2-intermediate-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 8 problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The first problems at the end of the chapter. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-counting-2-10",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 10 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 222. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -13960,28 +14093,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-int-counting-3-13",
+            "id": "check-int-counting-3-intermediate-counting",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Intermediate Counting & Probability",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/intermediate-counting-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 294. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-int-counting-3-16",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Intermediate Counting & Probability, chapter 16 problems",
-            "url": "https://artofproblemsolving.com/store/book/intermediate-counting",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The first problems at the end of the chapter. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Intermediate Counting & Probability class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -14046,6 +14170,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 76. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-2-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Trigonometric Values, Graphs of Trigonometric Functions, and Inverse Trigonometric Functions",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Trigonometric Values, Graphs of Trigonometric Functions, and Inverse Trigonometric Functions until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -14074,6 +14209,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 123. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-3-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Basic Trigonometric Identities, Sums and Differences of Angles, Double and Half Angle Identities, Sum-to-Product and Product-to-Sum, and Solving Trigonometric Equations",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 75,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Basic Trigonometric Identities, Sums and Differences of Angles, Double and Half Angle Identities, Sum-to-Product and Product-to-Sum, and Solving Trigonometric Equations until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 5 are mastered."
             }
           ]
         },
@@ -14102,6 +14248,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 152. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-4-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Basic Triangle Geometry and Advanced Triangle Geometry",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Basic Triangle Geometry and Advanced Triangle Geometry until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -14130,33 +14287,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 187. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-5-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Parametric Curves, Polar Coordinates, 3D Coordinates, and Spherical and Cylindrical Coordinates",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Parametric Curves, Polar Coordinates, 3D Coordinates, and Spherical and Cylindrical Coordinates until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-precalculus-1-3",
+            "id": "check-precalculus-1-precalc",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 3 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Precalculus",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/precalc-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 123. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-precalculus-1-5",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 5 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 187. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Precalculus class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar."
           }
         ]
       },
@@ -14193,6 +14352,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 213. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-6-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Complex Number Arithmetic and The Complex Plane",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 30,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Complex Number Arithmetic and The Complex Plane until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 2 are mastered."
             }
           ]
         },
@@ -14221,6 +14391,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 249. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-7-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Polar Form of Complex Numbers, Exponential Form of Complex Numbers, and Roots of Unity",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Polar Form of Complex Numbers, Exponential Form of Complex Numbers, and Roots of Unity until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -14249,6 +14430,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 292. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-8-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Geometry of Complex Numbers",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Geometry of Complex Numbers until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         },
@@ -14281,28 +14473,19 @@
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-precalculus-2-7",
+            "id": "check-precalculus-2-precalc",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 7 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Precalculus",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/precalc-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 249. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-precalculus-2-8",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 8 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 292. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Precalculus class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },
@@ -14339,6 +14522,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 330. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-9-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: 2D Vector Basics, Lines with 2D Vectors, and Projections of 2D Vectors",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work 2D Vector Basics, Lines with 2D Vectors, and Projections of 2D Vectors until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -14367,6 +14561,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 374. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-10-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: 2D Matrix Basics, 2D Matrix Transformations, 2D Matrix Determinant, and 2D Matrix Inverses",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work 2D Matrix Basics, 2D Matrix Transformations, 2D Matrix Determinant, and 2D Matrix Inverses until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -14395,6 +14600,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 415. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-11-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: 3D Vector Basics, 3D Matrix Basics, and 3D Matrix Determinant",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 45,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work 3D Vector Basics, 3D Matrix Basics, and 3D Matrix Determinant until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 3 are mastered."
             }
           ]
         },
@@ -14423,6 +14639,17 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 457. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-12-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Lines with 3D Vectors, Planes with 3D Vectors, Cross Product, and Projections of 3D Vectors",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 60,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Lines with 3D Vectors, Planes with 3D Vectors, Cross Product, and Projections of 3D Vectors until each shows mastered on your progress report. A topic you mastered earlier counts. Tick this when all 4 are mastered."
             }
           ]
         },
@@ -14451,33 +14678,35 @@
               "minutesBasis": "Proposed",
               "record": "manual",
               "what": "The problems after the summary on p. 485. Write each solution out. Mark this item missed if you miss any, and note which."
+            },
+            {
+              "id": "precalc-13-alcumus",
+              "kind": "do",
+              "system": "alcumus",
+              "title": "Alcumus, Precalculus: Solving Geometry Problems with Vectors",
+              "url": "https://artofproblemsolving.com/alcumus",
+              "minutes": 15,
+              "minutesBasis": "15 minutes a topic, proposed",
+              "record": "manual",
+              "what": "In the Precalculus course, work Solving Geometry Problems with Vectors until it shows mastered on your progress report. A topic you mastered earlier counts. Tick this when it is mastered."
             }
           ]
         }
       ],
       "checkpoint": {
-        "minutes": 50,
-        "rule": "Placed out when each set is done within the time, counted from Start, with at most one miss in each. Tick each set that meets that.",
+        "minutes": 60,
+        "rule": "Placed out when you pass AoPS's own placement test for the course, by AoPS's bar. Tick each test you pass.",
         "items": [
           {
-            "id": "check-precalculus-3-11",
+            "id": "check-precalculus-3-precalc",
             "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 11 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
+            "system": "aops-diagnostic",
+            "title": "AoPS “Do you need this?” test, Precalculus",
+            "url": "https://data.artofproblemsolving.com/course-docs/diagnostics/precalc-posttest.pdf",
+            "minutes": 60,
+            "minutesBasis": "Proposed. AoPS sets no time limit.",
             "record": "manual",
-            "what": "The Review Problems after the summary on p. 415. Write each answer, then check the solutions manual."
-          },
-          {
-            "id": "check-precalculus-3-13",
-            "kind": "do",
-            "system": "aops-book",
-            "title": "Precalculus, chapter 13 Review Problems",
-            "url": "https://artofproblemsolving.com/store/book/precalculus",
-            "minutes": 25,
-            "record": "manual",
-            "what": "The Review Problems after the summary on p. 485. Write each answer, then check the solutions manual."
+            "what": "AoPS's placement test for its Precalculus class, which covers the whole book. No calculator and no help. Check it against the answer key at its end, and retry the ones you missed once. Tick it if you solved nearly all of the problems with little difficulty, AoPS's own bar. If you already passed this test at an earlier unit, tick it now."
           }
         ]
       },

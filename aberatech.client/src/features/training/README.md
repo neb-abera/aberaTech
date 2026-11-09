@@ -49,7 +49,9 @@ never hold back or count toward a unit.
 | learncpp.com lessons              | learncpp.com's table of contents, by lesson number                     |
 | Saad's Udemy sections and lengths | Each course's public curriculum on Udemy, read in Chrome               |
 | cppreference pages                | Internet Archive snapshots. Cloudflare holds Chrome at a human check.  |
-| Alcumus topics                    | The topic list in Neb's Alcumus, read in Chrome                        |
+| Alcumus topics                    | Neb's Alcumus report, matched to each book's section titles            |
+| Math placement                    | AoPS's "Do you need this?" test for each class, from its course page   |
+| AMC 10 and AMC 12 papers          | AoPS's Practice Competitions page                                      |
 
 Minutes for reading are 3 a page, an estimate, and each item says so.
 
