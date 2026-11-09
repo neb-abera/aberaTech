@@ -301,6 +301,11 @@ export default function TechnicalTransitionGuide(props: {
               on specific DSA problems.
             </li>
           </Typography>
+
+          <Typography variant="body1" gutterBottom sx={{ mt: 3 }}>
+            My own path past the basics, into competitive math and programming,
+            is on <Link to="/training">Training</Link>.
+          </Typography>
         </Box>
       </GuideSection>
 

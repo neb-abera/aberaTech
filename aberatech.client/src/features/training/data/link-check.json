@@ -1,0 +1,3076 @@
+{
+  "checkedOn": "2026-11-09",
+  "total": 698,
+  "about": "How every address in syllabus.json was opened on 9 Nov 2026. fetch: a plain request. browser: Chrome on the dev box, for hosts that refuse plain requests. archive: the Internet Archive, for a page behind a human check. source: the address as AoPS links it on its own videos page.",
+  "links": {
+    "https://artofproblemsolving.com/alcumus": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Alcumus"
+    },
+    "https://artofproblemsolving.com/store/book/intro-algebra": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Algebra Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/intro-counting": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Counting & Probability Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/intro-number-theory": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Number Theory Textbook"
+    },
+    "https://artofproblemsolving.com/store/book/prealgebra": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Prealgebra Textbook"
+    },
+    "https://artofproblemsolving.com/store/recommendations.php": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Math Curriculum Recommendations - Elementary to High School | AoPS"
+    },
+    "https://artofproblemsolving.com/videos": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Videos"
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/214": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/215": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/216": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/217": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/218": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter1/221": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/312": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/313": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/314": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/315": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/316": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter10/347": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter11/317": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter11/318": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter11/319": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter11/320": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter11/346": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/333": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/334": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/340": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/341": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/345": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter12/350": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/321": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/322": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/323": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/324": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/325": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/326": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/327": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/328": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter13/329": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/522": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/523": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/543": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/544": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/545": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/546": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/547": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/548": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/549": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter14/550": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/551": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/552": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/553": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/554": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/555": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/556": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/557": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/558": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/559": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/560": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/561": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter15/562": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/563": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/564": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/565": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/566": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/567": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/568": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/569": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/570": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/571": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/572": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/573": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/574": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter16/575": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/576": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/577": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/578": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/579": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/580": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/581": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/582": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter17/583": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter18/584": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter18/585": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter18/586": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter18/587": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/588": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/589": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/590": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/591": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/592": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/593": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/594": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/595": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/596": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/597": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/598": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/599": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter19/600": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/225": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/226": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/227": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/229": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/230": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/237": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/92": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/97": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter2/98": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/601": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/602": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/603": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/604": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/605": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/606": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/607": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter20/608": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/609": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/610": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/611": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/612": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/613": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/614": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/615": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/616": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/617": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/618": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter21/619": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter22/620": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter22/621": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter22/622": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter22/623": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/101": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/130": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/131": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/132": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/228": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/234": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/90": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/93": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/94": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/95": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter3/96": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/235": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/236": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/238": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/243": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/244": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/245": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/246": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter4/247": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/257": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/258": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/259": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/260": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/261": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/262": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/263": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/264": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter5/265": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/152": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/153": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/154": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/156": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/157": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/162": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/163": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/164": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/165": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/166": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/167": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/280": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/281": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter6/282": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/158": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/159": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/160": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/161": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/283": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/284": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/285": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter7/286": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/295": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/297": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/299": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/300": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/301": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/303": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter8/304": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/100": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/102": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/133": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/302": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/305": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/306": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/307": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/algebra1/chapter9/99": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/175": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/176": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/177": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/178": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/179": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/180": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/181": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/182": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/183": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/184": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter1/185": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter10/115": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter10/116": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter10/117": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter11/118": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter11/119": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter11/120": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter11/121": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter11/122": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter12/140": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter12/141": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter12/142": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter13/143": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter13/144": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter13/145": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter13/146": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter13/147": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/123": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/124": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/125": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/126": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/127": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/128": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter14/129": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/186": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/187": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/188": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/189": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/190": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/191": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter2/192": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter3/57": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter3/58": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter3/59": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter3/60": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter3/61": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/62": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/63": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/64": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/65": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/66": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter4/67": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/73": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/74": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/75": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/76": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/78": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter5/79": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter6/80": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter6/81": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter6/82": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter6/83": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/84": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/85": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/86": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/87": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/88": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter7/89": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/103": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/104": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/105": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/106": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/107": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/108": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/109": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/110": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter8/111": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter9/112": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter9/113": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/counting/chapter9/114": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/17": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/18": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/19": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/20": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/21": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/22": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/23": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/24": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/25": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/26": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/27": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter1/32": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/194": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/195": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/196": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/197": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/198": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/199": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/201": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter10/202": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/203": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/204": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/205": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/206": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/207": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/208": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/209": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/210": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/211": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/212": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter11/213": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/219": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/220": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/222": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/223": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/224": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/231": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/232": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/233": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/266": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/267": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/274": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/275": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter12/277": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/287": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/288": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/290": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/291": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/292": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/293": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter13/294": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/175": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/176": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/177": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/179": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/180": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/181": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/183": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/185": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/186": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/187": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/60": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter14/84": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter15/308": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter15/309": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter15/310": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter15/311": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/28": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/29": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/30": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/31": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/33": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/34": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/35": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/39": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter2/41": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/36": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/37": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/38": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/40": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/42": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/43": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/44": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/45": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/50": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter3/56": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/46": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/47": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/48": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/49": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/51": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/52": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/53": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/54": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/55": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/68": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/69": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/70": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/71": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/72": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter4/91": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/100": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/101": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/102": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/130": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/131": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/132": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/133": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/90": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/92": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/93": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/94": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/95": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/96": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/97": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/98": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter5/99": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/134": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/135": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/136": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/137": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/138": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/139": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/148": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/149": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/150": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter6/151": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/152": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/153": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/154": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/155": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/156": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/157": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/158": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/159": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/160": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter7/161": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/162": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/163": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/164": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/165": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/166": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter8/167": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/168": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/169": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/170": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/171": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/172": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/173": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/videos/prealgebra/chapter9/174": {
+      "how": "source",
+      "note": "The link on AoPS's own videos page, read in Chrome."
+    },
+    "https://artofproblemsolving.com/wiki/index.php/AMC_10_Problems_and_Solutions": {
+      "how": "archive",
+      "status": 200,
+      "note": "Cloudflare asks a browser to prove it is human. The Internet Archive holds a 200 snapshot from 2026-10-03."
+    },
+    "https://artofproblemsolving.com/wiki/index.php/AMC_12_Problems_and_Solutions": {
+      "how": "archive",
+      "status": 200,
+      "note": "Cloudflare asks a browser to prove it is human. The Internet Archive holds a 200 snapshot from 2026-09-28."
+    },
+    "https://atcoder.jp/contests/abc400/tasks/abc400_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Takahashi the Wall Breaker"
+    },
+    "https://atcoder.jp/contests/abc411/tasks/abc411_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Conflict 2"
+    },
+    "https://atcoder.jp/contests/abc418/tasks/abc418_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Flush"
+    },
+    "https://atcoder.jp/contests/abc425/tasks/abc425_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Ulam-Warburton Automaton"
+    },
+    "https://atcoder.jp/contests/abc430/tasks/abc430_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - Shift String"
+    },
+    "https://atcoder.jp/contests/abc433/tasks/abc433_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - 183183"
+    },
+    "https://atcoder.jp/contests/abc434/tasks/abc434_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Clouds"
+    },
+    "https://atcoder.jp/contests/abc437/tasks/abc437_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Sum of Differences"
+    },
+    "https://atcoder.jp/contests/abc441/tasks/abc441_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Paid Walk"
+    },
+    "https://atcoder.jp/contests/abc446/tasks/abc446_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Max Straight"
+    },
+    "https://atcoder.jp/contests/abc447/tasks/abc447_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - Divide Graph"
+    },
+    "https://atcoder.jp/contests/abc453/tasks/abc453_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Go Straight"
+    },
+    "https://atcoder.jp/contests/abc455/tasks/abc455_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Card Pile Query"
+    },
+    "https://atcoder.jp/contests/abc463/tasks/abc463_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Maximize the Gap"
+    },
+    "https://atcoder.jp/contests/abc464/tasks/abc464_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Plumage Palette"
+    },
+    "https://atcoder.jp/contests/abc464/tasks/abc464_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Celester"
+    },
+    "https://atcoder.jp/contests/abc468/tasks/abc468_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - Sum of Average"
+    },
+    "https://atcoder.jp/contests/abc472/tasks/abc472_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Bomber Mad"
+    },
+    "https://atcoder.jp/contests/abc473/tasks/abc473_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - K-Divisible Subarrays"
+    },
+    "https://atcoder.jp/contests/abc475/tasks/abc475_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Walk the Line"
+    },
+    "https://atcoder.jp/contests/abc479/tasks/abc479_e": {
+      "how": "fetch",
+      "status": 200,
+      "title": "E - Cut and Add"
+    },
+    "https://atcoder.jp/contests/abc482/tasks/abc482_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Band Count"
+    },
+    "https://atcoder.jp/contests/abc483/tasks/abc483_c": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C - Second Choice Election"
+    },
+    "https://atcoder.jp/contests/abc483/tasks/abc483_d": {
+      "how": "fetch",
+      "status": 200,
+      "title": "D - Glitchy Robot"
+    },
+    "https://codeforces.com": {
+      "how": "browser",
+      "status": 200,
+      "title": "Codeforces"
+    },
+    "https://codeforces.com/contests": {
+      "how": "browser",
+      "status": 200,
+      "title": "Contests - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1913/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1913C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1926/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1926D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1927/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1927D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/1992/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 1992D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2002/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2002C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2004/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2004C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2009/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2009E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2014/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2014D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2019/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2019B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2024/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2024B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2031/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2031B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2032/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2032C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2033/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2033D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2034/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2034B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2036/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2036C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2039/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2039B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2039/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2039C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2044/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2044E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2047/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2047B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2050/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2050B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2051/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2051C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2055/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2055B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2055/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2055C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2056/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2056B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2056/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2056C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2063/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2063B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2064/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2064B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2065/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2065C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2067/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2067B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2070/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2070B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2071/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2071B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2072/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2072B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2074/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2074C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2084/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2084B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2085/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2085B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2086/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2086C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2090/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2090B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2091/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2091C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2093/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2093D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2094/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2094C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2094/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2094E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2096/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2096B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2104/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2104B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2107/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2107B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2110/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2110B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2110/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2110C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2112/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2112C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2117/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2117D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2119/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2119C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2120/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2120B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2120/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2120C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2121/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2121C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2122/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2122B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2127/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2127B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2127/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2127C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2128/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2128B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2128/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2128C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2132/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2132B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2132/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2132C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2133/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2133C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2137/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2137C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2140/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2140B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2143/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2143C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2145/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2145B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2145/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2145C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2148/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2148E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2149/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2149D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2154/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2154B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2154/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2154C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2157/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2157B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2158/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2158B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2158/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2158C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2160/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2160B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2160/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2160C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2161/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2161C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2164/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2164B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2169/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2169C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2170/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2170B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2170/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2170C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2171/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2171B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2171/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2171C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2171/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2171D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2173/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2173C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2175/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2175B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2176/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2176C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2184/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2184C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2188/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2188B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2189/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2189B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2189/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2189C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2193/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2193C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2194/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2194C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2195/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2195B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2195/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2195C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2200/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2200C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2200/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2200D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2204/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2204C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2204/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2204D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2208/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2208C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2209/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2209B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2209/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2209C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2210/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2210B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2211/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2211B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2216/A": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2216A - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2217/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2217C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2218/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2218D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2218/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2218E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2222/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2222B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2225/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2225C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2227/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2227D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2227/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2227E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2228/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2228B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2229/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2229C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2231/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2231B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2231/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2231C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2236/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2236C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2236/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2236D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2237/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2237C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2238/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2238B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2238/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2238C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2240/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2240B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2241/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2241C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2242/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2242B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2242/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2242C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2244/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2244E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2245/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2245B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2248/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2248B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2248/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2248D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2253/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2253B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2254/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2254/C1": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254C1 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2254/C2": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254C2 - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2254/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2254D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2257/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2257C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2260/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2260C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2261/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2261C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2263/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2263B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2266/E": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2266E - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2267/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2267C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2269/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2269B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2271/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2271C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2275/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2275D - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2276/B": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2276B - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2276/C": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2276C - Codeforces"
+    },
+    "https://codeforces.com/problemset/problem/2276/D": {
+      "how": "browser",
+      "status": 200,
+      "title": "Problem - 2276D - Codeforces"
+    },
+    "https://cp-algorithms.com": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Main Page - Algorithms for Competitive Programming"
+    },
+    "https://cses.fi/problemset/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - CSES Problem Set - Tasks"
+    },
+    "https://cses.fi/problemset/task/1068": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Weird Algorithm"
+    },
+    "https://cses.fi/problemset/task/1069": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Repetitions"
+    },
+    "https://cses.fi/problemset/task/1070": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Permutations"
+    },
+    "https://cses.fi/problemset/task/1071": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Number Spiral"
+    },
+    "https://cses.fi/problemset/task/1072": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Two Knights"
+    },
+    "https://cses.fi/problemset/task/1074": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Stick Lengths"
+    },
+    "https://cses.fi/problemset/task/1083": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Missing Number"
+    },
+    "https://cses.fi/problemset/task/1084": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Apartments"
+    },
+    "https://cses.fi/problemset/task/1090": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Ferris Wheel"
+    },
+    "https://cses.fi/problemset/task/1091": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Concert Tickets"
+    },
+    "https://cses.fi/problemset/task/1092": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Two Sets"
+    },
+    "https://cses.fi/problemset/task/1094": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Increasing Array"
+    },
+    "https://cses.fi/problemset/task/1146": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Bits"
+    },
+    "https://cses.fi/problemset/task/1192": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Counting Rooms"
+    },
+    "https://cses.fi/problemset/task/1193": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Labyrinth"
+    },
+    "https://cses.fi/problemset/task/1617": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Bit Strings"
+    },
+    "https://cses.fi/problemset/task/1619": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Restaurant Customers"
+    },
+    "https://cses.fi/problemset/task/1621": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Distinct Numbers"
+    },
+    "https://cses.fi/problemset/task/1622": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Creating Strings"
+    },
+    "https://cses.fi/problemset/task/1623": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Apple Division"
+    },
+    "https://cses.fi/problemset/task/1624": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Chessboard and Queens"
+    },
+    "https://cses.fi/problemset/task/1629": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Movie Festival"
+    },
+    "https://cses.fi/problemset/task/1640": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Sum of Two Values"
+    },
+    "https://cses.fi/problemset/task/1643": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Maximum Subarray Sum"
+    },
+    "https://cses.fi/problemset/task/1646": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Static Range Sum Queries"
+    },
+    "https://cses.fi/problemset/task/1650": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Range Xor Queries"
+    },
+    "https://cses.fi/problemset/task/1652": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Forest Queries"
+    },
+    "https://cses.fi/problemset/task/1666": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Building Roads"
+    },
+    "https://cses.fi/problemset/task/1674": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Subordinates"
+    },
+    "https://cses.fi/problemset/task/1750": {
+      "how": "fetch",
+      "status": 200,
+      "title": "CSES - Planets Queries I"
+    },
+    "https://kenkoooo.com/atcoder/": {
+      "how": "fetch",
+      "status": 200,
+      "title": "AtCoder Problems"
+    },
+    "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/": {
+      "how": "browser",
+      "status": 200,
+      "title": "Introduction to Algorithms"
+    },
+    "https://usaco.guide": {
+      "how": "fetch",
+      "status": 200,
+      "title": "USACO Guide"
+    },
+    "https://usaco.guide/bronze/ad-hoc": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Ad Hoc Problems · USACO Guide"
+    },
+    "https://usaco.guide/bronze/ad-hoc#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Ad Hoc Problems · USACO Guide"
+    },
+    "https://usaco.guide/bronze/bronze-conclusion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Additional Practice for USACO Bronze · USACO Guide"
+    },
+    "https://usaco.guide/bronze/casework": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Casework · USACO Guide"
+    },
+    "https://usaco.guide/bronze/casework#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Casework · USACO Guide"
+    },
+    "https://usaco.guide/bronze/complete-rec": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide"
+    },
+    "https://usaco.guide/bronze/complete-rec#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Complete Search with Recursion · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-complete": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Basic Complete Search · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-complete#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Basic Complete Search · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-ds": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Data Structures · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-ds#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Data Structures · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-graphs": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-graphs#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Graphs · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-greedy": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Greedy Algorithms · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-greedy#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Greedy Algorithms · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sets": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sets#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sets & Maps · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sorting": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorting · USACO Guide"
+    },
+    "https://usaco.guide/bronze/intro-sorting#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Sorting · USACO Guide"
+    },
+    "https://usaco.guide/bronze/rect-geo": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Rectangle Geometry · USACO Guide"
+    },
+    "https://usaco.guide/bronze/rect-geo#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Rectangle Geometry · USACO Guide"
+    },
+    "https://usaco.guide/bronze/simulation": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Simulation · USACO Guide"
+    },
+    "https://usaco.guide/bronze/simulation#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Simulation · USACO Guide"
+    },
+    "https://usaco.guide/bronze/time-comp": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide"
+    },
+    "https://usaco.guide/bronze/time-comp#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Time Complexity · USACO Guide"
+    },
+    "https://usaco.guide/general/choosing-lang": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Choosing a Language · USACO Guide"
+    },
+    "https://usaco.guide/general/contest-strategy": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Contest Strategy · USACO Guide"
+    },
+    "https://usaco.guide/general/cpp-command": {
+      "how": "fetch",
+      "status": 200,
+      "title": "C++ With the Command Line · USACO Guide"
+    },
+    "https://usaco.guide/general/data-types": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Data Types · USACO Guide"
+    },
+    "https://usaco.guide/general/debugging-checklist": {
+      "how": "fetch",
+      "status": 200,
+      "title": "How to Debug · USACO Guide"
+    },
+    "https://usaco.guide/general/debugging-cpp": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Debugging C++ · USACO Guide"
+    },
+    "https://usaco.guide/general/expected-knowledge": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Expected Knowledge · USACO Guide"
+    },
+    "https://usaco.guide/general/fast-io": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Fast Input & Output · USACO Guide"
+    },
+    "https://usaco.guide/general/input-output": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Input & Output · USACO Guide"
+    },
+    "https://usaco.guide/general/running-code-locally": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Running Code Locally · USACO Guide"
+    },
+    "https://usaco.guide/silver/binary-search": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search · USACO Guide"
+    },
+    "https://usaco.guide/silver/binary-search#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search · USACO Guide"
+    },
+    "https://usaco.guide/silver/binary-search-sorted-array": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search on a Sorted Array · USACO Guide"
+    },
+    "https://usaco.guide/silver/binary-search-sorted-array#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Binary Search on a Sorted Array · USACO Guide"
+    },
+    "https://usaco.guide/silver/flood-fill": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Flood Fill · USACO Guide"
+    },
+    "https://usaco.guide/silver/flood-fill#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Flood Fill · USACO Guide"
+    },
+    "https://usaco.guide/silver/func-graphs": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide"
+    },
+    "https://usaco.guide/silver/func-graphs#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Functional Graphs · USACO Guide"
+    },
+    "https://usaco.guide/silver/graph-traversal": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide"
+    },
+    "https://usaco.guide/silver/graph-traversal#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Graph Traversal · USACO Guide"
+    },
+    "https://usaco.guide/silver/greedy-sorting": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide"
+    },
+    "https://usaco.guide/silver/greedy-sorting#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Greedy Algorithms with Sorting · USACO Guide"
+    },
+    "https://usaco.guide/silver/intro-bitwise": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intro to Bitwise Operators · USACO Guide"
+    },
+    "https://usaco.guide/silver/intro-bitwise#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Intro to Bitwise Operators · USACO Guide"
+    },
+    "https://usaco.guide/silver/intro-tree": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Tree Algorithms · USACO Guide"
+    },
+    "https://usaco.guide/silver/intro-tree#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Tree Algorithms · USACO Guide"
+    },
+    "https://usaco.guide/silver/more-prefix-sums": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More on Prefix Sums · USACO Guide"
+    },
+    "https://usaco.guide/silver/more-prefix-sums#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "More on Prefix Sums · USACO Guide"
+    },
+    "https://usaco.guide/silver/prefix-sums": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Prefix Sums · USACO Guide"
+    },
+    "https://usaco.guide/silver/prefix-sums#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Introduction to Prefix Sums · USACO Guide"
+    },
+    "https://usaco.guide/silver/priority-queues": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Priority Queues · USACO Guide"
+    },
+    "https://usaco.guide/silver/priority-queues#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Priority Queues · USACO Guide"
+    },
+    "https://usaco.guide/silver/silver-conclusion": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Additional Practice for USACO Silver · USACO Guide"
+    },
+    "https://usaco.guide/silver/sorting-custom": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Custom Comparators and Coordinate Compression · USACO Guide"
+    },
+    "https://usaco.guide/silver/sorting-custom#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Custom Comparators and Coordinate Compression · USACO Guide"
+    },
+    "https://usaco.guide/silver/two-pointers": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Two Pointers · USACO Guide"
+    },
+    "https://usaco.guide/silver/two-pointers#problems": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Two Pointers · USACO Guide"
+    },
+    "https://web.evanchen.cc/otis.html": {
+      "how": "fetch",
+      "status": 200,
+      "title": "Evan Chen • Olympiad Training for Individual Study (OTIS)"
+    }
+  }
+}

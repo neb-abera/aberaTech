@@ -162,6 +162,11 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Training plan",
     description: "The owner's training plan, read live from Notion.",
   },
+  "/training": {
+    title: "Training",
+    description:
+      "A path in competitive math and programming, from the basics to olympiad level: the order, the sources, and the record.",
+  },
 };
 
 const entryMeta = Object.fromEntries(
