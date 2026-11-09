@@ -2,7 +2,7 @@
 # server. A named stage rather than an ARG deliberately: Dependabot cannot see
 # an image behind ARG indirection, but it watches a literal FROM, and every
 # consumer derives from this one stage so a bump moves them all together.
-FROM node:26@sha256:a723b54c35a76e947095a20a67d39585bb09c862e6b1adeb8a9f518f95e34fb0 AS nodebase
+FROM node:26@sha256:438603bbb5cda404b9416f0b5c8026f61501ab911760d861ec28c36b5d675725 AS nodebase
 
 # Prose linter, for scripts/check-prose.sh. Never built into anything: the
 # stage exists so the image is a FROM line Dependabot sees and bumps, and the
