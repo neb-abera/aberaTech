@@ -1,0 +1,47 @@
+# /training
+
+A course player for competitive math and programming. It coordinates other
+systems and writes no lesson text a source already teaches. The design is
+the Notion page "abera.tech training system for competitive math and
+programming: systems design (9 Nov 2026)". The plan it delivers is
+"Competitive math and programming: plan to 2032".
+
+## Where things are
+
+- `data/syllabus.json`: phases, the week, systems, units, lessons, items,
+  and checkpoints. Built on 9 Nov 2026 from the plan and from each source.
+- `data/link-check.json`: how every address in the syllabus was opened, and
+  what it answered. A unit test fails on an address with no record.
+- `core/syllabus.ts`: the types, including the question types the
+  assessment increment fills.
+- `core/progress.ts`: the owner's document (key `training` in
+  `/api/progress`), item status, checkpoints, and unit states.
+- `/api/progress/training`: owner only, server side. A visitor never asks
+  for it.
+
+## How the syllabus was built
+
+| Data                              | Source                                                                 |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| Chapters, sections, pages         | The AoPS table of contents PDF for each book                           |
+| Videos                            | AoPS's videos page, read in Chrome, and each video's length on YouTube |
+| USACO Guide modules               | `content/ordering.ts` and the module files in cpinitiative/usaco-guide |
+| CSES problems                     | cses.fi/problemset                                                     |
+| Codeforces problems and ratings   | The Codeforces API, `problemset.problems`                              |
+| AtCoder problems and difficulties | AtCoder Problems, `problems.json` and `problem-models.json`            |
+
+Minutes for reading are 3 a page, an estimate, and each item says so.
+
+## Increments not built yet
+
+Each is in the design page, with its requirement.
+
+1. Review queue at 2 and 14 days, and the rule that overdue reviews come
+   first. The document keeps `reviews`, and `today()` takes a list of due
+   reviews and puts them first in their track's block.
+2. Assessment: multiple choice, short answer, proofs against a rubric,
+   flashcards on FSRS, an Anki export, pretests, and mastery checks. Lessons
+   take `questions`, and units take `pretest` and `mastery`.
+3. Notes search. Notes are kept by lesson and item id in `notes`.
+4. Coding drills graded on the server by a Rust grader service. The question
+   type `code` carries its tests. Not built until Neb approves its cost.

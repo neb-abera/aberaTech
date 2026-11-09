@@ -22,8 +22,16 @@ function saved(page: Page) {
   );
 }
 
-test("the owner opens /training on Today", async ({ page }) => {
+test("the owner reaches /training from the app bar and sees Today", async ({
+  page,
+}) => {
   await open(page, "/training");
+  await page.goto("/guides");
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Training", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/training$/);
   const today = page.getByRole("region", { name: "Today" });
   await expect(
     today.getByRole("heading", {
@@ -36,24 +44,34 @@ test("the owner opens /training on Today", async ({ page }) => {
   );
 });
 
-test("the owner ticks an item and it survives a reload", async ({ page }) => {
+test("the owner ticks an item and writes a note, and both survive a reload", async ({
+  page,
+}) => {
   await open(page, "/training?lesson=cp-3");
   const box = page.getByRole("checkbox", {
     name: /Done: Introduction to Counting & Probability, chapter 3/,
   });
+  const note = page.getByRole("textbox", { name: "Lesson notes" });
+  const text = `e2e ${test.info().project.name}`;
 
   let put = saved(page);
   await box.check();
   expect((await put).ok()).toBe(true);
+  put = saved(page);
+  await note.fill(text);
+  expect((await put).ok()).toBe(true);
 
   await page.reload();
   await expect(box).toBeChecked({ timeout: 15_000 });
+  await expect(note).toHaveValue(text);
 
   put = saved(page);
   await box.uncheck();
+  await note.fill("");
   expect((await put).ok()).toBe(true);
   await page.reload();
   await expect(box).not.toBeChecked({ timeout: 15_000 });
+  await expect(note).toHaveValue("");
 });
 
 test("a problem Codeforces reports solved shows solved, and an unsolved one stays open", async ({
