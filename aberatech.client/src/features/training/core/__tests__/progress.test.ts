@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { checkKey, recordAttempt } from "../assessment";
 import {
   canTick,
   checkpointState,
@@ -327,13 +328,27 @@ describe("the units", () => {
     expect(count.done).toBe(basics.length);
   });
 
-  it("finish when every item is done", () => {
+  it("finish when every item is done, the quizzes taken, and mastery passed", () => {
+    const basics = unit("cpp-basics");
+    const done = now.toISOString();
     let document = emptyTraining();
-    for (const lesson of unit("cpp-basics").lessons)
+    for (const lesson of basics.lessons) {
       for (const each of lesson.items)
         document = toggleItem(document, each.id, now);
-    expect(unitStates(document, noSolves, now).get("cpp-basics")?.state).toBe(
-      "done",
-    );
+      document = recordAttempt(document, checkKey("quiz", lesson.id), {
+        at: done,
+        answers: {},
+      });
+    }
+    const state = () =>
+      unitStates(document, noSolves, now).get("cpp-basics")?.state;
+    expect(state()).not.toBe("done");
+    document = recordAttempt(document, checkKey("mastery", basics.id), {
+      at: done,
+      answers: Object.fromEntries(
+        (basics.mastery ?? []).map((id) => [id, { correct: true, given: "x" }]),
+      ),
+    });
+    expect(state()).toBe("done");
   });
 });

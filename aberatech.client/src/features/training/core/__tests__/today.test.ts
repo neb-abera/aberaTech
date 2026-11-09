@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { checkKey, recordAttempt, setExternal } from "../assessment";
 import {
   emptyTraining,
   noSolves,
@@ -47,11 +48,36 @@ function placeOut(document: TrainingDocument, id: string): TrainingDocument {
   return next;
 }
 
-/** Every item of a unit ticked. */
+/**
+ * Every item of a unit ticked, its quizzes and pretest taken, and its
+ * mastery check passed, on the page or outside: the unit is done.
+ */
 function finish(document: TrainingDocument, id: string): TrainingDocument {
+  const each = unit(id);
+  const at = now.toISOString();
   let next = document;
-  for (const lesson of unit(id).lessons)
-    for (const each of lesson.items) next = toggleItem(next, each.id, now);
+  for (const lesson of each.lessons) {
+    for (const item of lesson.items) next = toggleItem(next, item.id, now);
+    if ((lesson.questions ?? []).length > 0)
+      next = recordAttempt(next, checkKey("quiz", lesson.id), {
+        at,
+        answers: {},
+      });
+  }
+  if (each.pretest)
+    next = recordAttempt(next, checkKey("pretest", id), { at, answers: {} });
+  if (each.mastery)
+    next = recordAttempt(next, checkKey("mastery", id), {
+      at,
+      answers: Object.fromEntries(
+        each.mastery.map((question) => [
+          question,
+          { correct: true, given: "x" },
+        ]),
+      ),
+    });
+  if (each.externalMastery)
+    next = setExternal(next, checkKey("mastery", id), { at });
   return next;
 }
 
@@ -86,7 +112,7 @@ describe("next up", () => {
         ),
     );
     for (const list of lists) expect(list).toEqual(lists[0]);
-    expect(lists[0]).toContain("refresh-learncpp-ints");
+    expect(lists[0]).toContain("pretest:refresh-cpp");
     expect(lists[0]).toContain("refresh-alcumus-setup");
   });
 

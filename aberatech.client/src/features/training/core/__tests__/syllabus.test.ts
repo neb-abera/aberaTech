@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import linkCheck from "../../data/link-check.json";
+import { readError } from "../grade";
 import { everyItem } from "../progress";
 import {
   allLessons,
@@ -239,6 +240,105 @@ describe("the syllabus", () => {
     const text = JSON.stringify(syllabus).toLowerCase();
     for (const site of ["leetcode", "hackerrank", "structy", "algomonster"])
       expect(text).not.toContain(site);
+  });
+});
+
+describe("the questions", () => {
+  const units = syllabus.units;
+  const questions = allLessons().flatMap((lesson) => lesson.questions ?? []);
+  const alcumus = units.filter((unit) => unit.externalMastery);
+  // Practice bands, contests, and timed papers are tested by the judges and
+  // the paper's score.
+  const untested = [
+    "first-contest",
+    "amc-baseline",
+    "amc12-gate",
+    "otis-apply",
+    "ac-bands",
+  ];
+
+  it("has a unique id for every question", () => {
+    const ids = questions.map((question) => question.id);
+    expect(ids.length).toBeGreaterThan(900);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.filter((id) => id.startsWith("fixture-"))).toEqual([]);
+  });
+
+  it("sends every question to a place the link check opened", () => {
+    const urls = [
+      ...questions.map((question) => question.ref.url),
+      ...alcumus.map((unit) => unit.externalMastery?.url ?? ""),
+    ];
+    expect(urls.filter((url) => !(url in links))).toEqual([]);
+    expect(urls.filter((url) => (links[url].status ?? 200) !== 200)).toEqual(
+      [],
+    );
+    for (const question of questions)
+      expect(question.ref.label.length, question.id).toBeGreaterThan(5);
+  });
+
+  it("gives each type what it needs to be graded", () => {
+    for (const question of questions) {
+      if (question.type === "choice") {
+        expect(question.choices.length, question.id).toBeGreaterThanOrEqual(3);
+        expect(question.answer, question.id).toBeLessThan(
+          question.choices.length,
+        );
+      }
+      if (question.type === "number")
+        expect(readError(question.answer), question.id).toBeNull();
+      if (question.type === "proof")
+        expect(question.rubric.length, question.id).toBeGreaterThanOrEqual(3);
+      if (question.type === "code")
+        expect(question.tests.length, question.id).toBeGreaterThanOrEqual(3);
+      if (question.type === "card")
+        expect(question.back.length, question.id).toBeGreaterThan(0);
+    }
+  });
+
+  it("asks each pretest and mastery check from the unit's own lessons, never both", () => {
+    for (const unit of units) {
+      const own = new Set(
+        unit.lessons.flatMap((lesson) =>
+          (lesson.questions ?? []).map((question) => question.id),
+        ),
+      );
+      const pretest = unit.pretest ?? [];
+      const mastery = unit.mastery ?? [];
+      for (const id of [...pretest, ...mastery])
+        expect(own.has(id), `${unit.id} ${id}`).toBe(true);
+      expect(pretest.filter((id) => mastery.includes(id))).toEqual([]);
+    }
+  });
+
+  it("leaves to Alcumus what Alcumus covers", () => {
+    expect(alcumus.length).toBe(26);
+    for (const unit of alcumus) {
+      expect(unit.pretest, unit.id).toBeUndefined();
+      expect(unit.mastery, unit.id).toBeUndefined();
+      const named = unit.lessons
+        .flatMap((lesson) => lesson.items)
+        .filter((item) => item.system === "alcumus")
+        .map((item) => item.title)
+        .join(" ");
+      for (const topic of unit.externalMastery?.topics ?? [])
+        expect(named, `${unit.id} ${topic}`).toContain(topic);
+      for (const lesson of unit.lessons)
+        for (const question of lesson.questions ?? [])
+          expect(["card", "proof"], question.id).toContain(question.type);
+    }
+  });
+
+  it("tests every unit of Phases 0 to 2 but bands, contests, and papers", () => {
+    const bare = units
+      .filter((unit) => unit.phase <= 2 && !unit.id.startsWith("band-"))
+      .filter((unit) => !untested.includes(unit.id))
+      .filter(
+        (unit) =>
+          !unit.lessons.some((lesson) => (lesson.questions ?? []).length > 0),
+      )
+      .map((unit) => unit.id);
+    expect(bare).toEqual([]);
   });
 });
 
