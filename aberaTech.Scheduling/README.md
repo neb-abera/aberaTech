@@ -133,16 +133,16 @@ so the Messages card says "Google accepted" and claims nothing more.
 
 ### What gets sent, and to whom
 
-| Event                             | Visitor                                 | Host        |
-| --------------------------------- | --------------------------------------- | ----------- |
-| Books a time | Calendar invite by Google. Text confirmation, with the opt-out, if they ticked the box | New booking |
-| Invite runs out of attempts | | Invite failed |
-| A day before                      | Reminder, if it is more than a day away |             |
-| An hour before                    | Reminder                                |             |
-| Cancels, either side | Invite withdrawn by Google. Text cancellation | Canceled |
-| Joins a queue                     | Place and estimate, with the opt-out    |             |
-| Estimate moves past the tolerance | New estimate                            |             |
-| Nearly their turn, and their turn | One each                                |             |
+| Event                             | Visitor                                                                                | Host          |
+| --------------------------------- | -------------------------------------------------------------------------------------- | ------------- |
+| Books a time                      | Calendar invite by Google. Text confirmation, with the opt-out, if they ticked the box | New booking   |
+| Invite runs out of attempts       |                                                                                        | Invite failed |
+| A day before                      | Reminder, if it is more than a day away                                                |               |
+| An hour before                    | Reminder                                                                               |               |
+| Cancels, either side              | Invite withdrawn by Google. Text cancellation                                          | Canceled      |
+| Joins a queue                     | Place and estimate, with the opt-out                                                   |               |
+| Estimate moves past the tolerance | New estimate                                                                           |               |
+| Nearly their turn, and their turn | One each                                                                               |               |
 
 Reminders are ordinary outbox rows with a due time in the future, so they
 inherit the same retries, receipts and dead lettering as everything else and
