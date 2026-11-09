@@ -279,7 +279,7 @@ describe("the units", () => {
     expect(states.get("cpp-toolkit")).toMatchObject({ state: "waiting" });
     expect(states.get("amc-baseline")?.state).toBe("open");
     expect(states.get("prealgebra-1")).toMatchObject({ state: "waiting" });
-    expect(states.get("p2-gold")?.state).toBe("locked");
+    expect(states.get("p3-chen")?.state).toBe("locked");
   });
 
   it("hold nothing up behind the first rated contest", () => {
