@@ -38,6 +38,8 @@ env:
   CONTAINER_REGISTRY_LOGIN_SERVER: aberatechserver20241221175455.azurecr.io
   DOCKER_FILE_PATH: aberaTech.Server/Dockerfile
   PROJECT_NAME_FOR_DOCKER: aberatechserver
+  # The Rust grader (grader/README.md), built and pushed beside the site.
+  GRADER_IMAGE_NAME: abera-grader
 jobs:
   build:
     runs-on: ubuntu-26.04
@@ -132,6 +134,42 @@ jobs:
           subject-name: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}
           subject-digest: ${{ steps.push.outputs.digest }}
           sbom-path: sbom.spdx.json
+          push-to-registry: true
+
+      # The grader's image, from grader/Dockerfile, with the same provenance
+      # and SBOM attestations as the site's. The Checks workflow built and
+      # ran this stage on the pull request.
+      - name: Build and push the grader image
+        id: grader
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: grader
+          push: true
+          tags: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.GRADER_IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Attest the grader image's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.GRADER_IMAGE_NAME }}
+          subject-digest: ${{ steps.grader.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate the grader image's SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          syft-version: ${{ steps.pins.outputs.syft }}
+          image: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.GRADER_IMAGE_NAME }}@${{ steps.grader.outputs.digest }}
+          format: spdx-json
+          output-file: grader-sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest the SBOM to the grader image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.GRADER_IMAGE_NAME }}
+          subject-digest: ${{ steps.grader.outputs.digest }}
+          sbom-path: grader-sbom.spdx.json
           push-to-registry: true
 
   # The schema changes here, before a revision of the new image exists, and

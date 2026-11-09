@@ -49,7 +49,7 @@ export HOST_GID
 IMAGE        := abera-tech:$(shell printf '%s' '$(notdir $(CURDIR))' | tr 'A-Z' 'a-z')
 
 .DEFAULT_GOAL := help
-.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e e2e-pass lighthouse lighthouse-live check image run clean
+.PHONY: help ports up dev db queue-open queue-close test test-watch servertest dbtest lint lint-ci fmt budget prose e2e e2e-pass lighthouse lighthouse-live grader-verify grader-fuzz check image run clean
 
 help: ## List the available targets
 	@grep -hE '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -112,7 +112,7 @@ LINT_IMAGE := $(shell sed -n 's|^FROM \(rhysd/actionlint:[^ ]*\) AS actionlint$$
 lint-ci: ## actionlint on the workflows and their run: blocks, shellcheck on scripts and tools, workflow concurrency, version numbers
 	@test -n "$(LINT_IMAGE)" || { echo "error: no 'FROM rhysd/actionlint:... AS actionlint' stage in $(DOCKERFILE)" >&2; exit 1; }
 	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint actionlint $(LINT_IMAGE) -color
-	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint shellcheck $(LINT_IMAGE) scripts/*.sh tools/lighthouse/*.sh
+	$(DOCKER) run --rm --user $(HOST_UID):$(HOST_GID) -v $(CURDIR):/repo:ro -w /repo --entrypoint shellcheck $(LINT_IMAGE) scripts/*.sh tools/lighthouse/*.sh grader/scripts/*.sh
 	./scripts/check-concurrency.sh --self-test
 	./scripts/check-concurrency.sh
 	./scripts/check-version.sh --self-test
@@ -210,6 +210,24 @@ lighthouse: ## Lighthouse against the production image: the gate, and an upload 
 lighthouse-live: ## Lighthouse against https://abera.tech, as the nightly run does
 	$(LIGHTHOUSE_RUN) -e LHCI_BASE_URL=https://abera.tech -e LHCI_MODE=live $(PLAYWRIGHT_IMAGE) bash /src/run.sh
 
+# The Rust grader (grader/README.md) runs modern-rust-template's verification
+# suite in its own toolchain image, tagged per worktree. The tree is copied
+# into the container, so the suite's canaries never touch this checkout.
+GRADER_TOOLCHAIN := $(subst abera-tech:,aberatech-grader-toolchain:,$(IMAGE))
+
+grader-verify: ## The grader's verification suite: tests, coverage, clippy, Miri, Kani, cargo-deny, cargo-vet, fuzz smoke, size
+	$(DOCKER) build --target toolchain -t $(GRADER_TOOLCHAIN) grader
+	$(DOCKER) run --rm -v $(CURDIR)/grader:/src:ro $(GRADER_TOOLCHAIN) bash -c 'set -eu; mkdir "$$HOME/project"; \
+	  tar -C /src --exclude=./target --exclude=./fuzz/target -cf - . | tar -xf - -C "$$HOME/project"; \
+	  cd "$$HOME/project" && ./scripts/verify.sh'
+
+grader-fuzz: ## Fuzz the grader's request and output handling for 60 seconds
+	$(DOCKER) build --target toolchain -t $(GRADER_TOOLCHAIN) grader
+	$(DOCKER) run --rm -v $(CURDIR)/grader:/src:ro $(GRADER_TOOLCHAIN) bash -c 'set -eu; mkdir "$$HOME/project"; \
+	  tar -C /src --exclude=./target --exclude=./fuzz/target -cf - . | tar -xf - -C "$$HOME/project"; \
+	  cd "$$HOME/project" && cargo +"$$NIGHTLY_TOOLCHAIN" fuzz run inputs \
+	    --target "$$(rustc +"$$NIGHTLY_TOOLCHAIN" -vV | sed -n "s/^host: //p")" -- -max_total_time=60'
+
 check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page weight, prose, database and browser suites
 	./scripts/check-required-contexts.sh --self-test
 	./scripts/check-required-contexts.sh
@@ -229,6 +247,7 @@ check: ## The gate CI runs: type check, unit tests, coverage, lint, format, page
 	./scripts/check-template-parity.sh --self-test
 	./scripts/check-template-parity.sh
 	./scripts/server-db-tests.sh
+	$(MAKE) grader-verify
 	$(MAKE) e2e
 
 image: ## Build the production image the deploy pipeline builds

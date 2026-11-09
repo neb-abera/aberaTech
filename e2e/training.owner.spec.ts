@@ -116,8 +116,9 @@ test("a drill runs against its tests and shows which failed", async ({
   });
   const editor = drill.getByRole("textbox", { name: "Your C++" });
 
-  // Compiler Explorer is faked under `make e2e` (FakeCompilerExplorer.cs):
-  // "// fake: sum" prints the sum of the input, anything else prints nothing.
+  // Under `make e2e` the drill goes through the Rust grader to a fake
+  // Compiler Explorer (grader/tests/common/fake.rs): "// fake: sum" prints
+  // the sum of the input, anything else prints nothing.
   await editor.fill("int main() {}");
   await drill.getByRole("button", { name: "Run 3 tests" }).click();
   await expect(drill.getByText("0 of 3 tests passed.")).toBeVisible();

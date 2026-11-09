@@ -374,6 +374,87 @@ jobs:
           flags: server
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  # The Rust grader (grader/), through modern-rust-template's verification
+  # suite in its own toolchain image: the build and tests, coverage, clippy,
+  # rustdoc, Miri, the Kani proofs and their canary, cargo-deny, cargo-vet,
+  # a fuzz smoke run, the executable, the benchmarks, the size budget, the
+  # mutation canary, and rustfmt. Then the production image is built, as the
+  # deploy workflow builds it, and must start and answer its health probe.
+  grader:
+    name: Grader verify suite, in the container
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          # Audit, not block: this job builds and runs containers, and
+          # container-side DNS bypasses harden-runner's resolver.
+          egress-policy: audit
+
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build the grader toolchain image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: grader
+          target: toolchain
+          push: false
+          load: true
+          tags: aberatech-ci-grader-toolchain
+          cache-from: type=gha,scope=grader-toolchain
+          cache-to: type=gha,scope=grader-toolchain,mode=max
+
+      # The tree is copied into the container's home, as the template's
+      # verify-docker.sh does, so the suite's canaries never touch the
+      # checkout. GITHUB_STEP_SUMMARY is a file on the runner, so the summary
+      # is written to the mounted output directory and appended after.
+      - name: Verification suite
+        run: |
+          mkdir -p "$RUNNER_TEMP/grader-summary"
+          chmod 777 "$RUNNER_TEMP/grader-summary"
+          status=0
+          docker run --rm -v "$PWD/grader":/src:ro -v "$RUNNER_TEMP/grader-summary":/out \
+            -e GITHUB_STEP_SUMMARY=/out/summary.md aberatech-ci-grader-toolchain bash -c '
+              set -eu
+              mkdir "$HOME/project"
+              tar -C /src --exclude=./target --exclude=./fuzz/target -cf - . | tar -xf - -C "$HOME/project"
+              cd "$HOME/project"
+              ./scripts/verify.sh
+            ' || status=$?
+          cat "$RUNNER_TEMP/grader-summary/summary.md" >> "$GITHUB_STEP_SUMMARY" 2> /dev/null || true
+          exit "$status"
+
+      - name: Build the grader production image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: grader
+          push: false
+          load: true
+          tags: aberatech-ci-grader
+          cache-from: type=gha,scope=grader
+          cache-to: type=gha,scope=grader,mode=max
+
+      - name: The grader image runs as nonroot and answers its probe
+        run: |
+          user=$(docker image inspect aberatech-ci-grader --format '{{.Config.User}}')
+          if [ "$user" != "nonroot" ]; then echo "::error::The grader image runs as '${user:-root}', not nonroot."; exit 1; fi
+          docker run -d --rm --name aberatech-ci-grader aberatech-ci-grader
+          for _ in $(seq 1 30); do
+            if docker exec aberatech-ci-grader /grader probe; then docker rm -f aberatech-ci-grader > /dev/null; exit 0; fi
+            sleep 1
+          done
+          docker logs aberatech-ci-grader
+          docker rm -f aberatech-ci-grader > /dev/null
+          echo "::error::The grader image did not answer /healthz within 30 seconds."
+          exit 1
+
   production-image:
     name: Production image, in the container
     runs-on: ubuntu-26.04
