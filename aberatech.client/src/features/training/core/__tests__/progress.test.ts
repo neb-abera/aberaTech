@@ -280,7 +280,22 @@ describe("the units", () => {
     expect(states.get("cpp-basics")).toMatchObject({ state: "waiting" });
     expect(states.get("refresh-algebra")?.state).toBe("open");
     expect(states.get("amc-baseline")).toMatchObject({ state: "waiting" });
-    expect(states.get("p3-chen")?.state).toBe("locked");
+    expect(states.get("p3-zeitz-finish")).toMatchObject({ state: "waiting" });
+  });
+
+  it("keep a unit locked while its lessons are unwritten", () => {
+    const egmo = unit("p3-egmo");
+    const from = {
+      ...syllabus,
+      units: syllabus.units.map((each) =>
+        each === egmo
+          ? { ...egmo, lessons: [], locked: "Written before you get there." }
+          : each,
+      ),
+    };
+    expect(
+      unitStates(emptyTraining(), noSolves, now, from).get("p3-egmo"),
+    ).toEqual({ state: "locked", reason: "Written before you get there." });
   });
 
   it("hold nothing up behind the first rated contest", () => {

@@ -52,6 +52,12 @@ never hold back or count toward a unit.
 | Alcumus topics                    | Neb's Alcumus report, matched to each book's section titles            |
 | Math placement                    | AoPS's "Do you need this?" test for each class, from its course page   |
 | AMC 10 and AMC 12 papers          | AoPS's Practice Competitions page                                      |
+| Olympiad book chapters and pages  | Each book's own contents: its PDF, Wiley, MAA, Springer, or AMS        |
+| USAMO and IMO papers              | Evan Chen's solution notes, one PDF a year                             |
+| IMO Shortlist and medal cutoffs   | imo-official.org                                                       |
+| Div. 1 problems under 100 solvers | Official standings of the 40 newest Div. 1 rounds, Codeforces API      |
+| ARC and AGC problems              | AtCoder Problems, `problems.json` and `problem-models.json`            |
+| cp-algorithms pages               | `src/navigation.md` in cp-algorithms/cp-algorithms                     |
 
 Minutes for reading are 3 a page, an estimate, and each item says so.
 
