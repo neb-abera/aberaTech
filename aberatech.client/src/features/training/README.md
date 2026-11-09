@@ -43,5 +43,14 @@ Each is in the design page, with its requirement.
    flashcards on FSRS, an Anki export, pretests, and mastery checks. Lessons
    take `questions`, and units take `pretest` and `mastery`.
 3. Notes search. Notes are kept by lesson and item id in `notes`.
-4. Coding drills graded on the server by a Rust grader service. The question
-   type `code` carries its tests. Not built until Neb approves its cost.
+4. A Rust grader service beside the site, called by the server, for drills
+   beyond the basics. Not built until Neb approves its cost.
+
+## Drills
+
+Five basics drills in "C++ for contests: the language" are coded on the
+page. `/api/training/drills/run` sends the source and each test's input to
+Compiler Explorer's public API (gcc 16.2, `-O2 -std=c++23`), and compares
+the output with the test, ignoring trailing spaces and blank lines. No
+code runs in the site's container. Each drill's expected output came from a
+reference solution compiled and run on the dev box on 9 Nov 2026.

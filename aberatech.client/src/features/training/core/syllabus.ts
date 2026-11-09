@@ -24,7 +24,9 @@ export type Recording =
   | "codeforces"
   | "atcoder"
   /** Done once the Codeforces API lists a rated contest for the handle. */
-  | "codeforces-rated";
+  | "codeforces-rated"
+  /** Done when its code passes every test on the page. */
+  | "drill";
 
 export interface Video {
   title: string;
@@ -63,6 +65,13 @@ export interface Item {
   links?: { label: string; url: string }[];
   /** The item takes a score, a practice paper out of 150. */
   score?: boolean;
+  /** A drill coded on the page and checked against its tests. */
+  drill?: Drill;
+}
+
+export interface Drill {
+  starter: string;
+  tests: { stdin: string; stdout: string }[];
 }
 
 /** Where a wrong answer sends you: the exact place that teaches it. */

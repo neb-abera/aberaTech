@@ -10,6 +10,11 @@ namespace aberaTech.Server.Training;
 /// </summary>
 public static class TrainingEndpoints
 {
+    /// <summary>Drill runs, per address. Each costs Compiler Explorer one call per test.</summary>
+    public const string DrillPolicy = "training-drills";
+
+    public const int DefaultDrillsPerMinute = 10;
+
     public static IEndpointRouteBuilder MapTrainingEndpoints(this IEndpointRouteBuilder routes)
     {
         routes.MapGet("/api/training/solves", async (string? codeforces, string? atcoder, JudgeReader judges, TimeProvider time, CancellationToken cancellationToken) =>
@@ -34,6 +39,17 @@ public static class TrainingEndpoints
             });
         })
         .RequireAuthorization(AdminAuth.PolicyName)
+        .WithTags("Training");
+
+        // A drill's C++ goes to Compiler Explorer, which compiles and runs
+        // it. Nothing runs here. Owner only, and ten runs a minute.
+        routes.MapPost("/api/training/drills/run", async (DrillRun run, DrillRunner runner, CancellationToken cancellationToken) =>
+        {
+            if (DrillRunner.Invalid(run) is { } problem) return Results.BadRequest(problem);
+            return Results.Ok(await runner.RunAsync(run, cancellationToken));
+        })
+        .RequireAuthorization(AdminAuth.PolicyName)
+        .RequireRateLimiting(DrillPolicy)
         .WithTags("Training");
 
         return routes;

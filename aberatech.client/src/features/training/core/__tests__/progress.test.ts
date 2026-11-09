@@ -7,7 +7,9 @@ import {
   normalizeTraining,
   noSolves,
   overall,
+  passDrill,
   type Solves,
+  setCode,
   setMissed,
   setScore,
   startCheckpoint,
@@ -134,6 +136,28 @@ describe("an item", () => {
       atcoder: { solved: { abc482_c: "2026-11-10T09:00:00.000Z" } },
     };
     expect(itemStatus(problem, emptyTraining(), solves).by).toBe("atcoder");
+  });
+});
+
+describe("a drill", () => {
+  const now = at("2026-11-10T10:00:00Z");
+
+  it("is done only by passing, never by a tick", () => {
+    const drill = item("drill-sum");
+    expect(canTick(drill, noSolves)).toBe(false);
+    const passed = passDrill(emptyTraining(), "drill-sum", now);
+    expect(itemStatus(drill, passed)).toMatchObject({
+      done: true,
+      by: "drill",
+    });
+    expect(passDrill(passed, "drill-sum", at("2026-11-11T10:00:00Z"))).toBe(
+      passed,
+    );
+  });
+
+  it("keeps the latest source", () => {
+    const document = setCode(emptyTraining(), "drill-sum", "int main(){}");
+    expect(normalizeTraining(document).code["drill-sum"]).toBe("int main(){}");
   });
 });
 

@@ -274,6 +274,147 @@
           ]
         },
         {
+          "id": "cpp-drills",
+          "title": "Drills on the page",
+          "items": [
+            {
+              "id": "drill-sum",
+              "kind": "code",
+              "system": "site",
+              "title": "Read two numbers, print their sum",
+              "minutes": 10,
+              "minutesBasis": "Proposed",
+              "record": "drill",
+              "what": "Read two integers a and b, each between -10^18 and 10^18 so that the sum fits, and print a + b. Run it here. Compiler Explorer compiles it with gcc 16.2, -O2 -std=c++23, and the page checks the output.",
+              "drill": {
+                "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n}\n",
+                "tests": [
+                  {
+                    "stdin": "2 3\n",
+                    "stdout": "5\n"
+                  },
+                  {
+                    "stdin": "-5 5\n",
+                    "stdout": "0\n"
+                  },
+                  {
+                    "stdin": "1000000000000000000 -1\n",
+                    "stdout": "999999999999999999\n"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "drill-loop",
+              "kind": "code",
+              "system": "site",
+              "title": "Sum of 1 to n",
+              "minutes": 10,
+              "minutesBasis": "Proposed",
+              "record": "drill",
+              "what": "Read n, 1 <= n <= 10^9, and print 1 + 2 + ... + n. Mind the type. Run it here. Compiler Explorer compiles it with gcc 16.2, -O2 -std=c++23, and the page checks the output.",
+              "drill": {
+                "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n}\n",
+                "tests": [
+                  {
+                    "stdin": "1\n",
+                    "stdout": "1\n"
+                  },
+                  {
+                    "stdin": "10\n",
+                    "stdout": "55\n"
+                  },
+                  {
+                    "stdin": "1000000000\n",
+                    "stdout": "500000000500000000\n"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "drill-sort",
+              "kind": "code",
+              "system": "site",
+              "title": "Sort and print",
+              "minutes": 10,
+              "minutesBasis": "Proposed",
+              "record": "drill",
+              "what": "Read n, then n integers. Print them in nondecreasing order, separated by spaces. Run it here. Compiler Explorer compiles it with gcc 16.2, -O2 -std=c++23, and the page checks the output.",
+              "drill": {
+                "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n}\n",
+                "tests": [
+                  {
+                    "stdin": "5\n3 1 4 1 5\n",
+                    "stdout": "1 1 3 4 5\n"
+                  },
+                  {
+                    "stdin": "1\n-7\n",
+                    "stdout": "-7\n"
+                  },
+                  {
+                    "stdin": "6\n10 -2 10 0 -2 3\n",
+                    "stdout": "-2 -2 0 3 10 10\n"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "drill-count",
+              "kind": "code",
+              "system": "site",
+              "title": "Count each value",
+              "minutes": 10,
+              "minutesBasis": "Proposed",
+              "record": "drill",
+              "what": "Read n, then n integers. For each distinct value, in increasing order, print the value and how many times it appears, one pair per line. Run it here. Compiler Explorer compiles it with gcc 16.2, -O2 -std=c++23, and the page checks the output.",
+              "drill": {
+                "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n}\n",
+                "tests": [
+                  {
+                    "stdin": "5\n3 1 3 2 3\n",
+                    "stdout": "1 1\n2 1\n3 3\n"
+                  },
+                  {
+                    "stdin": "1\n0\n",
+                    "stdout": "0 1\n"
+                  },
+                  {
+                    "stdin": "4\n-1 -1 -1 -1\n",
+                    "stdout": "-1 4\n"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "drill-binary-search",
+              "kind": "code",
+              "system": "site",
+              "title": "First position at least x",
+              "minutes": 10,
+              "minutesBasis": "Proposed",
+              "record": "drill",
+              "what": "Read n, then n integers in nondecreasing order, then q, then q queries x. For each x, print the 0-based index of the first element at least x, or n if there is none. Run it here. Compiler Explorer compiles it with gcc 16.2, -O2 -std=c++23, and the page checks the output.",
+              "drill": {
+                "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n}\n",
+                "tests": [
+                  {
+                    "stdin": "5\n1 3 3 5 9\n4\n3\n4\n0\n10\n",
+                    "stdout": "1\n3\n0\n5\n"
+                  },
+                  {
+                    "stdin": "1\n7\n2\n7\n8\n",
+                    "stdout": "0\n1\n"
+                  },
+                  {
+                    "stdin": "3\n2 2 2\n2\n1\n2\n",
+                    "stdout": "0\n0\n"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
           "id": "cpp-debug",
           "title": "Debugging",
           "items": [
