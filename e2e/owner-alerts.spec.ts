@@ -13,6 +13,22 @@ import {
 // The worker, the database and the rate limit are real. Serial: mute, skip
 // and the settings are rows the next test reads.
 
+/*
+ * The newest push the fake sent with this title. The fake keeps every push
+ * the server sends, and the server's own alarms go out while a test runs: on
+ * 2026-11-09 a ring-once push landed between a test's click and its read of
+ * the newest push, and the test read priority 0. The title names the test's
+ * own push.
+ */
+async function lastSent(page: Page, title: string) {
+  const sent = (await (
+    await page.request.get("/api/alerts/fake/sent-all")
+  ).json()) as { title: string }[];
+  const mine = sent.filter((message) => message.title === title).at(-1);
+  expect(mine, `a push titled "${title}"`).toBeDefined();
+  return mine as Record<string, unknown>;
+}
+
 test.describe.configure({ mode: "serial" });
 
 async function signIn(page: Page) {
@@ -253,7 +269,7 @@ test.describe("/alerts", () => {
         "Ring until stopped test sent. It rings every 120 s until you acknowledge it on the phone or here, and stops after 30 min.",
       ),
     ).toBeVisible();
-    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    const sent = await lastSent(page, "Test: ring until stopped");
     expect(sent).toMatchObject({
       priority: "2",
       retry: "120",
@@ -297,7 +313,7 @@ test.describe("/alerts", () => {
       .getByRole("button", { name: "Test: ring until stopped" })
       .click();
     await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
-    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    const sent = await lastSent(page, "Test: ring until stopped");
     expect(sent).toMatchObject({ priority: "2", retry: "45", expire: "1200" });
 
     await reset(page);
@@ -324,7 +340,7 @@ test.describe("/alerts", () => {
       .getByRole("button", { name: "Test: ring until stopped" })
       .click();
     await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
-    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    const sent = await lastSent(page, "Test: ring until stopped");
     expect(sent).toMatchObject({ priority: "2", sound: "aberaalarm" });
 
     await reset(page);
@@ -362,7 +378,7 @@ test.describe("/alerts", () => {
         'Test of E2E review sent, titled "Test: E2E review", set to ring until stopped.',
       ),
     ).toBeVisible();
-    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    const sent = await lastSent(page, "Test: E2E review");
     expect(sent).toMatchObject({
       title: "Test: E2E review",
       priority: "2",
@@ -389,9 +405,7 @@ test.describe("/alerts", () => {
       .getByRole("button", { name: "Test: ring until stopped" })
       .click();
     await expect(page.getByText(/Ring until stopped test sent/)).toBeVisible();
-    const alarm = await (
-      await page.request.get("/api/alerts/fake/sent")
-    ).json();
+    const alarm = await lastSent(page, "Test: ring until stopped");
     expect(alarm).toMatchObject({
       title: "Test: ring until stopped",
       priority: "2",
@@ -401,9 +415,7 @@ test.describe("/alerts", () => {
 
     await page.getByRole("button", { name: "Test: ring once" }).click();
     await expect(page.getByText(/Ring once test sent/)).toBeVisible();
-    const plain = await (
-      await page.request.get("/api/alerts/fake/sent")
-    ).json();
+    const plain = await lastSent(page, "Test: ring once");
     expect(plain).toMatchObject({
       title: "Test: ring once",
       priority: "0",
@@ -447,7 +459,7 @@ test.describe("/alerts", () => {
         'Test of E2E standup sent, titled "Test: E2E standup", set to ring once.',
       ),
     ).toBeVisible();
-    const sent = await (await page.request.get("/api/alerts/fake/sent")).json();
+    const sent = await lastSent(page, "Test: E2E standup");
     expect(sent).toMatchObject({
       title: "Test: E2E standup",
       priority: "0",
