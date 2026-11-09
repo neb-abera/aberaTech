@@ -3,6 +3,8 @@ import linkCheck from "../../data/link-check.json";
 import { everyItem } from "../progress";
 import {
   allLessons,
+  checkpointLabel,
+  countOf,
   formatMinutes,
   locate,
   phaseOn,
@@ -154,6 +156,15 @@ describe("the helpers", () => {
     expect(phaseOn("2027-10-01").phase).toBe(2);
     expect(phaseOn("2020-01-01").phase).toBe(0);
     expect(phaseOn("2040-01-01").phase).toBe(3);
+  });
+
+  it("counts in words that agree with the number", () => {
+    expect(countOf(1, "lesson")).toBe("1 lesson");
+    expect(countOf(4, "lesson")).toBe("4 lessons");
+    const math = syllabus.units.find((unit) => unit.id === "prealgebra-1");
+    const code = syllabus.units.find((unit) => unit.id === "bronze-1");
+    expect(math && checkpointLabel(math)).toBe("2 problem sets in 50 minutes");
+    expect(code && checkpointLabel(code)).toBe("3 problems in 60 minutes");
   });
 
   it("formats minutes", () => {

@@ -18,6 +18,8 @@ import {
   type UnitState,
 } from "../core/progress";
 import {
+  checkpointLabel,
+  countOf,
   formatMinutes,
   lessonMinutes,
   trackLabel,
@@ -54,8 +56,7 @@ function Checkpoint({
     >
       <Stack spacing={1.5}>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-          Checkpoint: {checkpoint.items.length} problems in {checkpoint.minutes}{" "}
-          minutes
+          Checkpoint: {checkpointLabel(unit)}
         </Typography>
         <Typography variant="body2">{checkpoint.rule}</Typography>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -214,7 +215,7 @@ export default function UnitView({
                 </Link>
               </Typography>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lesson.items.length} items,{" "}
+                {countOf(lesson.items.length, "item")},{" "}
                 {formatMinutes(lessonMinutes(lesson))}
                 {owner
                   ? lessonDone(lesson, document, solves)

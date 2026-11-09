@@ -275,3 +275,15 @@ export function formatMinutes(minutes: number): string {
   if (hours === 0) return `${rest} min`;
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
+
+/** "1 lesson", "4 lessons". */
+export const countOf = (n: number, one: string, many = `${one}s`): string =>
+  `${n} ${n === 1 ? one : many}`;
+
+/** "3 problems in 60 minutes" or, in math, "2 problem sets in 50 minutes". */
+export function checkpointLabel(unit: Unit): string {
+  const checkpoint = unit.checkpoint;
+  if (!checkpoint) return "";
+  const what = unit.track === "math" ? "problem set" : "problem";
+  return `${countOf(checkpoint.items.length, what)} in ${checkpoint.minutes} minutes`;
+}
