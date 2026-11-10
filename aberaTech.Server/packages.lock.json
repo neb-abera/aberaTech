@@ -187,10 +187,10 @@
         "type": "Project",
         "dependencies": {
           "DocumentFormat.OpenXml": "[3.5.1, )",
-          "Garmin.FIT.Sdk": "[21.217.0, )",
+          "Garmin.FIT.Sdk": "[21.221.0, )",
           "Microsoft.EntityFrameworkCore": "[11.0.0-rc.3.26522.148, )",
           "Microsoft.EntityFrameworkCore.Relational": "[11.0.0-rc.3.26522.148, )",
-          "NodaTime": "[3.3.4, )",
+          "NodaTime": "[3.3.7, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[11.0.0-rc.3, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": "[11.0.0-rc.3, )",
           "aberaTech.Postgres": "[1.0.0, )"
@@ -208,12 +208,12 @@
       "aberatech.scheduling": {
         "type": "Project",
         "dependencies": {
-          "Ical.Net": "[5.2.3, )",
+          "Ical.Net": "[5.2.4, )",
           "Microsoft.AspNetCore.Authentication.Google": "[11.0.0, )",
           "Microsoft.AspNetCore.DataProtection.EntityFrameworkCore": "[11.0.0-rc.3.26522.148, )",
           "Microsoft.EntityFrameworkCore": "[11.0.0-rc.3.26522.148, )",
           "Microsoft.EntityFrameworkCore.Relational": "[11.0.0-rc.3.26522.148, )",
-          "NodaTime": "[3.3.4, )",
+          "NodaTime": "[3.3.7, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[11.0.0-rc.3, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime": "[11.0.0-rc.3, )",
           "aberaTech.Postgres": "[1.0.0, )"
@@ -239,15 +239,15 @@
       },
       "Garmin.FIT.Sdk": {
         "type": "CentralTransitive",
-        "requested": "[21.217.0, )",
-        "resolved": "21.217.0",
-        "contentHash": "NyHuYBFmASgAZtXOS+SDbNkNFB46NVNDHlcYULpeIxQzxqOsP04EiXsW5gnC6naMcYr/g1wZEdX0vOuouXQgeg=="
+        "requested": "[21.221.0, )",
+        "resolved": "21.221.0",
+        "contentHash": "aRTlFniu9YH+Db5lvAdYcMenIUE2Hfz2vQ/Q2pc3gLeFy2KjbItowy7PLChiJh4mGl6Pwii/fW8H++6J2c4NZA=="
       },
       "Ical.Net": {
         "type": "CentralTransitive",
-        "requested": "[5.2.3, )",
-        "resolved": "5.2.3",
-        "contentHash": "zROvmrRPKqND0e0Bt/wSY+d8iYtL4+sP9mORyjT/ySBiIDfik4iovTjS+L9PFg+zoXfkJ5eBTHK2lX9c7lganw==",
+        "requested": "[5.2.4, )",
+        "resolved": "5.2.4",
+        "contentHash": "KpXaIEqe4TntybCRoa0TSwkXJu7kgnFsLRj3lKSaYLYRQuos1ujyzaS0Opk7g5QZKM1Igi/2h84+FBhbmGgNeg==",
         "dependencies": {
           "NodaTime": "3.2.2"
         }
@@ -288,9 +288,9 @@
       },
       "NodaTime": {
         "type": "CentralTransitive",
-        "requested": "[3.3.4, )",
-        "resolved": "3.3.4",
-        "contentHash": "iLaEeOFjWHVibXmHa8WOMTkZdxvzTH6b7qNYts7cBmSfttCDenguHvEJsuAQGBDPV4LSA+7c0nyt4A0AR6z6zQ=="
+        "requested": "[3.3.7, )",
+        "resolved": "3.3.7",
+        "contentHash": "4Rc3zup1sZqtlcgkWZOsjoVbhm+RkDvxrFDJfIxi7nr32ZgzVW+zCTBr827+KG/4r5owpchUjqx8tO4K2ZtpOw=="
       },
       "Npgsql": {
         "type": "CentralTransitive",

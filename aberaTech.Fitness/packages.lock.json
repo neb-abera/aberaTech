@@ -13,9 +13,9 @@
       },
       "Garmin.FIT.Sdk": {
         "type": "Direct",
-        "requested": "[21.217.0, )",
-        "resolved": "21.217.0",
-        "contentHash": "NyHuYBFmASgAZtXOS+SDbNkNFB46NVNDHlcYULpeIxQzxqOsP04EiXsW5gnC6naMcYr/g1wZEdX0vOuouXQgeg=="
+        "requested": "[21.221.0, )",
+        "resolved": "21.221.0",
+        "contentHash": "aRTlFniu9YH+Db5lvAdYcMenIUE2Hfz2vQ/Q2pc3gLeFy2KjbItowy7PLChiJh4mGl6Pwii/fW8H++6J2c4NZA=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Direct",
@@ -54,9 +54,9 @@
       },
       "NodaTime": {
         "type": "Direct",
-        "requested": "[3.3.4, )",
-        "resolved": "3.3.4",
-        "contentHash": "iLaEeOFjWHVibXmHa8WOMTkZdxvzTH6b7qNYts7cBmSfttCDenguHvEJsuAQGBDPV4LSA+7c0nyt4A0AR6z6zQ=="
+        "requested": "[3.3.7, )",
+        "resolved": "3.3.7",
+        "contentHash": "4Rc3zup1sZqtlcgkWZOsjoVbhm+RkDvxrFDJfIxi7nr32ZgzVW+zCTBr827+KG/4r5owpchUjqx8tO4K2ZtpOw=="
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
         "type": "Direct",
