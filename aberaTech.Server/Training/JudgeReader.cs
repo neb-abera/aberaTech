@@ -280,10 +280,21 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
             if (!model.TryGetProperty("difficulty", out var difficulty) || difficulty.ValueKind != JsonValueKind.Number) continue;
             if (model.TryGetProperty("is_experimental", out var experimental) && experimental.ValueKind == JsonValueKind.True) continue;
             var contest = problem.GetProperty("contest_id").GetString() ?? "";
+            var letter = problem.TryGetProperty("problem_index", out var index) ? index.GetString() ?? "" : "";
+            // AtCoder Problems lists a problem under the contest it last ran
+            // in, which for most Beginner Contest problems is an AtCoder Daily
+            // Training rerun ("adt_easy_20261106_2"). The id names the
+            // contest it was written for: abc401_b is ABC401 B.
+            var split = id.LastIndexOf('_');
+            if (contest.StartsWith("adt_", StringComparison.Ordinal) && split > 0)
+            {
+                contest = id[..split];
+                letter = id[(split + 1)..].ToUpperInvariant();
+            }
             list.Add(new AtCoderBandProblem(
                 id,
                 contest,
-                problem.TryGetProperty("problem_index", out var index) ? index.GetString() ?? "" : "",
+                letter,
                 problem.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
                 ShownDifficulty(difficulty.GetDouble()),
                 $"https://atcoder.jp/contests/{Uri.EscapeDataString(contest)}/tasks/{Uri.EscapeDataString(id)}"));

@@ -41,13 +41,15 @@ public sealed class FakeJudges : HttpMessageHandler
     /// AtCoder Problems' problem list. With <see cref="AtCoderModels"/>, five
     /// are in the Codeforces band 800 to 1000 (AtCoder 117 to 382 shown):
     /// abc400_b, abc401_b, abc402_b, abc403_c, and abc407_b, which
-    /// Nebikinizer solved. abc404_a is too easy, abc405_c too hard, abc406_b's
+    /// Nebikinizer solved. abc401_b is listed under an AtCoder Daily Training
+    /// rerun, as AtCoder Problems lists most Beginner Contest problems.
+    /// abc404_a is too easy, abc405_c too hard, abc406_b's
     /// model is experimental, and abc408_b has none.
     /// </summary>
     public const string AtCoderProblems = """
         [
         {"id":"abc400_b","contest_id":"abc400","problem_index":"B","name":"Sum of Squares","title":"B. Sum of Squares"},
-        {"id":"abc401_b","contest_id":"abc401","problem_index":"B","name":"Two Lamps","title":"B. Two Lamps"},
+        {"id":"abc401_b","contest_id":"adt_easy_20261106_2","problem_index":"E","name":"Two Lamps","title":"E. Two Lamps"},
         {"id":"abc402_b","contest_id":"abc402","problem_index":"B","name":"Queue Line","title":"B. Queue Line"},
         {"id":"abc403_c","contest_id":"abc403","problem_index":"C","name":"Grid Walk","title":"C. Grid Walk"},
         {"id":"abc404_a","contest_id":"abc404","problem_index":"A","name":"Too Easy","title":"A. Too Easy"},
