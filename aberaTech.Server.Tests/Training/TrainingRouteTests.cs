@@ -164,6 +164,11 @@ public sealed class TrainingRouteTests : IDisposable
         Assert.Equal("abc403", problems[1].GetProperty("contest").GetString());
         Assert.Equal("C", problems[1].GetProperty("index").GetString());
         Assert.Equal("Grid Walk", problems[1].GetProperty("name").GetString());
+        // AtCoder Problems lists abc401_b under the Daily Training rerun it
+        // last appeared in. The pick names and links the Beginner Contest.
+        Assert.Equal("abc401", problems[3].GetProperty("contest").GetString());
+        Assert.Equal("B", problems[3].GetProperty("index").GetString());
+        Assert.Equal("https://atcoder.jp/contests/abc401/tasks/abc401_b", problems[3].GetProperty("url").GetString());
         // The Codeforces half is unchanged.
         Assert.Equal(9, body.GetProperty("problems").GetArrayLength());
     }
