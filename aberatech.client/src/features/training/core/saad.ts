@@ -119,12 +119,43 @@ export interface BandProblem {
   url: string;
 }
 
+/**
+ * An AtCoder problem in the owner's band, from AtCoder Problems'
+ * problems.json and problem-models.json. AtCoder problems carry no tags.
+ */
+export interface AtCoderProblem {
+  /** The AtCoder task id, "abc482_c". */
+  id: string;
+  /** The contest id, "abc482". */
+  contest: string;
+  /** The task letter, "C". */
+  index: string;
+  name: string;
+  /** The difficulty as AtCoder Problems shows it, on AtCoder's scale. */
+  difficulty: number;
+  url: string;
+}
+
+/** The AtCoder half of the band: shown difficulty `from` to `to`. */
+export interface AtCoderList {
+  ok: boolean;
+  error?: string | null;
+  from: number;
+  to: number;
+  problems: AtCoderProblem[];
+}
+
 /** The band list the server read: ratings `from` to `to`. */
 export interface BandList {
   from: number;
   to: number;
   problems: BandProblem[];
+  /** Absent from a server older than the AtCoder half. */
+  atcoder?: AtCoderList;
 }
+
+export const atcoderScaleSource =
+  "AtCoder difficulty from a Codeforces rating: the straight line in silverfoxxxy's Rating converter (silverfoxxxy.github.io/rating-converter, read 11 Nov 2026), on which Codeforces 0 is AtCoder -940 and Codeforces 3900 is AtCoder 4215.";
 
 export type Pick =
   | { source: "saad"; problem: PoolProblem; band: Band }
@@ -133,7 +164,34 @@ export type Pick =
       problem: BandProblem;
       /** The slot of his mix it fills, since his pool had none to fit. */
       band: Band;
-    };
+    }
+  | { source: "atcoder"; problem: AtCoderProblem; band: Band };
+
+export type Judge = "codeforces" | "atcoder";
+
+/**
+ * Which judge fills each of `count` band slots. The plan names AtCoder
+ * Problems by difficulty and the Codeforces problemset by rating side by
+ * side and states no ratio, so the slots alternate, Codeforces first. A
+ * judge with no problems left gives its turns to the other.
+ */
+export function splitSlots(
+  count: number,
+  codeforces: number,
+  atcoder: number,
+): Judge[] {
+  const left = { codeforces, atcoder };
+  const order: Judge[] = [];
+  let turn: Judge = "codeforces";
+  while (order.length < count && left.codeforces + left.atcoder > 0) {
+    const judge: Judge =
+      left[turn] > 0 ? turn : turn === "codeforces" ? "atcoder" : "codeforces";
+    order.push(judge);
+    left[judge] -= 1;
+    turn = turn === "codeforces" ? "atcoder" : "codeforces";
+  }
+  return order;
+}
 
 /** A stable shuffle key: the same order all week, a new one the next. */
 function hash(text: string): number {
@@ -149,8 +207,8 @@ function hash(text: string): number {
  * Ten problems by Saad's mix around `level`, none already solved and none
  * without a working link (his UVA, TJU, LiveArchive and TopCoder rows).
  * Within a band, higher importance first, then a shuffle that holds for
- * the week. A band his pool cannot fill takes Codeforces problems in the
- * owner's band, never a level outside it: a far-above problem in a
+ * the week. A band his pool cannot fill takes Codeforces and AtCoder
+ * problems in the owner's band (`splitSlots`), never a level outside it: a far-above problem in a
  * "slightly above" slot breaks his mix.
  */
 export function pickMix(
@@ -159,6 +217,7 @@ export function pickMix(
   week: string,
   solved: Set<string>,
   band: BandProblem[] = [],
+  atcoder: AtCoderProblem[] = [],
 ): Pick[] {
   const open = openPool(pool, solved);
   const order = (a: PoolProblem, b: PoolProblem) =>
@@ -185,17 +244,29 @@ export function pickMix(
     }
     for (let i = inside.length; i < slot.count; i += 1) short.push(slot.band);
   }
-  const fill = band
+  const weekly = (a: { id: string }, b: { id: string }) =>
+    hash(`${week}:${a.id}`) - hash(`${week}:${b.id}`);
+  const codeforces = band
     .filter(
       (problem) =>
         !solved.has(problem.id) &&
         !open.some((each) => each.codeforces === problem.id),
     )
-    .sort((a, b) => hash(`${week}:${a.id}`) - hash(`${week}:${b.id}`))
-    .slice(0, short.length);
-  fill.forEach((problem, i) => {
-    picks.push({ source: "codeforces", problem, band: short[i] });
-  });
+    .sort(weekly);
+  const fromAtCoder = atcoder
+    .filter((problem) => !solved.has(problem.id))
+    .sort(weekly);
+  splitSlots(short.length, codeforces.length, fromAtCoder.length).forEach(
+    (judge, i) => {
+      if (judge === "codeforces") {
+        const problem = codeforces.shift();
+        if (problem) picks.push({ source: judge, problem, band: short[i] });
+      } else {
+        const problem = fromAtCoder.shift();
+        if (problem) picks.push({ source: judge, problem, band: short[i] });
+      }
+    },
+  );
   return picks;
 }
 

@@ -24,6 +24,15 @@ public sealed record BandProblem(string Id, string Name, int Rating, string Url)
 /// <summary>Codeforces problems rated <paramref name="From"/> to <paramref name="To"/>, newest contest first.</summary>
 public sealed record BandAnswer(bool Ok, string? Error, int From, int To, IReadOnlyList<BandProblem> Problems, DateTimeOffset ReadAt);
 
+/// <summary>
+/// An AtCoder problem from AtCoder Problems: its id ("abc482_c"), contest,
+/// letter, name, page, and difficulty as AtCoder Problems shows it.
+/// </summary>
+public sealed record AtCoderBandProblem(string Id, string Contest, string Index, string Name, int Difficulty, string Url);
+
+/// <summary>AtCoder problems at shown difficulty <paramref name="From"/> to <paramref name="To"/>.</summary>
+public sealed record AtCoderBandAnswer(bool Ok, string? Error, int From, int To, IReadOnlyList<AtCoderBandProblem> Problems, DateTimeOffset ReadAt);
+
 /// <summary>A rated contest that has not started.</summary>
 public sealed record UpcomingContest(string Name, DateTimeOffset Start, int DurationMinutes, string Url, string Judge);
 
@@ -191,6 +200,104 @@ public sealed partial class JudgeReader(IHttpClientFactory clients, IMemoryCache
         }
         var band = all.Where(problem => problem.Rating >= from && problem.Rating <= to).Take(BandSize).ToList();
         return new BandAnswer(true, null, from, to, band, Now);
+    }
+
+    /// <summary>AtCoder Problems' problem list and difficulty models. Both change when a contest ends.</summary>
+    public static readonly Uri AtCoderResources = new("https://kenkoooo.com/atcoder/resources/");
+
+    /// <summary>The two AtCoder Problems files are held this long, at most.</summary>
+    public static readonly TimeSpan AtCoderProblemsFor = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// A Codeforces rating on AtCoder's scale, by the straight line in
+    /// silverfoxxxy's Rating converter (silverfoxxxy.github.io/rating-converter,
+    /// converter.js, read 11 Nov 2026): Codeforces 0 is AtCoder -940, and
+    /// Codeforces 3900 is AtCoder 4215.
+    /// </summary>
+    public static int AtCoderOf(int codeforces) =>
+        (int)Math.Round(-940 + codeforces * 5155.0 / 3900, MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// A difficulty as AtCoder Problems shows it. Below 400 its models run
+    /// negative, and the site shows 400 / e^(1 - d/400), as AtCoder shows a
+    /// low rating (clipDifficulty in atcoder-problems-frontend/src/utils).
+    /// </summary>
+    public static int ShownDifficulty(double difficulty) =>
+        (int)Math.Round(difficulty >= 400 ? difficulty : 400 / Math.Exp(1.0 - difficulty / 400), MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// AtCoder problems whose shown difficulty is the Codeforces band
+    /// <paramref name="from"/> to <paramref name="to"/> on AtCoder's scale,
+    /// from AtCoder Problems' problems.json and problem-models.json. A model
+    /// AtCoder Problems marks experimental is left out.
+    /// </summary>
+    public async Task<AtCoderBandAnswer> AtCoderBandAsync(int from, int to, CancellationToken cancellationToken)
+    {
+        int low = AtCoderOf(from), high = AtCoderOf(to);
+        if (cache.TryGetValue("judges:atcoder-problems-failed", out string? failed) && failed is not null)
+            return new AtCoderBandAnswer(false, failed, low, high, [], Now);
+        if (!cache.TryGetValue("judges:atcoder-problems", out IReadOnlyList<AtCoderBandProblem>? all) || all is null)
+        {
+            string error;
+            try
+            {
+                using var problems = await AtCoderResourceAsync("problems.json", cancellationToken);
+                using var models = await AtCoderResourceAsync("problem-models.json", cancellationToken);
+                all = ParseAtCoderProblems(problems.RootElement, models.RootElement);
+                cache.Set("judges:atcoder-problems", all, AtCoderProblemsFor);
+                error = "";
+            }
+            catch (JudgeException exception)
+            {
+                error = exception.Message;
+            }
+            catch (Exception exception) when (exception is HttpRequestException or JsonException or KeyNotFoundException or InvalidOperationException or TaskCanceledException)
+            {
+                error = "AtCoder Problems did not answer.";
+            }
+            if (all is null)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                    cache.Set("judges:atcoder-problems-failed", error, TimeSpan.FromMinutes(1));
+                return new AtCoderBandAnswer(false, error, low, high, [], Now);
+            }
+        }
+        var band = all.Where(problem => problem.Difficulty >= low && problem.Difficulty <= high).Take(BandSize).ToList();
+        return new AtCoderBandAnswer(true, null, low, high, band, Now);
+    }
+
+    /// <summary>
+    /// Every problem with a difficulty model that is not experimental, with
+    /// its shown difficulty, newest contest first within each kind.
+    /// </summary>
+    public static IReadOnlyList<AtCoderBandProblem> ParseAtCoderProblems(JsonElement problems, JsonElement models)
+    {
+        var list = new List<AtCoderBandProblem>();
+        foreach (var problem in problems.EnumerateArray())
+        {
+            var id = problem.GetProperty("id").GetString() ?? "";
+            if (!models.TryGetProperty(id, out var model)) continue;
+            if (!model.TryGetProperty("difficulty", out var difficulty) || difficulty.ValueKind != JsonValueKind.Number) continue;
+            if (model.TryGetProperty("is_experimental", out var experimental) && experimental.ValueKind == JsonValueKind.True) continue;
+            var contest = problem.GetProperty("contest_id").GetString() ?? "";
+            list.Add(new AtCoderBandProblem(
+                id,
+                contest,
+                problem.TryGetProperty("problem_index", out var index) ? index.GetString() ?? "" : "",
+                problem.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
+                ShownDifficulty(difficulty.GetDouble()),
+                $"https://atcoder.jp/contests/{Uri.EscapeDataString(contest)}/tasks/{Uri.EscapeDataString(id)}"));
+        }
+        return list.OrderByDescending(problem => problem.Contest, StringComparer.Ordinal).ThenBy(problem => problem.Id, StringComparer.Ordinal).ToList();
+    }
+
+    private async Task<JsonDocument> AtCoderResourceAsync(string file, CancellationToken cancellationToken)
+    {
+        using var response = await Client.GetAsync(new Uri(AtCoderResources, file), cancellationToken);
+        if (response.StatusCode != HttpStatusCode.OK)
+            throw new JudgeException($"AtCoder Problems answered {(int)response.StatusCode}");
+        await using var body = await response.Content.ReadAsStreamAsync(cancellationToken);
+        return await JsonDocument.ParseAsync(body, cancellationToken: cancellationToken);
     }
 
     /// <summary>Every rated problem with a contest, newest contest first. Tags are not read.</summary>

@@ -119,6 +119,7 @@ export default function TrainingPanel() {
   const level = levelOf(band.rating);
   const solvedCodes = new Set([
     ...Object.keys(answer.codeforces?.ok ? answer.codeforces.solved : {}),
+    ...Object.keys(answer.atcoder?.ok ? answer.atcoder.solved : {}),
     ...document.log.map((solve) => solve.problem),
   ]);
   const bandList = useBand(owner, band.rating);
@@ -128,6 +129,7 @@ export default function TrainingPanel() {
     weekStart(localDate(now)),
     solvedCodes,
     bandList.ok ? bandList.problems : [],
+    bandList.atcoder?.ok ? bandList.atcoder.problems : [],
   );
   const start = poolStart(pool.problems, solvedCodes);
   const total = overall(document, solves, states);

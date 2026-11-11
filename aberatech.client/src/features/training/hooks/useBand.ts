@@ -17,8 +17,10 @@ const idle: BandAnswer = {
 
 /**
  * Codeforces problemset problems rated `rating` to `rating` + 200, as the
- * server read them from the Codeforces API, with no tags. Asked only once
- * the owner is known. The server holds the problemset for an hour.
+ * server read them from the Codeforces API, with no tags, and AtCoder
+ * problems in the same band on AtCoder's scale, from AtCoder Problems.
+ * Asked only once the owner is known. The server holds the problemset for
+ * an hour and AtCoder Problems' files for a day.
  */
 export function useBand(owner: boolean, rating: number): BandAnswer {
   const [answer, setAnswer] = useState<BandAnswer>(idle);

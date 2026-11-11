@@ -20,7 +20,8 @@ programming: systems design (9 Nov 2026)". The plan it delivers is
   for it.
 - `/api/training/pool`: Mostafa Saad's pool, owner only, read live.
 - `/api/training/band?rating=`: Codeforces problemset problems rated
-  `rating` to `rating` + 200, owner only, read live, with no tags.
+  `rating` to `rating` + 200, and AtCoder problems in the same band on
+  AtCoder's scale, owner only, read live, with no tags.
 
 ## Self-paced
 
@@ -161,13 +162,30 @@ mix around your level: 1 below, 2 at, 6 slightly above, and 1 far above.
 Solved problems are left out, by the Codeforces API and by the log. Rows
 with no working link (UVA, TJU, LiveArchive, TopCoder) are never picked.
 
-A slot his pool cannot fill takes an unsolved Codeforces problemset problem
-rated your rating to 200 above, from `/api/training/band`, labeled as such
-and with its tags hidden. The server reads `problemset.problems` and holds it
-for an hour. His live pool has no linked problem below level 3, so at 800
-(level 1.50) only the far-above slot is his, and the panel says his pool
-starts near Div. 2 C and opens at about 1350. AtCoder Problems difficulty is
-not read, so AtCoder fills no slot.
+A slot his pool cannot fill takes an unsolved problem in your band, your
+rating to 200 above, from `/api/training/band`, with its tags hidden. Each
+pick names its judge. The server reads Codeforces' `problemset.problems` and
+holds it for an hour. It reads AtCoder Problems' `problems.json` and
+`problem-models.json` and holds them in memory for a day. A model AtCoder
+Problems marks experimental is left out. The plan names AtCoder Problems by
+difficulty and the Codeforces problemset by rating side by side and states
+no ratio, so the slots alternate, Codeforces first. A judge with nothing
+left gives its turns to the other. An AtCoder problem counts as solved when
+AtCoder Problems says the AtCoder handle on the Tools tab solved it, or when
+it is in the log.
+
+AtCoder difficulty is on AtCoder's scale. The band maps to it by the straight
+line in silverfoxxxy's Rating converter
+(silverfoxxxy.github.io/rating-converter, `converter.js`, read 11 Nov 2026):
+Codeforces 0 is AtCoder -940, and Codeforces 3900 is AtCoder 4215. Codeforces
+800 to 1000 is AtCoder 117 to 382. A problem's difficulty is compared as
+AtCoder Problems shows it: below 400, 400 / e^(1 - d/400) of the model's
+value (`clipDifficulty` in its frontend). The syllabus's band units chose
+their AtCoder problems by hand on 9 Nov 2026 and keep their own ranges.
+
+His live pool has no linked problem below level 3, so at 800 (level 1.50)
+only the far-above slot is his, and the panel says his pool starts near
+Div. 2 C and opens at about 1350.
 
 Your level is the open band unit's rating (`band-1000` is 1000), else your
 Codeforces rating, else 800. A rating maps to his scale by his table (Div. 2
