@@ -98,5 +98,5 @@ export const unlisted: Record<string, string> = {
   "/training":
     "The owner's competitive math and programming course player. A visitor sees the syllabus read-only and never the progress or notes. It is linked from /technical, and the app bar shows a Training entry to the signed-in owner.",
   "/training-plan":
-    "The owner's training plan, read live from one Notion page and its two databases. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Training plan entry only to the signed-in owner.",
+    "The owner's fitness plan (Evoke), read live from one Notion page and its two databases. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Fitness plan entry only to the signed-in owner.",
 };

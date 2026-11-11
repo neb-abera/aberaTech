@@ -18,7 +18,7 @@ test("a visitor is asked to sign in and no plan file is requested", async ({
   await page.goto("/training-plan");
   expect((await plan).status()).toBe(401);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Training plan" }),
+    page.getByRole("heading", { level: 1, name: "Fitness plan" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Sign in with Google" }),

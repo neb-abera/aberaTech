@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { openFromBar } from "./owner-session";
 
 // /dates as the owner, against the compose app and its database: sign in
 // by the real button, add a countdown, watch it tick, edit it, delete it,
@@ -34,7 +35,7 @@ async function phoneSees(page: Page) {
   }[];
 }
 
-test("the owner reaches /dates from the app bar on any page, and the bar fits", async ({
+test("the owner reaches /dates from the app bar's menu on any page, and the bar fits", async ({
   page,
 }) => {
   await signIn(page);
@@ -49,8 +50,7 @@ test("the owner reaches /dates from the app bar on any page, and the bar fits", 
       await page.getByRole("button", { name: "Menu button" }).click();
       await page.getByRole("menuitem", { name: "Dates", exact: true }).click();
     } else {
-      const bar = page.getByRole("banner");
-      await bar.getByRole("link", { name: "Dates", exact: true }).click();
+      await openFromBar(page, "Dates");
       // Every entry stays inside the bar: nothing wraps out or scrolls.
       await page.goto("/guides");
       const overflow = await page.evaluate(() => {
@@ -58,7 +58,7 @@ test("the owner reaches /dates from the app bar on any page, and the bar fits", 
         return toolbar ? toolbar.scrollWidth - toolbar.clientWidth : -1;
       });
       expect(overflow, `toolbar overflow at ${width}px`).toBe(0);
-      await bar.getByRole("link", { name: "Dates", exact: true }).click();
+      await openFromBar(page, "Dates");
     }
     await expect(page).toHaveURL(/\/dates$/);
     await expect(

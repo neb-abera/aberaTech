@@ -16,3 +16,15 @@ export async function openAsOwner(page: Page, path: string, ready: string) {
   }
   await expect(page.locator(ready).first()).toBeVisible({ timeout: 15_000 });
 }
+
+/**
+ * Reach an owner page from the desktop app bar: the owner's pages sit under
+ * one menu button, so it is two clicks from any page.
+ */
+export async function openFromBar(page: Page, label: string) {
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: "My pages" })
+    .click();
+  await page.getByRole("menuitem", { name: label, exact: true }).click();
+}

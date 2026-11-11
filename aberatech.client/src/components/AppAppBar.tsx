@@ -1,4 +1,5 @@
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppBar from "@mui/material/AppBar";
@@ -8,6 +9,7 @@ import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import { alpha, styled } from "@mui/material/styles";
@@ -19,6 +21,7 @@ import { signInHref, signOut, useAccount } from "../hooks/useAccount";
 import {
   guides,
   label,
+  ownerMenuLabel,
   ownerPages,
   primaryAction,
   projects,
@@ -65,6 +68,63 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   boxShadow: theme.shadows[1],
   padding: "8px 12px",
 }));
+
+/**
+ * The owner's pages behind one button in the bar: two clicks from any page.
+ * Laid out flat, ten of them broke "Dev box", "Training plan" and "Schedule
+ * time with me" across lines at 1300px (11 Nov 2026). MUI's Menu gives the
+ * keyboard behavior: Enter, Space or the down arrow opens it on the first
+ * item, the arrows move, Escape closes it and returns focus to the button.
+ */
+function OwnerMenu() {
+  const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
+  const location = useLocation();
+  const open = anchor !== null;
+  const close = () => setAnchor(null);
+  return (
+    <>
+      <Button
+        id="owner-menu-button"
+        variant="text"
+        color="info"
+        size="small"
+        aria-controls={open ? "owner-menu" : undefined}
+        aria-haspopup="menu"
+        aria-expanded={open ? "true" : "false"}
+        endIcon={<ExpandMoreRoundedIcon />}
+        onClick={(event) => setAnchor(event.currentTarget)}
+      >
+        {ownerMenuLabel}
+      </Button>
+      <Menu
+        id="owner-menu"
+        anchorEl={anchor}
+        open={open}
+        onClose={close}
+        slotProps={{
+          list: { "aria-labelledby": "owner-menu-button" },
+          paper: { variant: "outlined", elevation: 0, sx: { my: "4px" } },
+        }}
+      >
+        {ownerPages.map((page) => {
+          const current = location.pathname === page.to;
+          return (
+            <MenuItem
+              key={page.to}
+              component={Link}
+              to={page.to}
+              selected={current}
+              aria-current={current ? "page" : undefined}
+              onClick={close}
+            >
+              {page.label}
+            </MenuItem>
+          );
+        })}
+      </Menu>
+    </>
+  );
+}
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
@@ -132,19 +192,7 @@ export default function AppAppBar() {
                 Projects
               </Button>
               {/* The owner's pages, for the owner only (sections.ts). */}
-              {signedIn &&
-                ownerPages.map((page) => (
-                  <Button
-                    key={page.to}
-                    variant="text"
-                    color="info"
-                    size="small"
-                    component={Link}
-                    to={page.to}
-                  >
-                    {page.label}
-                  </Button>
-                ))}
+              {signedIn && <OwnerMenu />}
             </Box>
           </Box>
           <Box

@@ -100,7 +100,13 @@ export const primaryAction: Entry = {
  * and phone alike. A page the owner works from goes here, so it is one
  * click from anywhere. /dates shipped on 2026-10-01 linked only from
  * /projects and the footer, and Neb had to ask how to reach it.
+ *
+ * On a desktop they sit under one button in the bar, `ownerMenuLabel`, so
+ * each is two clicks from any page and no label wraps from 1024px up. In
+ * the phone drawer they are listed flat.
  */
+export const ownerMenuLabel = "My pages";
+
 export const ownerPages: { label: string; to: string }[] = [
   { label: "Links", to: "/links" },
   { label: "Plan", to: "/plan" },
@@ -110,7 +116,7 @@ export const ownerPages: { label: string; to: string }[] = [
   { label: "Network", to: "/network" },
   { label: "Playbook", to: "/playbook" },
   { label: "Marksmanship", to: "/marksmanship" },
-  { label: "Training plan", to: "/training-plan" },
+  { label: "Fitness plan", to: "/training-plan" },
   { label: "Training", to: "/training" },
 ];
 

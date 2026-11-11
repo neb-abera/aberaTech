@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { openAsOwner } from "./owner-session";
+import { openAsOwner, openFromBar } from "./owner-session";
 
 // /network as the owner, against the compose app and its database: sign in
 // by the real button, paste a document, see it drawn and listed, select a
@@ -66,7 +66,7 @@ async function current(page: Page): Promise<string | null> {
   return response.status() === 200 ? await response.text() : null;
 }
 
-test("the owner reaches /network from the app bar on any page, and the bar fits", async ({
+test("the owner reaches /network from the app bar's menu on any page, and the bar fits", async ({
   page,
 }) => {
   await openAsOwner(page, "/network", ready);
@@ -83,15 +83,14 @@ test("the owner reaches /network from the app bar on any page, and the bar fits"
         .getByRole("menuitem", { name: "Network", exact: true })
         .click();
     } else {
-      const bar = page.getByRole("banner");
-      await bar.getByRole("link", { name: "Network", exact: true }).click();
+      await openFromBar(page, "Network");
       await page.goto("/guides");
       const overflow = await page.evaluate(() => {
         const toolbar = document.querySelector("header .MuiToolbar-root");
         return toolbar ? toolbar.scrollWidth - toolbar.clientWidth : -1;
       });
       expect(overflow, `toolbar overflow at ${width}px`).toBe(0);
-      await bar.getByRole("link", { name: "Network", exact: true }).click();
+      await openFromBar(page, "Network");
     }
     await expect(page).toHaveURL(/\/network$/);
     await expect(

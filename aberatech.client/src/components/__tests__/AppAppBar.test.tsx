@@ -12,6 +12,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
@@ -24,7 +25,13 @@ import {
   vi,
 } from "vitest";
 import { resetAccountProbeForTests } from "../../hooks/useAccount";
-import { guides, label, projects } from "../../site/sections";
+import {
+  guides,
+  label,
+  ownerMenuLabel,
+  ownerPages,
+  projects,
+} from "../../site/sections";
 import AppTheme from "../../theme/AppTheme";
 import AppAppBar from "../AppAppBar";
 
@@ -118,54 +125,44 @@ describe("the account controls", () => {
     expect(screen.queryByRole("menuitem", { name: "Alerts" })).toBeNull();
   });
 
-  it("shows the owner the Links entry and a way out", async () => {
+  it("puts the owner's pages under one menu in the bar, and a way out", async () => {
     const fetchMock = account(true);
-    mount();
+    mount("/dates");
 
-    const links = await screen.findByRole("link", { name: "Links" });
-    expect(links.getAttribute("href")).toBe("/links");
-    expect(
-      screen.getByRole("link", { name: "Plan" }).getAttribute("href"),
-    ).toBe("/plan");
-    expect(
-      screen.getByRole("link", { name: "Dev box" }).getAttribute("href"),
-    ).toBe("/devbox");
-    expect(
-      screen.getByRole("link", { name: "Alerts" }).getAttribute("href"),
-    ).toBe("/alerts");
-    expect(
-      screen.getByRole("link", { name: "Dates" }).getAttribute("href"),
-    ).toBe("/dates");
-    expect(
-      screen.getByRole("link", { name: "Network" }).getAttribute("href"),
-    ).toBe("/network");
-    expect(
-      screen.getByRole("link", { name: "Playbook" }).getAttribute("href"),
-    ).toBe("/playbook");
+    const button = await screen.findByRole("button", { name: ownerMenuLabel });
+    expect(button.getAttribute("aria-haspopup")).toBe("menu");
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    // Flat in the bar no longer: nothing but the menu button until it opens.
+    expect(screen.queryByRole("link", { name: "Links" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Fitness plan" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
 
+    fireEvent.click(button);
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    const menu = screen.getByRole("menu", { name: ownerMenuLabel });
+    for (const page of ownerPages) {
+      const item = within(menu).getByRole("menuitem", { name: page.label });
+      expect(item.getAttribute("href")).toBe(page.to);
+      expect(item.getAttribute("aria-current")).toBe(
+        page.to === "/dates" ? "page" : null,
+      );
+    }
+    expect(
+      within(menu)
+        .getByRole("menuitem", { name: "Fitness plan" })
+        .getAttribute("href"),
+    ).toBe("/training-plan");
+    fireEvent.keyDown(menu, { key: "Escape" });
+    await waitFor(() => {
+      expect(button.getAttribute("aria-expanded")).toBe("false");
+    });
+
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
-    expect(
-      screen.getByRole("menuitem", { name: "Links" }).getAttribute("href"),
-    ).toBe("/links");
-    expect(
-      screen.getByRole("menuitem", { name: "Plan" }).getAttribute("href"),
-    ).toBe("/plan");
-    expect(
-      screen.getByRole("menuitem", { name: "Dev box" }).getAttribute("href"),
-    ).toBe("/devbox");
-    expect(
-      screen.getByRole("menuitem", { name: "Alerts" }).getAttribute("href"),
-    ).toBe("/alerts");
-    expect(
-      screen.getByRole("menuitem", { name: "Dates" }).getAttribute("href"),
-    ).toBe("/dates");
-    expect(
-      screen.getByRole("menuitem", { name: "Network" }).getAttribute("href"),
-    ).toBe("/network");
-    expect(
-      screen.getByRole("menuitem", { name: "Playbook" }).getAttribute("href"),
-    ).toBe("/playbook");
+    for (const page of ownerPages) {
+      expect(
+        screen.getByRole("menuitem", { name: page.label }).getAttribute("href"),
+      ).toBe(page.to);
+    }
 
     const reload = vi.fn();
     Object.defineProperty(window, "location", {

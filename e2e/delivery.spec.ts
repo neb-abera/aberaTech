@@ -38,7 +38,7 @@ const prerendered: Record<string, string> = {
   "/network": "Network",
   "/playbook": "Playbook",
   "/marksmanship": "Marksmanship",
-  "/training-plan": "Training plan",
+  "/training-plan": "Fitness plan",
 };
 
 async function loadHome(page: Page) {
