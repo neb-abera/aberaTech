@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openAsOwner } from "./owner-session";
+import { openAsOwner, openFromBar } from "./owner-session";
 
 // /marksmanship as the owner, against the compose app and its Notion in
 // memory (FakeNotion.cs, made-up content): reach it from the app bar, read
@@ -10,10 +10,7 @@ const ready = 'table[aria-labelledby^="log-"]';
 test("the owner reaches /marksmanship from the app bar", async ({ page }) => {
   await openAsOwner(page, "/marksmanship", ready);
   await page.goto("/guides");
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: "Marksmanship", exact: true })
-    .click();
+  await openFromBar(page, "Marksmanship");
   await expect(page).toHaveURL(/\/marksmanship$/);
   await expect(page.locator(ready)).toBeVisible();
 });

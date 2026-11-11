@@ -159,8 +159,8 @@ const structuralMeta: Record<string, PageMeta> = {
       "The owner's President's Hundred plan and training log, read live.",
   },
   "/training-plan": {
-    title: "Training plan",
-    description: "The owner's training plan, read live from Notion.",
+    title: "Fitness plan",
+    description: "The owner's fitness plan, read live from Notion.",
   },
   "/training": {
     title: "Training",

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { openAsOwner } from "./owner-session";
+import { openAsOwner, openFromBar } from "./owner-session";
 
 // /training as the owner, against the compose app: the owner document in
 // its database and the judges in memory (FakeJudges.cs, which says
@@ -32,10 +32,7 @@ test("the owner reaches /training from the app bar and works ahead past a sessio
 }) => {
   await open(page, "/training");
   await page.goto("/guides");
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: "Training", exact: true })
-    .click();
+  await openFromBar(page, "Training");
   await expect(page).toHaveURL(/\/training$/);
   const next = page.getByRole("region", { name: "Next up" });
   await expect(
