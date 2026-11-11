@@ -402,6 +402,9 @@ if (adminOptions.IsConfigured)
         client.Timeout = TimeSpan.FromSeconds(15);
         client.DefaultRequestHeaders.UserAgent.ParseAdd("abera.tech-training/1.0 (+https://abera.tech/training)");
     });
+    // AtCoder Problems' problem files are about 4 MB as JSON and 0.5 MB
+    // compressed, so the client asks for them compressed.
+    judges.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = System.Net.DecompressionMethods.All });
     builder.Services.AddSingleton<SaadPool>();
     // Mostafa Saad's supervision pool, read from his public sheet. Google
     // answers the export with a redirect to googleusercontent.com.

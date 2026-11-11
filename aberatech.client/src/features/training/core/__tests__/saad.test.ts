@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  type AtCoderProblem,
   type BandProblem,
   currentBand,
   levelOf,
@@ -9,12 +10,15 @@ import {
   pickMix,
   poolStart,
   ratingOf,
+  splitSlots,
 } from "../saad";
 
 const fromSaad = (picks: Pick[]) =>
   picks.flatMap((pick) => (pick.source === "saad" ? [pick] : []));
 const fromBand = (picks: Pick[]) =>
   picks.flatMap((pick) => (pick.source === "codeforces" ? [pick] : []));
+const fromAtCoder = (picks: Pick[]) =>
+  picks.flatMap((pick) => (pick.source === "atcoder" ? [pick] : []));
 const idOf = (pick: Pick) =>
   pick.source === "saad" ? pick.problem.code : pick.problem.id;
 
@@ -223,5 +227,99 @@ describe("Saad's mix at the edge of his pool", () => {
   it("inside his pool, takes nothing from the band", () => {
     const picks = pickMix(pool, 5, "2026-11-09", new Set(), band);
     expect(picks.every((pick) => pick.source === "saad")).toBe(true);
+  });
+});
+
+/** AtCoder problems at shown difficulty 117 to 382, as the band endpoint sends them. */
+const atcoder: AtCoderProblem[] = Array.from({ length: 8 }, (_, i) => ({
+  id: `abc${400 + i}_b`,
+  contest: `abc${400 + i}`,
+  index: "B",
+  name: `Task ${i}`,
+  difficulty: 120 + i * 30,
+  url: `https://atcoder.jp/contests/abc${400 + i}/tasks/abc${400 + i}_b`,
+}));
+
+describe("the band's slots split between Codeforces and AtCoder", () => {
+  it("alternates, Codeforces first, since the plan names both and states no ratio", () => {
+    expect(splitSlots(6, 10, 10)).toEqual([
+      "codeforces",
+      "atcoder",
+      "codeforces",
+      "atcoder",
+      "codeforces",
+      "atcoder",
+    ]);
+    expect(splitSlots(3, 10, 10)).toEqual([
+      "codeforces",
+      "atcoder",
+      "codeforces",
+    ]);
+    expect(splitSlots(0, 10, 10)).toEqual([]);
+  });
+
+  it("gives a judge's turns to the other once its problems run out", () => {
+    expect(splitSlots(5, 1, 10)).toEqual([
+      "codeforces",
+      "atcoder",
+      "atcoder",
+      "atcoder",
+      "atcoder",
+    ]);
+    expect(splitSlots(4, 10, 0)).toEqual(Array(4).fill("codeforces"));
+    expect(splitSlots(4, 0, 2)).toEqual(["atcoder", "atcoder"]);
+    expect(splitSlots(4, 1, 1)).toEqual(["codeforces", "atcoder"]);
+  });
+
+  it("fills his empty slots half from each judge, every pick naming its source", () => {
+    const picks = pickMix(
+      live,
+      levelOf(800),
+      "2026-11-09",
+      new Set(),
+      band,
+      atcoder,
+    );
+    expect(picks).toHaveLength(10);
+    expect(fromSaad(picks)).toHaveLength(1);
+    expect(fromBand(picks)).toHaveLength(5);
+    expect(fromAtCoder(picks)).toHaveLength(4);
+    expect(picks.slice(1).map((pick) => pick.source)).toEqual([
+      "codeforces",
+      "atcoder",
+      "codeforces",
+      "atcoder",
+      "codeforces",
+      "atcoder",
+      "codeforces",
+      "atcoder",
+      "codeforces",
+    ]);
+    for (const pick of fromAtCoder(picks))
+      expect(atcoder.map((each) => each.id)).toContain(pick.problem.id);
+  });
+
+  it("leaves out AtCoder problems the AtCoder handle solved", () => {
+    const picks = pickMix(
+      live,
+      1.5,
+      "2026-11-09",
+      new Set(atcoder.slice(0, 7).map((each) => each.id)),
+      band,
+      atcoder,
+    );
+    expect(fromAtCoder(picks).map((pick) => pick.problem.id)).toEqual([
+      "abc407_b",
+    ]);
+    expect(fromBand(picks)).toHaveLength(8);
+  });
+
+  it("holds the same AtCoder picks all week", () => {
+    const week = (start: string) =>
+      fromAtCoder(pickMix(live, 1.5, start, new Set(), band, atcoder)).map(
+        (pick) => pick.problem.id,
+      );
+    expect(week("2026-11-09")).toEqual(week("2026-11-09"));
+    expect(week("2026-11-23")).not.toEqual(week("2026-11-09"));
   });
 });

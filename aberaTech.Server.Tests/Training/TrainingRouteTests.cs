@@ -126,6 +126,73 @@ public sealed class TrainingRouteTests : IDisposable
         Assert.DoesNotContain("greedy", text, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(0, -940)]
+    [InlineData(800, 117)]
+    [InlineData(1000, 382)]
+    [InlineData(1400, 911)]
+    [InlineData(2400, 2232)]
+    [InlineData(3900, 4215)]
+    public void A_codeforces_rating_maps_to_atcoder_by_the_converters_line(int codeforces, int atcoder) =>
+        Assert.Equal(atcoder, JudgeReader.AtCoderOf(codeforces));
+
+    [Theory]
+    [InlineData(-848, 18)]
+    [InlineData(0, 147)]
+    [InlineData(380, 380)]
+    [InlineData(400, 400)]
+    [InlineData(486, 486)]
+    public void A_difficulty_shows_as_atcoder_problems_shows_it(double raw, int shown) =>
+        Assert.Equal(shown, JudgeReader.ShownDifficulty(raw));
+
+    [Fact]
+    public async Task The_band_holds_atcoder_problems_at_the_same_band_on_atcoders_scale_without_experimental_models()
+    {
+        using var owner = Owner();
+        var body = await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=800");
+        var atcoder = body.GetProperty("atcoder");
+
+        Assert.True(atcoder.GetProperty("ok").GetBoolean());
+        Assert.Equal(117, atcoder.GetProperty("from").GetInt32());
+        Assert.Equal(382, atcoder.GetProperty("to").GetInt32());
+        var problems = atcoder.GetProperty("problems").EnumerateArray().ToList();
+        Assert.Equal(
+            ["abc407_b", "abc403_c", "abc402_b", "abc401_b", "abc400_b"],
+            problems.Select(p => p.GetProperty("id").GetString()));
+        Assert.Equal([189, 380, 353, 243, 147], problems.Select(p => p.GetProperty("difficulty").GetInt32()));
+        Assert.Equal("https://atcoder.jp/contests/abc403/tasks/abc403_c", problems[1].GetProperty("url").GetString());
+        Assert.Equal("abc403", problems[1].GetProperty("contest").GetString());
+        Assert.Equal("C", problems[1].GetProperty("index").GetString());
+        Assert.Equal("Grid Walk", problems[1].GetProperty("name").GetString());
+        // The Codeforces half is unchanged.
+        Assert.Equal(9, body.GetProperty("problems").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Atcoder_problems_files_are_read_once_and_held_a_day_at_most()
+    {
+        using var owner = Owner();
+        await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=800");
+        await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=1400");
+        Assert.Single(_judges.Requests, uri => uri.AbsolutePath.EndsWith("/resources/problems.json", StringComparison.Ordinal));
+        Assert.Single(_judges.Requests, uri => uri.AbsolutePath.EndsWith("/resources/problem-models.json", StringComparison.Ordinal));
+        Assert.Equal(TimeSpan.FromDays(1), JudgeReader.AtCoderProblemsFor);
+    }
+
+    [Fact]
+    public async Task Atcoder_problems_that_cannot_answer_is_reported_and_codeforces_still_fills()
+    {
+        _judges.DownHost = "kenkoooo.com";
+        using var owner = Owner();
+        var body = await owner.GetFromJsonAsync<JsonElement>("/api/training/band?rating=800");
+        Assert.True(body.GetProperty("ok").GetBoolean());
+        Assert.Equal(9, body.GetProperty("problems").GetArrayLength());
+        var atcoder = body.GetProperty("atcoder");
+        Assert.False(atcoder.GetProperty("ok").GetBoolean());
+        Assert.Equal("AtCoder Problems answered 503", atcoder.GetProperty("error").GetString());
+        Assert.Empty(atcoder.GetProperty("problems").EnumerateArray());
+    }
+
     [Fact]
     public async Task The_problemset_is_read_once_an_hour()
     {

@@ -46,13 +46,18 @@ public static class TrainingEndpoints
         .RequireAuthorization(AdminAuth.PolicyName)
         .WithTags("Training");
 
-        // Codeforces problems in the owner's band, rating to rating + 200,
-        // for the pool's slots that Mostafa Saad's sheet cannot fill.
+        // Problems in the owner's band, rating to rating + 200, for the
+        // pool's slots that Mostafa Saad's sheet cannot fill: Codeforces by
+        // rating, and AtCoder by AtCoder Problems difficulty on its own scale.
         routes.MapGet("/api/training/band", async (int? rating, JudgeReader judges, CancellationToken cancellationToken) =>
         {
             if (rating is not { } from || from < 0 || from > 4000)
                 return Results.BadRequest("A rating is a whole number from 0 to 4000.");
-            var answer = await judges.BandAsync(from, from + BandWidth, cancellationToken);
+            var codeforcesTask = judges.BandAsync(from, from + BandWidth, cancellationToken);
+            var atcoderTask = judges.AtCoderBandAsync(from, from + BandWidth, cancellationToken);
+            await Task.WhenAll(codeforcesTask, atcoderTask);
+            var answer = codeforcesTask.Result;
+            var atcoder = atcoderTask.Result;
             return Results.Ok(new
             {
                 ok = answer.Ok,
@@ -61,6 +66,15 @@ public static class TrainingEndpoints
                 to = answer.To,
                 readAt = answer.ReadAt,
                 problems = answer.Problems.Select(problem => new { id = problem.Id, name = problem.Name, rating = problem.Rating, url = problem.Url }),
+                atcoder = new
+                {
+                    ok = atcoder.Ok,
+                    error = atcoder.Error,
+                    from = atcoder.From,
+                    to = atcoder.To,
+                    readAt = atcoder.ReadAt,
+                    problems = atcoder.Problems.Select(problem => new { id = problem.Id, contest = problem.Contest, index = problem.Index, name = problem.Name, difficulty = problem.Difficulty, url = problem.Url }),
+                },
             });
         })
         .RequireAuthorization(AdminAuth.PolicyName)

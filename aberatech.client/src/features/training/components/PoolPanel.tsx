@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router";
 import { clock } from "../core/dates";
 import {
+  atcoderScaleSource,
   type Band,
   mix,
   type Pick,
@@ -24,7 +25,8 @@ const bandLabel = Object.fromEntries(
  * This week's ten from Mostafa Saad's pool, by his mix around the current
  * band. Each says its level, its importance, and where it came from. A
  * slot his pool cannot fill takes a Codeforces problem in the band, and
- * says so.
+ * says so. Those alternate between Codeforces and AtCoder, and each
+ * names its judge.
  */
 export default function PoolPanel({
   pool,
@@ -43,8 +45,30 @@ export default function PoolPanel({
 }) {
   const fromSaad = picks.filter((pick) => pick.source === "saad").length;
   const fromBand = picks.length - fromSaad;
+  const fromCodeforces = picks.filter(
+    (pick) => pick.source === "codeforces",
+  ).length;
+  const fromAtCoder = fromBand - fromCodeforces;
   const missing = 10 - picks.length;
   const range = `${band.rating} to ${band.rating + 200}`;
+  const atcoder = bandList.atcoder;
+  const atcoderRange = atcoder ? `${atcoder.from} to ${atcoder.to}` : "";
+  const judges = [
+    fromCodeforces > 0 &&
+      `${fromCodeforces} Codeforces ${fromCodeforces === 1 ? "problem" : "problems"} rated ${range}`,
+    fromAtCoder > 0 &&
+      `${fromAtCoder} AtCoder ${fromAtCoder === 1 ? "problem" : "problems"} at difficulty ${atcoderRange}`,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+  const unread = [
+    bandList.status === "error" || (bandList.status === "ready" && !bandList.ok)
+      ? "the Codeforces problemset"
+      : null,
+    bandList.status === "error" || (atcoder && !atcoder.ok)
+      ? "AtCoder Problems"
+      : null,
+  ].filter((name): name is string => name !== null);
   const opens =
     start && start.rating > band.rating
       ? ` His pool starts near Div. 2 ${start.letter}, at level ${start.level}. It opens to you at a Codeforces rating of about ${start.rating}.`
@@ -78,15 +102,17 @@ export default function PoolPanel({
             {fromBand > 0 && (
               <Alert severity="info" aria-label="Below his pool">
                 {fromSaad === 0
-                  ? `None of Mostafa Saad's pool fits your level yet.${opens} Until then, all ${fromBand} are Codeforces problems rated ${range}, with tags hidden.`
-                  : `His pool has too few problems at your level, so ${fromBand} of the ten are Codeforces problems rated ${range}, with tags hidden.${opens}`}
+                  ? `None of Mostafa Saad's pool fits your level yet.${opens} Until then, all ${fromBand} are from your band: ${judges}, with tags hidden.`
+                  : `His pool has too few problems at your level, so ${fromBand} of the ten are from your band: ${judges}, with tags hidden.${opens}`}
               </Alert>
             )}
             {missing > 0 && (
               <Alert severity="warning">
                 {bandList.status === "loading" || bandList.status === "idle"
-                  ? `Reading Codeforces problems rated ${range} for the other ${missing}.`
-                  : `The Codeforces problemset could not be read, so ${missing} of the ten are missing.${opens}`}
+                  ? `Reading problems in your band of ${range} for the other ${missing}.`
+                  : unread.length > 0
+                    ? `${unread.join(" and ")} could not be read, so ${missing} of the ten are missing.${opens}`
+                    : `Your band has too few unsolved problems, so ${missing} of the ten are missing.${opens}`}
               </Alert>
             )}
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
@@ -98,6 +124,10 @@ export default function PoolPanel({
               , read {pool.readAt ? clock(pool.readAt) : ""},{" "}
               {pool.problems.length} of {pool.rows} problems at importance P5 to
               P3. Solved problems are left out. The order holds for the week.
+              {fromAtCoder > 0 ? ` ${atcoderScaleSource}` : ""}
+              {atcoder && !atcoder.ok && missing === 0
+                ? ` AtCoder Problems could not be read${atcoder.error ? `: ${atcoder.error}` : ""}, so Codeforces fills the band.`
+                : ""}
             </Typography>
             <Stack component="ol" spacing={0.75} sx={{ pl: 2.5, m: 0 }}>
               {picks.map((pick) =>
@@ -131,6 +161,34 @@ export default function PoolPanel({
                         : "."}{" "}
                     </Typography>
                     <LogIt problem={pick.problem.code} />
+                  </Typography>
+                ) : pick.source === "atcoder" ? (
+                  <Typography
+                    component="li"
+                    variant="body2"
+                    key={pick.problem.id}
+                  >
+                    <Link
+                      href={pick.problem.url}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      AtCoder {pick.problem.contest.toUpperCase()}{" "}
+                      {pick.problem.index}
+                    </Link>{" "}
+                    <Chip
+                      size="small"
+                      label={`difficulty ${pick.problem.difficulty}`}
+                    />{" "}
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      AtCoder Problems, at difficulty {atcoderRange}: your band
+                      on AtCoder's scale. Tags hidden.{" "}
+                    </Typography>
+                    <LogIt problem={pick.problem.id} />
                   </Typography>
                 ) : (
                   <Typography
