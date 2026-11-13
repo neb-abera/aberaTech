@@ -35,11 +35,21 @@ const summary = {
 } as unknown as Summary;
 
 /** The compliance each prediction request asked for, newest last. */
-function stubPredictions(): () => string | null {
+function stubPredictions(plan?: unknown): () => string | null {
   const urls: string[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/api/training-plan")) {
+        return plan === undefined
+          ? new Promise(() => undefined)
+          : Promise.resolve(
+              new Response(JSON.stringify(plan), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              }),
+            );
+      }
       urls.push(url);
       return new Promise(() => undefined);
     }),
@@ -71,8 +81,8 @@ describe("ProjectionPanel compliance", () => {
 
     const slider = screen.getByRole("slider", { name: "Compliance percent" });
     fireEvent.keyDown(slider, { key: "ArrowLeft" });
-    expect(screen.getByText(/Compliance/).textContent).toContain("95%");
-    await waitFor(() => expect(compliance()).toBe("0.95"));
+    expect(screen.getByText(/Compliance/).textContent).toContain("99%");
+    await waitFor(() => expect(compliance()).toBe("0.99"));
 
     fireEvent.keyDown(
       screen.getByRole("slider", { name: "Weekly running hours" }),
@@ -80,5 +90,46 @@ describe("ProjectionPanel compliance", () => {
     );
     expect(screen.queryByText(/Compliance/)).toBeNull();
     await waitFor(() => expect(compliance()).toBe("1"));
+  });
+
+  it("opens the Evoke plan on the compliance the log measures", async () => {
+    const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString(
+      "en-CA",
+    );
+    const compliance = stubPredictions({
+      configured: true,
+      plan: {
+        workouts: [
+          {
+            id: "w1",
+            title: "Run (MAF intensity)",
+            place: { date: yesterday },
+            sport: "Run",
+            minutes: 60,
+            description: "",
+            comments: "",
+            structure: "",
+            changed: false,
+          },
+        ],
+      },
+    });
+    render(
+      <ProjectionPanel
+        summary={{
+          ...summary,
+          dailyVolume: [{ date: yesterday, minutes: 45 }],
+        }}
+        onGoalsChanged={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Evoke plan/ }));
+
+    expect(
+      await screen.findByText(/your log holds 45 of the plan/),
+    ).toBeTruthy();
+    expect(screen.getByText(/Compliance/).textContent).toContain("75%");
+    await waitFor(() => expect(compliance()).toBe("0.75"));
   });
 });
