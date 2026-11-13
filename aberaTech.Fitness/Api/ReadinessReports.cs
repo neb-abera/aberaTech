@@ -19,6 +19,9 @@ internal static class ReadinessReports
     /// <summary>A test older than this no longer describes the athlete.</summary>
     private const int MeasurementWindowDays = 120;
 
+    /// <summary>Days a lift's best estimate stands in the forecast's history before a lighter one replaces it.</summary>
+    private const int EnvelopeDays = 28;
+
     /// <summary>A ruck within this fraction of twelve miles counts as the twelve-mile.</summary>
     private const double TwelveMileTolerance = 0.98;
 
@@ -359,7 +362,7 @@ internal static class ReadinessReports
             Sources.Hevy);
     }
 
-    private static void Strength(
+    internal static void Strength(
         IReadOnlyList<DatedSet> all,
         DateTimeZone zone,
         BodyMetric? weight,
@@ -379,33 +382,54 @@ internal static class ReadinessReports
                      ("back squat", 1, (string?)null, SelectionReadiness.Metrics.BackSquatLb)
                  })
         {
-            // Every day the lift was trained, its best estimate: the history a
-            // forecast is drawn through.
+            // Every day the lift was trained, its best set and that set's
+            // estimate.
             var byDay = sets
                 .Where(x => IsLift(x.Set.Exercise, lift))
                 .GroupBy(x => x.StartedAt.InZone(zone).Date)
-                .Select(g => (Date: g.Key, E1Rm: g.Max(x => OneRepMax.Epley(x.Set.WeightKg, x.Set.Reps))))
+                .Select(g =>
+                {
+                    var best = g
+                        .OrderByDescending(x => OneRepMax.Epley(x.Set.WeightKg, x.Set.Reps))
+                        .First();
+                    return (Date: g.Key, E1Rm: OneRepMax.Epley(best.Set.WeightKg, best.Set.Reps), Best: best.Set);
+                })
                 .OrderBy(x => x.Date)
                 .ToArray();
 
+            // The history a forecast is drawn through: on each training day,
+            // the best estimate of the four weeks to that day. A light or
+            // technique day says nothing about the max, so it cannot pull the
+            // line down. Strength lost shows once four weeks pass without a
+            // heavier set. On 2026-11-13 the bench forecast fell to 181 lb
+            // because days of 135 lb sets read as maxes.
             foreach (var day in byDay)
             {
-                var dayRepMax = reps == 1 ? day.E1Rm : day.E1Rm / (1 + reps / 30.0);
+                var envelope = byDay
+                    .Where(x => x.Date <= day.Date && x.Date > day.Date.PlusDays(-EnvelopeDays))
+                    .Max(x => x.E1Rm);
+                var dayRepMax = reps == 1 ? envelope : envelope / (1 + reps / 30.0);
                 if (poundsMetric is not null) Record(histories, poundsMetric, day.Date, dayRepMax * BodyMass.PoundsPerKg);
                 if (bodyweightMetric is not null && weight is { } bw) Record(histories, bodyweightMetric, day.Date, dayRepMax / bw.WeightKg);
             }
 
+            // The best estimate in the window, and of equal ones the newest.
             var recent = byDay
                 .Where(x => x.Date >= since)
-                .OrderByDescending(x => x.E1Rm)
+                .OrderByDescending(x => Math.Round(x.E1Rm, 3))
+                .ThenByDescending(x => x.Date)
                 .FirstOrDefault();
 
             if (recent.E1Rm <= 0) continue;
 
             // Epley backwards: the n-rep max is the single divided by (1 + n/30);
-            // the single is the estimate itself.
+            // the single is the estimate itself. The evidence names the set, so
+            // the reps it came from are on the page.
             var repMaxKg = reps == 1 ? recent.E1Rm : recent.E1Rm / (1 + reps / 30.0);
-            var evidence = Text($"{repMaxKg * BodyMass.PoundsPerKg:0} lb for {reps}, from an Epley estimate of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb on {recent.Date:yyyy-MM-dd}");
+            var set = Text($"{recent.Best.WeightKg * BodyMass.PoundsPerKg:0} lb × {recent.Best.Reps} on {recent.Date:yyyy-MM-dd}");
+            var evidence = reps == 1
+                ? Text($"{set}, an Epley one-rep max of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb. Sets above {OneRepMax.MaxTrustworthyReps} reps are not counted")
+                : Text($"{repMaxKg * BodyMass.PoundsPerKg:0} lb for {reps}, from {set} (an Epley one-rep max of {recent.E1Rm * BodyMass.PoundsPerKg:0} lb). Sets above {OneRepMax.MaxTrustworthyReps} reps are not counted");
 
             if (poundsMetric is not null)
             {
