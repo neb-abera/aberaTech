@@ -63,7 +63,9 @@ export default function ProjectionPanel({
   const [plan, setPlan] = React.useState<PlanState>(() =>
     planFromPreset(ATHLETIC, "total"),
   );
-  const [compliance, setCompliance] = React.useState(85);
+  // Compliance applies to a written plan only, and starts at 100%.
+  const [compliance, setCompliance] = React.useState(100);
+  const kept = plan.written ? compliance / 100 : 1;
   // Opens on the weight the athlete is actually training towards, which they
   // have now told us, rather than on today's — and survives a reload.
   const goalWeightLb = summary.settings.goalWeightKg
@@ -87,7 +89,7 @@ export default function ProjectionPanel({
           : null;
       fetchPrediction(
         toRequest(plan),
-        compliance / 100,
+        kept,
         weightKg,
         distances,
         horizons,
@@ -110,7 +112,7 @@ export default function ProjectionPanel({
       window.clearTimeout(handle);
       stop.abort();
     };
-  }, [plan, compliance, targetWeightLb, currentWeightLb, distances, horizons]);
+  }, [plan, kept, targetWeightLb, currentWeightLb, distances, horizons]);
 
   return (
     <Stack spacing={3}>

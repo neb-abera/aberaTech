@@ -231,12 +231,18 @@ public static class FitnessReports
             DoseResponse.Marginal(effective, TrainingZone.Easy, p.Responsiveness),
             0);
 
-        trace
-            .Add(
+        // A week stated as hours is the hours trained. Compliance is a
+        // written plan's, so the step shows only when it scales something.
+        if (compliance < 1)
+        {
+            trace.Add(
                 "Compliance",
                 Text($"{plan.RunningHours:0.0} h planned × {Format.Percent(compliance)} kept"),
                 Text($"{effective.RunningHours:0.0} h/week actually trained"),
-                Citations.CogganPmc.Id)
+                Citations.CogganPmc.Id);
+        }
+
+        trace
             .AddRange(DoseResponse.Explain(effective, p.Responsiveness))
             .Add(
                 "Starting point",

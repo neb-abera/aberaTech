@@ -26,6 +26,13 @@ export interface PlanState {
   thresholdHours: number;
   intervalHours: number;
   strengthHours: number;
+  /**
+   * The week is a written training plan's (the Evoke plan), so some of its
+   * sessions may be missed and compliance applies. A week stated as hours
+   * (a total, the Athletic default, the log, or any edit) is the hours
+   * trained, and compliance would count the misses twice. Neb, 2026-11-13.
+   */
+  written: boolean;
 }
 
 export function toRequest(plan: PlanState): PlanRequest {
@@ -47,6 +54,7 @@ export function planFromDose(dose: Dose, mode: PlanMode = "zones"): PlanState {
     thresholdHours: Number(dose.thresholdHours.toFixed(2)),
     intervalHours: Number(dose.intervalHours.toFixed(2)),
     strengthHours: Number(dose.strengthHours.toFixed(2)),
+    written: false,
   };
 }
 
@@ -71,6 +79,7 @@ export function planFromPreset(
     thresholdHours: threshold,
     intervalHours: interval,
     strengthHours: preset.strengthHours,
+    written: preset === EVOKE,
   };
 }
 
@@ -102,6 +111,9 @@ export default function PlanEditor({
   prediction: Prediction | null;
   measured: Dose;
 }) {
+  // Any hour typed in is the athlete's own week, not the plan's.
+  const edit = (patch: Partial<PlanState>) =>
+    onChange({ ...plan, ...patch, written: false });
   const zoneField = (
     label: string,
     key: "easyHours" | "thresholdHours" | "intervalHours" | "strengthHours",
@@ -113,7 +125,7 @@ export default function PlanEditor({
         min={0}
         max={40}
         step={0.25}
-        onCommit={(value) => onChange({ ...plan, [key]: value })}
+        onCommit={(value) => edit({ [key]: value })}
       />
     </Grid>
   );
@@ -175,9 +187,7 @@ export default function PlanEditor({
                 max={20}
                 step={0.25}
                 value={plan.totalHours}
-                onChange={(_, value) =>
-                  onChange({ ...plan, totalHours: value as number })
-                }
+                onChange={(_, value) => edit({ totalHours: value as number })}
               />
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 Split to maximize the ceiling it supports, which lands near 80%
@@ -202,30 +212,31 @@ export default function PlanEditor({
                 min={0}
                 max={10}
                 step={0.25}
-                onCommit={(value) =>
-                  onChange({ ...plan, strengthHours: value })
-                }
+                onCommit={(value) => edit({ strengthHours: value })}
               />
             </Grid>
           )}
 
-          <Grid size={{ xs: 12, sm: 3 }}>
-            <Typography gutterBottom variant="body2">
-              Compliance: <strong>{compliance}%</strong>
-            </Typography>
-            <Slider
-              aria-label="Compliance percent"
-              min={10}
-              max={100}
-              step={5}
-              value={compliance}
-              onChange={(_, value) => onComplianceChange(value as number)}
-            />
-            <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              The share of planned sessions that actually happen. Your last 8
-              weeks logged {measured.runningHours.toFixed(1)} h/week of running.
-            </Typography>
-          </Grid>
+          {plan.written && (
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <Typography gutterBottom variant="body2">
+                Compliance: <strong>{compliance}%</strong>
+              </Typography>
+              <Slider
+                aria-label="Compliance percent"
+                min={10}
+                max={100}
+                step={5}
+                value={compliance}
+                onChange={(_, value) => onComplianceChange(value as number)}
+              />
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                The share of the plan's sessions that actually happen. Your last
+                8 weeks logged {measured.runningHours.toFixed(1)} h/week of
+                running.
+              </Typography>
+            </Grid>
+          )}
         </Grid>
 
         {prediction && (
