@@ -8,7 +8,8 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { SettingsDto, ThresholdEntry } from "../../core/api";
+import type { SettingsDto } from "../../core/api";
+import type { ThresholdEntry } from "../../core/thresholds";
 import ThresholdsCard from "../ThresholdsCard";
 
 const settings: SettingsDto = {

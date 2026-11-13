@@ -11,17 +11,15 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import type { FieldTest, SettingsDto, ThresholdSuggestion } from "../core/api";
+import { formatPace } from "../core/format";
 import {
   deleteThreshold,
-  type FieldTest,
   fetchThresholds,
   logThreshold,
-  type SettingsDto,
   type ThresholdEntry,
   type ThresholdKind,
-  type ThresholdSuggestion,
-} from "../core/api";
-import { formatPace } from "../core/format";
+} from "../core/thresholds";
 
 /** "6:40" → 400; blank → null; nonsense → NaN. */
 export function parsePace(text: string): number | null {
