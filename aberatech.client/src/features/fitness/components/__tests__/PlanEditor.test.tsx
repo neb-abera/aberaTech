@@ -18,3 +18,10 @@ describe("planFromPreset", () => {
     expect(plan.strengthHours).toBe(2.5);
   });
 });
+
+describe("written plans", () => {
+  it("marks only the Evoke plan as written, so only it takes compliance", () => {
+    expect(planFromPreset(EVOKE).written).toBe(true);
+    expect(planFromPreset(ATHLETIC).written).toBe(false);
+  });
+});
