@@ -54,10 +54,10 @@ internal static class ReadinessReports
         var measurements = new Dictionary<string, Measurement>();
         var histories = new Dictionary<string, List<DatedValue>>();
 
-        var anchorSource = row.VdotMeasuredOn is null ? "the default VDOT in your profile" : "the time trial in your profile";
-        var anchorEvidence = row.VdotMeasuredOn is { } measuredOn
-            ? Text($"modeled from your VDOT {row.StartVdot:0.0} anchor of {measuredOn:yyyy-MM-dd}")
-            : Text($"modeled from the default VDOT {row.StartVdot:0.0}, with no time trial recorded");
+        var anchorSource = row.AnchorSource ?? (row.VdotMeasuredOn is null ? "the default VDOT" : "the VDOT in your profile");
+        var anchorEvidence = row.VdotMeasuredOn is not null
+            ? Text($"modeled from your VDOT {row.StartVdot:0.0}, from {anchorSource}")
+            : Text($"modeled from the default VDOT {row.StartVdot:0.0}, with no race, time trial, or AFT recorded");
 
         // Runs: the anchor says what a race would be today, at home altitude.
         measurements[SelectionReadiness.Metrics.RunTwoMile] = Modeled(
@@ -263,7 +263,7 @@ internal static class ReadinessReports
                     LoadCarriage.PredictSeconds(row.StartVdot, body, loadKg, TwelveMiles),
                     Text($"load-carriage model from your VDOT {row.StartVdot:0.0} at {body * BodyMass.PoundsPerKg:0} lb bodyweight; no timed twelve-mile at this load in the last {MeasurementWindowDays} days"),
                     row.VdotMeasuredOn,
-                    Text($"{(row.VdotMeasuredOn is null ? "the default VDOT" : "the time trial")} in your profile and your latest weigh-in"),
+                    Text($"{row.AnchorSource ?? (row.VdotMeasuredOn is null ? "the default VDOT" : "the VDOT in your profile")} and your latest weigh-in"),
                     Models.LoadCarriage);
             }
         }

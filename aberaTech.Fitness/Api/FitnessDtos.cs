@@ -177,7 +177,25 @@ public sealed record SummaryDto(
     IReadOnlyList<FieldTestDto> FieldTests,
     ThresholdSuggestionDto? ThresholdSuggestion,
     DurabilityDto Durability,
-    AerobicOutlookDto? AerobicOutlook = null);
+    AerobicOutlookDto? AerobicOutlook = null,
+    AnchorDto? Anchor = null,
+    IReadOnlyList<EffortDto>? Efforts = null,
+    IReadOnlyList<SkippedTestDto>? SkippedTests = null,
+    IReadOnlyList<PlaceDto>? Places = null);
+
+/// <summary>Where the projections start, and the test that set it.</summary>
+/// <param name="Floor">True when the test was an AFT 2-mile: fitness is at least this.</param>
+public sealed record AnchorDto(double Vdot, string? On, string Kind, string? Name, double? DistanceMeters, double? Seconds, double? AltitudeMeters, bool Floor, string Why);
+
+/// <summary>One race, time trial, or AFT 2-mile, scored at its altitude.</summary>
+/// <param name="Removable">True for a result entered by hand, which the page can take back.</param>
+public sealed record EffortDto(string? Id, string Kind, string Date, string Name, double DistanceMeters, double Seconds, double AltitudeMeters, double Vdot, bool IsAnchor, bool Removable, string? Note);
+
+/// <summary>A recording named as a test whose time could not be read.</summary>
+public sealed record SkippedTestDto(string ActivityId, string Date, string Name, string Reason);
+
+/// <summary>One place in the place log.</summary>
+public sealed record PlaceDto(string Id, string? Since, string Place, double AltitudeMeters, bool Current);
 
 /// <summary>The athlete's standing on one metric, and where the number came from.</summary>
 /// <param name="Source">Where the data came from.</param>

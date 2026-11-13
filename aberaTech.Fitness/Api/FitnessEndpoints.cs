@@ -150,6 +150,9 @@ public static class FitnessEndpoints
         // The thresholds, one value at a time, each kept.
         api.MapThresholdEndpoints();
 
+        // Races entered by hand, and where each test was run.
+        api.MapEffortEndpoints();
+
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide
         // and the course planner are the owner's, and a visitor gets neither
@@ -525,25 +528,15 @@ public static class FitnessEndpoints
             row.TreadmillGradePercent = update.TreadmillGradePercent;
             row.TreadmillGradeSince = ParseDate(update.TreadmillGradeSince);
 
-            // A race is the honest way to state the anchor; raw VDOT stays as
-            // the escape hatch. The race happened at home altitude, so its
-            // sea-level equivalent is what scores it.
-            if (update is { AnchorDistanceMeters: { } anchorDistance, AnchorSeconds: { } anchorSeconds }
-                && anchorDistance is >= 400 and <= 100_000 && anchorSeconds > 0)
+            // Races are entered on their own log (/races), and the anchor is
+            // worked out from every test when the log is read. A typed VDOT
+            // stays as the last resort, dated by when it was measured.
+            if (update.AnchorDistanceMeters is not null || update.AnchorSeconds is not null)
             {
-                row.StartVdot = Domain.Vdot.FromRace(
-                    anchorDistance,
-                    Domain.Altitude.ToSeaLevel(anchorSeconds, update.HomeAltitudeMeters) / 60.0);
-                row.AnchorDistanceMeters = anchorDistance;
-                row.AnchorSeconds = anchorSeconds;
+                return Fail("Enter a race on the Races and time trials card. It is kept there with the others.");
             }
-            else if (Math.Abs(update.StartVdot - row.StartVdot) > 1e-6)
-            {
-                // A typed VDOT replaces the race it came from.
-                row.StartVdot = update.StartVdot;
-                row.AnchorDistanceMeters = null;
-                row.AnchorSeconds = null;
-            }
+
+            row.StartVdot = update.StartVdot;
 
             await database.SaveChangesAsync(cancellationToken);
 

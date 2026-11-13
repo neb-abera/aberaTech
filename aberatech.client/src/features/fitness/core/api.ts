@@ -46,6 +46,51 @@ export interface SettingsDto {
   anchorSeconds?: number | null;
 }
 
+/** Where the projections start, and the test that set it. */
+export interface AnchorInfo {
+  vdot: number;
+  on: string | null;
+  kind: "Recording" | "Entered" | "Aft2Mile" | "TypedVdot" | "Default";
+  name: string | null;
+  distanceMeters: number | null;
+  seconds: number | null;
+  altitudeMeters: number | null;
+  /** True for an AFT 2-mile: run tired, so fitness is at least this. */
+  floor: boolean;
+  why: string;
+}
+
+/** A race, time trial, or AFT 2-mile, scored at the altitude it was run. */
+export interface EffortInfo {
+  id: string | null;
+  kind: "Recording" | "Entered" | "Aft2Mile";
+  date: string;
+  name: string;
+  distanceMeters: number;
+  seconds: number;
+  altitudeMeters: number;
+  vdot: number;
+  isAnchor: boolean;
+  removable: boolean;
+  note: string | null;
+}
+
+/** A recording named as a test whose time could not be read. */
+export interface SkippedTestInfo {
+  activityId: string;
+  date: string;
+  name: string;
+  reason: string;
+}
+
+export interface PlaceInfo {
+  id: string;
+  since: string | null;
+  place: string;
+  altitudeMeters: number;
+  current: boolean;
+}
+
 export interface SettingsUpdate {
   referenceHr: number;
   ltSecondsPerKm: number | null;
@@ -216,6 +261,10 @@ export interface Summary {
   weeklyVolume: WeekVolume[];
   dailyVolume: DayVolume[];
   aerobicOutlook?: AerobicOutlook | null;
+  anchor?: AnchorInfo | null;
+  efforts?: EffortInfo[];
+  skippedTests?: SkippedTestInfo[];
+  places?: PlaceInfo[];
   strengthTrend: E1RmPoint[];
   highlights: Highlight[];
   trainingPaces: TrainingPace[];

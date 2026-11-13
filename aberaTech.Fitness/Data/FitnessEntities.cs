@@ -200,6 +200,46 @@ public class ThresholdEntry
     public Instant RecordedAt { get; set; }
 }
 
+/// <summary>
+/// A race or time trial entered by hand: one with no recording, or run
+/// before the log began. A recording named for its distance is read from the
+/// log itself and needs no entry here.
+/// </summary>
+public class RaceResult
+{
+    public Guid Id { get; set; }
+
+    public LocalDate Date { get; set; }
+
+    public string Name { get; set; } = "";
+
+    public double DistanceMeters { get; set; }
+
+    public double Seconds { get; set; }
+
+    /// <summary>Where it was run, when it differs from the place log for that day.</summary>
+    public double? AltitudeMeters { get; set; }
+
+    public Instant RecordedAt { get; set; }
+}
+
+/// <summary>
+/// Where the athlete lived and trained from a date on. A test is scored at
+/// the altitude of the place it was run, and the times shown are for where
+/// the athlete is now. A place with no start date covers everything before
+/// the first dated one.
+/// </summary>
+public class TrainingPlace
+{
+    public Guid Id { get; set; }
+
+    public LocalDate? Since { get; set; }
+
+    public string Place { get; set; } = "";
+
+    public double AltitudeMeters { get; set; }
+}
+
 public class AftResult
 {
     public Guid Id { get; set; }
@@ -368,6 +408,20 @@ public class AthleteSettings
 
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
+
+    /// <summary>
+    /// Where the lifetime best was run, from the place log for its year. Set
+    /// when the log is read, never stored.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public double? PastPeakAltitudeMeters { get; set; }
+
+    /// <summary>
+    /// The test the anchor came from, in words: "your AFT 2-mile of
+    /// 2026-04-03". Set when the log is read, never stored.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? AnchorSource { get; set; }
 
     /// <summary>
     /// The date the athlete is assessing on — for a Guard candidate the

@@ -92,13 +92,14 @@ public sealed class SummaryEndpointTests : IDisposable
 
         // Settings, the weigh-ins, the activities with their laps, the
         // strength sets, the AFT results, the FBI results and the ledger:
-        // one each. It was eighteen, most of them re-reading the same
-        // activities.
-        Assert.Equal(7, _app.Commands.Count);
+        // one each. Since 2026-11-13 the anchor reads the races, the place
+        // log and the AFT results again, three more. It was eighteen, most of
+        // them re-reading the same activities.
+        Assert.Equal(10, _app.Commands.Count);
     }
 
     [Theory]
-    [InlineData("/api/fitness/digest", 7)]
+    [InlineData("/api/fitness/digest", 10)]
     public async Task The_pages_written_from_the_same_log_read_it_once_too(string path, int commands)
     {
         await _app.SeedAsync(FitnessSeed.AthleteAsync);

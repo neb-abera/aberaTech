@@ -857,7 +857,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                         <TableRow key={`${option.kind}-${option.atMonths}`}>
                           <TableCell>
                             {option.kind === "TimeTrial"
-                              ? "Time trial"
+                              ? "A race or time trial, any distance"
                               : "A month of logged runs"}
                           </TableCell>
                           <TableCell align="right">
