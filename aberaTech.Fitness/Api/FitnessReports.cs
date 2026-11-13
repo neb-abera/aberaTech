@@ -60,7 +60,7 @@ public static class FitnessReports
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
         var today = now.InZone(zone).Date;
 
-        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, Bands(row)), settings.ReferenceHr);
+        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, row), settings.ReferenceHr);
 
         var weeks = WeeklyVolumes(
             history.Activities.Where(a => a.Sport == "run" || a.Sport == "ruck").ToList(), zone);
@@ -108,7 +108,7 @@ public static class FitnessReports
         return new SummaryDto(
             settings with { CurrentWeightKg = weight?.WeightKg },
             trend.Select(p => new AerobicPointDto(
-                $"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount, p.IndoorRuns)).ToArray(),
+                $"{p.Year:0000}-{p.Month:00}", p.MedianNormalizedSecPerKm, p.RunCount, p.IndoorRuns, p.GradedRuns)).ToArray(),
             weeks,
             days,
             strength,
@@ -137,7 +137,7 @@ public static class FitnessReports
                 durability.DaysOfLog,
                 durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
                 Steps(durability.Steps)),
-            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, Bands(row)), settings.ReferenceHr, today), settings.ReferenceHr));
+            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, row), settings.ReferenceHr, today), settings.ReferenceHr));
     }
 
     private static AerobicOutlookDto Outlook(AerobicOutlookResult result, int referenceHr) =>
@@ -451,7 +451,7 @@ public static class FitnessReports
     {
         var row = history.Row;
 
-        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, Bands(row)), row.ReferenceHr);
+        var trend = AerobicAnalysis.MonthlyTrend(SteadyRuns(history.Activities, row), row.ReferenceHr);
 
         var (measured, sessions, _) = MeasuredDose(history.Activities, row, now);
         var observations = useHistory
@@ -697,20 +697,29 @@ public static class FitnessReports
     /// <summary>
     /// The runs the aerobic trend may read pace-at-heart-rate from: steady
     /// efforts below the lactate threshold, judged by heart rate and, where
-    /// the watch recorded laps, by how evenly they were run.
+    /// the watch recorded laps, by how evenly they were run. A treadmill
+    /// run carries the incline it was set to, so its pace is read as the
+    /// flat run of the same cost.
     /// </summary>
-    private static IReadOnlyList<SteadyRun> SteadyRuns(IReadOnlyList<Activity> activities, HeartRateBands bands)
+    private static IReadOnlyList<SteadyRun> SteadyRuns(IReadOnlyList<Activity> activities, AthleteSettings row)
     {
         var zone = DateTimeZoneProviders.Tzdb["Etc/UTC"];
+        var bands = Bands(row);
 
         return MeasuredRuns(activities)
             .Where(a => SessionMix.IsSteady(Session(a), bands))
-            .Select(a => new SteadyRun(
-                a.StartedAt.InZone(zone).Date,
-                a.DistanceMeters!.Value,
-                a.DurationSeconds,
-                a.AverageHr!.Value,
-                a.Indoor == true))
+            .Select(a =>
+            {
+                var date = a.StartedAt.InZone(zone).Date;
+                var indoor = a.Indoor == true;
+                return new SteadyRun(
+                    date,
+                    a.DistanceMeters!.Value,
+                    a.DurationSeconds,
+                    a.AverageHr!.Value,
+                    indoor,
+                    TreadmillGrade.For(indoor, date, a.Name, row.TreadmillGradePercent, row.TreadmillGradeSince));
+            })
             .ToArray();
     }
 
@@ -804,7 +813,9 @@ public static class FitnessReports
             row.GoalWeightKg,
             BodyMass.MaxAdjustmentFraction,
             row.HomeAltitudeMeters,
-            row.LtHr);
+            row.LtHr,
+            row.TreadmillGradePercent,
+            row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
     /// <summary>Days kept for the rolling windows: 26 weeks, the span the weekly chart shows.</summary>

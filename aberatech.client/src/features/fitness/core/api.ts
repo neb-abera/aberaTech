@@ -37,6 +37,10 @@ export interface SettingsDto {
   homeAltitudeMeters: number;
   /** The lactate-threshold heart rate, when a test has set it. */
   ltHr: number | null;
+  /** The incline treadmill runs are set to, in percent, from treadmillGradeSince on. */
+  treadmillGradePercent?: number | null;
+  /** yyyy-mm-dd: the first day treadmill runs were at that incline. */
+  treadmillGradeSince?: string | null;
 }
 
 export interface SettingsUpdate {
@@ -58,6 +62,8 @@ export interface SettingsUpdate {
   anchorDistanceMeters: number | null;
   anchorSeconds: number | null;
   ltHr: number | null;
+  treadmillGradePercent: number | null;
+  treadmillGradeSince: string | null;
 }
 
 export interface AerobicPoint {
@@ -66,6 +72,8 @@ export interface AerobicPoint {
   runs: number;
   /** How many of the month's runs were on a treadmill. */
   indoorRuns: number;
+  /** How many of them were on an incline, read at their flat-equivalent pace. */
+  gradedRuns?: number;
 }
 
 /** A field test the log turned out to contain: an AeT (MAF / drift) run or a threshold time trial. */

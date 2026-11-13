@@ -262,6 +262,15 @@ public class AthleteSettings
     /// </summary>
     public int? LtHr { get; set; }
 
+    /// <summary>
+    /// The incline treadmill runs are set to from <see cref="TreadmillGradeSince"/>
+    /// on, in percent. A watch cannot record it. A grade in a run's title wins.
+    /// </summary>
+    public double? TreadmillGradePercent { get; set; }
+
+    /// <summary>The first day treadmill runs were at <see cref="TreadmillGradePercent"/>.</summary>
+    public LocalDate? TreadmillGradeSince { get; set; }
+
     /// <summary>The plan's weekly endurance volume, for compliance math.</summary>
     public double PlanMinutesPerWeek { get; set; } = 160;
 

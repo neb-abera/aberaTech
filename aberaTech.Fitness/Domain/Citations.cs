@@ -248,6 +248,22 @@ public static class Citations
         1998,
         "https://pubmed.ncbi.nlm.nih.gov/9662690/");
 
+    public static readonly Citation AcsmRunningEquation = new(
+        "acsm-running-equation",
+        "Running costs VO2 = 0.2·speed + 0.9·speed·grade + 3.5 mL/kg/min, so a treadmill incline converts to the flat pace of the same cost.",
+        "American College of Sports Medicine, the professional body that sets exercise-testing standards; its metabolic equations are the standard in exercise physiology.",
+        "ACSM's Guidelines for Exercise Testing and Prescription, metabolic calculations; stated for steady running faster than 134 m/min (quoted in Kokkinos et al., J Hum Kinet 2013)",
+        1975,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC3743617/");
+
+    public static readonly Citation JonesDoustTreadmillGrade = new(
+        "jones-doust-treadmill-grade",
+        "A 1% treadmill grade matches the energy cost of level outdoor running between 2.92 and 5.0 m/s, because the belt removes air resistance.",
+        "Andrew Jones and Jonathan Doust, exercise physiologists who measured oxygen uptake in nine trained runners on the road and at five treadmill grades.",
+        "A 1% treadmill grade most accurately reflects the energetic cost of outdoor running (J Sports Sci 14(4):321-327)",
+        1996,
+        "https://pubmed.ncbi.nlm.nih.gov/8887211/");
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -257,6 +273,6 @@ public static class Citations
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
-        MaffetoneMaf, FosterMonotony, FbiPft
+        MaffetoneMaf, FosterMonotony, FbiPft, AcsmRunningEquation, JonesDoustTreadmillGrade
     ];
 }

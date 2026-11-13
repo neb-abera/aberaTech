@@ -54,7 +54,7 @@ public static class AerobicOutlook
             .GroupBy(r => r.Date.PlusDays(-(((int)r.Date.DayOfWeek - 1 + 7) % 7)))
             .Select(g =>
             {
-                var paces = g.Select(r => AerobicAnalysis.NormalizedSecPerKm(r.DistanceMeters, r.Seconds, r.AverageHr, referenceHr)).OrderBy(x => x).ToArray();
+                var paces = g.Select(r => AerobicAnalysis.NormalizedSecPerKm(r, referenceHr)).OrderBy(x => x).ToArray();
                 var n = paces.Length;
                 var median = n % 2 == 1 ? paces[n / 2] : (paces[n / 2 - 1] + paces[n / 2]) / 2;
                 return new WeekPace(g.Key, median, n);

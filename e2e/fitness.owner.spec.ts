@@ -121,3 +121,58 @@ test("the console opens on the workbook's goals, in its groups and order", async
   );
   expect(Math.max(...bottoms) - tabsTop).toBeLessThan(900 * 1.2);
 });
+
+// The treadmill incline is a setting on the Log tab. The test brings its own
+// treadmill run, because the console hides its cards while the log is empty,
+// and removes the run and the setting before it ends, so the next run and the
+// other specs start from 0%.
+test("a treadmill incline is saved with its start date, read in the trend, and cleared", async ({
+  page,
+}, info) => {
+  const day = new Date(Date.now() - 4 * 86_400_000).toISOString().slice(0, 10);
+  const since = new Date(Date.now() - 5 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const name = `E2E treadmill ${info.project.name}`;
+  const csv = [
+    "Activity Type,Date,Title,Distance,Time,Avg HR,Max HR",
+    `Treadmill Running,${day} 03:41:00,${name},5.00,00:31:20,150,160`,
+  ].join("\n");
+
+  await page.goto("/fitness?tab=log");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Choose files" }).click();
+  await (await chooser).setFiles({
+    name: "e2e-treadmill.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
+  await expect(
+    page.getByRole("alert").filter({ hasText: "e2e-treadmill.csv" }),
+  ).toContainText(/1 activities, 1 new/);
+
+  const card = page.locator(".MuiCard-root").filter({
+    has: page.getByRole("heading", { name: "Treadmill incline" }),
+  });
+  await expect(card).toBeVisible({ timeout: 15_000 });
+
+  await card.getByLabel("Incline (%)").fill("1");
+  await card.getByLabel("Since").fill(since);
+  await card.getByRole("button", { name: "Save incline" }).click();
+  await expect(card.getByRole("alert")).toContainText(
+    `Treadmill runs from ${since} on read at 1%.`,
+  );
+  await expect(
+    page.getByText(/on an incline, read at their flat-equivalent pace/),
+  ).toBeVisible();
+
+  await card.getByRole("button", { name: "Clear" }).click();
+  await expect(card.getByRole("alert")).toContainText("Incline cleared.");
+  await expect(card.getByRole("button", { name: "Clear" })).toHaveCount(0);
+  await expect(card.getByLabel("Incline (%)")).toHaveValue("");
+
+  page.once("dialog", (dialog) => dialog.accept());
+  const remove = page.getByRole("button", { name: `Remove ${name} of ${day}` });
+  await remove.click();
+  await expect(remove).toHaveCount(0);
+});
