@@ -1,8 +1,11 @@
+using System.Globalization;
 using System.Security.Claims;
 using aberaTech.Fitness.Data;
 using aberaTech.Fitness.Domain;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using aberaTech.Fitness.Ingest;
 using aberaTech.Fitness.IntervalsIcu;
 using Microsoft.AspNetCore.Http.Features;
@@ -444,18 +447,40 @@ public static class FitnessEndpoints
             return Results.NoContent();
         });
 
-        api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
+        // A partial update: only the fields the request names change. Each
+        // card sends its own fields alone. Until 2026-11-13 every card sent
+        // the whole record, so a card holding an old copy of a value wrote it
+        // back over a newer one. The thresholds are not saved here at all:
+        // each is logged on its own through /thresholds.
+        api.MapPatch("/settings", async (JsonElement body, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
-            // The thresholds are not saved here. Each is logged on its own
-            // through /thresholds and kept, so a profile save can never
-            // overwrite or clear one. The fields stay in the request only so
-            // older pages still parse.
+            if (body.ValueKind != JsonValueKind.Object) return Fail("Send a JSON object of the settings to change.");
 
             var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
             if (row is null)
             {
                 row = new AthleteSettings { Id = 1 };
                 database.Settings.Add(row);
+            }
+
+            // Today's values, with the named fields laid over them.
+            var merged = JsonSerializer.SerializeToNode(AsUpdate(row), SettingsJson)!.AsObject();
+            foreach (var property in body.EnumerateObject())
+            {
+                var key = merged.Select(field => field.Key)
+                    .FirstOrDefault(name => string.Equals(name, property.Name, StringComparison.OrdinalIgnoreCase));
+                if (key is null) return Fail($"There is no setting called {property.Name}.");
+                merged[key] = JsonNode.Parse(property.Value.GetRawText());
+            }
+
+            SettingsUpdate update;
+            try
+            {
+                update = merged.Deserialize<SettingsUpdate>(SettingsJson)!;
+            }
+            catch (JsonException)
+            {
+                return Fail("A setting has a value of the wrong type.");
             }
 
             if (update.HomeAltitudeMeters is < 0 or > 5000)
@@ -683,6 +708,31 @@ public static class FitnessEndpoints
             Encoding.UTF8.GetBytes(authorizationHeader[scheme.Length..].Trim()),
             Encoding.UTF8.GetBytes(digestKey.Trim()));
     }
+
+    private static readonly JsonSerializerOptions SettingsJson = new(JsonSerializerDefaults.Web);
+
+    /// <summary>The row as an update that changes nothing.</summary>
+    private static SettingsUpdate AsUpdate(AthleteSettings row) => new(
+        row.ReferenceHr,
+        row.LtSecondsPerKm,
+        row.PlanMinutesPerWeek,
+        row.StartVdot,
+        row.VdotMeasuredOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        row.BirthYear,
+        row.Female,
+        row.AvailableHoursPerWeek,
+        row.SustainedWeeklyHours,
+        row.PastPeakDistanceMeters,
+        row.PastPeakSeconds,
+        row.PastPeakYear,
+        row.PastPeakWeightKg,
+        row.GoalWeightKg,
+        row.HomeAltitudeMeters,
+        null,
+        null,
+        row.LtHr,
+        row.TreadmillGradePercent,
+        row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
     private static IResult Fail(string message) =>
         Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);

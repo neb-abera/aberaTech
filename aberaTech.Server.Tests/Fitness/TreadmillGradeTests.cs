@@ -93,7 +93,7 @@ public sealed class TreadmillGradeTests
         Assert.Equal(376.2, before.GetProperty("medianSecPerKm").GetDouble(), precision: 6);
         Assert.Equal(0, before.GetProperty("gradedRuns").GetInt32());
 
-        var saved = await client.PutAsJsonAsync("/api/fitness/settings", Update(1, "2026-06-01"));
+        var saved = await client.PatchAsJsonAsync("/api/fitness/settings", Update(1, "2026-06-01"));
         Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
 
         var summary = await client.GetFromJsonAsync<JsonElement>("/api/fitness/summary");
@@ -117,7 +117,7 @@ public sealed class TreadmillGradeTests
         await app.SeedAsync(OneMonthOfTreadmillRuns);
         var client = app.Factory.CreateClient();
 
-        var response = await client.PutAsJsonAsync("/api/fitness/settings", Update(percent, since));
+        var response = await client.PatchAsJsonAsync("/api/fitness/settings", Update(percent, since));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

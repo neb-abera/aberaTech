@@ -583,9 +583,15 @@ export async function saveAvailableHours(hours: number): Promise<void> {
   }
 }
 
-export async function saveSettings(update: SettingsUpdate): Promise<void> {
+/**
+ * Saves only the named settings. Every other value stays as the server
+ * holds it, so a card with an old copy of the page never writes it back.
+ */
+export async function saveSettings(
+  update: Partial<SettingsUpdate>,
+): Promise<void> {
   const response = await fetch("/api/fitness/settings", {
-    method: "PUT",
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(update),
   });

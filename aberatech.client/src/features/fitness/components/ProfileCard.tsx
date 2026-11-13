@@ -44,35 +44,6 @@ function distanceLabel(meters: number | null): string {
   );
 }
 
-/**
- * Today's settings as an update that changes nothing. Each part of the card
- * overrides only its own fields, so saving the hours never re-sends a race.
- */
-export function unchanged(settings: SettingsDto): SettingsUpdate {
-  return {
-    referenceHr: settings.referenceHr,
-    ltSecondsPerKm: settings.ltSecondsPerKm,
-    ltHr: settings.ltHr,
-    planMinutesPerWeek: settings.planMinutesPerWeek,
-    startVdot: settings.startVdot,
-    vdotMeasuredOn: settings.vdotMeasuredOn,
-    birthYear: settings.birthYear,
-    female: settings.female,
-    availableHoursPerWeek: settings.availableHoursPerWeek,
-    sustainedWeeklyHours: settings.sustainedWeeklyHours,
-    pastPeakDistanceMeters: settings.pastPeakDistanceMeters,
-    pastPeakSeconds: settings.pastPeakSeconds,
-    pastPeakYear: settings.pastPeakYear,
-    pastPeakWeightKg: settings.pastPeakWeightKg,
-    goalWeightKg: settings.goalWeightKg,
-    homeAltitudeMeters: settings.homeAltitudeMeters,
-    anchorDistanceMeters: null,
-    anchorSeconds: null,
-    treadmillGradePercent: settings.treadmillGradePercent ?? null,
-    treadmillGradeSince: settings.treadmillGradeSince ?? null,
-  };
-}
-
 type Status = { ok: boolean; text: string } | null;
 
 /** One part of the profile: its own fields, its own Save, its own result. */
@@ -192,7 +163,7 @@ export default function ProfileCard({
     set: (s: Status) => void,
   ) => {
     try {
-      await saveSettings({ ...unchanged(settings), ...changes });
+      await saveSettings(changes);
       set({ ok: true, text: said });
       onSaved();
     } catch {
