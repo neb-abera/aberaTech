@@ -45,7 +45,7 @@ function stubPredictions(): () => string | null {
     }),
   );
   return () => {
-    const last = urls.at(-1);
+    const last = urls[urls.length - 1];
     return last
       ? new URL(last, "https://abera.tech").searchParams.get("compliance")
       : null;
