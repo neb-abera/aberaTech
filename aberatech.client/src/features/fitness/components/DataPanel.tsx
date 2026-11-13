@@ -396,7 +396,7 @@ function WeighIn({ onSaved }: { onSaved: () => void }) {
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
           Bodyweight feeds the run predictions (VDOT is per-kilogram). Nutrition
-          planning stays in LoseIt; this is just the number.
+          planning stays in LoseIt. This is just the number.
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
@@ -537,7 +537,7 @@ function IntegrationsCard({
             >
               {hevyApi
                 ? line(status?.hevy)
-                : "Live sync appears once a Hevy Pro API key is configured (~$24/year, optional); the CSV export works without it."}
+                : "Live sync appears once a Hevy Pro API key is configured (~$24/year, optional). The CSV export works without it."}
             </Typography>
             {hevyApi && (
               <Button
@@ -570,7 +570,7 @@ function IntegrationsCard({
             >
               {intervalsIcu
                 ? line(status?.intervalsIcu)
-                : "Appears once an intervals.icu personal API key (free; Settings → Developer) is configured and Garmin Connect is linked to intervals.icu."}
+                : "Appears once an intervals.icu personal API key (free, under Settings → Developer) is configured and Garmin Connect is linked to intervals.icu."}
             </Typography>
             {intervalsIcu && (
               <Button

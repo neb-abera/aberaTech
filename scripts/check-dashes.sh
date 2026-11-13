@@ -24,13 +24,16 @@ PATHS=(
   aberaTech.Server.Tests/Fitness
 )
 EXCLUDE=(':!*/Migrations/*' ':!*.json')
-PATTERN='—| – '
+# The last form is a JSX dash before a {" "} that renders as a spaced dash.
+PATTERN='—| – |–\{" "\}'
 
 if [ "${1:-}" = "--self-test" ]; then
   grep -q -E "$PATTERN" <<<'the anchor — a time trial' \
     || { echo "self-test: an em dash was not caught" >&2; exit 1; }
   grep -q -E "$PATTERN" <<<'12:30 – 13:10' \
     || { echo "self-test: a spaced en dash was not caught" >&2; exit 1; }
+  grep -q -E "$PATTERN" <<<'{low} –{" "}' \
+    || { echo "self-test: a JSX spaced en dash was not caught" >&2; exit 1; }
   if grep -q -E "$PATTERN" <<<'a 2-mile run, 5–10 beats, 12:30 to 13:10'; then
     echo "self-test: a hyphen or an unspaced range was flagged" >&2; exit 1
   fi

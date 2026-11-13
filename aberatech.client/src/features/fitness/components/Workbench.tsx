@@ -1057,7 +1057,7 @@ function ModelCardView({ result }: { result: SolveResult }) {
                     {parameter.unit}
                   </TableCell>
                   <TableCell align="right">
-                    {parameter.low.toFixed(parameter.low < 1 ? 3 : 2)} –{" "}
+                    {parameter.low.toFixed(parameter.low < 1 ? 3 : 2)} to{" "}
                     {parameter.high.toFixed(parameter.high < 1 ? 3 : 2)}
                   </TableCell>
                 </TableRow>
