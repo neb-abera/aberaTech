@@ -13,12 +13,14 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import { fetchPlan } from "../../training-plan/core/api";
 import {
   deleteGoal,
   fetchPrediction,
   type Prediction,
   type Summary,
 } from "../core/api";
+import { type MeasuredCompliance, measureCompliance } from "../core/compliance";
 import {
   formatChance,
   formatDistance,
@@ -64,9 +66,36 @@ export default function ProjectionPanel({
   const [plan, setPlan] = React.useState<PlanState>(() =>
     planFromPreset(ATHLETIC, "total"),
   );
-  // Compliance applies to a written plan only, and starts at 100%.
+  // Compliance applies to a written plan only. It opens on what the log
+  // shows of the plan so far, and at 100% until that can be read.
   const [compliance, setCompliance] = React.useState(100);
+  const [measured, setMeasured] = React.useState<
+    MeasuredCompliance | null | "unavailable"
+  >(null);
   const kept = plan.written ? compliance / 100 : 1;
+
+  React.useEffect(() => {
+    if (!plan.written || measured !== null) return;
+    let canceled = false;
+    fetchPlan()
+      .then((result) => {
+        if (canceled) return;
+        const reading =
+          result.status === "owner"
+            ? measureCompliance(
+                result.plan.workouts,
+                summary.dailyVolume,
+                new Date().toLocaleDateString("en-CA"),
+              )
+            : null;
+        setMeasured(reading ?? "unavailable");
+        if (reading) setCompliance(Math.round(reading.share * 100));
+      })
+      .catch(() => !canceled && setMeasured("unavailable"));
+    return () => {
+      canceled = true;
+    };
+  }, [plan.written, measured, summary.dailyVolume]);
   // Opens on the weight the athlete is actually training towards, which they
   // have now told us, rather than on today's — and survives a reload.
   const goalWeightLb = summary.settings.goalWeightKg
@@ -124,6 +153,7 @@ export default function ProjectionPanel({
         onChange={setPlan}
         compliance={compliance}
         onComplianceChange={setCompliance}
+        measuredCompliance={measured === "unavailable" ? null : measured}
         prediction={prediction}
         measured={summary.measuredDose}
       />

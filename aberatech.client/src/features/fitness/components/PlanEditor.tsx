@@ -14,6 +14,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import type { Dose, PlanRequest, Prediction } from "../core/api";
+import type { MeasuredCompliance } from "../core/compliance";
 import { ATHLETIC, EVOKE, type WeekPreset } from "./doses";
 import { NumberInput } from "./NumberInput";
 
@@ -101,6 +102,7 @@ export default function PlanEditor({
   onChange,
   compliance,
   onComplianceChange,
+  measuredCompliance = null,
   prediction,
   measured,
 }: {
@@ -108,6 +110,8 @@ export default function PlanEditor({
   onChange: (plan: PlanState) => void;
   compliance: number;
   onComplianceChange: (compliance: number) => void;
+  /** What the log shows of the written plan so far, when it can be read. */
+  measuredCompliance?: MeasuredCompliance | null;
   prediction: Prediction | null;
   measured: Dose;
 }) {
@@ -224,17 +228,44 @@ export default function PlanEditor({
               </Typography>
               <Slider
                 aria-label="Compliance percent"
-                min={10}
+                min={0}
                 max={100}
-                step={5}
+                step={1}
                 value={compliance}
                 onChange={(_, value) => onComplianceChange(value as number)}
               />
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                The share of the plan's sessions that actually happen. Your last
-                8 weeks logged {measured.runningHours.toFixed(1)} h/week of
-                running.
+                {measuredCompliance ? (
+                  <>
+                    Measured: your log holds{" "}
+                    {Math.round(measuredCompliance.loggedMinutes)} of the
+                    plan&apos;s {Math.round(measuredCompliance.plannedMinutes)}{" "}
+                    running and rucking minutes from {measuredCompliance.from}{" "}
+                    through {measuredCompliance.through},{" "}
+                    {Math.round(measuredCompliance.share * 100)}%. Optional
+                    sessions are left out. Move the slider to ask what if.
+                  </>
+                ) : (
+                  <>
+                    The share of the plan&apos;s running and rucking that
+                    happens. It is measured from your log once a planned day has
+                    passed.
+                  </>
+                )}
               </Typography>
+              {measuredCompliance &&
+                compliance !== Math.round(measuredCompliance.share * 100) && (
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      onComplianceChange(
+                        Math.round(measuredCompliance.share * 100),
+                      )
+                    }
+                  >
+                    Back to measured
+                  </Button>
+                )}
             </Grid>
           )}
         </Grid>
