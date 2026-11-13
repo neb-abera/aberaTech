@@ -4,7 +4,7 @@ namespace aberaTech.Fitness.Domain;
 
 /// <summary>A loaded march reduced to what the energy-cost model needs.</summary>
 /// <param name="BodyKg">The athlete's body mass.</param>
-/// <param name="LoadKg">The dry load carried — ruck, not water or rifle.</param>
+/// <param name="LoadKg">The dry load carried: ruck, not water or rifle.</param>
 /// <param name="DistanceMeters">Distance covered.</param>
 /// <param name="Seconds">Time taken.</param>
 /// <param name="GradePercent">Average grade; zero for a road or treadmill.</param>
@@ -39,8 +39,8 @@ public sealed record LoadedMarch(
 /// movement is different, the shoulders and hips fatigue before the lungs do,
 /// and the pack changes the gait. The share it can draw on is
 /// <see cref="RuckEfficiency"/>, one number, calibrated so the published
-/// selection benchmark pairs agree with each other — a 15:12 two-mile beside a
-/// three-hour twelve-mile at 45 lb, a 13:30 two-mile beside 2:45 — for an
+/// selection benchmark pairs agree with each other (a 15:12 two-mile beside a
+/// three-hour twelve-mile at 45 lb, a 13:30 two-mile beside 2:45) for an
 /// athlete of ordinary mass. It is a judgment made visible, not a
 /// measurement, and a timed ruck of the athlete's own always outranks it.
 ///
@@ -78,7 +78,7 @@ public static class LoadCarriage
                                           + 0.35 * metersPerSecond * gradePercent);
     }
 
-    /// <summary>The same cost as oxygen uptake, in ml/kg/min — VDOT's unit.</summary>
+    /// <summary>The same cost as oxygen uptake, in ml/kg/min, VDOT's unit.</summary>
     public static double OxygenCost(double bodyKg, double loadKg, double metersPerSecond, double gradePercent = 0)
     {
         var watts = MetabolicWatts(bodyKg, loadKg, metersPerSecond, gradePercent);

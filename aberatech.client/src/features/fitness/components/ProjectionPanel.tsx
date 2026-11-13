@@ -47,7 +47,7 @@ const DEFAULT_HORIZONS = [0, 3, 6, 12, 18, 24];
 
 /**
  * The prediction console: a training week in, projected performance with its
- * uncertainty out — and the inverse, a goal in, the week it needs out. All of
+ * uncertainty out. It also does the inverse: a goal in, the week it needs out. All of
  * the arithmetic happens server-side; this renders it, including the workings.
  */
 export default function ProjectionPanel({
@@ -97,7 +97,7 @@ export default function ProjectionPanel({
     };
   }, [plan.written, measured, summary.dailyVolume]);
   // Opens on the weight the athlete is actually training towards, which they
-  // have now told us, rather than on today's — and survives a reload.
+  // have now told us, rather than on today's. It survives a reload.
   const goalWeightLb = summary.settings.goalWeightKg
     ? Math.round(kgToLb(summary.settings.goalWeightKg))
     : null;
@@ -164,7 +164,7 @@ export default function ProjectionPanel({
             <Typography gutterBottom variant="body2">
               Race weight:{" "}
               <strong>
-                {targetWeightLb === null ? "—" : `${targetWeightLb} lb`}
+                {targetWeightLb === null ? "n/a" : `${targetWeightLb} lb`}
               </strong>
             </Typography>
             <Slider
@@ -185,7 +185,7 @@ export default function ProjectionPanel({
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
               Relative VO2max scales with the inverse of body mass, so shed fat
               mass moves both your current fitness and the lifetime best you can
-              reclaim — that best was itself run at a bodyweight. The range is
+              reclaim. That best was itself run at a bodyweight. The range is
               the ±
               {Math.round(summary.settings.maxWeightAdjustmentFraction * 100)}%
               the model will honor; past that the fat-mass-only assumption has
@@ -216,7 +216,7 @@ export default function ProjectionPanel({
                     Every number below assumes you race at {targetWeightLb} lb,
                     not today's {currentWeightLb} lb
                     {summary.settings.pastPeakWeightKg === null
-                      ? " — and only your current fitness is adjusted for it, because the weight your lifetime best was run at is not recorded."
+                      ? ". Only your current fitness is adjusted for it, because the weight your lifetime best was run at is not recorded."
                       : "."}
                   </Alert>
                 )}
@@ -224,7 +224,7 @@ export default function ProjectionPanel({
                 variant="body2"
                 sx={{ color: "text.secondary", mb: 1 }}
               >
-                The shaded band is the 80% interval — the model's own
+                The shaded band is the 80% interval: the model's own
                 uncertainty, from fitting it to your history, not a decoration.
               </Typography>
               <ProjectionChart
@@ -407,7 +407,7 @@ export default function ProjectionPanel({
   );
 }
 
-/** "5 mi", "10k", "3000 m", "1.5" — a distance the way it gets typed. */
+/** "5 mi", "10k", "3000 m", "1.5": a distance the way it gets typed. */
 export function parseDistance(text: string): number | null {
   const match = text
     .trim()
@@ -475,8 +475,8 @@ function Anchor({
           {prediction?.reclaimVdot != null && (
             <>
               . You have held{" "}
-              <strong>VDOT {prediction.reclaimVdot.toFixed(1)}</strong> before —
-              everything below that line comes back at the retraining rate, not
+              <strong>VDOT {prediction.reclaimVdot.toFixed(1)}</strong> before.
+              Everything below that line comes back at the retraining rate, not
               the beginner rate
             </>
           )}
@@ -522,8 +522,9 @@ function FitCard({ prediction }: { prediction: Prediction }) {
               {fit.responsiveness.toFixed(2)} ±{" "}
               {fit.responsivenessStandardError.toFixed(2)}
             </strong>{" "}
-            times the reference athlete — {(fit.dataWeight * 100).toFixed(0)}%
-            of that from your own data rather than the literature priors.
+            times the reference athlete, with{" "}
+            {(fit.dataWeight * 100).toFixed(0)}% of that from your own data
+            rather than the literature priors.
           </Typography>
         ) : (
           <Typography variant="body2" sx={{ color: "text.secondary" }}>

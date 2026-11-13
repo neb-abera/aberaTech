@@ -9,7 +9,7 @@ namespace aberaTech.Server.Tests.Fitness;
 
 /// <summary>
 /// The archive Garmin actually emails when you ask for your data, and its
-/// units — centimetres, milliseconds, and two epoch clocks where only one is
+/// units: centimetres, milliseconds, and two epoch clocks where only one is
 /// really UTC. Getting any of those wrong turns a 3 km run into 3 meters or
 /// 30 km, and the resulting VDOT would still look like a number.
 /// </summary>
@@ -202,7 +202,7 @@ public sealed class ImportTests
         var first = Zip(("a.zip", second));
 
         // Three levels is past anything Garmin produces, so the payload at the
-        // bottom is never reached — and the walk ends rather than recursing.
+        // bottom is never reached. The walk ends rather than recursing.
         Assert.Throws<FormatException>(() => Read(first));
     }
 
@@ -257,8 +257,8 @@ public sealed class ImportTests
 }
 
 /// <summary>
-/// The archive describes the same run twice — once in the summaries and again
-/// as the original .fit — and the two have to become one row. A .fit cannot be
+/// The archive describes the same run twice: once in the summaries and again
+/// as the original .fit. The two have to become one row. A .fit cannot be
 /// built by hand in a test, so the merge is exercised directly rather than
 /// through a fixture that would have to be a binary blob in the repository.
 /// </summary>

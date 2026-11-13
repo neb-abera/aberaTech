@@ -24,7 +24,7 @@ public sealed record MonthlyAerobicPoint(
 /// relationship exercise testing has leaned on since Åstrand), so each run's
 /// pace is scaled to a reference heart rate: normalized pace = pace × HR/ref.
 /// Falling normalized pace at a fixed reference HR is the cleanest field
-/// evidence the aerobic engine is growing — it is the same signal a monthly
+/// evidence the aerobic engine is growing. It is the same signal a monthly
 /// aerobic-threshold test measures, computed from every steady run instead of
 /// one.
 ///

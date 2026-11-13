@@ -39,7 +39,7 @@ public sealed class OneRepMaxTests
     [Fact]
     public void Epley_matches_the_published_formula()
     {
-        // 155 x 8: 155 x (1 + 8/30) = 196.33 — the bench estimate the audit used.
+        // 155 x 8: 155 x (1 + 8/30) = 196.33, the bench estimate the audit used.
         Assert.Equal(196.33, OneRepMax.Epley(155, 8), precision: 2);
     }
 

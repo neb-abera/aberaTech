@@ -13,8 +13,8 @@ public sealed record UpsertOutcome(int Added, int Skipped, int Superseded);
 public static class ActivityStore
 {
     /// <summary>
-    /// Upserts by (Source, ExternalId). Existing rows are replaced wholesale —
-    /// the source of truth is the source system, not whatever this database had
+    /// Upserts by (Source, ExternalId). Existing rows are replaced wholesale.
+    /// The source of truth is the source system, not whatever this database had
     /// before.
     ///
     /// Two files from the same service can describe one session under different
@@ -22,8 +22,8 @@ public static class ActivityStore
     /// account of a run, which carries a real clock, replaces the same run read
     /// from a CSV that carries only a wall clock, and a CSV row is not stored
     /// at all when the export already covers it. Without that, uploading both
-    /// of the files Garmin offers doubles the weekly volume chart — quietly,
-    /// and in the direction that flatters.
+    /// of the files Garmin offers doubles the weekly volume chart. It does so
+    /// quietly, and in the direction that flatters.
     /// </summary>
     /// <remarks>
     /// Two queries for the whole batch, not two per row. A Garmin export is a

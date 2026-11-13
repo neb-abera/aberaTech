@@ -8,7 +8,7 @@ namespace aberaTech.Server.Tests.Fitness;
 
 /// <summary>
 /// The fitness test as the gates see it. An official card from five months
-/// ago is still the athlete's record — it was being thrown away as too old,
+/// ago is still the athlete's record. It was being thrown away as too old,
 /// which left the combat-standard gate unknown with a 428 sitting in the
 /// database.
 /// </summary>

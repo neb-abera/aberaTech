@@ -65,7 +65,7 @@ public static class HumanLimits
     /// <summary>Age at which the open record book stops being flattered by youth.</summary>
     public const int RecordAge = Retraining.PlateauEndAge;
 
-    /// <summary>The record that scores highest in each book — the human ceiling.</summary>
+    /// <summary>The record that scores highest in each book. It is the human ceiling.</summary>
     public static WorldBest BestRecord(bool female) =>
         Records.Where(r => r.Female == female).MaxBy(r => r.VdotScore)!;
 
@@ -152,7 +152,7 @@ public static class HumanLimits
             .Add(
                 "Where the target sits",
                 $"{vdot:0.0} ÷ {ceiling:0.0}",
-                $"{Format.Percent(grade)} of the record — {Band(grade)}",
+                $"{Format.Percent(grade)} of the record ({Band(grade)})",
                 Citations.WmaAgeGrading.Id)
             .Steps;
     }

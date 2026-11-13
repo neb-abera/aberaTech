@@ -49,7 +49,7 @@ public sealed record AftScore(int AgeBand, bool Female, IReadOnlyList<AftEventSc
 /// <remarks>
 /// The tables are the scoring scales the Army published for the test that
 /// took effect on 1 June 2025, transcribed row for row: ten age bands, each
-/// with a men's column — which is also the sex-neutral combat column — and a
+/// with a men's column (which is also the sex-neutral combat column) and a
 /// women's. A row holds the raw performance worth exactly that many points;
 /// where the raw scale is coarser than the points scale the row is empty, and
 /// a performance scores the highest row it reaches. Below sixty points the

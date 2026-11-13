@@ -52,7 +52,7 @@ public sealed class IntervalsIcuClient(HttpClient http, IntervalsIcuOptions opti
 
     /// <summary>
     /// The activity's original file as the device recorded it, or null when
-    /// intervals.icu has none for it — an activity that arrived via Strava, or
+    /// intervals.icu has none for it: an activity that arrived via Strava, or
     /// one typed in by hand.
     /// </summary>
     public Task<byte[]?> OriginalFileAsync(string activityId, CancellationToken cancellationToken) =>

@@ -55,7 +55,7 @@ public sealed class SolverTests(ITestOutputHelper output)
     {
         // Round trip: take the time that setting this factor to a known value
         // produces, hand it back as the target, and the solver should find the
-        // value again — whichever of the five factors is the blank one.
+        // value again, whichever of the five factors is the blank one.
         var context = Context();
         var scenario = Base();
         var target = Solver.Predict(context, scenario.With(unknown, truth)).Median;
@@ -268,7 +268,7 @@ public sealed class InformationTests(ITestOutputHelper output)
         // Worth knowing, and not obvious: a trial run next month says less
         // about a race two years out than one run a month before it. The early
         // trial is still the one worth doing, because it is the one that
-        // arrives while the plan can still be changed — but it buys less
+        // arrives while the plan can still be changed. But it buys less
         // certainty about the far date, and the model should not pretend
         // otherwise.
         var context = Context();

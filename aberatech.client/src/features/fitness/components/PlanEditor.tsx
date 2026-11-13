@@ -85,7 +85,7 @@ export function planFromPreset(
 }
 
 const ZONE_NOTES: Record<string, string> = {
-  Easy: "Conversational volume. Saturates slowly — this is the long game.",
+  Easy: "Conversational volume. Saturates slowly. This is the long game.",
   Threshold:
     "Comfortably hard. Most of its return is in the first ~1.2 h/week.",
   Interval: "VO2max repeats. Nearly spent after two sessions a week.",
@@ -95,7 +95,7 @@ const ZONE_NOTES: Record<string, string> = {
 /**
  * The training week, stated the way it is actually lived: hours by intensity.
  * Either name them, or give a total and let the model spend it the way it
- * would advise spending it — and see, per zone, what the next hour there buys.
+ * would advise spending it. Then see, per zone, what the next hour there buys.
  */
 export default function PlanEditor({
   plan,
@@ -195,7 +195,7 @@ export default function PlanEditor({
               />
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 Split to maximize the ceiling it supports, which lands near 80%
-                easy — the distribution the elite-endurance literature observes,
+                easy, the distribution the elite-endurance literature observes,
                 arrived at rather than assumed.
               </Typography>
             </Grid>

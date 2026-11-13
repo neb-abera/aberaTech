@@ -219,7 +219,7 @@ describe("FitnessPanel", () => {
             json({
               date: "2026-09-07",
               weekStart: "2026-09-07",
-              text: "abera.tech/fitness — week of 2026-09-07",
+              text: "abera.tech/fitness: week of 2026-09-07",
               lines: [],
             }),
           );
@@ -237,7 +237,7 @@ describe("FitnessPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Plan" }));
     await screen.findByText(/training paces \(daniels\)/i);
-    await screen.findByText(/7:26\/km – 6:13\/km/);
+    await screen.findByText(/7:26\/km to 6:13\/km/);
     await screen.findByText(/Threshold tests/);
 
     await waitFor(() => {
@@ -252,7 +252,7 @@ describe("FitnessPanel", () => {
   });
   it("keeps the console standing when a refresh fails", async () => {
     // The bug: one latch, checked before everything, meant a single failed
-    // summary fetch replaced the whole console — tabs, charts, the lot — with
+    // summary fetch replaced the whole console (tabs, charts, the lot) with
     // "the service did not answer", discarding data already on screen. The
     // fix that rebuilt the dashboard after an import made three more ways to
     // trip it.

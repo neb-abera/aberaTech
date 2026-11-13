@@ -28,7 +28,7 @@ public sealed class TrajectoryTests
     [Fact]
     public void Committed_dose_matches_the_published_scenario_table()
     {
-        // 9.5 h at 90% compliance — the "committed" scenario: ~44.2 at 12
+        // 9.5 h at 90% compliance is the "committed" scenario: ~44.2 at 12
         // months, ~45.2 at 24. These values were computed independently before
         // this class existed; they are the calibration, not its echo.
         var effective = Trajectory.EffectiveHours(9.5, 0.90);

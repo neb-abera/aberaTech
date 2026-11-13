@@ -9,7 +9,7 @@ namespace aberaTech.Server.Tests.Fitness;
 
 /// <summary>
 /// The fail-closed contract, from the outside. A deployment with no fitness
-/// configuration must answer "not configured" — not 500, not an empty shell,
+/// configuration must answer "not configured". Not 500, not an empty shell,
 /// and above all not data.
 /// </summary>
 public sealed class FitnessEndpointsTests : IDisposable
@@ -52,7 +52,7 @@ public sealed class FitnessEndpointsTests : IDisposable
         using var client = _factory.CreateClient();
 
         // The route does not exist, so the request falls through to the SPA
-        // fallback and comes back as HTML — never JSON, never a 500.
+        // fallback and comes back as HTML. It is never JSON, never a 500.
         var summary = await client.GetAsync("/api/fitness/summary");
         Assert.NotEqual("application/json", summary.Content.Headers.ContentType?.MediaType);
     }

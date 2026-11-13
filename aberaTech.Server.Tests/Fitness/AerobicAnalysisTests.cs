@@ -9,7 +9,7 @@ public sealed class AerobicAnalysisTests
     [Fact]
     public void Normalizes_pace_linearly_in_heart_rate()
     {
-        // 6:30/km at 160 bpm reads as 6:55.8/km at the 152 reference —
+        // 6:30/km at 160 bpm reads as 6:55.8/km at the 152 reference:
         // pace x 160/152.
         var normalized = AerobicAnalysis.NormalizedSecPerKm(5000, 5 * 390, 160, 152);
         Assert.Equal(390.0 * 160 / 152, normalized, precision: 3);
@@ -52,8 +52,8 @@ public sealed class AerobicAnalysisTests
     [Fact]
     public void Deficiency_spread_matches_the_audit()
     {
-        // AeT pace 6:30/km against LT pace 5:40/km: (390-340)/340 = 14.7% —
-        // deficient by the 10% rule.
+        // AeT pace 6:30/km against LT pace 5:40/km: (390-340)/340 = 14.7%.
+        // That is deficient by the 10% rule.
         var spread = AerobicAnalysis.DeficiencySpread(390, 340);
         Assert.Equal(50.0 / 340, spread, precision: 4);
         Assert.True(spread > AerobicAnalysis.DeficiencyThreshold);

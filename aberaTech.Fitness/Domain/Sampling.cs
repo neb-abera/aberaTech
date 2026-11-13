@@ -9,7 +9,7 @@ namespace aberaTech.Fitness.Domain;
 /// runtime: <c>Random</c> is only guaranteed deterministic for a given .NET
 /// version, and these answers should survive an upgrade.
 ///
-/// xoshiro256++ with a SplitMix64 seeder — the standard small, fast,
+/// xoshiro256++ with a SplitMix64 seeder. It is the standard small, fast,
 /// well-tested pair, and short enough to read.
 /// </remarks>
 public sealed class Rng
@@ -107,7 +107,7 @@ public static class Statistic
         return Math.Sqrt(values.Sum(v => (v - mean) * (v - mean)) / (values.Count - 1));
     }
 
-    /// <summary>The share of draws satisfying a condition — a probability, by counting.</summary>
+    /// <summary>The share of draws satisfying a condition. It is a probability, by counting.</summary>
     public static double Share<T>(IReadOnlyList<T> draws, Func<T, bool> holds) =>
         draws.Count == 0 ? 0 : draws.Count(holds) / (double)draws.Count;
 }

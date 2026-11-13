@@ -9,8 +9,8 @@ namespace aberaTech.Fitness.Api;
 /// The athlete and their whole log, read once per request.
 /// </summary>
 /// <remarks>
-/// Every report is some view of the same activities — the steady runs, the
-/// last eight weeks, the rucks, the field tests — and each view used to be its
+/// Every report is some view of the same activities: the steady runs, the
+/// last eight weeks, the rucks, and the field tests. Each view used to be its
 /// own query, most of them fetching the same rows and the same laps again. One
 /// summary was eighteen round trips. The log is a few thousand rows at most,
 /// so it is read once, oldest first, and the views are filters over the list.

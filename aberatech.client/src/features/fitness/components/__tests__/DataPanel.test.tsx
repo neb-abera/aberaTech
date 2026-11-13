@@ -3,7 +3,7 @@
  * Bringing data in, from the user's chair.
  *
  * The page used to make you say which of three buttons your download was, and
- * the file Garmin actually emails — the "Export Your Data" archive — matched
+ * the file Garmin actually emails (the "Export Your Data" archive) matched
  * none of them. There is one door now, so what matters from out here is that a
  * file goes to it untouched and the page reports back what the server made of
  * it.
@@ -171,14 +171,14 @@ describe("bringing data in", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Garmin export archive: 28 activities, 28 new/),
+        screen.getByText(/Garmin export archive\): 28 activities, 28 new/),
       ).toBeTruthy();
     });
   });
 
   it("tells the page to rebuild the dashboard, not just the list below", async () => {
     // The bug this guards: an import refreshed the activity table on this tab
-    // and nothing else, so the Dashboard — built once when the page loaded —
+    // and nothing else, so the Dashboard (built once when the page loaded)
     // went on showing the state of things before the upload. The rows were
     // visibly there and the charts said there was nothing.
     const onDataChanged = vi.fn();

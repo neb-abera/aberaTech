@@ -9,7 +9,7 @@ import * as React from "react";
 import { type Citation, fetchCitations } from "../core/api";
 
 /**
- * Every model on the site, sourced — the people, the works, the years.
+ * Every model on the site, sourced: the people, the works, and the years.
  * Discipline-matched on purpose: running claims cite running coaches and
  * physiologists; strength claims cite strength researchers.
  */

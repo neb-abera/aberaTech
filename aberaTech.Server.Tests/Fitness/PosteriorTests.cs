@@ -35,9 +35,9 @@ public sealed class PosteriorTests(ITestOutputHelper output)
     [Fact]
     public void Its_predictions_are_calibrated_even_where_its_parameters_are_not()
     {
-        // The parameters lie on a ridge — a proxy read low, from a low start,
+        // The parameters lie on a ridge. A proxy read low, from a low start,
         // approached slowly fits about as well as an accurate one from a high
-        // start approached fast — so the marginals lean on their priors and
+        // start approached fast, so the marginals lean on their priors and
         // are not the thing to test. Every combination on that ridge agrees
         // about the future, and the future is what the athlete is buying.
         var covered = 0;

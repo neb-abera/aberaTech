@@ -26,7 +26,7 @@ export default function TrainingPacesCard({ summary }: { summary: Summary }) {
               <strong>
                 {pace.zone} · {pace.name}:
               </strong>{" "}
-              {formatPace(pace.slowSecPerKm)} – {formatPace(pace.fastSecPerKm)}{" "}
+              {formatPace(pace.slowSecPerKm)} to {formatPace(pace.fastSecPerKm)}{" "}
               <Typography
                 component="span"
                 variant="caption"

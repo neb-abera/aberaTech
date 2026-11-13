@@ -565,8 +565,8 @@ export async function deleteGoal(metric: string): Promise<void> {
 }
 
 /**
- * Any file these services hand out. The server decides what it was — see
- * Ingest/Import.cs — so the page never asks which button a download belongs to.
+ * Any file these services hand out. The server decides what it was (see
+ * Ingest/Import.cs), so the page never asks which button a download belongs to.
  */
 export interface ImportOutcome {
   kind: string;

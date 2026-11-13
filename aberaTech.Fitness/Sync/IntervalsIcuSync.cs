@@ -33,9 +33,9 @@ public sealed class IntervalsIcuSync(
     /// </summary>
     /// <remarks>
     /// Every run, not only the first. Activities reach intervals.icu out of
-    /// order — Garmin forwards new ones the day they happen, and the years
-    /// before arrive whenever the athlete uploads the Garmin archive there —
-    /// so a listing that only looked past the newest activity seen would
+    /// order. Garmin forwards new ones the day they happen, and the years
+    /// before arrive whenever the athlete uploads the Garmin archive there.
+    /// So a listing that only looked past the newest activity seen would
     /// never notice the backfill. The listing is one request whatever its
     /// span, and the known ids keep it from re-reading anything.
     /// </remarks>

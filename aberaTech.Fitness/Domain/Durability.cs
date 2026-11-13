@@ -4,7 +4,7 @@ using NodaTime;
 namespace aberaTech.Fitness.Domain;
 
 /// <summary>One day's training load, in easy-hour equivalents.</summary>
-/// <param name="Impact">Whether the day carried running or rucking — the load a rest day rests from.</param>
+/// <param name="Impact">Whether the day carried running or rucking, the load a rest day rests from.</param>
 public sealed record DailyLoad(LocalDate Date, double Load, bool Impact);
 
 /// <summary>One logged session as the load model sees it.</summary>
@@ -38,8 +38,8 @@ public sealed record DurabilityReport(
 /// how long since a day off.
 /// </summary>
 /// <remarks>
-/// Load is the strain the dose model already uses — hours weighted by what
-/// each zone costs to recover from (<see cref="TrainingDose.Strain"/>) — so a
+/// Load is the strain the dose model already uses: hours weighted by what
+/// each zone costs to recover from (<see cref="TrainingDose.Strain"/>). So a
 /// week of intervals weighs more than the same hours easy, and lifting counts
 /// too. Three readings come out of the daily series:
 ///
@@ -50,7 +50,7 @@ public sealed record DurabilityReport(
 ///
 /// <b>Monotony and strain.</b> Foster's measures: the week's mean daily load
 /// over its standard deviation, and that ratio times the week's load. A week
-/// that is the same every day — no hard/easy contrast, no day off — scored
+/// that is the same every day (no hard/easy contrast, no day off) scored
 /// above about 2.0 preceded illness and overtraining in his athletes even
 /// when the total was modest.
 ///
@@ -120,12 +120,12 @@ public static class Durability
             .Add(
                 "Acute:chronic ratio",
                 Text($"{acute:0.0} (last 7 days) ÷ {chronic:0.0} (average week of the last 28)"),
-                acwr is { } r ? Text($"{r:0.00} — safe band {AcwrSweetLow:0.0}–{AcwrSweetHigh:0.0}, risk climbs past {AcwrDanger:0.0}") : Text($"needs {ChronicDays} days of log; has {daysOfLog}"),
+                acwr is { } r ? Text($"{r:0.00} (safe band {AcwrSweetLow:0.0}–{AcwrSweetHigh:0.0}, risk climbs past {AcwrDanger:0.0})") : Text($"needs {ChronicDays} days of log; has {daysOfLog}"),
                 Citations.GabbettWorkload.Id)
             .Add(
                 "Monotony and strain",
                 Text($"mean daily load {mean:0.00} ÷ its spread {sd:0.00}; strain = weekly load × monotony"),
-                monotony is { } mo ? Text($"monotony {mo:0.0}, strain {strain:0.0} — over {MonotonyLimit:0.0} the week has no contrast") : "no spread to divide by",
+                monotony is { } mo ? Text($"monotony {mo:0.0}, strain {strain:0.0} (over {MonotonyLimit:0.0} the week has no contrast)") : "no spread to divide by",
                 Citations.FosterMonotony.Id)
             .Add(
                 "Impact streak",
@@ -187,7 +187,7 @@ public static class Durability
         {
             highlights.Add(new Highlight("durability-steady",
                 Text($"Load carried well: {steady:0.00}× the four-week average"),
-                Text($"Inside the {AcwrSweetLow:0.0}–{AcwrSweetHigh:0.0} band, monotony {(report.Monotony is { } m ? m.ToString("0.0", CultureInfo.InvariantCulture) : "—")}, {report.RestDaysLast7} rest days in the last 7. Keep the build to this shape."),
+                Text($"Inside the {AcwrSweetLow:0.0}–{AcwrSweetHigh:0.0} band, monotony {(report.Monotony is { } m ? m.ToString("0.0", CultureInfo.InvariantCulture) : "n/a")}, {report.RestDaysLast7} rest days in the last 7. Keep the build to this shape."),
                 Positive: true));
         }
 

@@ -67,20 +67,20 @@ public sealed record OutlookContext(
 /// training week.
 /// </summary>
 /// <remarks>
-/// Two engines, chosen by what the line measures. Running lines — the timed
+/// Two engines, chosen by what the line measures. Running lines (the timed
 /// runs, the rucks read through the load-carriage model, the pace at the
-/// aerobic threshold — are all functions of VDOT, so each is turned into the
+/// aerobic threshold) are all functions of VDOT, so each is turned into the
 /// VDOT that clears it and asked of the Banister trajectory, whose fitted
-/// covariance gives the probability (<see cref="Forecast"/>). The rest —
-/// reps, lifts, body fat, the fitness test — have no dose-response model
+/// covariance gives the probability (<see cref="Forecast"/>). The rest
+/// (reps, lifts, body fat, the fitness test) have no dose-response model
 /// here, so each is projected along a straight line through its own dated
 /// history, with the prediction interval of that regression as the spread.
 /// A straight line is a modest model of a lift; it is the honest one when
 /// the alternative is a number with no interval at all.
 ///
 /// A gate's probability is the product of its lines', which treats them as
-/// independent. They are not — a stronger athlete is stronger everywhere —
-/// so the product is a floor, and it is labeled with how many of the lines
+/// independent. They are not, because a stronger athlete is stronger everywhere.
+/// So the product is a floor, and it is labeled with how many of the lines
 /// it covers.
 ///
 /// Citations: <see cref="Citations.NonlinearRegression"/>,

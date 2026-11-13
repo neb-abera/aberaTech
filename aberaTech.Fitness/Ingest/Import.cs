@@ -13,7 +13,7 @@ public sealed record ImportResult(string Kind, IReadOnlyList<Activity> Activitie
 ///
 /// The page used to ask which of three buttons a file belonged to, which meant
 /// knowing that Garmin's "Export Your Data" archive is not the same thing as
-/// the Connect website's activities CSV — and the archive, the thing Garmin
+/// the Connect website's activities CSV. The archive, the thing Garmin
 /// emails you, fitted none of the three. So nothing is asked: the bytes are
 /// sniffed, an archive is walked, and whatever is recognized inside it is
 /// imported.
@@ -29,7 +29,7 @@ public static class Import
     /// <summary>Any one member, decompressed. The largest thing expected is the summaries JSON.</summary>
     private const long MaxEntryBytes = 64L * 1024 * 1024;
 
-    /// <summary>Everything decompressed, across the whole walk — the zip-bomb ceiling.</summary>
+    /// <summary>Everything decompressed, across the whole walk. This is the zip-bomb ceiling.</summary>
     private const long MaxTotalBytes = 512L * 1024 * 1024;
 
     /// <summary>Garmin nests originals in a second zip. Nothing legitimate goes deeper.</summary>
@@ -59,8 +59,8 @@ public static class Import
     ///
     /// A Garmin export says the same run twice: once in the summaries JSON and
     /// again as the original .fit under uploaded files. Both clocks are real
-    /// UTC, so matching on the start minute — two activities never begin in the
-    /// same one — lets the .fit fill in what the summary left out, instead of
+    /// UTC, so matching on the start minute (two activities never begin in the
+    /// same one) lets the .fit fill in what the summary left out, instead of
     /// the archive importing every run of the year twice.
     /// </summary>
     internal static IReadOnlyList<Activity> Merge(
@@ -100,7 +100,7 @@ public static class Import
                 continue;
             }
 
-            // An activity the summaries do not cover — an older one, or a file
+            // An activity the summaries do not cover: an older one, or a file
             // uploaded to Connect from elsewhere. Keyed by its start, so
             // re-importing the same archive lands on the same row.
             if (fromArchive)
@@ -273,7 +273,7 @@ public static class Import
         ///
         /// An export describes the same run twice: once in the summaries JSON
         /// and again as an original .fit under uploaded files. Matching them on
-        /// the start minute — two activities never begin in the same one — lets
+        /// the start minute (two activities never begin in the same one) lets
         /// the .fit fill in what the summary left out, instead of the archive
         /// importing every run of the year twice.
         /// </summary>

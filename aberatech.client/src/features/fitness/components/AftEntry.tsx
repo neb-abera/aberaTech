@@ -57,7 +57,7 @@ export default function AftEntry({ onSaved }: { onSaved: () => void }) {
       });
       setError(null);
       setSaved(
-        `Scored ${result.total} on the ${result.ageBand} band — combat standard ${result.meetsCombatStandard ? "met" : "not met"}.`,
+        `Scored ${result.total} on the ${result.ageBand} band. Combat standard ${result.meetsCombatStandard ? "met" : "not met"}.`,
       );
       onSaved();
     } catch (caught) {

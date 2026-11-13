@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import * as React from "react";
 
 /**
- * An editable set of numbers — the distances a projection reports, the
+ * An editable set of numbers: the distances a projection reports, the
  * horizons it reports them at. A dropdown of four presets is a decision made
  * for the athlete; this is the same convenience with the door left open.
  */

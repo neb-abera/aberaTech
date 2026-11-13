@@ -7,7 +7,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// The race-weight factor used to move the anchor and nothing else, so a plan
 /// to race lighter raised the starting fitness toward a ceiling that stayed
 /// where it was. That shortened the stretch re-earned at the retraining rate
-/// and made the model gloomier the lighter the athlete planned to be — the
+/// and made the model gloomier the lighter the athlete planned to be. That is the
 /// opposite of the physiology it was modeling.
 /// </summary>
 public sealed class RaceWeightTests(ITestOutputHelper output)
@@ -19,7 +19,7 @@ public sealed class RaceWeightTests(ITestOutputHelper output)
     public void A_lifetime_best_is_re_scored_at_the_weight_you_plan_to_race()
     {
         // VDOT is per kilogram, so the same absolute engine in a lighter body
-        // scores higher — the treatment the anchor already had.
+        // scores higher. That is the treatment the anchor already had.
         var lighter = BodyMass.AtRaceWeight(48.7, Lb(178), Lb(165));
         Assert.NotNull(lighter);
         Assert.Equal(48.7 * 178 / 165, lighter!.Value, precision: 6);

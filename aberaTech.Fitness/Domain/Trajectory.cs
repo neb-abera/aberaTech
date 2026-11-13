@@ -36,7 +36,7 @@ public sealed record TrajectoryParameters(
 /// </summary>
 /// <remarks>
 /// A plan is not a step function. An athlete at four hours a week does not
-/// train nine next Monday — or rather, they can, and get hurt. Chronic load is
+/// train nine next Monday. Or rather, they can, and get hurt. Chronic load is
 /// built by increments the body absorbs, so the schedule ramps geometrically
 /// from where the athlete actually is, and every date this engine reports is
 /// a date on the ramped path rather than on a dose nobody could start.
@@ -58,7 +58,7 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
     /// A percentage increase on nothing is nothing, so an athlete starting
     /// from zero would ramp forever and every goal would come back
     /// unreachable. Someone with no history does not add 8% to nothing, they
-    /// go for a couple of runs — which is where the ramp actually starts.
+    /// go for a couple of runs. That is where the ramp actually starts.
     /// </remarks>
     public const double StandingStartHours = 1.5;
 
@@ -90,7 +90,7 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
     /// Compliance as a single fraction cannot express this. Eighty-five per
     /// cent spread evenly is not the same as three good weeks and one lost
     /// one, because what is lost during the gap decays several times faster
-    /// than it was built — so the shape of the missed training matters as much
+    /// than it was built. So the shape of the missed training matters as much
     /// as the amount, and only one of the two was expressible before.
     /// </remarks>
     public Func<double, TrainingDose> WithGap(double fromMonths, double months)
@@ -125,15 +125,15 @@ public sealed record DoseSchedule(TrainingDose Target, TrainingDose? Start = nul
 /// dV/dt = k(V)·(C(h(t)) − V),
 ///
 /// which is the same curve when the dose is constant and still correct when it
-/// is not — a ramping plan, a block of base work followed by a sharpening
-/// block, a return from a layoff. There is no closed form for a time-varying
+/// is not: a ramping plan, a block of base work followed by a sharpening
+/// block, or a return from a layoff. There is no closed form for a time-varying
 /// dose, so it is integrated numerically with fourth-order Runge-Kutta at a
 /// step of about a day and a half; against the constant-dose exponential it
 /// agrees to nine decimal places, which is the test that keeps it honest.
 ///
 /// A trained past speeds the climb. Up to the age-adjusted lifetime peak the
-/// athlete is <i>reclaiming</i> — the retraining literature's fast lane
-/// (<see cref="Retraining"/>) — so k is multiplied by a factor that tapers
+/// athlete is <i>reclaiming</i>, the retraining literature's fast lane
+/// (<see cref="Retraining"/>). So k is multiplied by a factor that tapers
 /// from <see cref="Retraining.ReclaimRateMultiplier"/> at the starting fitness
 /// to 1 at the old peak. Beyond the peak is new territory at the de-novo rate.
 ///
@@ -148,8 +148,8 @@ public static class Trajectory
     /// </summary>
     /// <remarks>
     /// Fourth-order error goes as (k·h)⁴, and with k around 0.07 per month a
-    /// step of an eighth of a month is accurate to roughly one part in 10¹²  —
-    /// far past anything a VDOT is quoted to. It matters because the sampler
+    /// step of an eighth of a month is accurate to roughly one part in 10¹².
+    /// That is far past anything a VDOT is quoted to. It matters because the sampler
     /// runs this integration tens of thousands of times per fit, so a step
     /// finer than the dynamics need is paid for in seconds of waiting.
     /// </remarks>
@@ -190,7 +190,7 @@ public static class Trajectory
 
     /// <summary>
     /// Projected VDOT after <paramref name="months"/> under any dose that
-    /// varies with time — a ramp, a block plan, or the weeks an athlete
+    /// varies with time: a ramp, a block plan, or the weeks an athlete
     /// actually trained.
     /// </summary>
     public static double VdotAt(TrajectoryParameters p, Func<double, TrainingDose> dose, double months)
@@ -215,8 +215,8 @@ public static class Trajectory
     /// </summary>
     /// <remarks>
     /// A training week holds for weeks at a time, but Runge-Kutta asks for the
-    /// dose four times a step. Evaluating the saturating ceiling — four
-    /// exponentials — on every one of those was most of the cost of a fit.
+    /// dose four times a step. Evaluating the saturating ceiling (four
+    /// exponentials) on every one of those was most of the cost of a fit.
     /// Training doses are records, so structural equality makes the memo a
     /// one-liner.
     /// </remarks>

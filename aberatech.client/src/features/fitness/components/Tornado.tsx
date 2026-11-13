@@ -23,7 +23,7 @@ function label(sensitivity: Sensitivity): string {
  * How much race time each factor is worth across the range it could plausibly
  * take, longest bar first.
  *
- * This is the picture that answers "what should I change" — not by ranking
+ * This is the picture that answers "what should I change". It does so not by ranking
  * factors by how much they matter in principle, but by how much they move
  * *this* athlete's *this* race, from where they actually are. A bar that runs
  * left of the current prediction is time gained.

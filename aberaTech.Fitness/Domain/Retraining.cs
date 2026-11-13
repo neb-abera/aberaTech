@@ -6,7 +6,7 @@ namespace aberaTech.Fitness.Domain;
 /// </summary>
 /// <remarks>
 /// Detrained athletes are not beginners. Regaining previously held fitness
-/// runs at a multiple of the de-novo rate — the detraining/retraining
+/// runs at a multiple of the de-novo rate. The detraining/retraining
 /// literature (Mujika &amp; Padilla's two-part review) shows much of the loss
 /// is rapidly reversible plasma volume and enzyme activity, and the muscle
 /// keeps structural receipts: myonuclei added by past training persist
@@ -16,7 +16,7 @@ namespace aberaTech.Fitness.Domain;
 ///
 /// The reclaimable level decays with age. World Masters Athletics age-grading
 /// holds open-class standards flat through the early thirties and then
-/// declines roughly 0.7% a year for middle-distance running — so a peak set
+/// declines roughly 0.7% a year for middle-distance running. So a peak set
 /// at 24 is essentially intact at 33 and meaningfully discounted at 45.
 ///
 /// Citations: <see cref="Citations.MujikaRetraining"/>,
@@ -34,7 +34,7 @@ public static class Retraining
     /// within the first four weeks of inactivity, most of it the rapidly
     /// reversible plasma-volume and enzyme changes rather than anything
     /// structural. Against a de-novo approach rate whose time constant is well
-    /// over a year, that puts the decay constant nearer two months — the
+    /// over a year, that puts the decay constant nearer two months. That is the
     /// multiple here.
     ///
     /// It is the reason a plan with a hole in it is worse than the same hours

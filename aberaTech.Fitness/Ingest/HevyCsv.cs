@@ -8,7 +8,7 @@ namespace aberaTech.Fitness.Ingest;
 
 /// <summary>
 /// Hevy's free "Export data" CSV: one row per set, grouped here into strength
-/// activities. Works without a Pro subscription — this is the zero-cost path.
+/// activities. Works without a Pro subscription. This is the zero-cost path.
 /// </summary>
 public static class HevyCsv
 {
@@ -86,7 +86,7 @@ public static class HevyCsv
                     var order = index++;
                     if (setIndex >= 0 && int.TryParse(row[setIndex], out var declared)) order = declared;
 
-                    // A timed hold — the plank — has a duration and no reps.
+                    // A timed hold (the plank) has a duration and no reps.
                     double? held = null;
                     if (durationSeconds >= 0 && row.Length > durationSeconds
                         && double.TryParse(row[durationSeconds], NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)

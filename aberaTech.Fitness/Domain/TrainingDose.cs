@@ -23,8 +23,8 @@ public enum TrainingZone
 /// <remarks>
 /// Two athletes training seven hours a week are not doing the same thing, and
 /// a model that only knows the total cannot say where the next hour should go.
-/// Every question this engine answers — what will I run, what would it take,
-/// what should I change — is asked and answered on this vector.
+/// Every question this engine answers (what will I run, what would it take,
+/// what should I change) is asked and answered on this vector.
 ///
 /// <b>Strain</b> weights the hours by what they cost to recover from. The
 /// weights are session-load ratios of the kind training-load models use
@@ -58,7 +58,7 @@ public sealed record TrainingDose(
     public static IReadOnlyList<TrainingZone> Zones { get; } =
         [TrainingZone.Easy, TrainingZone.Threshold, TrainingZone.Interval, TrainingZone.Strength];
 
-    /// <summary>The running zones — the ones an allocation decides between.</summary>
+    /// <summary>The running zones, the ones an allocation decides between.</summary>
     public static IReadOnlyList<TrainingZone> RunningZones { get; } =
         [TrainingZone.Easy, TrainingZone.Threshold, TrainingZone.Interval];
 
@@ -87,7 +87,7 @@ public sealed record TrainingDose(
     /// <summary>Weekly recovery cost in easy-hour equivalents.</summary>
     public double Strain => Zones.Sum(z => StrainWeight(z) * this[z]);
 
-    /// <summary>The share of running time spent easy — the 80/20 number.</summary>
+    /// <summary>The share of running time spent easy. This is the 80/20 number.</summary>
     public double EasyShare => RunningHours > 0 ? EasyHours / RunningHours : 0;
 
     public TrainingDose Scale(double factor)

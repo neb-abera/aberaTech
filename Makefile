@@ -131,6 +131,8 @@ prose: ## Writing rules (.vale/styles/Abera): the Markdown, then the prerendered
 	./scripts/check-prose.sh
 	./scripts/check-american-spelling.sh --self-test
 	./scripts/check-american-spelling.sh
+	./scripts/check-dashes.sh --self-test
+	./scripts/check-dashes.sh
 	$(DOCKER) build --target clientprose -f $(DOCKERFILE) .
 
 # The Playwright image is the FROM line of e2e/Dockerfile, pinned by tag and

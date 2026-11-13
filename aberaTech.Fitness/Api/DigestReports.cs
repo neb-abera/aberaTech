@@ -44,7 +44,7 @@ internal static class DigestReports
         var lines = new List<string>();
         var settings = summary.Settings;
 
-        lines.Add(Text($"abera.tech/fitness — week of {weekStart:yyyy-MM-dd}"));
+        lines.Add(Text($"abera.tech/fitness: week of {weekStart:yyyy-MM-dd}"));
         lines.Add("");
 
         // What was done.

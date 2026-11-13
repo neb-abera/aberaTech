@@ -113,7 +113,7 @@ public sealed record SolverContext(
 /// <param name="High">90th percentile.</param>
 /// <param name="Impossible">Share of draws for which no answer exists at all.</param>
 /// <param name="AlreadyMet">
-/// Share of draws in which the factor needs no change — the target is met
+/// Share of draws in which the factor needs no change: the target is met
 /// where it already sits. Reported separately because folding "no change
 /// needed" into a median makes the median mean nothing.
 /// </param>
@@ -142,7 +142,7 @@ public sealed record Spread(
 /// <param name="Value">Where it is set now.</param>
 /// <param name="Elasticity">
 /// The percentage change in the predicted time from a one percent change in
-/// this factor — the derivative, made comparable across units.
+/// this factor. It is the derivative, made comparable across units.
 /// </param>
 /// <param name="PerUnitSeconds">Seconds of race time per unit of the factor.</param>
 /// <param name="LowValue">The bottom of the range the swing was taken over.</param>
@@ -168,16 +168,16 @@ public sealed record FactorSensitivity(
 /// one, and either evaluate or solve.
 /// </summary>
 /// <remarks>
-/// The console used to have two hard-coded directions — a plan forward to a
-/// time, and a goal backward to a plan — which is two implementations of one
+/// The console used to have two hard-coded directions: a plan forward to a
+/// time, and a goal backward to a plan. That is two implementations of one
 /// idea and no help at all when the question is "what compliance would I need"
 /// or "how light would I have to be". Every relationship here is monotone in
 /// its factor, so a single bisection answers all of them, and the answer is a
 /// distribution rather than a number because it is solved once per posterior
 /// draw.
 ///
-/// The derivatives fall out of the same evaluation. Elasticity — the percentage
-/// change in the answer per percentage change in a factor — is what makes a
+/// The derivatives fall out of the same evaluation. Elasticity (the percentage
+/// change in the answer per percentage change in a factor) is what makes a
 /// weekly hour, a compliance point and a kilogram comparable, and comparing
 /// them is the whole question of what to change next.
 /// </remarks>
@@ -363,7 +363,7 @@ public static class Solver
 
     /// <summary>
     /// Every factor's local derivative and its swing across a plausible range,
-    /// sorted by how much race time it moves — a tornado, in data form.
+    /// sorted by how much race time it moves. It is a tornado, in data form.
     /// </summary>
     public static IReadOnlyList<FactorSensitivity> Sensitivities(
         SolverContext context,
@@ -405,8 +405,8 @@ public static class Solver
     }
 
     /// <summary>
-    /// The predicted time over a grid of two factors, for a contour plot —
-    /// which is how "what if I change both of these" gets answered without
+    /// The predicted time over a grid of two factors, for a contour plot.
+    /// That is how "what if I change both of these" gets answered without
     /// guessing at one of them.
     /// </summary>
     public static double[,] Surface(
@@ -501,8 +501,8 @@ public static class Solver
                 $"Sensitivity to {Name(sensitivity.Factor)}",
                 Text($"∂(time)/∂({Name(sensitivity.Factor)}) at {sensitivity.Value:0.00}"),
                 // An elasticity is already a ratio of fractional changes, so
-                // it is a percentage per percentage — not a percentage of one.
-                Text($"{sensitivity.PerUnitSeconds:0.0} s per unit — {Math.Abs(sensitivity.Elasticity):0.000}% of race time per 1% change"),
+                // it is a percentage per percentage. It is not a percentage of one.
+                Text($"{sensitivity.PerUnitSeconds:0.0} s per unit ({Math.Abs(sensitivity.Elasticity):0.000}% of race time per 1% change)"),
                 Citations.BanisterModel.Id);
         }
 

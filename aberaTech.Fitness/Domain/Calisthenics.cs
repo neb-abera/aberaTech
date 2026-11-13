@@ -28,8 +28,8 @@ public sealed record BestSetPoint(LocalDate Date, string Metric, double Value);
 /// A strength log records bodyweight sets at zero weight, which is exactly the
 /// filter the one-rep-max trend applies to leave them out. Selection does not
 /// leave them out: the day-one assessment is push-ups, pull-ups and a run, and
-/// the sets are already in the log. So they are read by name — whatever the
-/// app called the movement — into the four metrics the gates ask for.
+/// the sets are already in the log. So they are read by name (whatever the
+/// app called the movement) into the four metrics the gates ask for.
 /// </remarks>
 public static class Calisthenics
 {

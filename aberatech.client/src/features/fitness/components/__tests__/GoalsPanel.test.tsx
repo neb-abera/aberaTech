@@ -213,7 +213,7 @@ describe("GoalsPanel", () => {
       name: "FBI Physical Fitness Test",
     });
     expect(within(fbi).getByText("Push-ups")).toBeTruthy();
-    expect(within(fbi).getByText("—")).toBeTruthy();
+    expect(within(fbi).getByText("n/a")).toBeTruthy();
   });
 
   it("tags an inferred goal and an FBI maximum from the athlete's own note", async () => {

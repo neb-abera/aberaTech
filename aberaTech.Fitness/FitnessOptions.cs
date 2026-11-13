@@ -11,20 +11,20 @@ public sealed class FitnessOptions
     /// <remarks>
     /// Same reasoning as the scheduling admin allowlist: authentication proves
     /// somebody has a Google account; this proves it is the athlete. Heart
-    /// rate, bodyweight and training history are health data — nobody else's
-    /// business — so with no allowlist the endpoints are never mapped at all.
+    /// rate, bodyweight and training history are health data and nobody else's
+    /// business, so with no allowlist the endpoints are never mapped at all.
     /// </remarks>
     public string[] AllowedEmails { get; set; } = [];
 
     /// <summary>
     /// Hevy API key, from hevy.com/settings?developer. Requires Hevy Pro
-    /// (~$24/year) — optional on purpose: the CSV upload path costs nothing.
+    /// (~$24/year). It is optional on purpose: the CSV upload path costs nothing.
     /// A container app secret, never appsettings.
     /// </summary>
     public string HevyApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// A bearer key that lets one caller — the morning brief — read the
+    /// A bearer key that lets one caller (the morning brief) read the
     /// plain-text digest without a Google sign-in. Optional; without it the
     /// route is never mapped. At least 32 characters, a container app secret,
     /// never appsettings.
@@ -38,8 +38,8 @@ public sealed class FitnessOptions
     /// Google project and no allowlist.
     /// </summary>
     /// <remarks>
-    /// Honored only when the host environment is Development — the gate below
-    /// enforces that, not this flag — so setting it in a deployed
+    /// Honored only when the host environment is Development. The gate below
+    /// enforces that, not this flag, so setting it in a deployed
     /// configuration does nothing. It exists because the local database is
     /// empty and loopback-only: there is no health data for the bypass to
     /// expose that the developer did not just upload to their own machine.

@@ -5,8 +5,8 @@ namespace aberaTech.Server.Tests.Fitness;
 
 /// <summary>
 /// The scorer against rows read straight off the published tables, so a
-/// transcription error anywhere in the men's 32-36 column — the one this
-/// athlete is scored on — fails here rather than on a scorecard.
+/// transcription error anywhere in the men's 32-36 column (the one this
+/// athlete is scored on) fails here rather than on a scorecard.
 /// </summary>
 public sealed class AftTests
 {

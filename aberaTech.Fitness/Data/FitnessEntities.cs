@@ -92,7 +92,7 @@ public class Activity
 /// One lap of a run or ruck: a distance, a time, a heart rate.
 /// </summary>
 /// <remarks>
-/// A session's average pace hides its structure — an interval workout reads
+/// A session's average pace hides its structure. An interval workout reads
 /// as an easy run once the recoveries are averaged in. Laps are how the log
 /// says what a session actually was, and a lap button pressed at the start
 /// and end of the steady part of a test is how a test declares itself.
@@ -153,10 +153,10 @@ public class StrengthSet
 
     public int Reps { get; set; }
 
-    /// <summary>How long a timed set was held — a plank has no reps.</summary>
+    /// <summary>How long a timed set was held. A plank has no reps.</summary>
     public double? DurationSeconds { get; set; }
 
-    /// <summary>How far a loaded set was carried — a farmer's walk has a distance, not reps.</summary>
+    /// <summary>How far a loaded set was carried. A farmer's walk has a distance, not reps.</summary>
     public double? DistanceMeters { get; set; }
 }
 
@@ -424,7 +424,7 @@ public class AthleteSettings
     public string? AnchorSource { get; set; }
 
     /// <summary>
-    /// The date the athlete is assessing on — for a Guard candidate the
+    /// The date the athlete is assessing on. For a Guard candidate it is the
     /// readiness evaluation, the first gate. The readiness gates count back
     /// from it; unset, they carry no dates.
     /// </summary>
@@ -437,8 +437,8 @@ public class AthleteSettings
 /// <remarks>
 /// A model that has never been checked against an outcome is a calculator with
 /// good manners. This one had grown considerably without ever having made a
-/// prediction anybody later compared to reality — and the way that gets fixed
-/// is not more modeling, it is writing one down and waiting.
+/// prediction anybody later compared to reality. The fix is not more
+/// modeling. It is writing one down and waiting.
 ///
 /// The scenario is stored alongside the answer because a prediction is only
 /// meaningful with its assumptions attached: what it assumed about training,

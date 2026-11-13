@@ -4,8 +4,8 @@ namespace aberaTech.Fitness.Domain;
 /// Estimated one-rep max from a submaximal set.
 /// </summary>
 /// <remarks>
-/// Epley (1985) is the primary estimate — the linear form the strength
-/// literature keeps returning to for sets under ~10 reps — with Brzycki (1993)
+/// Epley (1985) is the primary estimate (the linear form the strength
+/// literature keeps returning to for sets under ~10 reps), with Brzycki (1993)
 /// reported alongside as the standard cross-check; the two bracket most
 /// measured maxes. Estimates degrade quickly past ten reps, so sets longer
 /// than that are excluded from trend math rather than pretending precision.
