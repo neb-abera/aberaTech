@@ -23,7 +23,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// SQLite rather than EF's in-memory provider because the point of several
 /// tests is how many commands a request sends: only a relational provider
 /// sends commands at all, so only a relational provider can be counted.
-/// Nothing in production changes to make this possible — the context is
+/// Nothing in production changes to make this possible. The context is
 /// subclassed to teach SQLite the two NodaTime types, and the migrator is
 /// swapped for one that creates the schema from the model, because the
 /// committed migrations are written in Postgres' dialect.

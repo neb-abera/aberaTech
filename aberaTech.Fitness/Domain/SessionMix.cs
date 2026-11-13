@@ -31,7 +31,7 @@ public sealed record LoggedSession(
 /// and anything above is Interval.
 ///
 /// When no lactate-threshold heart rate is known, it is taken to be 10% above
-/// the aerobic threshold — the spread at which Johnston's rule says the
+/// the aerobic threshold. That is the spread at which Johnston's rule says the
 /// aerobic system is no longer the limiter (<see cref="Citations.UphillAthleteAet"/>).
 /// </remarks>
 public sealed record HeartRateBands(int AetHr, int? LtHr)
@@ -58,7 +58,7 @@ public sealed record HeartRateBands(int AetHr, int? LtHr)
 /// </summary>
 /// <remarks>
 /// Each run is placed in a zone against the athlete's current Daniels bands
-/// (<see cref="TrainingPaces"/>) — the same bands the app prescribes with, so
+/// (<see cref="TrainingPaces"/>), the same bands the app prescribes with, so
 /// the plan and the log are scored on one ruler. Rucking is aerobic volume;
 /// lifting is its own zone.
 ///
@@ -66,7 +66,7 @@ public sealed record HeartRateBands(int AetHr, int? LtHr)
 /// with its recoveries, reads as an easy run. When the watch recorded laps,
 /// each lap is placed on its own and the session's time is split across the
 /// zones its laps landed in. Without laps the average stands, and the hard
-/// time is under-counted — which the explanation says.
+/// time is under-counted. The explanation says so.
 ///
 /// A treadmill's distance is the belt's word, or the wrist's guess at it, so
 /// an indoor lap is placed by heart rate against
@@ -85,7 +85,7 @@ public static class SessionMix
     /// same movement: slower, heavier, and with a stride and economy that do
     /// not fully transfer to running a race. Counting it hour-for-hour
     /// flattered a rucking week's effect on a running time. Counting it as
-    /// nothing would be worse — it is a large part of this athlete's training
+    /// nothing would be worse. It is a large part of this athlete's training
     /// and a large part of the aerobic base it builds.
     ///
     /// The weight is a judgment, not a measurement, and it is here as one
@@ -107,7 +107,7 @@ public static class SessionMix
     /// </summary>
     public const double SteadyPaceSpread = 0.15;
 
-    /// <summary>The zone a whole session lands in by its average pace — the no-laps reading.</summary>
+    /// <summary>The zone a whole session lands in by its average pace. This is the no-laps reading.</summary>
     public static TrainingZone ZoneOf(LoggedSession session, double vdot) => ZoneOf(session, vdot, null);
 
     /// <summary>
@@ -153,7 +153,7 @@ public static class SessionMix
         }
 
         // Whatever the laps did not cover was the watch running between
-        // presses — easy, as far as anyone can tell.
+        // presses. It was easy, as far as anyone can tell.
         var remainder = Math.Max(0, session.Seconds - covered) / 3600.0;
         return dose.With(TrainingZone.Easy, dose.EasyHours + remainder);
     }
@@ -191,8 +191,8 @@ public static class SessionMix
     }
 
     /// <summary>
-    /// Whether a run was one steady effort — the kind the aerobic trend can
-    /// read pace-at-heart-rate from — rather than a workout or a race.
+    /// Whether a run was one steady effort (the kind the aerobic trend can
+    /// read pace-at-heart-rate from) rather than a workout or a race.
     /// </summary>
     /// <remarks>
     /// Two tests. The average heart rate has to sit below the lactate

@@ -12,7 +12,7 @@ namespace aberaTech.Fitness.Domain;
 /// ~600&#160;m and around 2–3% at Mexico City's 2,240&#160;m. This linear
 /// approximation reproduces that: about 1% at El&#160;Paso's ~1,190&#160;m.
 /// Sprints, which are anaerobic and air-resistance-limited, actually speed up
-/// at altitude — this model is for the aerobic events this app predicts and
+/// at altitude. This model is for the aerobic events this app predicts and
 /// deliberately never returns a benefit.
 ///
 /// Citation: <see cref="Citations.PeronnetAltitude"/>.

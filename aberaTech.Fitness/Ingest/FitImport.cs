@@ -6,7 +6,7 @@ using Lap = aberaTech.Fitness.Data.Lap;
 namespace aberaTech.Fitness.Ingest;
 
 /// <summary>
-/// A single Garmin .fit activity file, decoded with Garmin's own SDK — the
+/// A single Garmin .fit activity file, decoded with Garmin's own SDK. This is the
 /// rich-detail path, straight off the watch or a Connect activity export.
 /// </summary>
 public static class FitImport
@@ -50,7 +50,7 @@ public static class FitImport
         };
 
         // The laps as the watch recorded them, in order. A lap that never
-        // ran — the zero-length one a stop leaves behind — is not a lap.
+        // ran (the zero-length one a stop leaves behind) is not a lap.
         var index = 0;
         foreach (var lap in messages.LapMesgs)
         {

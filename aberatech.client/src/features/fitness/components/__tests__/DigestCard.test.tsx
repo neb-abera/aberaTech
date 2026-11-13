@@ -21,7 +21,7 @@ describe("DigestCard", () => {
         JSON.stringify({
           date: "2026-09-07",
           weekStart: "2026-09-07",
-          text: "abera.tech/fitness — week of 2026-09-07\n\nTRAINING\n  Endurance: 85 min this week so far.",
+          text: "abera.tech/fitness: week of 2026-09-07\n\nTRAINING\n  Endurance: 85 min this week so far.",
           lines: [],
         }),
         { headers: { "Content-Type": "application/json" } },

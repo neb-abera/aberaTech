@@ -10,9 +10,9 @@ namespace aberaTech.Server.Tests.Fitness;
 /// The tests that use this exist to catch one thing: a return to the quadratic
 /// likelihood, where the trajectory was integrated once per observation instead
 /// of once per proposal and a fit took thirty-seven seconds. A clock cannot
-/// tell that apart from a loaded runner — under <c>make check</c>, with three
+/// tell that apart from a loaded runner. Under <c>make check</c>, with three
 /// image builds and a browser competing for the machine, a healthy fit has
-/// taken longer than the old bound — so the assertion is off by default and
+/// taken longer than the old bound, so the assertion is off by default and
 /// the test is a build-and-run smoke gate, as harnesses are meant to be. Set
 /// <see cref="Variable"/> to any value to profile on a quiet machine, where
 /// the number means something:

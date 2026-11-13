@@ -463,9 +463,9 @@ function SectionCard({ section }: { section: GoalSection }) {
                 color="text.primary"
                 data-testid="points-now"
               >
-                {section.pointsNow ?? "—"}
+                {section.pointsNow ?? "n/a"}
               </Typography>{" "}
-              latest · goal {section.pointsGoal ?? "—"} of {section.pointsMax}{" "}
+              latest · goal {section.pointsGoal ?? "n/a"} of {section.pointsMax}{" "}
               pts
             </Typography>
           ) : null}

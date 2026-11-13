@@ -9,7 +9,7 @@ namespace aberaTech.Fitness.Ingest;
 /// </summary>
 /// <remarks>
 /// No watch records what was in the pack. What athletes do instead is name
-/// the activity — "Ruck 45lb", "12 mi @ 20 kg", "#35 ruck" — so the name is
+/// the activity ("Ruck 45lb", "12 mi @ 20 kg", "#35 ruck"), so the name is
 /// read for a weight in either unit and stored in kilograms, the unit
 /// everything else in this library keeps. A load the owner types on the page
 /// afterwards outranks whatever was parsed here.

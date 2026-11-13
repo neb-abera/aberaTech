@@ -25,7 +25,7 @@ function axisLabel(factor: FactorName, value: number): string {
  *
  * This is the line worth having. A single answer says "nine hours a week";
  * this says "nine hours at your current compliance, or seven if you never miss
- * a session, or eight if you also drop four pounds" — the trade the athlete is
+ * a session, or eight if you also drop four pounds". That is the trade the athlete is
  * actually making, drawn rather than described.
  */
 function isoline(
@@ -136,7 +136,7 @@ export default function ContourPlot({
     if (!onPick) return;
     const box = event.currentTarget.getBoundingClientRect();
 
-    // A collapsed container — a hidden tab, a display:none ancestor — measures
+    // A collapsed container (a hidden tab, a display:none ancestor) measures
     // zero, and dividing by it turns a click into NaN factors that would be
     // written straight into the scenario.
     if (box.width <= 0 || box.height <= 0) return;

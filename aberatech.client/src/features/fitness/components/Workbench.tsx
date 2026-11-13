@@ -165,12 +165,12 @@ function show(factor: FactorName, spread: SpreadValue): string {
   };
 
   if (Number.isNaN(spread.median)) return "nothing reaches it";
-  return `${unit(spread.median)}  (${unit(spread.low)} – ${unit(spread.high)})`;
+  return `${unit(spread.median)}  (${unit(spread.low)} to ${unit(spread.high)})`;
 }
 
 /**
  * The what-if workbench: state every factor, mark the one to work out, and get
- * back a distribution rather than a number — plus the derivatives that say
+ * back a distribution rather than a number, plus the derivatives that say
  * which factor to move next and the field that shows what moving two at once
  * would do.
  */
@@ -380,8 +380,8 @@ export default function Workbench({ summary }: { summary: Summary }) {
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
             Set every factor, then mark the one to solve for. The answer comes
             back as a range because it is solved once for each of{" "}
-            {result?.model.draws ?? "several thousand"} posterior draws — the
-            model's own uncertainty, not a decoration.
+            {result?.model.draws ?? "several thousand"} posterior draws. That
+            range is the model's own uncertainty, not a decoration.
           </Typography>
 
           <Grid container spacing={2}>
@@ -407,7 +407,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 disabled={unknown === "RaceTime"}
                 helperText={
                   unknown === "RaceTime"
-                    ? "not needed — this is the answer"
+                    ? "not needed: this is the answer"
                     : "e.g. 34:00"
                 }
                 onBlur={(event) => {
@@ -560,7 +560,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
         <CardContent>
           <Typography variant="h6">Where the plan starts</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-            Stated, not inferred. Nothing below is read off your imports — a
+            Stated, not inferred. Nothing below is read off your imports. A
             training log records what you have done, and a projection is of what
             you are going to do.
           </Typography>
@@ -605,7 +605,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 onCommit={(value) => set("startHours", value)}
                 helperText={
                   summary.measuredDose.runningHours > 0
-                    ? `Your log shows ${summary.measuredDose.runningHours.toFixed(1)} h/week — a suggestion, not the answer`
+                    ? `Your log shows ${summary.measuredDose.runningHours.toFixed(1)} h/week. That is a suggestion, not the answer`
                     : "What you are on now, in your own estimation"
                 }
                 sx={{ width: 240 }}
@@ -693,7 +693,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 sx={{ color: "text.secondary", mb: 1 }}
               >
                 Each factor swung across the range it could plausibly take, with
-                everything else held. Longest bar first — that is the one worth
+                everything else held. Longest bar first. That is the one worth
                 moving.
               </Typography>
               <Tornado
@@ -737,8 +737,8 @@ export default function Workbench({ summary }: { summary: Summary }) {
               </Box>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 Elasticity is the percentage change in race time from a one
-                percent change in the factor — the derivative, made comparable
-                across hours, kilograms and percentage points.
+                percent change in the factor. It is the derivative, made
+                comparable across hours, kilograms and percentage points.
               </Typography>
             </CardContent>
           </Card>
@@ -932,13 +932,13 @@ function Answer({
                 : `${UNKNOWNS.find((u) => u.key === unknown)?.label}: ${
                     result.solved
                       ? show(unknown as FactorName, result.solved)
-                      : "—"
+                      : "n/a"
                   }`
             }
           />
           <Chip
             variant="outlined"
-            label={`80% range ${formatSeconds(predicted.low)} – ${formatSeconds(predicted.high)}`}
+            label={`80% range ${formatSeconds(predicted.low)} to ${formatSeconds(predicted.high)}`}
           />
           {result.probability !== null && (
             <Chip
@@ -987,7 +987,7 @@ function Answer({
             disabled={locked}
           >
             {locked
-              ? "Locked — it will ask you on the day"
+              ? "Locked. It will ask you on the day"
               : "Lock this prediction"}
           </Button>
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
@@ -1066,9 +1066,9 @@ function ModelCardView({ result }: { result: SolveResult }) {
           </Table>
         </Box>
         <Typography variant="caption" sx={{ color: "text.secondary" }}>
-          The parameters sit on a ridge — a proxy read low, from a low start,
+          The parameters sit on a ridge. A proxy read low, from a low start,
           approached slowly fits about as well as an accurate one from a high
-          start approached fast — so these marginals lean on their priors. What
+          start approached fast, so these marginals lean on their priors. What
           survives the ridge is the prediction, which is why the intervals above
           are the number to trust rather than these.
         </Typography>

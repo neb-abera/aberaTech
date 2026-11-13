@@ -112,7 +112,7 @@ export default function DataPanel({
             result.superseded > 0 && `${result.superseded} replaced`,
           ].filter(Boolean);
           notes.push(
-            `${file.name} — ${result.kind}: ${result.parsed} activities, ${result.added} new` +
+            `${file.name} (${result.kind}): ${result.parsed} activities, ${result.added} new` +
               (reconciled.length > 0 ? ` (${reconciled.join(", ")}).` : "."),
           );
         } catch (error) {
@@ -162,7 +162,7 @@ export default function DataPanel({
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
             Whatever they sent you. Garmin&apos;s &ldquo;Export Your Data&rdquo;
             archive, a single activity&apos;s .fit file, an activities CSV from
-            the Connect website, or Hevy&apos;s export — drop the file in as it
+            the Connect website, or Hevy&apos;s export. Drop the file in as it
             arrived and it will be read for what it is. Re-importing the same
             file never duplicates anything.
           </Typography>
@@ -226,7 +226,7 @@ export default function DataPanel({
           {busy && <LinearProgress sx={{ mt: 1 }} />}
 
           {/* The answer where the question was asked. This used to render
-              below the weigh-in card — on a phone, 460px further down and off
+              below the weigh-in card. On a phone that was 460px further down and off
               the bottom of the screen, so dropping a file looked like it had
               done nothing at all. */}
           {status && (
@@ -275,7 +275,7 @@ export default function DataPanel({
           </Typography>
           {activities.length === 0 ? null : (
             /* Seven columns do not fit a phone. Without this the Card clipped
-               them at the screen edge — Time, Avg HR and Source were simply
+               them at the screen edge. Time, Avg HR, and Source were simply
                gone, with nothing to scroll. */
             <TableContainer sx={{ overflowX: "auto" }}>
               <Table size="small" sx={{ minWidth: 560 }}>
@@ -300,14 +300,14 @@ export default function DataPanel({
                       <TableCell>{activity.name}</TableCell>
                       <TableCell align="right">
                         {activity.distanceMeters === null
-                          ? "—"
+                          ? "n/a"
                           : `${(activity.distanceMeters / 1000).toFixed(2)} km`}
                       </TableCell>
                       <TableCell align="right">
                         {formatSeconds(activity.durationSeconds)}
                       </TableCell>
                       <TableCell align="right">
-                        {activity.averageHr ?? "—"}
+                        {activity.averageHr ?? "n/a"}
                       </TableCell>
                       <TableCell align="right">
                         {activity.sport === "ruck" ? (
@@ -320,7 +320,7 @@ export default function DataPanel({
                             onError={(text) => setStatus({ ok: false, text })}
                           />
                         ) : (
-                          "—"
+                          "n/a"
                         )}
                       </TableCell>
                       <TableCell>{activity.source}</TableCell>
@@ -502,7 +502,7 @@ function IntegrationsCard({
   };
 
   const line = (s: SourceStatus | undefined) =>
-    `Last sync ${ago(s?.lastSyncedAt ?? s?.lastRunAt ?? null)}${s?.lastOutcome ? ` — ${s.lastOutcome}` : ""}.`;
+    `Last sync ${ago(s?.lastSyncedAt ?? s?.lastRunAt ?? null)}${s?.lastOutcome ? `: ${s.lastOutcome}` : ""}.`;
 
   return (
     <Card variant="outlined">

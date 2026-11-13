@@ -1,4 +1,4 @@
-/** Seconds to m:ss or h:mm:ss — race times and durations. */
+/** Seconds to m:ss or h:mm:ss, for race times and durations. */
 export function formatSeconds(totalSeconds: number): string {
   const seconds = Math.round(totalSeconds);
   const h = Math.floor(seconds / 3600);

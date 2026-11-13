@@ -7,7 +7,7 @@ namespace aberaTech.Fitness.Api;
 /// The fitted posterior, computed once per version of the athlete's data.
 /// </summary>
 /// <remarks>
-/// Sampling takes a couple of seconds — cheap for a fit, far too slow to sit
+/// Sampling takes a couple of seconds. That is cheap for a fit and far too slow to sit
 /// inside a slider drag. It also does not depend on anything the athlete is
 /// dragging: the posterior is a function of the training history, and moving a
 /// what-if factor does not change history. So it is computed on the first

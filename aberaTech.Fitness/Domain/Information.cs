@@ -23,8 +23,8 @@ public sealed record MeasurementValue(
 /// The model's honest problem is not its mathematics, it is that it is being
 /// asked to predict one athlete from a thin, indirect record. That is fixable,
 /// and this says what fixing it is worth before the effort is spent: a time
-/// trial in two months, or in six, or another month of ordinary logged runs —
-/// each has a price in effort and a value in narrowed uncertainty, and only
+/// trial in two months, or in six, or another month of ordinary logged runs.
+/// Each has a price in effort and a value in narrowed uncertainty, and only
 /// one of those was ever visible.
 ///
 /// The calculation is the standard preposterior one. For a candidate

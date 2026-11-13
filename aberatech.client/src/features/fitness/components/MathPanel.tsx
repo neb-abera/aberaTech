@@ -54,7 +54,7 @@ export default function MathPanel({
                 </TableCell>
                 <TableCell>
                   {step.citationId === null ? (
-                    "—"
+                    "n/a"
                   ) : (
                     <Link href={`#source-${step.citationId}`} underline="hover">
                       {step.citationId}

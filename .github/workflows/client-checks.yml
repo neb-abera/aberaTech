@@ -257,6 +257,8 @@ jobs:
           ./scripts/check-prose.sh
           ./scripts/check-american-spelling.sh --self-test
           ./scripts/check-american-spelling.sh
+          ./scripts/check-dashes.sh --self-test
+          ./scripts/check-dashes.sh
 
       # Nothing published under Neb's name credits an AI. The commit-msg hook
       # and the Claude PreToolUse gate both run on the machine making the

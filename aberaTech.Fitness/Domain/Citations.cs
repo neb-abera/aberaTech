@@ -35,7 +35,7 @@ public static class Citations
     public static readonly Citation SeilerPolarized = new(
         "seiler-polarized",
         "Elite endurance athletes across sports do ~80% of sessions at low intensity; sustainable volume, not intensity, drives aerobic development.",
-        "Stephen Seiler, PhD, University of Agder — the physiologist who documented the 80/20 intensity distribution in elite endurance sport.",
+        "Stephen Seiler, PhD, University of Agder, is the physiologist who documented the 80/20 intensity distribution in elite endurance sport.",
         "What is best practice for training intensity and duration distribution in endurance athletes? (Int J Sports Physiol Perform 5)",
         2010,
         "https://pubmed.ncbi.nlm.nih.gov/20861519/");
@@ -59,7 +59,7 @@ public static class Citations
     public static readonly Citation CuretonSparling = new(
         "cureton-added-mass",
         "Relative VO2max and distance-running performance scale with the inverse of body mass: ~1% added (or shed) fat mass moves relative VO2max ~1%.",
-        "Kirk Cureton, PhD, and Phillip Sparling, PhD — exercise physiologists whose added-load experiments isolated body mass's effect on running.",
+        "Kirk Cureton, PhD, and Phillip Sparling, PhD, are exercise physiologists whose added-load experiments isolated body mass's effect on running.",
         "Distance running performance and metabolic responses to running with excess weight (Med Sci Sports Exerc 12)",
         1980,
         "https://pubmed.ncbi.nlm.nih.gov/7392900/");
@@ -83,14 +83,14 @@ public static class Citations
     public static readonly Citation MujikaRetraining = new(
         "mujika-retraining",
         "Detrained athletes regain previously held fitness far faster than novices build it; much of detraining loss is rapidly reversible.",
-        "Inigo Mujika, PhD — the physiologist of detraining and tapering, coach and consultant to Olympic and world-champion endurance athletes; with Sabino Padilla, PhD.",
+        "Inigo Mujika, PhD, with Sabino Padilla, PhD. Mujika is the physiologist of detraining and tapering, and coach and consultant to Olympic and world-champion endurance athletes.",
         "Detraining: loss of training-induced physiological and performance adaptations, Parts I & II (Sports Med 30)",
         2000,
         "https://pubmed.ncbi.nlm.nih.gov/10999420/");
 
     public static readonly Citation MuscleMemory = new(
         "muscle-memory",
-        "Muscle keeps structural and epigenetic receipts of past training — myonuclei persist through years of detraining — so retraining starts ahead.",
+        "Muscle keeps structural and epigenetic receipts of past training. Myonuclei persist through years of detraining, so retraining starts ahead.",
         "Kristian Gundersen's Oslo lab (Bruusgaard et al.) on myonuclear permanence; Robert Seaborne and Adam Sharples on the epigenetic memory of hypertrophy.",
         "Myonuclei acquired by overload persist (PNAS 107); Human skeletal muscle possesses an epigenetic memory of hypertrophy (Sci Rep 8)",
         2010,
@@ -98,16 +98,16 @@ public static class Citations
 
     public static readonly Citation WmaAgeGrading = new(
         "wma-age-grading",
-        "Distance-running capability holds essentially flat through the early thirties, then declines roughly 0.7% per year — so a twenties peak is intact at 33.",
-        "World Masters Athletics age-grading factors, maintained by the WMA statistics team (the Alan Jones tables) — the standard every masters result is scored against.",
+        "Distance-running capability holds essentially flat through the early thirties, then declines roughly 0.7% per year. A twenties peak is intact at 33.",
+        "World Masters Athletics age-grading factors, maintained by the WMA statistics team (the Alan Jones tables). They are the standard every masters result is scored against.",
         "WMA Age-Grading Tables (2023 factors)",
         2023,
         "https://github.com/AlanLyttonJones/Age-Grade-Tables");
 
     public static readonly Citation PeronnetAltitude = new(
         "peronnet-altitude",
-        "Aerobic race times slow with altitude — near zero below ~600 m, roughly 2-3% at Mexico City's 2,240 m, about 1% at El Paso's elevation.",
-        "Francois Peronnet, PhD, and Guy Thibault, PhD — the exercise physiologists whose power-duration model anchored altitude effects on the Mexico City record book.",
+        "Aerobic race times slow with altitude: near zero below ~600 m, roughly 2-3% at Mexico City's 2,240 m, and about 1% at El Paso's elevation.",
+        "Francois Peronnet, PhD, and Guy Thibault, PhD, are the exercise physiologists whose power-duration model anchored altitude effects on the Mexico City record book.",
         "A theoretical analysis of the effect of altitude on running performance (J Appl Physiol 70)",
         1991,
         "https://pubmed.ncbi.nlm.nih.gov/2010409/");
@@ -115,15 +115,15 @@ public static class Citations
     public static readonly Citation CogganPmc = new(
         "coggan-training-load",
         "Chronic and acute training load (CTL/ATL) summarize the dose the body is adapting to; ramping chronic load gradually is what the body absorbs.",
-        "Andrew Coggan, PhD, and Hunter Allen — the physiologist-coach pair behind the performance-management model most endurance platforms implement.",
+        "Andrew Coggan, PhD, and Hunter Allen are the physiologist-coach pair behind the performance-management model most endurance platforms implement.",
         "Training and Racing with a Power Meter (VeloPress)",
         2010,
         null);
 
     public static readonly Citation RonnestadStrength = new(
         "ronnestad-strength",
-        "Heavy resistance training improves running economy by a few percent in trained endurance athletes without adding bulk — a small but real ceiling gain per hour.",
-        "Bent Ronnestad, PhD, Inland Norway University, and Inigo Mujika, PhD — the pair whose review consolidated the strength-for-endurance evidence.",
+        "Heavy resistance training improves running economy by a few percent in trained endurance athletes without adding bulk. That is a small but real ceiling gain per hour.",
+        "Bent Ronnestad, PhD, Inland Norway University, and Inigo Mujika, PhD, are the pair whose review consolidated the strength-for-endurance evidence.",
         "Optimizing strength training for running and cycling endurance performance: a review (Scand J Med Sci Sports 24)",
         2014,
         "https://pubmed.ncbi.nlm.nih.gov/24151913/");
@@ -147,7 +147,7 @@ public static class Citations
     public static readonly Citation PandolfLoadCarriage = new(
         "pandolf-load-carriage",
         "The metabolic cost of walking under load is M = 1.5W + 2.0(W+L)(L/W)² + η(W+L)(1.5V² + 0.35VG) watts; it under-predicts once the gait breaks into a shuffle above ~2.2 m/s.",
-        "Kent Pandolf, Baruch Givoni and Ralph Goldman of the US Army Research Institute of Environmental Medicine — the load-carriage model the Army's own research still starts from.",
+        "Kent Pandolf, Baruch Givoni, and Ralph Goldman of the US Army Research Institute of Environmental Medicine. Theirs is the load-carriage model the Army's own research still starts from.",
         "Predicting energy expenditure with loads while standing or walking very slowly (J Appl Physiol 43)",
         1977,
         "https://pubmed.ncbi.nlm.nih.gov/908672/");
@@ -155,7 +155,7 @@ public static class Citations
     public static readonly Citation FarinaSfasPredictors = new(
         "farina-sfas-predictors",
         "In 800 candidates, road-march speed was the strongest physical predictor of selection (top quartile selected at 66-67%, bottom at 5-6%), ahead of land navigation, run time, fitness-test score and pull-ups.",
-        "Emily Farina, Lauren Thompson, Joseph Knapik, Stefan Pasiakos, James McClung and Harris Lieberman — the US Army Research Institute of Environmental Medicine team that followed a cohort through Special Forces Assessment and Selection.",
+        "Emily Farina, Lauren Thompson, Joseph Knapik, Stefan Pasiakos, James McClung, and Harris Lieberman are the US Army Research Institute of Environmental Medicine team that followed a cohort through Special Forces Assessment and Selection.",
         "Physical performance, demographic, psychological, and physiological predictors of success in the U.S. Army Special Forces Assessment and Selection course (Physiol Behav 210)",
         2019,
         "https://pubmed.ncbi.nlm.nih.gov/31401079/");
@@ -171,7 +171,7 @@ public static class Citations
     public static readonly Citation ArmyAft = new(
         "army-aft-2025",
         "The Army Fitness Test scores five events 0-100 by age band; combat specialties need 60 in every event and 350 in total, on the sex-neutral scale.",
-        "Headquarters, Department of the Army — the scoring scales as published, approved 15 May 2025.",
+        "Headquarters, Department of the Army: the scoring scales as published, approved 15 May 2025.",
         "Army Fitness Test Score Tables, effective 1 June 2025",
         2025,
         "https://www.army.mil/e2/downloads/rv7/aft/AFT_Scoring_Scales_250601.pdf");
@@ -186,9 +186,9 @@ public static class Citations
 
     public static readonly Citation EvokeSfasReady = new(
         "evoke-sfas-ready",
-        "Ready for SFAS, per Evoke's coaches: Kuenzle — \"I would get your AeT pace at least below an 8:00 mile on the flat\", a line Johnston repeats; the lifts Kuenzle attributes to Vince Paikowski, a 350 lb deadlift triple and a 250 lb squat for five; and the five-mile in 35:00, 15 strict pull-ups and 80 push-ups the candidate brought as the standard and the coaches trained toward. Kuenzle: the best ruckers he ever saw never trained with a ruck and were incredible runners.",
+        "Ready for SFAS, per Evoke's coaches. Kuenzle: \"I would get your AeT pace at least below an 8:00 mile on the flat\", a line Johnston repeats. Kuenzle attributes the lifts to Vince Paikowski: a 350 lb deadlift triple and a 250 lb squat for five. The candidate brought the five-mile in 35:00, 15 strict pull-ups, and 80 push-ups as the standard, and the coaches trained toward it. Kuenzle: the best ruckers he ever saw never trained with a ruck and were incredible runners.",
         "Jack Kuenzle (ex-Navy SEAL, FKT record holder) and Scott Johnston, answering an SFAS candidate on the Evoke Endurance forum, January–June 2023; Vince Paikowski's lifting standards as Kuenzle reports them.",
-        "Army Special Forces Selection (SFAS) — Evoke Endurance forum thread",
+        "Army Special Forces Selection (SFAS), Evoke Endurance forum thread",
         2023,
         "https://evokeendurance.com/forums/topic/army-special-forces-selection-sfas/");
 
@@ -203,7 +203,7 @@ public static class Citations
     public static readonly Citation NebFitnessGoals = new(
         "neb-fitness-goals",
         "The athlete's own end-of-2027 goals: the essential rows of his workbook, read from it at request time, in its groups and order.",
-        "Neb Abera — the athlete, in the workbook the console is scored against.",
+        "Neb Abera, the athlete, in the workbook the console is scored against.",
         "physical fitness goals.xlsx (OneDrive, Documents/physical fitness)",
         2026,
         null);
@@ -211,7 +211,7 @@ public static class Citations
     public static readonly Citation FbiPft = new(
         "fbi-pft",
         "The FBI special agent Physical Fitness Test scores pull-ups, a 300-meter sprint, untimed push-ups and a 1.5-mile run from -2 to 10 points each; 10 points takes 20 pull-ups, 40.9 s, 71 push-ups and 8:59 for men.",
-        "Federal Bureau of Investigation, Special Agent Selection System — the scoring tables as published.",
+        "Federal Bureau of Investigation, Special Agent Selection System: the scoring tables as published.",
         "Physical Requirements: Events 1-4 (fbijobs.gov)",
         2026,
         "https://fbijobs.gov/special-agents/physical-requirements");
@@ -219,7 +219,7 @@ public static class Citations
     public static readonly Citation UphillAthleteHrDrift = new(
         "uphill-athlete-hr-drift",
         "On a run of an hour at a fixed heart rate, pace-to-heart-rate drift of 5% or less puts that heart rate at or below the aerobic threshold; more puts it above.",
-        "Scott Johnston, Uphill Athlete — the field protocol the Evoke/Uphill Athlete method sets aerobic-threshold heart rate by.",
+        "Scott Johnston, Uphill Athlete: the field protocol the Evoke/Uphill Athlete method sets aerobic-threshold heart rate by.",
         "Heart Rate Drift: A Functional Measure of Aerobic Fitness (Uphill Athlete)",
         2019,
         "https://uphillathlete.com/aerobic-training/heart-rate-drift/");
@@ -243,7 +243,7 @@ public static class Citations
     public static readonly Citation FosterMonotony = new(
         "foster-monotony",
         "Training monotony (mean daily load over its spread) above about 2.0, and the strain it multiplies into, preceded illness and overtraining even at modest volumes.",
-        "Carl Foster, PhD, University of Wisconsin–La Crosse — originator of session-RPE load monitoring and its monotony and strain indices.",
+        "Carl Foster, PhD, University of Wisconsin–La Crosse, is the originator of session-RPE load monitoring and its monotony and strain indices.",
         "Monitoring training in athletes with reference to overtraining syndrome (Med Sci Sports Exerc 30)",
         1998,
         "https://pubmed.ncbi.nlm.nih.gov/9662690/");

@@ -73,7 +73,7 @@ public sealed record FitResult(
 /// against history rather than against a smooth curve.
 ///
 /// <b>How.</b> Penalised nonlinear least squares by Levenberg-Marquardt. The
-/// model has no closed-form derivatives — the prediction is an ODE solve — so
+/// model has no closed-form derivatives (the prediction is an ODE solve), so
 /// the Jacobian is central differences, which for three parameters costs six
 /// integrations per iteration and is exact to about seven digits. The penalty
 /// term is a Gaussian prior on each parameter centered on the literature value,
@@ -83,7 +83,7 @@ public sealed record FitResult(
 /// says which regime the answer is in.
 ///
 /// <b>Uncertainty.</b> The parameter covariance is s²·(JᵀJ + Λ)⁻¹ with Λ the
-/// prior precisions — the standard nonlinear-regression result, with the ridge
+/// prior precisions. This is the standard nonlinear-regression result, with the ridge
 /// term the priors contribute. <see cref="Forecast"/> propagates it forward
 /// into the bands and probabilities the athlete actually reads.
 ///

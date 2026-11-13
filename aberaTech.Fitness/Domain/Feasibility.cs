@@ -97,15 +97,15 @@ public sealed record FeasibilityReport(
 /// <remarks>
 /// The failure this replaces is worth naming. A model whose ceiling rose
 /// linearly with training hours would quote a dose for any time at all, so
-/// every ambitious goal — a good one, a national-class one, and one faster
-/// than any human has run — came back with the same sentence about elite
+/// every ambitious goal (a good one, a national-class one, and one faster
+/// than any human has run) came back with the same sentence about elite
 /// volume. Three different walls, one message.
 ///
 /// They are separated here, and each answer carries the number that decided
 /// it: the record it beats, the age-graded record it beats, the ceiling no
 /// sustainable week supports, the date it needs, or the hours it needs. The
-/// checks run in that order because that is the order in which they bind —
-/// there is no point discussing training hours for a time nobody has ever run.
+/// checks run in that order because that is the order in which they bind.
+/// There is no point discussing training hours for a time nobody has ever run.
 ///
 /// Citations: <see cref="Citations.DanielsVdot"/>,
 /// <see cref="Citations.WmaAgeGrading"/>, <see cref="Citations.SeilerPolarized"/>,
@@ -175,9 +175,9 @@ public static class Feasibility
         {
             return Report(
                 FeasibilityVerdict.AlreadyThere,
-                $"You are already there — your anchor is worth {Format.Clock(BestTime(p.StartVdot, goal.DistanceMeters, athlete.AltitudeMeters))} for this distance.",
+                $"You are already there. Your anchor is worth {Format.Clock(BestTime(p.StartVdot, goal.DistanceMeters, athlete.AltitudeMeters))} for this distance.",
                 "Set the target somewhere you have to go and get it.",
-                "none — the target is behind you",
+                "none: the target is behind you",
                 achievable: BestTime(p.StartVdot, goal.DistanceMeters, athlete.AltitudeMeters));
         }
 
@@ -188,7 +188,7 @@ public static class Feasibility
                 FeasibilityVerdict.PastTheWorldRecord,
                 $"No human has run this. {Format.Clock(goal.TargetSeconds)} for {Format.Distance(goal.DistanceMeters)} scores VDOT {targetVdot:0.0}; the record nearest that distance scores {openCeiling:0.0}.",
                 $"The target is {Format.Percent(margin)} beyond the record book, so no training answer exists. Record-equivalent for this distance is {Format.Clock(recordEquivalent)} ({record.Holder}'s level).",
-                $"the world record — VDOT {openCeiling:0.0}",
+                $"the world record (VDOT {openCeiling:0.0})",
                 achievable: recordEquivalent);
         }
 
@@ -198,7 +198,7 @@ public static class Feasibility
                 FeasibilityVerdict.PastTheAgeGradedRecord,
                 $"Faster than anyone has run it at {athlete.Age}. VDOT {targetVdot:0.0} against an age-graded ceiling of {ageGradedCeiling:0.0}.",
                 $"The open record over this distance scores {openCeiling:0.0}, which the age-grading discounts to {ageGradedCeiling:0.0} at your age. An age-graded record run would be {Format.Clock(recordEquivalent)}.",
-                $"the age-graded record — VDOT {ageGradedCeiling:0.0}",
+                $"the age-graded record (VDOT {ageGradedCeiling:0.0})",
                 achievable: recordEquivalent);
         }
 
@@ -208,14 +208,14 @@ public static class Feasibility
             trace.Add(
                 "Ceiling of the largest sustainable week",
                 Text($"{athlete.MaxStrain:0} easy-hour equivalents a week, split optimally, at responsiveness {p.Responsiveness:0.00}"),
-                Text($"VDOT {maxCeiling:0.0} — worth {Format.Clock(ceilingTime)}"),
+                Text($"VDOT {maxCeiling:0.0}, worth {Format.Clock(ceilingTime)}"),
                 Citations.SeilerPolarized.Id);
 
             return Report(
                 FeasibilityVerdict.PastAnyTrainingCeiling,
                 $"Inside human range, past yours. The largest week you could sustain supports VDOT {maxCeiling:0.0}; this target needs {targetVdot:0.0}.",
-                $"At {athlete.MaxStrain:0} easy-hour equivalents a week — full-time-athlete volume — the model tops out at {Format.Clock(ceilingTime)} for this distance, with no date attached. Beating that would mean a higher responsiveness than your history shows ({p.Responsiveness:0.00} ± {athlete.Fit.Responsiveness.StandardError:0.00}).",
-                $"your trainable ceiling — VDOT {maxCeiling:0.0}",
+                $"At {athlete.MaxStrain:0} easy-hour equivalents a week (full-time-athlete volume), the model tops out at {Format.Clock(ceilingTime)} for this distance, with no date attached. Beating that would mean a higher responsiveness than your history shows ({p.Responsiveness:0.00} ± {athlete.Fit.Responsiveness.StandardError:0.00}).",
+                $"your trainable ceiling (VDOT {maxCeiling:0.0})",
                 achievable: ceilingTime);
         }
 
@@ -242,18 +242,18 @@ public static class Feasibility
                 "Fastest arrival",
                 Text($"the largest sustainable week, ramped from your current {athlete.CurrentDose.RunningHours:0.0} h at 8%/week"),
                 earliestMonths is { } m
-                    ? Text($"VDOT {targetVdot:0.0} in {m:0.0} months — {m - goal.Months:0.0} months past your date")
+                    ? Text($"VDOT {targetVdot:0.0} in {m:0.0} months, {m - goal.Months:0.0} months past your date")
                     : "not inside ten years",
                 Citations.GabbettWorkload.Id);
 
             return Report(
                 FeasibilityVerdict.NotByThatDate,
                 earliestMonths is { } soonest
-                    ? $"Reachable, but not in {goal.Months:0.#} months — the earliest is about {soonest:0.0} months out, and that is on full-time volume."
+                    ? $"Reachable, but not in {goal.Months:0.#} months. The earliest is about {soonest:0.0} months out, and that is on full-time volume."
                     : $"Not reachable on any schedule inside ten years from VDOT {p.StartVdot:0.0}.",
                 $"By your date the biggest sustainable week gets you to VDOT {atDeadline:0.0}, worth {Format.Clock(best)}. The target needs {targetVdot:0.0}.",
                 earliestMonths is { } bind
-                    ? $"the calendar — {bind:0.0} months needed against {goal.Months:0.#} given"
+                    ? $"the calendar: {bind:0.0} months needed against {goal.Months:0.#} given"
                     : "the calendar, past any horizon worth quoting",
                 earliest: earliestMonths,
                 achievable: best);
@@ -299,8 +299,8 @@ public static class Feasibility
                 $"The date needs {requiredHours.Value:0.0} h/week; you have said you can give {available:0.0}.",
                 atAvailable is { } months
                     ? $"On {available:0.0} h/week the same target arrives around month {months:0.0} instead. Holding your date would mean finding {requiredHours.Value - available:0.0} more hours a week, or accepting {Format.Clock(BestTime(byDate, goal.DistanceMeters, athlete.AltitudeMeters))} on the day."
-                    : $"On {available:0.0} h/week it does not arrive at all — that week supports VDOT {DoseResponse.Ceiling(DoseResponse.Allocate(available, athlete.Limits).Dose, p.Responsiveness):0.0}.",
-                $"your available time — {available:0.0} h/week against {requiredHours.Value:0.0} needed",
+                    : $"On {available:0.0} h/week it does not arrive at all. That week supports VDOT {DoseResponse.Ceiling(DoseResponse.Allocate(available, athlete.Limits).Dose, p.Responsiveness):0.0}.",
+                $"your available time: {available:0.0} h/week against {requiredHours.Value:0.0} needed",
                 prescription,
                 atAvailable,
                 earliestMonths,
@@ -315,19 +315,19 @@ public static class Feasibility
         var confidence = probability >= 0.65
             ? "and the fitted uncertainty puts the odds in your favor"
             : probability > 0.35
-                ? "which lands the projection on your date exactly — even odds, so hours above this buy the margin"
+                ? "which lands the projection on your date exactly. That is even odds, so hours above this buy the margin"
                 : probability >= LongShot
                     ? "though the fitted uncertainty makes it a stretch rather than a plan"
                     : "but on your own measured scatter it is a long shot at that date";
 
         return Report(
             FeasibilityVerdict.Reachable,
-            $"Reachable on {requiredHours.Value:0.0} h/week of running — {Format.Percent(probability)} by your date.",
+            $"Reachable on {requiredHours.Value:0.0} h/week of running ({Format.Percent(probability)} by your date).",
             $"{allocation.Dose.EasyHours:0.0} h easy, {allocation.Dose.ThresholdHours:0.0} h threshold and {allocation.Dose.IntervalHours:0.0} h intervals, built from your current {athlete.CurrentDose.RunningHours:0.0} h over about {schedule.MonthsToFullDose():0.0} months, {confidence}."
             + (evenOdds is { } fifty && Math.Abs(fifty - goal.Months) > 0.5
                 ? $" Even odds land around month {fifty:0.0}."
                 : string.Empty),
-            $"training time — {requiredHours.Value:0.0} h/week, {allocation.Dose.Strain:0.0} strain units",
+            $"training time: {requiredHours.Value:0.0} h/week, {allocation.Dose.Strain:0.0} strain units",
             prescription,
             goal.Months,
             earliestMonths,

@@ -13,7 +13,7 @@ public sealed record LedgerEntry(Guid Id, LocalDate MadeOn, LocalDate TargetDate
 /// <remarks>
 /// A model that is never held to a number is never wrong, and never
 /// improves. The ledger exists so that the console's forecasts can be
-/// scored; these two findings are what keeps it in use — an empty ledger
+/// scored. These two findings are what keeps it in use: an empty ledger
 /// ahead of a known test, and a due prediction nobody has scored.
 /// </remarks>
 public static class Ledger

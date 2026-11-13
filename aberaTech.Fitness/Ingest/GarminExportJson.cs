@@ -5,14 +5,14 @@ using NodaTime;
 namespace aberaTech.Fitness.Ingest;
 
 /// <summary>
-/// The activity summaries inside Garmin's "Export Your Data" archive —
+/// The activity summaries inside Garmin's "Export Your Data" archive:
 /// <c>DI_CONNECT/DI-Connect-Fitness/*_summarizedActivities.json</c>.
 ///
 /// This is the file Garmin actually sends when you ask for your data, and it
 /// is the complete activity list for the account rather than the page-at-a-time
 /// export the Connect website offers. Its units are its own: distances in
-/// centimetres, durations in milliseconds, and two epoch-millisecond clocks —
-/// <c>startTimeGmt</c> is real UTC, <c>startTimeLocal</c> is the same instant
+/// centimeters, durations in milliseconds, and two epoch-millisecond clocks.
+/// <c>startTimeGmt</c> is real UTC. <c>startTimeLocal</c> is the same instant
 /// pre-shifted to the watch's wall clock. Only the GMT one is used, so an
 /// activity keeps one identity wherever it is read.
 /// </summary>
@@ -90,8 +90,8 @@ public static class GarminExportJson
         {
             Id = Guid.NewGuid(),
             Source = "garmin-export",
-            // Garmin's own activity id, so re-importing this archive — or a
-            // later one that overlaps it — updates rather than duplicates.
+            // Garmin's own activity id, so re-importing this archive (or a
+            // later one that overlaps it) updates rather than duplicates.
             ExternalId = id is null
                 ? $"garmin:{started.ToUnixTimeSeconds()}"
                 : $"garmin:{(long)id.Value}",

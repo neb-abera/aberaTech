@@ -28,7 +28,7 @@ const durability: Durability = {
     {
       label: "Acute:chronic ratio",
       expression: "10.5 ÷ 7.9",
-      value: "1.33 — safe band 0.8–1.3",
+      value: "1.33 (safe band 0.8–1.3)",
       citationId: "gabbett-workload",
     },
   ],

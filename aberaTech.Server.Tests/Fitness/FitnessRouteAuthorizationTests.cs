@@ -22,7 +22,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// <remarks>
 /// Health data, so the refusals are the point: the id in a route is never
 /// enough, and neither is being signed in. The happy paths are here too, so
-/// that a route cannot go dark — or start answering 500 — without a test
+/// that a route cannot go dark (or start answering 500) without a test
 /// noticing, and so that every route in the table has at least one caller.
 /// </remarks>
 public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime

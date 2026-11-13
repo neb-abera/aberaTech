@@ -485,8 +485,8 @@ internal static class ReadinessReports
     }
 
     /// <summary>
-    /// What the most recent test says. The latest official test always counts —
-    /// it is the athlete's record until the next one — but one older than the
+    /// What the most recent test says. The latest official test always counts.
+    /// It is the athlete's record until the next one. One older than the
     /// measurement window says so in its evidence, because a gate scored from a
     /// months-old card is a different thing from one scored from last week's.
     /// </summary>

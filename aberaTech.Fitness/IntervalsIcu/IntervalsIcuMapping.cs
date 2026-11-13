@@ -11,8 +11,8 @@ namespace aberaTech.Fitness.IntervalsIcu;
 /// original FIT file when there is one, from the listing when there is not.
 /// </summary>
 /// <remarks>
-/// The file is the better witness — it is what a manual upload would have
-/// been, laps and sub-sport included — so it is read first and the listing
+/// The file is the better witness. It is what a manual upload would have
+/// been, laps and sub-sport included, so it is read first and the listing
 /// only fills in what the file does not carry: the name the athlete gave the
 /// session, and the trainer flag when the file's sub-sport said nothing.
 /// Like Strava, intervals.icu has no ruck; the name decides, as it does on

@@ -25,7 +25,7 @@ public sealed class FieldTestsTests
     public void A_named_outdoor_drift_test_reads_its_drift_from_the_laps()
     {
         // Four 15-minute laps: the second half is a shade slower at a shade
-        // higher heart rate — 3.5% decoupling, inside the line.
+        // higher heart rate: 3.5% decoupling, inside the line.
         var laps = Laps(900, (400, 150), (400, 151), (405, 153), (408, 154));
         var run = Run("HR drift test", 3600, 403, 152, laps);
 

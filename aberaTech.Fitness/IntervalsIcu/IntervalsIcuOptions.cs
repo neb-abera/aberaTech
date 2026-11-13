@@ -10,7 +10,7 @@ namespace aberaTech.Fitness.IntervalsIcu;
 /// activity to intervals.icu through Garmin's own partner integration, and
 /// intervals.icu's personal API is free: one key from Settings → Developer,
 /// sent as basic auth. It also keeps the original FIT file, so what arrives
-/// here is exactly what a manual upload would have been — laps, sub-sport
+/// here is exactly what a manual upload would have been, with laps, sub-sport,
 /// and all. The key is a container app secret, never appsettings.
 /// </remarks>
 public sealed class IntervalsIcuOptions

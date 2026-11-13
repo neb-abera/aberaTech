@@ -109,7 +109,7 @@ internal static class Linear
     /// <summary>The standard normal cumulative distribution.</summary>
     /// <remarks>
     /// Erf by the Abramowitz &amp; Stegun 7.1.26 rational approximation, which
-    /// is accurate to 1.5×10⁻⁷ — four more digits than any probability this
+    /// is accurate to 1.5×10⁻⁷. That is four more digits than any probability this
     /// app should be quoting to an athlete.
     /// </remarks>
     public static double NormalCdf(double z)

@@ -7,7 +7,7 @@
  *
  * Each card is rendered on its own. Mounting the whole data panel to type
  * into one of its cards paid for the profile card's dozen fields and its
- * Select on every test — 0.7s a test alone, and past the 15s budget under
+ * Select on every test: 0.7s a test alone, and past the 15s budget under
  * coverage with the server build running alongside.
  */
 

@@ -245,7 +245,7 @@ public static class FitnessReports
         {
             trace.Add(
                 "Race weight, on the reclaimable peak",
-                Text($"VDOT {asRun:0.0} × {peakWeight:0.0} ÷ {racing:0.0} kg — the best was set at {peakWeight * BodyMass.PoundsPerKg:0} lb"),
+                Text($"VDOT {asRun:0.0} × {peakWeight:0.0} ÷ {racing:0.0} kg (the best was set at {peakWeight * BodyMass.PoundsPerKg:0} lb)"),
                 Text($"VDOT {reclaimed:0.0}"),
                 Citations.CuretonSparling.Id);
         }
@@ -253,7 +253,7 @@ public static class FitnessReports
         {
             trace.Add(
                 "Race weight, on the reclaimable peak",
-                "not applied — the weight the lifetime best was set at is not recorded",
+                "not applied: the weight the lifetime best was set at is not recorded",
                 "peak left as run",
                 Citations.CuretonSparling.Id);
         }
@@ -546,8 +546,8 @@ public static class FitnessReports
     /// </summary>
     /// <remarks>
     /// Normalized pace is a fitness signal, not a race result, so it is turned
-    /// into a score by ratio to the most recent month — which is the month the
-    /// measured anchor belongs to — and raised to the elasticity of VDOT with
+    /// into a score by ratio to the most recent month (the month the
+    /// measured anchor belongs to) and raised to the elasticity of VDOT with
     /// respect to speed (<see cref="Vdot.SpeedElasticity"/>), computed at the
     /// athlete's own pace rather than assumed to be one.
     /// </remarks>
@@ -649,10 +649,10 @@ public static class FitnessReports
 
         assumptions.Add(row.SustainedWeeklyHours is { } sustained
             ? Text($"Ceilings are planned against your own recovery budget: the {sustained:0.#} h/week you have held for a month without breaking down [gabbett-workload].")
-            : "No sustained week recorded, so ceilings assume a full-time endurance athlete's recovery budget — generous. Record the biggest week you have held for a month and every ceiling below becomes yours [gabbett-workload].");
+            : "No sustained week recorded, so ceilings assume a full-time endurance athlete's recovery budget. That budget is generous. Record the biggest week you have held for a month and every ceiling below becomes yours [gabbett-workload].");
 
         assumptions.Add(row.Female is null
-            ? "Sex is unstated, so targets are graded against the open men's record book — the most permissive bound available [wma-age-grading]."
+            ? "Sex is unstated, so targets are graded against the open men's record book, the most permissive bound available [wma-age-grading]."
             : Text($"Targets are graded against the {(row.Female.Value ? "women's" : "men's")} record book, age-adjusted [wma-age-grading]."));
 
         return assumptions;

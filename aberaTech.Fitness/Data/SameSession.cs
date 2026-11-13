@@ -8,8 +8,8 @@ namespace aberaTech.Fitness.Data;
 ///
 /// Garmin's export carries a real UTC clock for every activity. The Connect
 /// website's activities CSV carries a wall clock and no zone at all, so the
-/// same run read from both is off by whatever the watch's offset was — and
-/// this athlete's own export flips from −6 to +3 partway through the year, so
+/// same run read from both is off by whatever the watch's offset was. This
+/// athlete's own export flips from −6 to +3 partway through the year, so
 /// there is no single zone that would reconcile them either. Matching on what
 /// the session *was* rather than when the file says it started is the only
 /// comparison that survives that.
@@ -19,7 +19,7 @@ public static class SameSession
     /// <summary>Both files round the same recorded time; they do not disagree by more.</summary>
     public const double DurationToleranceSeconds = 2;
 
-    /// <summary>The summary and the CSV round distance differently — meters, not kilometers, apart.</summary>
+    /// <summary>The summary and the CSV round distance differently. They differ by meters, not kilometers.</summary>
     public const double DistanceToleranceMeters = 25;
 
     /// <summary>

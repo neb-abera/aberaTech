@@ -17,7 +17,7 @@ namespace aberaTech.Fitness.Domain;
 /// <param name="MaxIntensityShare">
 /// The largest share of running hours that may be spent above easy. One means
 /// unconstrained, which is right for an athlete whose aerobic base is sound and
-/// wrong for one whose is not — see
+/// wrong for one whose is not. See
 /// <see cref="DoseResponse.IntensityCapFor"/>.
 /// </param>
 public sealed record DoseLimits(
@@ -44,7 +44,7 @@ public sealed record DoseLimits(
 /// 1.5 h/week strength. The marginal values bᵢ were then fixed by two
 /// conditions, both checked in the tests:
 /// <list type="number">
-/// <item>the optimal split of an 8-hour week comes out at 80% easy — the
+/// <item>the optimal split of an 8-hour week comes out at 80% easy, the
 /// distribution Seiler documents in elite endurance athletes, reproduced by
 /// the model rather than assumed by it; and</item>
 /// <item>over 4–12 h/week the surface agrees within about 1.5 VDOT with the
@@ -59,8 +59,8 @@ public sealed record DoseLimits(
 /// and the Lagrangian conditions are what make it explainable. Stationarity
 /// gives r·bᵢ·e^(−hᵢ/sᵢ) = λ + μ·cᵢ, so at the optimum every zone in use
 /// returns the same ceiling per hour once its recovery cost is priced at μ.
-/// λ is the shadow price of an hour — what one more hour a week is worth, in
-/// VDOT — and it falls as the week gets longer. Both multipliers are reported,
+/// λ is the shadow price of an hour: what one more hour a week is worth, in
+/// VDOT. It falls as the week gets longer. Both multipliers are reported,
 /// because "where should my next hour go" is answered by comparing them.
 ///
 /// Citations: <see cref="Citations.SeilerPolarized"/>,
@@ -121,7 +121,7 @@ public static class DoseResponse
     /// <remarks>
     /// Maximising the ceiling is the wrong objective at low volume. With only a
     /// couple of hours a week nothing is saturated, so every zone's first hour
-    /// looks valuable and the optimiser spreads them evenly — it put barely
+    /// looks valuable and the optimiser spreads them evenly. It put barely
     /// forty per cent of a ninety-minute week into easy running. For an athlete
     /// whose aerobic threshold already lags their lactate threshold by more
     /// than about ten per cent, that is the opposite of the prescription: the
@@ -208,7 +208,7 @@ public static class DoseResponse
     /// recover from. It is the Lagrange multiplier λ of the hours constraint
     /// while recovery is free, and λ + μ·c once recovery has a price.
     /// </param>
-    /// <param name="StrainPrice">μ — VDOT lost to each unit of recovery budget the week is short of.</param>
+    /// <param name="StrainPrice">μ: VDOT lost to each unit of recovery budget the week is short of.</param>
     public sealed record Allocation(TrainingDose Dose, double HourPrice, double StrainPrice);
 
     /// <summary>

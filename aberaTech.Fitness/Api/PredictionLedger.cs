@@ -10,8 +10,8 @@ namespace aberaTech.Fitness.Api;
 /// <remarks>
 /// Every other number this app produces is a claim about the future that
 /// nothing later checks. This is the ledger that makes the model falsifiable:
-/// a prediction, the plan it assumed, the interval it was quoted with, and — in
-/// time — what actually happened.
+/// a prediction, the plan it assumed, the interval it was quoted with, and (in
+/// time) what actually happened.
 ///
 /// The interval matters as much as the median. A model whose point predictions
 /// are often wrong but whose 80% intervals contain the outcome about 80% of the

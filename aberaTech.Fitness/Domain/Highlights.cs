@@ -19,7 +19,7 @@ public sealed record E1RmPoint(LocalDate Date, string Exercise, double E1Rm);
 /// Quality highlights: what moved, which way, with the numbers attached.
 /// </summary>
 /// <remarks>
-/// Rules, not vibes — each highlight fires on a measurable change and carries
+/// Rules, not vibes. Each highlight fires on a measurable change and carries
 /// its evidence. Negative findings are generated on purpose: a tracker that
 /// only congratulates is a toy.
 /// </remarks>

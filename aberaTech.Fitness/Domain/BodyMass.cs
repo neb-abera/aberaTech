@@ -6,14 +6,14 @@ namespace aberaTech.Fitness.Domain;
 /// <remarks>
 /// VDOT is oxygen uptake <i>per kilogram</i>. Losing fat mass leaves the
 /// engine's absolute output (litres of O2 per minute) essentially unchanged
-/// while shrinking the denominator, so relative VO2max — and therefore VDOT —
+/// while shrinking the denominator, so relative VO2max (and therefore VDOT)
 /// scales with the inverse of mass: VDOT' = VDOT × (m₀ / m₁). The experimental
 /// anchor is Cureton &amp; Sparling's added-load studies, where each 1% of
 /// added mass cost close to 1% of relative VO2max and a measurable slice of
 /// 12-minute-run distance.
 ///
 /// Two honest limits, both enforced here. The scaling only describes fat-mass
-/// change — starve off muscle and the numerator falls with the denominator —
+/// change. Starve off muscle and the numerator falls with the denominator,
 /// so the adjustment is clamped to ±10% of current mass, past which the
 /// assumption has no evidence behind it. And it is symmetric: gaining mass
 /// costs exactly what losing it buys.
@@ -48,7 +48,7 @@ public static class BodyMass
     /// A past peak is a performance, and a performance was run at a bodyweight.
     /// Scoring it as though it belonged to no weight at all is what let the
     /// race-weight factor raise the starting fitness toward a ceiling that
-    /// stayed put — which shrank the reclaim runway and made the model
+    /// stayed put. That shrank the reclaim runway and made the model
     /// <i>less</i> optimistic the lighter the athlete planned to race, exactly
     /// backwards. The mark and the anchor get the same treatment, clamp and
     /// caveat included.

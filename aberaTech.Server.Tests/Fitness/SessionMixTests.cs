@@ -77,7 +77,7 @@ public sealed class SpeedElasticityTests
     public void Vdot_reacts_more_than_proportionally_to_speed()
     {
         // The oxygen-cost curve is quadratic in velocity, so the elasticity is
-        // above one — assuming one understates every measured improvement.
+        // above one. Assuming one understates every measured improvement.
         var elasticity = Vdot.SpeedElasticity(5000, 25);
         Assert.InRange(elasticity, 1.0, 1.4);
     }

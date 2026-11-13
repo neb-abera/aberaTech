@@ -19,9 +19,9 @@ public sealed record TrainingPace(
 /// <remarks>
 /// The most actionable number a VDOT gives is not a prediction but a
 /// prescription: the pace each kind of training should happen at. The bands
-/// are Daniels' published intensity ranges as fractions of VO2max — Easy
+/// are Daniels' published intensity ranges as fractions of VO2max (Easy
 /// 59–74%, Marathon 75–84%, Threshold 83–88%, Interval 95–100%, Repetition
-/// ~105–110% — inverted through the same oxygen-cost curve the VDOT score
+/// ~105–110%), inverted through the same oxygen-cost curve the VDOT score
 /// comes from. Computed this way the paces land within a few seconds per
 /// kilometer of Daniels' printed tables, which carry additional empirical
 /// smoothing; treat these as bands, not laps to hit to the second.
@@ -36,11 +36,11 @@ public static class TrainingPaces
 
         return
         [
-            Band(vdot, "E", "Easy", "aerobic base — where Zone 2 volume lives", 0.59, 0.74),
+            Band(vdot, "E", "Easy", "aerobic base, where Zone 2 volume lives", 0.59, 0.74),
             Band(vdot, "M", "Marathon", "steady long efforts and ruck-pace calibration", 0.75, 0.84),
             Band(vdot, "T", "Threshold", "cruise intervals and tempo, comfortably hard", 0.83, 0.88),
             Band(vdot, "I", "Interval", "VO2max work, 3–5 minute repeats", 0.95, 1.00),
-            Band(vdot, "R", "Repetition", "speed and economy — strides live here", 1.05, 1.10)
+            Band(vdot, "R", "Repetition", "speed and economy, where strides live", 1.05, 1.10)
         ];
     }
 
@@ -56,7 +56,7 @@ public static class TrainingPaces
     }
 
     /// <summary>
-    /// The pace whose oxygen cost equals <paramref name="vo2"/> — the Daniels
+    /// The pace whose oxygen cost equals <paramref name="vo2"/>. It is the Daniels
     /// &amp; Gilbert cost curve solved for velocity.
     /// </summary>
     private static double SecPerKmAt(double vo2)

@@ -6,7 +6,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// <summary>
 /// Maximising the ceiling is the wrong objective at low volume. Nothing is
 /// saturated at ninety minutes a week, so every zone's first hour looks
-/// valuable and the optimiser spread them evenly — barely forty per cent of the
+/// valuable and the optimiser spread them evenly. It put barely forty per cent of the
 /// week into easy running, for an athlete whose measured deficit is base.
 /// </summary>
 public sealed class AerobicBaseTests(ITestOutputHelper output)

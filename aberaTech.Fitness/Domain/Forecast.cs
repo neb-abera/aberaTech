@@ -26,7 +26,7 @@ public sealed record Band(
 /// A single projected number is a prediction pretending to be a fact. The
 /// parameters were estimated from a handful of noisy months and carry a
 /// covariance (<see cref="ModelFit"/>); the delta method pushes it forward
-/// through the model — Var[V(t)] ≈ ∇θV(t)ᵀ·Σ·∇θV(t) — and the residual spread
+/// through the model (Var[V(t)] ≈ ∇θV(t)ᵀ·Σ·∇θV(t)), and the residual spread
 /// is added on top, because a future month is a new draw of the same noise
 /// that made the past ones scatter. The gradient is central differences on the
 /// same integration the projection uses, so the band cannot drift away from

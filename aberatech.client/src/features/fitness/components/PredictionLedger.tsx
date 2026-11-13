@@ -23,7 +23,7 @@ import { formatDistance, formatSeconds, parseClock } from "../core/format";
  * What the model said before it knew, and what happened.
  *
  * Everything else on this page is a claim about the future that nothing later
- * checks. This is the only part that can tell you the model is wrong — and the
+ * checks. This is the only part that can tell you the model is wrong. The
  * interval matters more than the median: intervals that contain the day about
  * as often as they claim to are a model working; intervals that always contain
  * it are a model not saying much.
@@ -93,7 +93,7 @@ export default function PredictionLedger({
                   size="small"
                   label={`Median error: ${
                     scored.length === 0
-                      ? "—"
+                      ? "n/a"
                       : `${Math.round(
                           scored.reduce(
                             (t, r) => t + (r.errorSeconds ?? 0),
@@ -165,7 +165,7 @@ export default function PredictionLedger({
                           >
                             {(row.errorSeconds ?? 0) >= 0 ? "+" : ""}
                             {Math.round(row.errorSeconds ?? 0)}s
-                            {row.insideInterval ? " — inside" : " — outside"}
+                            {row.insideInterval ? ", inside" : ", outside"}
                           </Typography>
                         </>
                       ) : row.status === "due" ? (

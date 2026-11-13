@@ -113,7 +113,7 @@ export default function FitnessPanel() {
    * A failure here is only fatal before there is anything to show. Once the
    * console is on screen a failed refresh says so and leaves the page standing:
    * this used to set one latch that every render checked first, so a single
-   * blip — or a session quietly expiring — replaced the whole console, tabs and
+   * blip (or a session quietly expiring) replaced the whole console, tabs and
    * all, with "the service did not answer".
    */
   const reloadSummary = React.useCallback(() => {
@@ -135,7 +135,7 @@ export default function FitnessPanel() {
           if (current === null) setFailed(true);
           else
             setStaleError(
-              "Could not refresh — showing the last numbers loaded.",
+              "Could not refresh. Showing the last numbers loaded.",
             );
           return current;
         });
@@ -369,8 +369,8 @@ function Dashboard({
                 Aerobic-to-lactate-threshold spread:{" "}
                 <strong>{(summary.deficiencySpread * 100).toFixed(0)}%</strong>
                 {summary.deficiencySpread > 0.1
-                  ? " — over the 10% deficiency line; base volume fixes it."
-                  : " — inside the 10% line."}
+                  ? " (over the 10% deficiency line). Base volume fixes it."
+                  : " (inside the 10% line)."}
               </>
             )}
           </Typography>
@@ -408,7 +408,7 @@ function Dashboard({
         <Card variant="outlined">
           <CardContent>
             <Typography variant="h6" sx={{ mb: 1 }}>
-              Strength — estimated 1RM (Epley)
+              Strength: estimated 1RM (Epley)
             </Typography>
             <Stack spacing={0.5}>
               {latestPerExercise(summary).map((point) => (

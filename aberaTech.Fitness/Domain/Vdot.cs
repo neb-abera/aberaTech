@@ -7,7 +7,7 @@ namespace aberaTech.Fitness.Domain;
 /// The two regression equations are from Daniels &amp; Gilbert, "Oxygen Power:
 /// Performance Tables for Distance Runners" (1979), as popularised in Jack
 /// Daniels, <i>Daniels' Running Formula</i> (Human Kinetics). VDOT is the
-/// oxygen cost the performance implies, in ml/kg/min — "effective VO2max",
+/// oxygen cost the performance implies, in ml/kg/min. It is "effective VO2max",
 /// folding in running economy. Two races with equal VDOT are equivalent
 /// performances, which is what lets one measured race predict times at other
 /// distances.
@@ -83,7 +83,7 @@ public static class Vdot
     /// </summary>
     /// <remarks>
     /// Turning a measured pace improvement into a fitness improvement needs
-    /// this number, and assuming it is 1 is wrong by several percent — the
+    /// this number, and assuming it is 1 is wrong by several percent. The
     /// oxygen-cost curve is quadratic in velocity, so faster running costs
     /// disproportionately more. It is computed here by differentiating the
     /// equations above rather than quoted, so it stays right at whatever speed

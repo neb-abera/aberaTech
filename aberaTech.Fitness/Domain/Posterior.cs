@@ -19,7 +19,7 @@ public enum ObservationKind
 /// <param name="PaceScale">
 /// The factor turning pace-at-heart-rate into VDOT. It absorbs a miscalibrated
 /// treadmill, a heart-rate strap reading high, and the imperfection of the
-/// normalisation itself — the things that bias a proxy but not a race.
+/// normalisation itself. These are the things that bias a proxy but not a race.
 /// </param>
 /// <param name="NoiseSd">Month-to-month scatter of the pace-derived series.</param>
 public sealed record ParameterDraw(
@@ -81,7 +81,7 @@ public sealed record PosteriorSamples(
 /// likelihood is close to quadratic. Neither is true here: one athlete, a
 /// handful of noisy months, parameters that trade off against each other
 /// (a high ceiling reached slowly looks much like a low one reached fast), and
-/// hard bounds — responsiveness cannot be negative. Under those conditions a
+/// hard bounds (responsiveness cannot be negative). Under those conditions a
 /// normal approximation quietly reports symmetric intervals for a skewed
 /// answer. The posterior is the honest object, and for a single athlete it is
 /// affordable: a few seconds of sampling, cached until the data change.
@@ -92,14 +92,14 @@ public sealed record PosteriorSamples(
 /// which is a <i>proxy</i>: it carries a scale error, from a treadmill belt
 /// that lies, a strap that reads high, or the normalisation itself. That scale
 /// is a parameter, so the model can discover that the proxy series runs a few
-/// percent off and stop treating its level as gospel — a race pins the level,
-/// the proxy pins the shape.
+/// percent off and stop treating its level as gospel. A race pins the level.
+/// The proxy pins the shape.
 ///
 /// <b>The sampler.</b> Adaptive random-walk Metropolis: four chains from
 /// dispersed starts, proposal covariance adapted to the chain's own during
 /// burn-in (Haario, Saksman &amp; Tamminen) and frozen afterwards so the chain
-/// is a proper Markov chain. Convergence is reported, not assumed —
-/// split-R̂ and effective sample size ship with every fit, and the page says so
+/// is a proper Markov chain. Convergence is reported, not assumed.
+/// Split-R̂ and effective sample size ship with every fit, and the page says so
 /// when they fail.
 ///
 /// Citations: <see cref="Citations.NonlinearRegression"/>,
@@ -222,8 +222,8 @@ public static class Posterior
     /// <summary>One chain: adaptive during burn-in, fixed proposal afterwards.</summary>
     /// <remarks>
     /// Haario, Saksman and Tamminen's adaptive Metropolis. The parameters of
-    /// this model trade off hard against each other — a fast approach to a low
-    /// ceiling looks much like a slow approach to a high one — so a proposal
+    /// this model trade off hard against each other. A fast approach to a low
+    /// ceiling looks much like a slow approach to a high one, so a proposal
     /// that moves each parameter independently walks across the ridge instead
     /// of along it and is rejected almost every time. The proposal is therefore
     /// shaped by the Cholesky factor of the chain's own covariance, with a
@@ -474,8 +474,8 @@ public static class Posterior
             "Inference",
             Text($"{observations} observations ({trials} time trial(s)), {Chains} chains × {PerChain} kept draws"),
             diagnostics.Converged
-                ? Text($"converged — R̂ {diagnostics.RHat:0.000}, effective sample size {diagnostics.EffectiveSampleSize:0}")
-                : Text($"NOT converged — R̂ {diagnostics.RHat:0.000}, effective sample size {diagnostics.EffectiveSampleSize:0}; treat the intervals as indicative"),
+                ? Text($"converged: R̂ {diagnostics.RHat:0.000}, effective sample size {diagnostics.EffectiveSampleSize:0}")
+                : Text($"NOT converged: R̂ {diagnostics.RHat:0.000}, effective sample size {diagnostics.EffectiveSampleSize:0}. Treat the intervals as indicative"),
             Citations.NonlinearRegression.Id);
 
         Parameter("Approach rate k", d => d.RatePerMonth, "/month", "0.0000");
@@ -488,7 +488,7 @@ public static class Posterior
             trace.Add(
                 "No time trial in the data",
                 Text($"the level rests entirely on the prior of VDOT {priors.StartVdot:0.0} ± {priors.StartVdotSd:0.0}"),
-                "intervals below are as wide as that prior — a measured race is the fix",
+                "intervals below are as wide as that prior. A measured race is the fix",
                 Citations.DanielsVdot.Id);
         }
 

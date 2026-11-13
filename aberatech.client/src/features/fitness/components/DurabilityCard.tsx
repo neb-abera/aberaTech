@@ -91,14 +91,16 @@ export default function DurabilityCard({
         >
           <Figure
             label="Acute : chronic"
-            value={durability.acwr === null ? "—" : durability.acwr.toFixed(2)}
+            value={
+              durability.acwr === null ? "n/a" : durability.acwr.toFixed(2)
+            }
             note={`${durability.acuteLoad.toFixed(1)} this week vs ${durability.chronicLoad.toFixed(1)} avg`}
           />
           <Figure
             label="Monotony"
             value={
               durability.monotony === null
-                ? "—"
+                ? "n/a"
                 : durability.monotony.toFixed(1)
             }
             note={

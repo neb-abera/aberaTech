@@ -38,7 +38,7 @@ public sealed class TrainingPacesTests
     [Fact]
     public void Easy_pace_for_the_current_athlete_matches_the_observed_base()
     {
-        // At VDOT 37 the easy band should contain ~6:30-7:30/km — the pace the
+        // At VDOT 37 the easy band should contain ~6:30-7:30/km, the pace the
         // athlete's own August base runs actually happened at. The model and
         // the training data describing the same runner is the whole check.
         var easy = TrainingPaces.For(37).Single(p => p.Zone == "E");

@@ -41,7 +41,7 @@ public sealed class DoseResponseTests
     [Fact]
     public void Parts_company_with_the_straight_line_where_the_line_becomes_nonsense()
     {
-        // Forty hours a week on the old line implied VDOT 102 — faster than
+        // Forty hours a week on the old line implied VDOT 102, faster than
         // any human has run. The surface saturates instead.
         var dose = DoseResponse.Allocate(40).Dose;
         Assert.True(DoseResponse.Ceiling(dose) < 70);

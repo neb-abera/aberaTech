@@ -6,7 +6,7 @@ using NodaTime.Text;
 namespace aberaTech.Fitness.Ingest;
 
 /// <summary>
-/// Garmin Connect's Activities page CSV export — the bulk-history path. One
+/// Garmin Connect's Activities page CSV export, the bulk-history path. One
 /// row per activity, summary only, which is exactly what the aerobic trend
 /// needs (distance, time, average HR).
 /// </summary>

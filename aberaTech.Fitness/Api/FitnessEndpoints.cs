@@ -86,7 +86,7 @@ public static class FitnessEndpoints
 
         // The Development bypass is the one case with no policy: sign-in is
         // skipped entirely, decided by FitnessGate, never by this default. It
-        // says so — AllowAnonymous — rather than saying nothing, because every
+        // says so with AllowAnonymous rather than saying nothing, because every
         // endpoint declares who may call it (RouteTableTests) and the
         // fallback policy closes one that does not.
         var api = requireOwnerSignIn ? group.RequireAuthorization(PolicyName) : group.AllowAnonymous();
@@ -94,7 +94,7 @@ public static class FitnessEndpoints
         // Whatever a write changed, the cached pages may have read.
         api.EvictOnWrite();
 
-        // Who am I — the one anonymous route, so the page can decide whether to
+        // Who am I. This is the one anonymous route, so the page can decide whether to
         // show a sign-in button or the dashboard. Discloses nothing but the
         // fact the feature exists, which the navigation already does.
         routes.MapGet("/api/fitness/me", (HttpContext context) =>
@@ -247,8 +247,8 @@ public static class FitnessEndpoints
         });
 
         // One import route, whatever the file is. Asking the owner to classify
-        // their own download is how the Garmin archive — the file Garmin
-        // actually sends — ended up fitting none of the three buttons there
+        // their own download is how the Garmin archive (the file Garmin
+        // actually sends) ended up fitting none of the three buttons there
         // used to be here.
         api.MapPost("/import", async (HttpRequest request, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {

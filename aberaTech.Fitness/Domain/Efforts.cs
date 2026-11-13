@@ -153,7 +153,7 @@ public static partial class Efforts
         {
             var why = fresh is null
                 ? "no fresh race or time trial is recorded, so your newest AFT 2-mile sets a floor: run after four other events, it reads slower than a fresh 2-mile"
-                : "your AFT 2-mile on or after your last fresh test shows more fitness, so it raises the floor";
+                : "your AFT 2-mile, run on or after your last fresh value, shows at least as much fitness, so it sets the floor";
             return new AnchorChoice(aft, aft.Vdot, aft.Date, true, why);
         }
 

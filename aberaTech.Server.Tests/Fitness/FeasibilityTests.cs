@@ -6,7 +6,7 @@ namespace aberaTech.Server.Tests.Fitness;
 /// <summary>
 /// The regression this whole model exists to fix: three goals that fail for
 /// three different reasons used to come back with one sentence about elite
-/// volume, and a 20:00 five-mile — faster than any human has run — came back
+/// volume, and a 20:00 five-mile (faster than any human has run) came back
 /// with a training plan of 45.8 hours a week.
 /// </summary>
 public sealed class FeasibilityTests
@@ -54,7 +54,7 @@ public sealed class FeasibilityTests
     [Fact]
     public void Each_kind_of_impossible_gets_its_own_answer()
     {
-        // Five goals over the same distance, failing — or not — for five
+        // Five goals over the same distance, failing (or not) for five
         // different reasons. Before this model they shared one sentence.
         var reports = new[]
         {

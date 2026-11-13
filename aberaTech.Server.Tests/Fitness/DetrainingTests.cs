@@ -6,8 +6,8 @@ namespace aberaTech.Server.Tests.Fitness;
 /// <summary>
 /// Fitness that can only go up is not a model of training, it is a model of
 /// wishing. The ceiling used to be floored at the athlete's starting fitness,
-/// so the gap driving the trajectory was never negative and no dose — including
-/// none at all — could make anyone slower.
+/// so the gap driving the trajectory was never negative and no dose (including
+/// none at all) could make anyone slower.
 /// </summary>
 public sealed class DetrainingTests(ITestOutputHelper output)
 {
@@ -98,7 +98,7 @@ public sealed class DetrainingTests(ITestOutputHelper output)
 
         // Some of it comes back, because the ground is re-taken at the
         // retraining rate rather than broken new. But over half of the loss is
-        // still there nine months later, on identical training since — a month
+        // still there nine months later, on identical training since. A month
         // off is not the same as being a month behind, which is the intuition
         // it usually gets treated as.
         Assert.True(nineMonthsLater < onTheDay);

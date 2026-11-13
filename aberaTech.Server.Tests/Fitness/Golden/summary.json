@@ -1468,7 +1468,7 @@
     {
       "zone": "E",
       "name": "Easy",
-      "purpose": "aerobic base \u2014 where Zone 2 volume lives",
+      "purpose": "aerobic base, where Zone 2 volume lives",
       "fastSecPerKm": 325,
       "slowSecPerKm": 389
     },
@@ -1496,7 +1496,7 @@
     {
       "zone": "R",
       "name": "Repetition",
-      "purpose": "speed and economy \u2014 strides live here",
+      "purpose": "speed and economy, where strides live",
       "fastSecPerKm": 236,
       "slowSecPerKm": 245
     }
@@ -3035,13 +3035,13 @@
       {
         "label": "Acute:chronic ratio",
         "expression": "7.3 (last 7 days) \u00F7 8.0 (average week of the last 28)",
-        "value": "0.91 \u2014 safe band 0.8\u20131.3, risk climbs past 1.5",
+        "value": "0.91 (safe band 0.8\u20131.3, risk climbs past 1.5)",
         "citationId": "gabbett-workload"
       },
       {
         "label": "Monotony and strain",
         "expression": "mean daily load 1.04 \u00F7 its spread 0.75; strain = weekly load \u00D7 monotony",
-        "value": "monotony 1.4, strain 10.0 \u2014 over 2.0 the week has no contrast",
+        "value": "monotony 1.4, strain 10.0 (over 2.0 the week has no contrast)",
         "citationId": "foster-monotony"
       },
       {

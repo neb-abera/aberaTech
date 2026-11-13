@@ -64,7 +64,7 @@ function RuckCard({ ruck }: { ruck: RuckReport }) {
           {ruck.predictedTwelveMileAt35Seconds !== null && (
             <>
               {" "}
-              — at 35 lb, {formatSeconds(ruck.predictedTwelveMileAt35Seconds)}
+              (at 35 lb, {formatSeconds(ruck.predictedTwelveMileAt35Seconds)})
             </>
           )}
           . A timed ruck of your own outranks this; record the load on each ruck
@@ -118,9 +118,11 @@ function RuckCard({ ruck }: { ruck: RuckReport }) {
                       {formatSeconds(m.seconds)}
                     </TableCell>
                     <TableCell align="right">{formatLoad(m.loadKg)}</TableCell>
-                    <TableCell align="right">{m.averageHr ?? "—"}</TableCell>
+                    <TableCell align="right">{m.averageHr ?? "n/a"}</TableCell>
                     <TableCell align="right">
-                      {m.impliedVdot === null ? "—" : m.impliedVdot.toFixed(1)}
+                      {m.impliedVdot === null
+                        ? "n/a"
+                        : m.impliedVdot.toFixed(1)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -191,8 +193,9 @@ function BodyCard({ body }: { body: BodyReport }) {
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
           What selection made of body composition in the one cohort it was
           measured in: the leanest quarter was selected at 52%, the fattest at
-          14%; the most muscular quarter at 59%, the least at 20%. Cohort rates,
-          not your odds — they say nothing about how you run or ruck.
+          14%; the most muscular quarter at 59%, the least at 20%. These are
+          cohort rates, not your odds. They say nothing about how you run or
+          ruck.
         </Typography>
         {body.latestBodyFatPercent === null ? (
           <Typography variant="body2">
@@ -204,7 +207,7 @@ function BodyCard({ body }: { body: BodyReport }) {
               Body fat{" "}
               <strong>{Number(body.latestBodyFatPercent.toFixed(1))}%</strong>
               {body.cohortRateByBodyFat !== null &&
-                ` — cohort selection rate ${Math.round(body.cohortRateByBodyFat * 100)}%`}
+                `, cohort selection rate ${Math.round(body.cohortRateByBodyFat * 100)}%`}
             </Typography>
             {body.latestLeanMassKg !== null && (
               <Typography variant="body2">
@@ -214,7 +217,7 @@ function BodyCard({ body }: { body: BodyReport }) {
                   {body.latestLeanMassKg.toFixed(1)} kg)
                 </strong>
                 {body.cohortRateByLeanMass !== null &&
-                  ` — cohort selection rate ${Math.round(body.cohortRateByLeanMass * 100)}%`}
+                  `, cohort selection rate ${Math.round(body.cohortRateByLeanMass * 100)}%`}
               </Typography>
             )}
             {withFat.length > 1 && (

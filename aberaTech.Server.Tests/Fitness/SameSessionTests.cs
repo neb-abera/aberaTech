@@ -9,7 +9,7 @@ namespace aberaTech.Server.Tests.Fitness;
 ///
 /// Garmin's export carries a real UTC clock; the Connect website's activities
 /// CSV carries a wall clock and no zone. This athlete's own export flips from
-/// −6 to +3 partway through 2026, so no single zone would reconcile them — the
+/// −6 to +3 partway through 2026, so no single zone would reconcile them. The
 /// comparison has to be of what the session was, not of when a file says it
 /// began.
 /// </summary>
