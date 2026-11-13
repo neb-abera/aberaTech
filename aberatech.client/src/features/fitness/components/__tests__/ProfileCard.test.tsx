@@ -42,7 +42,7 @@ function sent(spy: ReturnType<typeof vi.fn>) {
 }
 
 describe("ProfileCard", () => {
-  it("saves the biggest week alone, and the anchor race is not sent again", async () => {
+  it("saves the biggest week alone, and nothing else", async () => {
     const fetch = vi
       .fn()
       .mockResolvedValue(new Response(null, { status: 204 }));
@@ -64,41 +64,5 @@ describe("ProfileCard", () => {
     expect(Object.keys(body)).toEqual(["sustainedWeeklyHours"]);
     expect(body.sustainedWeeklyHours).toBe(8);
     expect(await within(hours).findByText(/Nothing else changed/)).toBeTruthy();
-  });
-
-  it("shows the current anchor and takes a newer race in empty fields", async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(new Response(null, { status: 204 }));
-    vi.stubGlobal("fetch", fetch);
-    render(<ProfileCard settings={settings} onSaved={() => undefined} />);
-
-    const anchor = screen.getByRole("region", { name: "Anchor race" });
-    expect(
-      within(anchor).getByText(/VDOT 35.4, from a race on 2026-04-03/),
-    ).toBeTruthy();
-    const time = within(anchor).getByLabelText(
-      "Time (m:ss)",
-    ) as HTMLInputElement;
-    expect(time.value).toBe("");
-
-    fireEvent.click(
-      within(anchor).getByRole("button", { name: "Record race" }),
-    );
-    expect(fetch).not.toHaveBeenCalled();
-
-    fireEvent.change(time, { target: { value: "15:30" } });
-    fireEvent.change(within(anchor).getByLabelText("Race date"), {
-      target: { value: "2026-11-20" },
-    });
-    fireEvent.click(
-      within(anchor).getByRole("button", { name: "Record race" }),
-    );
-
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-    const body = sent(fetch);
-    expect(body.anchorSeconds).toBe(930);
-    expect(body.vdotMeasuredOn).toBe("2026-11-20");
-    expect(body).not.toHaveProperty("availableHoursPerWeek");
   });
 });

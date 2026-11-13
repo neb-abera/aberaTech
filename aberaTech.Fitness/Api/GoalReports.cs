@@ -374,16 +374,16 @@ internal static class GoalReports
                 var needs = new List<string>();
                 var anchoredOn = frame.Athlete.Row.VdotMeasuredOn;
                 if (anchoredOn is not { } anchor)
-                    needs.Add("a timed 2-mile, because the model starts from a default VDOT");
+                    needs.Add("a race or time trial at any distance, because the model starts from a default VDOT");
                 else if (Period.Between(anchor, today, PeriodUnits.Days).Days is var age && age > Highlights.AnchorStaleAfterDays)
-                    needs.Add(Text($"a new time trial, because the VDOT anchor of {anchor:yyyy-MM-dd} is {age} days old"));
+                    needs.Add(Text($"a new race or time trial, because the anchor of {anchor:yyyy-MM-dd} is {age} days old"));
 
                 var months = frame.Athlete.Fit.Observations;
                 if (months < ModelFit.MinimumObservations)
                     needs.Add(Text($"{ModelFit.MinimumObservations - months} more month{(ModelFit.MinimumObservations - months == 1 ? "" : "s")} of easy runs to fit your own response ({months} of {ModelFit.MinimumObservations}); until then the rate is the literature's"));
 
                 var sources = runs.Sources.Count > 0 ? $"runs from {string.Join(" and ", runs.Sources)}" : "no runs in the log yet";
-                sources += anchoredOn is null ? ", and the default VDOT in your profile" : Text($", and the time trial of {anchoredOn:yyyy-MM-dd} in your profile");
+                sources += ", and " + (frame.Athlete.Row.AnchorSource ?? (anchoredOn is null ? "the default VDOT" : Text($"the VDOT of {anchoredOn:yyyy-MM-dd}")));
                 var model = metric is SelectionReadiness.Metrics.RuckTwelveMileAt45 or SelectionReadiness.Metrics.RuckTwelveMileAt35
                     ? TrajectoryModel + ", then the Pandolf load-carriage model (1977)"
                     : TrajectoryModel;

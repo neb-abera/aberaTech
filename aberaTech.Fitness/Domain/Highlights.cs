@@ -204,7 +204,7 @@ public static class Highlights
         {
             return new Highlight("anchor-missing",
                 "Your anchor is the default, not a measurement",
-                "Every projection launches from the default VDOT because no time trial is recorded. Run a two-mile and record it on the Log tab.",
+                "Every projection launches from the default VDOT because no race, time trial, or AFT is recorded. Run a time trial at any distance and name the run for it, such as \"5 mile time trial\", or enter a race on the Log tab.",
                 Positive: false);
         }
 
@@ -213,7 +213,7 @@ public static class Highlights
 
         return new Highlight("anchor-stale",
             $"Your anchor is {age} days old",
-            $"Time trial on {measured:yyyy-MM-dd}; after {AnchorStaleAfterDays} days of training it no longer says where you are. Re-run it.",
+            $"Your anchor test was on {measured:yyyy-MM-dd}. After {AnchorStaleAfterDays} days of training it no longer says where you are. Run a new race or time trial.",
             Positive: false);
     }
 

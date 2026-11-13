@@ -37,6 +37,7 @@ import PlanEditor, {
   planFromPreset,
   toRequest,
 } from "./PlanEditor";
+import { distanceLabel, formatAltitude } from "./raceDistances";
 
 const MILE = 1609.344;
 const DEFAULT_DISTANCES = [1.5 * MILE, 2 * MILE, 5 * MILE];
@@ -401,19 +402,29 @@ export function parseDistance(text: string): number | null {
 }
 
 /**
- * Which result the anchor VDOT was scored from, named by its distance and
- * time. "Time trial" alone left Neb asking on 2026-11-13 whether it meant
- * the AeT test, a 2-mile, or a 5-mile. It was the 2-mile of his AFT.
+ * Which test the anchor VDOT came from, named by its distance, time, date,
+ * and altitude. "Time trial" alone left Neb asking on 2026-11-13 whether it
+ * meant the AeT test, a 2-mile, or a 5-mile. An AFT 2-mile is run tired, so
+ * it reads as a floor.
  */
-export function anchorSource(settings: Summary["settings"]): string {
-  const { anchorDistanceMeters, anchorSeconds, vdotMeasuredOn } = settings;
-  if (anchorDistanceMeters && anchorSeconds) {
-    const on = vdotMeasuredOn ? ` on ${vdotMeasuredOn}` : "";
-    return ` (from a ${formatDistance(anchorDistanceMeters)} run in ${formatSeconds(anchorSeconds)}${on})`;
+export function anchorSource(
+  summary: Pick<Summary, "anchor" | "settings">,
+): string {
+  const anchor = summary.anchor;
+  if (anchor && anchor.distanceMeters && anchor.seconds) {
+    const where =
+      anchor.altitudeMeters !== null
+        ? ` at ${formatAltitude(anchor.altitudeMeters)}`
+        : "";
+    const what = `${distanceLabel(anchor.distanceMeters)} in ${formatSeconds(anchor.seconds)} on ${anchor.on}${where}`;
+    return anchor.floor
+      ? ` at least, from your AFT 2-mile: ${what}. Run after four other events, it reads slower than a fresh 2-mile`
+      : ` (from your ${anchor.name ?? "race"}: ${what})`;
   }
-  return vdotMeasuredOn
-    ? ` (entered as a VDOT, measured on ${vdotMeasuredOn})`
-    : " (a default, not a measurement)";
+  const on = anchor?.on ?? summary.settings.vdotMeasuredOn;
+  return on
+    ? ` (entered as a VDOT, measured on ${on})`
+    : " (a default, not a measurement: no race, time trial, or AFT is recorded)";
 }
 
 function Anchor({
@@ -430,7 +441,7 @@ function Anchor({
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           Every projection below launches from your measured anchor:{" "}
           <strong>VDOT {summary.settings.startVdot.toFixed(1)}</strong>
-          {anchorSource(summary.settings)}
+          {anchorSource(summary)}
           {prediction?.reclaimVdot != null && (
             <>
               . You have held{" "}

@@ -3117,5 +3117,46 @@
     ],
     "slopeSecPerKmPerWeek": null,
     "ahead": []
-  }
+  },
+  "anchor": {
+    "vdot": 44,
+    "on": "2026-05-06",
+    "kind": "TypedVdot",
+    "name": "VDOT typed into the profile",
+    "distanceMeters": null,
+    "seconds": null,
+    "altitudeMeters": null,
+    "floor": false,
+    "why": "the VDOT typed into your profile, newer than any race or time trial"
+  },
+  "efforts": [
+    {
+      "id": "00000008-0000-4000-8000-000000000002",
+      "kind": "Aft2Mile",
+      "date": "2026-05-16",
+      "name": "AFT 2-mile",
+      "distanceMeters": 3218.688,
+      "seconds": 900,
+      "altitudeMeters": 300,
+      "vdot": 40.393466949432515,
+      "isAnchor": false,
+      "removable": false,
+      "note": "run after four other events, so it sets a floor"
+    },
+    {
+      "id": "00000008-0000-4000-8000-000000000001",
+      "kind": "Aft2Mile",
+      "date": "2026-01-16",
+      "name": "AFT 2-mile",
+      "distanceMeters": 3218.688,
+      "seconds": 960,
+      "altitudeMeters": 300,
+      "vdot": 37.47290136336112,
+      "isAnchor": false,
+      "removable": false,
+      "note": "run after four other events, so it sets a floor"
+    }
+  ],
+  "skippedTests": [],
+  "places": []
 }

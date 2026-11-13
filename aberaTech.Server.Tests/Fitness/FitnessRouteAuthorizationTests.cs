@@ -64,6 +64,10 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         ["DELETE", $"/api/fitness/aft/{FitnessSeed.Id(8, 1)}"],
         ["PATCH", "/api/fitness/settings"],
         ["GET", "/api/fitness/thresholds"],
+        ["POST", "/api/fitness/races"],
+        ["DELETE", $"/api/fitness/races/{Guid.Empty}"],
+        ["POST", "/api/fitness/places"],
+        ["DELETE", $"/api/fitness/places/{Guid.Empty}"],
         ["POST", "/api/fitness/thresholds"],
         ["DELETE", $"/api/fitness/thresholds/{Guid.Empty}"],
         ["POST", "/api/fitness/body-metrics"],
@@ -385,6 +389,79 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, last.StatusCode);
     }
 
+    private async Task<JsonElement> SummaryAsync(HttpClient owner) =>
+        await owner.GetFromJsonAsync<JsonElement>("/api/fitness/summary");
+
+    [Fact]
+    public async Task A_race_entered_by_hand_becomes_the_anchor_and_can_be_taken_back()
+    {
+        using var owner = Owner_();
+
+        // The seed's newest test is an AFT 30 days ago; this 10K is newer.
+        using var raced = await owner.PostAsJsonAsync("/api/fitness/races", new
+        {
+            date = Day(-5), name = "Turkey Trot 10K", distanceMeters = 10_000.0, seconds = 2700.0, altitudeMeters = 0.0,
+        });
+        var summary = await SummaryAsync(owner);
+        var anchor = summary.GetProperty("anchor");
+
+        Assert.Equal(HttpStatusCode.NoContent, raced.StatusCode);
+        Assert.Equal("Entered", anchor.GetProperty("kind").GetString());
+        Assert.Equal(Day(-5), anchor.GetProperty("on").GetString());
+        Assert.False(anchor.GetProperty("floor").GetBoolean());
+        Assert.Equal(aberaTech.Fitness.Domain.Vdot.FromRace(10_000, 45), anchor.GetProperty("vdot").GetDouble(), 6);
+        Assert.Equal(anchor.GetProperty("vdot").GetDouble(), summary.GetProperty("settings").GetProperty("startVdot").GetDouble(), 6);
+
+        var race = summary.GetProperty("efforts").EnumerateArray().Single(e => e.GetProperty("kind").GetString() == "Entered");
+        Assert.True(race.GetProperty("isAnchor").GetBoolean());
+        Assert.True(race.GetProperty("removable").GetBoolean());
+
+        using var removed = await owner.DeleteAsync($"/api/fitness/races/{race.GetProperty("id").GetString()}");
+        Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        Assert.NotEqual("Entered", (await SummaryAsync(owner)).GetProperty("anchor").GetProperty("kind").GetString());
+    }
+
+    [Fact]
+    public async Task A_race_with_nonsense_in_it_is_refused()
+    {
+        using var owner = Owner_();
+
+        using var future = await owner.PostAsJsonAsync("/api/fitness/races", new { date = Day(3), name = "5K", distanceMeters = 5000.0, seconds = 1200.0 });
+        using var tooShort = await owner.PostAsJsonAsync("/api/fitness/races", new { date = Day(-3), name = "Sprint", distanceMeters = 400.0, seconds = 60.0 });
+        using var nameless = await owner.PostAsJsonAsync("/api/fitness/races", new { date = Day(-3), name = " ", distanceMeters = 5000.0, seconds = 1200.0 });
+        using var anchorViaSettings = await owner.PatchAsJsonAsync("/api/fitness/settings", new { anchorDistanceMeters = 5000.0, anchorSeconds = 1200.0 });
+
+        Assert.All(
+            [future, tooShort, nameless, anchorViaSettings],
+            response => Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode));
+    }
+
+    [Fact]
+    public async Task Each_test_is_scored_at_the_altitude_of_where_it_was_run()
+    {
+        using var owner = Owner_();
+        var before = (await SummaryAsync(owner)).GetProperty("efforts").EnumerateArray()
+            .Single(e => e.GetProperty("date").GetString() == Day(-30));
+
+        // Lived at 1,186 m when the AFT 30 days ago was run, at sea level from 10 days ago.
+        using var high = await owner.PostAsJsonAsync("/api/fitness/places", new { since = Day(-60), place = "El Paso", altitudeMeters = 1186.0 });
+        using var low = await owner.PostAsJsonAsync("/api/fitness/places", new { since = Day(-10), place = "Washington", altitudeMeters = 15.0 });
+        using var twice = await owner.PostAsJsonAsync("/api/fitness/places", new { since = Day(-10), place = "Again", altitudeMeters = 15.0 });
+        var summary = await SummaryAsync(owner);
+        var after = summary.GetProperty("efforts").EnumerateArray()
+            .Single(e => e.GetProperty("date").GetString() == Day(-30));
+
+        Assert.Equal(HttpStatusCode.NoContent, high.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, low.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, twice.StatusCode);
+        Assert.Equal(1186, after.GetProperty("altitudeMeters").GetDouble());
+        Assert.True(after.GetProperty("vdot").GetDouble() > before.GetProperty("vdot").GetDouble());
+        // The times shown are for where the athlete is today.
+        Assert.Equal(15, summary.GetProperty("settings").GetProperty("homeAltitudeMeters").GetDouble());
+        var current = summary.GetProperty("places").EnumerateArray().Single(p => p.GetProperty("current").GetBoolean());
+        Assert.Equal("Washington", current.GetProperty("place").GetString());
+    }
+
     [Fact]
     public async Task A_settings_save_changes_only_the_fields_it_names()
     {
@@ -434,46 +511,6 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         // The seed's thresholds stand: a profile save cannot clear or overwrite them.
         Assert.Equal(150, settings.ReferenceHr);
         Assert.Equal(172, settings.LtHr);
-    }
-
-    [Fact]
-    public async Task The_anchor_race_is_kept_until_a_vdot_is_typed_over_it()
-    {
-        using var owner = Owner_();
-
-        using var raced = await owner.PatchAsJsonAsync("/api/fitness/settings", new
-        {
-            referenceHr = 150, planMinutesPerWeek = 240, startVdot = 0, vdotMeasuredOn = "2026-04-03",
-            anchorDistanceMeters = 3218.688, anchorSeconds = 1009.0,
-        });
-        var afterRace = await SettingsAsync();
-
-        // The thresholds card saves without the race and with the same VDOT.
-        using var other = await owner.PatchAsJsonAsync("/api/fitness/settings", new
-        {
-            referenceHr = 152, planMinutesPerWeek = 240, startVdot = afterRace.StartVdot, vdotMeasuredOn = "2026-04-03",
-        });
-        var afterOther = await SettingsAsync();
-
-        using var typed = await owner.PatchAsJsonAsync("/api/fitness/settings", new
-        {
-            referenceHr = 152, planMinutesPerWeek = 240, startVdot = 40, vdotMeasuredOn = "2026-04-03",
-        });
-        var afterTyped = await SettingsAsync();
-
-        Assert.Equal(HttpStatusCode.NoContent, raced.StatusCode);
-        Assert.Equal(3218.688, afterRace.AnchorDistanceMeters);
-        Assert.Equal(1009, afterRace.AnchorSeconds);
-        Assert.Equal(1009, afterOther.AnchorSeconds);
-        Assert.Null(afterTyped.AnchorDistanceMeters);
-        Assert.Null(afterTyped.AnchorSeconds);
-        Assert.Equal(40, afterTyped.StartVdot);
-    }
-
-    private async Task<AthleteSettings> SettingsAsync()
-    {
-        using var scope = _app.Factory.Services.CreateScope();
-        return await scope.ServiceProvider.GetRequiredService<FitnessDbContext>().Settings.AsNoTracking().SingleAsync();
     }
 
     [Fact]

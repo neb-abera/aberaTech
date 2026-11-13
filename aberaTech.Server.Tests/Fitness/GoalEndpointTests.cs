@@ -363,7 +363,7 @@ public sealed class GoalEndpointTests : IDisposable
         var running = Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trajectory").ToArray();
         Assert.NotEmpty(running);
         Assert.All(running, f => Assert.Contains(
-            $"a new time trial, because the VDOT anchor of {FitnessApp.Now.InUtc().Date.PlusDays(-(Highlights.AnchorStaleAfterDays + 30)):yyyy-MM-dd} is {Highlights.AnchorStaleAfterDays + 30} days old",
+            $"a new race or time trial, because the anchor of {FitnessApp.Now.InUtc().Date.PlusDays(-(Highlights.AnchorStaleAfterDays + 30)):yyyy-MM-dd} is {Highlights.AnchorStaleAfterDays + 30} days old",
             f.GetProperty("needsData").GetString()));
     }
 
@@ -409,7 +409,7 @@ public sealed class GoalEndpointTests : IDisposable
         var trajectory = Forecasts(goals).First(f => f.GetProperty("method").GetString() == "trajectory");
         Assert.StartsWith("Banister impulse-response training model (Banister 1975, Busso 2003)", trajectory.GetProperty("model").GetString());
         Assert.StartsWith("runs from ", trajectory.GetProperty("sources").GetString());
-        Assert.Contains("the time trial of ", trajectory.GetProperty("sources").GetString());
+        Assert.Contains("the VDOT typed into your profile on ", trajectory.GetProperty("sources").GetString());
         Assert.True(LocalDatePattern(trajectory.GetProperty("dataFrom").GetString()!) <= LocalDatePattern(trajectory.GetProperty("dataThrough").GetString()!));
 
         Assert.All(Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trend"),

@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261113152407_ThresholdLog";
+    public override string LastMigrationId => "20261113174003_RacesAndPlaces";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -415,6 +415,39 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Documents");
             });
 
+        modelBuilder.Entity("aberaTech.Fitness.Data.RaceResult", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<double?>("AltitudeMeters")
+                    .HasColumnType("double precision");
+
+                b.Property<LocalDate>("Date")
+                    .HasColumnType("date");
+
+                b.Property<double>("DistanceMeters")
+                    .HasColumnType("double precision");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)");
+
+                b.Property<Instant>("RecordedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<double>("Seconds")
+                    .HasColumnType("double precision");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Date");
+
+                b.ToTable("RaceResults");
+            });
+
         modelBuilder.Entity("aberaTech.Fitness.Data.StrengthSet", b =>
             {
                 b.Property<Guid>("Id")
@@ -501,6 +534,28 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("Kind", "MeasuredOn");
 
                 b.ToTable("Thresholds");
+            });
+
+        modelBuilder.Entity("aberaTech.Fitness.Data.TrainingPlace", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<double>("AltitudeMeters")
+                    .HasColumnType("double precision");
+
+                b.Property<string>("Place")
+                    .IsRequired()
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)");
+
+                b.Property<LocalDate?>("Since")
+                    .HasColumnType("date");
+
+                b.HasKey("Id");
+
+                b.ToTable("TrainingPlaces");
             });
 
         modelBuilder.Entity("aberaTech.Fitness.Data.Lap", b =>

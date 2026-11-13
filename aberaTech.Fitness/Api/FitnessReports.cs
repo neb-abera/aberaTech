@@ -137,7 +137,55 @@ public static class FitnessReports
                 durability.DaysOfLog,
                 durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
                 Steps(durability.Steps)),
-            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, row), settings.ReferenceHr, today), settings.ReferenceHr));
+            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, row), settings.ReferenceHr, today), settings.ReferenceHr),
+            AnchorOf(history),
+            (history.Efforts ?? []).Select(e => new EffortDto(
+                e.Id?.ToString(),
+                e.Kind.ToString(),
+                IsoDate(e.Date),
+                e.Name,
+                e.DistanceMeters,
+                e.Seconds,
+                e.AltitudeMeters,
+                e.Vdot,
+                ReferenceEquals(e, history.Anchor?.Effort),
+                e.Kind == EffortKind.Entered,
+                e.Note)).ToArray(),
+            (history.Skipped ?? []).Select(s => new SkippedTestDto(s.ActivityId.ToString(), IsoDate(s.Date), s.Name, s.Reason)).ToArray(),
+            PlacesOf(history, today));
+    }
+
+    private static string IsoDate(LocalDate date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private static AnchorDto? AnchorOf(TrainingHistory history)
+    {
+        if (history.Anchor is not { } anchor) return null;
+        var effort = anchor.Effort;
+        return new AnchorDto(
+            anchor.Vdot,
+            anchor.On is { } on ? IsoDate(on) : null,
+            effort?.Kind.ToString() ?? "Default",
+            effort?.Name,
+            effort is { Kind: not EffortKind.TypedVdot } ? effort.DistanceMeters : null,
+            effort is { Kind: not EffortKind.TypedVdot } ? effort.Seconds : null,
+            effort is { Kind: not EffortKind.TypedVdot } ? effort.AltitudeMeters : null,
+            anchor.Floor,
+            anchor.Why);
+    }
+
+    private static IReadOnlyList<PlaceDto> PlacesOf(TrainingHistory history, LocalDate today)
+    {
+        var places = history.Places ?? [];
+        var current = places
+            .Where(p => p.Since is null || p.Since <= today)
+            .OrderByDescending(p => p.Since ?? LocalDate.MinIsoValue)
+            .FirstOrDefault();
+        return places.Select(p => new PlaceDto(
+            p.Id.ToString(),
+            p.Since is { } since ? IsoDate(since) : null,
+            p.Place,
+            p.AltitudeMeters,
+            ReferenceEquals(p, current))).ToArray();
     }
 
     private static AerobicOutlookDto Outlook(AerobicOutlookResult result, int referenceHr) =>
@@ -687,7 +735,7 @@ public static class FitnessReports
             return null;
         }
 
-        var peakVdot = Vdot.FromRace(distance, Altitude.ToSeaLevel(seconds, row.HomeAltitudeMeters) / 60.0);
+        var peakVdot = Vdot.FromRace(distance, Altitude.ToSeaLevel(seconds, row.PastPeakAltitudeMeters ?? row.HomeAltitudeMeters) / 60.0);
 
         if (row is { BirthYear: { } birthYear, PastPeakYear: { } peakYear })
         {

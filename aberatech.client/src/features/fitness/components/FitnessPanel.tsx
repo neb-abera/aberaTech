@@ -25,9 +25,11 @@ import { AerobicTrendChart } from "./charts";
 import DataPanel from "./DataPanel";
 import DigestCard from "./DigestCard";
 import DurabilityCard from "./DurabilityCard";
+import EffortsCard from "./EffortsCard";
 import GoalsPanel from "./GoalsPanel";
 import LessonsCard from "./LessonsCard";
 import OutlookCard from "./OutlookCard";
+import PlacesCard from "./PlacesCard";
 import ProjectionPanel from "./ProjectionPanel";
 import ReadinessPanel from "./ReadinessPanel";
 import SourcesPanel from "./SourcesPanel";
@@ -229,7 +231,14 @@ export default function FitnessPanel() {
             <Dashboard summary={summary} onSettingsChanged={reloadSummary} />
           </LogPart>
           <LogPart title="Tests and body">
-            <ReadinessPanel readiness={summary.readiness} />
+            <Stack spacing={3}>
+              <EffortsCard summary={summary} onChanged={reloadSummary} />
+              <PlacesCard
+                places={summary.places ?? []}
+                onChanged={reloadSummary}
+              />
+              <ReadinessPanel readiness={summary.readiness} />
+            </Stack>
           </LogPart>
           <LogPart title="Bring data in">
             <DataPanel

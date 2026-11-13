@@ -15,34 +15,7 @@ import {
 } from "../core/api";
 import { formatSeconds, kgToLb, lbToKg } from "../core/format";
 
-const MILE = 1609.344;
-
-const RACE_DISTANCES: { label: string; meters: number }[] = [
-  { label: "1.5 mile", meters: 1.5 * MILE },
-  { label: "2 mile", meters: 2 * MILE },
-  { label: "5K", meters: 5000 },
-  { label: "5 mile", meters: 5 * MILE },
-  { label: "10K", meters: 10_000 },
-];
-
-const FEET_PER_METER = 3.28084;
-
-function parseRaceTime(value: string): number | null {
-  const parts = value.split(":").map(Number);
-  if (parts.length !== 2 || parts.some((p) => !Number.isFinite(p))) {
-    return null;
-  }
-  const seconds = parts[0] * 60 + parts[1];
-  return seconds > 0 ? seconds : null;
-}
-
-function distanceLabel(meters: number | null): string {
-  return (
-    RACE_DISTANCES.find(
-      (d) => meters !== null && Math.abs(d.meters - meters) < 1,
-    )?.label ?? `${Math.round(meters ?? 0)} m`
-  );
-}
+import { MILE, parseRaceTime, RACE_DISTANCES } from "./raceDistances";
 
 type Status = { ok: boolean; text: string } | null;
 
@@ -94,10 +67,10 @@ function Part({
 }
 
 /**
- * The athlete's history and context, in four parts that save on their own.
+ * The athlete's history and context, in parts that save on their own.
  * Until 2026-11-04 one Save sent every field, so changing the hours appeared
- * to re-submit the anchor race with it (Neb). A race is a dated record: the
- * current one is shown, and a newer one is entered in empty fields.
+ * to re-submit the anchor race with it (Neb). Since 2026-11-13 races are kept
+ * on the Races and time trials card, and altitude on the place log.
  */
 export default function ProfileCard({
   settings,
@@ -114,12 +87,6 @@ export default function ProfileCard({
       : String(settings.sustainedWeeklyHours),
   );
   const [hoursStatus, setHoursStatus] = React.useState<Status>(null);
-
-  // A newer anchor race: empty until one is entered.
-  const [anchorDistance, setAnchorDistance] = React.useState(2 * MILE);
-  const [anchorTime, setAnchorTime] = React.useState("");
-  const [anchorDate, setAnchorDate] = React.useState("");
-  const [anchorStatus, setAnchorStatus] = React.useState<Status>(null);
 
   // Lifetime best.
   const [peakDistance, setPeakDistance] = React.useState(
@@ -146,9 +113,6 @@ export default function ProfileCard({
   );
   const [birthYear, setBirthYear] = React.useState(
     settings.birthYear === null ? "" : String(settings.birthYear),
-  );
-  const [altitudeFt, setAltitudeFt] = React.useState(
-    String(Math.round(settings.homeAltitudeMeters * FEET_PER_METER)),
   );
   const [goalWeightLb, setGoalWeightLb] = React.useState(
     settings.goalWeightKg === null
@@ -187,33 +151,6 @@ export default function ProfileCard({
     );
   };
 
-  const saveAnchor = () => {
-    const seconds = parseRaceTime(anchorTime);
-    if (seconds === null) {
-      setAnchorStatus({ ok: false, text: "Time must look like 16:49." });
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate)) {
-      setAnchorStatus({ ok: false, text: "Give the date the race was run." });
-      return;
-    }
-    void send(
-      {
-        anchorDistanceMeters: anchorDistance,
-        anchorSeconds: seconds,
-        vdotMeasuredOn: anchorDate,
-      },
-      `Recorded a ${distanceLabel(anchorDistance)} in ${anchorTime} on ${anchorDate} as the anchor. Nothing else changed.`,
-      (s) => {
-        setAnchorStatus(s);
-        if (s?.ok) {
-          setAnchorTime("");
-          setAnchorDate("");
-        }
-      },
-    );
-  };
-
   const savePeak = () => {
     const seconds = peakTime.trim() === "" ? null : parseRaceTime(peakTime);
     if (peakTime.trim() !== "" && seconds === null) {
@@ -241,11 +178,6 @@ export default function ProfileCard({
   };
 
   const saveAbout = () => {
-    const altitude = Number(altitudeFt);
-    if (!Number.isFinite(altitude) || altitude < 0 || altitude > 15000) {
-      setAboutStatus({ ok: false, text: "Altitude must be 0-15000 ft." });
-      return;
-    }
     const goal = Number(goalWeightLb);
     if (
       goalWeightLb.trim() !== "" &&
@@ -261,7 +193,6 @@ export default function ProfileCard({
       {
         female: book === "unstated" ? null : book === "women",
         birthYear: birthYear.trim() === "" ? null : Number(birthYear),
-        homeAltitudeMeters: altitude / FEET_PER_METER,
         goalWeightKg: goalWeightLb.trim() === "" ? null : lbToKg(goal),
       },
       "Saved. Nothing else changed.",
@@ -294,47 +225,6 @@ export default function ProfileCard({
               helperText="Held for a month without breaking down"
               slotProps={{ htmlInput: { min: 0, max: 40, step: 0.5 } }}
               sx={{ width: 260 }}
-            />
-          </Part>
-
-          <Part
-            title="Anchor race"
-            help={`The race every run forecast starts from. Now: VDOT ${settings.startVdot.toFixed(1)}${
-              settings.vdotMeasuredOn
-                ? `, from a race on ${settings.vdotMeasuredOn}`
-                : ""
-            }. Enter a newer race to replace it.`}
-            status={anchorStatus}
-            onSave={saveAnchor}
-            saveLabel="Record race"
-          >
-            <TextField
-              select
-              label="Distance"
-              value={anchorDistance}
-              onChange={(event) =>
-                setAnchorDistance(Number(event.target.value))
-              }
-              sx={{ minWidth: 140 }}
-            >
-              {RACE_DISTANCES.map((d) => (
-                <MenuItem key={d.label} value={d.meters}>
-                  {d.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Time (m:ss)"
-              value={anchorTime}
-              onChange={(event) => setAnchorTime(event.target.value)}
-              sx={{ width: 160 }}
-            />
-            <TextField
-              label="Race date"
-              type="date"
-              value={anchorDate}
-              onChange={(event) => setAnchorDate(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Part>
 
@@ -381,7 +271,7 @@ export default function ProfileCard({
 
           <Part
             title="About you"
-            help="Age, record book, altitude, and the weight the projection opens at."
+            help="Age, record book, and the weight the projection opens at. Altitude is set by the place log."
             status={aboutStatus}
             onSave={saveAbout}
           >
@@ -403,12 +293,6 @@ export default function ProfileCard({
               value={birthYear}
               onChange={(event) => setBirthYear(event.target.value)}
               sx={{ width: 140 }}
-            />
-            <TextField
-              label="Home altitude (ft)"
-              value={altitudeFt}
-              onChange={(event) => setAltitudeFt(event.target.value)}
-              sx={{ width: 170 }}
             />
             <TextField
               label="Goal race weight (lb)"

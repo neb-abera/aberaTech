@@ -162,7 +162,7 @@ public static class Information
         foreach (var option in options.Take(4))
         {
             var what = option.Kind == ObservationKind.TimeTrial
-                ? "a time trial"
+                ? "a race or time trial at any distance"
                 : "a month of logged runs";
             trace.Add(
                 option.AtMonths <= 0.01 ? $"{what}, now" : $"{what}, in {option.AtMonths:0.#} months",

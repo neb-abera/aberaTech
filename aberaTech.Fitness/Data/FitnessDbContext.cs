@@ -13,6 +13,8 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
     public DbSet<AftResult> AftResults => Set<AftResult>();
     public DbSet<FbiResult> FbiResults => Set<FbiResult>();
     public DbSet<ThresholdEntry> Thresholds => Set<ThresholdEntry>();
+    public DbSet<RaceResult> RaceResults => Set<RaceResult>();
+    public DbSet<TrainingPlace> TrainingPlaces => Set<TrainingPlace>();
     public DbSet<Lap> Laps => Set<Lap>();
     public DbSet<SyncState> SyncStates => Set<SyncState>();
     public DbSet<OwnerDocument> Documents => Set<OwnerDocument>();
@@ -78,6 +80,10 @@ public class FitnessDbContext(DbContextOptions<FitnessDbContext> options) : DbCo
         modelBuilder.Entity<ThresholdEntry>().Property(t => t.Kind).HasMaxLength(16);
         modelBuilder.Entity<ThresholdEntry>().Property(t => t.Source).HasMaxLength(200);
         modelBuilder.Entity<ThresholdEntry>().HasIndex(t => new { t.Kind, t.MeasuredOn });
+
+        modelBuilder.Entity<RaceResult>().Property(r => r.Name).HasMaxLength(128);
+        modelBuilder.Entity<RaceResult>().HasIndex(r => r.Date);
+        modelBuilder.Entity<TrainingPlace>().Property(p => p.Place).HasMaxLength(128);
 
         modelBuilder.Entity<OwnerDocument>().HasKey(d => d.Key);
         modelBuilder.Entity<OwnerDocument>().Property(d => d.Key).HasMaxLength(64);
