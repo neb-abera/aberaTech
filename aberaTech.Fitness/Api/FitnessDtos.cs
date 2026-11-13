@@ -55,7 +55,10 @@ public sealed record SettingsDto(
     int? LtHr = null,
     /// <summary>The incline treadmill runs are set to, from <see cref="TreadmillGradeSince"/> on.</summary>
     double? TreadmillGradePercent = null,
-    string? TreadmillGradeSince = null);
+    string? TreadmillGradeSince = null,
+    /// <summary>The race the anchor VDOT was scored from, when one was given.</summary>
+    double? AnchorDistanceMeters = null,
+    double? AnchorSeconds = null);
 
 public sealed record TrainingPaceDto(
     string Zone,

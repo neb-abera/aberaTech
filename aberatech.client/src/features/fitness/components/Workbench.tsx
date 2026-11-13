@@ -11,6 +11,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Radio from "@mui/material/Radio";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
+import { useTheme } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -68,6 +69,46 @@ const UNKNOWNS: {
     hint: "lifting the target needs",
   },
 ];
+
+/**
+ * The two axes the contour draws, and what each box may offer. The factor
+ * being solved for is an output, so it cannot also be an axis: picking a
+ * value for it would be picking the answer. Each box lists only plottable
+ * factors other than the one on the other axis, and its value is the axis
+ * actually drawn. Before 2026-11-13 the menus filtered on the raw choice, so
+ * Across showed blank while months were drawn across, and some picks did
+ * nothing.
+ */
+export function plotAxes(
+  unknown: FactorName | "RaceTime",
+  across: FactorName,
+  down: FactorName,
+  hasMass: boolean,
+) {
+  const choices = (
+    ["WeeklyHours", "Months", "RaceMassKg", "StrengthHours"] as FactorName[]
+  ).filter(
+    (factor) => factor !== unknown && !(factor === "RaceMassKg" && !hasMass),
+  );
+  const plotAcross = choices.includes(across) ? across : choices[0];
+  const plotDown =
+    choices.includes(down) && down !== plotAcross
+      ? down
+      : (choices.find((factor) => factor !== plotAcross) ?? plotAcross);
+  const options = (other: FactorName) =>
+    UNKNOWNS.filter(
+      (o) =>
+        o.key !== "RaceTime" &&
+        o.key !== other &&
+        choices.includes(o.key as FactorName),
+    );
+  return {
+    across: plotAcross,
+    down: plotDown,
+    acrossOptions: options(plotDown),
+    downOptions: options(plotAcross),
+  };
+}
 
 interface WorkbenchState {
   distanceMeters: number;
@@ -144,6 +185,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
     ? Math.round(kgToLb(summary.settings.currentWeightKg))
     : null;
 
+  const theme = useTheme();
   const [unknown, setUnknown] = React.useState<FactorName | "RaceTime">(
     "WeeklyHours",
   );
@@ -214,20 +256,9 @@ export default function Workbench({ summary }: { summary: Summary }) {
     value: WorkbenchState[K],
   ) => setState((previous) => ({ ...previous, [key]: value }));
 
-  // The factor being solved for is an output, so it cannot also be an axis to
-  // drag along — picking a value for it would be picking the answer.
-  const axisChoices = (
-    ["WeeklyHours", "Months", "RaceMassKg", "StrengthHours"] as FactorName[]
-  ).filter(
-    (factor) =>
-      factor !== unknown &&
-      !(factor === "RaceMassKg" && currentMassLb === null),
-  );
-  const plotAcross = axisChoices.includes(across) ? across : axisChoices[0];
-  const plotDown =
-    axisChoices.includes(down) && down !== plotAcross
-      ? down
-      : (axisChoices.find((factor) => factor !== plotAcross) ?? plotAcross);
+  const axes = plotAxes(unknown, across, down, currentMassLb !== null);
+  const plotAcross = axes.across;
+  const plotDown = axes.down;
 
   // Aborted, not merely ignored. A solve is a few hundred milliseconds of
   // arithmetic on the server, and a drag settles several times: dropping the
@@ -714,9 +745,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   }
                   sx={{ minWidth: 150 }}
                 >
-                  {UNKNOWNS.filter(
-                    (o) => o.key !== "RaceTime" && o.key !== down,
-                  ).map((o) => (
+                  {axes.acrossOptions.map((o) => (
                     <MenuItem key={o.key} value={o.key}>
                       {o.label}
                     </MenuItem>
@@ -732,9 +761,7 @@ export default function Workbench({ summary }: { summary: Summary }) {
                   }
                   sx={{ minWidth: 150 }}
                 >
-                  {UNKNOWNS.filter(
-                    (o) => o.key !== "RaceTime" && o.key !== across,
-                  ).map((o) => (
+                  {axes.downOptions.map((o) => (
                     <MenuItem key={o.key} value={o.key}>
                       {o.label}
                     </MenuItem>
@@ -745,9 +772,11 @@ export default function Workbench({ summary }: { summary: Summary }) {
                 variant="body2"
                 sx={{ color: "text.secondary", mb: 1 }}
               >
-                Darker is faster. The orange line is every combination that hits
-                your target exactly — the trade you are actually making. Click
-                the field to move both factors there.
+                {/* The ramp mixes the theme's blue into the card, so a faster
+                    cell is darker on a light card and brighter on a dark one. */}
+                {theme.palette.mode === "dark" ? "Brighter" : "Darker"} is
+                faster. The orange line is every combination that hits your
+                target exactly. Click the field to move both factors there.
               </Typography>
               {surface && (
                 <ContourPlot

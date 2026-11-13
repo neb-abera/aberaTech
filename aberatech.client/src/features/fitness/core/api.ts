@@ -41,6 +41,9 @@ export interface SettingsDto {
   treadmillGradePercent?: number | null;
   /** yyyy-mm-dd: the first day treadmill runs were at that incline. */
   treadmillGradeSince?: string | null;
+  /** The race the anchor VDOT was scored from, when one was given. */
+  anchorDistanceMeters?: number | null;
+  anchorSeconds?: number | null;
 }
 
 export interface SettingsUpdate {

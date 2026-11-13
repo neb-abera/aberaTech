@@ -511,10 +511,15 @@ public static class FitnessEndpoints
                 row.StartVdot = Domain.Vdot.FromRace(
                     anchorDistance,
                     Domain.Altitude.ToSeaLevel(anchorSeconds, update.HomeAltitudeMeters) / 60.0);
+                row.AnchorDistanceMeters = anchorDistance;
+                row.AnchorSeconds = anchorSeconds;
             }
-            else
+            else if (Math.Abs(update.StartVdot - row.StartVdot) > 1e-6)
             {
+                // A typed VDOT replaces the race it came from.
                 row.StartVdot = update.StartVdot;
+                row.AnchorDistanceMeters = null;
+                row.AnchorSeconds = null;
             }
 
             await database.SaveChangesAsync(cancellationToken);

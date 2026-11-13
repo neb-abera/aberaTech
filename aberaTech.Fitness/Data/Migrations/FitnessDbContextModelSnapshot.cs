@@ -152,6 +152,12 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
 
                 NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(id);
 
+                b.Property<double?>("AnchorDistanceMeters")
+                    .HasColumnType("double precision");
+
+                b.Property<double?>("AnchorSeconds")
+                    .HasColumnType("double precision");
+
                 b.Property<double>("AvailableHoursPerWeek")
                     .HasColumnType("double precision");
 

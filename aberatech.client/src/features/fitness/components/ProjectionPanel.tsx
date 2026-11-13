@@ -400,6 +400,22 @@ export function parseDistance(text: string): number | null {
   }
 }
 
+/**
+ * Which result the anchor VDOT was scored from, named by its distance and
+ * time. "Time trial" alone left Neb asking on 2026-11-13 whether it meant
+ * the AeT test, a 2-mile, or a 5-mile. It was the 2-mile of his AFT.
+ */
+export function anchorSource(settings: Summary["settings"]): string {
+  const { anchorDistanceMeters, anchorSeconds, vdotMeasuredOn } = settings;
+  if (anchorDistanceMeters && anchorSeconds) {
+    const on = vdotMeasuredOn ? ` on ${vdotMeasuredOn}` : "";
+    return ` (from a ${formatDistance(anchorDistanceMeters)} run in ${formatSeconds(anchorSeconds)}${on})`;
+  }
+  return vdotMeasuredOn
+    ? ` (entered as a VDOT, measured on ${vdotMeasuredOn})`
+    : " (a default, not a measurement)";
+}
+
 function Anchor({
   summary,
   prediction,
@@ -414,9 +430,7 @@ function Anchor({
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           Every projection below launches from your measured anchor:{" "}
           <strong>VDOT {summary.settings.startVdot.toFixed(1)}</strong>
-          {summary.settings.vdotMeasuredOn
-            ? ` (time trial on ${summary.settings.vdotMeasuredOn})`
-            : " (default — record a fresh time trial in settings to reset it)"}
+          {anchorSource(summary.settings)}
           {prediction?.reclaimVdot != null && (
             <>
               . You have held{" "}
