@@ -8,7 +8,6 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { type SettingsDto, saveSettings } from "../core/api";
 import { formatPace } from "../core/format";
-import { unchanged } from "./ProfileCard";
 
 /** The ACSM running equation's vertical cost over its horizontal cost: 0.9 / 0.2. */
 export const COST_RATIO = 4.5;
@@ -62,7 +61,6 @@ export default function TreadmillGradeCard({
   ) => {
     try {
       await saveSettings({
-        ...unchanged(settings),
         treadmillGradePercent,
         treadmillGradeSince,
       });

@@ -53,7 +53,7 @@ describe("TreadmillGradeCard", () => {
     expect(flatPace(360, 0)).toBe(360);
   });
 
-  it("saves the incline and its start date and keeps every other setting", async () => {
+  it("saves the incline and its start date, and sends nothing else", async () => {
     const fetchMock = stubPut();
     const onSaved = vi.fn();
     render(
@@ -79,8 +79,10 @@ describe("TreadmillGradeCard", () => {
     const body = sentBody(fetchMock);
     expect(body.treadmillGradePercent).toBe(1);
     expect(body.treadmillGradeSince).toBe("2026-10-20");
-    expect(body.ltHr).toBe(168);
-    expect(body.birthYear).toBe(1991);
+    expect(Object.keys(body).sort()).toEqual([
+      "treadmillGradePercent",
+      "treadmillGradeSince",
+    ]);
   });
 
   it("refuses an incline without a date before it reaches the server", async () => {

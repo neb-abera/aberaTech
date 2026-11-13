@@ -60,11 +60,9 @@ describe("ProfileCard", () => {
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const body = sent(fetch);
+    // Only this part's own fields: nothing else can be written back stale.
+    expect(Object.keys(body)).toEqual(["sustainedWeeklyHours"]);
     expect(body.sustainedWeeklyHours).toBe(8);
-    expect(body.availableHoursPerWeek).toBe(7);
-    expect(body.anchorSeconds).toBeNull();
-    expect(body.vdotMeasuredOn).toBe("2026-04-03");
-    expect(body.pastPeakSeconds).toBe(765);
     expect(await within(hours).findByText(/Nothing else changed/)).toBeTruthy();
   });
 
@@ -101,6 +99,6 @@ describe("ProfileCard", () => {
     const body = sent(fetch);
     expect(body.anchorSeconds).toBe(930);
     expect(body.vdotMeasuredOn).toBe("2026-11-20");
-    expect(body.availableHoursPerWeek).toBe(7);
+    expect(body).not.toHaveProperty("availableHoursPerWeek");
   });
 });

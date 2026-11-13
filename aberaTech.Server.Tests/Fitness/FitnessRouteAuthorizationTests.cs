@@ -62,7 +62,7 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         ["DELETE", $"/api/fitness/activities/{FitnessSeed.Id(1, 1)}"],
         ["POST", "/api/fitness/aft"],
         ["DELETE", $"/api/fitness/aft/{FitnessSeed.Id(8, 1)}"],
-        ["PUT", "/api/fitness/settings"],
+        ["PATCH", "/api/fitness/settings"],
         ["GET", "/api/fitness/thresholds"],
         ["POST", "/api/fitness/thresholds"],
         ["DELETE", $"/api/fitness/thresholds/{Guid.Empty}"],
@@ -386,11 +386,40 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_settings_save_changes_only_the_fields_it_names()
+    {
+        using var owner = Owner_();
+
+        // Two cards, each saving its own field from its own copy of the page.
+        using var hours = await owner.PatchAsJsonAsync("/api/fitness/settings", new { availableHoursPerWeek = 9 });
+        using var weight = await owner.PatchAsJsonAsync("/api/fitness/settings", new { goalWeightKg = 74.8 });
+        using var cleared = await owner.PatchAsJsonAsync("/api/fitness/settings", new { sustainedWeeklyHours = (double?)null });
+        using var unknown = await owner.PatchAsJsonAsync("/api/fitness/settings", new { notASetting = 1 });
+        using var wrongType = await owner.PatchAsJsonAsync("/api/fitness/settings", new { birthYear = "nineteen" });
+
+        Assert.Equal(HttpStatusCode.NoContent, hours.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, weight.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, cleared.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, wrongType.StatusCode);
+
+        using var scope = _app.Factory.Services.CreateScope();
+        var settings = await scope.ServiceProvider.GetRequiredService<FitnessDbContext>().Settings.SingleAsync();
+        Assert.Equal(9, settings.AvailableHoursPerWeek);
+        Assert.Equal(74.8, settings.GoalWeightKg);
+        Assert.Null(settings.SustainedWeeklyHours);
+        // Untouched by any of the three.
+        Assert.Equal(1992, settings.BirthYear);
+        Assert.Equal(44, settings.StartVdot);
+        Assert.Equal(300, settings.HomeAltitudeMeters);
+    }
+
+    [Fact]
     public async Task Settings_are_saved_and_never_touch_the_thresholds()
     {
         using var owner = Owner_();
 
-        using var saved = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        using var saved = await owner.PatchAsJsonAsync("/api/fitness/settings", new
         {
             referenceHr = 30, ltHr = (int?)null, ltSecondsPerKm = (double?)null,
             planMinutesPerWeek = 240, startVdot = 45, availableHoursPerWeek = 8
@@ -412,7 +441,7 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
     {
         using var owner = Owner_();
 
-        using var raced = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        using var raced = await owner.PatchAsJsonAsync("/api/fitness/settings", new
         {
             referenceHr = 150, planMinutesPerWeek = 240, startVdot = 0, vdotMeasuredOn = "2026-04-03",
             anchorDistanceMeters = 3218.688, anchorSeconds = 1009.0,
@@ -420,13 +449,13 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         var afterRace = await SettingsAsync();
 
         // The thresholds card saves without the race and with the same VDOT.
-        using var other = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        using var other = await owner.PatchAsJsonAsync("/api/fitness/settings", new
         {
             referenceHr = 152, planMinutesPerWeek = 240, startVdot = afterRace.StartVdot, vdotMeasuredOn = "2026-04-03",
         });
         var afterOther = await SettingsAsync();
 
-        using var typed = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        using var typed = await owner.PatchAsJsonAsync("/api/fitness/settings", new
         {
             referenceHr = 152, planMinutesPerWeek = 240, startVdot = 40, vdotMeasuredOn = "2026-04-03",
         });
@@ -690,7 +719,7 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
     private static Task<HttpResponseMessage> Send(HttpClient client, string method, string path)
     {
         var request = new HttpRequestMessage(HttpMethod.Parse(method), path);
-        if (method is "POST" or "PUT")
+        if (method is "POST" or "PUT" or "PATCH")
         {
             // Authorization runs before the body is read; an empty object is
             // enough to show that, whatever the route would have done with it.
