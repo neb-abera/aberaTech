@@ -80,7 +80,7 @@ export default function DurabilityCard({
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
           Load is hours weighted by what each zone costs to recover from. The
           ratio is this week over the average of the last four (Gabbett: safe
-          0.8–1.3, risk climbs past 1.5); monotony is the week&apos;s mean daily
+          0.8–1.3, risk climbs past 1.5). Monotony is the week&apos;s mean daily
           load over its spread (Foster: over 2.0 the week has no contrast).
         </Typography>
 
