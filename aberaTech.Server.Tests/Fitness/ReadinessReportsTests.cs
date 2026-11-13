@@ -66,6 +66,52 @@ public sealed class ReadinessReportsTests
         Assert.False(measurements.ContainsKey(SelectionReadiness.Metrics.DeadliftTripleToBodyweight));
     }
 
+    private static DatedSet Bench(LocalDate date, double pounds, int reps) => new(
+        new StrengthSet
+        {
+            Id = Guid.NewGuid(),
+            ActivityId = Guid.NewGuid(),
+            Exercise = "Bench Press (Barbell)",
+            WeightKg = pounds / BodyMass.PoundsPerKg,
+            Reps = reps,
+        },
+        date.AtMidnight().InUtc().ToInstant());
+
+    [Fact]
+    public void A_lift_names_the_set_it_came_from_and_a_light_day_does_not_drag_its_trend()
+    {
+        // Neb's bench, 2026-11: 155 lb for 10 is a 207 lb single by Epley.
+        DatedSet[] sets =
+        [
+            Bench(new LocalDate(2026, 10, 20), 150, 9),
+            Bench(new LocalDate(2026, 10, 31), 135, 8),
+            Bench(new LocalDate(2026, 11, 3), 155, 10),
+            Bench(new LocalDate(2026, 11, 8), 135, 15),
+            Bench(new LocalDate(2026, 11, 8), 155, 9),
+            Bench(new LocalDate(2026, 11, 11), 155, 10),
+        ];
+        var measurements = new Dictionary<string, Measurement>();
+        var histories = new Dictionary<string, List<DatedValue>>();
+
+        ReadinessReports.Strength(
+            sets, DateTimeZone.Utc, null, new LocalDate(2026, 7, 15), measurements, histories);
+
+        var bench = measurements[SelectionReadiness.Metrics.BenchPressLb];
+        Assert.Equal(155 * (1 + 10 / 30.0), bench.Value, 6);
+        // The newest of the equal sets, named with its reps.
+        Assert.Equal(new LocalDate(2026, 11, 11), bench.On);
+        Assert.StartsWith("155 lb × 10 on 2026-11-11, an Epley one-rep max of 207 lb", bench.Evidence);
+        Assert.Contains("above 10 reps are not counted", bench.Evidence);
+
+        // The 31 Oct day of 135 lb sets reads as the best of its four weeks,
+        // 150 lb x 9 on 20 Oct, not as a 171 lb max.
+        var history = histories[SelectionReadiness.Metrics.BenchPressLb];
+        var light = history.Single(x => x.Date == new LocalDate(2026, 10, 31));
+        Assert.Equal(150 * (1 + 9 / 30.0), light.Value, 6);
+        var after = history.Where(x => x.Date >= new LocalDate(2026, 11, 3)).Select(x => x.Value);
+        Assert.All(after, v => Assert.Equal(155 * (1 + 10 / 30.0), v, 6));
+    }
+
     [Theory]
     [InlineData("Squat (Barbell)", "back squat", true)]
     [InlineData("Back Squat", "back squat", true)]
