@@ -144,6 +144,9 @@ public static class FitnessEndpoints
         // The goals, read from the athlete's own workbook.
         api.MapGoalEndpoints(oneDrive);
 
+        // The thresholds, one value at a time, each kept.
+        api.MapThresholdEndpoints();
+
         // The owner's saved documents, on their own prefix but behind the
         // same policy and the same Development bypass: the training guide
         // and the course planner are the owner's, and a visitor gets neither
@@ -443,12 +446,10 @@ public static class FitnessEndpoints
 
         api.MapPut("/settings", async (SettingsUpdate update, FitnessDbContext database, PosteriorCache cache, CancellationToken cancellationToken) =>
         {
-            if (update.ReferenceHr is < 80 or > 220) return Fail("Reference HR out of range.");
-            if (update.LtHr is < 80 or > 220) return Fail("Lactate-threshold HR out of range.");
-            if (update.LtHr is { } ltHr && ltHr <= update.ReferenceHr)
-            {
-                return Fail("Lactate-threshold HR has to sit above the aerobic-threshold HR.");
-            }
+            // The thresholds are not saved here. Each is logged on its own
+            // through /thresholds and kept, so a profile save can never
+            // overwrite or clear one. The fields stay in the request only so
+            // older pages still parse.
 
             var row = await database.Settings.SingleOrDefaultAsync(s => s.Id == 1, cancellationToken);
             if (row is null)
@@ -482,9 +483,6 @@ public static class FitnessEndpoints
                 return Fail("Weights are 30-250 kg.");
             }
 
-            row.ReferenceHr = update.ReferenceHr;
-            row.LtSecondsPerKm = update.LtSecondsPerKm;
-            row.LtHr = update.LtHr;
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
             row.BirthYear = update.BirthYear;

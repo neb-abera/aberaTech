@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using aberaTech.Fitness.Api;
 using aberaTech.Fitness.Data;
 using aberaTech.Server.Tests.Support;
 using Microsoft.AspNetCore.Hosting;
@@ -62,6 +63,9 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         ["POST", "/api/fitness/aft"],
         ["DELETE", $"/api/fitness/aft/{FitnessSeed.Id(8, 1)}"],
         ["PUT", "/api/fitness/settings"],
+        ["GET", "/api/fitness/thresholds"],
+        ["POST", "/api/fitness/thresholds"],
+        ["DELETE", $"/api/fitness/thresholds/{Guid.Empty}"],
         ["POST", "/api/fitness/body-metrics"],
         ["PUT", "/api/fitness/goals"],
         ["DELETE", "/api/fitness/goals/two-mile"],
@@ -308,27 +312,99 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
         Assert.Equal(0, await CountAsync(database => database.Set<StrengthSet>().CountAsync(set => set.ActivityId == Lift)));
     }
 
+    private static string Day(int offset) =>
+        FitnessApp.Now.InUtc().Date.PlusDays(offset).ToString("yyyy-MM-dd", null);
+
+    private async Task<(AthleteSettings Settings, List<ThresholdEntry> Entries)> ThresholdStateAsync()
+    {
+        using var scope = _app.Factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
+        return (
+            await database.Settings.AsNoTracking().SingleAsync(),
+            await database.Thresholds.AsNoTracking().ToListAsync());
+    }
+
     [Fact]
-    public async Task Settings_are_saved_and_a_heart_rate_nobody_has_is_refused()
+    public async Task A_threshold_is_logged_alone_and_the_newest_test_is_in_use()
+    {
+        using var owner = Owner_();
+
+        using var pace = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "lt-pace", value = 340.0, measuredOn = Day(-2) });
+        var afterPace = await ThresholdStateAsync();
+
+        // An older test, logged for the record, stays out of use.
+        using var older = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "lt-pace", value = 360.0, measuredOn = Day(-30) });
+        var afterOlder = await ThresholdStateAsync();
+
+        Assert.Equal(HttpStatusCode.OK, pace.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, older.StatusCode);
+        Assert.Equal(340, afterPace.Settings.LtSecondsPerKm);
+        Assert.Equal(150, afterPace.Settings.ReferenceHr);
+        Assert.Equal(172, afterPace.Settings.LtHr);
+        Assert.Equal(340, afterOlder.Settings.LtSecondsPerKm);
+        Assert.Equal(2, afterOlder.Entries.Count);
+
+        var list = await owner.GetFromJsonAsync<List<ThresholdEntryDto>>("/api/fitness/thresholds");
+        Assert.Equal([340.0, 360.0], list!.Select(e => e.Value));
+        Assert.Equal([true, false], list!.Select(e => e.Current));
+    }
+
+    [Fact]
+    public async Task A_threshold_nobody_has_or_out_of_order_is_refused()
+    {
+        using var owner = Owner_();
+
+        using var low = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "aet-hr", value = 30.0, measuredOn = Day(-1) });
+        using var belowAet = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "lt-hr", value = 145.0, measuredOn = Day(-1) });
+        using var future = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "aet-hr", value = 150.0, measuredOn = Day(5) });
+        using var undated = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "aet-hr", value = 150.0, measuredOn = "" });
+        using var unknown = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "vo2", value = 50.0, measuredOn = Day(-1) });
+
+        Assert.All(
+            [low, belowAet, future, undated, unknown],
+            response => Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode));
+        Assert.Empty((await ThresholdStateAsync()).Entries);
+    }
+
+    [Fact]
+    public async Task Removing_a_wrong_entry_brings_the_one_before_back()
+    {
+        using var owner = Owner_();
+
+        using var first = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "aet-hr", value = 152.0, measuredOn = Day(-20) });
+        using var wrong = await owner.PostAsJsonAsync("/api/fitness/thresholds", new { kind = "aet-hr", value = 165.0, measuredOn = Day(-1) });
+        var wrongId = (await ThresholdStateAsync()).Entries.Single(e => e.Value == 165).Id;
+        var firstId = (await ThresholdStateAsync()).Entries.Single(e => e.Value == 152).Id;
+
+        using var removed = await owner.DeleteAsync($"/api/fitness/thresholds/{wrongId}");
+        var after = await ThresholdStateAsync();
+        using var last = await owner.DeleteAsync($"/api/fitness/thresholds/{firstId}");
+
+        Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        Assert.Equal(152, after.Settings.ReferenceHr);
+        Assert.Equal(HttpStatusCode.BadRequest, last.StatusCode);
+    }
+
+    [Fact]
+    public async Task Settings_are_saved_and_never_touch_the_thresholds()
     {
         using var owner = Owner_();
 
         using var saved = await owner.PutAsJsonAsync("/api/fitness/settings", new
         {
-            referenceHr = 150, ltHr = 172, planMinutesPerWeek = 240, startVdot = 45, availableHoursPerWeek = 8
-        });
-        using var refused = await owner.PutAsJsonAsync("/api/fitness/settings", new
-        {
-            referenceHr = 30, planMinutesPerWeek = 240, startVdot = 45
+            referenceHr = 30, ltHr = (int?)null, ltSecondsPerKm = (double?)null,
+            planMinutesPerWeek = 240, startVdot = 45, availableHoursPerWeek = 8
         });
 
         Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
 
         using var scope = _app.Factory.Services.CreateScope();
         var settings = await scope.ServiceProvider.GetRequiredService<FitnessDbContext>().Settings.SingleAsync();
         Assert.Equal(45, settings.StartVdot);
         Assert.Equal(8, settings.AvailableHoursPerWeek);
+        // The seed's thresholds stand: a profile save cannot clear or overwrite them.
+        Assert.Equal(150, settings.ReferenceHr);
+        Assert.Equal(172, settings.LtHr);
     }
 
     [Fact]
