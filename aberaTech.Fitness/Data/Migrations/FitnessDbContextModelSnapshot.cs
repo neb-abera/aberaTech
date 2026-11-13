@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261113132754_TreadmillGrade";
+    public override string LastMigrationId => "20261113152407_ThresholdLog";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -467,6 +467,40 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Source");
 
                 b.ToTable("SyncStates");
+            });
+
+        modelBuilder.Entity("aberaTech.Fitness.Data.ThresholdEntry", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<Guid?>("ActivityId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Kind")
+                    .IsRequired()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<LocalDate?>("MeasuredOn")
+                    .HasColumnType("date");
+
+                b.Property<Instant>("RecordedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Source")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
+
+                b.Property<double>("Value")
+                    .HasColumnType("double precision");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Kind", "MeasuredOn");
+
+                b.ToTable("Thresholds");
             });
 
         modelBuilder.Entity("aberaTech.Fitness.Data.Lap", b =>

@@ -55,6 +55,8 @@ describe("Workbench", () => {
     render(<Workbench summary={summary} />);
 
     expect(screen.queryByText(/Compliance/)).toBeNull();
+    // Every box names its unit; the date is months from now.
+    expect(screen.getByLabelText("months from now")).toBeTruthy();
     const athletic = screen.getByRole("button", {
       name: "Athletic: 8 h run, 3 h strength",
     });

@@ -164,6 +164,42 @@ public class StrengthSet
 /// One Army Fitness Test, as taken: the five raw results. Scored on the way
 /// out, never stored scored, so a change to the tables re-scores history.
 /// </summary>
+/// <summary>
+/// One threshold value as measured: the aerobic-threshold heart rate, the
+/// lactate-threshold heart rate, or the lactate-threshold pace. Each is
+/// logged on its own, with the date of the test that set it, and nothing is
+/// overwritten. The current value of each kind is its latest entry, which
+/// the settings row mirrors for every reader of the zones. Until 2026-11-13
+/// one form saved all three together, a blank box cleared a value, and the
+/// old value was gone. Neb asked for the redesign that day.
+/// </summary>
+public class ThresholdEntry
+{
+    public const string AetHr = "aet-hr";
+    public const string LtHr = "lt-hr";
+    public const string LtPace = "lt-pace";
+
+    public static readonly string[] Kinds = [AetHr, LtHr, LtPace];
+
+    public Guid Id { get; set; }
+
+    public string Kind { get; set; } = "";
+
+    /// <summary>Beats per minute for the heart rates, seconds per km for the pace.</summary>
+    public double Value { get; set; }
+
+    /// <summary>The day of the test. Null only for values carried over from before the log existed.</summary>
+    public LocalDate? MeasuredOn { get; set; }
+
+    /// <summary>What set it, in words: the test's name, or "entered by hand".</summary>
+    public string? Source { get; set; }
+
+    /// <summary>The logged run the value came from, when it came from one.</summary>
+    public Guid? ActivityId { get; set; }
+
+    public Instant RecordedAt { get; set; }
+}
+
 public class AftResult
 {
     public Guid Id { get; set; }

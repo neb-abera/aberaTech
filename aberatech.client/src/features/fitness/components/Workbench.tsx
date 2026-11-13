@@ -42,6 +42,7 @@ import {
   formatSeconds,
   kgToLb,
   lbToKg,
+  monthsFromNow,
   parseClock,
 } from "../core/format";
 import ContourPlot from "./ContourPlot";
@@ -110,6 +111,17 @@ export function plotAxes(
   };
 }
 
+/**
+ * The unit each factor's box is in. Neb, 2026-11-13: the Date box read "18"
+ * with nothing to say it meant months from now.
+ */
+export const FACTOR_UNITS: Partial<Record<FactorName, string>> = {
+  WeeklyHours: "hours a week",
+  Months: "months from now",
+  RaceMassKg: "lb",
+  StrengthHours: "hours a week",
+};
+
 interface WorkbenchState {
   distanceMeters: number;
   months: number;
@@ -144,7 +156,7 @@ function show(factor: FactorName, spread: SpreadValue): string {
       case "Compliance":
         return `${Math.round(value * 100)}%`;
       case "Months":
-        return `${value.toFixed(1)} months`;
+        return `${value.toFixed(1)} months (${monthsFromNow(value)})`;
       case "RaceMassKg":
         return `${kgToLb(value).toFixed(0)} lb`;
       default:
@@ -502,6 +514,12 @@ export default function Workbench({ summary }: { summary: Summary }) {
                       ) : (
                         <NumberInput
                           disabled={disabled}
+                          label={FACTOR_UNITS[factor]}
+                          helperText={
+                            factor === "Months"
+                              ? monthsFromNow(state.months)
+                              : undefined
+                          }
                           value={
                             factor === "RaceMassKg"
                               ? state.raceMassLb
