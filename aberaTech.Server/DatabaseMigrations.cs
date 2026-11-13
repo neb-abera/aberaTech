@@ -63,6 +63,7 @@ public static class DatabaseMigrations
     {
         var logger = loggers.CreateLogger("DatabaseMigrations");
         var options = configuration.GetSection(DatabaseOptions.Section).Get<DatabaseOptions>() ?? new DatabaseOptions();
+        var database = "scheduling";
 
         try
         {
@@ -72,6 +73,7 @@ public static class DatabaseMigrations
                     new DbContextOptionsBuilder<SchedulingDbContext>()
                         .UseNpgsql(source, npgsql => npgsql.UseNodaTime()).Options));
 
+            database = "fitness";
             await MigrateAsync(
                 "fitness", configuration.GetConnectionString("Fitness"), options, loggers, logger, listOnly,
                 source => new FitnessDbContext(
@@ -82,11 +84,31 @@ public static class DatabaseMigrations
         }
         catch (Exception exception)
         {
-            // The type and the database name only, for the reason /readyz
-            // gives: provider messages can carry a connection string.
-            logger.LogCritical("Migration failed with {Failure}.", exception.GetType().Name);
+            // Types, the Postgres error code, and the database name only,
+            // for the reason /readyz gives: provider messages can carry a
+            // connection string. On 2026-11-13 a deploy logged only
+            // "NpgsqlException" twice, and the cause could not be read.
+            logger.LogCritical("Migration of {Database} failed with {Failure}.", database, Describe(exception));
             return 1;
         }
+    }
+
+    /// <summary>
+    /// The exception and its causes by type, with the Postgres error code
+    /// when the server answered, such as "NpgsqlException from
+    /// PostgresException 28000". Nothing from a message.
+    /// </summary>
+    public static string Describe(Exception exception)
+    {
+        var parts = new List<string>();
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            parts.Add(current is Npgsql.PostgresException postgres
+                ? $"{current.GetType().Name} {postgres.SqlState}"
+                : current.GetType().Name);
+        }
+
+        return string.Join(" from ", parts);
     }
 
     /// <summary>
