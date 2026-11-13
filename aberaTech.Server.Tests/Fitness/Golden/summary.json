@@ -19,7 +19,9 @@
     "homeAltitudeMeters": 300,
     "ltHr": 172,
     "treadmillGradePercent": null,
-    "treadmillGradeSince": null
+    "treadmillGradeSince": null,
+    "anchorDistanceMeters": null,
+    "anchorSeconds": null
   },
   "aerobicTrend": [
     {

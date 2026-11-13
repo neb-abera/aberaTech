@@ -821,7 +821,9 @@ public static class FitnessReports
             row.HomeAltitudeMeters,
             row.LtHr,
             row.TreadmillGradePercent,
-            row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            row.AnchorDistanceMeters,
+            row.AnchorSeconds);
     }
 
     /// <summary>Days kept for the rolling windows: 26 weeks, the span the weekly chart shows.</summary>

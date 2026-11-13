@@ -277,6 +277,15 @@ public class AthleteSettings
     /// <summary>Measured VDOT anchor (from the most recent time trial).</summary>
     public double StartVdot { get; set; } = 37;
 
+    /// <summary>
+    /// The race the anchor was scored from, so the page can name it: the
+    /// 2-mile of an AFT reads differently from a 5-mile time trial. Null when
+    /// the anchor was typed as a raw VDOT.
+    /// </summary>
+    public double? AnchorDistanceMeters { get; set; }
+
+    public double? AnchorSeconds { get; set; }
+
     /// <summary>When the anchor was measured; predictions project from here.</summary>
     public LocalDate? VdotMeasuredOn { get; set; }
 

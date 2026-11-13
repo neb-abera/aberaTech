@@ -332,6 +332,46 @@ public sealed class FitnessRouteAuthorizationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_anchor_race_is_kept_until_a_vdot_is_typed_over_it()
+    {
+        using var owner = Owner_();
+
+        using var raced = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        {
+            referenceHr = 150, planMinutesPerWeek = 240, startVdot = 0, vdotMeasuredOn = "2026-04-03",
+            anchorDistanceMeters = 3218.688, anchorSeconds = 1009.0,
+        });
+        var afterRace = await SettingsAsync();
+
+        // The thresholds card saves without the race and with the same VDOT.
+        using var other = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        {
+            referenceHr = 152, planMinutesPerWeek = 240, startVdot = afterRace.StartVdot, vdotMeasuredOn = "2026-04-03",
+        });
+        var afterOther = await SettingsAsync();
+
+        using var typed = await owner.PutAsJsonAsync("/api/fitness/settings", new
+        {
+            referenceHr = 152, planMinutesPerWeek = 240, startVdot = 40, vdotMeasuredOn = "2026-04-03",
+        });
+        var afterTyped = await SettingsAsync();
+
+        Assert.Equal(HttpStatusCode.NoContent, raced.StatusCode);
+        Assert.Equal(3218.688, afterRace.AnchorDistanceMeters);
+        Assert.Equal(1009, afterRace.AnchorSeconds);
+        Assert.Equal(1009, afterOther.AnchorSeconds);
+        Assert.Null(afterTyped.AnchorDistanceMeters);
+        Assert.Null(afterTyped.AnchorSeconds);
+        Assert.Equal(40, afterTyped.StartVdot);
+    }
+
+    private async Task<AthleteSettings> SettingsAsync()
+    {
+        using var scope = _app.Factory.Services.CreateScope();
+        return await scope.ServiceProvider.GetRequiredService<FitnessDbContext>().Settings.AsNoTracking().SingleAsync();
+    }
+
+    [Fact]
     public async Task A_goal_is_set_replaced_and_removed_by_its_metric()
     {
         using var owner = Owner_();

@@ -9,7 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Summary } from "../../core/api";
 import { NumberInput } from "../NumberInput";
-import Workbench from "../Workbench";
+import Workbench, { plotAxes } from "../Workbench";
 
 afterEach(() => {
   cleanup();
@@ -75,5 +75,31 @@ describe("Workbench", () => {
     expect(
       (within(strength).getByRole("spinbutton") as HTMLInputElement).value,
     ).toBe("2.5");
+  });
+});
+
+describe("plotAxes", () => {
+  const keys = (options: { key: string }[]) => options.map((o) => o.key);
+
+  it("shows in each box the axis the chart draws", () => {
+    // Solving for hours with the defaults: hours cannot be an axis, so
+    // months move across and race weight down.
+    const axes = plotAxes("WeeklyHours", "WeeklyHours", "Months", true);
+    expect(axes.across).toBe("Months");
+    expect(axes.down).toBe("RaceMassKg");
+    expect(keys(axes.acrossOptions)).toContain(axes.across);
+    expect(keys(axes.downOptions)).toContain(axes.down);
+  });
+
+  it("never offers the solved factor or the other axis", () => {
+    const axes = plotAxes("WeeklyHours", "Months", "RaceMassKg", true);
+    expect(keys(axes.acrossOptions)).toEqual(["Months", "StrengthHours"]);
+    expect(keys(axes.downOptions)).toEqual(["RaceMassKg", "StrengthHours"]);
+  });
+
+  it("leaves race weight out when no weight is recorded", () => {
+    const axes = plotAxes("RaceTime", "WeeklyHours", "RaceMassKg", false);
+    expect(axes.down).toBe("Months");
+    expect(keys(axes.downOptions)).not.toContain("RaceMassKg");
   });
 });
