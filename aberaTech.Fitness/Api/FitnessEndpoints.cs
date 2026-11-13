@@ -31,7 +31,9 @@ public sealed record SettingsUpdate(
     // When set, the anchor VDOT is computed from this race instead of StartVdot.
     double? AnchorDistanceMeters = null,
     double? AnchorSeconds = null,
-    int? LtHr = null);
+    int? LtHr = null,
+    double? TreadmillGradePercent = null,
+    string? TreadmillGradeSince = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -460,6 +462,21 @@ public static class FitnessEndpoints
                 return Fail("Home altitude 0-5000 m.");
             }
 
+            if (update.TreadmillGradePercent is < 0 or > TreadmillGrade.MaxPercent)
+            {
+                return Fail($"Treadmill incline 0-{TreadmillGrade.MaxPercent:0}%.");
+            }
+
+            if ((update.TreadmillGradePercent is null) != string.IsNullOrWhiteSpace(update.TreadmillGradeSince))
+            {
+                return Fail("A treadmill incline needs the date it started, and a date needs an incline.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(update.TreadmillGradeSince) && ParseDate(update.TreadmillGradeSince) is null)
+            {
+                return Fail("The incline's start date is yyyy-mm-dd.");
+            }
+
             if (update.PastPeakWeightKg is < 30 or > 250 || update.GoalWeightKg is < 30 or > 250)
             {
                 return Fail("Weights are 30-250 kg.");
@@ -482,6 +499,8 @@ public static class FitnessEndpoints
             row.PastPeakWeightKg = update.PastPeakWeightKg;
             row.GoalWeightKg = update.GoalWeightKg;
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
+            row.TreadmillGradePercent = update.TreadmillGradePercent;
+            row.TreadmillGradeSince = ParseDate(update.TreadmillGradeSince);
 
             // A race is the honest way to state the anchor; raw VDOT stays as
             // the escape hatch. The race happened at home altitude, so its

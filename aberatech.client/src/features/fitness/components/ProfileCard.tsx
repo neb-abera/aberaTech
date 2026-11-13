@@ -68,6 +68,8 @@ export function unchanged(settings: SettingsDto): SettingsUpdate {
     homeAltitudeMeters: settings.homeAltitudeMeters,
     anchorDistanceMeters: null,
     anchorSeconds: null,
+    treadmillGradePercent: settings.treadmillGradePercent ?? null,
+    treadmillGradeSince: settings.treadmillGradeSince ?? null,
   };
 }
 

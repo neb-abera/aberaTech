@@ -14,6 +14,7 @@ import {
   type ThresholdSuggestion,
 } from "../core/api";
 import { formatPace, formatSeconds } from "../core/format";
+import { unchanged } from "./ProfileCard";
 
 /** "6:40" → 400; blank → null; nonsense → NaN. */
 function parsePace(text: string): number | null {
@@ -22,30 +23,6 @@ function parsePace(text: string): number | null {
   const match = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
   if (!match) return Number.NaN;
   return Number(match[1]) * 60 + Number(match[2]);
-}
-
-/** The full update the endpoint wants, from the settings as they stand. */
-function updateFrom(settings: SettingsDto) {
-  return {
-    referenceHr: settings.referenceHr,
-    ltSecondsPerKm: settings.ltSecondsPerKm,
-    ltHr: settings.ltHr,
-    planMinutesPerWeek: settings.planMinutesPerWeek,
-    startVdot: settings.startVdot,
-    vdotMeasuredOn: settings.vdotMeasuredOn,
-    birthYear: settings.birthYear,
-    female: settings.female,
-    availableHoursPerWeek: settings.availableHoursPerWeek,
-    sustainedWeeklyHours: settings.sustainedWeeklyHours,
-    pastPeakDistanceMeters: settings.pastPeakDistanceMeters,
-    pastPeakSeconds: settings.pastPeakSeconds,
-    pastPeakYear: settings.pastPeakYear,
-    pastPeakWeightKg: settings.pastPeakWeightKg,
-    goalWeightKg: settings.goalWeightKg,
-    homeAltitudeMeters: settings.homeAltitudeMeters,
-    anchorDistanceMeters: null,
-    anchorSeconds: null,
-  };
 }
 
 /**
@@ -96,7 +73,7 @@ export default function ThresholdsCard({
     ltSecondsPerKm: number | null;
   }) => {
     try {
-      await saveSettings({ ...updateFrom(settings), ...next });
+      await saveSettings({ ...unchanged(settings), ...next });
       setStatus({
         ok: true,
         text: "Thresholds saved — every zone moves with them.",

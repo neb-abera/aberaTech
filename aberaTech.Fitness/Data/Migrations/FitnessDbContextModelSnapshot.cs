@@ -17,13 +17,13 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261104140318_RunBestEfforts";
+    public override string LastMigrationId => "20261113132754_TreadmillGrade";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder
-            .HasAnnotation("ProductVersion", "11.0.0-rc.1.26425.128")
+            .HasAnnotation("ProductVersion", "11.0.0-rc.3.26522.148")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -199,6 +199,12 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<double?>("SustainedWeeklyHours")
                     .HasColumnType("double precision");
+
+                b.Property<double?>("TreadmillGradePercent")
+                    .HasColumnType("double precision");
+
+                b.Property<LocalDate?>("TreadmillGradeSince")
+                    .HasColumnType("date");
 
                 b.Property<LocalDate?>("VdotMeasuredOn")
                     .HasColumnType("date");

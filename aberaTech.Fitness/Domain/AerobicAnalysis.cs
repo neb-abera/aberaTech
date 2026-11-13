@@ -4,13 +4,15 @@ namespace aberaTech.Fitness.Domain;
 
 /// <summary>A steady run reduced to what the aerobic analysis needs.</summary>
 /// <param name="Indoor">Treadmill: the distance is the belt's reading, so the pace is a weaker witness.</param>
-public sealed record SteadyRun(LocalDate Date, double DistanceMeters, double Seconds, int AverageHr, bool Indoor = false);
+/// <param name="GradePercent">The treadmill's incline (<see cref="TreadmillGrade"/>); 0 outdoors.</param>
+public sealed record SteadyRun(LocalDate Date, double DistanceMeters, double Seconds, int AverageHr, bool Indoor = false, double GradePercent = 0);
 
 /// <summary>One month's aerobic fitness, as the median normalized pace.</summary>
 /// <param name="IndoorRuns">How many of the month's runs were on a treadmill.</param>
 /// <param name="LastRun">The month's latest counted run, the date its median is current to.</param>
+/// <param name="GradedRuns">How many of the month's runs were on an incline, read at their flat-equivalent pace.</param>
 public sealed record MonthlyAerobicPoint(
-    int Year, int Month, double MedianNormalizedSecPerKm, int RunCount, int IndoorRuns = 0, LocalDate? LastRun = null);
+    int Year, int Month, double MedianNormalizedSecPerKm, int RunCount, int IndoorRuns = 0, LocalDate? LastRun = null, int GradedRuns = 0);
 
 /// <summary>
 /// Aerobic-base analysis: pace-at-heart-rate over time, and the aerobic
@@ -58,6 +60,17 @@ public static class AerobicAnalysis
         return secPerKm * averageHr / referenceHr;
     }
 
+    /// <summary>
+    /// A steady run's pace scaled to <paramref name="referenceHr"/>, read as
+    /// the flat run of the same cost when the treadmill was on an incline.
+    /// </summary>
+    public static double NormalizedSecPerKm(SteadyRun run, int referenceHr) =>
+        NormalizedSecPerKm(
+            TreadmillGrade.FlatEquivalentMeters(run.DistanceMeters, run.GradePercent),
+            run.Seconds,
+            run.AverageHr,
+            referenceHr);
+
     /// <summary>Monthly medians of normalized pace, oldest first.</summary>
     /// <remarks>
     /// The median, not the mean: a single walk-run or treadmill mis-calibration
@@ -77,11 +90,12 @@ public static class AerobicAnalysis
             .Select(g =>
             {
                 var normalized = g
-                    .Select(r => NormalizedSecPerKm(r.DistanceMeters, r.Seconds, r.AverageHr, referenceHr))
+                    .Select(r => NormalizedSecPerKm(r, referenceHr))
                     .OrderBy(x => x)
                     .ToArray();
                 return new MonthlyAerobicPoint(
-                    g.Key.Year, g.Key.Month, Median(normalized), normalized.Length, g.Count(r => r.Indoor), g.Max(r => r.Date));
+                    g.Key.Year, g.Key.Month, Median(normalized), normalized.Length, g.Count(r => r.Indoor), g.Max(r => r.Date),
+                    g.Count(r => r.GradePercent > 0));
             })
             .ToArray();
     }

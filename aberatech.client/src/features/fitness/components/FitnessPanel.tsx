@@ -35,6 +35,7 @@ import TestProtocolCard from "./TestProtocolCard";
 import ThresholdsCard from "./ThresholdsCard";
 import TrainingDoseCard from "./TrainingDoseCard";
 import TrainingPacesCard from "./TrainingPacesCard";
+import TreadmillGradeCard from "./TreadmillGradeCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -375,6 +376,17 @@ function Dashboard({
         onSaved={onSettingsChanged}
       />
 
+      <TreadmillGradeCard
+        settings={summary.settings}
+        examplePace={
+          summary.aerobicTrend.length > 0
+            ? summary.aerobicTrend[summary.aerobicTrend.length - 1]
+                .medianSecPerKm
+            : null
+        }
+        onSaved={onSettingsChanged}
+      />
+
       <TrainingDoseCard
         days={summary.dailyVolume}
         weeks={summary.weeklyVolume}
@@ -419,6 +431,10 @@ function Dashboard({
           {summary.aerobicTrend[summary.aerobicTrend.length - 1].runs} runs
           {summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns > 0
             ? ` (${summary.aerobicTrend[summary.aerobicTrend.length - 1].indoorRuns} on a treadmill)`
+            : ""}
+          {(summary.aerobicTrend[summary.aerobicTrend.length - 1].gradedRuns ??
+            0) > 0
+            ? `, ${summary.aerobicTrend[summary.aerobicTrend.length - 1].gradedRuns} on an incline, read at their flat-equivalent pace`
             : ""}
           .
         </Typography>

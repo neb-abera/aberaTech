@@ -1,6 +1,6 @@
 namespace aberaTech.Fitness.Api;
 
-public sealed record AerobicPointDto(string Month, double MedianSecPerKm, int Runs, int IndoorRuns = 0);
+public sealed record AerobicPointDto(string Month, double MedianSecPerKm, int Runs, int IndoorRuns = 0, int GradedRuns = 0);
 
 /// <summary>A field test the log turned out to contain.</summary>
 public sealed record FieldTestDto(
@@ -52,7 +52,10 @@ public sealed record SettingsDto(
     double MaxWeightAdjustmentFraction,
     double HomeAltitudeMeters,
     /// <summary>The lactate-threshold heart rate, when a test has set it.</summary>
-    int? LtHr = null);
+    int? LtHr = null,
+    /// <summary>The incline treadmill runs are set to, from <see cref="TreadmillGradeSince"/> on.</summary>
+    double? TreadmillGradePercent = null,
+    string? TreadmillGradeSince = null);
 
 public sealed record TrainingPaceDto(
     string Zone,

@@ -17,50 +17,59 @@
     "goalWeightKg": null,
     "maxWeightAdjustmentFraction": 0.1,
     "homeAltitudeMeters": 300,
-    "ltHr": 172
+    "ltHr": 172,
+    "treadmillGradePercent": null,
+    "treadmillGradeSince": null
   },
   "aerobicTrend": [
     {
       "month": "2025-12",
       "medianSecPerKm": 371.48,
       "runs": 5,
-      "indoorRuns": 1
+      "indoorRuns": 1,
+      "gradedRuns": 0
     },
     {
       "month": "2026-01",
       "medianSecPerKm": 365.295,
       "runs": 9,
-      "indoorRuns": 1
+      "indoorRuns": 1,
+      "gradedRuns": 0
     },
     {
       "month": "2026-02",
       "medianSecPerKm": 358.97249999999997,
       "runs": 8,
-      "indoorRuns": 1
+      "indoorRuns": 1,
+      "gradedRuns": 0
     },
     {
       "month": "2026-03",
       "medianSecPerKm": 350.895,
       "runs": 9,
-      "indoorRuns": 2
+      "indoorRuns": 2,
+      "gradedRuns": 0
     },
     {
       "month": "2026-04",
       "medianSecPerKm": 343.40250000000003,
       "runs": 8,
-      "indoorRuns": 1
+      "indoorRuns": 1,
+      "gradedRuns": 0
     },
     {
       "month": "2026-05",
       "medianSecPerKm": 336,
       "runs": 9,
-      "indoorRuns": 2
+      "indoorRuns": 2,
+      "gradedRuns": 0
     },
     {
       "month": "2026-06",
       "medianSecPerKm": 330.0375,
       "runs": 4,
-      "indoorRuns": 0
+      "indoorRuns": 0,
+      "gradedRuns": 0
     }
   ],
   "weeklyVolume": [
