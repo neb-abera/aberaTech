@@ -51,6 +51,9 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertEventTypeRecord> AlertEventTypes => Set<AlertEventTypeRecord>();
 
+    /// <summary>The leads kept here for events someone else organized.</summary>
+    public DbSet<AlertEventLeadRecord> AlertEventLeads => Set<AlertEventLeadRecord>();
+
     /// <summary>The phones paired on /alerts, by the hash of their tokens.</summary>
     public DbSet<AlertDeviceRecord> AlertDevices => Set<AlertDeviceRecord>();
 
@@ -214,6 +217,14 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(choice => choice.Type).HasMaxLength(AlertTypes.MaxLength).IsRequired();
             // The prune deletes by it.
             entity.HasIndex(choice => choice.LastSeenAt);
+        });
+
+        builder.Entity<AlertEventLeadRecord>(entity =>
+        {
+            entity.HasKey(lead => lead.Key);
+            entity.Property(lead => lead.Key).HasMaxLength(AlertPlanner.MaxKeyLength);
+            // The prune deletes by it.
+            entity.HasIndex(lead => lead.LastSeenAt);
         });
 
         builder.Entity<AlertDeviceRecord>(entity =>

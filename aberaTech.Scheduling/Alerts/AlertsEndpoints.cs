@@ -378,9 +378,18 @@ public static class AlertsEndpoints
             if (edit is null) return Results.ValidationProblem(errors);
             if (alert is null) return Results.NotFound();
 
-            var outcome = await AlertEventWrites.EditAsync(
-                alert, before, request.Scope == EventScopes.Series && alert.Recurring, edit, snapshot.Zone, google, store, now,
-                cancellationToken);
+            var series = request.Scope == EventScopes.Series && alert.Recurring;
+            var outcome = await AlertEventWrites.EditAsync(alert, before, series, edit, snapshot.Zone, google, store, now, cancellationToken);
+            // An invitation: Google lets only its organizer change it. A
+            // lead alone is the invitee's own, and it is kept here.
+            if (outcome.Problem == CalendarWriteMessages.OnlyOrganizer && edit.LeadMinutes is { } lead && AlertEventWrites.LeadOnly(alert, edit))
+            {
+                await store.SetEventLeadAsync(alert.Recurring && !series ? alert.Key : alert.EventId, lead, now, cancellationToken);
+                await pushes.PlanChangedAsync(cancellationToken);
+                worker.Wake();
+                return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+            }
+
             if (outcome.Problem is not null) return WriteProblem(outcome);
 
             await pushes.PlanChangedAsync(cancellationToken);

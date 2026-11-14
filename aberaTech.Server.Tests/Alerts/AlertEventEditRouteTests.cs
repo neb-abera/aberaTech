@@ -344,6 +344,84 @@ public sealed class AlertEventEditRouteTests : IDisposable
         Assert.Equal("reminder", same.GetProperty("source").GetString());
     }
 
+    // An invitation: Google lets only its organizer change it, and the
+    // feed rarely carries an invitee's reminder (1 of 227 invitations on
+    // 12 Nov 2026). Its lead is kept here instead.
+    [Fact]
+    public async Task A_lead_alone_on_an_invitation_is_kept_here_and_google_is_not_written()
+    {
+        _google.Seed("standup@google.com", organisedHere: false);
+        using var owner = Owner();
+        var before = await VersionAsync();
+
+        using var response = await Put(owner, """
+            {"key":"standup@google.com|20261028T130000Z","scope":"occurrence","title":"Standup","startsAt":"2026-10-28T09:00:00-04:00","location":"Room 1","leadMinutes":30}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(_google.Writes);
+        Assert.Equal(At(10, 28, 12, 30), ByKey(await AlertsOf(response), StandupKey).GetProperty("alertAt").GetDateTimeOffset());
+        Assert.NotEqual(before, await VersionAsync());
+
+        // The feed still says 15 minutes. The kept lead holds.
+        Read();
+        Assert.Equal(At(10, 28, 12, 30), ByKey(await StatusAlerts(), StandupKey).GetProperty("alertAt").GetDateTimeOffset());
+    }
+
+    [Fact]
+    public async Task A_title_with_a_lead_on_an_invitation_is_refused_and_nothing_is_kept()
+    {
+        _google.Seed("standup@google.com", organisedHere: false);
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"standup@google.com|20261028T130000Z","scope":"occurrence","title":"Standup moved","startsAt":"2026-10-28T09:00:00-04:00","leadMinutes":30}
+            """);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(CalendarWriteMessages.OnlyOrganizer, (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("detail").GetString());
+        Assert.Empty(await _store.EventLeadsAsync(CancellationToken.None));
+        Assert.Equal(At(10, 28, 12, 45), ByKey(await StatusAlerts(), StandupKey).GetProperty("alertAt").GetDateTimeOffset());
+    }
+
+    [Fact]
+    public async Task A_lead_for_every_occurrence_of_an_invitation_moves_them_all()
+    {
+        _google.Seed("daily@google.com", organisedHere: false, recurring: true, start: Instant.FromUtc(2026, 10, 28, 14, 0), summary: "Daily");
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"daily@google.com|20261028T140000Z","scope":"series","title":"Daily","startsAt":"2026-10-28T10:00:00-04:00","location":"Room 2","leadMinutes":45}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(_google.Writes);
+        var alerts = await AlertsOf(response);
+        Assert.Equal(At(10, 28, 13, 15), ByKey(alerts, DailyToday).GetProperty("alertAt").GetDateTimeOffset());
+        Assert.Equal(At(10, 29, 13, 15), ByKey(alerts, DailyTomorrow).GetProperty("alertAt").GetDateTimeOffset());
+
+        // Past the first occurrence, the rest keep it.
+        _clock.Now = Instant.FromUtc(2026, 10, 28, 15, 0);
+        Read();
+        Assert.Equal(At(10, 29, 13, 15), ByKey(await StatusAlerts(), DailyTomorrow).GetProperty("alertAt").GetDateTimeOffset());
+    }
+
+    [Fact]
+    public async Task A_lead_for_one_occurrence_of_an_invitation_moves_that_one()
+    {
+        _google.Seed("daily@google.com", organisedHere: false, recurring: true, start: Instant.FromUtc(2026, 10, 28, 14, 0), summary: "Daily");
+        using var owner = Owner();
+
+        using var response = await Put(owner, """
+            {"key":"daily@google.com|20261029T140000Z","scope":"occurrence","title":"Daily","startsAt":"2026-10-29T10:00:00-04:00","leadMinutes":45}
+            """);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var alerts = await AlertsOf(response);
+        Assert.Equal(At(10, 29, 13, 15), ByKey(alerts, DailyTomorrow).GetProperty("alertAt").GetDateTimeOffset());
+        Assert.Equal(At(10, 28, 13, 50), ByKey(alerts, DailyToday).GetProperty("alertAt").GetDateTimeOffset());
+    }
+
     [Fact]
     public async Task A_null_location_clears_it()
     {

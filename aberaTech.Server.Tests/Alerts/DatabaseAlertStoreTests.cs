@@ -398,6 +398,27 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_kept_lead_is_one_row_per_key_replaced_in_place_and_forgotten_like_a_type()
+    {
+        var longAgo = Now - Duration.FromDays(61);
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.Empty(await store.EventLeadsAsync(CancellationToken.None));
+            await store.SetEventLeadAsync("farewell@army.mil", 10, longAgo, CancellationToken.None);
+            await store.SetEventLeadAsync("farewell@army.mil", 30, longAgo, CancellationToken.None);
+            await store.SetEventLeadAsync("daily@army.mil|20261028T140000Z", 45, longAgo, CancellationToken.None);
+            await store.SetEventLeadAsync("gone@army.mil", 5, longAgo, CancellationToken.None);
+            await store.SeenEventsAsync(["farewell@army.mil"], Now, Now - Duration.FromDays(60), CancellationToken.None);
+        }
+
+        await using var restarted = Context();
+        var leads = await new DatabaseAlertStore(restarted).EventLeadsAsync(CancellationToken.None);
+        Assert.Equal(["farewell@army.mil"], leads.Keys);
+        Assert.Equal(30, leads["farewell@army.mil"]);
+    }
+
+    [PostgresFact]
     public async Task A_choice_for_an_event_still_in_the_feed_is_kept_and_one_gone_for_sixty_days_is_forgotten()
     {
         var longAgo = Now - Duration.FromDays(61);

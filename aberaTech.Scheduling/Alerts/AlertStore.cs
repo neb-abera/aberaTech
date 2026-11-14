@@ -92,6 +92,12 @@ public interface IAlertStore
     /// </summary>
     Task SeenEventsAsync(IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken);
 
+    /// <summary>Every lead kept here, by event UID or occurrence key.</summary>
+    Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Keeps a lead for an event UID or one occurrence's key.</summary>
+    Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken);
+
     /// <summary>The events created on /alerts that are still kept, soonest first.</summary>
     Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken);
 
@@ -391,6 +397,38 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             .Where(choice => ids.Contains(choice.EventId))
             .ExecuteUpdateAsync(set => set.SetProperty(choice => choice.LastSeenAt, now), cancellationToken);
         await database.AlertEventTypes.Where(choice => choice.LastSeenAt < forgetBefore).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertEventLeads
+            .Where(lead => ids.Contains(lead.Key))
+            .ExecuteUpdateAsync(set => set.SetProperty(lead => lead.LastSeenAt, now), cancellationToken);
+        await database.AlertEventLeads.Where(lead => lead.LastSeenAt < forgetBefore).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken) =>
+        await database.AlertEventLeads.AsNoTracking()
+            .ToDictionaryAsync(lead => lead.Key, lead => lead.LeadMinutes, StringComparer.Ordinal, cancellationToken);
+
+    public async Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken)
+    {
+        var updated = await database.AlertEventLeads
+            .Where(lead => lead.Key == key)
+            .ExecuteUpdateAsync(
+                set => set.SetProperty(lead => lead.LeadMinutes, leadMinutes).SetProperty(lead => lead.UpdatedAt, now)
+                    .SetProperty(lead => lead.LastSeenAt, now),
+                cancellationToken);
+        if (updated > 0) return;
+        database.AlertEventLeads.Add(new AlertEventLeadRecord { Key = key, LeadMinutes = leadMinutes, UpdatedAt = now, LastSeenAt = now });
+        try
+        {
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Another request kept one first. This one's lead is the later choice.
+            database.ChangeTracker.Clear();
+            await database.AlertEventLeads
+                .Where(lead => lead.Key == key)
+                .ExecuteUpdateAsync(set => set.SetProperty(lead => lead.LeadMinutes, leadMinutes), cancellationToken);
+        }
     }
 
     public async Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>

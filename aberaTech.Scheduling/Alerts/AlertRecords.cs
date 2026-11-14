@@ -88,6 +88,26 @@ public class AlertEventTypeRecord
     public Instant LastSeenAt { get; set; }
 }
 
+/// <summary>
+/// How long before the start an event alerts, chosen on /alerts or a phone
+/// for an event someone else organized. Google lets only an organizer
+/// change an event, and the feed rarely carries an invitee's own reminder,
+/// so the lead is kept here. Keyed by the event's UID for every
+/// occurrence, or by one occurrence's key.
+/// </summary>
+public class AlertEventLeadRecord
+{
+    /// <summary>The event's UID, or one occurrence's key: see <see cref="AlertPlanner"/>.</summary>
+    public string Key { get; set; } = string.Empty;
+
+    public int LeadMinutes { get; set; }
+
+    public Instant UpdatedAt { get; set; }
+
+    /// <summary>The last calendar read that had the event. A row unseen for 60 days is forgotten.</summary>
+    public Instant LastSeenAt { get; set; }
+}
+
 /// <summary>One occurrence the owner pressed Skip on.</summary>
 public class AlertSkipRecord
 {

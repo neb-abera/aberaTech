@@ -686,6 +686,11 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) => Down<bool>();
 
+        public Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken) =>
+            Down<IReadOnlyDictionary<string, int>>();
+
+        public Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken) => Down<bool>();
+
         public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
             Down<IReadOnlyList<CreatedAlertEvent>>();
 
@@ -787,6 +792,12 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
             _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken) =>
+            _inner.EventLeadsAsync(cancellationToken);
+
+        public Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken) =>
+            _inner.SetEventLeadAsync(key, leadMinutes, now, cancellationToken);
 
         public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
             _inner.CreatedEventsAsync(cancellationToken);
@@ -1199,6 +1210,12 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task SeenEventsAsync(
             IReadOnlyCollection<string> eventIds, Instant now, Instant forgetBefore, CancellationToken cancellationToken) =>
             _inner.SeenEventsAsync(eventIds, now, forgetBefore, cancellationToken);
+
+        public Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken) =>
+            _inner.EventLeadsAsync(cancellationToken);
+
+        public Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken) =>
+            _inner.SetEventLeadAsync(key, leadMinutes, now, cancellationToken);
 
         public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken) =>
             untilStopped

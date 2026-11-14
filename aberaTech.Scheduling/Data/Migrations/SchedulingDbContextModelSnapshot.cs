@@ -17,13 +17,13 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261109144049_BookingLinkKeptKeys";
+    public override string LastMigrationId => "20261113004559_AlertEventLeads";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder
-            .HasAnnotation("ProductVersion", "11.0.0-rc.1.26425.128")
+            .HasAnnotation("ProductVersion", "11.0.0-rc.3.26522.148")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "btree_gist");
@@ -301,6 +301,28 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("AlertEventChanges");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertEventLeadRecord", b =>
+            {
+                b.Property<string>("Key")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
+
+                b.Property<Instant>("LastSeenAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<int>("LeadMinutes")
+                    .HasColumnType("integer");
+
+                b.Property<Instant>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.HasKey("Key");
+
+                b.HasIndex("LastSeenAt");
+
+                b.ToTable("AlertEventLeads");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertEventTypeRecord", b =>
