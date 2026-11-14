@@ -431,7 +431,9 @@ public sealed class CalendarAlertWorker(
             var merged = CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, kept, now, settings);
             var finished = EventChanges.Done(merged, snapshot.Plan, changes, snapshot.Zone, now, snapshot.LastSuccessAt is not null);
             if (finished.Count > 0) await store.ForgetEventChangesAsync(finished, cancellationToken);
-            var plan = AlertsPlan.Merge(snapshot, kept, changes.Where(change => !finished.Contains(change.Id)), now, settings);
+            var plan = AlertsPlan.Merge(
+                snapshot, kept, changes.Where(change => !finished.Contains(change.Id)), now, settings,
+                await store.EventLeadsAsync(cancellationToken));
 
             // The routine alarms' rings, from the one ringing now to the look-ahead.
             var rings = await RoutineRings.CurrentAsync(

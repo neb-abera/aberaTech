@@ -103,18 +103,35 @@ public static class AlertsPlan
             await store.CreatedEventsAsync(cancellationToken),
             await store.EventChangesAsync(cancellationToken),
             now,
-            settings);
+            settings,
+            await store.EventLeadsAsync(cancellationToken));
 
     /// <summary>The same plan from rows already read.</summary>
+    /// <param name="leads">The leads kept here, by occurrence key or event UID. An occurrence's own wins.</param>
     public static IReadOnlyList<PlannedAlert> Merge(
         AlertsSnapshot snapshot,
         IEnumerable<CreatedAlertEvent> created,
         IEnumerable<AlertEventChange> changes,
         Instant now,
-        AlertSettings settings) =>
-        EventChanges.Apply(
+        AlertSettings settings,
+        IReadOnlyDictionary<string, int>? leads = null)
+    {
+        var plan = EventChanges.Apply(
             CreatedEvents.Merge(snapshot.Plan, snapshot.FeedEventIds, created, now, settings),
             snapshot.Plan,
             changes,
             snapshot.Zone);
+        if (leads is null || leads.Count == 0) return plan;
+
+        return
+        [
+            .. plan
+                .Select(alert => leads.TryGetValue(alert.Key, out var lead) || leads.TryGetValue(alert.EventId, out lead)
+                    ? alert with { AlertAt = alert.StartsAt - Duration.FromMinutes(lead), Source = AlertSource.Reminder }
+                    : alert)
+                .OrderBy(alert => alert.AlertAt)
+                .ThenBy(alert => alert.StartsAt)
+                .ThenBy(alert => alert.Key, StringComparer.Ordinal)
+        ];
+    }
 }

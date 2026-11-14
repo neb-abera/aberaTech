@@ -182,6 +182,19 @@ internal sealed class InMemoryAlertStore : IAlertStore
         return Task.CompletedTask;
     }
 
+    private readonly Dictionary<string, int> _leads = new(StringComparer.Ordinal);
+
+    public Task<IReadOnlyDictionary<string, int>> EventLeadsAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult<IReadOnlyDictionary<string, int>>(new Dictionary<string, int>(_leads, StringComparer.Ordinal));
+    }
+
+    public Task SetEventLeadAsync(string key, int leadMinutes, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock) _leads[key] = leadMinutes;
+        return Task.CompletedTask;
+    }
+
     private readonly Dictionary<string, CreatedAlertEvent> _created = new(StringComparer.Ordinal);
 
     public Task<IReadOnlyList<CreatedAlertEvent>> CreatedEventsAsync(CancellationToken cancellationToken)

@@ -61,6 +61,17 @@ public static class AlertEventWrites
     }
 
     /// <summary>
+    /// True when the edit changes nothing but the lead: the title, the
+    /// start, the length and the location are the listed occurrence's own.
+    /// A start within a second is the same: a phone sends milliseconds.
+    /// </summary>
+    public static bool LeadOnly(PlannedAlert alert, AlertEventEdit edit) =>
+        edit.Title == alert.Title
+        && Math.Abs((edit.StartsAt - alert.StartsAt).TotalSeconds) < 1
+        && (edit.DurationMinutes is not { } minutes || alert.EndsAt is { } end && (end - alert.StartsAt).TotalMinutes == minutes)
+        && (!edit.LocationSet || (edit.Location ?? "") == (alert.Location ?? ""));
+
+    /// <summary>
     /// Deletes on Google, then stores the deletion, forgets a created event
     /// the feed does not have yet, pushes the phones, and cancels Pushover's
     /// repeats for each occurrence that went. Nothing is stored when Google
