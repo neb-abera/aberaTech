@@ -41,6 +41,12 @@ public interface IAlertStore
 
     Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken);
 
+    /// <summary>The owner's rules for what an event sends, in order.</summary>
+    Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken);
+
+    /// <summary>Replaces every rule with <paramref name="rules"/>, in one transaction.</summary>
+    Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken);
+
     Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken);
 
     /// <summary>Null unmutes.</summary>
@@ -229,6 +235,33 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                  "UpdatedAt" = EXCLUDED."UpdatedAt"
              """,
             cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken) =>
+        await database.AlertTypeRules.AsNoTracking()
+            .OrderBy(rule => rule.Position)
+            .Select(rule => new AlertTypeRule(rule.Field, rule.Text, rule.Type))
+            .ToListAsync(cancellationToken);
+
+    public async Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken)
+    {
+        // A save from the page and one from the phone at once: the lock
+        // makes the second wait for the first, and the last one stands whole.
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        await database.Database.ExecuteSqlRawAsync(
+            "LOCK TABLE \"AlertTypeRules\" IN SHARE ROW EXCLUSIVE MODE", cancellationToken);
+        await database.AlertTypeRules.ExecuteDeleteAsync(cancellationToken);
+        database.AlertTypeRules.AddRange(rules.Select((rule, position) => new AlertTypeRuleRecord
+        {
+            Position = position,
+            Field = rule.Field,
+            Text = rule.Text,
+            Type = rule.Type,
+            UpdatedAt = now,
+        }));
+        await database.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        database.ChangeTracker.Clear();
     }
 
     public async Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken) =>

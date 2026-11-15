@@ -259,6 +259,29 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken, written));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // The owner's rules for what an event sends, as one ordered list.
+        // A save replaces every rule. Rules decide only events with no choice
+        // of their own and no #critical mark, and they write nothing to
+        // Google Calendar. The phones are pushed, since a rule can make an
+        // event an alarm or take one away.
+        shared.MapPut("/rules", async (
+            AlertTypeRulesRequest request,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertDeviceStore devices,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            var (rules, errors) = AlertTypeRuleBounds.Validate(request.Rules);
+            if (rules is null) return Results.ValidationProblem(errors);
+
+            await store.SaveTypeRulesAsync(rules, clock.GetCurrentInstant(), cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         // Acknowledge: the phone's alarm or the browser's ring was answered.
         // An occurrence on the list, or one that was sent and has since
         // dropped off it, so a phone that answers late still counts. The
@@ -774,6 +797,8 @@ public static class AlertsEndpoints
                 // move the standing events.
                 var changes = await store.EventChangesAsync(cancellationToken);
                 await store.ForgetEventChangesAsync([.. changes.Select(change => change.Id)], cancellationToken);
+                // Rules an earlier spec saved would change every type.
+                await store.SaveTypeRulesAsync([], clock.GetCurrentInstant(), cancellationToken);
                 await worker.ReadNowAsync(cancellationToken);
                 return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
             }).RequireRateLimiting(ActionsPolicy);
@@ -983,7 +1008,8 @@ public static class AlertsEndpoints
                             acknowledgement?.Via,
                             alert.Recurring,
                             alert.EndsAt?.ToDateTimeOffset(),
-                            alert.Until.ToDateTimeOffset());
+                            alert.Until.ToDateTimeOffset(),
+                            alert.Organizer);
                     })
             ],
             Push: new PushView(options.ApnsMissing().Count == 0, options.ApnsMissing()),
@@ -1012,6 +1038,7 @@ public static class AlertsEndpoints
                     .ThenBy(view => view.Label, StringComparer.Ordinal)
                     .ThenBy(view => view.Id)
             ],
+            Rules: settings.Rules,
             CalendarWrite: calendarWrite);
     }
 
@@ -1150,6 +1177,7 @@ public static class AlertsEndpoints
         IReadOnlyList<RoutineView> Routines,
         IReadOnlyList<RoutineRingView> RoutineRings,
         IReadOnlyList<CountdownView> Countdowns,
+        IReadOnlyList<AlertTypeRule> Rules,
         string? CalendarWrite = null);
 
     /// <summary>
@@ -1298,7 +1326,8 @@ public static class AlertsEndpoints
         string? AcknowledgedVia,
         bool Recurring,
         DateTimeOffset? EndsAt,
-        DateTimeOffset RingsUntil);
+        DateTimeOffset RingsUntil,
+        string? Organizer);
 
     /// <summary>
     /// An edit of a listed occurrence. Key, scope, title and startsAt are

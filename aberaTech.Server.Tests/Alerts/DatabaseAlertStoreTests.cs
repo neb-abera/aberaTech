@@ -39,6 +39,51 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         new(id ?? Guid.NewGuid(), label, hour, minute, days ?? [1, 2, 3, 4, 5], true, 9, Now);
 
     [PostgresFact]
+    public async Task Type_rules_read_back_in_order_and_a_save_replaces_them_all()
+    {
+        AlertTypeRule[] first =
+        [
+            new("organizer", "army.mil", "alarm"),
+            new("location", "", "notification"),
+            new("title", "lunch", "none"),
+        ];
+        await using (var context = Context())
+        {
+            await new DatabaseAlertStore(context).SaveTypeRulesAsync(first, Now, CancellationToken.None);
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.Equal(first, await store.TypeRulesAsync(CancellationToken.None));
+            await store.SaveTypeRulesAsync([new("title", "drill", "alarm")], Now, CancellationToken.None);
+        }
+
+        await using (var context = Context())
+        {
+            Assert.Equal([new AlertTypeRule("title", "drill", "alarm")],
+                await new DatabaseAlertStore(context).TypeRulesAsync(CancellationToken.None));
+        }
+    }
+
+    [PostgresFact]
+    public async Task Two_rule_saves_at_once_leave_one_of_the_lists_whole()
+    {
+        AlertTypeRule[] page = [new("title", "a", "alarm"), new("title", "b", "alarm")];
+        AlertTypeRule[] phone = [new("location", "", "none")];
+        await using var one = Context();
+        await using var two = Context();
+
+        await Task.WhenAll(
+            new DatabaseAlertStore(one).SaveTypeRulesAsync(page, Now, CancellationToken.None),
+            new DatabaseAlertStore(two).SaveTypeRulesAsync(phone, Now, CancellationToken.None));
+
+        await using var check = Context();
+        var saved = await new DatabaseAlertStore(check).TypeRulesAsync(CancellationToken.None);
+        Assert.True(saved.SequenceEqual(page) || saved.SequenceEqual(phone), string.Join(", ", saved));
+    }
+
+    [PostgresFact]
     public async Task A_routine_is_a_row_a_new_process_reads_back_whole_updates_in_place_and_deletes()
     {
         var id = Guid.NewGuid();

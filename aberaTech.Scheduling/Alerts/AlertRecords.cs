@@ -95,6 +95,20 @@ public class AlertEventTypeRecord
 /// so the lead is kept here. Keyed by the event's UID for every
 /// occurrence, or by one occurrence's key.
 /// </summary>
+/// <summary>One rule for what an event sends, at its place in the owner's order. See <see cref="AlertTypeRule"/>.</summary>
+public class AlertTypeRuleRecord
+{
+    public int Position { get; set; }
+
+    public string Field { get; set; } = AlertTypeRuleFields.Title;
+
+    public string Text { get; set; } = string.Empty;
+
+    public string Type { get; set; } = AlertTypes.None;
+
+    public Instant UpdatedAt { get; set; }
+}
+
 public class AlertEventLeadRecord
 {
     /// <summary>The event's UID, or one occurrence's key: see <see cref="AlertPlanner"/>.</summary>

@@ -257,6 +257,19 @@ public sealed class AlertPlannerTests
     }
 
     [Fact]
+    public void The_organizer_is_read_from_the_feed_and_none_is_null()
+    {
+        var feed = Ics(
+            Event("drill", "Fire drill", "20261028T100000", "20261028T103000", extra: ["ORGANIZER;CN=Operations:mailto:ops@army.mil"]),
+            Event("lunch", "Lunch", "20261028T120000", "20261028T130000"));
+
+        var alerts = Plan(feed);
+
+        Assert.Equal("ops@army.mil", alerts.Single(alert => alert.Title == "Fire drill").Organizer);
+        Assert.Null(alerts.Single(alert => alert.Title == "Lunch").Organizer);
+    }
+
+    [Fact]
     public void A_time_with_no_zone_is_read_as_new_york_time()
     {
         var feed = Ics("BEGIN:VEVENT\r\nDTSTART:20261028T090000\r\nDTEND:20261028T093000\r\nUID:floating\r\nSUMMARY:Floating\r\nEND:VEVENT");

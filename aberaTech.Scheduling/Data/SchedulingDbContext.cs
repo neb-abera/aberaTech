@@ -51,6 +51,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertEventTypeRecord> AlertEventTypes => Set<AlertEventTypeRecord>();
 
+    public DbSet<AlertTypeRuleRecord> AlertTypeRules => Set<AlertTypeRuleRecord>();
+
     /// <summary>The leads kept here for events someone else organized.</summary>
     public DbSet<AlertEventLeadRecord> AlertEventLeads => Set<AlertEventLeadRecord>();
 
@@ -217,6 +219,16 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(choice => choice.Type).HasMaxLength(AlertTypes.MaxLength).IsRequired();
             // The prune deletes by it.
             entity.HasIndex(choice => choice.LastSeenAt);
+        });
+
+        builder.Entity<AlertTypeRuleRecord>(entity =>
+        {
+            // The order is the key: a save replaces the whole list.
+            entity.HasKey(rule => rule.Position);
+            entity.Property(rule => rule.Position).ValueGeneratedNever();
+            entity.Property(rule => rule.Field).HasMaxLength(16).IsRequired();
+            entity.Property(rule => rule.Text).HasMaxLength(AlertTypeRuleBounds.MaxTextLength).IsRequired();
+            entity.Property(rule => rule.Type).HasMaxLength(AlertTypes.MaxLength).IsRequired();
         });
 
         builder.Entity<AlertEventLeadRecord>(entity =>

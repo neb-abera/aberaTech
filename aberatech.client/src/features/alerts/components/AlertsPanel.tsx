@@ -29,6 +29,7 @@ import {
   unskipAlert,
 } from "../core/api";
 import { ringPollMs } from "../core/ring";
+import { unchosenType } from "../core/rules";
 import { alarmLine, count, describe, typeLabels } from "../core/settings";
 import AlertSettingsForm from "./AlertSettingsForm";
 import { DeleteEventDialog, EditEventDialog } from "./EventDialogs";
@@ -40,6 +41,7 @@ import RoutinesSection, {
   type RoutinesApi,
   routinesApi,
 } from "./RoutinesSection";
+import RulesSection, { type RulesApi, rulesApi } from "./RulesSection";
 import SyncNote from "./SyncNote";
 import {
   type Pending,
@@ -66,9 +68,9 @@ function mostPressing(
   );
 }
 
-/** The type the server gives an event once its choice is dropped. */
-function defaultTypeOf(alert: AlertItem, state: AlertsState): AlertType {
-  return alert.critical ? "alarm" : state.settings.defaultType;
+/** The type the server gives an event once its choice is dropped: #critical, then a rule, then the default. */
+function defaultTypeOf(alert: AlertItem, state: AlertsState) {
+  return unchosenType(alert, state.rules ?? [], state.settings.defaultType);
 }
 
 /**
@@ -79,9 +81,11 @@ function defaultTypeOf(alert: AlertItem, state: AlertsState): AlertType {
 export default function AlertsPanel({
   phones = phonesApi,
   routines = routinesApi,
+  rules = rulesApi,
 }: {
   phones?: PhonesApi;
   routines?: RoutinesApi;
+  rules?: RulesApi;
 } = {}) {
   const [view, setView] = React.useState<View>({ status: "loading" });
   const [ringing, setRinging] = React.useState(false);
@@ -257,10 +261,7 @@ export default function AlertsPanel({
       ...(type === undefined
         ? {}
         : type === "default"
-          ? {
-              type: defaultTypeOf(alert, state),
-              typeFrom: alert.critical ? "critical" : "default",
-            }
+          ? defaultTypeOf(alert, state)
           : { type, typeFrom: "set" }),
       ...(skipped === undefined ? {} : { skipped }),
     };
@@ -476,6 +477,14 @@ export default function AlertsPanel({
         }}
       />
 
+      <RulesSection
+        rules={state.rules ?? []}
+        api={rules}
+        onState={(next) => {
+          if (alive.current) setView({ status: "owner", state: next });
+        }}
+      />
+
       <HowEventsAlert
         settings={state.settings}
         maxSounds={state.bounds.maxEmergencySounds}
@@ -588,7 +597,9 @@ function typeLine(alert: AlertItem): string {
       ? "set here"
       : alert.typeFrom === "critical"
         ? "from #critical in the calendar"
-        : "the default for unmarked events";
+        : alert.typeFrom === "rule"
+          ? "from a rule under Rules"
+          : "the default for unmarked events";
   if (alert.type === "none")
     return `Sends nothing: ${from}. Send test is off until you choose Ring once or Ring until stopped.`;
   return `${typeLabels[alert.type]}: ${from}. The ${typeLabels[alert.type]} settings apply.`;

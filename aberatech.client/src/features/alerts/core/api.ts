@@ -12,6 +12,17 @@ import { requestJson } from "../../../site/earlyRequest";
 import type { Countdown } from "./countdowns";
 import type { Routine } from "./routines";
 
+/**
+ * One rule for what an event sends: when the field contains the text, any
+ * case, the event's alert is the type. Blank text on organizer or location
+ * matches any event that has one. The first rule that matches wins.
+ */
+export interface TypeRule {
+  field: "title" | "organizer" | "location";
+  text: string;
+  type: AlertType;
+}
+
 export interface AlertItem {
   /** The event's UID and the occurrence's start: what Skip sends back. */
   key: string;
@@ -27,8 +38,8 @@ export interface AlertItem {
   critical: boolean;
   /** What this occurrence will send. */
   type: AlertType;
-  /** "set" on this page, "critical" from the calendar's mark, or "default". */
-  typeFrom: "set" | "critical" | "default";
+  /** "set" on this page, "critical" from the calendar's mark, "rule" from a rule, or "default". */
+  typeFrom: "set" | "critical" | "rule" | "default";
   /** Answered on a paired phone, in a browser or in the Pushover app. Nothing more is sent. */
   acknowledged: boolean;
   acknowledgedAt: string | null;
@@ -42,6 +53,8 @@ export interface AlertItem {
    * the start, a window after the alert. A browser rings until then.
    */
   ringsUntil: string;
+  /** The organizer's email address. Null when the calendar names none. An older server leaves it out. */
+  organizer?: string | null;
 }
 
 /** Where an alarm was answered: a paired phone, Ring in this browser, or the Pushover app. */
@@ -175,6 +188,8 @@ export interface AlertsState {
    * time left. An older server leaves the field out.
    */
   countdowns?: Countdown[];
+  /** The rules for what an event sends, in order. An older server leaves the field out. */
+  rules?: TypeRule[];
   /**
    * The zone a new countdown starts in: the paired phone's, else the
    * settings' zone, else America/New_York. An older server leaves it out.

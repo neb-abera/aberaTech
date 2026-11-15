@@ -94,9 +94,19 @@ public sealed record AlertSettings(
         Math.Clamp(options.BackupDelaySeconds, MinBackupDelaySeconds, MaxBackupDelaySeconds));
 
     /// <summary>The saved row, or the configuration's values when nothing is saved.</summary>
+    /// <summary>The saved settings, or the defaults, with the owner's rules in their order.</summary>
     public static async Task<AlertSettings> CurrentAsync(
         IAlertStore store, AlertsOptions options, CancellationToken cancellationToken) =>
-        await store.SettingsAsync(cancellationToken) ?? Defaults(options);
+        (await store.SettingsAsync(cancellationToken) ?? Defaults(options)) with
+        {
+            Rules = await store.TypeRulesAsync(cancellationToken),
+        };
+
+    /// <summary>
+    /// What an event sends when no choice and no #critical mark decide it,
+    /// first match wins. Kept in their own table and read with the settings.
+    /// </summary>
+    public IReadOnlyList<AlertTypeRule> Rules { get; init; } = [];
 
     public Duration Poll => Duration.FromMinutes(PollMinutes);
 

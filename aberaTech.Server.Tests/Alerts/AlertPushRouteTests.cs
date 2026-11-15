@@ -312,6 +312,8 @@ public sealed class AlertPushRouteTests : IDisposable
         ["ack from a browser", "owner", "POST", "/api/alerts/ack", "{\"key\":\"standup@google.com|20261028T130000Z\",\"via\":\"browser\"}"],
         ["type from the page", "owner", "PUT", "/api/alerts/event-type", "{\"key\":\"review@google.com|20261028T180000Z\",\"type\":\"alarm\"}"],
         ["type from the phone", "phone", "PUT", "/api/alerts/event-type", "{\"key\":\"review@google.com|20261028T180000Z\",\"type\":\"notification\"}"],
+        ["rules from the page", "owner", "PUT", "/api/alerts/rules", "{\"rules\":[{\"field\":\"title\",\"text\":\"review\",\"type\":\"alarm\"}]}"],
+        ["rules from the phone", "phone", "PUT", "/api/alerts/rules", "{\"rules\":[]}"],
         ["new event from the phone", "phone", "POST", "/api/alerts/events",
             "{\"title\":\"Dentist\",\"startsAt\":\"2026-10-28T11:00:00-04:00\",\"durationMinutes\":30,\"type\":\"alarm\",\"leadMinutes\":20}"],
         ["new event from the page", "owner", "POST", "/api/alerts/events",
