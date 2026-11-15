@@ -89,7 +89,8 @@ export default function SchedulePanel() {
             >
               Booked for {formatDay(booking.startsAt)} at{" "}
               {formatTime(booking.startsAt)}. A calendar invite is on its way to{" "}
-              {booking.email}.
+              {booking.email}. To cancel, decline the invite. To change the
+              time, propose a new one from the invite.
               {booking.texted
                 ? " A text confirmation is on its way to your phone."
                 : null}

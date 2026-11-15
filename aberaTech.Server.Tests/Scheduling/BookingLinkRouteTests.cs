@@ -446,5 +446,8 @@ public sealed class BookingLinkRouteTests : IDisposable
             lock (Withdrawn) Withdrawn.Add(appointment.Id);
             return Task.FromResult(SendResult.Confirmed(GoogleCalendarInvites.WithdrawalId(GoogleCalendarInvites.EventId(appointment))));
         }
+
+        public Task<BookingEvent> ReadAsync(Appointment appointment, CancellationToken cancellationToken) =>
+            Task.FromResult(BookingEvent.Unknown("This fake holds no events."));
     }
 }

@@ -190,6 +190,10 @@ test("a visitor books a time with texts and the time is taken", async ({
   await expect(booked).toContainText(
     `A calendar invite is on its way to e2e-${info.project.name}@example.com.`,
   );
+  // Cancel and move happen in the visitor's calendar, and the page says so.
+  await expect(booked).toContainText(
+    "To cancel, decline the invite. To change the time, propose a new one from the invite.",
+  );
   await expect(booked).toContainText("A text confirmation is on its way");
   // The page asks again after a booking, and the time is gone from the day.
   await expect(slot).toHaveCount(0);

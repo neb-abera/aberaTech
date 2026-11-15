@@ -44,7 +44,13 @@ public enum NotificationKind
     CalendarWithdraw = 11,
 
     /// <summary>A calendar invite ran out of retries. Sent to the host.</summary>
-    HostInviteFailed = 12
+    HostInviteFailed = 12,
+
+    /// <summary>The host moved the calendar event, and the booking moved with it.</summary>
+    Moved = 13,
+
+    /// <summary>A booking followed its calendar event to a new time. Sent to the host.</summary>
+    HostMoved = 14
 }
 
 /// <summary>Which provider carries each kind.</summary>

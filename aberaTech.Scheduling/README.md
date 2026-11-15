@@ -134,6 +134,32 @@ An invite gets 10 attempts over 4 hours 15 minutes. One that runs out texts
 the host. Canceling queues a withdrawal the same way. Google sends no receipt,
 so the Messages card says "Google accepted" and claims nothing more.
 
+### A booking follows its calendar event
+
+A visitor cancels or moves a booking in their own calendar. The invite and the
+confirmation on the page both say how.
+
+| In Google Calendar                  | On the site, within `Scheduling:CalendarSyncSeconds` (60)             |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| The visitor declines the invite     | The booking is canceled and the event is withdrawn                    |
+| The visitor proposes a new time     | Nothing, until the host accepts by moving the event                   |
+| The host moves or resizes the event | The booking takes the event's times, and its reminders are re-planned |
+| The host deletes the event          | The booking is canceled                                               |
+
+`BookingCalendarSync` reads each upcoming booking's event with `events.get`.
+`BookingEvent.FromGoogle` reads the answer and `BookingSync.Decide` picks the
+action. Both are pure. A cancel runs `BookingChanges.CancelAsync`, the same
+code the cancel route runs.
+
+Only a 200 with `status: cancelled` counts as a deleted event. Google's
+reference says `get` always returns a deleted event that way. A 404, any other
+error and a body that is not a timed event change nothing. A reconnected,
+different calendar answers 404 for every booking, and that must not cancel
+them.
+
+A move onto another booking's time is refused by the overlap constraint. The
+booking keeps its old time, and the log says why.
+
 ### What gets sent, and to whom
 
 | Event                             | Visitor                                                                                | Host          |
@@ -143,6 +169,9 @@ so the Messages card says "Google accepted" and claims nothing more.
 | A day before                      | Reminder, if it is more than a day away                                                |               |
 | An hour before                    | Reminder                                                                               |               |
 | Cancels, either side              | Invite withdrawn by Google. Text cancellation                                          | Canceled      |
+| Declines the invite               | Invite withdrawn by Google. Text cancellation                                          | Canceled      |
+| Host deletes the event            | Text cancellation                                                                      | Canceled      |
+| Host moves the event              | Text with the new time. Reminders move with it                                         | Moved         |
 | Joins a queue                     | Place and estimate, with the opt-out                                                   |               |
 | Estimate moves past the tolerance | New estimate                                                                           |               |
 | Nearly their turn, and their turn | One each                                                                               |               |

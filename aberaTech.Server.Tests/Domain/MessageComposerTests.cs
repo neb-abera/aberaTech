@@ -45,6 +45,8 @@ public class MessageComposerTests
     [InlineData(NotificationKind.HostBooked)]
     [InlineData(NotificationKind.HostCancelled)]
     [InlineData(NotificationKind.HostInviteFailed)]
+    [InlineData(NotificationKind.Moved)]
+    [InlineData(NotificationKind.HostMoved)]
     public void Every_message_fits_in_one_billable_segment(NotificationKind kind)
     {
         // A body that spills past 160 characters silently doubles both the cost
@@ -67,14 +69,16 @@ public class MessageComposerTests
         NotificationKind.Booked,
         NotificationKind.ReminderDayBefore,
         NotificationKind.Reminder,
-        NotificationKind.Cancelled
+        NotificationKind.Cancelled,
+        NotificationKind.Moved
     ];
 
     private static readonly NotificationKind[] ToHost =
     [
         NotificationKind.HostBooked,
         NotificationKind.HostCancelled,
-        NotificationKind.HostInviteFailed
+        NotificationKind.HostInviteFailed,
+        NotificationKind.HostMoved
     ];
 
     /// <summary>The kinds Google Calendar carries. They are not texts and have no body to compose.</summary>

@@ -58,6 +58,8 @@ describe("calendar jobs", () => {
       "Not delivered",
     );
     expect(kindLabel("HostInviteFailed")).toBe("Invite failed, to you");
+    expect(kindLabel("Moved")).toBe("New time");
+    expect(kindLabel("HostMoved")).toBe("New time, to you");
   });
 
   it("keeps the kind and number for a text", () => {

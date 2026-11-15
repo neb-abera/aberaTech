@@ -36,3 +36,8 @@ aberatech.client/src/views/CoursePlanner.tsx	e-catalogue\.jhu\.edu	JHU's URL
 aberatech.client/src/features/planner/data/link-check.json	e-catalogue\.jhu\.edu	JHU's URL
 aberaTech.Scheduling/Outbox/OutboxDispatcher.cs	appointment\.Cancelled	stored column Appointment.Cancelled
 aberaTech.Scheduling/Admin/BookingLinkEndpoints.cs	appointment\.Cancelled	stored column Appointment.Cancelled
+aberaTech.Scheduling/Api/BookingChanges.cs	\.Cancelled	stored column Appointment.Cancelled and enum value NotificationKind.Cancelled
+aberaTech.Scheduling/Calendar/BookingCalendarSync.cs	appointment\.Cancelled	stored column Appointment.Cancelled
+aberaTech.Scheduling/Calendar/BookingEvent.cs	"cancelled"	Google Calendar event status value
+aberaTech.Server.Tests/Calendar/BookingSyncTests.cs	"cancelled	Google Calendar event status value
+aberaTech.Server.Tests/Scheduling/BookingCalendarSyncTests.cs	\.Cancelled	stored column Appointment.Cancelled and enum value NotificationKind.Cancelled
