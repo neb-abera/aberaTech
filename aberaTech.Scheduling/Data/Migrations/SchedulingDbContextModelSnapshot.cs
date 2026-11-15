@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261113004559_AlertEventLeads";
+    public override string LastMigrationId => "20261115145107_AlertTypeRules";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -536,6 +536,34 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("OccurrenceKey");
 
                 b.ToTable("AlertSkips");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertTypeRuleRecord", b =>
+            {
+                b.Property<int>("Position")
+                    .HasColumnType("integer");
+
+                b.Property<string>("Field")
+                    .IsRequired()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
+
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<Instant>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.HasKey("Position");
+
+                b.ToTable("AlertTypeRules");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Data.AdminSessionVersion", b =>

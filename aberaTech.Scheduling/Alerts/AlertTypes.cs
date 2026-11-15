@@ -2,7 +2,7 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>What one event's alert sends, and where that came from.</summary>
 /// <param name="Type"><see cref="AlertTypes.None"/>, <see cref="AlertTypes.Notification"/> or <see cref="AlertTypes.Alarm"/>.</param>
-/// <param name="From">"set" on the page, "critical" from the calendar's mark, or "default".</param>
+/// <param name="From">"set" on the page, "critical" from the calendar's mark, "rule" from a rule, or "default".</param>
 public sealed record EffectiveType(string Type, string From);
 
 /// <summary>
@@ -12,7 +12,8 @@ public sealed record EffectiveType(string Type, string From);
 /// </summary>
 /// <remarks>
 /// A choice made on the page wins. Otherwise an event marked #critical in
-/// the calendar is an alarm. Otherwise it follows
+/// the calendar is an alarm. Otherwise the first of the owner's rules that
+/// matches it decides (<see cref="AlertTypeRule"/>). Otherwise it follows
 /// <see cref="AlertSettings.DefaultType"/>, which is none unless the owner
 /// changes it.
 /// </remarks>
@@ -31,6 +32,8 @@ public static class AlertTypes
 
     public const string FromMark = "critical";
 
+    public const string FromRule = "rule";
+
     public const string FromDefault = "default";
 
     /// <summary>The longest type stored.</summary>
@@ -46,9 +49,16 @@ public static class AlertTypes
     /// </summary>
     public static readonly IReadOnlyList<string> Defaults = [None, Notification];
 
-    /// <summary>The page's choice, then the calendar's mark, then the default.</summary>
-    public static EffectiveType Resolve(PlannedAlert alert, string? chosen, AlertSettings settings) =>
-        chosen is not null ? new EffectiveType(chosen, FromPage)
-        : alert.Critical ? new EffectiveType(Alarm, FromMark)
-        : new EffectiveType(settings.DefaultType, FromDefault);
+    /// <summary>The page's choice, then the calendar's mark, then the first rule that matches, then the default.</summary>
+    public static EffectiveType Resolve(PlannedAlert alert, string? chosen, AlertSettings settings)
+    {
+        if (chosen is not null) return new EffectiveType(chosen, FromPage);
+        if (alert.Critical) return new EffectiveType(Alarm, FromMark);
+        foreach (var rule in settings.Rules)
+        {
+            if (rule.Matches(alert)) return new EffectiveType(rule.Type, FromRule);
+        }
+
+        return new EffectiveType(settings.DefaultType, FromDefault);
+    }
 }

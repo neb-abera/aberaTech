@@ -26,10 +26,22 @@ internal sealed class InMemoryAlertStore : IAlertStore
     private readonly Dictionary<string, Instant> _skips = [];
     private Instant? _mutedUntil;
     private AlertSettings? _settings;
+    private IReadOnlyList<AlertTypeRule> _rules = [];
 
     public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken)
     {
         lock (_lock) return Task.FromResult(_settings);
+    }
+
+    public Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_rules);
+    }
+
+    public Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken)
+    {
+        lock (_lock) _rules = [.. rules];
+        return Task.CompletedTask;
     }
 
     public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken)

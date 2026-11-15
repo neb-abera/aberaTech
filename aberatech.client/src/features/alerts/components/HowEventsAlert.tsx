@@ -57,6 +57,9 @@ export default function HowEventsAlert({
           The mark is left off the title the phone shows.
         </li>
         <li>
+          Otherwise the first rule under Rules that matches the event decides.
+        </li>
+        <li>
           {settings.defaultType === "notification"
             ? "Every other event rings once, the default for unmarked events under Settings."
             : "Every other event sends nothing, the default for unmarked events under Settings."}

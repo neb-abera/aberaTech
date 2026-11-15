@@ -647,6 +647,10 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken) => Down<bool>();
 
+        public Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken) => Down<IReadOnlyList<AlertTypeRule>>();
+
+        public Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken) => Down<bool>();
+
         public Task<Instant?> MutedUntilAsync(CancellationToken cancellationToken) => Down<Instant?>();
 
         public Task SetMutedUntilAsync(Instant? until, Instant now, CancellationToken cancellationToken) => Down<bool>();
@@ -741,6 +745,12 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken) =>
             SettingsDown ? Task.FromException<AlertSettings?>(new TimeoutException("database down")) : _inner.SettingsAsync(cancellationToken);
+
+        public Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken) =>
+            SettingsDown ? Task.FromException<IReadOnlyList<AlertTypeRule>>(new TimeoutException("database down")) : _inner.TypeRulesAsync(cancellationToken);
+
+        public Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken) =>
+            _inner.SaveTypeRulesAsync(rules, now, cancellationToken);
 
         public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken) =>
             _inner.SaveSettingsAsync(settings, now, cancellationToken);
@@ -1159,6 +1169,11 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         private readonly InMemoryAlertStore _inner = new();
 
         public Task<AlertSettings?> SettingsAsync(CancellationToken cancellationToken) => _inner.SettingsAsync(cancellationToken);
+
+        public Task<IReadOnlyList<AlertTypeRule>> TypeRulesAsync(CancellationToken cancellationToken) => _inner.TypeRulesAsync(cancellationToken);
+
+        public Task SaveTypeRulesAsync(IReadOnlyList<AlertTypeRule> rules, Instant now, CancellationToken cancellationToken) =>
+            _inner.SaveTypeRulesAsync(rules, now, cancellationToken);
 
         public Task SaveSettingsAsync(AlertSettings settings, Instant now, CancellationToken cancellationToken) =>
             _inner.SaveSettingsAsync(settings, now, cancellationToken);

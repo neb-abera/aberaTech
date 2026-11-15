@@ -482,6 +482,51 @@ test.describe("/alerts", () => {
     await expect(test).toBeDisabled();
   });
 
+  test("a rule sets an event's type, survives a reload, and removing it puts the default back", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    const standup = page
+      .getByRole("list", { name: "Next alerts" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E standup" });
+    const rules = page.getByRole("region", { name: "Rules" });
+    const save = rules.getByRole("button", { name: "Save rules" });
+
+    await rules.getByRole("button", { name: "Add rule" }).click();
+    const rule = rules.getByRole("group", { name: "Rule 1" });
+    await rule.getByLabel("When").selectOption("title");
+    await rule.getByLabel("Text").fill("e2e STANDUP");
+    await rule.getByLabel("Sends").selectOption("notification");
+    await save.click();
+    await expect(rules.getByRole("status")).toHaveText("Saved");
+    await expect(
+      standup.getByText(
+        "Ring once: from a rule under Rules. The Ring once settings apply.",
+      ),
+    ).toBeVisible();
+
+    await page.reload();
+    await expect(rule.getByLabel("Text")).toHaveValue("e2e STANDUP");
+    await expect(
+      page.getByRole("button", {
+        name: /^Set E2E standup at .* to Ring once$/,
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await rules.getByRole("button", { name: "Remove rule 1" }).click();
+    await save.click();
+    await expect(rules.getByRole("status")).toHaveText("Saved");
+    await page.reload();
+    await expect(rules.getByText("No rules.", { exact: false })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /^Set E2E standup at .* to Off$/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
   test("a new event made on the page is listed at once, and a type change is written to Google Calendar", async ({
     page,
   }) => {

@@ -38,6 +38,7 @@ public enum AlertSource
 /// One ring of a routine alarm (<see cref="RoutineRings"/>). AlertAt is the
 /// ring and StartsAt is when it stops. Always an alarm.
 /// </param>
+/// <param name="Organizer">The organizer's email address. Null when the feed names none.</param>
 public sealed record PlannedAlert(
     string Key,
     string Title,
@@ -49,7 +50,8 @@ public sealed record PlannedAlert(
     bool Critical = false,
     Instant? EndsAt = null,
     bool Recurring = false,
-    bool Routine = false)
+    bool Routine = false,
+    string? Organizer = null)
 {
     /// <summary>
     /// When the alert stops being due: the event's start, or for an alert
@@ -240,7 +242,8 @@ public static partial class AlertPlanner
             EventId(calendarEvent.Uid),
             critical,
             shownEnd,
-            calendarEvent.RecurrenceRule is not null || calendarEvent.RecurrenceIdentifier is not null);
+            calendarEvent.RecurrenceRule is not null || calendarEvent.RecurrenceIdentifier is not null,
+            Organizer: Address(calendarEvent.Organizer?.Value)?.Trim());
         return alert.ListedUntil <= now ? null : alert;
     }
 
