@@ -101,6 +101,32 @@ public sealed class GoogleCalendarInvites(
         }
     }
 
+    public async Task<BookingEvent> ReadAsync(Appointment appointment, CancellationToken cancellationToken)
+    {
+        var (credential, accessToken, refusal) = await AuthorizeAsync(cancellationToken);
+        if (refusal is not null)
+        {
+            return BookingEvent.Unknown(refusal.Value.Error ?? "The calendar is not connected.");
+        }
+
+        var url = $"https://www.googleapis.com/calendar/v3/calendars/{Uri.EscapeDataString(credential!.CalendarId)}"
+                  + $"/events/{Uri.EscapeDataString(EventId(appointment))}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        try
+        {
+            using var response = await http.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            return BookingEvent.FromGoogle(response.StatusCode, body, appointment.Email);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return BookingEvent.Unknown($"Google was unreachable: {exception.GetType().Name}.");
+        }
+    }
+
     /// <summary>
     /// The stored grant and a fresh access token, or the reason there are none.
     /// </summary>
@@ -176,6 +202,15 @@ public sealed class GoogleCalendarInvites(
     internal static string WithdrawalId(string eventId) => $"withdraw-{eventId}";
 
     /// <summary>
+    /// What the visitor reads in the invite: where it came from, and how to
+    /// cancel or move it. Both are done in their calendar, and
+    /// <see cref="BookingCalendarSync"/> brings the booking along.
+    /// </summary>
+    internal const string Description =
+        "Booked at https://abera.tech/schedule. To cancel, decline this invite. "
+        + "To change the time, propose a new time from this invite.";
+
+    /// <summary>
     /// The event as Google's API wants it.
     /// </summary>
     /// <remarks>
@@ -189,7 +224,7 @@ public sealed class GoogleCalendarInvites(
         {
             id = EventId(appointment),
             summary = $"{hostName} and {appointment.DisplayName}",
-            description = "Booked at https://abera.tech/schedule.",
+            description = Description,
             start = new { dateTime = InstantPattern.ExtendedIso.Format(appointment.StartsAt) },
             end = new { dateTime = InstantPattern.ExtendedIso.Format(appointment.EndsAt) },
             attendees = new[] { new { email = appointment.Email } }

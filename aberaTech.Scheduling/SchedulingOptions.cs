@@ -69,6 +69,13 @@ public sealed class SchedulingOptions
     /// </remarks>
     public string HostPhoneE164 { get; set; } = string.Empty;
 
+    /// <summary>
+    /// How often each upcoming booking is compared with its Google Calendar
+    /// event. A decline, a deleted event or a moved event reaches the site
+    /// within this many seconds.
+    /// </summary>
+    public int CalendarSyncSeconds { get; set; } = 60;
+
     public DateTimeZone HostZone =>
         DateTimeZoneProviders.Tzdb.GetZoneOrNull(HostZoneId)
         ?? throw new InvalidOperationException($"Scheduling:HostZoneId '{HostZoneId}' is not an IANA zone id.");

@@ -64,6 +64,11 @@ public class CalendarInviteTests
         Assert.Equal("2027-06-01T19:55:00Z", root.GetProperty("end").GetProperty("dateTime").GetString());
         Assert.Equal("ada@example.com",
             root.GetProperty("attendees")[0].GetProperty("email").GetString());
+
+        // The invite tells the visitor how to cancel and how to move it.
+        var description = root.GetProperty("description").GetString();
+        Assert.Contains("To cancel, decline this invite.", description);
+        Assert.Contains("propose a new time", description);
     }
 
     [Fact]

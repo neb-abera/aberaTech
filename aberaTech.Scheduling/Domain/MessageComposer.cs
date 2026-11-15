@@ -68,12 +68,19 @@ public static class MessageComposer
                 $"Canceled: {at}.",
             NotificationKind.HostInviteFailed =>
                 $"Calendar invite failed for the {at} booking. See abera.tech/schedule/admin.",
+            NotificationKind.Moved =>
+                $"Your time with {hostName} moved to {at}.",
+            NotificationKind.HostMoved =>
+                $"Moved: {at}.",
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown notification kind.")
         };
 
         // The host does not need telling which brand is texting him about his own
         // calendar, and the characters are better spent elsewhere.
-        var toHost = kind is NotificationKind.HostBooked or NotificationKind.HostCancelled or NotificationKind.HostInviteFailed;
+        var toHost = kind is NotificationKind.HostBooked
+            or NotificationKind.HostCancelled
+            or NotificationKind.HostInviteFailed
+            or NotificationKind.HostMoved;
 
         return string.IsNullOrWhiteSpace(brandName) || toHost ? body : $"{brandName}: {body}";
     }

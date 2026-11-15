@@ -23,6 +23,12 @@ public interface ICalendarInvites
 
     /// <summary>Deletes the event, which tells Google to notify the attendee.</summary>
     Task<SendResult> WithdrawAsync(Appointment appointment, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reads the event as Google holds it now, for <see cref="BookingCalendarSync"/>.
+    /// Unknown whenever Google gives no usable answer.
+    /// </summary>
+    Task<BookingEvent> ReadAsync(Appointment appointment, CancellationToken cancellationToken);
 }
 
 /// <summary>The invites when Google is not configured: none, and the outbox says so.</summary>
@@ -42,4 +48,7 @@ public sealed class NoCalendarInvites(ILogger<NoCalendarInvites> logger) : ICale
 
     public Task<SendResult> WithdrawAsync(Appointment appointment, CancellationToken cancellationToken) =>
         Task.FromResult(SendResult.RejectedPermanently(Reason));
+
+    public Task<BookingEvent> ReadAsync(Appointment appointment, CancellationToken cancellationToken) =>
+        Task.FromResult(BookingEvent.Unknown(Reason));
 }

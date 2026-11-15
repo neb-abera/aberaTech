@@ -633,6 +633,10 @@ public static class SchedulingEndpoints
     ///
     /// Pending reminders are removed rather than left to fire. A reminder for an
     /// appointment that is not happening is worse than no reminder at all.
+    ///
+    /// The work is <see cref="BookingChanges.CancelAsync"/>, which the calendar
+    /// sync also calls when a visitor declines the invite or the host deletes
+    /// the event.
     /// </remarks>
     private static async Task<IResult> CancelBookingAsync(
         Guid appointmentId,
@@ -657,48 +661,14 @@ public static class SchedulingEndpoints
         }
 
         var now = clock.GetCurrentInstant();
-        appointment.Cancelled = true;
-
-        // Anything still waiting to go out about this appointment is now wrong.
-        var pending = await database.Outbox
-            .Where(message => message.AppointmentId == appointmentId
-                              && (message.State == DeliveryState.Pending || message.State == DeliveryState.Failed))
-            .ToListAsync(cancellationToken);
-
-        database.Outbox.RemoveRange(pending);
-
-        var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(appointment.BookedZoneId) ?? options.HostZone;
-
-        if (appointment.SmsConsent && !string.IsNullOrEmpty(appointment.PhoneE164))
-        {
-            database.Outbox.Add(NewMessage(appointment, NotificationKind.Cancelled, options, zone, now, now));
-        }
-
-        if (PhoneNumber.TryParse(options.HostPhoneE164, out var hostPhone))
-        {
-            var forHost = NewMessage(appointment, NotificationKind.HostCancelled, options, options.HostZone, now, now);
-            forHost.ToPhoneE164 = hostPhone.Value.E164;
-            forHost.IdempotencyKey = $"{appointment.Id}:{NotificationKind.HostCancelled}";
-            database.Outbox.Add(forHost);
-        }
-
-        // Withdrawn by the outbox, so Google being down delays the withdrawal
-        // rather than losing it. Queued whether or not the invite went: the
-        // event's id is the booking's, so deleting one that was never made
-        // is a 404, which counts as done. Half a minute later than now, so an
-        // invite already in flight lands before its withdrawal.
-        if (!string.IsNullOrEmpty(appointment.Email))
-        {
-            database.Outbox.Add(CalendarJob(
-                appointment, NotificationKind.CalendarWithdraw, now, now + Duration.FromSeconds(30)));
-        }
+        await BookingChanges.CancelAsync(database, appointment, options, now, withdrawInvite: true, cancellationToken);
 
         await database.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
     }
 
-    private static OutboxMessage NewMessage(
+    internal static OutboxMessage NewMessage(
         Appointment appointment,
         NotificationKind kind,
         SchedulingOptions options,
@@ -767,7 +737,7 @@ public static class SchedulingEndpoints
     /// The body is for the host's Messages card. Google writes the email the
     /// visitor receives.
     /// </remarks>
-    private static OutboxMessage CalendarJob(Appointment appointment, NotificationKind kind, Instant now, Instant dueAt) =>
+    internal static OutboxMessage CalendarJob(Appointment appointment, NotificationKind kind, Instant now, Instant dueAt) =>
         new()
         {
             Id = Guid.NewGuid(),

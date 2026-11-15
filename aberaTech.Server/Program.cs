@@ -198,6 +198,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         }
     }
     builder.Services.AddHostedService<OutboxDispatcher>();
+    builder.Services.AddHostedService<BookingCalendarSync>();
 }
 
 // ---------------------------------------------------------------- fitness

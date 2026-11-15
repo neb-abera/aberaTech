@@ -39,6 +39,8 @@ const kinds: Record<string, string> = {
   CalendarInvite: "Calendar invite",
   CalendarWithdraw: "Invite withdrawn",
   HostInviteFailed: "Invite failed, to you",
+  Moved: "New time",
+  HostMoved: "New time, to you",
 };
 
 /** The kinds Google Calendar carries rather than a text. */
