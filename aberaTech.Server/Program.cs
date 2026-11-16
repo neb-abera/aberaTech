@@ -425,6 +425,7 @@ if (adminOptions.IsConfigured)
     // The Rust grader (grader/), when Training:GraderUrl names it. It answers
     // within 90 s or says why it stopped, so 100 s is the ceiling here.
     builder.Services.AddSingleton<GraderClient>();
+    builder.Services.AddSingleton<ProofChecker>();
     builder.Services.AddHttpClient(GraderClient.ClientName, client => client.Timeout = TimeSpan.FromSeconds(100));
     if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Training:Fake"))
     {

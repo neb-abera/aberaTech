@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import leanReferences from "../../data/lean-references.json";
 import linkCheck from "../../data/link-check.json";
 import { readError } from "../grade";
 import { everyItem } from "../progress";
@@ -20,6 +21,8 @@ import {
  */
 
 const items = everyItem();
+const escapeRegExp = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const links = linkCheck.links as Record<string, { status?: number }>;
 
 describe("the syllabus", () => {
@@ -293,6 +296,34 @@ describe("the questions", () => {
         expect(question.tests.length, question.id).toBeGreaterThanOrEqual(3);
       if (question.type === "card")
         expect(question.back.length, question.id).toBeGreaterThan(0);
+      if (question.type === "lean") {
+        expect(question.statement, question.id).not.toMatch(/\n|:=/);
+        expect(question.statement.length, question.id).toBeLessThanOrEqual(
+          1024,
+        );
+      }
+    }
+  });
+
+  it("keeps a reference proof for every Lean question, checked by the grader", () => {
+    const lean = questions.filter((question) => question.type === "lean");
+    expect(lean.length).toBe(9);
+    const kept = leanReferences as Record<
+      string,
+      { statement: string; proof: string }
+    >;
+    expect(Object.keys(kept).sort()).toEqual(
+      lean.map((question) => question.id).sort(),
+    );
+    for (const question of lean) {
+      const reference = kept[question.id];
+      expect(reference.statement, question.id).toBe(question.statement);
+      expect(reference.proof, question.id).toMatch(
+        new RegExp(`^theorem answer : ${escapeRegExp(question.statement)} := `),
+      );
+      expect(reference.proof, question.id).not.toContain("sorry");
+      // Each Lean question follows the paper proof it formalizes.
+      expect(questions.some((q) => `${q.id}-lean` === question.id)).toBe(true);
     }
   });
 
@@ -325,7 +356,9 @@ describe("the questions", () => {
         expect(named, `${unit.id} ${topic}`).toContain(topic);
       for (const lesson of unit.lessons)
         for (const question of lesson.questions ?? [])
-          expect(["card", "proof"], question.id).toContain(question.type);
+          expect(["card", "proof", "lean"], question.id).toContain(
+            question.type,
+          );
     }
   });
 

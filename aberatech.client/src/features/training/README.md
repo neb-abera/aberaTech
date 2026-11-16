@@ -122,6 +122,7 @@ seconds into a video. A YouTube link opens at that second.
 | `proof`  | `rubric`: the points a correct proof makes        | The owner, each line met or not, with elegance and clarity beside it |
 | `card`   | `back`                                            | The owner's recall, Again to Easy                                    |
 | `code`   | `tests`: `{ "stdin", "stdout" }`, `starter`       | The drill endpoint, every test passing                               |
+| `lean`   | `statement`: the proposition, one line, `starter` | The grader's `POST /prove`: Lean accepts `answer` as a proof of it   |
 
 A short answer may use numbers, `+ - * / ^`, parentheses, `sqrt`, `abs`,
 `sin`, `cos`, `tan`, `ln`, `log`, `exp`, `pi`, and single-letter variables.
@@ -138,8 +139,8 @@ A unit takes:
   "minutes", "topics" }`, such as the named Alcumus topics. The page never
   asks for AoPS credentials.
 
-The syllabus holds 991 questions for Phases 0 to 2: 459 cards, 285 number
-answers, 141 choices, 65 proofs, and 41 code questions. 33 programming and
+The syllabus holds 1,000 questions for Phases 0 to 2: 459 cards, 285 number
+answers, 141 choices, 65 proofs, 41 code questions, and 9 Lean proofs. 33 programming and
 non-Alcumus math units have a pretest and a mastery check. The 26 units
 Alcumus covers have cards and proofs only, close on their named Alcumus
 topics (`externalMastery`), and place out by AoPS's own test (their
@@ -151,6 +152,27 @@ gcc 16.2 on the dev box.
 Under `make e2e` the server sends two sample questions
 (`aberaTech.Server/Training/FakeAssessment.cs`), and `core/fixture.ts` adds
 them to the C++ refresher. Production sends none.
+
+## Lean proofs
+
+Nine paper proofs have a Lean question after them, with the id
+`<proof id>-lean`. Each states the same fact in core Lean 4, with no
+Mathlib, for `theorem answer` to prove. The editor opens on the statement,
+proved by `sorry`. Check with Lean sends the file and the statement to
+`/api/training/drills/prove`, owner only, under the drill limit. The server
+passes both to the Rust grader's `POST /prove` (`grader/README.md`), and
+the grader has Compiler Explorer's Lean 4.29.1 check the file. A proof is
+right when Lean compiled it with no error, `answer` proves the statement as
+written, and `answer` rests on no axiom past Lean's three standard ones.
+`sorry` fails, and so does `native_decide`. With no `Training:GraderUrl`
+the server answers `unavailable` and Submit stays held. Under `make e2e`
+the grader runs against the fake Compiler Explorer, which answers as Lean
+would.
+
+`data/lean-references.json` keeps a reference proof for each. Every one was
+proved through the grader against Compiler Explorer's `lean_4_29_1` on
+16 Nov 2026, and every question's starter failed as `sorry`. A wrong answer
+links Theorem Proving in Lean 4's chapter on tactics.
 
 ## Problem pool and solve log
 

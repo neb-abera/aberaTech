@@ -16,8 +16,10 @@ import {
   gradeCard,
   gradeChoice,
   gradeCode,
+  gradeLean,
   gradeNumber,
   gradeProof,
+  leanStarter,
   referenceUrl,
   rightAnswer,
   timeLabel,
@@ -33,6 +35,7 @@ const typeLabel: Record<Question["type"], string> = {
   proof: "Proof",
   card: "Card",
   code: "Code",
+  lean: "Lean proof",
 };
 
 /** What a wrong answer gets: the right answer, why, and where to learn it. */
@@ -53,11 +56,13 @@ export function Feedback({
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {answer.correct ? "Right." : "Not right."}
         </Typography>
-        {!answer.correct && question.type !== "code" && (
-          <Typography variant="body2">
-            The right answer: {rightAnswer(question)}
-          </Typography>
-        )}
+        {!answer.correct &&
+          question.type !== "code" &&
+          question.type !== "lean" && (
+            <Typography variant="body2">
+              The right answer: {rightAnswer(question)}
+            </Typography>
+          )}
         <Typography variant="body2">Why: {question.why}</Typography>
         <Typography variant="body2">
           {answer.correct ? "Reference: " : "Learn it here: "}
@@ -139,6 +144,8 @@ function Body({
       return <Card question={question} answer={answer} onAnswer={onAnswer} />;
     case "code":
       return <Code question={question} answer={answer} onAnswer={onAnswer} />;
+    case "lean":
+      return <Lean question={question} answer={answer} onAnswer={onAnswer} />;
   }
 }
 
@@ -478,6 +485,137 @@ function Code({
             ? `${result.tests.filter((test) => test.passed).length} of ${question.tests.length} tests passed.`
             : `No test ran. ${result.error ?? ""}`}
         </Typography>
+      )}
+    </Stack>
+  );
+}
+
+interface ProofCheck {
+  outcome:
+    | "proved"
+    | "error"
+    | "sorry"
+    | "axiom"
+    | "statement"
+    | "forbidden"
+    | "unavailable";
+  message?: string | null;
+  output: string;
+}
+
+/** Lean's tactic reference, for any failed check. */
+export const leanTacticsUrl =
+  "https://lean-lang.org/theorem_proving_in_lean4/Tactics/";
+
+/** A Lean proof checked by the grader: Compiler Explorer's Lean reads it, the grader reads Lean's report. */
+function Lean({
+  question,
+  answer,
+  onAnswer,
+}: {
+  question: Question & { type: "lean" };
+  answer?: Answer;
+  onAnswer: (answer: Answer) => void;
+}) {
+  const [source, setSource] = useState(answer?.given ?? leanStarter(question));
+  const [checking, setChecking] = useState(false);
+  const [check, setCheck] = useState<ProofCheck | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const answered = !!check && check.outcome !== "unavailable";
+
+  async function run() {
+    setChecking(true);
+    setFailure(null);
+    try {
+      const response = await fetch("/api/training/drills/prove", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, statement: question.statement }),
+      });
+      if (!response.ok) {
+        setFailure(
+          response.status === 429
+            ? "Too many checks this minute. Wait a moment and check it again."
+            : `The check failed: ${response.status}.`,
+        );
+        return;
+      }
+      setCheck((await response.json()) as ProofCheck);
+    } catch {
+      setFailure("The check did not reach the server.");
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <Stack spacing={1}>
+      <Typography variant="body2">
+        Prove <code style={mono}>theorem answer : {question.statement}</code> in
+        core Lean 4, with no Mathlib.
+      </Typography>
+      <TextField
+        label="Your Lean"
+        multiline
+        minRows={6}
+        value={source}
+        disabled={!!answer}
+        onChange={(event) => setSource(event.target.value)}
+        slotProps={{ htmlInput: { spellCheck: false, style: mono } }}
+      />
+      {!answer && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={checking}
+            onClick={run}
+          >
+            {checking ? "Checking" : "Check with Lean"}
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!answered}
+            onClick={() =>
+              onAnswer(gradeLean(source, check?.outcome === "proved"))
+            }
+          >
+            Submit
+          </Button>
+        </Stack>
+      )}
+      {failure && <Alert severity="error">{failure}</Alert>}
+      {check && (
+        <Alert
+          severity={check.outcome === "proved" ? "success" : "warning"}
+          aria-label="Lean's check"
+        >
+          <Stack spacing={0.5}>
+            <Typography variant="body2">
+              {check.outcome === "proved"
+                ? "Lean accepted the proof."
+                : (check.message ?? "Lean did not accept the proof.")}
+            </Typography>
+            {check.output && (
+              <Box
+                component="pre"
+                sx={{ ...mono, m: 0, whiteSpace: "pre-wrap", fontSize: 13 }}
+              >
+                {check.output}
+              </Box>
+            )}
+            {check.outcome !== "proved" && (
+              <Typography variant="body2">
+                Tactics:{" "}
+                <Link href={leanTacticsUrl} target="_blank" rel="noopener">
+                  Theorem Proving in Lean 4, Tactics
+                </Link>
+              </Typography>
+            )}
+          </Stack>
+        </Alert>
       )}
     </Stack>
   );

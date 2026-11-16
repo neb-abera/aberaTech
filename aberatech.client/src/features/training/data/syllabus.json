@@ -9195,6 +9195,17 @@
                 "label": "Prealgebra, section 1.4, Negation, p. 17",
                 "url": "https://artofproblemsolving.com/store/book/prealgebra"
               }
+            },
+            {
+              "id": "q-pre-1-4-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that (-a)(-b) = ab for all integers a and b.",
+              "why": "Rewrite the negations out: -a times anything is the negation of the product, and so is anything times -b. Two negations cancel. Lean's lemmas Int.neg_mul, Int.mul_neg, and Int.neg_neg say exactly these three facts.",
+              "ref": {
+                "label": "Prealgebra, section 1.4, Negation, p. 17",
+                "url": "https://artofproblemsolving.com/store/book/prealgebra"
+              },
+              "statement": "∀ a b : Int, (-a) * (-b) = a * b"
             }
           ]
         },
@@ -9863,6 +9874,17 @@
                 "label": "Prealgebra, section 5.5, Inequalities, p. 230",
                 "url": "https://artofproblemsolving.com/store/book/prealgebra"
               }
+            },
+            {
+              "id": "q-pre-5-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that if a < b then -a > -b, for integers.",
+              "why": "Negation reverses order: a < b means b - a is positive, and (-a) - (-b) is the same number. The tactic omega decides any linear statement about integers, and this is one.",
+              "ref": {
+                "label": "Prealgebra, section 5.5, Inequalities, p. 230",
+                "url": "https://artofproblemsolving.com/store/book/prealgebra"
+              },
+              "statement": "∀ a b : Int, a < b → -a > -b"
             }
           ]
         }
@@ -14425,6 +14447,17 @@
                 "label": "Introduction to Algebra, section 21.4, Geometric Series, p. 605",
                 "url": "https://artofproblemsolving.com/store/book/intro-algebra"
               }
+            },
+            {
+              "id": "q-alg-21-4-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that (r - 1)(a + ar + ... + ar^(n-1)) = a(r^n - 1) for integers a and r, with the sum written as a list sum.",
+              "why": "Multiplying the geometric sum by r - 1 telescopes: each term ar^k appears once with + and once with -. Induct on n, and the step adds (r - 1)ar^n = ar^(n+1) - ar^n to both sides.",
+              "ref": {
+                "label": "Introduction to Algebra, section 21.4, Geometric Series, p. 605",
+                "url": "https://artofproblemsolving.com/store/book/intro-algebra"
+              },
+              "statement": "∀ (a r : Int) (n : Nat), (r - 1) * ((List.range n).map (fun k => a * r ^ k)).sum = a * (r ^ n - 1)"
             }
           ]
         },
@@ -16410,6 +16443,17 @@
                 "label": "Introduction to Number Theory, section 1.6, Using Divisors, p. 18",
                 "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
               }
+            },
+            {
+              "id": "q-nt-1-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that if a divides b and a divides c, then a divides bx + cy, for all integers.",
+              "why": "Write b = ak and c = al. Then bx + cy = a(kx + ly), so kx + ly is the witness. In Lean, obtain the two witnesses and give the new one.",
+              "ref": {
+                "label": "Introduction to Number Theory, section 1.6, Using Divisors, p. 18",
+                "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
+              },
+              "statement": "∀ a b c x y : Int, a ∣ b → a ∣ c → a ∣ b * x + c * y"
             }
           ]
         },
@@ -16568,6 +16612,17 @@
                 "label": "Introduction to Number Theory, section 3.7, The Euclidean Algorithm, p. 53",
                 "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
               }
+            },
+            {
+              "id": "q-nt-3-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that gcd(a - b, b) = gcd(a, b) for natural numbers with b ≤ a.",
+              "why": "Any common divisor of a and b divides a - b, and any common divisor of a - b and b divides a. In Lean, write a as (a - b) + b and let simp use that gcd(x + y, y) = gcd(x, y).",
+              "ref": {
+                "label": "Introduction to Number Theory, section 3.7, The Euclidean Algorithm, p. 53",
+                "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
+              },
+              "statement": "∀ a b : Nat, b ≤ a → Nat.gcd (a - b) b = Nat.gcd a b"
             }
           ]
         },
@@ -17241,6 +17296,17 @@
                 "label": "Introduction to Number Theory, section 12.5, Multiplication and Exponentiation, p. 232",
                 "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
               }
+            },
+            {
+              "id": "q-nt-12-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that if a ≡ b and c ≡ d (mod m), then ac ≡ bd (mod m), with congruence written as equal remainders.",
+              "why": "The remainder of a product depends only on the factors' remainders: ac mod m = ((a mod m)(c mod m)) mod m. Replace each remainder by the equal one, then fold it back. Lean's lemma is Int.mul_emod.",
+              "ref": {
+                "label": "Introduction to Number Theory, section 12.5, Multiplication and Exponentiation, p. 232",
+                "url": "https://artofproblemsolving.com/store/book/intro-number-theory"
+              },
+              "statement": "∀ a b c d m : Int, a % m = b % m → c % m = d % m → a * c % m = b * d % m"
             }
           ]
         },
@@ -20100,6 +20166,17 @@
                 "label": "Intermediate Algebra, section 11.3, Induction, p. 348",
                 "url": "https://artofproblemsolving.com/store/book/intermediate-algebra"
               }
+            },
+            {
+              "id": "q-ialg-11-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove by induction that 6(0^2 + 1^2 + ... + n^2) = n(n+1)(2n+1), with the sum written as a list sum.",
+              "why": "Induct on n. The step adds (n+1)^2 to both sides, and what is left is a polynomial identity. Split the list sum with List.range_succ and List.sum_append, then let grind check the algebra.",
+              "ref": {
+                "label": "Intermediate Algebra, section 11.3, Induction, p. 348",
+                "url": "https://artofproblemsolving.com/store/book/intermediate-algebra"
+              },
+              "statement": "∀ n : Nat, 6 * ((List.range (n + 1)).map (fun k => k ^ 2)).sum = n * (n + 1) * (2 * n + 1)"
             }
           ]
         },
@@ -21638,6 +21715,17 @@
                 "label": "Intermediate Counting & Probability, chapter 8, Mathematical Induction, pp. 161 to 171",
                 "url": "https://artofproblemsolving.com/store/book/intermediate-counting"
               }
+            },
+            {
+              "id": "q-icp-8-2-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove by induction that 1 + 3 + 5 + ... + (2n-1) = n^2, with the sum written over k from 0 to n-1 of 2k+1.",
+              "why": "Induct on n. Adding the next odd number 2n+1 to n^2 gives (n+1)^2. Split the list sum, rewrite with the hypothesis, and let grind check the algebra.",
+              "ref": {
+                "label": "Intermediate Counting & Probability, chapter 8, Mathematical Induction, pp. 161 to 171",
+                "url": "https://artofproblemsolving.com/store/book/intermediate-counting"
+              },
+              "statement": "∀ n : Nat, ((List.range n).map (fun k => 2 * k + 1)).sum = n ^ 2"
             },
             {
               "id": "q-icp-8-3",
@@ -25995,6 +26083,17 @@
                 "label": "Zeitz, The Art and Craft of Problem Solving, section 2.3, Methods of Argument, subsection Mathematical Induction, p. 42",
                 "url": "https://www.wiley.com/en-us/The+Art+and+Craft+of+Problem+Solving%2C+3rd+Edition-p-9781119239901"
               }
+            },
+            {
+              "id": "q-zeitz-2-3-lean",
+              "type": "lean",
+              "prompt": "In Lean, prove that n^2 < 2^n for every natural number n ≥ 5.",
+              "why": "Induct from 5. If k^2 < 2^k and k ≥ 5, then (k+1)^2 = k^2 + 2k + 1 ≤ 2k^2 < 2 · 2^k, because 2k + 1 ≤ k^2 once k ≥ 3. The base case 25 < 32 is decided by computation.",
+              "ref": {
+                "label": "Zeitz, The Art and Craft of Problem Solving, section 2.3, Methods of Argument, subsection Mathematical Induction, p. 42",
+                "url": "https://www.wiley.com/en-us/The+Art+and+Craft+of+Problem+Solving%2C+3rd+Edition-p-9781119239901"
+              },
+              "statement": "∀ n : Nat, 5 ≤ n → n ^ 2 < 2 ^ n"
             },
             {
               "id": "q-zeitz-2-4",

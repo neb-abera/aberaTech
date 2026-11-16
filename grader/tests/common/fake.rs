@@ -11,6 +11,15 @@
 //! - `// fake: hang` is stopped for time.
 //! - Anything else prints nothing.
 //!
+//! A Lean compile (`"lang": "lean"`) answers the way Lean reports the
+//! grader's wrapped file (src/prove.rs), with the fences it asked for:
+//!
+//! - `-- fake: error` reports an error.
+//! - `-- fake: other` proves a different statement.
+//! - `-- fake: axiom` rests on the axiom `cheat`.
+//! - `sorry` in the owner's part rests on `sorryAx`.
+//! - Anything else is a complete proof.
+//!
 //! `delay_ms` waits that long before each answer. `busy` answers 429 with Retry-After: 1 that many times first. `status`
 //! answers that status to every call. `garbage` answers 200 with no JSON.
 
@@ -88,6 +97,42 @@ pub fn answer(source: &str, stdin: &str) -> Value {
     })
 }
 
+/// Lean's report on the grader's wrapped file.
+pub fn lean_answer(source: &str) -> Value {
+    let first = source.lines().next().unwrap_or_default();
+    let nonce = first
+        .strip_prefix("theorem reference_")
+        .and_then(|rest| rest.split(' ').next())
+        .unwrap_or_default();
+    let owner = source.split("/-! checks -/").next().unwrap_or_default();
+    let owner = owner.split_once('\n').map_or("", |(_, rest)| rest);
+    let wanted = "∀ (n : Nat), @Eq.{1} Nat n n";
+    let got = if owner.contains("-- fake: other") {
+        "True"
+    } else {
+        wanted
+    };
+    let axioms = if owner.contains("-- fake: axiom") {
+        "'answer' depends on axioms: [cheat]"
+    } else if owner.contains("sorry") {
+        "'answer' depends on axioms: [sorryAx]"
+    } else {
+        "'answer' does not depend on any axioms"
+    };
+    let code = i64::from(owner.contains("-- fake: error"));
+    let mut text = String::from("<source>:1:8: warning: declaration uses `sorry`\n");
+    if owner.contains("sorry") {
+        text.push_str("<source>:2:8: warning: declaration uses `sorry`\n");
+    }
+    if code == 1 {
+        text.push_str("<source>:3:2: error: unsolved goals\n");
+    }
+    text = format!(
+        "{text}{nonce}:statement\nreference_{nonce} : {wanted}\n{nonce}:answer\nanswer : {got}\n{nonce}:axioms\n{axioms}\n{nonce}:end"
+    );
+    json!({ "code": code, "stdout": lines(&text), "stderr": [] })
+}
+
 async fn compile(
     State(fake): State<Arc<Fake>>,
     Path(compiler): Path<String>,
@@ -116,6 +161,9 @@ async fn compile(
         return "<html>not json</html>".into_response();
     }
     let source = body["source"].as_str().unwrap_or_default();
+    if body["lang"] == "lean" {
+        return Json(lean_answer(source)).into_response();
+    }
     let stdin = body["options"]["executeParameters"]["stdin"]
         .as_str()
         .unwrap_or_default();

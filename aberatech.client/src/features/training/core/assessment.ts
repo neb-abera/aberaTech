@@ -134,6 +134,7 @@ export function checkQuestions(
 export function questionMinutes(question: Question): number {
   switch (question.type) {
     case "proof":
+    case "lean":
       return 20;
     case "code":
       return 15;
@@ -145,7 +146,7 @@ export function questionMinutes(question: Question): number {
 }
 
 export const questionMinutesBasis =
-  "A card is 1 min, a choice or short answer 2, code 15, and a proof 20. All are estimates.";
+  "A card is 1 min, a choice or short answer 2, code 15, and a proof or Lean proof 20. All are estimates.";
 
 // ---------------------------------------------------------------- grading
 
@@ -180,6 +181,21 @@ export function gradeCode(source: string, allPassed: boolean): Answer {
   return { correct: allPassed, given: source };
 }
 
+/** A Lean proof is right when the grader reports it proved. */
+export function gradeLean(source: string, proved: boolean): Answer {
+  return { correct: proved, given: source };
+}
+
+/** The file a Lean question opens with. */
+export function leanStarter(question: {
+  statement: string;
+  starter?: string;
+}): string {
+  return (
+    question.starter ?? `theorem answer : ${question.statement} := by\n  sorry`
+  );
+}
+
 /** The right answer, as the page shows it after a wrong one. */
 export function rightAnswer(question: Question): string {
   switch (question.type) {
@@ -193,6 +209,8 @@ export function rightAnswer(question: Question): string {
       return question.rubric.join(" ");
     case "code":
       return "Every test passing.";
+    case "lean":
+      return "A proof of the statement that Lean accepts, with no sorry and no new axiom.";
   }
 }
 

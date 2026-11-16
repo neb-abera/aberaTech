@@ -362,6 +362,55 @@ test("a failed mastery check shows each wrong answer's reference and opens again
   );
 });
 
+test("a Lean proof is checked by Lean: sorry is refused, and a proof is accepted", async ({
+  page,
+}) => {
+  // Under `make e2e` the grader checks proofs against the fake Compiler
+  // Explorer (grader/tests/common/fake.rs): a file with sorry fails as
+  // sorry, and any other is proved. The quiz is the first Prealgebra
+  // lesson's, whose Lean question follows its paper proof.
+  await open(page, "/training");
+  await withDocument(
+    page,
+    (current) => current,
+    async () => {
+      await page.goto("/training?check=quiz:pre-1");
+      const question = page.getByRole("article", {
+        name: /In Lean, prove that \(-a\)\(-b\) = ab/,
+      });
+      await expect(question).toContainText("Lean proof", { timeout: 15_000 });
+      const editor = question.getByRole("textbox", { name: "Your Lean" });
+      await expect(editor).toHaveValue(
+        "theorem answer : ∀ a b : Int, (-a) * (-b) = a * b := by\n  sorry",
+      );
+      const submit = question.getByRole("button", { name: "Submit" });
+      await expect(submit).toBeDisabled();
+
+      await question.getByRole("button", { name: "Check with Lean" }).click();
+      const check = question.getByRole("alert", { name: "Lean's check" });
+      await expect(check).toContainText("The proof uses `sorry`.");
+      await expect(check).toContainText("declaration uses `sorry`");
+      await expect(
+        check.getByRole("link", { name: "Theorem Proving in Lean 4, Tactics" }),
+      ).toHaveAttribute(
+        "href",
+        "https://lean-lang.org/theorem_proving_in_lean4/Tactics/",
+      );
+
+      await editor.fill(
+        "theorem answer : ∀ a b : Int, (-a) * (-b) = a * b := by\n  intro a b\n  rw [Int.neg_mul, Int.mul_neg, Int.neg_neg]",
+      );
+      await question.getByRole("button", { name: "Check with Lean" }).click();
+      await expect(check).toContainText("Lean accepted the proof.");
+      await submit.click();
+      await expect(
+        question.getByRole("alert", { name: "Right" }),
+      ).toBeVisible();
+      await expect(editor).toBeDisabled();
+    },
+  );
+});
+
 test("the pool picks ten by Saad's mix, and a logged solve shows in the week's averages", async ({
   page,
 }) => {
