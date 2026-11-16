@@ -113,6 +113,22 @@ test("a drill runs against its tests and shows which failed", async ({
   });
   const editor = drill.getByRole("textbox", { name: "Your C++" });
 
+  // The editor's box holds all of its text. The theme once fixed every
+  // input at 2.5rem, so the starter drew 160 px past a 40 px box, over the
+  // drill's own instructions.
+  await expect(editor).toBeVisible();
+  const [text, frame] = await editor.evaluate((area) => {
+    const box = area.getBoundingClientRect();
+    const root = (area.parentElement as HTMLElement).getBoundingClientRect();
+    return [
+      { top: box.top, bottom: box.bottom },
+      { top: root.top, bottom: root.bottom },
+    ];
+  });
+  expect(text.bottom - text.top).toBeGreaterThan(100);
+  expect(text.top).toBeGreaterThanOrEqual(frame.top);
+  expect(text.bottom).toBeLessThanOrEqual(frame.bottom);
+
   // Under `make e2e` the drill goes through the Rust grader to a fake
   // Compiler Explorer (grader/tests/common/fake.rs): "// fake: sum" prints
   // the sum of the input, anything else prints nothing.

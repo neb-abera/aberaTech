@@ -441,6 +441,16 @@ export const inputsCustomizations: Components<Theme> = {
               height: "2.5rem",
             },
           },
+          {
+            // A multiline field grows with its rows. The fixed heights above
+            // are for one line, and a box held to them draws the text past it.
+            props: {
+              multiline: true,
+            },
+            style: {
+              height: "auto",
+            },
+          },
         ],
       }),
       notchedOutline: {
