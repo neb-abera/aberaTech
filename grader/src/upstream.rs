@@ -201,6 +201,40 @@ impl CompilerExplorer {
             "allowStoreCodeDebug": false,
         });
 
+        self.post(&url, &body).await
+    }
+
+    /// Compile `source` with `compiler` and run nothing: the compiler's own
+    /// messages are the answer. The Lean proof check uses it, because Lean
+    /// reports what it checked while it compiles.
+    ///
+    /// # Errors
+    ///
+    /// As [`CompilerExplorer::execute`].
+    pub async fn compile(
+        &self,
+        compiler: &str,
+        language: &str,
+        source: &str,
+    ) -> Result<Execution, UpstreamError> {
+        let url = format!("{}/api/compiler/{compiler}/compile", self.settings.base);
+        let body = json!({
+            "source": source,
+            "compiler": compiler,
+            "options": {
+                "userArguments": "",
+                "filters": { "binary": false, "execute": false },
+                "tools": [],
+                "libraries": [],
+            },
+            "lang": language,
+            "allowStoreCodeDebug": false,
+        });
+        self.post(&url, &body).await
+    }
+
+    /// One call, with 429s waited out by [`backoff`].
+    async fn post(&self, url: &str, body: &serde_json::Value) -> Result<Execution, UpstreamError> {
         let mut attempt = 1;
         loop {
             let response = {
@@ -210,9 +244,9 @@ impl CompilerExplorer {
                     .await
                     .map_err(|_| UpstreamError::Unreachable)?;
                 self.client
-                    .post(&url)
+                    .post(url)
                     .header("Accept", "application/json")
-                    .json(&body)
+                    .json(body)
                     .send()
                     .await
                     .map_err(|_| UpstreamError::Unreachable)?

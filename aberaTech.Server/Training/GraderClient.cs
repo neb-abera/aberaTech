@@ -72,6 +72,33 @@ public sealed class GraderClient(IHttpClientFactory clients, IConfiguration conf
         }
     }
 
+    private sealed record ProveRequest(string Source, string Statement);
+
+    private sealed record ProveAnswer(string? Outcome, string? Message, string? Output);
+
+    /// <summary>A Lean proof, checked by the grader's <c>POST /prove</c>.</summary>
+    public async Task<ProofResult> ProveAsync(ProofRun run, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await clients.CreateClient(ClientName)
+                .PostAsJsonAsync(new Uri(Address!, "prove"), new ProveRequest(run.Source, run.Statement), Json, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var refusal = await ReadAsync<GradeError>(response, cancellationToken);
+                return new ProofResult("unavailable", refusal?.Error ?? $"The grader answered {(int)response.StatusCode}.", "");
+            }
+            var answer = await ReadAsync<ProveAnswer>(response, cancellationToken);
+            if (answer?.Outcome is not { Length: > 0 } outcome)
+                return new ProofResult("unavailable", "The grader sent an answer the site could not read.", "");
+            return new ProofResult(outcome, answer.Message, answer.Output ?? "");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return new ProofResult("unavailable", "The grader did not answer.", "");
+        }
+    }
+
     private static DrillTestResult Result(GradeVerdict test) => test.Verdict switch
     {
         "pass" => new DrillTestResult(true, test.Stdout ?? "", null),

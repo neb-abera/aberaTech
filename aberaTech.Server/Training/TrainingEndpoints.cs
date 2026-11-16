@@ -95,6 +95,18 @@ public static class TrainingEndpoints
         .RequireRateLimiting(DrillPolicy)
         .WithTags("Training");
 
+        // A Lean proof goes to the Rust grader, which has Compiler Explorer's
+        // Lean check it and reads Lean's report (grader/src/prove.rs).
+        // Owner only, and under the same limit as drill runs.
+        routes.MapPost("/api/training/drills/prove", async (ProofRun run, ProofChecker checker, CancellationToken cancellationToken) =>
+        {
+            if (ProofChecker.Invalid(run) is { } problem) return Results.BadRequest(problem);
+            return Results.Ok(await checker.CheckAsync(run, cancellationToken));
+        })
+        .RequireAuthorization(AdminAuth.PolicyName)
+        .RequireRateLimiting(DrillPolicy)
+        .WithTags("Training");
+
         return routes;
     }
 

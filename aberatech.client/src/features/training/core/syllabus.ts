@@ -93,7 +93,8 @@ interface QuestionBase {
 /**
  * The ways the page tests you. Choice and number answers are graded by the
  * page. A proof is graded by you against its rubric. A card is recalled
- * and rated. Code runs against its tests.
+ * and rated. Code runs against its tests. A Lean proof is checked by Lean,
+ * through the grader.
  */
 export type Question =
   | (QuestionBase & { type: "choice"; choices: string[]; answer: number })
@@ -117,6 +118,16 @@ export type Question =
       type: "code";
       starter?: string;
       tests: { stdin: string; stdout: string }[];
+    })
+  | (QuestionBase & {
+      type: "lean";
+      /**
+       * The proposition `theorem answer` must prove, in core Lean 4 with no
+       * Mathlib, on one line.
+       */
+      statement: string;
+      /** The file the editor opens with. By default the statement, by sorry. */
+      starter?: string;
     });
 
 export interface Lesson {

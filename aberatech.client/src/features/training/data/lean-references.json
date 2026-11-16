@@ -1,0 +1,38 @@
+{
+  "q-pre-1-4-lean": {
+    "statement": "∀ a b : Int, (-a) * (-b) = a * b",
+    "proof": "theorem answer : ∀ a b : Int, (-a) * (-b) = a * b := by\n  intro a b\n  rw [Int.neg_mul, Int.mul_neg, Int.neg_neg]"
+  },
+  "q-pre-5-3-lean": {
+    "statement": "∀ a b : Int, a < b → -a > -b",
+    "proof": "theorem answer : ∀ a b : Int, a < b → -a > -b := by\n  intro a b h\n  omega"
+  },
+  "q-nt-1-3-lean": {
+    "statement": "∀ a b c x y : Int, a ∣ b → a ∣ c → a ∣ b * x + c * y",
+    "proof": "theorem answer : ∀ a b c x y : Int, a ∣ b → a ∣ c → a ∣ b * x + c * y := by\n  intro a b c x y hb hc\n  obtain ⟨k, rfl⟩ := hb\n  obtain ⟨l, rfl⟩ := hc\n  exact ⟨k * x + l * y, by grind⟩"
+  },
+  "q-nt-12-3-lean": {
+    "statement": "∀ a b c d m : Int, a % m = b % m → c % m = d % m → a * c % m = b * d % m",
+    "proof": "theorem answer : ∀ a b c d m : Int, a % m = b % m → c % m = d % m → a * c % m = b * d % m := by\n  intro a b c d m h1 h2\n  rw [Int.mul_emod, h1, h2, ← Int.mul_emod]"
+  },
+  "q-nt-3-3-lean": {
+    "statement": "∀ a b : Nat, b ≤ a → Nat.gcd (a - b) b = Nat.gcd a b",
+    "proof": "theorem answer : ∀ a b : Nat, b ≤ a → Nat.gcd (a - b) b = Nat.gcd a b := by\n  intro a b h\n  rw [Nat.gcd_comm (a - b) b, Nat.gcd_comm a b]\n  have : a = (a - b) + b := by omega\n  conv => rhs; rw [this]\n  simp"
+  },
+  "q-ialg-11-3-lean": {
+    "statement": "∀ n : Nat, 6 * ((List.range (n + 1)).map (fun k => k ^ 2)).sum = n * (n + 1) * (2 * n + 1)",
+    "proof": "theorem answer : ∀ n : Nat, 6 * ((List.range (n + 1)).map (fun k => k ^ 2)).sum = n * (n + 1) * (2 * n + 1) := by\n  intro n\n  induction n with\n  | zero => rfl\n  | succ k ih =>\n    rw [List.range_succ, List.map_append, List.sum_append]\n    simp only [List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]\n    grind"
+  },
+  "q-icp-8-2-lean": {
+    "statement": "∀ n : Nat, ((List.range n).map (fun k => 2 * k + 1)).sum = n ^ 2",
+    "proof": "theorem answer : ∀ n : Nat, ((List.range n).map (fun k => 2 * k + 1)).sum = n ^ 2 := by\n  intro n\n  induction n with\n  | zero => rfl\n  | succ k ih =>\n    rw [List.range_succ, List.map_append, List.sum_append, ih]\n    simp only [List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]\n    grind"
+  },
+  "q-zeitz-2-3-lean": {
+    "statement": "∀ n : Nat, 5 ≤ n → n ^ 2 < 2 ^ n",
+    "proof": "theorem answer : ∀ n : Nat, 5 ≤ n → n ^ 2 < 2 ^ n := by\n  intro n h\n  induction n with\n  | zero => omega\n  | succ k ih =>\n    by_cases hk : 5 ≤ k\n    · have step := ih hk\n      have grow : 2 * k + 1 ≤ k * k := by\n        have := Nat.mul_le_mul_right k hk\n        omega\n      have e1 : (k + 1) ^ 2 = k * k + 2 * k + 1 := by grind\n      have e2 : 2 ^ (k + 1) = 2 * 2 ^ k := by rw [Nat.pow_succ]; omega\n      rw [Nat.pow_two] at step\n      rw [e1, e2]\n      generalize k * k = s at *\n      generalize 2 ^ k = t at *\n      omega\n    · have : k = 4 := by omega\n      subst this\n      decide"
+  },
+  "q-alg-21-4-lean": {
+    "statement": "∀ (a r : Int) (n : Nat), (r - 1) * ((List.range n).map (fun k => a * r ^ k)).sum = a * (r ^ n - 1)",
+    "proof": "theorem answer : ∀ (a r : Int) (n : Nat), (r - 1) * ((List.range n).map (fun k => a * r ^ k)).sum = a * (r ^ n - 1) := by\n  intro a r n\n  induction n with\n  | zero => simp\n  | succ k ih =>\n    rw [List.range_succ, List.map_append, List.sum_append]\n    simp only [List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]\n    rw [Int.mul_add, ih, Int.pow_succ]\n    grind"
+  }
+}

@@ -1,4 +1,4 @@
-//! The HTTP surface: POST /grade and GET /healthz.
+//! The HTTP surface: POST /grade, POST /prove, and GET /healthz.
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -16,6 +16,7 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::Level;
 
 use crate::grade::grade;
+use crate::prove::{ProveRequest, prove};
 use crate::request::{GradeRequest, MAX_BODY_BYTES, Verdict};
 use crate::upstream::{CompilerExplorer, UpstreamError};
 
@@ -47,9 +48,17 @@ pub fn router(explorer: CompilerExplorer, limits: Limits) -> Router {
             .concurrency_limit(limits.gradings.max(1))
             .timeout(limits.grading_timeout),
     );
+    let proving = post(prove_route).layer(
+        ServiceBuilder::new()
+            .layer(HandleErrorLayer::new(refused))
+            .load_shed()
+            .concurrency_limit(limits.gradings.max(1))
+            .timeout(limits.grading_timeout),
+    );
     Router::new()
         .route("/healthz", get(|| async { "ok" }))
         .route("/grade", grading)
+        .route("/prove", proving)
         .fallback(|| async { error(StatusCode::NOT_FOUND, "No such route.") })
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .layer(TraceLayer::new_for_http().on_response(DefaultOnResponse::new().level(Level::INFO)))
@@ -119,6 +128,43 @@ async fn grade_route(
         }
         Err(failure) => {
             tracing::warn!(?failure, elapsed_ms, "compiler explorer gave no run");
+            let status = if failure == UpstreamError::Busy {
+                StatusCode::SERVICE_UNAVAILABLE
+            } else {
+                StatusCode::BAD_GATEWAY
+            };
+            error(status, &failure.message())
+        }
+    }
+}
+
+async fn prove_route(
+    State(explorer): State<Arc<CompilerExplorer>>,
+    body: Result<Json<ProveRequest>, JsonRejection>,
+) -> Response {
+    let request = match body {
+        Ok(Json(request)) => request,
+        Err(rejection) => {
+            let status = rejection.status();
+            tracing::info!(status = status.as_u16(), "unreadable prove request");
+            return error(status, &rejection.body_text());
+        }
+    };
+    if let Some(problem) = request.problem() {
+        tracing::info!(%problem, "prove request refused");
+        return error(StatusCode::BAD_REQUEST, &problem);
+    }
+    let started = Instant::now();
+    let result = prove(&explorer, &request).await;
+    let elapsed_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    match result {
+        Ok(response) => {
+            // The proof and Lean's output are never logged.
+            tracing::info!(outcome = ?response.outcome, elapsed_ms, "proof checked");
+            Json(response).into_response()
+        }
+        Err(failure) => {
+            tracing::warn!(?failure, elapsed_ms, "compiler explorer gave no answer");
             let status = if failure == UpstreamError::Busy {
                 StatusCode::SERVICE_UNAVAILABLE
             } else {

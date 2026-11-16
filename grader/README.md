@@ -77,12 +77,54 @@ size limit, 415 without a JSON content type, 422 for an unknown field, 503
 when Compiler Explorer stays busy or the grader is at capacity, 502 when
 Compiler Explorer fails, and 504 past 90 seconds.
 
+## Lean proofs
+
+`POST /prove`, JSON:
+
+```json
+{
+  "source": "theorem answer : ∀ n : Nat, 2 * n % 2 = 0 := by\n  intro n\n  omega",
+  "statement": "∀ n : Nat, 2 * n % 2 = 0"
+}
+```
+
+`source` is at most 16 KiB. `statement` is one line of at most 1 KiB with
+no `:=`. The grader puts the statement first, as a theorem named with a
+random value, then the file, then the checks, and sends the whole to
+Compiler Explorer's Lean 4.29.1 (`lean_4_29_1`, core Lean with no Mathlib).
+It reads Lean's report between fences that carry the same value. The
+answer:
+
+```json
+{ "outcome": "proved", "message": null, "output": "" }
+```
+
+| Outcome     | When                                                                        |
+| ----------- | --------------------------------------------------------------------------- |
+| `proved`    | Every check below held                                                      |
+| `error`     | Lean reported an error, or its report on the file is missing                |
+| `statement` | `answer` is missing, or its type differs from the statement's               |
+| `sorry`     | `answer` rests on `sorryAx`                                                 |
+| `axiom`     | `answer` rests on an axiom past `propext`, `Classical.choice`, `Quot.sound` |
+| `forbidden` | The file uses a command that runs code in Lean, such as `#eval` or `macro`  |
+
+The two types are compared with `pp.all`, fully elaborated, so a notation,
+an instance, or a definition that changes what the statement means fails.
+`native_decide` rests on `Lean.ofReduceBool` and fails as `axiom`.
+`output` is Lean's messages about the file, with line numbers counted in
+the file. `src/prove.rs` holds the rules. Kani proves the fence search reads
+only from after the last opening fence to the next closing one, for every
+6-byte input.
+
+The check reads what Lean reports. It runs no second kernel check of the
+result, as `lean4checker` would.
+
 `GET /healthz` answers `ok`. `grader probe` checks it from inside the image,
 which has no shell.
 
 ## Limits
 
-- 8 gradings at once. The next is refused with 503 at once.
+- 8 gradings and 8 proof checks at once. The next is refused with 503 at once.
 - 4 calls to Compiler Explorer at once, across every grading.
 - A 429 is waited out as Retry-After says, or 2 then 4 seconds, 3 tries at
   most. A wait over 10 seconds is not waited.
