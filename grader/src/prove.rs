@@ -147,7 +147,7 @@ pub fn contains_word(text: &str, word: &str) -> bool {
 
 /// A value the owner's file cannot know, as 32 hex digits.
 #[must_use]
-pub fn nonce() -> String {
+pub fn fence_value() -> String {
     let half = || {
         let mut hasher = RandomState::new().build_hasher();
         hasher.write_u8(0);
@@ -159,9 +159,9 @@ pub fn nonce() -> String {
 /// The file sent to Lean: the statement alone, the owner's file, then the
 /// fenced checks.
 #[must_use]
-pub fn wrapped(request: &ProveRequest, nonce: &str) -> String {
-    let reference = format!("reference_{nonce}");
-    let fence = |part: &str| format!("#print \"{nonce}:{part}\"\n");
+pub fn wrapped(request: &ProveRequest, marker: &str) -> String {
+    let reference = format!("reference_{marker}");
+    let fence = |part: &str| format!("#print \"{marker}:{part}\"\n");
     format!(
         "theorem {reference} : {statement} := sorry\n\
          {source}\n\
@@ -182,11 +182,15 @@ pub fn wrapped(request: &ProveRequest, nonce: &str) -> String {
     )
 }
 
-/// The text between the fence line `{nonce}:{from}` and the fence line
-/// `{nonce}:{to}`, or `None` when either is missing or out of order.
+/// The text between the fence line `{marker}:{from}` and the fence line
+/// `{marker}:{to}`, or `None` when either is missing or out of order.
 #[must_use]
-pub fn between<'a>(output: &'a str, nonce: &str, from: &str, to: &str) -> Option<&'a str> {
-    fenced(output, &format!("{nonce}:{from}"), &format!("{nonce}:{to}"))
+pub fn between<'a>(output: &'a str, marker: &str, from: &str, to: &str) -> Option<&'a str> {
+    fenced(
+        output,
+        &format!("{marker}:{from}"),
+        &format!("{marker}:{to}"),
+    )
 }
 
 /// The text after the last `open` and before the first `close` that
@@ -235,8 +239,8 @@ pub fn axioms(report: &str) -> Option<Vec<String>> {
 /// fence, without the messages about the statement line the grader put
 /// first, and with line numbers counted in the owner's file.
 #[must_use]
-pub fn owner_output(output: &str, nonce: &str) -> String {
-    let fence = format!("{nonce}:statement");
+pub fn owner_output(output: &str, marker: &str) -> String {
+    let fence = format!("{marker}:statement");
     let text = output.find(&fence).map_or(output, |at| &output[..at]);
     let mut kept = Vec::new();
     let mut skipping = false;
@@ -265,24 +269,24 @@ pub fn owner_output(output: &str, nonce: &str) -> String {
 
 /// Read Lean's report on the wrapped file.
 #[must_use]
-pub fn judge(run: &Execution, nonce: &str) -> ProveResponse {
+pub fn judge(run: &Execution, marker: &str) -> ProveResponse {
     let output = joined(&run.stdout) + "\n" + &joined(&run.stderr);
     let reply = |outcome, message: &str| ProveResponse {
         outcome,
         message: Some(message.into()),
-        output: owner_output(&output, nonce),
+        output: owner_output(&output, marker),
     };
     if run.code != 0 {
         return reply(Outcome::Error, "Lean reported an error.");
     }
     let (Some(statement), Some(answer), Some(report)) = (
-        between(&output, nonce, "statement", "answer"),
-        between(&output, nonce, "answer", "axioms"),
-        between(&output, nonce, "axioms", "end"),
+        between(&output, marker, "statement", "answer"),
+        between(&output, marker, "answer", "axioms"),
+        between(&output, marker, "axioms", "end"),
     ) else {
         return reply(Outcome::Error, "Lean's report on the proof was missing.");
     };
-    let reference = format!("reference_{nonce}");
+    let reference = format!("reference_{marker}");
     match (
         checked_type(statement, &reference),
         checked_type(answer, "answer"),
@@ -313,7 +317,7 @@ pub fn judge(run: &Execution, nonce: &str) -> ProveResponse {
     ProveResponse {
         outcome: Outcome::Proved,
         message: None,
-        output: owner_output(&output, nonce),
+        output: owner_output(&output, marker),
     }
 }
 
@@ -333,11 +337,11 @@ pub async fn prove(
             output: String::new(),
         });
     }
-    let nonce = nonce();
+    let marker = fence_value();
     let run = explorer
-        .compile(LEAN_COMPILER, "lean", &wrapped(request, &nonce))
+        .compile(LEAN_COMPILER, "lean", &wrapped(request, &marker))
         .await?;
-    Ok(judge(&run, &nonce))
+    Ok(judge(&run, &marker))
 }
 
 #[cfg(test)]
@@ -345,7 +349,7 @@ mod tests {
     use super::*;
     use crate::upstream::Line;
 
-    const NONCE: &str = "0123456789abcdef0123456789abcdef";
+    const FENCE: &str = "0123456789abcdef0123456789abcdef";
 
     fn lines(text: &str) -> Vec<Line> {
         text.lines()
@@ -358,7 +362,7 @@ mod tests {
     fn report(answer_type: &str, axioms_line: &str) -> String {
         let wanted = "∀ (n : Nat),\n  @Eq.{1} Nat\n    (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) n\n      (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))))\n    n";
         format!(
-            "<source>:1:8: warning: declaration uses `sorry`\n{NONCE}:statement\nreference_{NONCE} : {wanted}\n{NONCE}:answer\nanswer : {answer_type}\n{NONCE}:axioms\n{axioms_line}\n{NONCE}:end"
+            "<source>:1:8: warning: declaration uses `sorry`\n{FENCE}:statement\nreference_{FENCE} : {wanted}\n{FENCE}:answer\nanswer : {answer_type}\n{FENCE}:axioms\n{axioms_line}\n{FENCE}:end"
         )
     }
 
@@ -376,7 +380,7 @@ mod tests {
     fn a_complete_proof_is_proved() {
         let answer = judge(
             &run(0, &report(SAME, "'answer' does not depend on any axioms")),
-            NONCE,
+            FENCE,
         );
         assert_eq!(answer.outcome, Outcome::Proved);
         assert_eq!(answer.message, None);
@@ -387,7 +391,7 @@ mod tests {
     fn the_standard_axioms_are_allowed() {
         let line = "'answer' depends on axioms: [propext, Classical.choice, Quot.sound]";
         assert_eq!(
-            judge(&run(0, &report(SAME, line)), NONCE).outcome,
+            judge(&run(0, &report(SAME, line)), FENCE).outcome,
             Outcome::Proved
         );
     }
@@ -396,7 +400,7 @@ mod tests {
     fn sorry_fails() {
         let line = "'answer' depends on axioms: [sorryAx]";
         assert_eq!(
-            judge(&run(0, &report(SAME, line)), NONCE).outcome,
+            judge(&run(0, &report(SAME, line)), FENCE).outcome,
             Outcome::Sorry
         );
     }
@@ -404,7 +408,7 @@ mod tests {
     #[test]
     fn native_decide_and_new_axioms_fail() {
         let line = "'answer' depends on axioms: [propext, Lean.ofReduceBool]";
-        let answer = judge(&run(0, &report(SAME, line)), NONCE);
+        let answer = judge(&run(0, &report(SAME, line)), FENCE);
         assert_eq!(answer.outcome, Outcome::Axiom);
         assert_eq!(
             answer.message.as_deref(),
@@ -417,7 +421,7 @@ mod tests {
         let other = SAME.replace("instAddNat", "instAddNat_example");
         let line = "'answer' does not depend on any axioms";
         assert_eq!(
-            judge(&run(0, &report(&other, line)), NONCE).outcome,
+            judge(&run(0, &report(&other, line)), FENCE).outcome,
             Outcome::Statement
         );
     }
@@ -426,7 +430,7 @@ mod tests {
     fn an_error_fails_before_anything_is_read() {
         let line = "'answer' does not depend on any axioms";
         assert_eq!(
-            judge(&run(1, &report(SAME, line)), NONCE).outcome,
+            judge(&run(1, &report(SAME, line)), FENCE).outcome,
             Outcome::Error
         );
     }
@@ -435,7 +439,7 @@ mod tests {
     fn a_report_without_fences_fails() {
         let answer = judge(
             &run(0, "answer : True\n'answer' does not depend on any axioms"),
-            NONCE,
+            FENCE,
         );
         assert_eq!(answer.outcome, Outcome::Error);
     }
@@ -443,8 +447,8 @@ mod tests {
     #[test]
     fn fences_with_another_value_do_not_count() {
         let forged = report(SAME, "'answer' does not depend on any axioms")
-            .replace(NONCE, "ffffffffffffffffffffffffffffffff");
-        assert_eq!(judge(&run(0, &forged), NONCE).outcome, Outcome::Error);
+            .replace(FENCE, "ffffffffffffffffffffffffffffffff");
+        assert_eq!(judge(&run(0, &forged), FENCE).outcome, Outcome::Error);
     }
 
     #[test]
@@ -470,21 +474,21 @@ mod tests {
             source: "theorem answer : True := trivial".into(),
             statement: "True".into(),
         };
-        let file = wrapped(&request, NONCE);
-        assert!(file.starts_with(&format!("theorem reference_{NONCE} : True := sorry\n")));
-        assert!(file.ends_with(&format!("#print \"{NONCE}:end\"\n")));
+        let file = wrapped(&request, FENCE);
+        assert!(file.starts_with(&format!("theorem reference_{FENCE} : True := sorry\n")));
+        assert!(file.ends_with(&format!("#print \"{FENCE}:end\"\n")));
         let source_at = file.find("theorem answer").unwrap_or(usize::MAX);
-        let first_check = file.find(&format!("{NONCE}:statement")).unwrap_or(0);
+        let first_check = file.find(&format!("{FENCE}:statement")).unwrap_or(0);
         assert!(source_at < first_check);
     }
 
     #[test]
     fn output_drops_the_statement_line_and_counts_lines_in_the_owners_file() {
         let output = format!(
-            "<source>:1:8: warning: declaration uses `sorry`\n<source>:3:4: error: Tactic `rfl` failed:\n  n : Nat\n{NONCE}:statement\nreference"
+            "<source>:1:8: warning: declaration uses `sorry`\n<source>:3:4: error: Tactic `rfl` failed:\n  n : Nat\n{FENCE}:statement\nreference"
         );
         assert_eq!(
-            owner_output(&output, NONCE),
+            owner_output(&output, FENCE),
             "<source>:2:4: error: Tactic `rfl` failed:\n  n : Nat"
         );
     }
@@ -500,11 +504,11 @@ mod tests {
     }
 
     #[test]
-    fn a_nonce_is_32_hex_digits_and_changes() {
-        let one = nonce();
+    fn a_fence_value_is_32_hex_digits_and_changes() {
+        let one = fence_value();
         assert_eq!(one.len(), 32);
         assert!(one.chars().all(|c| c.is_ascii_hexdigit()));
-        assert_ne!(one, nonce());
+        assert_ne!(one, fence_value());
     }
 
     #[test]

@@ -100,7 +100,7 @@ pub fn answer(source: &str, stdin: &str) -> Value {
 /// Lean's report on the grader's wrapped file.
 pub fn lean_answer(source: &str) -> Value {
     let first = source.lines().next().unwrap_or_default();
-    let nonce = first
+    let marker = first
         .strip_prefix("theorem reference_")
         .and_then(|rest| rest.split(' ').next())
         .unwrap_or_default();
@@ -128,7 +128,7 @@ pub fn lean_answer(source: &str) -> Value {
         text.push_str("<source>:3:2: error: unsolved goals\n");
     }
     text = format!(
-        "{text}{nonce}:statement\nreference_{nonce} : {wanted}\n{nonce}:answer\nanswer : {got}\n{nonce}:axioms\n{axioms}\n{nonce}:end"
+        "{text}{marker}:statement\nreference_{marker} : {wanted}\n{marker}:answer\nanswer : {got}\n{marker}:axioms\n{axioms}\n{marker}:end"
     );
     json!({ "code": code, "stdout": lines(&text), "stderr": [] })
 }

@@ -99,14 +99,14 @@ answer:
 { "outcome": "proved", "message": null, "output": "" }
 ```
 
-| Outcome     | When                                                                   |
-| ----------- | ---------------------------------------------------------------------- |
-| `proved`    | Every check below held                                                 |
-| `error`     | Lean reported an error, or its report on the file is missing          |
-| `statement` | `answer` is missing, or its type differs from the statement's          |
-| `sorry`     | `answer` rests on `sorryAx`                                            |
+| Outcome     | When                                                                        |
+| ----------- | --------------------------------------------------------------------------- |
+| `proved`    | Every check below held                                                      |
+| `error`     | Lean reported an error, or its report on the file is missing                |
+| `statement` | `answer` is missing, or its type differs from the statement's               |
+| `sorry`     | `answer` rests on `sorryAx`                                                 |
 | `axiom`     | `answer` rests on an axiom past `propext`, `Classical.choice`, `Quot.sound` |
-| `forbidden` | The file uses a command that runs code in Lean, such as `#eval` or `macro` |
+| `forbidden` | The file uses a command that runs code in Lean, such as `#eval` or `macro`  |
 
 The two types are compared with `pp.all`, fully elaborated, so a notation,
 an instance, or a definition that changes what the statement means fails.
