@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@lhci/cli": "0.16.0",
+    "@lhci/cli": "0.16.1",
     "lighthouse": "13.6.0"
   },
   "overrides": {
