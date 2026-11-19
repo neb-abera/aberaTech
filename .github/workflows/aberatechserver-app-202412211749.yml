@@ -184,6 +184,9 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     needs: build
+    env:
+      POSTGRES_RESOURCE_GROUP: facewoof-rg
+      POSTGRES_SERVER: abera-postgres
     permissions:
       contents: read
       id-token: write
@@ -214,6 +217,28 @@ jobs:
           az acr login --name "${CONTAINER_REGISTRY_LOGIN_SERVER%%.*}"
           docker pull "${CONTAINER_REGISTRY_LOGIN_SERVER}/${PROJECT_NAME_FOR_DOCKER}:${GITHUB_SHA}"
 
+      # The server's one firewall rule admits Azure's addresses. Some
+      # GitHub-hosted runners are on AWS: 52.200.10.122 on 2026-11-04 and
+      # 3.41.210.121 and .134 on 2026-11-13 were EC2 us-east-1 and in no
+      # AzureCloud prefix, and each migrate step timed out connecting. So the
+      # job admits its own address, one /32, and the last step removes it.
+      # The deploy identity makes the rule. The migrator holds no Azure role.
+      - name: Admit this runner to the database firewall
+        id: firewall
+        run: |
+          ip="$(curl -fsS --retry 3 --max-time 10 https://api.ipify.org)"
+          if ! [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+            echo "error: no public IPv4 address for this runner: '${ip}'" >&2
+            exit 1
+          fi
+          echo "runner public address: ${ip}"
+          rule="gha-migrate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "rule=${rule}" >> "$GITHUB_OUTPUT"
+          az postgres flexible-server firewall-rule create \
+            --resource-group "$POSTGRES_RESOURCE_GROUP" --server-name "$POSTGRES_SERVER" \
+            --name "$rule" --start-ip-address "$ip" --end-ip-address "$ip" --output none
+          echo "firewall rule ${rule} admits ${ip}"
+
       # abera-migrator trusts this repository's master branch through a
       # federated credential, in both subject formats. It holds no Azure role,
       # so there is no subscription to select. Its one right is the Postgres
@@ -230,6 +255,26 @@ jobs:
 
       - name: Apply migrations as abera-migrator
         run: ./scripts/migrate-production.sh "${CONTAINER_REGISTRY_LOGIN_SERVER}/${PROJECT_NAME_FOR_DOCKER}:${GITHUB_SHA}" apply
+
+      # The migrator login above replaced the deploy identity, so sign in as
+      # it again to remove the rule. This runs on failure and cancel too.
+      - name: Azure Login, deploy identity, to remove the firewall rule
+        if: always() && steps.firewall.outputs.rule != ''
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.ABERATECHSERVERAPP202412211749_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Remove this runner from the database firewall
+        if: always() && steps.firewall.outputs.rule != ''
+        env:
+          RULE: ${{ steps.firewall.outputs.rule }}
+        run: |
+          az postgres flexible-server firewall-rule delete \
+            --resource-group "$POSTGRES_RESOURCE_GROUP" --server-name "$POSTGRES_SERVER" \
+            --name "$RULE" --yes --output none
+          echo "firewall rule ${RULE} removed"
 
       - name: Logout from Azure
         if: always()
