@@ -84,6 +84,10 @@ export interface RoutineCompletion {
   stepId: string;
   cycle: string;
   completedAt: string;
+  id: string;
+  /** The note kept with the check-off, so a step checked off ahead shows it. */
+  note: string | null;
+  hasPhoto: boolean;
 }
 
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */

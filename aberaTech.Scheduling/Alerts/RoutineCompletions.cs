@@ -205,7 +205,8 @@ public sealed record HistoryStepView(
 public sealed record HistoryCompletionView(Guid Id, DateTimeOffset CompletedAt, string? Note, bool HasPhoto);
 
 /// <summary>A completion as the status lists it for the phone: which step of which cycle, and when. Never a note or a photo.</summary>
-public sealed record RoutineCompletionView(Guid RoutineId, Guid StepId, string Cycle, DateTimeOffset CompletedAt);
+public sealed record RoutineCompletionView(
+    Guid RoutineId, Guid StepId, string Cycle, DateTimeOffset CompletedAt, Guid Id, string? Note, bool HasPhoto);
 
 /// <summary>
 /// The body of a completion. Note null clears it. Photo null keeps the

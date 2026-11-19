@@ -1175,7 +1175,13 @@ public static class AlertsEndpoints
             [
                 .. (await store.CompletionsAsync(now - RoutineCompletions.ListedFor, cancellationToken))
                     .Select(completion => new RoutineCompletionView(
-                        completion.RoutineId, completion.StepId, completion.Cycle, completion.CompletedAt.ToDateTimeOffset()))
+                        completion.RoutineId,
+                        completion.StepId,
+                        completion.Cycle,
+                        completion.CompletedAt.ToDateTimeOffset(),
+                        completion.Id,
+                        completion.Note,
+                        completion.HasPhoto))
             ],
             CalendarWrite: calendarWrite);
     }
