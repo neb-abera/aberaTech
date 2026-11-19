@@ -80,7 +80,11 @@ public interface IAlertStore
     /// <summary>True for the first acknowledgment of a key. A second one changes nothing and is false.</summary>
     Task<bool> AcknowledgeAsync(string key, Instant startsAt, string via, Instant now, CancellationToken cancellationToken);
 
-    /// <summary>Forgets claims, skips, acknowledgments and held rings from before <paramref name="before"/>. The feed never plans those again.</summary>
+    /// <summary>
+    /// Forgets claims, skips, acknowledgments and held rings from before
+    /// <paramref name="before"/>, and completions whose cycle rang before it,
+    /// photos with them. The feed never plans those again.
+    /// </summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
 
     /// <summary>Every event the owner chose a type for, by event id.</summary>
@@ -135,7 +139,7 @@ public interface IAlertStore
     /// </summary>
     Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken);
 
-    /// <summary>Replaces every field but the id and the creation time. False when there is no such routine.</summary>
+    /// <summary>Replaces every field but the id and the creation time, and every step. False when there is no such routine.</summary>
     Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken);
 
     /// <summary>False when there was no such routine.</summary>
@@ -149,6 +153,23 @@ public interface IAlertStore
 
     /// <summary>Forgets the held rings of one routine: it was switched off or deleted.</summary>
     Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken);
+
+    /// <summary>The completions whose cycle rang at or after <paramref name="cyclesFrom"/>, without their photos.</summary>
+    Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores the completion of one step in one cycle, or replaces the one
+    /// already stored, which keeps its id. <paramref name="keepPhoto"/> keeps
+    /// the stored photo. Otherwise <paramref name="photo"/> replaces it, and
+    /// null removes it.
+    /// </summary>
+    Task SaveCompletionAsync(RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken);
+
+    /// <summary>False when that step of that cycle was not checked off.</summary>
+    Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken);
+
+    /// <summary>A completion's photo, or null when it has none or there is no such completion.</summary>
+    Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>Every countdown, by target and label.</summary>
     Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken);
@@ -391,6 +412,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertSkips.Where(skip => skip.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertAcknowledgements.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertHeldRings.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertRoutineCompletions.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
@@ -550,8 +572,14 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertEventChanges.Where(row => kept.Contains(row.Id)).ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken) =>
-        AlertRoutines.Sorted(
+    public async Task<IReadOnlyList<AlertRoutine>> RoutinesAsync(CancellationToken cancellationToken)
+    {
+        var steps = (await database.AlertRoutineSteps.AsNoTracking()
+                .OrderBy(step => step.RoutineId)
+                .ThenBy(step => step.Position)
+                .ToListAsync(cancellationToken))
+            .ToLookup(step => step.RoutineId);
+        return AlertRoutines.Sorted(
             (await database.AlertRoutines.AsNoTracking().ToListAsync(cancellationToken))
             .Select(row => new AlertRoutine(
                 row.Id,
@@ -561,7 +589,27 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                 [.. row.Days.Select(day => (int)day)],
                 row.Enabled,
                 row.SnoozeMinutes,
-                row.UpdatedAt)));
+                row.UpdatedAt)
+            {
+                CreatedAt = row.CreatedAt,
+                Steps = [.. steps[row.Id].Select(step => new AlertRoutineStep(step.Id, step.Label, step.OffsetMinutes, step.CreatedAt))],
+            }));
+    }
+
+    /// <summary>Inserts the routine's steps in order. The caller holds the transaction and has removed the old ones.</summary>
+    private async Task InsertStepsAsync(AlertRoutine routine, CancellationToken cancellationToken)
+    {
+        for (var position = 0; position < routine.Steps.Count; position++)
+        {
+            var step = routine.Steps[position];
+            await database.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertRoutineSteps" ("RoutineId", "Id", "Position", "Label", "OffsetMinutes", "CreatedAt")
+                 VALUES ({routine.Id}, {step.Id}, {(short)position}, {step.Label}, {(short)step.OffsetMinutes}, {step.CreatedAt})
+                 """,
+                cancellationToken);
+        }
+    }
 
     public async Task<bool> AddRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
     {
@@ -577,9 +625,10 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             $"""
              INSERT INTO "AlertRoutines" ("Id", "Label", "Hour", "Minute", "Days", "Enabled", "SnoozeMinutes", "CreatedAt", "UpdatedAt")
              VALUES ({routine.Id}, {routine.Label}, {(short)routine.Hour}, {(short)routine.Minute}, {days},
-                 {routine.Enabled}, {(short)routine.SnoozeMinutes}, {routine.UpdatedAt}, {routine.UpdatedAt})
+                 {routine.Enabled}, {(short)routine.SnoozeMinutes}, {routine.CreatedAt}, {routine.UpdatedAt})
              """,
             cancellationToken);
+        await InsertStepsAsync(routine, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;
     }
@@ -587,7 +636,8 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
     public async Task<bool> UpdateRoutineAsync(AlertRoutine routine, CancellationToken cancellationToken)
     {
         var days = Days(routine);
-        return await database.AlertRoutines
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        var updated = await database.AlertRoutines
             .Where(row => row.Id == routine.Id)
             .ExecuteUpdateAsync(
                 set => set
@@ -599,6 +649,13 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                     .SetProperty(row => row.SnoozeMinutes, (short)routine.SnoozeMinutes)
                     .SetProperty(row => row.UpdatedAt, routine.UpdatedAt),
                 cancellationToken) == 1;
+        if (!updated) return false;
+
+        // The whole list, as sent: the creation times came from the stored steps.
+        await database.AlertRoutineSteps.Where(step => step.RoutineId == routine.Id).ExecuteDeleteAsync(cancellationToken);
+        await InsertStepsAsync(routine, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
     }
 
     public async Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) =>
@@ -629,6 +686,59 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
 
     public async Task ForgetHeldRingsAsync(Guid routineId, CancellationToken cancellationToken) =>
         await database.AlertHeldRings.Where(row => row.RoutineId == routineId).ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+        await database.AlertRoutineCompletions.AsNoTracking()
+            .Where(row => row.CycleAt >= cyclesFrom)
+            .OrderBy(row => row.CycleAt)
+            .ThenBy(row => row.StepAt)
+            .Select(row => new RoutineCompletion(
+                row.Id,
+                row.RoutineId,
+                row.StepId,
+                row.Cycle,
+                row.RoutineLabel,
+                row.StepLabel,
+                row.CycleAt,
+                row.StepAt,
+                row.CompletedAt,
+                row.Note,
+                row.Photo != null))
+            .ToListAsync(cancellationToken);
+
+    public async Task SaveCompletionAsync(
+        RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken)
+    {
+        // The unique index decides, like the claims: the phone and the page
+        // checking one step off at once store one row, and the later wins.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertRoutineCompletions" ("Id", "RoutineId", "StepId", "Cycle", "RoutineLabel", "StepLabel",
+                 "CycleAt", "StepAt", "CompletedAt", "Note", "Photo")
+             VALUES ({completion.Id}, {completion.RoutineId}, {completion.StepId}, {completion.Cycle}, {completion.RoutineLabel},
+                 {completion.StepLabel}, {completion.CycleAt}, {completion.StepAt}, {completion.CompletedAt}, {completion.Note}, {photo})
+             ON CONFLICT ("RoutineId", "StepId", "Cycle") DO UPDATE SET
+                 "RoutineLabel" = EXCLUDED."RoutineLabel",
+                 "StepLabel" = EXCLUDED."StepLabel",
+                 "CycleAt" = EXCLUDED."CycleAt",
+                 "StepAt" = EXCLUDED."StepAt",
+                 "CompletedAt" = EXCLUDED."CompletedAt",
+                 "Note" = EXCLUDED."Note",
+                 "Photo" = CASE WHEN {keepPhoto} THEN "AlertRoutineCompletions"."Photo" ELSE EXCLUDED."Photo" END
+             """,
+            cancellationToken);
+    }
+
+    public async Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken) =>
+        await database.AlertRoutineCompletions
+            .Where(row => row.RoutineId == routineId && row.StepId == stepId && row.Cycle == cycle)
+            .ExecuteDeleteAsync(cancellationToken) > 0;
+
+    public async Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) =>
+        await database.AlertRoutineCompletions.AsNoTracking()
+            .Where(row => row.Id == id)
+            .Select(row => row.Photo)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) =>
         AlertCountdowns.Sorted(

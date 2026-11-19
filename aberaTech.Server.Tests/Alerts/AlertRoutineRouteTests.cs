@@ -114,7 +114,7 @@ public sealed class AlertRoutineRouteTests : IDisposable
         Assert.True(state.TryGetProperty("alerts", out _));
         var routine = Assert.Single(state.GetProperty("routines").EnumerateArray());
         Assert.Equal(
-            ["id", "label", "hour", "minute", "days", "enabled", "snoozeMinutes", "updatedAt"],
+            ["id", "label", "hour", "minute", "days", "enabled", "snoozeMinutes", "updatedAt", "steps"],
             routine.EnumerateObject().Select(field => field.Name));
         Assert.True(routine.GetProperty("id").GetGuid() != Guid.Empty);
         Assert.Equal("Wake up", routine.GetProperty("label").GetString());

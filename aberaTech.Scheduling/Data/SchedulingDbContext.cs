@@ -72,6 +72,12 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Routine alarms, rung by the paired phone. At most <see cref="Alerts.AlertRoutines.MaxRoutines"/>.</summary>
     public DbSet<AlertRoutineRecord> AlertRoutines => Set<AlertRoutineRecord>();
 
+    /// <summary>The steps of the routine alarms. At most <see cref="Alerts.AlertRoutines.MaxSteps"/> each.</summary>
+    public DbSet<AlertRoutineStepRecord> AlertRoutineSteps => Set<AlertRoutineStepRecord>();
+
+    /// <summary>Steps checked off, with notes and photos. Kept 14 days.</summary>
+    public DbSet<AlertRoutineCompletionRecord> AlertRoutineCompletions => Set<AlertRoutineCompletionRecord>();
+
     /// <summary>Rings of routine alarms that were ringing when the routine was edited. Kept until they stop.</summary>
     public DbSet<AlertHeldRingRecord> AlertHeldRings => Set<AlertHeldRingRecord>();
 
@@ -290,6 +296,25 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(routine => routine.Id).ValueGeneratedNever();
             entity.Property(routine => routine.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
             entity.Property(routine => routine.Days).IsRequired();
+        });
+
+        builder.Entity<AlertRoutineStepRecord>(entity =>
+        {
+            entity.HasKey(step => new { step.RoutineId, step.Id });
+            entity.Property(step => step.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+            entity.HasOne<AlertRoutineRecord>().WithMany().HasForeignKey(step => step.RoutineId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AlertRoutineCompletionRecord>(entity =>
+        {
+            entity.HasKey(completion => completion.Id);
+            entity.Property(completion => completion.Id).ValueGeneratedNever();
+            entity.Property(completion => completion.Cycle).HasMaxLength(16).IsRequired();
+            entity.Property(completion => completion.RoutineLabel).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+            entity.Property(completion => completion.StepLabel).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+            entity.Property(completion => completion.Note).HasMaxLength(RoutineCompletions.MaxNoteLength);
+            entity.HasIndex(completion => new { completion.RoutineId, completion.StepId, completion.Cycle }).IsUnique();
+            entity.HasIndex(completion => completion.CycleAt);
         });
 
         builder.Entity<AlertHeldRingRecord>(entity =>

@@ -154,4 +154,145 @@ public sealed class RoutineRingsTests
         Assert.Equal(AlertTypes.Alarm, AlertTypes.Resolve(planned, null, settings).Type);
         Assert.Equal("Routine alarm, 6:30 AM +03, Wed 28 Oct", AlertText.Message(planned, Amman));
     }
+
+    // ------------------------------------------------------------------ steps
+
+    private static readonly Guid Meds = Guid.Parse("5A1E0000-0000-4000-8000-000000000001");
+    private static readonly Guid Floss = Guid.Parse("5A1E0000-0000-4000-8000-000000000002");
+
+    private static AlertRoutine WithSteps(AlertRoutine routine, params (Guid Id, string Label, int Offset)[] steps) =>
+        routine with { Steps = [.. steps.Select(step => new AlertRoutineStep(step.Id, step.Label, step.Offset, routine.UpdatedAt))] };
+
+    [Fact]
+    public void A_step_rings_its_cumulative_offset_after_its_routine_under_a_key_with_the_routines_time()
+    {
+        var routine = WithSteps(Routine(6, 30, [3], Instant.FromUtc(2026, 10, 1, 0, 0)), (Meds, "Meds", 5), (Floss, "Floss", 10));
+
+        var rings = Plan(routine, Amman, Instant.FromUtc(2026, 10, 28, 0, 0), Instant.FromUtc(2026, 10, 29, 0, 0));
+
+        Assert.Equal(
+            [
+                ("routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T06:30", "Wake up", Instant.FromUtc(2026, 10, 28, 3, 30), (Guid?)null),
+                ("routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T06:30:step:5a1e0000-0000-4000-8000-000000000001", "Meds",
+                    Instant.FromUtc(2026, 10, 28, 3, 35), Meds),
+                ("routine:0d8c6f1e-3f6e-4a53-9d53-8f1b2a7c4d10:2026-10-28T06:30:step:5a1e0000-0000-4000-8000-000000000002", "Floss",
+                    Instant.FromUtc(2026, 10, 28, 3, 45), Floss),
+            ],
+            rings.Select(ring => (ring.Key, ring.Label, ring.AlertAt, ring.StepId)));
+        Assert.All(rings, ring => Assert.Equal(ring.AlertAt + ThreeHours, ring.StartsAt));
+        Assert.All(rings, ring => Assert.True(RoutineRings.IsKey(ring.Key)));
+    }
+
+    [Fact]
+    public void A_step_key_reads_back_as_its_routine_cycle_and_step()
+    {
+        var key = RoutineRings.StepKey(Id, "2026-10-28T06:30", Meds);
+
+        Assert.Equal((Id, "2026-10-28T06:30", (Guid?)Meds), RoutineRings.ParseKey(key));
+        Assert.Equal((Id, "2026-10-28T06:30", (Guid?)null), RoutineRings.ParseKey($"routine:{Id:D}:2026-10-28T06:30"));
+        Assert.Null(RoutineRings.ParseKey($"routine:{Id:D}:2026-10-28T06:30:step:nope"));
+        Assert.Null(RoutineRings.ParseKey($"routine:{Id:D}:yesterday"));
+        Assert.Null(RoutineRings.ParseKey("standup@google.com|20261028T130000Z"));
+    }
+
+    [Fact]
+    public void A_step_of_a_ring_before_the_window_rings_inside_it()
+    {
+        // 23:50 on Tuesday, and its step 20 minutes later, on Wednesday.
+        var routine = WithSteps(Routine(23, 50, [2], Instant.FromUtc(2026, 10, 1, 0, 0)), (Meds, "Meds", 20));
+        var wednesday = Instant.FromUtc(2026, 10, 27, 21, 0);
+
+        var ring = Assert.Single(Plan(routine, Amman, wednesday, wednesday + Duration.FromHours(1)));
+
+        Assert.Equal(Meds, ring.StepId);
+        Assert.Equal(Instant.FromUtc(2026, 10, 27, 21, 10), ring.AlertAt);
+        Assert.EndsWith(":2026-10-27T23:50:step:5a1e0000-0000-4000-8000-000000000001", ring.Key);
+    }
+
+    [Fact]
+    public void A_step_whose_ring_falls_in_an_hour_the_clock_skips_rings_by_elapsed_time()
+    {
+        // New York, Sunday 8 March 2026: 01:50 EST, and a step 15 minutes
+        // later. 02:05 does not exist that night: it rings at 03:05 EDT.
+        var routine = WithSteps(Routine(1, 50, [7], Instant.FromUtc(2026, 3, 1, 0, 0)), (Meds, "Meds", 15));
+
+        var rings = Plan(routine, NewYork, Instant.FromUtc(2026, 3, 8, 0, 0), Instant.FromUtc(2026, 3, 9, 0, 0));
+
+        Assert.Equal([Instant.FromUtc(2026, 3, 8, 6, 50), Instant.FromUtc(2026, 3, 8, 7, 5)], rings.Select(ring => ring.AlertAt));
+        Assert.Equal(new LocalDateTime(2026, 3, 8, 3, 5), rings[1].AlertAt.InZone(NewYork).LocalDateTime);
+        Assert.EndsWith(":2026-03-08T01:50:step:5a1e0000-0000-4000-8000-000000000001", rings[1].Key);
+    }
+
+    [Fact]
+    public void A_step_of_a_routine_in_the_skipped_hour_follows_the_ring_the_clock_moved()
+    {
+        // 02:30 does not exist on 8 March 2026 in New York: the routine rings
+        // at 03:00 EDT and its step 10 minutes after that.
+        var routine = WithSteps(Routine(2, 30, [7], Instant.FromUtc(2026, 3, 1, 0, 0)), (Meds, "Meds", 10));
+
+        var rings = Plan(routine, NewYork, Instant.FromUtc(2026, 3, 8, 0, 0), Instant.FromUtc(2026, 3, 9, 0, 0));
+
+        Assert.Equal([Instant.FromUtc(2026, 3, 8, 7, 0), Instant.FromUtc(2026, 3, 8, 7, 10)], rings.Select(ring => ring.AlertAt));
+        Assert.EndsWith(":2026-03-08T02:30:step:5a1e0000-0000-4000-8000-000000000001", rings[1].Key);
+    }
+
+    [Fact]
+    public void A_step_across_the_repeated_hour_counts_elapsed_minutes()
+    {
+        // New York, Sunday 1 November 2026: 01:30 EDT, then 45 minutes later
+        // is 01:15 EST, not 02:15.
+        var routine = WithSteps(Routine(1, 30, [7], Instant.FromUtc(2026, 10, 1, 0, 0)), (Meds, "Meds", 45));
+
+        var rings = Plan(routine, NewYork, Instant.FromUtc(2026, 11, 1, 0, 0), Instant.FromUtc(2026, 11, 2, 0, 0));
+
+        Assert.Equal(Instant.FromUtc(2026, 11, 1, 6, 15), rings[1].AlertAt);
+        Assert.Equal(new LocalDateTime(2026, 11, 1, 1, 15), rings[1].AlertAt.InZone(NewYork).LocalDateTime);
+    }
+
+    [Fact]
+    public void A_completed_step_is_not_planned_for_its_cycle_and_is_for_the_next()
+    {
+        var routine = WithSteps(Routine(6, 30, [1, 2, 3, 4, 5, 6, 7], Instant.FromUtc(2026, 10, 1, 0, 0)), (Meds, "Meds", 5));
+        var done = new HashSet<string>(StringComparer.Ordinal) { RoutineRings.StepKey(Id, "2026-10-28T06:30", Meds) };
+
+        var rings = RoutineRings.Plan([routine], Amman, Instant.FromUtc(2026, 10, 28, 0, 0), Instant.FromUtc(2026, 10, 29, 23, 0), ThreeHours, done);
+
+        Assert.Equal(
+            [":2026-10-28T06:30", ":2026-10-29T06:30", ":2026-10-29T06:30:step:5a1e0000-0000-4000-8000-000000000001"],
+            rings.Select(ring => ring.Key[(ring.Key.IndexOf(':', RoutineRings.KeyPrefix.Length))..]));
+    }
+
+    [Fact]
+    public void A_step_ring_at_or_before_the_last_save_does_not_ring()
+    {
+        // Saved at 06:33 in Amman: the 06:30 ring has passed, its step at 06:35 has not.
+        var routine = WithSteps(Routine(6, 30, [3], Instant.FromUtc(2026, 10, 28, 3, 33)), (Meds, "Meds", 5));
+
+        var rings = Plan(routine, Amman, Instant.FromUtc(2026, 10, 28, 0, 0), Instant.FromUtc(2026, 10, 28, 12, 0));
+
+        Assert.Equal([Meds], rings.Select(ring => ring.StepId));
+    }
+
+    [Fact]
+    public void The_steps_of_a_one_time_routine_follow_its_single_ring()
+    {
+        var routine = WithSteps(Routine(6, 30, [], Instant.FromUtc(2026, 10, 28, 4, 0)), (Meds, "Meds", 5));
+
+        var rings = Plan(routine, Amman, Instant.FromUtc(2026, 10, 27, 0, 0), Instant.FromUtc(2026, 11, 2, 0, 0));
+
+        Assert.Equal([Instant.FromUtc(2026, 10, 29, 3, 30), Instant.FromUtc(2026, 10, 29, 3, 35)], rings.Select(ring => ring.AlertAt));
+    }
+
+    [Fact]
+    public void A_step_ring_is_planned_as_an_alarm_titled_with_the_steps_label()
+    {
+        var routine = WithSteps(Routine(6, 30, [3], Instant.FromUtc(2026, 10, 1, 0, 0)), (Meds, "Take medication", 5));
+        var ring = Plan(routine, Amman, Instant.FromUtc(2026, 10, 28, 0, 0), Instant.FromUtc(2026, 10, 29, 0, 0))[1];
+
+        var planned = ring.ToPlanned();
+
+        Assert.Equal("Take medication", planned.Title);
+        Assert.True(planned.Routine);
+        Assert.Equal(ring.Key, planned.Key);
+    }
 }

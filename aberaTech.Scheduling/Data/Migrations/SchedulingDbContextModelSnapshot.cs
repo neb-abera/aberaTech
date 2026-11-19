@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115145107_AlertTypeRules";
+    public override string LastMigrationId => "20261119181241_RoutineSteps";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -409,6 +409,58 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("AlertPushStates");
             });
 
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineCompletionRecord", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid");
+
+                b.Property<Instant>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Cycle")
+                    .IsRequired()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<Instant>("CycleAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Note")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
+
+                b.Property<byte[]>("Photo")
+                    .HasColumnType("bytea");
+
+                b.Property<Guid>("RoutineId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("RoutineLabel")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)");
+
+                b.Property<Instant>("StepAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Guid>("StepId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("StepLabel")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("CycleAt");
+
+                b.HasIndex("RoutineId", "StepId", "Cycle")
+                    .IsUnique();
+
+                b.ToTable("AlertRoutineCompletions");
+            });
+
         modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineRecord", b =>
             {
                 b.Property<Guid>("Id")
@@ -444,6 +496,33 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("AlertRoutines");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineStepRecord", b =>
+            {
+                b.Property<Guid>("RoutineId")
+                    .HasColumnType("uuid");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid");
+
+                b.Property<Instant>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Label")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)");
+
+                b.Property<short>("OffsetMinutes")
+                    .HasColumnType("smallint");
+
+                b.Property<short>("Position")
+                    .HasColumnType("smallint");
+
+                b.HasKey("RoutineId", "Id");
+
+                b.ToTable("AlertRoutineSteps");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertSettingsRecord", b =>
@@ -950,6 +1029,15 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .HasFilter("\"ProviderMessageId\" IS NOT NULL");
 
                 b.ToTable("Outbox");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineStepRecord", b =>
+            {
+                b.HasOne("aberaTech.Scheduling.Alerts.AlertRoutineRecord", null)
+                    .WithMany()
+                    .HasForeignKey("RoutineId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Data.QueueEntryRecord", b =>

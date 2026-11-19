@@ -498,6 +498,15 @@ public sealed class CalendarAlertWorker(
             var store = scope.ServiceProvider.GetRequiredService<IAlertStore>();
             await store.PruneAsync(now - KeepFor, cancellationToken);
             await store.SeenEventsAsync(plan.EventIds, now, now - KeepChoicesFor, cancellationToken);
+
+            // A one-time routine with steps goes once its last step stops
+            // ringing, with no acknowledgment to set it off (OneTimeAlarms).
+            if (await OneTimeAlarms.ForgetAcknowledgedAsync(
+                    store, scope.ServiceProvider.GetService<IAlertDeviceStore>(), settings, now, cancellationToken)
+                && scope.ServiceProvider.GetService<AlertPushWorker>() is { } changed)
+            {
+                await changed.PlanChangedAsync(cancellationToken);
+            }
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {

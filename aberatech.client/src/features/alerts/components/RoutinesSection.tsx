@@ -18,6 +18,7 @@ import {
   type RoutineResult,
   routineBounds,
   routineTime,
+  stepSummary,
   updateRoutine,
 } from "../core/routines";
 import SyncNote from "./SyncNote";
@@ -271,6 +272,23 @@ export default function RoutinesSection({
                     Snooze {routine.snoozeMinutes} min.{" "}
                     {routine.enabled ? "On" : "Off"}
                   </Typography>
+                  {routine.steps && routine.steps.length > 0 && (
+                    <Box
+                      component="ol"
+                      aria-label={`Steps of ${name}`}
+                      sx={{ m: 0, mt: 0.5, pl: 3 }}
+                    >
+                      {routine.steps.map((step) => (
+                        <Typography
+                          component="li"
+                          variant="body2"
+                          key={step.id}
+                        >
+                          {stepSummary(step)}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
                   <SyncNote status={switches.pending[routine.id]?.status} />
                 </Box>
                 <Switch

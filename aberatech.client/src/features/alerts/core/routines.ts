@@ -16,6 +16,25 @@ export interface Routine {
   enabled: boolean;
   snoozeMinutes: number;
   updatedAt: string;
+  /**
+   * Sub-alarms that ring after it, in order, each offsetMinutes after the
+   * item before it. Set on the paired phone. The page's update sends none,
+   * and the server keeps them. An older server leaves the field out.
+   */
+  steps?: RoutineStep[];
+}
+
+/** One step of a routine alarm. */
+export interface RoutineStep {
+  id: string;
+  label: string;
+  /** Minutes after the item before it: the routine's ring for the first step. */
+  offsetMinutes: number;
+}
+
+/** "Take medication, 5 min after": a step and its offset, as the list reads it. */
+export function stepSummary(step: RoutineStep): string {
+  return `${step.label}, ${step.offsetMinutes} min after`;
 }
 
 /** What a create or an update sends. */

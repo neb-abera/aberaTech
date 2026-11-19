@@ -349,7 +349,8 @@ One acknowledgment anywhere stops all of them (`AlertRoutines.cs`, table
 
 The rings follow the phone's rules. A routine with days rings on those
 weekdays. One with none rings once, at the next `hour:minute` after it was
-saved, and deletes itself once that ring is stopped. A time a clock change skips rings at the first time that exists
+saved, and deletes itself once that ring is stopped. With steps, it waits
+for its steps instead (below). A time a clock change skips rings at the first time that exists
 after it, and a time that happens twice rings the first time. An edit
 changes later rings only: a ring that is ringing when the edit is saved
 keeps ringing as it was (table `AlertHeldRings`), unless the edit turns
@@ -379,7 +380,7 @@ snoozed one. `startsAt` is the ring and the saved Pushover stop time.
 `POST /api/alerts/ack` takes a listed key, or one Pushover sent.
 
 A routine is `{id, label, hour, minute, days, enabled, snoozeMinutes,
-updatedAt}`. `hour` is 0 to 23 and `minute` 0 to 59, in wall-clock time.
+updatedAt, steps}`. `hour` is 0 to 23 and `minute` 0 to 59, in wall-clock time.
 The server never converts them. `days` are ISO weekdays, Monday 1 to
 Sunday 7, stored sorted. Empty rings once at the next `hour:minute`, and
 the phone then turns it off with a `PUT` setting `enabled` false. `label`
@@ -397,6 +398,45 @@ Each change pushes the phones.
 | `POST /api/alerts/routines`        | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
 | `PUT /api/alerts/routines/{id}`    | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}`                     | 200. 400 by field. 404 for an unknown id       |
 | `DELETE /api/alerts/routines/{id}` | none                                                                                      | 200. 404 for an unknown id                     |
+
+### Calendar alerts: routine steps
+
+A routine can hold up to 20 steps that ring after it in order. Each is
+`{id, label, offsetMinutes}`, rung `offsetMinutes` after the item before
+it. The offsets are 0 to 1440 and add up to at most 1440. The phone sends
+its own step ids. A step sent without one gets a new id. A `PUT` with no
+`steps` keeps the stored steps, so the page's edit leaves them alone. `[]`
+removes them. Steps are set on the phone. The page lists them read only.
+
+A step rings under its own key, the routine's key and `:step:{stepId}`:
+`routine:{id}:2026-11-19T06:00:step:{stepId}`. The stamp is the routine's
+scheduled local time, the cycle. `routineRings` lists step rings with
+`stepId` set and the step's label. The step rings its total offset after
+the routine's ring, counted in elapsed minutes across a clock change.
+
+Checking a step off means it does not ring for that cycle, anywhere. The
+next cycle sets it again. A completion can carry a note and a JPEG.
+
+| Route                                                                    | Request                         | Answer                                                |
+| ------------------------------------------------------------------------ | ------------------------------- | ----------------------------------------------------- |
+| `PUT /api/alerts/routines/{id}/steps/{stepId}/cycles/{cycle}/completion` | `{note?, photo?, completedAt?}` | 200 and the state. 400 by field or cycle. 404 unknown |
+| `DELETE` on the same path                                                | none                            | 200 and the state. The step rings again               |
+| `GET /api/alerts/history`                                                | none                            | `{days, cycles}`, newest first                        |
+| `GET /api/alerts/completions/{id}/photo`                                 | none                            | the JPEG with `no-store`. 404 when there is none      |
+
+`cycle` is a ring of the routine from 14 days ago to 2 days ahead. `photo`
+is base64. Null keeps the stored photo and `""` removes it. `completedAt`
+is now when left out. The status lists `routineCompletions` from two days
+back, so the phone can skip a completed step. History lists every cycle
+of the last 14 days for each routine with steps. A step with no completion
+was missed. A completion whose routine or step was deleted is still
+listed, by the labels it kept. Completions and photos are deleted 14 days
+after their cycle (`RoutineCompletions.cs`, table
+`AlertRoutineCompletions`).
+
+A one-time routine with steps is not deleted when its own ring is
+stopped. It goes once every step of that cycle has stopped ringing, been
+stopped, or been checked off.
 
 ### Playbook: connecting Notion
 
@@ -493,7 +533,7 @@ when Google refuses or does not answer). An edit moves and renames the
 event, and delete deletes it. A countdown with its alarm on that does not
 repeat deletes itself once its alarm is stopped, on the phone, in Pushover
 or in a browser. Its calendar event stays as the record of the day. So
-does a routine alarm with no repeat days (`OneTimeAlarms.cs`).
+does a routine alarm with no repeat days and no steps (`OneTimeAlarms.cs`).
 
 A countdown repeats never, or every N hours, days, weeks, months or
 years, N from 1 to 999 (`repeat` is the unit, `repeatEvery` the N). One

@@ -721,6 +721,16 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) => Down<IReadOnlyList<AlertCountdown>>();
 
+        public Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            Down<IReadOnlyList<RoutineCompletion>>();
+
+        public Task SaveCompletionAsync(RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken) =>
+            Down<bool>();
+
+        public Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => Down<byte[]?>();
+
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
 
         public Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
@@ -841,6 +851,17 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteRoutineAsync(id, cancellationToken);
 
         public Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) => _inner.CountdownsAsync(cancellationToken);
+
+        public Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.CompletionsAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveCompletionAsync(RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken) =>
+            _inner.SaveCompletionAsync(completion, photo, keepPhoto, cancellationToken);
+
+        public Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteCompletionAsync(routineId, stepId, cycle, cancellationToken);
+
+        public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => _inner.CompletionPhotoAsync(id, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);
@@ -1266,6 +1287,17 @@ public sealed class CalendarAlertWorkerTests : IDisposable
         public Task<bool> DeleteRoutineAsync(Guid id, CancellationToken cancellationToken) => _inner.DeleteRoutineAsync(id, cancellationToken);
 
         public Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) => _inner.CountdownsAsync(cancellationToken);
+
+        public Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.CompletionsAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveCompletionAsync(RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken) =>
+            _inner.SaveCompletionAsync(completion, photo, keepPhoto, cancellationToken);
+
+        public Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteCompletionAsync(routineId, stepId, cycle, cancellationToken);
+
+        public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => _inner.CompletionPhotoAsync(id, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);
