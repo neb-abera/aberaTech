@@ -144,7 +144,11 @@ public sealed class RouteTableTests
         "PUT /api/alerts/countdowns/{id:guid}",
         "DELETE /api/alerts/countdowns/{id:guid}",
         "PUT /api/alerts/phone-settings",
-        "PUT /api/alerts/rules"
+        "PUT /api/alerts/rules",
+        "PUT /api/alerts/routines/{id:guid}/steps/{stepId:guid}/cycles/{cycle}/completion",
+        "DELETE /api/alerts/routines/{id:guid}/steps/{stepId:guid}/cycles/{cycle}/completion",
+        "GET /api/alerts/history",
+        "GET /api/alerts/completions/{id:guid}/photo"
     ];
 
     /// <summary>The routes a paired phone's token alone reaches: its own push registration.</summary>

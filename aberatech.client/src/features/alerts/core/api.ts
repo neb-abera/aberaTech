@@ -61,9 +61,10 @@ export interface AlertItem {
 export type AcknowledgedVia = "phone" | "browser" | "pushover";
 
 /**
- * One ring of a routine alarm, from the one ringing now to 24 hours ahead.
- * alertAt is the ring and startsAt is when it stops. The key is what
- * Acknowledge sends.
+ * One ring of a routine alarm or of one of its steps, from the one ringing
+ * now to 24 hours ahead. alertAt is the ring and startsAt is when it stops.
+ * The key is what Acknowledge sends. stepId is null for the routine's own
+ * ring, and the label is the step's for a step.
  */
 export interface RoutineRing {
   key: string;
@@ -74,6 +75,15 @@ export interface RoutineRing {
   acknowledged: boolean;
   acknowledgedAt: string | null;
   acknowledgedVia: AcknowledgedVia | null;
+  stepId?: string | null;
+}
+
+/** A step checked off for one cycle: the stamp of the routine's ring. A checked-off step does not ring for that cycle. */
+export interface RoutineCompletion {
+  routineId: string;
+  stepId: string;
+  cycle: string;
+  completedAt: string;
 }
 
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
@@ -183,6 +193,11 @@ export interface AlertsState {
    * An older server leaves the field out.
    */
   routineRings?: RoutineRing[];
+  /**
+   * Steps checked off, for cycles from two days ago on. An older server
+   * leaves the field out.
+   */
+  routineCompletions?: RoutineCompletion[];
   /**
    * Countdowns, by target and label. /dates and the paired phone show the
    * time left. An older server leaves the field out.

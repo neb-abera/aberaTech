@@ -45,6 +45,7 @@ public static class PushoverCallback
         IAlertStore store,
         PushoverClient pushover,
         AlertPushWorker pushes,
+        AlertsOptions options,
         IClock clock,
         ILoggerFactory loggers,
         CancellationToken cancellationToken)
@@ -86,7 +87,12 @@ public static class PushoverCallback
         var now = clock.GetCurrentInstant();
         if (await store.AcknowledgeAsync(delivery.Key, delivery.StartsAt, AlertAcknowledgementVia.Pushover, now, cancellationToken))
         {
-            await OneTimeAlarms.ForgetAcknowledgedAsync(store, now, cancellationToken);
+            await OneTimeAlarms.ForgetAcknowledgedAsync(
+                store,
+                context.RequestServices.GetService<IAlertDeviceStore>(),
+                await AlertSettings.CurrentAsync(store, options, cancellationToken),
+                now,
+                cancellationToken);
             await pushes.PlanChangedAsync(cancellationToken);
         }
         else

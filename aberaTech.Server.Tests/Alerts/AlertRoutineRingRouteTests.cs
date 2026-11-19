@@ -136,7 +136,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
         // Thursday 06:30 in Amman is 03:30 UTC: the next ring inside 24 hours.
         var ring = Assert.Single(rings);
         Assert.Equal(
-            ["key", "routineId", "label", "alertAt", "startsAt", "acknowledged", "acknowledgedAt", "acknowledgedVia"],
+            ["key", "routineId", "label", "alertAt", "startsAt", "acknowledged", "acknowledgedAt", "acknowledgedVia", "stepId"],
             ring.EnumerateObject().Select(field => field.Name));
         Assert.Equal($"routine:{id:D}:2026-10-29T06:30", ring.GetProperty("key").GetString());
         Assert.Equal(id, ring.GetProperty("routineId").GetGuid());
@@ -148,6 +148,7 @@ public sealed class AlertRoutineRingRouteTests : IDisposable
         Assert.False(ring.GetProperty("acknowledged").GetBoolean());
         Assert.Equal(JsonValueKind.Null, ring.GetProperty("acknowledgedAt").ValueKind);
         Assert.Equal(JsonValueKind.Null, ring.GetProperty("acknowledgedVia").ValueKind);
+        Assert.Equal(JsonValueKind.Null, ring.GetProperty("stepId").ValueKind);
     }
 
     [Fact]

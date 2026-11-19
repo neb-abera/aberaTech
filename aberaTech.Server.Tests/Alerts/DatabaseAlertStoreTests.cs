@@ -130,6 +130,102 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_routines_steps_read_back_in_order_an_update_replaces_them_and_a_delete_takes_them()
+    {
+        var id = Guid.NewGuid();
+        var meds = Guid.NewGuid();
+        var floss = Guid.NewGuid();
+        var routine = Routine("Wake up", id: id) with
+        {
+            Steps = [new AlertRoutineStep(meds, "Take medication", 5, Now), new AlertRoutineStep(floss, "Floss", 1440, Now)],
+        };
+        await using (var context = Context())
+        {
+            Assert.True(await new DatabaseAlertStore(context).AddRoutineAsync(routine, CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.RoutinesAsync(CancellationToken.None));
+            Assert.Equal(routine.Steps, read.Steps);
+            Assert.Equal(Now, read.CreatedAt);
+
+            var later = Now + Duration.FromHours(1);
+            Assert.True(await store.UpdateRoutineAsync(
+                routine with { UpdatedAt = later, Steps = [new AlertRoutineStep(floss, "Floss", 2, Now), new AlertRoutineStep(meds, "Meds", 3, later)] },
+                CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.Equal(
+                [(floss, "Floss", 2, Now), (meds, "Meds", 3, Now + Duration.FromHours(1))],
+                Assert.Single(await store.RoutinesAsync(CancellationToken.None)).Steps.Select(step => (step.Id, step.Label, step.OffsetMinutes, step.CreatedAt)));
+            Assert.True(await store.DeleteRoutineAsync(id, CancellationToken.None));
+            Assert.Empty(await context.AlertRoutineSteps.AsNoTracking().ToListAsync());
+        }
+    }
+
+    private static RoutineCompletion Completion(Guid routine, Guid step, string cycle, Instant cycleAt, string? note = null) =>
+        new(Guid.NewGuid(), routine, step, cycle, "Wake up", "Take medication", cycleAt, cycleAt + Duration.FromMinutes(5), cycleAt, note, false);
+
+    [PostgresFact]
+    public async Task A_completion_upserts_on_its_step_and_cycle_keeps_or_drops_its_photo_and_deletes()
+    {
+        var routine = Guid.NewGuid();
+        var step = Guid.NewGuid();
+        byte[] jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3];
+        var first = Completion(routine, step, "2026-10-28T06:30", Now, "first");
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            await store.SaveCompletionAsync(first, jpeg, keepPhoto: false, CancellationToken.None);
+            // The same step and cycle from another device: one row, the first id, the photo kept.
+            await store.SaveCompletionAsync(Completion(routine, step, "2026-10-28T06:30", Now, "second"), null, keepPhoto: true, CancellationToken.None);
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = Assert.Single(await store.CompletionsAsync(Instant.MinValue, CancellationToken.None));
+            Assert.Equal((first.Id, "second", true), (read.Id, read.Note, read.HasPhoto));
+            Assert.Equal(first with { Note = "second", HasPhoto = true }, read);
+            Assert.Equal(jpeg, await store.CompletionPhotoAsync(first.Id, CancellationToken.None));
+
+            await store.SaveCompletionAsync(first with { Note = null }, null, keepPhoto: false, CancellationToken.None);
+            read = Assert.Single(await store.CompletionsAsync(Instant.MinValue, CancellationToken.None));
+            Assert.False(read.HasPhoto);
+            Assert.Null(read.Note);
+            Assert.Null(await store.CompletionPhotoAsync(first.Id, CancellationToken.None));
+
+            Assert.Empty(await store.CompletionsAsync(Now + Duration.FromSeconds(1), CancellationToken.None));
+            Assert.False(await store.DeleteCompletionAsync(routine, step, "2026-10-29T06:30", CancellationToken.None));
+            Assert.True(await store.DeleteCompletionAsync(routine, step, "2026-10-28T06:30", CancellationToken.None));
+            Assert.Empty(await store.CompletionsAsync(Instant.MinValue, CancellationToken.None));
+        }
+    }
+
+    [PostgresFact]
+    public async Task Pruning_deletes_completions_and_photos_whose_cycle_rang_more_than_14_days_ago()
+    {
+        var routine = Guid.NewGuid();
+        var step = Guid.NewGuid();
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        var old = Now - Duration.FromDays(14) - Duration.FromMinutes(1);
+        var kept = Now - Duration.FromDays(14) + Duration.FromMinutes(1);
+        await store.SaveCompletionAsync(Completion(routine, step, "old", old), [0xFF, 0xD8, 0xFF], false, CancellationToken.None);
+        await store.SaveCompletionAsync(Completion(routine, step, "kept", kept), null, false, CancellationToken.None);
+
+        await store.PruneAsync(Now - Duration.FromDays(14), CancellationToken.None);
+
+        Assert.Equal(["kept"], (await store.CompletionsAsync(Instant.MinValue, CancellationToken.None)).Select(row => row.Cycle));
+        Assert.Equal(1, await context.AlertRoutineCompletions.CountAsync());
+    }
+
+    [PostgresFact]
     public async Task Routines_read_back_by_hour_minute_then_label()
     {
         await using var context = Context();

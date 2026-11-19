@@ -1335,6 +1335,120 @@ test.describe("/alerts", () => {
     expect(status.routines).toEqual([]);
   });
 
+  test("a routine's steps show under it, survive an edit on the page, and a completion reaches history", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    // The phone sets steps. The page only reads them.
+    const meds = "5a1e0000-0000-4000-8000-0000000000e2";
+    const created = await page.request.post("/api/alerts/routines", {
+      data: {
+        label: "E2E steps",
+        hour: 0,
+        minute: 1,
+        days: [1, 2, 3, 4, 5, 6, 7],
+        steps: [
+          { id: meds, label: "Take medication", offsetMinutes: 5 },
+          { label: "Beauty care routine", offsetMinutes: 5 },
+        ],
+      },
+    });
+    expect(created.status()).toBe(201);
+    await page.reload();
+
+    const item = page
+      .getByRole("list", { name: "Routine alarms" })
+      .getByRole("listitem")
+      .filter({ hasText: "E2E steps" })
+      .first();
+    const steps = item.getByRole("list", {
+      name: "Steps of E2E steps at 00:01",
+    });
+    await expect(steps.getByRole("listitem")).toHaveText([
+      "Take medication, 5 min after",
+      "Beauty care routine, 5 min after",
+    ]);
+
+    // An edit on the page sends no steps, and the server keeps them.
+    await item.getByRole("button", { name: "Edit E2E steps at 00:01" }).click();
+    const edit = page.getByRole("form", { name: "Edit routine alarm" });
+    await edit.getByLabel("Label").fill("E2E steps edited");
+    await edit.getByRole("button", { name: "Save routine alarm" }).click();
+    await expect(
+      page.getByRole("list", { name: "Steps of E2E steps edited at 00:01" }),
+    ).toBeVisible();
+    let status = await (await page.request.get("/api/alerts/status")).json();
+    const routine = status.routines.find(
+      (stored: { label: string }) => stored.label === "E2E steps edited",
+    );
+    expect(routine.steps.map((step: { label: string }) => step.label)).toEqual([
+      "Take medication",
+      "Beauty care routine",
+    ]);
+
+    // Check off the last cycle that rang, the day before the next ring,
+    // with a note and a JPEG, as the phone does.
+    const next = status.routineRings.find(
+      (ring: { routineId: string; stepId: string | null }) =>
+        ring.routineId === routine.id && ring.stepId === null,
+    );
+    const nextDate = next.key.slice(
+      `routine:${routine.id}:`.length,
+      -"T00:01".length,
+    );
+    const before = new Date(`${nextDate}T00:00:00Z`);
+    before.setUTCDate(before.getUTCDate() - 1);
+    const stamp = `${before.toISOString().slice(0, 10)}T00:01`;
+    const history = async () =>
+      (await (await page.request.get("/api/alerts/history")).json()) as {
+        days: number;
+        cycles: {
+          cycle: string;
+          steps: {
+            stepId: string;
+            completion: { id: string; note: string; hasPhoto: boolean } | null;
+          }[];
+        }[];
+      };
+    const jpeg = Buffer.from([
+      0xff, 0xd8, 0xff, 0xe0, 0, 16, 0xff, 0xd9,
+    ]).toString("base64");
+    const done = await page.request.put(
+      `/api/alerts/routines/${routine.id}/steps/${meds}/cycles/${stamp}/completion`,
+      { data: { note: "With breakfast", photo: jpeg } },
+    );
+    expect(done.status()).toBe(200);
+    status = await done.json();
+    expect(status.routineCompletions).toContainEqual(
+      expect.objectContaining({
+        routineId: routine.id,
+        stepId: meds,
+        cycle: stamp,
+      }),
+    );
+
+    const entry = (await history()).cycles.find((item) => item.cycle === stamp);
+    const step = entry?.steps.find((item) => item.stepId === meds);
+    expect(step?.completion).toMatchObject({
+      note: "With breakfast",
+      hasPhoto: true,
+    });
+    const photo = await page.request.get(
+      `/api/alerts/completions/${step?.completion?.id}/photo`,
+    );
+    expect(photo.status()).toBe(200);
+    expect(photo.headers()["content-type"]).toBe("image/jpeg");
+    expect(photo.headers()["cache-control"]).toContain("no-store");
+
+    // Undo, then clean up.
+    const undo = await page.request.delete(
+      `/api/alerts/routines/${routine.id}/steps/${meds}/cycles/${stamp}/completion`,
+    );
+    expect(undo.status()).toBe(200);
+    await reset(page);
+  });
+
   test("a routine switch moves at once, waits with no connection, and sends when back online", async ({
     page,
   }) => {

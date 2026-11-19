@@ -5,11 +5,16 @@ using NodaTime.TimeZones;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
-/// One ring of a routine alarm. AlertAt is the ring. StartsAt is when it
-/// stops: the ring and the saved StopAfterMinutes.
+/// One ring of a routine alarm or of one of its steps. AlertAt is the ring.
+/// StartsAt is when it stops: the ring and the saved StopAfterMinutes.
 /// </summary>
-/// <param name="Key">routine:{id}:{scheduled local date and time}. The phone makes the same key.</param>
-public sealed record RoutineRing(string Key, Guid RoutineId, string Label, Instant AlertAt, Instant StartsAt)
+/// <param name="Key">
+/// routine:{id}:{scheduled local date and time}, and for a step
+/// :step:{step id} after it, with the routine's scheduled time. The phone
+/// makes the same key.
+/// </param>
+/// <param name="StepId">The step's id. Null for the routine's own ring.</param>
+public sealed record RoutineRing(string Key, Guid RoutineId, string Label, Instant AlertAt, Instant StartsAt, Guid? StepId = null)
 {
     /// <summary>The ring as the send path takes it: an alarm titled with the label.</summary>
     public PlannedAlert ToPlanned() => new(
@@ -37,6 +42,9 @@ public sealed record RoutineRing(string Key, Guid RoutineId, string Label, Insta
 /// edit changes rings after the edit only: a ring of the new time that
 /// fell before the save never rings, and a ring of the old time that was
 /// ringing when the save came keeps ringing (<see cref="IAlertStore.HoldRingsAsync"/>).
+/// A step rings its total offset after its routine's ring, in elapsed
+/// time, under a key with the routine's scheduled time. A step checked off
+/// for a cycle does not ring for it (<see cref="RoutineCompletions"/>).
 /// </remarks>
 public static class RoutineRings
 {
@@ -52,9 +60,41 @@ public static class RoutineRings
     private static readonly ZoneLocalMappingResolver PhoneRules =
         Resolvers.CreateMappingResolver(Resolvers.ReturnEarlier, Resolvers.ReturnStartOfIntervalAfter);
 
+    /// <summary>The text between a step ring's cycle and its step id.</summary>
+    public const string StepInfix = ":step:";
+
     /// <summary>"routine:0d8c…:2026-10-28T06:30": the routine's id in lowercase and the scheduled local time, never a snoozed one.</summary>
     public static string Key(Guid routineId, LocalDateTime scheduled) =>
-        $"{KeyPrefix}{routineId:D}:{KeyTime.Format(scheduled)}";
+        $"{KeyPrefix}{routineId:D}:{Stamp(scheduled)}";
+
+    /// <summary>"routine:0d8c…:2026-10-28T06:30:step:5a1e…": a step's ring in the cycle of the routine's ring at that time.</summary>
+    public static string StepKey(Guid routineId, string cycle, Guid stepId) =>
+        $"{KeyPrefix}{routineId:D}:{cycle}{StepInfix}{stepId:D}";
+
+    /// <summary>"2026-10-28T06:30": a cycle, the scheduled local time of the routine's own ring.</summary>
+    public static string Stamp(LocalDateTime scheduled) => KeyTime.Format(scheduled);
+
+    /// <summary>The cycle a stamp names, or null when it is not one.</summary>
+    public static LocalDateTime? ParseStamp(string? stamp) =>
+        stamp is not null && KeyTime.Parse(stamp) is { Success: true } parsed ? parsed.Value : null;
+
+    /// <summary>The routine, the cycle and the step, if any, a ring key names. Null for anything else.</summary>
+    public static (Guid RoutineId, string Cycle, Guid? StepId)? ParseKey(string? key)
+    {
+        if (!IsKey(key)) return null;
+        var rest = key![KeyPrefix.Length..];
+        if (rest.Length < 37 || rest[36] != ':' || !Guid.TryParseExact(rest[..36], "D", out var routineId)) return null;
+        rest = rest[37..];
+        Guid? stepId = null;
+        if (rest.IndexOf(StepInfix, StringComparison.Ordinal) is var at and >= 0)
+        {
+            if (!Guid.TryParseExact(rest[(at + StepInfix.Length)..], "D", out var step)) return null;
+            stepId = step;
+            rest = rest[..at];
+        }
+
+        return ParseStamp(rest) is null ? null : (routineId, rest, stepId);
+    }
 
     public static bool IsKey(string? key) => key?.StartsWith(KeyPrefix, StringComparison.Ordinal) == true;
 
@@ -62,49 +102,88 @@ public static class RoutineRings
     public static string EventId(Guid routineId) => $"{KeyPrefix}{routineId:D}";
 
     /// <summary>
-    /// Every ring of the enabled routines whose ring falls from
-    /// <paramref name="from"/> to <paramref name="until"/>, soonest first.
+    /// Every ring of the enabled routines and of their steps that falls from
+    /// <paramref name="from"/> to <paramref name="until"/>, soonest first. A
+    /// step rings its cumulative offset after the routine's ring, so a step of
+    /// a ring before <paramref name="from"/> can fall inside. A step ring
+    /// whose key is in <paramref name="completed"/> was checked off for that
+    /// cycle and is left out.
     /// </summary>
     public static IReadOnlyList<RoutineRing> Plan(
-        IEnumerable<AlertRoutine> routines, DateTimeZone zone, Instant from, Instant until, Duration stopAfter)
+        IEnumerable<AlertRoutine> routines,
+        DateTimeZone zone,
+        Instant from,
+        Instant until,
+        Duration stopAfter,
+        IReadOnlySet<string>? completed = null)
     {
         var rings = new List<RoutineRing>();
         foreach (var routine in routines)
         {
             if (!routine.Enabled) continue;
-            var time = new LocalTime(routine.Hour, routine.Minute);
+            var offsets = AlertRoutines.Offsets(routine);
+            var reach = Duration.FromMinutes(offsets.Count == 0 ? 0 : offsets[^1].Minutes);
 
-            void Add(LocalDate date)
+            void Add(Instant at, string key, string label, Guid? stepId)
             {
-                var scheduled = date.At(time);
-                var at = zone.ResolveLocal(scheduled, PhoneRules).ToInstant();
                 if (at <= routine.UpdatedAt || at < from || at > until) return;
-                rings.Add(new RoutineRing(Key(routine.Id, scheduled), routine.Id, routine.Label, at, at + stopAfter));
+                rings.Add(new RoutineRing(key, routine.Id, label, at, at + stopAfter, stepId));
             }
 
-            if (routine.Days.Count == 0)
+            foreach (var (scheduled, at) in Cycles(routine, zone, from - reach, until))
             {
-                // Once, at the next hour:minute after the save.
-                var date = routine.UpdatedAt.InZone(zone).Date;
-                for (var day = 0; day < 3; day++, date = date.PlusDays(1))
+                Add(at, Key(routine.Id, scheduled), routine.Label, null);
+                var cycle = Stamp(scheduled);
+                foreach (var (step, minutes) in offsets)
                 {
-                    if (zone.ResolveLocal(date.At(time), PhoneRules).ToInstant() <= routine.UpdatedAt) continue;
-                    Add(date);
-                    break;
+                    var key = StepKey(routine.Id, cycle, step.Id);
+                    if (completed?.Contains(key) == true) continue;
+                    Add(at + Duration.FromMinutes(minutes), key, step.Label, step.Id);
                 }
-
-                continue;
-            }
-
-            // A day either side, so a zone far from UTC never cuts the window.
-            var last = until.InZone(zone).Date.PlusDays(1);
-            for (var date = from.InZone(zone).Date.PlusDays(-1); date <= last; date = date.PlusDays(1))
-            {
-                if (routine.Days.Contains((int)date.DayOfWeek)) Add(date);
             }
         }
 
         return [.. rings.OrderBy(ring => ring.AlertAt).ThenBy(ring => ring.Key, StringComparer.Ordinal)];
+    }
+
+    /// <summary>
+    /// The routine's own rings by its current schedule, whether or not it is
+    /// switched on, with a day either side of the window so a zone far from
+    /// UTC never cuts it: every one of its weekdays, or for one with no days
+    /// its single ring, the next hour:minute after it was saved. The caller
+    /// keeps the ones it wants by instant.
+    /// </summary>
+    public static IEnumerable<(LocalDateTime Scheduled, Instant At)> Cycles(
+        AlertRoutine routine, DateTimeZone zone, Instant from, Instant until)
+    {
+        var time = new LocalTime(routine.Hour, routine.Minute);
+        if (routine.Days.Count == 0)
+        {
+            if (Once(routine, zone) is { } once) yield return once;
+            yield break;
+        }
+
+        var last = until.InZone(zone).Date.PlusDays(1);
+        for (var date = from.InZone(zone).Date.PlusDays(-1); date <= last; date = date.PlusDays(1))
+        {
+            if (!routine.Days.Contains((int)date.DayOfWeek)) continue;
+            var scheduled = date.At(time);
+            yield return (scheduled, zone.ResolveLocal(scheduled, PhoneRules).ToInstant());
+        }
+    }
+
+    /// <summary>The single ring of a routine with no days: the next hour:minute after it was saved.</summary>
+    public static (LocalDateTime Scheduled, Instant At)? Once(AlertRoutine routine, DateTimeZone zone)
+    {
+        var time = new LocalTime(routine.Hour, routine.Minute);
+        var date = routine.UpdatedAt.InZone(zone).Date;
+        for (var day = 0; day < 3; day++, date = date.PlusDays(1))
+        {
+            var at = zone.ResolveLocal(date.At(time), PhoneRules).ToInstant();
+            if (at > routine.UpdatedAt) return (date.At(time), at);
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -134,11 +213,18 @@ public static class RoutineRings
     {
         var zone = await ZoneAsync(devices, settings, cancellationToken);
         var routines = await store.RoutinesAsync(cancellationToken);
-        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes));
+        // A step rings at most a day after its cycle's ring.
+        var completed = (await store.CompletionsAsync(
+                from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken))
+            .Select(completion => completion.StepKey)
+            .ToHashSet(StringComparer.Ordinal);
+        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed);
 
         var enabled = routines.Where(routine => routine.Enabled).Select(routine => routine.Id).ToHashSet();
         var held = (await store.HeldRingsAsync(cancellationToken))
             .Where(ring => enabled.Contains(ring.RoutineId) && ring.AlertAt >= from && ring.AlertAt <= until)
+            .Where(ring => !completed.Contains(ring.Key))
+            .Select(ring => ring with { StepId = ParseKey(ring.Key)?.StepId })
             .ToList();
         var keys = held.Select(ring => ring.Key).ToHashSet(StringComparer.Ordinal);
 

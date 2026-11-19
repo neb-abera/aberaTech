@@ -331,6 +331,64 @@ public class AlertRoutineRecord
 }
 
 /// <summary>
+/// A step of a routine alarm: a sub-alarm OffsetMinutes after the item
+/// before it. Its id is unique within its routine. It goes with its routine.
+/// </summary>
+public class AlertRoutineStepRecord
+{
+    public Guid RoutineId { get; set; }
+
+    /// <summary>The phone's own id when the phone made it.</summary>
+    public Guid Id { get; set; }
+
+    /// <summary>Its place in the routine, from 0.</summary>
+    public short Position { get; set; }
+
+    /// <summary>1 to 60 characters. "Step" when none was given.</summary>
+    public string Label { get; set; } = AlertRoutines.DefaultStepLabel;
+
+    /// <summary>0 to 1440 minutes after the item before it.</summary>
+    public short OffsetMinutes { get; set; }
+
+    /// <summary>When the server first stored it. Kept across edits.</summary>
+    public Instant CreatedAt { get; set; }
+}
+
+/// <summary>
+/// A step checked off for one cycle, with its note and photo. No foreign key:
+/// it outlives its routine and its step until it is 14 days old.
+/// </summary>
+public class AlertRoutineCompletionRecord
+{
+    public Guid Id { get; set; }
+
+    public Guid RoutineId { get; set; }
+
+    public Guid StepId { get; set; }
+
+    /// <summary>The cycle's stamp, the routine's scheduled local time: 2026-11-19T06:00.</summary>
+    public string Cycle { get; set; } = string.Empty;
+
+    public string RoutineLabel { get; set; } = string.Empty;
+
+    public string StepLabel { get; set; } = string.Empty;
+
+    /// <summary>The routine's ring for that cycle. Retention and the windows read it.</summary>
+    public Instant CycleAt { get; set; }
+
+    /// <summary>The step's ring for that cycle.</summary>
+    public Instant StepAt { get; set; }
+
+    public Instant CompletedAt { get; set; }
+
+    /// <summary>At most 2,000 characters.</summary>
+    public string? Note { get; set; }
+
+    /// <summary>A JPEG of at most 2,000,000 bytes.</summary>
+    public byte[]? Photo { get; set; }
+}
+
+/// <summary>
 /// A ring of a routine alarm that was ringing when the routine was edited.
 /// An edit changes later rings only, so this one keeps ringing as it was
 /// until it is acknowledged or stops (<see cref="RoutineRings"/>).

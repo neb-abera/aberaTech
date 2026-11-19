@@ -115,6 +115,35 @@ describe("the list", () => {
     expect(screen.getByText(`${summary}, Wake up`)).toBeTruthy();
   });
 
+  it("lists a routine's steps in order with their offsets, read only", () => {
+    mount([
+      {
+        ...wake,
+        steps: [
+          { id: "s1", label: "Take medication", offsetMinutes: 5 },
+          { id: "s2", label: "Beauty care routine", offsetMinutes: 5 },
+        ],
+      },
+      gym,
+    ]);
+
+    const steps = screen.getByRole("list", {
+      name: "Steps of Wake up at 06:30",
+    });
+    expect(
+      within(steps)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual([
+      "Take medication, 5 min after",
+      "Beauty care routine, 5 min after",
+    ]);
+    expect(
+      screen.queryByRole("list", { name: "Steps of Gym at 05:00" }),
+    ).toBeNull();
+    expect(within(steps).queryByRole("button")).toBeNull();
+  });
+
   it("says when there are none", () => {
     mount([]);
     expect(screen.getByText("No routine alarms.")).toBeTruthy();
@@ -514,6 +543,26 @@ describe("edit", () => {
     expect(
       screen.getByRole("form", { name: "Add routine alarm" }),
     ).toBeTruthy();
+  });
+
+  it("an edit of a routine with steps sends no steps, so the server keeps them", async () => {
+    const steps = [{ id: "s1", label: "Take medication", offsetMinutes: 5 }];
+    const { api } = mount([{ ...wake, steps }]);
+
+    await press(screen.getByRole("button", { name: "Edit Wake up at 06:30" }));
+    const form = screen.getByRole("form", { name: "Edit routine alarm" });
+    await press(
+      within(form).getByRole("button", { name: "Save routine alarm" }),
+    );
+
+    expect(api.update).toHaveBeenCalledExactlyOnceWith(wake.id, {
+      label: "Wake up",
+      hour: 6,
+      minute: 30,
+      days: [1, 2, 3, 4, 5],
+      enabled: true,
+      snoozeMinutes: 9,
+    });
   });
 
   it("Cancel edit goes back to adding", async () => {

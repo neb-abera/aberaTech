@@ -160,7 +160,64 @@ internal sealed class InMemoryAlertStore : IAlertStore
         lock (_lock) return Task.FromResult(_acknowledgements.TryAdd(key, new AlertAcknowledgement(now, via)));
     }
 
-    public Task PruneAsync(Instant before, CancellationToken cancellationToken) => Task.CompletedTask;
+    /// <summary>Only the completions: the send logic's tests count on the rest staying.</summary>
+    public Task PruneAsync(Instant before, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            foreach (var key in _completions.Where(pair => pair.Value.Completion.CycleAt < before).Select(pair => pair.Key).ToList())
+            {
+                _completions.Remove(key);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private readonly Dictionary<(Guid, Guid, string), (RoutineCompletion Completion, byte[]? Photo)> _completions = [];
+
+    public Task<IReadOnlyList<RoutineCompletion>> CompletionsAsync(Instant cyclesFrom, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            return Task.FromResult<IReadOnlyList<RoutineCompletion>>(
+            [
+                .. _completions.Values
+                    .Select(row => row.Completion with { HasPhoto = row.Photo is not null })
+                    .Where(completion => completion.CycleAt >= cyclesFrom)
+                    .OrderBy(completion => completion.CycleAt)
+                    .ThenBy(completion => completion.StepAt)
+            ]);
+        }
+    }
+
+    public Task SaveCompletionAsync(RoutineCompletion completion, byte[]? photo, bool keepPhoto, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            var key = (completion.RoutineId, completion.StepId, completion.Cycle);
+            if (_completions.TryGetValue(key, out var saved))
+            {
+                _completions[key] = (completion with { Id = saved.Completion.Id }, keepPhoto ? saved.Photo : photo);
+            }
+            else
+            {
+                _completions[key] = (completion, photo);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteCompletionAsync(Guid routineId, Guid stepId, string cycle, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_completions.Remove((routineId, stepId, cycle)));
+    }
+
+    public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_completions.Values.FirstOrDefault(row => row.Completion.Id == id).Photo);
+    }
 
     private readonly Dictionary<string, string> _types = [];
 
@@ -281,8 +338,8 @@ internal sealed class InMemoryAlertStore : IAlertStore
     {
         lock (_lock)
         {
-            if (!_routines.ContainsKey(routine.Id)) return Task.FromResult(false);
-            _routines[routine.Id] = routine;
+            if (!_routines.TryGetValue(routine.Id, out var saved)) return Task.FromResult(false);
+            _routines[routine.Id] = routine with { CreatedAt = saved.CreatedAt };
             return Task.FromResult(true);
         }
     }

@@ -8,24 +8,50 @@ namespace aberaTech.Scheduling.Alerts;
 /// repeat days, and a countdown with its alarm on that does not repeat. A
 /// countdown's calendar event stays, as the record of the day. Neb asked
 /// for this on 2026-11-03.
+///
+/// A routine with no repeat days that has steps is not deleted on the Stop
+/// of its own ring, or its steps would never ring. It goes once its ring has
+/// rung and every step ring of that cycle has stopped, been acknowledged, or
+/// been checked off, whichever comes first. The phone follows the same rule.
+/// Set on 2026-11-19.
 /// </summary>
 public static class OneTimeAlarms
 {
-    /// <summary>Deletes every one-time alarm whose ring was acknowledged. True when any went.</summary>
-    public static async Task<bool> ForgetAcknowledgedAsync(IAlertStore store, Instant now, CancellationToken cancellationToken)
+    /// <summary>Deletes every one-time alarm that is done. True when any went.</summary>
+    /// <param name="devices">The phones, for the zone a routine's steps ring in. Null plans in the settings' zone.</param>
+    public static async Task<bool> ForgetAcknowledgedAsync(
+        IAlertStore store,
+        IAlertDeviceStore? devices,
+        AlertSettings settings,
+        Instant now,
+        CancellationToken cancellationToken)
     {
         var acknowledged = await store.AcknowledgementsAsync(cancellationToken);
-        if (acknowledged.Count == 0) return false;
         var gone = false;
+        DateTimeZone? zone = null;
+        IReadOnlySet<string>? completed = null;
 
         foreach (var routine in await store.RoutinesAsync(cancellationToken))
         {
             if (routine.Days.Count > 0) continue;
-            var prefix = $"{RoutineRings.KeyPrefix}{routine.Id:D}:";
-            // A ring acknowledged before the last save was a ring of the routine as it was then.
-            var rang = acknowledged.Any(pair =>
-                pair.Key.StartsWith(prefix, StringComparison.Ordinal) && pair.Value.At >= routine.UpdatedAt);
-            if (!rang) continue;
+            bool done;
+            if (routine.Steps.Count == 0)
+            {
+                var prefix = $"{RoutineRings.KeyPrefix}{routine.Id:D}:";
+                // A ring acknowledged before the last save was a ring of the routine as it was then.
+                done = acknowledged.Any(pair =>
+                    pair.Key.StartsWith(prefix, StringComparison.Ordinal) && pair.Value.At >= routine.UpdatedAt);
+            }
+            else
+            {
+                zone ??= await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
+                completed ??= (await store.CompletionsAsync(now - RoutineCompletions.KeepFor, cancellationToken))
+                    .Select(completion => completion.StepKey)
+                    .ToHashSet(StringComparer.Ordinal);
+                done = StepsDone(routine, zone, Duration.FromMinutes(settings.StopAfterMinutes), acknowledged, completed, now);
+            }
+
+            if (!done) continue;
             if (await store.DeleteRoutineAsync(routine.Id, cancellationToken))
             {
                 await store.ForgetHeldRingsAsync(routine.Id, cancellationToken);
@@ -42,5 +68,29 @@ public static class OneTimeAlarms
         }
 
         return gone;
+    }
+
+    /// <summary>
+    /// The single ring has rung, and each step ring of its cycle has stopped
+    /// ringing, was acknowledged after the last save, or was checked off.
+    /// </summary>
+    private static bool StepsDone(
+        AlertRoutine routine,
+        DateTimeZone zone,
+        Duration stopAfter,
+        IReadOnlyDictionary<string, AlertAcknowledgement> acknowledged,
+        IReadOnlySet<string> completed,
+        Instant now)
+    {
+        if (RoutineRings.Once(routine, zone) is not { } once || once.At > now) return false;
+        var (scheduled, at) = once;
+        var cycle = RoutineRings.Stamp(scheduled);
+        return AlertRoutines.Offsets(routine).All(pair =>
+        {
+            var key = RoutineRings.StepKey(routine.Id, cycle, pair.Step.Id);
+            return at + Duration.FromMinutes(pair.Minutes) + stopAfter <= now
+                   || completed.Contains(key)
+                   || (acknowledged.TryGetValue(key, out var stop) && stop.At >= routine.UpdatedAt);
+        });
     }
 }
