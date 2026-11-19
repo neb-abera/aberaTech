@@ -386,7 +386,13 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
         Assert.DoesNotContain(Key(id, "2026-10-28T12:00", Meds), keys);
         Assert.Contains(Key(id, "2026-10-28T12:00", Beauty), keys);
         var completion = Assert.Single(state.GetProperty("routineCompletions").EnumerateArray());
-        Assert.Equal(["routineId", "stepId", "cycle", "completedAt"], completion.EnumerateObject().Select(field => field.Name));
+        Assert.Equal(
+            ["routineId", "stepId", "cycle", "completedAt", "id", "note", "hasPhoto"],
+            completion.EnumerateObject().Select(field => field.Name));
+        // The phone shows the note of a step checked off ahead, before its cycle reaches the history.
+        Assert.Equal("Took them", completion.GetProperty("note").GetString());
+        Assert.False(completion.GetProperty("hasPhoto").GetBoolean());
+        Assert.NotEqual(Guid.Empty, completion.GetProperty("id").GetGuid());
         Assert.Equal(id, completion.GetProperty("routineId").GetGuid());
         Assert.Equal(Meds, completion.GetProperty("stepId").GetGuid());
         Assert.Equal("2026-10-28T12:00", completion.GetProperty("cycle").GetString());
