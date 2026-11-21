@@ -434,3 +434,15 @@ internal static class GoalReports
 
     private static string Text(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
 }
+
+/// <summary>
+/// The goals report for a reader outside this project: the aberaTech app's
+/// fitness view, at the stated week and full compliance, as the Goals tab
+/// opens.
+/// </summary>
+public static class GoalsReport
+{
+    public static Task<GoalsDto> BuildAsync(
+        FitnessDbContext database, IWorkbookSource source, Instant now, CancellationToken cancellationToken) =>
+        GoalReports.BuildAsync(database, source, null, 1.0, now, cancellationToken);
+}

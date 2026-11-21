@@ -1,7 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using aberaTech.Server;
 using aberaTech.Server.DevBox;
-using aberaTech.Server.Health;
+using aberaTech.Server.App;
 using aberaTech.Server.Playbook;
 using aberaTech.Server.Training;
 using Azure.Core;
@@ -60,6 +60,10 @@ builder.Services.AddSingleton(twilioOptions);
 var adminOptions = builder.Configuration.GetSection(AdminOptions.Section).Get<AdminOptions>() ?? new AdminOptions();
 builder.Services.AddSingleton(adminOptions);
 
+// The aberaTech iPhone app: who signs in to it and where its data lives. App/AppOptions.cs.
+var appOptions = builder.Configuration.GetSection(AppOptions.Section).Get<AppOptions>() ?? new AppOptions();
+builder.Services.AddSingleton(appOptions);
+
 // Without Google credentials and an allowlist there is no admin surface at all:
 // the endpoints are never mapped. Failing closed rather than falling back to
 // something weaker means a half-finished configuration cannot quietly leave the
@@ -73,6 +77,11 @@ if (adminOptions.IsConfigured)
     // /api/alerts: the owner's cookie, or a paired phone's token on the
     // routes a phone needs. AlertsAuth.cs.
     builder.Services.AddAlertsDeviceAuth(adminOptions);
+
+    // /api/app: the aberaTech app's own token, for the owner and his
+    // household. A Google sign-in the app started ends in the app. App/AppAccess.cs.
+    builder.Services.AddAppAuth();
+    builder.Services.AddScoped<aberaTech.Scheduling.AppAccess.IAppSignInHandoff, AppSignInHandoff>();
 
     // Deny by default. Every endpoint says who may call it — a policy, or an
     // explicit AllowAnonymous — and RouteTableTests fails the build on one that
@@ -114,6 +123,8 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
     builder.Services.AddDbContext<SchedulingDbContext>((services, options) =>
         options.UseNpgsql(services.GetRequiredService<NpgsqlDataSource>(), npgsql => npgsql.UseNodaTime()));
+
+    builder.Services.AddScoped<IAppAccessStore, DatabaseAppAccessStore>();
 
     builder.Services.AddScoped<QueueNotifier>();
 
@@ -526,6 +537,9 @@ builder.Services.AddSingleton(ClientAddress.Bind(builder.Configuration));
 builder.Services.AddAppRateLimits(builder.Configuration);
 builder.AddRequestLimits();
 
+// No scheduling database: the app's sessions live in memory, and a restart signs it out.
+builder.Services.TryAddSingleton<IAppAccessStore, MemoryAppAccessStore>();
+
 var app = builder.Build();
 
 // `dotnet aberaTech.Server.dll migrate`: apply migrations as whoever the
@@ -732,6 +746,11 @@ if (adminOptions.IsConfigured)
 {
     // Mapped with the names that are missing, if any: the page lists them.
     app.MapAlertsEndpoints(alertsOptions, alertsMissing);
+
+    // The aberaTech app: sign-in, a household member's requests, the wish list.
+    app.MapAppSignInEndpoints();
+    app.MapAppRequestEndpoints();
+    app.MapAppWishListEndpoints();
 }
 else
 {
@@ -745,8 +764,12 @@ if (fitnessEnabled)
 
     app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions, oneDriveOptions);
 
-    // Apple Health weigh-ins from the paired phone: the alerts token, the fitness log.
-    if (adminOptions.IsConfigured) app.MapHealthWeightEndpoints();
+    // The aberaTech app's fitness view, and the owner's Apple Health weigh-ins.
+    if (adminOptions.IsConfigured)
+    {
+        app.MapAppFitnessEndpoints();
+        app.MapAppHealthEndpoints();
+    }
 }
 else
 {

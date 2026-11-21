@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121123432_RoutineOutcomes";
+    public override string LastMigrationId => "20261121163528_AppAccess";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -679,6 +679,71 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Position");
 
                 b.ToTable("AlertTypeRules");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.AppAccess.AppSessionRecord", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid");
+
+                b.Property<Instant>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Device")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)");
+
+                b.Property<Instant?>("LastSeenAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Person")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)");
+
+                b.Property<byte[]>("TokenHash")
+                    .IsRequired()
+                    .HasColumnType("bytea");
+
+                b.HasKey("Id");
+
+                b.HasIndex("TokenHash")
+                    .IsUnique();
+
+                b.ToTable("AppSessions");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.AppAccess.AppSignInCodeRecord", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Challenge")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
+
+                b.Property<byte[]>("CodeHash")
+                    .IsRequired()
+                    .HasColumnType("bytea");
+
+                b.Property<Instant>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Person")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("CodeHash")
+                    .IsUnique();
+
+                b.HasIndex("ExpiresAt");
+
+                b.ToTable("AppSignInCodes");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Data.AdminSessionVersion", b =>

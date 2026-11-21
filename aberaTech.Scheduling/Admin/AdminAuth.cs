@@ -118,6 +118,28 @@ public static class AdminAuth
                 // captured server side below and stored encrypted instead.
                 google.SaveTokens = false;
 
+                // A sign-in the aberaTech iPhone app started ends in the app,
+                // not in a cookie: the browser sheet is sent to the app's
+                // scheme with a one-time code, and nothing signs in here.
+                google.Events.OnTicketReceived = async context =>
+                {
+                    var properties = context.Properties;
+                    if (properties is null
+                        || !properties.Items.TryGetValue(AppAccess.IAppSignInHandoff.ChallengeItem, out var challenge)
+                        || challenge is null
+                        || context.HttpContext.RequestServices.GetService<AppAccess.IAppSignInHandoff>() is not { } handoff)
+                    {
+                        return;
+                    }
+
+                    properties.Items.TryGetValue("app.state", out var state);
+                    var target = await handoff.CompleteAsync(
+                        context.Principal?.FindFirstValue(ClaimTypes.Email), challenge, state ?? string.Empty,
+                        context.HttpContext.RequestAborted);
+                    context.Response.Redirect(target);
+                    context.HandleResponse();
+                };
+
                 google.Events.OnCreatingTicket = async context =>
                 {
                     // The only moment a refresh token exists. Google returns it

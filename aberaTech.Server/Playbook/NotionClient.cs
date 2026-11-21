@@ -19,8 +19,9 @@ public sealed class NotionThrottledException(TimeSpan retryAfter) : Exception("N
 }
 
 /// <summary>
-/// The four Notion calls the playbook needs: a page, a block, a block's
-/// children and a data source's pages. Reads only.
+/// The Notion calls the site needs: for the playbook a page, a block, a
+/// block's children and a data source's pages, all reads; for the aberaTech
+/// app a filtered query and page writes, never cached.
 /// </summary>
 /// <remarks>
 /// Answers are kept in memory for <see cref="NotionOptions.CacheSeconds"/>,
@@ -105,6 +106,35 @@ public sealed class NotionClient(
         cache.Set(key, (IReadOnlyList<JsonElement>)all, CacheFor);
         return all;
     }
+
+    /// <summary>
+    /// Pages in a data source matching a filter and sort, asked fresh: the
+    /// app shows an edit the moment it is made.
+    /// </summary>
+    public async Task<IReadOnlyList<JsonElement>> QueryFreshAsync(
+        string dataSourceId, IReadOnlyDictionary<string, object> query, CancellationToken cancellationToken)
+    {
+        var all = new List<JsonElement>();
+        string? cursor = null;
+        do
+        {
+            var body = new Dictionary<string, object>(query) { ["page_size"] = 100 };
+            if (cursor is not null) body["start_cursor"] = cursor;
+            var page = await SendAsync(
+                HttpMethod.Post, $"/v1/data_sources/{dataSourceId}/query", JsonSerializer.Serialize(body), cancellationToken);
+            cursor = Collect(page, all);
+        } while (cursor is not null);
+
+        return all;
+    }
+
+    /// <summary>A new page. The body names its parent and properties as the API takes them.</summary>
+    public Task<JsonElement> CreatePageAsync(IReadOnlyDictionary<string, object> body, CancellationToken cancellationToken) =>
+        SendAsync(HttpMethod.Post, "/v1/pages", JsonSerializer.Serialize(body), cancellationToken);
+
+    /// <summary>Changes a page's properties.</summary>
+    public Task<JsonElement> UpdatePageAsync(string id, IReadOnlyDictionary<string, object> body, CancellationToken cancellationToken) =>
+        SendAsync(HttpMethod.Patch, $"/v1/pages/{id}", JsonSerializer.Serialize(body), cancellationToken);
 
     /// <summary>
     /// A signed file address, opened for streaming. Never cached and never

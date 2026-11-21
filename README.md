@@ -530,6 +530,50 @@ its signed address lasts an hour.
 Each route is the owner's alone. 503 with Retry-After when Notion asks for
 a longer wait. 502 naming Notion's status for any other failure.
 
+### The aberaTech app
+
+The aberaTech iPhone app (neb-abera/aberatech-app) signs in with Google
+and reads and writes through `/api/app`. Two people use it. Neb is the
+owner: the addresses in `Admin__AllowedEmails`. Each household member signs
+in with any of their own Google addresses and gets one view whichever
+address they use.
+
+Sign-in runs through the site's own Google client. The app opens
+`/api/app/sign-in` in a browser sheet with a PKCE challenge. Google's
+answer comes back to `/signin-google`, which sends the sheet to
+`aberatech://signin` with a one-time code instead of setting a cookie. The
+app trades the code and its verifier for a token at `/api/app/session`.
+A token is stored as its SHA-256. Taking an address out of the household
+signs that person out on their next request.
+
+A household member's requests are Neb's Notion Tasks rows whose
+Requested by names them: the ones they add in the app and the ones the
+email routine files from their mail. Nothing is copied. Add the integration to Tasks and to Wish
+list items under ••• > Connections.
+
+| Environment variable           | Kind    | Value                                   |
+| ------------------------------ | ------- | --------------------------------------- |
+| `App__Household__0__Name`      | setting | the name Tasks' Requested by uses       |
+| `App__Household__0__Emails__0` | setting | their first Google address              |
+| `App__Household__0__Emails__1` | setting | their second Google address             |
+| `App__TasksDataSourceId`       | setting | the Tasks data source id                |
+| `App__WishListDataSourceId`    | setting | the Wish list items data source id      |
+| `App__ToldProperty`            | setting | the Tasks select the email routine sets |
+
+| Route                                | Who                 | Answer                                                                                    |
+| ------------------------------------ | ------------------- | ----------------------------------------------------------------------------------------- |
+| `GET /api/app/sign-in`               | anyone              | Google, then the app's scheme with a code or `error=not-allowed`                          |
+| `POST /api/app/session`              | anyone, with a code | `{token, name, role}`. 401 for an unknown, used, or expired code, or a wrong verifier     |
+| `GET /api/app/me`                    | the app             | `{name, role}`                                                                            |
+| `DELETE /api/app/session`            | the app             | signs this phone out                                                                      |
+| `GET /api/app/requests`              | the app             | their requests with status, open ones and ones finished in the last 30 days               |
+| `POST /api/app/requests`             | the app             | adds one to Tasks as theirs                                                               |
+| `PUT /api/app/requests/{id}`         | the app             | changes the title, details, date or link. 404 for a task that is not theirs, 409 finished |
+| `POST /api/app/requests/{id}/remove` | the app             | Archived, with "Reason: Removed by" and the name. Never deleted                           |
+| `GET /api/app/wishlist`              | the app             | items still wanted, best score first                                                      |
+| `GET /api/app/fitness`               | the app             | the goals with standing and forecast, and 120 days of weigh-ins                           |
+| `POST /api/app/health/weights`       | the owner's app     | Apple Health weigh-ins, one a day                                                         |
+
 ### Dates and countdowns
 
 `/dates` counts the days between two dates and adds or subtracts years,

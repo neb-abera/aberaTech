@@ -157,8 +157,7 @@ public sealed class RouteTableTests
     private static readonly string[] DeviceOnlyRoutes =
     [
         "PUT /api/alerts/devices/me/push",
-        "DELETE /api/alerts/devices/me/push",
-        "POST /api/alerts/health/weights"
+        "DELETE /api/alerts/devices/me/push"
     ];
 
     [Fact]
