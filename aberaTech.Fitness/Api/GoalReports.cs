@@ -401,6 +401,13 @@ internal static class GoalReports
             }
 
             case OutlookMethod.Trend:
+                // The year the line was drawn through, not the whole log.
+                if (history is { Count: > 0 })
+                {
+                    var latest = history.Max(h => h.Date);
+                    first = history.Where(h => h.Date > latest.PlusDays(-GateOutlook.TrendWindowDays)).Min(h => h.Date);
+                }
+
                 return new Made(first, last, current?.Source, TrendModel,
                     last is { } newest && Period.Between(newest, today, PeriodUnits.Days).Days is var stale && stale > TrendStaleAfterDays
                         ? Text($"a new reading, because the newest is {stale} days old")

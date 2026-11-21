@@ -204,5 +204,10 @@ public sealed class GateOutlookTests
         var at = GateOutlook.TrendAt(history, new LocalDate(2027, 12, 31));
 
         Assert.Equal(174, at!.Value.Projected, precision: 6);
+
+        var weight = SelectionReadiness.Metrics.BodyweightLb;
+        var line = GateOutlook.Line(Line(weight, Comparison.AtMost, 165, "lb"), 12,
+            Context(histories: new Dictionary<string, IReadOnlyList<DatedValue>> { [weight] = history }) with { Today = new LocalDate(2026, 11, 21) });
+        Assert.Contains("Straight line through 3 readings from 2026-04-03 to 2026-11-21", line.Evidence);
     }
 }
