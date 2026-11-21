@@ -83,6 +83,14 @@ public static class RateLimits
             // Google. A person does it once; ten a minute is a loop.
             options.AddPolicy(AdminAuth.SignInPolicy, context => PerMinute(context, signInPerMinute));
 
+            // The aberaTech app's sign-in and code exchange: a person signs in
+            // once per phone. Ten a minute is a loop.
+            options.AddPolicy(App.AppSignIn.RateLimitPolicy, context => PerMinute(context, signInPerMinute));
+
+            // The app's writes, each a Notion call. A person taps a few a minute.
+            var appWritesPerMinute = configuration.GetValue("RateLimits:AppWritesPerMinute", App.AppRequests.DefaultWritesPerMinute);
+            options.AddPolicy(App.AppRequests.WritePolicy, context => PerMinute(context, appWritesPerMinute));
+
             // Each press asks Azure to start a VM that bills by the hour. The
             // owner presses once and waits; five a minute is a stuck finger.
             // Start, hold and park share the budget. The end-to-end suite

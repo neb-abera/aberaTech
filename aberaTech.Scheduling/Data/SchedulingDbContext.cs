@@ -86,8 +86,38 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Countdowns, shown on /dates and the paired phone. At most <see cref="Alerts.AlertCountdowns.MaxCountdowns"/>.</summary>
     public DbSet<AlertCountdownRecord> AlertCountdowns => Set<AlertCountdownRecord>();
 
+    /// <summary>One-time codes from Google sign-ins the aberaTech app started. Live 2 minutes.</summary>
+    public DbSet<AppAccess.AppSignInCodeRecord> AppSignInCodes => Set<AppAccess.AppSignInCodeRecord>();
+
+    /// <summary>Signed-in aberaTech apps, one per phone and person.</summary>
+    public DbSet<AppAccess.AppSessionRecord> AppSessions => Set<AppAccess.AppSessionRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.Entity<AppAccess.AppSignInCodeRecord>(entity =>
+        {
+            entity.HasKey(code => code.Id);
+            entity.Property(code => code.Id).ValueGeneratedNever();
+            entity.Property(code => code.CodeHash).IsRequired();
+            // The exchange looks a code up by its hash.
+            entity.HasIndex(code => code.CodeHash).IsUnique();
+            entity.Property(code => code.Challenge).HasMaxLength(64).IsRequired();
+            entity.Property(code => code.Person).HasMaxLength(40).IsRequired();
+            // Expired codes are swept by date.
+            entity.HasIndex(code => code.ExpiresAt);
+        });
+
+        builder.Entity<AppAccess.AppSessionRecord>(entity =>
+        {
+            entity.HasKey(session => session.Id);
+            entity.Property(session => session.Id).ValueGeneratedNever();
+            entity.Property(session => session.TokenHash).IsRequired();
+            // Every request with a token looks it up by its hash.
+            entity.HasIndex(session => session.TokenHash).IsUnique();
+            entity.Property(session => session.Person).HasMaxLength(40).IsRequired();
+            entity.Property(session => session.Device).HasMaxLength(60).IsRequired();
+        });
+
         builder.HasPostgresExtension("btree_gist");
 
         builder.Entity<AvailabilityRuleRecord>(entity =>
