@@ -278,10 +278,12 @@ public static class GateOutlook
             }
         }
 
-        var first = history.Min(h => h.Date);
+        // The readings the line was drawn through, not every one in the log.
         var last = history.Max(h => h.Date);
+        var used = history.Where(h => h.Date > last.PlusDays(-TrendWindowDays)).ToArray();
+        var first = used.Min(h => h.Date);
         var evidence = Text(
-            $"Straight line through {history.Count} readings from {first:yyyy-MM-dd} to {last:yyyy-MM-dd} projects {SelectionReadiness.Describe(requirement.Unit, trend.Projected)} ± {SelectionReadiness.Describe(requirement.Unit, trend.Sd)} at the date.");
+            $"Straight line through {used.Length} readings from {first:yyyy-MM-dd} to {last:yyyy-MM-dd} projects {SelectionReadiness.Describe(requirement.Unit, trend.Projected)} ± {SelectionReadiness.Describe(requirement.Unit, trend.Sd)} at the date.");
 
         return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trend, evidence, trend.Projected, ready, null,
             requirement.Target, requirement.Unit, requirement.Comparison);
