@@ -1,5 +1,6 @@
 using System.Text.Json;
 using aberaTech.Server.Playbook;
+using Microsoft.AspNetCore.Mvc;
 
 namespace aberaTech.Server.App;
 
@@ -25,9 +26,9 @@ public static class AppWishList
 
     public static IEndpointRouteBuilder MapAppWishListEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/app/wishlist", async (NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
+        routes.MapGet("/api/app/wishlist", async ([FromKeyedServices(AppOptions.NotionKey)] NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
             {
-                if (!NotionIds.TryNormalize(app.WishListDataSourceId, out var dataSource))
+                if (string.IsNullOrWhiteSpace(app.NotionToken) || !NotionIds.TryNormalize(app.WishListDataSourceId, out var dataSource))
                 {
                     return Results.Problem(statusCode: 503, title: "The wish list is not connected.");
                 }

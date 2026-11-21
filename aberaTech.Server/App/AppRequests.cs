@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using aberaTech.Server.Playbook;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 using NodaTime.Text;
 
@@ -59,7 +60,7 @@ public static class AppRequests
     {
         var group = routes.MapGroup("/api/app/requests").RequireAuthorization(AppAuth.SignedInPolicy);
 
-        group.MapGet("", async (HttpContext context, NotionClient notion, AppOptions app, IClock clock, CancellationToken cancellationToken) =>
+        group.MapGet("", async (HttpContext context, [FromKeyedServices(AppOptions.NotionKey)] NotionClient notion, AppOptions app, IClock clock, CancellationToken cancellationToken) =>
         {
             if (Setup(context, app) is not { } setup) return Results.Problem(statusCode: 503, title: "Tasks is not connected.");
             var query = new Dictionary<string, object>
@@ -74,7 +75,7 @@ public static class AppRequests
             return Results.Ok(pages.Select(Read).Where(r => Shown(r, since)).ToList());
         });
 
-        group.MapPost("", async (AppRequestInput input, HttpContext context, NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
+        group.MapPost("", async (AppRequestInput input, HttpContext context, [FromKeyedServices(AppOptions.NotionKey)] NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
         {
             if (Setup(context, app) is not { } setup) return Results.Problem(statusCode: 503, title: "Tasks is not connected.");
             if (Problem(input) is { } problem) return Invalid(problem);
@@ -94,7 +95,7 @@ public static class AppRequests
             return page is null ? Unavailable() : Results.Ok(Read(page.Value));
         }).RequireRateLimiting(WritePolicy);
 
-        group.MapPut("/{id}", async (string id, AppRequestInput input, HttpContext context, NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
+        group.MapPut("/{id}", async (string id, AppRequestInput input, HttpContext context, [FromKeyedServices(AppOptions.NotionKey)] NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
         {
             if (Setup(context, app) is not { } setup) return Results.Problem(statusCode: 503, title: "Tasks is not connected.");
             if (Problem(input) is { } problem) return Invalid(problem);
@@ -105,7 +106,7 @@ public static class AppRequests
             return page is null ? Unavailable() : Results.Ok(Read(page.Value));
         }).RequireRateLimiting(WritePolicy);
 
-        group.MapPost("/{id}/remove", async (string id, HttpContext context, NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
+        group.MapPost("/{id}/remove", async (string id, HttpContext context, [FromKeyedServices(AppOptions.NotionKey)] NotionClient notion, AppOptions app, CancellationToken cancellationToken) =>
         {
             if (Setup(context, app) is not { } setup) return Results.Problem(statusCode: 503, title: "Tasks is not connected.");
             if (await Owned(notion, setup, id, cancellationToken) is not { } owned) return Results.NotFound();
@@ -133,7 +134,7 @@ public static class AppRequests
     private static Context? Setup(HttpContext context, AppOptions app)
     {
         if (AppAuth.Person(context.User) is not { } person) return null;
-        if (!NotionIds.TryNormalize(app.TasksDataSourceId, out var dataSource)) return null;
+        if (string.IsNullOrWhiteSpace(app.NotionToken) || !NotionIds.TryNormalize(app.TasksDataSourceId, out var dataSource)) return null;
         return AppPeople.Requester(person, app) is { } requester ? new Context(person, requester, dataSource) : null;
     }
 

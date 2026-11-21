@@ -365,6 +365,12 @@ if (adminOptions.IsConfigured)
     builder.Services.AddMemoryCache();
     builder.Services.TryAddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<NotionClient>();
+    // The app's own integration, which may write Tasks. App/AppOptions.cs.
+    builder.Services.AddKeyedSingleton(AppOptions.NotionKey, (services, _) => new NotionClient(
+        services.GetRequiredService<IHttpClientFactory>(),
+        services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+        services.GetRequiredService<TimeProvider>(),
+        new NotionOptions { Token = appOptions.NotionToken, BaseUrl = notionOptions.BaseUrl, CacheSeconds = notionOptions.CacheSeconds }));
     builder.Services.AddScoped<PlaybookReader>();
     // The fitness console's lessons page: the same reader, rooted there.
     builder.Services.AddKeyedScoped(PlaybookEndpoints.LessonsReader, (services, _) => new PlaybookReader(

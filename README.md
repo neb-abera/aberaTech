@@ -548,17 +548,20 @@ signs that person out on their next request.
 
 A household member's requests are Neb's Notion Tasks rows whose
 Requested by names them: the ones they add in the app and the ones the
-email routine files from their mail. Nothing is copied. Add the integration to Tasks and to Wish
-list items under ••• > Connections.
+email routine files from their mail. Nothing is copied. The app writes with its own Notion
+integration, "abera.tech app", with read, insert, and update content,
+connected to Tasks and Wish list items alone. The playbook's integration
+only reads.
 
-| Environment variable           | Kind    | Value                                   |
-| ------------------------------ | ------- | --------------------------------------- |
-| `App__Household__0__Name`      | setting | the name Tasks' Requested by uses       |
-| `App__Household__0__Emails__0` | setting | their first Google address              |
-| `App__Household__0__Emails__1` | setting | their second Google address             |
-| `App__TasksDataSourceId`       | setting | the Tasks data source id                |
-| `App__WishListDataSourceId`    | setting | the Wish list items data source id      |
-| `App__ToldProperty`            | setting | the Tasks select the email routine sets |
+| Environment variable           | Kind    | Value                                     |
+| ------------------------------ | ------- | ----------------------------------------- |
+| `App__NotionToken`             | secret  | the "abera.tech app" integration's secret |
+| `App__Household__0__Name`      | setting | the name Tasks' Requested by uses         |
+| `App__Household__0__Emails__0` | setting | their first Google address                |
+| `App__Household__0__Emails__1` | setting | their second Google address               |
+| `App__TasksDataSourceId`       | setting | the Tasks data source id                  |
+| `App__WishListDataSourceId`    | setting | the Wish list items data source id        |
+| `App__ToldProperty`            | setting | the Tasks select the email routine sets   |
 
 | Route                                | Who                 | Answer                                                                                    |
 | ------------------------------------ | ------------------- | ----------------------------------------------------------------------------------------- |

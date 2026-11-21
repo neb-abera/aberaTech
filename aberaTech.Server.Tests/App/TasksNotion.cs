@@ -18,6 +18,9 @@ internal sealed class TasksNotion : HttpMessageHandler
     private readonly Dictionary<string, JsonObject> _pages = new();
     public List<string> Calls { get; } = [];
 
+    /// <summary>The Authorization header of every call.</summary>
+    public List<string> Authorizations { get; } = [];
+
     /// <summary>The body of the last page create or update.</summary>
     public JsonObject? LastWrite { get; private set; }
 
@@ -87,6 +90,7 @@ internal sealed class TasksNotion : HttpMessageHandler
         var path = request.RequestUri!.AbsolutePath;
         var body = request.Content is null ? null : JsonNode.Parse(await request.Content.ReadAsStringAsync(cancellationToken))?.AsObject();
         Calls.Add($"{request.Method} {path}");
+        Authorizations.Add(request.Headers.Authorization?.ToString() ?? "");
 
         if (request.Method == HttpMethod.Post && path.StartsWith("/v1/data_sources/", StringComparison.Ordinal))
         {

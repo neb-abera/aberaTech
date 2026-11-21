@@ -15,6 +15,16 @@ public sealed class AppOptions
 {
     public const string Section = "App";
 
+    /// <summary>The keyed NotionClient that holds <see cref="NotionToken"/>.</summary>
+    public const string NotionKey = "app";
+
+    /// <summary>
+    /// The "abera.tech app" Notion integration's secret: read, insert, and
+    /// update, connected to Tasks and Wish list items alone. The playbook's
+    /// integration only reads, so the app writes with its own.
+    /// </summary>
+    public string? NotionToken { get; init; }
+
     public string OwnerName { get; init; } = "Neb";
 
     public AppMember[] Household { get; init; } = [];

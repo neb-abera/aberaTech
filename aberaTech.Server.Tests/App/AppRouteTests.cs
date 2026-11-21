@@ -33,8 +33,7 @@ public sealed class AppRouteTests : IDisposable
     public AppRouteTests()
     {
         var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
-        settings["Notion:Token"] = "notion-token-for-tests";
-        settings["Notion:PlaybookPageId"] = "00000000-0000-0000-0000-0000000000aa";
+        settings["App:NotionToken"] = "notion-app-token-for-tests";
         settings["App:Household:0:Name"] = "Sam";
         settings["App:ToldProperty"] = "Requester told";
         settings["App:Household:0:Emails:0"] = MemberGmail;
@@ -239,6 +238,13 @@ public sealed class AppRouteTests : IDisposable
 
         Assert.Equal(["Running shoes", "AI camera"], items!.Select(i => i.Item));
         Assert.Equal(160, items![0].Price);
+    }
+
+    [Fact]
+    public async Task The_requests_go_to_Notion_with_the_apps_own_token()
+    {
+        await Client(await TokenFor("Sam")).GetAsync("/api/app/requests");
+        Assert.Equal("Bearer notion-app-token-for-tests", _notion.Authorizations.Single());
     }
 
     [Fact]
