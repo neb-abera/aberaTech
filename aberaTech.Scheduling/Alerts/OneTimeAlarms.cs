@@ -14,6 +14,10 @@ namespace aberaTech.Scheduling.Alerts;
 /// rung and every step ring of that cycle has stopped, been acknowledged, or
 /// been checked off, whichever comes first. The phone follows the same rule.
 /// Set on 2026-11-19.
+///
+/// Done or Skipped on its single ring answers that ring, even before it
+/// rings. Skipped settles every step too. After Done each step still has to
+/// stop, be acknowledged, or be checked off. Set on 2026-11-21.
 /// </summary>
 public static class OneTimeAlarms
 {
@@ -30,25 +34,32 @@ public static class OneTimeAlarms
         var gone = false;
         DateTimeZone? zone = null;
         IReadOnlySet<string>? completed = null;
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineOutcome>? outcomes = null;
 
         foreach (var routine in await store.RoutinesAsync(cancellationToken))
         {
             if (routine.Days.Count > 0) continue;
+            zone ??= await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
+            outcomes ??= RoutineOutcomes.ByCycle(await store.OutcomesAsync(now - RoutineCompletions.KeepFor, cancellationToken));
+            // An outcome counts on the cycle the routine rings now: one on a
+            // cycle an edit moved away from was for the routine as it was then.
+            var outcome = RoutineRings.Once(routine, zone) is { } single
+                ? outcomes.GetValueOrDefault((routine.Id, RoutineRings.Stamp(single.Scheduled)))
+                : null;
             bool done;
             if (routine.Steps.Count == 0)
             {
                 var prefix = $"{RoutineRings.KeyPrefix}{routine.Id:D}:";
                 // A ring acknowledged before the last save was a ring of the routine as it was then.
-                done = acknowledged.Any(pair =>
+                done = outcome is not null || acknowledged.Any(pair =>
                     pair.Key.StartsWith(prefix, StringComparison.Ordinal) && pair.Value.At >= routine.UpdatedAt);
             }
             else
             {
-                zone ??= await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
                 completed ??= (await store.CompletionsAsync(now - RoutineCompletions.KeepFor, cancellationToken))
                     .Select(completion => completion.StepKey)
                     .ToHashSet(StringComparer.Ordinal);
-                done = StepsDone(routine, zone, Duration.FromMinutes(settings.StopAfterMinutes), acknowledged, completed, now);
+                done = StepsDone(routine, zone, Duration.FromMinutes(settings.StopAfterMinutes), acknowledged, completed, outcome, now);
             }
 
             if (!done) continue;
@@ -71,8 +82,9 @@ public static class OneTimeAlarms
     }
 
     /// <summary>
-    /// The single ring has rung, and each step ring of its cycle has stopped
-    /// ringing, was acknowledged after the last save, or was checked off.
+    /// The single ring has rung or has an outcome, and each step ring of its
+    /// cycle has stopped ringing, was acknowledged after the last save, or
+    /// was checked off. Skipped settles every step.
     /// </summary>
     private static bool StepsDone(
         AlertRoutine routine,
@@ -80,9 +92,12 @@ public static class OneTimeAlarms
         Duration stopAfter,
         IReadOnlyDictionary<string, AlertAcknowledgement> acknowledged,
         IReadOnlySet<string> completed,
+        RoutineOutcome? outcome,
         Instant now)
     {
-        if (RoutineRings.Once(routine, zone) is not { } once || once.At > now) return false;
+        if (RoutineRings.Once(routine, zone) is not { } once) return false;
+        if (outcome is { Skipped: true }) return true;
+        if (outcome is null && once.At > now) return false;
         var (scheduled, at) = once;
         var cycle = RoutineRings.Stamp(scheduled);
         return AlertRoutines.Offsets(routine).All(pair =>

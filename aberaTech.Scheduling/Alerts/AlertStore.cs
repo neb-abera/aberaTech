@@ -171,6 +171,15 @@ public interface IAlertStore
     /// <summary>A completion's photo, or null when it has none or there is no such completion.</summary>
     Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken);
 
+    /// <summary>The outcomes whose cycle rang at or after <paramref name="cyclesFrom"/>, by cycle.</summary>
+    Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken);
+
+    /// <summary>Stores the outcome of one cycle, or replaces the one already stored.</summary>
+    Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken);
+
+    /// <summary>False when that cycle had no outcome.</summary>
+    Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken);
+
     /// <summary>Every countdown, by target and label.</summary>
     Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken);
 
@@ -413,6 +422,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertAcknowledgements.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertHeldRings.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertRoutineCompletions.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertRoutineOutcomes.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
@@ -739,6 +749,37 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             .Where(row => row.Id == id)
             .Select(row => row.Photo)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+        await database.AlertRoutineOutcomes.AsNoTracking()
+            .Where(row => row.CycleAt >= cyclesFrom)
+            .OrderBy(row => row.CycleAt)
+            .ThenBy(row => row.RoutineId)
+            .Select(row => new RoutineOutcome(row.RoutineId, row.Cycle, row.Status, row.RoutineLabel, row.CycleAt, row.At, row.Note))
+            .ToListAsync(cancellationToken);
+
+    public async Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken)
+    {
+        // The key decides, as for completions: the phone and the page marking
+        // one cycle at once store one row, and the later wins.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertRoutineOutcomes" ("RoutineId", "Cycle", "Status", "RoutineLabel", "CycleAt", "At", "Note")
+             VALUES ({outcome.RoutineId}, {outcome.Cycle}, {outcome.Status}, {outcome.RoutineLabel}, {outcome.CycleAt}, {outcome.At}, {outcome.Note})
+             ON CONFLICT ("RoutineId", "Cycle") DO UPDATE SET
+                 "Status" = EXCLUDED."Status",
+                 "RoutineLabel" = EXCLUDED."RoutineLabel",
+                 "CycleAt" = EXCLUDED."CycleAt",
+                 "At" = EXCLUDED."At",
+                 "Note" = EXCLUDED."Note"
+             """,
+            cancellationToken);
+    }
+
+    public async Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+        await database.AlertRoutineOutcomes
+            .Where(row => row.RoutineId == routineId && row.Cycle == cycle)
+            .ExecuteDeleteAsync(cancellationToken) > 0;
 
     public async Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) =>
         AlertCountdowns.Sorted(

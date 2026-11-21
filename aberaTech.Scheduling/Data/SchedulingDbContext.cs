@@ -78,6 +78,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
     /// <summary>Steps checked off, with notes and photos. Kept 14 days.</summary>
     public DbSet<AlertRoutineCompletionRecord> AlertRoutineCompletions => Set<AlertRoutineCompletionRecord>();
 
+    public DbSet<AlertRoutineOutcomeRecord> AlertRoutineOutcomes => Set<AlertRoutineOutcomeRecord>();
+
     /// <summary>Rings of routine alarms that were ringing when the routine was edited. Kept until they stop.</summary>
     public DbSet<AlertHeldRingRecord> AlertHeldRings => Set<AlertHeldRingRecord>();
 
@@ -315,6 +317,16 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(completion => completion.Note).HasMaxLength(RoutineCompletions.MaxNoteLength);
             entity.HasIndex(completion => new { completion.RoutineId, completion.StepId, completion.Cycle }).IsUnique();
             entity.HasIndex(completion => completion.CycleAt);
+        });
+
+        builder.Entity<AlertRoutineOutcomeRecord>(entity =>
+        {
+            entity.HasKey(outcome => new { outcome.RoutineId, outcome.Cycle });
+            entity.Property(outcome => outcome.Cycle).HasMaxLength(16);
+            entity.Property(outcome => outcome.Status).HasMaxLength(RoutineOutcomes.MaxStatusLength).IsRequired();
+            entity.Property(outcome => outcome.RoutineLabel).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
+            entity.Property(outcome => outcome.Note).HasMaxLength(RoutineCompletions.MaxNoteLength);
+            entity.HasIndex(outcome => outcome.CycleAt);
         });
 
         builder.Entity<AlertHeldRingRecord>(entity =>
