@@ -15,6 +15,9 @@ public static class OutlookMethod
     /// <summary>A straight line through the metric's own dated history.</summary>
     public const string Trend = "trend";
 
+    /// <summary>Today's lift carried forward at the trained-lifter rate.</summary>
+    public const string Progression = "progression";
+
     /// <summary>Passing now, with too little history to project.</summary>
     public const string Held = "held";
 
@@ -73,10 +76,10 @@ public sealed record OutlookContext(
 /// VDOT that clears it and asked of the Banister trajectory, whose fitted
 /// covariance gives the probability (<see cref="Forecast"/>). The rest
 /// (reps, lifts, body fat, the fitness test) have no dose-response model
-/// here, so each is projected along a straight line through its own dated
+/// here. A barbell lift is carried forward from today's max at the rate
+/// trained lifters gain (<see cref="StrengthProgression"/>). The rest are
+/// projected along a straight line through the last year of their own dated
 /// history, with the prediction interval of that regression as the spread.
-/// A straight line is a modest model of a lift; it is the honest one when
-/// the alternative is a number with no interval at all.
 ///
 /// A gate's probability is the product of its lines', which treats them as
 /// independent. They are not, because a stronger athlete is stronger everywhere.
@@ -97,6 +100,9 @@ public static class GateOutlook
     /// <summary>…spanning at least this long, or it is a couple of days, not a trend.</summary>
     public const int MinimumTrendSpanDays = 42;
 
+    /// <summary>A trend reads only the readings of the last year before its newest one.</summary>
+    public const int TrendWindowDays = 365;
+
     /// <summary>When the workbook names no year, every goal is asked about this far out.</summary>
     public const double DefaultHorizonMonths = 12;
 
@@ -111,6 +117,12 @@ public static class GateOutlook
         if (TargetVdot(requirement, context) is { } target)
         {
             return ByTrajectory(requirement, target, months, context);
+        }
+
+        if (IsLift(requirement.Metric)
+            && context.Current.TryGetValue(requirement.Metric, out var lift) && lift.Value > 0)
+        {
+            return ByProgression(requirement, lift, months, context);
         }
 
         if (context.Histories.TryGetValue(requirement.Metric, out var history)
@@ -215,6 +227,41 @@ public static class GateOutlook
             _ => null
         };
 
+    /// <summary>The barbell lines: read forward from today's max, never through older ones.</summary>
+    internal static bool IsLift(string metric) => metric is
+        SelectionReadiness.Metrics.DeadliftTripleToBodyweight or SelectionReadiness.Metrics.DeadliftTripleLb
+        or SelectionReadiness.Metrics.FrontSquatTripleToBodyweight or SelectionReadiness.Metrics.FrontSquatToBodyweight
+        or SelectionReadiness.Metrics.FrontSquatLb or SelectionReadiness.Metrics.BenchPressToBodyweight
+        or SelectionReadiness.Metrics.BenchPressLb or SelectionReadiness.Metrics.BackSquatFiveLb
+        or SelectionReadiness.Metrics.BackSquatLb;
+
+    private static LineOutlook ByProgression(Requirement requirement, Measurement current, double months, OutlookContext context)
+    {
+        // The best estimate he has held, a ceiling he regains fast. Today's
+        // reading is the start whether or not an older one was higher.
+        double? best = context.Histories.TryGetValue(requirement.Metric, out var history) && history.Count > 0
+            ? history.Max(h => h.Value)
+            : null;
+        var age = current.On is { } on ? Math.Max(0, Period.Between(on, context.Today, PeriodUnits.Days).Days) / DaysPerMonth : 0;
+
+        var at = StrengthProgression.At(current.Value, best, months, age);
+        var probability = TrendProbability(requirement, at);
+
+        double? ready = null;
+        for (var m = 0.0; m <= TrendHorizonMonths; m += 0.25)
+        {
+            if (TrendProbability(requirement, StrengthProgression.At(current.Value, best, m, age)) >= ReadyProbability)
+            {
+                ready = m;
+                break;
+            }
+        }
+
+        var evidence = StrengthProgression.Explain(current.Value, best, at, requirement.Unit, SelectionReadiness.Describe);
+        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Progression, evidence, at.Projected, ready, null,
+            requirement.Target, requirement.Unit, requirement.Comparison);
+    }
+
     private static LineOutlook ByTrend(
         Requirement requirement, IReadOnlyList<DatedValue> history, (double Projected, double Sd) trend, double months, OutlookContext context)
     {
@@ -252,11 +299,15 @@ public static class GateOutlook
     /// Ordinary least squares through the readings, evaluated at a date, with
     /// the prediction-interval spread: residual scatter, widened by how far
     /// the date sits from the readings' center. Null when there is no trend
-    /// to speak of.
+    /// to speak of. Readings more than a year older than the newest are left
+    /// out: on 2026-11-21 the bodyweight line ran through weigh-ins from 2017.
     /// </summary>
     internal static (double Projected, double Sd)? TrendAt(IReadOnlyList<DatedValue> history, LocalDate at)
     {
+        if (history.Count == 0) return null;
+        var newest = history.Max(h => h.Date);
         var points = history
+            .Where(h => h.Date > newest.PlusDays(-TrendWindowDays))
             .GroupBy(h => h.Date)
             .Select(g => g.OrderByDescending(h => h.Value).First())
             .OrderBy(h => h.Date)

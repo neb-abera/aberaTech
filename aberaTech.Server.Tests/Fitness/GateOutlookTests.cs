@@ -132,4 +132,77 @@ public sealed class GateOutlookTests
         Assert.Contains("the log has 0", blank.Evidence);
     }
 
+    [Fact]
+    public void A_lift_is_forecast_forward_from_todays_max_and_not_through_older_readings()
+    {
+        // His bench as Hevy read it on 2026-11-21: 207 lb in April, 210 in
+        // May, a dip to 175 on 31 October, and 207 again from 155 × 10 on
+        // 17 November. The straight line through them fell to 205 lb.
+        var today = new LocalDate(2026, 11, 21);
+        var bench = SelectionReadiness.Metrics.BenchPressLb;
+        IReadOnlyList<DatedValue> history =
+        [
+            new(new(2026, 4, 5), 207), new(new(2026, 5, 15), 210), new(new(2026, 8, 19), 196),
+            new(new(2026, 9, 1), 192), new(new(2026, 10, 31), 175), new(new(2026, 11, 8), 202),
+            new(new(2026, 11, 17), 207)
+        ];
+        var straight = GateOutlook.TrendAt(history, new LocalDate(2027, 12, 31));
+        Assert.True(straight!.Value.Projected < 207);
+
+        var current = new Dictionary<string, Measurement>
+        {
+            [bench] = new(bench, 207, Basis.Modeled, "", new LocalDate(2026, 11, 17), "Hevy")
+        };
+        var context = Context(current: current, histories: new Dictionary<string, IReadOnlyList<DatedValue>> { [bench] = history })
+            with { Today = today };
+
+        var line = GateOutlook.Line(Line(bench, Comparison.AtLeast, 247.5, "lb"), 13.3, context);
+
+        Assert.Equal(OutlookMethod.Progression, line.Method);
+        Assert.InRange(line.Projected!.Value, 220, 235);
+        Assert.InRange(line.Probability!.Value, 0.005, 0.2);
+        Assert.Contains("From today's 207 lb", line.Evidence);
+        Assert.Contains("back to your best logged 210 lb", line.Evidence);
+
+        // A goal inside reach is likely, and ready on a stated month.
+        var near = GateOutlook.Line(Line(bench, Comparison.AtLeast, 215, "lb"), 13.3, context);
+        Assert.True(near.Probability > 0.8);
+        Assert.NotNull(near.ReadyInMonths);
+    }
+
+    [Fact]
+    public void A_lift_climbs_back_to_its_best_in_eight_weeks_then_gains_at_the_trained_rate()
+    {
+        // No older best: 8.8% a year from today.
+        var (year, _) = StrengthProgression.At(200, null, 12, 0);
+        Assert.Equal(200 * (1 + StrengthProgression.GainPerYear), year, precision: 6);
+        Assert.InRange(StrengthProgression.GainPerYear, 0.087, 0.088);
+
+        // A best of 220 is back at 8 weeks, and the year runs from there.
+        var (back, _) = StrengthProgression.At(200, 220, StrengthProgression.ReclaimMonths, 0);
+        Assert.Equal(220, back, precision: 6);
+        var (halfway, _) = StrengthProgression.At(200, 220, StrengthProgression.ReclaimMonths / 2, 0);
+        Assert.Equal(210, halfway, precision: 6);
+
+        // A lower old reading changes nothing.
+        Assert.Equal(StrengthProgression.At(200, null, 6, 0), StrengthProgression.At(200, 150, 6, 0));
+
+        // An old estimate is less certain than a fresh one.
+        Assert.True(StrengthProgression.At(200, null, 6, 6).Sd > StrengthProgression.At(200, null, 6, 0).Sd);
+    }
+
+    [Fact]
+    public void A_trend_reads_only_the_last_year_of_readings()
+    {
+        // Weigh-ins from 2017 at 167 lb would tilt a line through 2026's.
+        IReadOnlyList<DatedValue> history =
+        [
+            new(new(2017, 1, 22), 167), new(new(2017, 2, 8), 167),
+            new(new(2026, 4, 3), 174), new(new(2026, 8, 30), 174), new(new(2026, 11, 21), 174)
+        ];
+
+        var at = GateOutlook.TrendAt(history, new LocalDate(2027, 12, 31));
+
+        Assert.Equal(174, at!.Value.Projected, precision: 6);
+    }
 }
