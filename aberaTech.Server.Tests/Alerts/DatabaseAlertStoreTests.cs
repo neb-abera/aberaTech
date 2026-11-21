@@ -226,6 +226,30 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task An_outcome_upserts_on_its_routine_and_cycle_deletes_and_is_pruned_after_14_days()
+    {
+        var routine = Guid.NewGuid();
+        var old = Now - Duration.FromDays(14) - Duration.FromMinutes(1);
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        await store.SaveOutcomeAsync(new RoutineOutcome(routine, "2026-10-28T06:30", "done", "Wake up", Now, Now, "first"), CancellationToken.None);
+        // The same cycle from another device: one row, the later wins.
+        var later = new RoutineOutcome(routine, "2026-10-28T06:30", "skipped", "Wake up", Now, Now + Duration.FromMinutes(1), null);
+        await store.SaveOutcomeAsync(later, CancellationToken.None);
+        await store.SaveOutcomeAsync(new RoutineOutcome(routine, "2026-10-14T06:30", "done", "Wake up", old, old, null), CancellationToken.None);
+
+        Assert.Equal(later, (await store.OutcomesAsync(Now, CancellationToken.None)).Single());
+        Assert.Equal(2, (await store.OutcomesAsync(Instant.MinValue, CancellationToken.None)).Count);
+
+        await store.PruneAsync(Now - Duration.FromDays(14), CancellationToken.None);
+        Assert.Equal([later], await store.OutcomesAsync(Instant.MinValue, CancellationToken.None));
+
+        Assert.False(await store.DeleteOutcomeAsync(routine, "2026-10-29T06:30", CancellationToken.None));
+        Assert.True(await store.DeleteOutcomeAsync(routine, "2026-10-28T06:30", CancellationToken.None));
+        Assert.Empty(await context.AlertRoutineOutcomes.AsNoTracking().ToListAsync());
+    }
+
+    [PostgresFact]
     public async Task Routines_read_back_by_hour_minute_then_label()
     {
         await using var context = Context();

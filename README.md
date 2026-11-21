@@ -438,6 +438,27 @@ A one-time routine with steps is not deleted when its own ring is
 stopped. It goes once every step of that cycle has stopped ringing, been
 stopped, or been checked off.
 
+One ring of a routine can be marked Done or Skipped, ahead of it or while
+it rings. Done means the routine's own ring for that cycle does not ring,
+and its steps still ring unless each is checked off. Skipped means
+neither the ring nor any step of that cycle rings. Undo plans the rings
+still ahead again. A ring ringing now stops on Pushover too.
+
+| Route                                                  | Request                | Answer                                                |
+| ------------------------------------------------------ | ---------------------- | ----------------------------------------------------- |
+| `PUT /api/alerts/routines/{id}/cycles/{cycle}/outcome` | `{status, note?, at?}` | 200 and the state. 400 by field or cycle. 404 unknown |
+| `DELETE` on the same path                              | none                   | 200 and the state. The rings ahead ring again         |
+
+`status` is `done` or `skipped`. `note` is at most 2,000 characters.
+`at` is now when left out, and from 14 days ago to 5 minutes ahead.
+`cycle` is checked as for a completion. The status lists
+`routineOutcomes`, `{routineId, cycle, status, at, note}`, from two days
+back. Each history cycle carries `outcome`, null or `{status, at, note}`,
+once its ring time has come. A one-time routine marked Done or Skipped
+counts as answered, even ahead of its ring, and goes once its steps are
+settled. Outcomes are deleted 14 days after their cycle
+(`RoutineOutcomes.cs`, table `AlertRoutineOutcomes`).
+
 ### Playbook: connecting Notion
 
 `/playbook` needs two values. Without both, the page says Notion is not

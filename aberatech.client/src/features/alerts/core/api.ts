@@ -90,6 +90,19 @@ export interface RoutineCompletion {
   hasPhoto: boolean;
 }
 
+/**
+ * One ring of a routine marked Done or Skipped, by the stamp of the
+ * routine's ring. Done: the routine's own ring does not ring, and its steps
+ * still do unless each is checked off. Skipped: neither rings.
+ */
+export interface RoutineOutcome {
+  routineId: string;
+  cycle: string;
+  status: "done" | "skipped";
+  at: string;
+  note: string | null;
+}
+
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
 export type AlertType = "none" | "notification" | "alarm";
 
@@ -202,6 +215,11 @@ export interface AlertsState {
    * leaves the field out.
    */
   routineCompletions?: RoutineCompletion[];
+  /**
+   * Rings marked Done or Skipped, for cycles from two days ago on. An older
+   * server leaves the field out.
+   */
+  routineOutcomes?: RoutineOutcome[];
   /**
    * Countdowns, by target and label. /dates and the paired phone show the
    * time left. An older server leaves the field out.

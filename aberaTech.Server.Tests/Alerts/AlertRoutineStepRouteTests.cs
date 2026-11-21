@@ -609,8 +609,10 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
             cycles.Select(cycle => cycle.GetProperty("cycle").GetString()));
         var done = cycles[1];
         Assert.Equal(
-            ["routineId", "label", "cycle", "at", "acknowledgedAt", "acknowledgedVia", "steps"],
+            ["routineId", "label", "cycle", "at", "acknowledgedAt", "acknowledgedVia", "steps", "outcome"],
             done.EnumerateObject().Select(field => field.Name));
+        // Neither Done nor Skipped (AlertRoutineOutcomeRouteTests).
+        Assert.Equal(JsonValueKind.Null, done.GetProperty("outcome").ValueKind);
         Assert.Equal(id, done.GetProperty("routineId").GetGuid());
         Assert.Equal("Wake up", done.GetProperty("label").GetString());
         Assert.Equal((Noon - Duration.FromDays(1)).ToDateTimeOffset(), done.GetProperty("at").GetDateTimeOffset());

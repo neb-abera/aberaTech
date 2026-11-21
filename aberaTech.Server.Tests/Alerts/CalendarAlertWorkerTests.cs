@@ -731,6 +731,13 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => Down<byte[]?>();
 
+        public Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            Down<IReadOnlyList<RoutineOutcome>>();
+
+        public Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) => Down<bool>();
+
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
 
         public Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
@@ -862,6 +869,15 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.DeleteCompletionAsync(routineId, stepId, cycle, cancellationToken);
 
         public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => _inner.CompletionPhotoAsync(id, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.OutcomesAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken) =>
+            _inner.SaveOutcomeAsync(outcome, cancellationToken);
+
+        public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteOutcomeAsync(routineId, cycle, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);
@@ -1298,6 +1314,15 @@ public sealed class CalendarAlertWorkerTests : IDisposable
             _inner.DeleteCompletionAsync(routineId, stepId, cycle, cancellationToken);
 
         public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken) => _inner.CompletionPhotoAsync(id, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.OutcomesAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken) =>
+            _inner.SaveOutcomeAsync(outcome, cancellationToken);
+
+        public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteOutcomeAsync(routineId, cycle, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);

@@ -15,7 +15,8 @@ namespace aberaTech.Scheduling.Alerts;
 /// reaches the routes a phone needs (<see cref="AlertsAuth.OwnerOrDevicePolicy"/>):
 /// the status, mute, unmute, skip, unskip, ack, an event's type, a new
 /// event, an event's edit and deletion, a routine alarm's create, update
-/// and delete, a step's completion and its undo, the history, a
+/// and delete, a step's completion and its undo, a ring's Done or Skipped
+/// and its undo, the history, a
 /// completion's photo, a countdown's create, update and delete, the rules,
 /// and the phone settings. The phone's own push registration takes its token alone
 /// (<see cref="AlertsAuth.DevicePolicy"/>). The actions share one rate
@@ -667,6 +668,97 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // One ring of a routine marked Done or Skipped. Done: the routine's
+        // own ring for that cycle does not ring, here, on Pushover or on the
+        // phone, and its steps still do unless each is checked off. Skipped:
+        // neither the ring nor any step of the cycle rings. A note may go
+        // with it. Neb asked for this on 2026-11-21.
+        shared.MapPut("/routines/{id:guid}/cycles/{cycle}/outcome", async (
+            Guid id,
+            string cycle,
+            HttpRequest http,
+            AlertDispatcher dispatcher,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertDeviceStore devices,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!http.HasJsonContentType()) return Results.StatusCode(StatusCodes.Status415UnsupportedMediaType);
+            OutcomeRequest? request;
+            try
+            {
+                request = await http.ReadFromJsonAsync<OutcomeRequest>(cancellationToken);
+            }
+            catch (BadHttpRequestException refused)
+            {
+                return Results.StatusCode(refused.StatusCode);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return Results.BadRequest("The body is not an outcome.");
+            }
+
+            var now = clock.GetCurrentInstant();
+            var (errors, valid) = OutcomeFields.Validate(request, now);
+            if (valid is null) return Results.ValidationProblem(errors);
+
+            var routine = (await store.RoutinesAsync(cancellationToken)).FirstOrDefault(routine => routine.Id == id);
+            if (routine is null) return Results.NotFound();
+
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var zone = await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
+            if (RoutineCompletions.CycleAt(routine, cycle, zone, now) is not { } cycleAt)
+            {
+                return Results.Problem(
+                    detail: "cycle is not a ring of this routine from 14 days ago to 2 days ahead.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // The rings of this cycle ringing now that the outcome silences.
+            var ringing = (await RoutineRings.RingingAsync(store, devices, settings, now, cancellationToken))
+                .Where(ring => ring.RoutineId == id && RoutineRings.ParseKey(ring.Key)?.Cycle == cycle)
+                .Where(ring => ring.StepId is null || valid.Status == RoutineOutcomes.SkippedStatus)
+                .ToList();
+            await store.SaveOutcomeAsync(
+                new RoutineOutcome(id, cycle, valid.Status, routine.Label, cycleAt, valid.At, valid.Note), cancellationToken);
+
+            foreach (var ring in ringing) await dispatcher.CancelRepeatsAsync(ring.Key, cancellationToken);
+            await OneTimeAlarms.ForgetAcknowledgedAsync(store, devices, settings, now, cancellationToken);
+            await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // Undo: the routine's ring and its steps ring again for that cycle,
+        // those still ahead. An outcome of a routine since deleted can be
+        // undone too.
+        shared.MapDelete("/routines/{id:guid}/cycles/{cycle}/outcome", async (
+            Guid id,
+            string cycle,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertDeviceStore devices,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await store.DeleteOutcomeAsync(id, cycle, cancellationToken)
+                && (await store.RoutinesAsync(cancellationToken)).All(routine => routine.Id != id))
+            {
+                return Results.NotFound();
+            }
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         // Two weeks of cycles, for checking on the weekend what was done.
         // Read like the status: no action limit.
         shared.MapGet("/history", async (IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
@@ -678,7 +770,8 @@ public static class AlertsEndpoints
                 await store.CompletionsAsync(now - RoutineCompletions.KeepFor, cancellationToken),
                 await store.AcknowledgementsAsync(cancellationToken),
                 await RoutineRings.ZoneAsync(devices, settings, cancellationToken),
-                now));
+                now,
+                await store.OutcomesAsync(now - RoutineCompletions.KeepFor, cancellationToken)));
         });
 
         // A completion's photo. The JPEG was sniffed on the way in. Never stored by a cache.
@@ -1183,6 +1276,12 @@ public static class AlertsEndpoints
                         completion.Note,
                         completion.HasPhoto))
             ],
+            RoutineOutcomes:
+            [
+                .. (await store.OutcomesAsync(now - RoutineCompletions.ListedFor, cancellationToken))
+                    .Select(outcome => new RoutineOutcomeView(
+                        outcome.RoutineId, outcome.Cycle, outcome.Status, outcome.At.ToDateTimeOffset(), outcome.Note))
+            ],
             CalendarWrite: calendarWrite);
     }
 
@@ -1323,6 +1422,7 @@ public static class AlertsEndpoints
         IReadOnlyList<CountdownView> Countdowns,
         IReadOnlyList<AlertTypeRule> Rules,
         IReadOnlyList<RoutineCompletionView> RoutineCompletions,
+        IReadOnlyList<RoutineOutcomeView> RoutineOutcomes,
         string? CalendarWrite = null);
 
     /// <summary>

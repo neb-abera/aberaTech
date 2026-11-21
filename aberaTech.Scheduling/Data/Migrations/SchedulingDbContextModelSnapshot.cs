@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261119181241_RoutineSteps";
+    public override string LastMigrationId => "20261121123432_RoutineOutcomes";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -459,6 +459,42 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("AlertRoutineCompletions");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineOutcomeRecord", b =>
+            {
+                b.Property<Guid>("RoutineId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Cycle")
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<Instant>("At")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Instant>("CycleAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Note")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
+
+                b.Property<string>("RoutineLabel")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
+
+                b.HasKey("RoutineId", "Cycle");
+
+                b.HasIndex("CycleAt");
+
+                b.ToTable("AlertRoutineOutcomes");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineRecord", b =>

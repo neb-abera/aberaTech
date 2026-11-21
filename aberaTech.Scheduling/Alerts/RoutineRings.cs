@@ -107,7 +107,8 @@ public static class RoutineRings
     /// step rings its cumulative offset after the routine's ring, so a step of
     /// a ring before <paramref name="from"/> can fall inside. A step ring
     /// whose key is in <paramref name="completed"/> was checked off for that
-    /// cycle and is left out.
+    /// cycle and is left out. A cycle in <paramref name="outcomes"/> leaves
+    /// out the routine's ring, and when Skipped its step rings too.
     /// </summary>
     public static IReadOnlyList<RoutineRing> Plan(
         IEnumerable<AlertRoutine> routines,
@@ -115,7 +116,8 @@ public static class RoutineRings
         Instant from,
         Instant until,
         Duration stopAfter,
-        IReadOnlySet<string>? completed = null)
+        IReadOnlySet<string>? completed = null,
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineOutcome>? outcomes = null)
     {
         var rings = new List<RoutineRing>();
         foreach (var routine in routines)
@@ -132,12 +134,12 @@ public static class RoutineRings
 
             foreach (var (scheduled, at) in Cycles(routine, zone, from - reach, until))
             {
-                Add(at, Key(routine.Id, scheduled), routine.Label, null);
                 var cycle = Stamp(scheduled);
+                if (!RoutineOutcomes.Silences(outcomes, routine.Id, cycle, null)) Add(at, Key(routine.Id, scheduled), routine.Label, null);
                 foreach (var (step, minutes) in offsets)
                 {
                     var key = StepKey(routine.Id, cycle, step.Id);
-                    if (completed?.Contains(key) == true) continue;
+                    if (completed?.Contains(key) == true || RoutineOutcomes.Silences(outcomes, routine.Id, cycle, step.Id)) continue;
                     Add(at + Duration.FromMinutes(minutes), key, step.Label, step.Id);
                 }
             }
@@ -218,12 +220,14 @@ public static class RoutineRings
                 from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken))
             .Select(completion => completion.StepKey)
             .ToHashSet(StringComparer.Ordinal);
-        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed);
+        var outcomes = RoutineOutcomes.ByCycle(await store.OutcomesAsync(
+            from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken));
+        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed, outcomes);
 
         var enabled = routines.Where(routine => routine.Enabled).Select(routine => routine.Id).ToHashSet();
         var held = (await store.HeldRingsAsync(cancellationToken))
             .Where(ring => enabled.Contains(ring.RoutineId) && ring.AlertAt >= from && ring.AlertAt <= until)
-            .Where(ring => !completed.Contains(ring.Key))
+            .Where(ring => !completed.Contains(ring.Key) && !RoutineOutcomes.Silences(outcomes, ring.Key))
             .Select(ring => ring with { StepId = ParseKey(ring.Key)?.StepId })
             .ToList();
         var keys = held.Select(ring => ring.Key).ToHashSet(StringComparer.Ordinal);

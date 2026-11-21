@@ -389,6 +389,32 @@ public class AlertRoutineCompletionRecord
 }
 
 /// <summary>
+/// One ring of a routine marked Done or Skipped. No foreign key: it outlives
+/// its routine until it is 14 days old.
+/// </summary>
+public class AlertRoutineOutcomeRecord
+{
+    public Guid RoutineId { get; set; }
+
+    /// <summary>The cycle's stamp, the routine's scheduled local time: 2026-11-21T07:00.</summary>
+    public string Cycle { get; set; } = string.Empty;
+
+    /// <summary>"done" or "skipped".</summary>
+    public string Status { get; set; } = RoutineOutcomes.DoneStatus;
+
+    public string RoutineLabel { get; set; } = string.Empty;
+
+    /// <summary>The routine's ring for that cycle. Retention and the windows read it.</summary>
+    public Instant CycleAt { get; set; }
+
+    /// <summary>When it was marked.</summary>
+    public Instant At { get; set; }
+
+    /// <summary>At most 2,000 characters.</summary>
+    public string? Note { get; set; }
+}
+
+/// <summary>
 /// A ring of a routine alarm that was ringing when the routine was edited.
 /// An edit changes later rings only, so this one keeps ringing as it was
 /// until it is acknowledged or stops (<see cref="RoutineRings"/>).

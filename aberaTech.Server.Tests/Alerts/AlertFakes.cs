@@ -160,7 +160,7 @@ internal sealed class InMemoryAlertStore : IAlertStore
         lock (_lock) return Task.FromResult(_acknowledgements.TryAdd(key, new AlertAcknowledgement(now, via)));
     }
 
-    /// <summary>Only the completions: the send logic's tests count on the rest staying.</summary>
+    /// <summary>Only the completions and outcomes: the send logic's tests count on the rest staying.</summary>
     public Task PruneAsync(Instant before, CancellationToken cancellationToken)
     {
         lock (_lock)
@@ -168,6 +168,11 @@ internal sealed class InMemoryAlertStore : IAlertStore
             foreach (var key in _completions.Where(pair => pair.Value.Completion.CycleAt < before).Select(pair => pair.Key).ToList())
             {
                 _completions.Remove(key);
+            }
+
+            foreach (var key in _outcomes.Where(pair => pair.Value.CycleAt < before).Select(pair => pair.Key).ToList())
+            {
+                _outcomes.Remove(key);
             }
         }
 
@@ -217,6 +222,33 @@ internal sealed class InMemoryAlertStore : IAlertStore
     public Task<byte[]?> CompletionPhotoAsync(Guid id, CancellationToken cancellationToken)
     {
         lock (_lock) return Task.FromResult(_completions.Values.FirstOrDefault(row => row.Completion.Id == id).Photo);
+    }
+
+    private readonly Dictionary<(Guid, string), RoutineOutcome> _outcomes = [];
+
+    public Task<IReadOnlyList<RoutineOutcome>> OutcomesAsync(Instant cyclesFrom, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            return Task.FromResult<IReadOnlyList<RoutineOutcome>>(
+            [
+                .. _outcomes.Values
+                    .Where(outcome => outcome.CycleAt >= cyclesFrom)
+                    .OrderBy(outcome => outcome.CycleAt)
+                    .ThenBy(outcome => outcome.RoutineId)
+            ]);
+        }
+    }
+
+    public Task SaveOutcomeAsync(RoutineOutcome outcome, CancellationToken cancellationToken)
+    {
+        lock (_lock) _outcomes[(outcome.RoutineId, outcome.Cycle)] = outcome;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_outcomes.Remove((routineId, cycle)));
     }
 
     private readonly Dictionary<string, string> _types = [];

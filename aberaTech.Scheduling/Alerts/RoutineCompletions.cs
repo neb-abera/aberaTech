@@ -82,16 +82,22 @@ public static class RoutineCompletions
     /// their ring, with the completion or the acknowledgment if there was
     /// one. A completion whose routine, step or cycle is no longer in the
     /// schedule is listed too, under its routine and cycle, by the labels it
-    /// kept.
+    /// kept. A cycle marked Done or Skipped carries its outcome, and one whose
+    /// routine is gone, has no steps, or no longer rings then is listed by the
+    /// label the outcome kept, once its ring time has come.
     /// </summary>
     public static HistoryView History(
         IReadOnlyList<AlertRoutine> routines,
         IReadOnlyList<RoutineCompletion> completions,
         IReadOnlyDictionary<string, AlertAcknowledgement> acknowledged,
         DateTimeZone zone,
-        Instant now)
+        Instant now,
+        IReadOnlyList<RoutineOutcome>? outcomes = null)
     {
         var from = now - KeepFor;
+        var marked = (outcomes ?? [])
+            .Where(outcome => outcome.CycleAt >= from && outcome.CycleAt <= now)
+            .ToDictionary(outcome => (outcome.RoutineId, outcome.Cycle));
         var byKey = completions
             .Where(completion => completion.CycleAt >= from && completion.CycleAt <= now)
             .ToDictionary(completion => completion.StepKey, StringComparer.Ordinal);
@@ -106,7 +112,9 @@ public static class RoutineCompletions
             {
                 if (at < from || at > now || at < routine.CreatedAt) continue;
                 var cycle = RoutineRings.Stamp(scheduled);
-                var entry = new HistoryCycle(routine.Id, routine.Label, cycle, at, acknowledged.GetValueOrDefault(RoutineRings.Key(routine.Id, scheduled)));
+                var entry = new HistoryCycle(
+                    routine.Id, routine.Label, cycle, at, acknowledged.GetValueOrDefault(RoutineRings.Key(routine.Id, scheduled)),
+                    marked.GetValueOrDefault((routine.Id, cycle)));
                 foreach (var (step, minutes) in offsets)
                 {
                     var stepAt = at + Duration.FromMinutes(minutes);
@@ -130,12 +138,25 @@ public static class RoutineCompletions
                 var parent = RoutineRings.ParseStamp(completion.Cycle) is { } scheduled
                     ? acknowledged.GetValueOrDefault(RoutineRings.Key(completion.RoutineId, scheduled))
                     : null;
-                entry = new HistoryCycle(completion.RoutineId, completion.RoutineLabel, completion.Cycle, completion.CycleAt, parent);
+                entry = new HistoryCycle(
+                    completion.RoutineId, completion.RoutineLabel, completion.Cycle, completion.CycleAt, parent,
+                    marked.GetValueOrDefault((completion.RoutineId, completion.Cycle)));
                 cycles[(completion.RoutineId, completion.Cycle)] = entry;
             }
 
             entry.Steps.Add(new HistoryStep(
                 completion.StepId, completion.StepLabel, completion.StepAt, acknowledged.GetValueOrDefault(completion.StepKey)?.At, completion));
+        }
+
+        // Outcomes the schedule no longer has a place for, and those of a
+        // routine with no steps, which the schedule does not list.
+        foreach (var outcome in marked.Values.Where(outcome => !cycles.ContainsKey((outcome.RoutineId, outcome.Cycle))))
+        {
+            var parent = RoutineRings.ParseStamp(outcome.Cycle) is { } scheduled
+                ? acknowledged.GetValueOrDefault(RoutineRings.Key(outcome.RoutineId, scheduled))
+                : null;
+            cycles[(outcome.RoutineId, outcome.Cycle)] =
+                new HistoryCycle(outcome.RoutineId, outcome.RoutineLabel, outcome.Cycle, outcome.CycleAt, parent, outcome);
         }
 
         return new HistoryView(
@@ -148,7 +169,8 @@ public static class RoutineCompletions
             ]);
     }
 
-    private sealed class HistoryCycle(Guid routineId, string label, string cycle, Instant at, AlertAcknowledgement? acknowledgement)
+    private sealed class HistoryCycle(
+        Guid routineId, string label, string cycle, Instant at, AlertAcknowledgement? acknowledgement, RoutineOutcome? outcome)
     {
         public Guid RoutineId => routineId;
 
@@ -163,7 +185,8 @@ public static class RoutineCompletions
             at.ToDateTimeOffset(),
             acknowledgement?.At.ToDateTimeOffset(),
             acknowledgement?.Via,
-            [.. Steps.Select(step => step.View())]);
+            [.. Steps.Select(step => step.View())],
+            outcome is { } marked ? new HistoryOutcomeView(marked.Status, marked.At.ToDateTimeOffset(), marked.Note) : null);
     }
 
     private sealed record HistoryStep(Guid StepId, string Label, Instant At, Instant? AcknowledgedAt, RoutineCompletion? Completion)
@@ -181,8 +204,10 @@ public static class RoutineCompletions
 public sealed record HistoryView(int Days, IReadOnlyList<HistoryCycleView> Cycles);
 
 /// <summary>
-/// One ring of a routine with steps. Cycle is the stamp the keys carry. At
-/// is the routine's ring. The acknowledgment is the Stop of that ring.
+/// One ring of a routine with steps, or of one marked Done or Skipped.
+/// Cycle is the stamp the keys carry. At is the routine's ring. The
+/// acknowledgment is the Stop of that ring. Outcome is null when the ring
+/// was neither marked Done nor Skipped.
 /// </summary>
 public sealed record HistoryCycleView(
     Guid RoutineId,
@@ -191,7 +216,8 @@ public sealed record HistoryCycleView(
     DateTimeOffset At,
     DateTimeOffset? AcknowledgedAt,
     string? AcknowledgedVia,
-    IReadOnlyList<HistoryStepView> Steps);
+    IReadOnlyList<HistoryStepView> Steps,
+    HistoryOutcomeView? Outcome);
 
 /// <summary>One step of a cycle. Completion null means it was not checked off: missed, unless the cycle is still going.</summary>
 public sealed record HistoryStepView(
