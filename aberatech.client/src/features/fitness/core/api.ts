@@ -1071,7 +1071,7 @@ export interface GoalSource {
 export interface GoalForecast {
   probability: number | null;
   projected: number | null;
-  method: "trajectory" | "trend" | "held" | "none";
+  method: "trajectory" | "progression" | "trend" | "held" | "none";
   evidence: string;
   hoursToReach: number | null;
   /** The date of the newest reading the forecast was made from. */

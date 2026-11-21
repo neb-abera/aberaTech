@@ -264,6 +264,38 @@ public static class Citations
         1996,
         "https://pubmed.ncbi.nlm.nih.gov/8887211/");
 
+    public static readonly Citation LatellaStrength = new(
+        "latella-strength",
+        "Raw powerlifting totals of 1,271 men rose 0.15 kg a day, about 10.7% a year, over up to 15 years. The strongest quartile gained 0.102 kg a day and the weakest 0.211.",
+        "Christopher Latella, Daniel van den Hoek, and colleagues at Edith Cowan University, from Australian powerlifting records 2003 to 2018.",
+        "Long-term strength adaptation: a 15-year analysis of powerlifting athletes (J Strength Cond Res 34(9):2412-2418)",
+        2020,
+        "https://pubmed.ncbi.nlm.nih.gov/32865942/");
+
+    public static readonly Citation WilsonConcurrent = new(
+        "wilson-concurrent",
+        "Strength rose by an effect size of 1.76 with strength training alone and 1.44 with endurance training added. Running reduced the gain, and cycling did not.",
+        "Jacob Wilson and colleagues, a meta-analysis of 21 studies of concurrent strength and endurance training.",
+        "Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises (J Strength Cond Res 26(8):2293-2307)",
+        2012,
+        "https://pubmed.ncbi.nlm.nih.gov/22002517/");
+
+    public static readonly Citation StrengthRetraining = new(
+        "strength-retraining",
+        "Strength lost to time off returns fast. Men who lost 5 to 15% of their 1RM in 12 weeks off regained it in under 8 weeks. After 3 weeks off, bench press gains matched the first 6 weeks of training. 24 weeks off cost 6% of 1RM.",
+        "Sara Blocquiaux and colleagues (KU Leuven); Riki Ogasawara and colleagues (University of Tokyo); Keijo Häkkinen and colleagues (University of Jyväskylä).",
+        "The effect of resistance training, detraining and retraining on muscle strength and power, myofibre size, satellite cells and myonuclei in older men (Exp Gerontol 133); Effects of periodic and continued resistance training on muscle CSA and strength in previously untrained men (Clin Physiol Funct Imaging 31); Neuromuscular adaptation during prolonged strength training, detraining and re-strength-training in middle-aged and elderly people (Eur J Appl Physiol 83)",
+        2020,
+        "https://pubmed.ncbi.nlm.nih.gov/32017951/");
+
+    public static readonly Citation ReynoldsRepMax = new(
+        "reynolds-rep-max",
+        "A one-rep max estimated from a 5RM chest press carried a standard error of 2.98 kg, and linear equations hold to 10 reps.",
+        "Jeff Reynolds, Timothy Gordon, and Robert Robergs, University of New Mexico.",
+        "Prediction of one repetition maximum strength from multiple repetition maximum testing and anthropometry (J Strength Cond Res 20(3):584-592)",
+        2006,
+        "https://pubmed.ncbi.nlm.nih.gov/16937972/");
+
     public static IReadOnlyList<Citation> All { get; } =
     [
         DanielsVdot, BanisterModel, MujikaRetraining, MuscleMemory,
@@ -273,6 +305,7 @@ public static class Citations
         PandolfLoadCarriage, FarinaSfasPredictors, FarinaSfasBody, ArmyAft,
         SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
-        MaffetoneMaf, FosterMonotony, FbiPft, AcsmRunningEquation, JonesDoustTreadmillGrade
+        MaffetoneMaf, FosterMonotony, FbiPft, AcsmRunningEquation, JonesDoustTreadmillGrade,
+        LatellaStrength, WilsonConcurrent, StrengthRetraining, ReynoldsRepMax
     ];
 }

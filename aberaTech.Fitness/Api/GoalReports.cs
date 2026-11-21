@@ -391,6 +391,15 @@ internal static class GoalReports
                 return new Made(runs.First, runs.Last, sources, model, needs.Count == 0 ? null : string.Join("; ", needs));
             }
 
+            case OutlookMethod.Progression:
+            {
+                var age = current?.On is { } measuredOn ? Period.Between(measuredOn, today, PeriodUnits.Days).Days : 0;
+                return new Made(first, last, current?.Source, StrengthProgression.Model,
+                    age > TrendStaleAfterDays
+                        ? Text($"a current set, because the newest is {age} days old")
+                        : null);
+            }
+
             case OutlookMethod.Trend:
                 return new Made(first, last, current?.Source, TrendModel,
                     last is { } newest && Period.Between(newest, today, PeriodUnits.Days).Days is var stale && stale > TrendStaleAfterDays
