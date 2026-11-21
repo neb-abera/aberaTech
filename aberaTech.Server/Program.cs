@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using aberaTech.Server;
 using aberaTech.Server.DevBox;
+using aberaTech.Server.Health;
 using aberaTech.Server.Playbook;
 using aberaTech.Server.Training;
 using Azure.Core;
@@ -743,6 +744,9 @@ if (fitnessEnabled)
     await app.PrepareAsync<FitnessDbContext>("fitness");
 
     app.MapFitnessEndpoints(fitnessOptions, fitnessRequiresSignIn, intervalsIcuOptions, oneDriveOptions);
+
+    // Apple Health weigh-ins from the paired phone: the alerts token, the fitness log.
+    if (adminOptions.IsConfigured) app.MapHealthWeightEndpoints();
 }
 else
 {

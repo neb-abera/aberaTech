@@ -668,7 +668,7 @@ internal static class ReadinessReports
     internal static class Sources
     {
         public const string Hevy = "Hevy";
-        public const string WeighIn = "a weigh-in entered on the Log tab";
+        public const string WeighIn = "a weigh-in from Apple Health or the Log tab";
         public const string Aft = "an AFT entered on the Log tab";
         public const string Fbi = "an FBI PFT entered on the Log tab";
     }
