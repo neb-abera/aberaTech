@@ -382,6 +382,12 @@ jobs:
   # a fuzz smoke run, the executable, the benchmarks, the size budget, the
   # mutation canary, and rustfmt. Then the production image is built, as the
   # deploy workflow builds it, and must start and answer its health probe.
+  # The grader's suite runs on a pull request only when it touches the
+  # grader or this workflow, and always on master. The job itself always
+  # runs, so the required check still reports. On 2026-11-23 an advisory
+  # against url 2.5.8 failed the grader's cargo-deny on every pull request,
+  # and blocked a change that never touched the grader. Neb asked for the
+  # grader to block only grader changes.
   grader:
     name: Grader verify suite, in the container
     runs-on: ubuntu-26.04
@@ -398,11 +404,34 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The pull request's base, to list the files it changes.
+          fetch-depth: 0
+
+      - name: Does this change touch the grader?
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != pull_request ]; then
+            echo "grader=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE"...HEAD)
+          if printf '%s\n' "$changed" | grep -qE '^(grader/|\.github/workflows/client-checks\.yml$)'; then
+            echo "grader=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "grader=false" >> "$GITHUB_OUTPUT"
+            echo "No file under grader/ changed. The grader suite runs on master and on grader changes." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Set up Docker Buildx
+        if: steps.changes.outputs.grader == 'true'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Build the grader toolchain image
+        if: steps.changes.outputs.grader == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: grader
@@ -418,6 +447,7 @@ jobs:
       # checkout. GITHUB_STEP_SUMMARY is a file on the runner, so the summary
       # is written to the mounted output directory and appended after.
       - name: Verification suite
+        if: steps.changes.outputs.grader == 'true'
         run: |
           mkdir -p "$RUNNER_TEMP/grader-summary"
           chmod 777 "$RUNNER_TEMP/grader-summary"
@@ -434,6 +464,7 @@ jobs:
           exit "$status"
 
       - name: Build the grader production image
+        if: steps.changes.outputs.grader == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: grader
@@ -444,6 +475,7 @@ jobs:
           cache-to: type=gha,scope=grader,mode=max
 
       - name: The grader image runs as nonroot and answers its probe
+        if: steps.changes.outputs.grader == 'true'
         run: |
           user=$(docker image inspect aberatech-ci-grader --format '{{.Config.User}}')
           if [ "$user" != "nonroot" ]; then echo "::error::The grader image runs as '${user:-root}', not nonroot."; exit 1; fi
