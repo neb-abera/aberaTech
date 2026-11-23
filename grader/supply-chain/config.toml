@@ -132,6 +132,16 @@ criteria = "safe-to-run"
 version = "0.1.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.form_urlencoded]]
+version = "1.2.3"
+criteria = "safe-to-deploy"
+notes = """
+Neb exempted it on 2026-11-23 for url 2.5.9 (RUSTSEC-2026-0592). Mozilla
+audits up to 1.2.2. The 1.2.2 to 1.2.3 diff was read in full: for_suffix
+caps an out-of-range start position where it panicked, and percent-encoding
+moves to 2.3.2. No unsafe code, I/O, build script, or new dependency.
+"""
+
 [[exemptions.futures-task]]
 version = "0.3.21"
 criteria = "safe-to-deploy"
@@ -581,7 +591,7 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.url]]
-version = "2.5.8"
+version = "2.5.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.valuable]]
