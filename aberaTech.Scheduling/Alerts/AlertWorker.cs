@@ -272,6 +272,7 @@ public sealed class CalendarAlertWorker(
     private readonly SemaphoreSlim _tick = new(1, 1);
     private readonly SemaphoreSlim _wake = new(0, 1);
     private readonly HashSet<string> _handled = new(StringComparer.Ordinal);
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _released = new();
     private Instant? _lastRead;
     private string? _plannedWith;
     private AlertSettings _settings = AlertSettings.Defaults(options);
@@ -293,6 +294,7 @@ public sealed class CalendarAlertWorker(
         await _tick.WaitAsync(cancellationToken);
         try
         {
+            while (_released.TryDequeue(out var key)) _handled.Remove(key);
             var now = clock.GetCurrentInstant();
             var settings = await SettingsAsync(cancellationToken);
             if (readNow || _lastRead is null || now >= _lastRead + settings.Poll || _plannedWith != settings.PlanKey)
@@ -350,6 +352,15 @@ public sealed class CalendarAlertWorker(
         {
             _tick.Release();
         }
+    }
+
+    /// <summary>
+    /// Lets this replica send these keys again at their new time, for rings
+    /// a delay moved after they were sent. The next pass applies it.
+    /// </summary>
+    public void Release(IEnumerable<string> keys)
+    {
+        foreach (var key in keys) _released.Enqueue(key);
     }
 
     /// <summary>

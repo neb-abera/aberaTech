@@ -44,7 +44,9 @@ public sealed record RoutineRing(string Key, Guid RoutineId, string Label, Insta
 /// ringing when the save came keeps ringing (<see cref="IAlertStore.HoldRingsAsync"/>).
 /// A step rings its total offset after its routine's ring, in elapsed
 /// time, under a key with the routine's scheduled time. A step checked off
-/// for a cycle does not ring for it (<see cref="RoutineCompletions"/>).
+/// for a cycle does not ring for it (<see cref="RoutineCompletions"/>). A
+/// delayed cycle rings later, its steps with it, under the keys of its
+/// planned time (<see cref="RoutineDelays"/>).
 /// </remarks>
 public static class RoutineRings
 {
@@ -108,7 +110,9 @@ public static class RoutineRings
     /// a ring before <paramref name="from"/> can fall inside. A step ring
     /// whose key is in <paramref name="completed"/> was checked off for that
     /// cycle and is left out. A cycle in <paramref name="outcomes"/> leaves
-    /// out the routine's ring, and when Skipped its step rings too.
+    /// out the routine's ring, and when Skipped its step rings too. A cycle in
+    /// <paramref name="delays"/> rings that much later, its steps with it,
+    /// under the same keys.
     /// </summary>
     public static IReadOnlyList<RoutineRing> Plan(
         IEnumerable<AlertRoutine> routines,
@@ -117,14 +121,17 @@ public static class RoutineRings
         Instant until,
         Duration stopAfter,
         IReadOnlySet<string>? completed = null,
-        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineOutcome>? outcomes = null)
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineOutcome>? outcomes = null,
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineDelay>? delays = null)
     {
         var rings = new List<RoutineRing>();
         foreach (var routine in routines)
         {
             if (!routine.Enabled) continue;
             var offsets = AlertRoutines.Offsets(routine);
-            var reach = Duration.FromMinutes(offsets.Count == 0 ? 0 : offsets[^1].Minutes);
+            // A delayed cycle from before the window can ring inside it.
+            var reach = Duration.FromMinutes(offsets.Count == 0 ? 0 : offsets[^1].Minutes)
+                        + (delays is { Count: > 0 } ? RoutineDelays.Longest : Duration.Zero);
 
             void Add(Instant at, string key, string label, Guid? stepId)
             {
@@ -132,9 +139,10 @@ public static class RoutineRings
                 rings.Add(new RoutineRing(key, routine.Id, label, at, at + stopAfter, stepId));
             }
 
-            foreach (var (scheduled, at) in Cycles(routine, zone, from - reach, until))
+            foreach (var (scheduled, planned) in Cycles(routine, zone, from - reach, until))
             {
                 var cycle = Stamp(scheduled);
+                var at = planned + RoutineDelays.Shift(delays, routine.Id, cycle);
                 if (!RoutineOutcomes.Silences(outcomes, routine.Id, cycle, null)) Add(at, Key(routine.Id, scheduled), routine.Label, null);
                 foreach (var (step, minutes) in offsets)
                 {
@@ -222,7 +230,9 @@ public static class RoutineRings
             .ToHashSet(StringComparer.Ordinal);
         var outcomes = RoutineOutcomes.ByCycle(await store.OutcomesAsync(
             from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken));
-        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed, outcomes);
+        var delays = RoutineDelays.ByCycle(await store.DelaysAsync(
+            from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - RoutineDelays.Longest - Duration.FromDays(1), cancellationToken));
+        var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed, outcomes, delays);
 
         var enabled = routines.Where(routine => routine.Enabled).Select(routine => routine.Id).ToHashSet();
         var held = (await store.HeldRingsAsync(cancellationToken))

@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121163528_AppAccess";
+    public override string LastMigrationId => "20261123121456_RoutineDelays";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -459,6 +459,31 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("AlertRoutineCompletions");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineDelayRecord", b =>
+            {
+                b.Property<Guid>("RoutineId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Cycle")
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)");
+
+                b.Property<Instant>("At")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Instant>("CycleAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<int>("Minutes")
+                    .HasColumnType("integer");
+
+                b.HasKey("RoutineId", "Cycle");
+
+                b.HasIndex("CycleAt");
+
+                b.ToTable("AlertRoutineDelays");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.Alerts.AlertRoutineOutcomeRecord", b =>
