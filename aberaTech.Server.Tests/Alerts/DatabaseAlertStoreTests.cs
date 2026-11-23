@@ -250,6 +250,51 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_delay_upserts_on_its_routine_and_cycle_deletes_and_is_pruned_after_14_days()
+    {
+        var routine = Guid.NewGuid();
+        var old = Now - Duration.FromDays(14) - Duration.FromMinutes(1);
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        await store.SaveDelayAsync(new RoutineDelay(routine, "2026-10-28T06:30", 30, Now, Now), CancellationToken.None);
+        // The same cycle again: one row, the later wins.
+        var later = new RoutineDelay(routine, "2026-10-28T06:30", 90, Now, Now + Duration.FromMinutes(1));
+        await store.SaveDelayAsync(later, CancellationToken.None);
+        await store.SaveDelayAsync(new RoutineDelay(routine, "2026-10-14T06:30", 10, old, old), CancellationToken.None);
+
+        Assert.Equal(later, (await store.DelaysAsync(Now, CancellationToken.None)).Single());
+        Assert.Equal(2, (await store.DelaysAsync(Instant.MinValue, CancellationToken.None)).Count);
+
+        await store.PruneAsync(Now - Duration.FromDays(14), CancellationToken.None);
+        Assert.Equal([later], await store.DelaysAsync(Instant.MinValue, CancellationToken.None));
+
+        Assert.False(await store.DeleteDelayAsync(routine, "2026-10-29T06:30", CancellationToken.None));
+        Assert.True(await store.DeleteDelayAsync(routine, "2026-10-28T06:30", CancellationToken.None));
+        Assert.Empty(await context.AlertRoutineDelays.AsNoTracking().ToListAsync());
+    }
+
+    [PostgresFact]
+    public async Task Releasing_rings_forgets_their_acknowledgment_and_claim_and_nothing_else()
+    {
+        await using var context = Context();
+        var store = new DatabaseAlertStore(context);
+        foreach (var key in new[] { "routine:a", "routine:b" })
+        {
+            await store.TryClaimAsync(key, Start, Now, CancellationToken.None);
+            await store.AcknowledgeAsync(key, Start, "phone", Now, CancellationToken.None);
+        }
+
+        await store.ReleaseRingsAsync(["routine:a"], CancellationToken.None);
+        await store.ReleaseRingsAsync([], CancellationToken.None);
+
+        Assert.False(await store.IsAcknowledgedAsync("routine:a", CancellationToken.None));
+        Assert.Null(await store.DeliveryAsync("routine:a", CancellationToken.None));
+        Assert.True(await store.TryClaimAsync("routine:a", Start, Now, CancellationToken.None));
+        Assert.True(await store.IsAcknowledgedAsync("routine:b", CancellationToken.None));
+        Assert.NotNull(await store.DeliveryAsync("routine:b", CancellationToken.None));
+    }
+
+    [PostgresFact]
     public async Task Routines_read_back_by_hour_minute_then_label()
     {
         await using var context = Context();

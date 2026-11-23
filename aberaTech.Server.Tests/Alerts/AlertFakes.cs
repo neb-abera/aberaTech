@@ -174,6 +174,11 @@ internal sealed class InMemoryAlertStore : IAlertStore
             {
                 _outcomes.Remove(key);
             }
+
+            foreach (var key in _delays.Where(pair => pair.Value.CycleAt < before).Select(pair => pair.Key).ToList())
+            {
+                _delays.Remove(key);
+            }
         }
 
         return Task.CompletedTask;
@@ -249,6 +254,49 @@ internal sealed class InMemoryAlertStore : IAlertStore
     public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken)
     {
         lock (_lock) return Task.FromResult(_outcomes.Remove((routineId, cycle)));
+    }
+
+    private readonly Dictionary<(Guid, string), RoutineDelay> _delays = [];
+
+    public Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            return Task.FromResult<IReadOnlyList<RoutineDelay>>(
+            [
+                .. _delays.Values
+                    .Where(delay => delay.CycleAt >= cyclesFrom)
+                    .OrderBy(delay => delay.CycleAt)
+                    .ThenBy(delay => delay.RoutineId)
+            ]);
+        }
+    }
+
+    public Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken)
+    {
+        lock (_lock) _delays[(delay.RoutineId, delay.Cycle)] = delay;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken)
+    {
+        lock (_lock) return Task.FromResult(_delays.Remove((routineId, cycle)));
+    }
+
+    public Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            foreach (var key in keys)
+            {
+                _acknowledgements.Remove(key);
+                _claims.Remove(key);
+                _starts.Remove(key);
+                _receipts.Remove(key);
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     private readonly Dictionary<string, string> _types = [];

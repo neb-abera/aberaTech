@@ -103,6 +103,18 @@ export interface RoutineOutcome {
   note: string | null;
 }
 
+/**
+ * One ring of a routine moved later, by the stamp of the routine's planned
+ * ring. The routine's ring and each step ring of that cycle ring `minutes`
+ * after their planned time. routineRings already carries the moved times.
+ */
+export interface RoutineDelay {
+  routineId: string;
+  cycle: string;
+  minutes: number;
+  at: string;
+}
+
 /** An alarm uses the alarm settings. A notification sounds once. None sends nothing. */
 export type AlertType = "none" | "notification" | "alarm";
 
@@ -220,6 +232,11 @@ export interface AlertsState {
    * server leaves the field out.
    */
   routineOutcomes?: RoutineOutcome[];
+  /**
+   * Rings moved later, for cycles from two days ago on. An older server
+   * leaves the field out.
+   */
+  routineDelays?: RoutineDelay[];
   /**
    * Countdowns, by target and label. /dates and the paired phone show the
    * time left. An older server leaves the field out.

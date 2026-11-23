@@ -759,6 +759,100 @@ public static class AlertsEndpoints
             return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
         }).RequireRateLimiting(ActionsPolicy);
 
+        // One ring of a routine moved later: the routine's own ring for that
+        // cycle and each of its step rings ring that many minutes after their
+        // planned time, here, on Pushover and on the phone. Keys stay as
+        // planned. A ring of the cycle that already rang and is still ahead
+        // after the move rings again. Neb asked for this on 2026-11-23.
+        shared.MapPut("/routines/{id:guid}/cycles/{cycle}/delay", async (
+            Guid id,
+            string cycle,
+            HttpRequest http,
+            AlertDispatcher dispatcher,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertDeviceStore devices,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!http.HasJsonContentType()) return Results.StatusCode(StatusCodes.Status415UnsupportedMediaType);
+            DelayRequest? request;
+            try
+            {
+                request = await http.ReadFromJsonAsync<DelayRequest>(cancellationToken);
+            }
+            catch (BadHttpRequestException refused)
+            {
+                return Results.StatusCode(refused.StatusCode);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return Results.BadRequest("The body is not a delay.");
+            }
+
+            var (errors, minutes) = DelayFields.Validate(request);
+            if (minutes is not { } delay) return Results.ValidationProblem(errors);
+
+            var now = clock.GetCurrentInstant();
+            var routine = (await store.RoutinesAsync(cancellationToken)).FirstOrDefault(routine => routine.Id == id);
+            if (routine is null) return Results.NotFound();
+
+            var settings = await AlertSettings.CurrentAsync(store, options, cancellationToken);
+            var zone = await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
+            if (RoutineCompletions.CycleAt(routine, cycle, zone, now) is not { } cycleAt)
+            {
+                return Results.Problem(
+                    detail: "cycle is not a ring of this routine from 14 days ago to 2 days ahead.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // The rings of this cycle ringing now stop: each rings again at its new time if that is ahead.
+            var ringing = (await RoutineRings.RingingAsync(store, devices, settings, now, cancellationToken))
+                .Where(ring => ring.RoutineId == id && RoutineRings.ParseKey(ring.Key)?.Cycle == cycle)
+                .ToList();
+            var saved = new RoutineDelay(id, cycle, delay, cycleAt, now);
+            await store.SaveDelayAsync(saved, cancellationToken);
+
+            foreach (var ring in ringing) await dispatcher.CancelRepeatsAsync(ring.Key, cancellationToken);
+            var ahead = RoutineDelays.CycleRings(routine, cycle, cycleAt, saved.Shift)
+                .Where(ring => ring.At > now)
+                .Select(ring => ring.Key)
+                .ToList();
+            await store.ReleaseRingsAsync(ahead, cancellationToken);
+            worker.Release(ahead);
+            await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
+        // Undo: the rings of that cycle ring at their planned time again. A
+        // delay of a routine since deleted can be undone too.
+        shared.MapDelete("/routines/{id:guid}/cycles/{cycle}/delay", async (
+            Guid id,
+            string cycle,
+            CalendarAlertWorker worker,
+            AlertPushWorker pushes,
+            AlertsStatus status,
+            PushoverSounds sounds,
+            IAlertDeviceStore devices,
+            IAlertStore store,
+            IClock clock,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await store.DeleteDelayAsync(id, cycle, cancellationToken)
+                && (await store.RoutinesAsync(cancellationToken)).All(routine => routine.Id != id))
+            {
+                return Results.NotFound();
+            }
+
+            await pushes.PlanChangedAsync(cancellationToken);
+            worker.Wake();
+            return Results.Ok(await StateAsync(status, store, devices, sounds, clock, options, cancellationToken));
+        }).RequireRateLimiting(ActionsPolicy);
+
         // Two weeks of cycles, for checking on the weekend what was done.
         // Read like the status: no action limit.
         shared.MapGet("/history", async (IAlertDeviceStore devices, IAlertStore store, IClock clock, CancellationToken cancellationToken) =>
@@ -1282,6 +1376,11 @@ public static class AlertsEndpoints
                     .Select(outcome => new RoutineOutcomeView(
                         outcome.RoutineId, outcome.Cycle, outcome.Status, outcome.At.ToDateTimeOffset(), outcome.Note))
             ],
+            RoutineDelays:
+            [
+                .. (await store.DelaysAsync(now - RoutineCompletions.ListedFor, cancellationToken))
+                    .Select(delay => new RoutineDelayView(delay.RoutineId, delay.Cycle, delay.Minutes, delay.At.ToDateTimeOffset()))
+            ],
             CalendarWrite: calendarWrite);
     }
 
@@ -1396,7 +1495,8 @@ public static class AlertsEndpoints
     /// CalendarWrite is set only in the answer to a type change or a new
     /// event whose write to Google did not happen, and says why. Routines
     /// lists every routine alarm by hour, minute and label. RoutineRings
-    /// lists their rings from the one ringing now to 24 hours ahead.
+    /// lists their rings from the one ringing now to 24 hours ahead, at
+    /// their delayed time. RoutineDelays lists the delays from two days back.
     /// Countdowns lists every countdown by target and label.
     /// </summary>
     /// <summary>Known is false when Pushover could not be asked.</summary>
@@ -1423,6 +1523,7 @@ public static class AlertsEndpoints
         IReadOnlyList<AlertTypeRule> Rules,
         IReadOnlyList<RoutineCompletionView> RoutineCompletions,
         IReadOnlyList<RoutineOutcomeView> RoutineOutcomes,
+        IReadOnlyList<RoutineDelayView> RoutineDelays,
         string? CalendarWrite = null);
 
     /// <summary>

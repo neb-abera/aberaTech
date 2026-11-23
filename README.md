@@ -459,6 +459,24 @@ counts as answered, even ahead of its ring, and goes once its steps are
 settled. Outcomes are deleted 14 days after their cycle
 (`RoutineOutcomes.cs`, table `AlertRoutineOutcomes`).
 
+One ring of a routine can be delayed, with its steps. The routine's own
+ring for that cycle and each step ring ring that many minutes after their
+planned time, in a browser, on Pushover, and on the phone. Ring keys keep
+the planned cycle, so completions, outcomes, and stops still apply. A
+second delay replaces the first, counted from the planned ring. A ring of
+that cycle already stopped rings again when its new time is still ahead,
+and a ring ringing now stops until then.
+
+| Route                                                | Request     | Answer                                                     |
+| ---------------------------------------------------- | ----------- | ---------------------------------------------------------- |
+| `PUT /api/alerts/routines/{id}/cycles/{cycle}/delay` | `{minutes}` | 200 and the state. 400 by field or cycle. 404 unknown      |
+| `DELETE` on the same path                            | none        | 200 and the state. The rings go back to their planned time |
+
+`minutes` is 1 to 720. `cycle` is checked as for a completion. The
+status lists `routineDelays`, `{routineId, cycle, minutes, at}`, from two
+days back. Delays are deleted 14 days after their cycle
+(`RoutineDelays.cs`, table `AlertRoutineDelays`).
+
 ### Playbook: connecting Notion
 
 `/playbook` needs two values. Without both, the page says Notion is not

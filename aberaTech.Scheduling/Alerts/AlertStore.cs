@@ -82,7 +82,7 @@ public interface IAlertStore
 
     /// <summary>
     /// Forgets claims, skips, acknowledgments and held rings from before
-    /// <paramref name="before"/>, and completions whose cycle rang before it,
+    /// <paramref name="before"/>, and completions, outcomes and delays whose cycle rang before it,
     /// photos with them. The feed never plans those again.
     /// </summary>
     Task PruneAsync(Instant before, CancellationToken cancellationToken);
@@ -179,6 +179,22 @@ public interface IAlertStore
 
     /// <summary>False when that cycle had no outcome.</summary>
     Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken);
+
+    /// <summary>The delays whose cycle rang at or after <paramref name="cyclesFrom"/>, by cycle.</summary>
+    Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken);
+
+    /// <summary>Stores the delay of one cycle, or replaces the one already stored.</summary>
+    Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken);
+
+    /// <summary>False when that cycle had no delay.</summary>
+    Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Forgets the acknowledgment and the claim of each key, so its ring
+    /// rings again and Pushover sends it again. For rings a delay moved
+    /// after they rang.
+    /// </summary>
+    Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken);
 
     /// <summary>Every countdown, by target and label.</summary>
     Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken);
@@ -423,6 +439,7 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertHeldRings.Where(row => row.StartsAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertRoutineCompletions.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
         await database.AlertRoutineOutcomes.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertRoutineDelays.Where(row => row.CycleAt < before).ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> EventTypesAsync(CancellationToken cancellationToken) =>
@@ -780,6 +797,44 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         await database.AlertRoutineOutcomes
             .Where(row => row.RoutineId == routineId && row.Cycle == cycle)
             .ExecuteDeleteAsync(cancellationToken) > 0;
+
+    public async Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+        await database.AlertRoutineDelays.AsNoTracking()
+            .Where(row => row.CycleAt >= cyclesFrom)
+            .OrderBy(row => row.CycleAt)
+            .ThenBy(row => row.RoutineId)
+            .Select(row => new RoutineDelay(row.RoutineId, row.Cycle, row.Minutes, row.CycleAt, row.At))
+            .ToListAsync(cancellationToken);
+
+    public async Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken)
+    {
+        // The key decides, as for outcomes: the later save wins.
+        await database.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO "AlertRoutineDelays" ("RoutineId", "Cycle", "Minutes", "CycleAt", "At")
+             VALUES ({delay.RoutineId}, {delay.Cycle}, {delay.Minutes}, {delay.CycleAt}, {delay.At})
+             ON CONFLICT ("RoutineId", "Cycle") DO UPDATE SET
+                 "Minutes" = EXCLUDED."Minutes",
+                 "CycleAt" = EXCLUDED."CycleAt",
+                 "At" = EXCLUDED."At"
+             """,
+            cancellationToken);
+    }
+
+    public async Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+        await database.AlertRoutineDelays
+            .Where(row => row.RoutineId == routineId && row.Cycle == cycle)
+            .ExecuteDeleteAsync(cancellationToken) > 0;
+
+    public async Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken)
+    {
+        if (keys.Count == 0) return;
+        var list = keys.ToList();
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        await database.AlertAcknowledgements.Where(row => list.Contains(row.OccurrenceKey)).ExecuteDeleteAsync(cancellationToken);
+        await database.AlertDeliveries.Where(row => list.Contains(row.OccurrenceKey)).ExecuteDeleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<AlertCountdown>> CountdownsAsync(CancellationToken cancellationToken) =>
         AlertCountdowns.Sorted(

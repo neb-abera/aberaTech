@@ -18,6 +18,9 @@ namespace aberaTech.Scheduling.Alerts;
 /// Done or Skipped on its single ring answers that ring, even before it
 /// rings. Skipped settles every step too. After Done each step still has to
 /// stop, be acknowledged, or be checked off. Set on 2026-11-21.
+///
+/// A delay on its single ring moves the ring and its steps, so the steps
+/// stop that much later. Set on 2026-11-23.
 /// </summary>
 public static class OneTimeAlarms
 {
@@ -35,6 +38,7 @@ public static class OneTimeAlarms
         DateTimeZone? zone = null;
         IReadOnlySet<string>? completed = null;
         IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineOutcome>? outcomes = null;
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineDelay>? delays = null;
 
         foreach (var routine in await store.RoutinesAsync(cancellationToken))
         {
@@ -59,7 +63,8 @@ public static class OneTimeAlarms
                 completed ??= (await store.CompletionsAsync(now - RoutineCompletions.KeepFor, cancellationToken))
                     .Select(completion => completion.StepKey)
                     .ToHashSet(StringComparer.Ordinal);
-                done = StepsDone(routine, zone, Duration.FromMinutes(settings.StopAfterMinutes), acknowledged, completed, outcome, now);
+                delays ??= RoutineDelays.ByCycle(await store.DelaysAsync(now - RoutineCompletions.KeepFor, cancellationToken));
+                done = StepsDone(routine, zone, Duration.FromMinutes(settings.StopAfterMinutes), acknowledged, completed, outcome, delays, now);
             }
 
             if (!done) continue;
@@ -93,13 +98,15 @@ public static class OneTimeAlarms
         IReadOnlyDictionary<string, AlertAcknowledgement> acknowledged,
         IReadOnlySet<string> completed,
         RoutineOutcome? outcome,
+        IReadOnlyDictionary<(Guid RoutineId, string Cycle), RoutineDelay> delays,
         Instant now)
     {
         if (RoutineRings.Once(routine, zone) is not { } once) return false;
         if (outcome is { Skipped: true }) return true;
-        if (outcome is null && once.At > now) return false;
-        var (scheduled, at) = once;
+        var (scheduled, planned) = once;
         var cycle = RoutineRings.Stamp(scheduled);
+        var at = planned + RoutineDelays.Shift(delays, routine.Id, cycle);
+        if (outcome is null && at > now) return false;
         return AlertRoutines.Offsets(routine).All(pair =>
         {
             var key = RoutineRings.StepKey(routine.Id, cycle, pair.Step.Id);

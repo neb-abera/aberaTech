@@ -80,6 +80,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertRoutineOutcomeRecord> AlertRoutineOutcomes => Set<AlertRoutineOutcomeRecord>();
 
+    public DbSet<AlertRoutineDelayRecord> AlertRoutineDelays => Set<AlertRoutineDelayRecord>();
+
     /// <summary>Rings of routine alarms that were ringing when the routine was edited. Kept until they stop.</summary>
     public DbSet<AlertHeldRingRecord> AlertHeldRings => Set<AlertHeldRingRecord>();
 
@@ -357,6 +359,13 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(outcome => outcome.RoutineLabel).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
             entity.Property(outcome => outcome.Note).HasMaxLength(RoutineCompletions.MaxNoteLength);
             entity.HasIndex(outcome => outcome.CycleAt);
+        });
+
+        builder.Entity<AlertRoutineDelayRecord>(entity =>
+        {
+            entity.HasKey(delay => new { delay.RoutineId, delay.Cycle });
+            entity.Property(delay => delay.Cycle).HasMaxLength(16);
+            entity.HasIndex(delay => delay.CycleAt);
         });
 
         builder.Entity<AlertHeldRingRecord>(entity =>

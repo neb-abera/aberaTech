@@ -415,6 +415,27 @@ public class AlertRoutineOutcomeRecord
 }
 
 /// <summary>
+/// One ring of a routine moved later, with its steps. No foreign key: it
+/// outlives its routine until it is 14 days old, as an outcome does.
+/// </summary>
+public class AlertRoutineDelayRecord
+{
+    public Guid RoutineId { get; set; }
+
+    /// <summary>The cycle's stamp, the routine's scheduled local time: 2026-11-23T07:00.</summary>
+    public string Cycle { get; set; } = string.Empty;
+
+    /// <summary>1 to 720, after the planned ring.</summary>
+    public int Minutes { get; set; }
+
+    /// <summary>The routine's planned ring for that cycle. Retention and the windows read it.</summary>
+    public Instant CycleAt { get; set; }
+
+    /// <summary>When it was saved.</summary>
+    public Instant At { get; set; }
+}
+
+/// <summary>
 /// A ring of a routine alarm that was ringing when the routine was edited.
 /// An edit changes later rings only, so this one keeps ringing as it was
 /// until it is acknowledged or stops (<see cref="RoutineRings"/>).

@@ -738,6 +738,15 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) => Down<bool>();
 
+        public Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            Down<IReadOnlyList<RoutineDelay>>();
+
+        public Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken) => Down<bool>();
+
+        public Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken) => Down<bool>();
+
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
 
         public Task<bool> UpdateCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) => Down<bool>();
@@ -878,6 +887,18 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
             _inner.DeleteOutcomeAsync(routineId, cycle, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.DelaysAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken) =>
+            _inner.SaveDelayAsync(delay, cancellationToken);
+
+        public Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteDelayAsync(routineId, cycle, cancellationToken);
+
+        public Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken) =>
+            _inner.ReleaseRingsAsync(keys, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);
@@ -1323,6 +1344,18 @@ public sealed class CalendarAlertWorkerTests : IDisposable
 
         public Task<bool> DeleteOutcomeAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
             _inner.DeleteOutcomeAsync(routineId, cycle, cancellationToken);
+
+        public Task<IReadOnlyList<RoutineDelay>> DelaysAsync(Instant cyclesFrom, CancellationToken cancellationToken) =>
+            _inner.DelaysAsync(cyclesFrom, cancellationToken);
+
+        public Task SaveDelayAsync(RoutineDelay delay, CancellationToken cancellationToken) =>
+            _inner.SaveDelayAsync(delay, cancellationToken);
+
+        public Task<bool> DeleteDelayAsync(Guid routineId, string cycle, CancellationToken cancellationToken) =>
+            _inner.DeleteDelayAsync(routineId, cycle, cancellationToken);
+
+        public Task ReleaseRingsAsync(IReadOnlyCollection<string> keys, CancellationToken cancellationToken) =>
+            _inner.ReleaseRingsAsync(keys, cancellationToken);
 
         public Task<bool> AddCountdownAsync(AlertCountdown countdown, CancellationToken cancellationToken) =>
             _inner.AddCountdownAsync(countdown, cancellationToken);
