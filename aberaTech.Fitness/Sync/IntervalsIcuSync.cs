@@ -72,6 +72,8 @@ public sealed class IntervalsIcuSync(
                 .ToHashSet();
             known.ExceptWith(withoutHalves);
 
+            var renamed = await RenameAsync(summaries, known, cancellationToken);
+
             var batch = new List<Activity>();
             var fetched = 0;
             foreach (var summary in summaries.OrderBy(s => s.StartDate ?? s.StartDateLocal))
@@ -102,10 +104,17 @@ public sealed class IntervalsIcuSync(
                 var outcome = await ActivityStore.UpsertAsync(database, batch, cancellationToken);
                 added = outcome.Added;
                 if (added > 0) cache.Invalidate();
+            }
+
+            if (batch.Count > 0 || renamed > 0)
+            {
+                if (renamed > 0) cache.Invalidate();
                 await pages.EvictFitnessAsync();
             }
 
-            state.LastOutcome = $"{fetched} seen, {added} new";
+            state.LastOutcome = renamed > 0
+                ? $"{fetched} seen, {added} new, {renamed} renamed"
+                : $"{fetched} seen, {added} new";
             await database.SaveChangesAsync(cancellationToken);
             return new IntervalsIcuSyncOutcome(fetched, added, null);
         }
@@ -116,6 +125,41 @@ public sealed class IntervalsIcuSync(
             await database.SaveChangesAsync(cancellationToken);
             return new IntervalsIcuSyncOutcome(0, 0, state.LastOutcome);
         }
+    }
+
+    /// <summary>
+    /// Takes the listing's name for every stored activity it has renamed. A
+    /// stored activity is never downloaded again, so the listing is the only
+    /// place a rename can arrive: a run saved as "Treadmill Running" and
+    /// renamed "HR drift test" once it was uploaded.
+    /// </summary>
+    private async Task<int> RenameAsync(IReadOnlyList<IcuActivity> summaries, HashSet<string> known, CancellationToken cancellationToken)
+    {
+        var listed = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var summary in summaries)
+        {
+            var id = IntervalsIcuMapping.ExternalId(summary.Id);
+            if (known.Contains(id)) listed[id] = summary.Name ?? "";
+        }
+
+        if (listed.Count == 0) return 0;
+
+        var stored = await database.Activities
+            .AsNoTracking()
+            .Where(a => a.Source == IntervalsIcuMapping.Source && a.ExternalId != null)
+            .Select(a => new { ExternalId = a.ExternalId!, a.Name })
+            .ToListAsync(cancellationToken);
+        var stale = stored
+            .Where(a => listed.TryGetValue(a.ExternalId, out var name) && name != a.Name)
+            .Select(a => a.ExternalId)
+            .ToHashSet();
+        if (stale.Count == 0) return 0;
+
+        var activities = await database.Activities
+            .Where(a => a.Source == IntervalsIcuMapping.Source && a.ExternalId != null && stale.Contains(a.ExternalId))
+            .ToListAsync(cancellationToken);
+        foreach (var activity in activities) IntervalsIcuMapping.Name(activity, listed[activity.ExternalId!]);
+        return activities.Count;
     }
 
     private async Task<SyncState> StateAsync(CancellationToken cancellationToken)

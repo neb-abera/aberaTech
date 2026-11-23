@@ -31,17 +31,24 @@ public static class IntervalsIcuMapping
         activity ??= FromSummary(summary);
         if (activity is null) return null;
 
-        var name = summary.Name ?? "";
         activity.Source = Source;
         activity.ExternalId = ExternalId(summary.Id);
-        activity.Name = name;
         activity.Indoor ??= summary.Trainer;
-
-        // The name is the only place a ruck is ever declared.
-        if (name.Contains("ruck", StringComparison.OrdinalIgnoreCase)) activity.Sport = "ruck";
-        if (activity.Sport == "ruck") activity.LoadKg ??= RuckLoad.Parse(name);
+        Name(activity, summary.Name ?? "");
 
         return activity;
+    }
+
+    /// <summary>
+    /// Gives the activity its name and what the name declares. The name is the
+    /// only place a ruck and its load are ever declared, and a field test is
+    /// known by its name, so a rename on intervals.icu changes all three.
+    /// </summary>
+    public static void Name(Activity activity, string name)
+    {
+        activity.Name = name;
+        if (name.Contains("ruck", StringComparison.OrdinalIgnoreCase)) activity.Sport = "ruck";
+        if (activity.Sport == "ruck") activity.LoadKg = RuckLoad.Parse(name) ?? activity.LoadKg;
     }
 
     /// <summary>The file as the device wrote it, gunzipped if intervals.icu stored it so.</summary>
