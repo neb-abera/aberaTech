@@ -38,7 +38,7 @@
     "jsdom": "30.1.3",
     "typescript": "~7.0.2",
     "vite": "^8.3.8",
-    "vitest": "^5.0.3"
+    "vitest": "^5.1.1"
   },
   "overrides": {
     "brace-expansion@1": "^1.1.18"
