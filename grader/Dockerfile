@@ -19,7 +19,7 @@ RUN rm -rf /usr/local/bin/*go* /usr/local/bin/*gfortran* /usr/local/lib/go \
 # The pinned stable compiler. Its tag must match the channel in
 # rust-toolchain.toml and the rust-version in Cargo.toml.
 # scripts/check-toolchain.sh enforces the pairing.
-FROM rust:1.99.1-slim@sha256:f6c4a35d21dbb3c89d7a8d056c193e94fc09037f2b58dd858b09c39a47dd02d7 AS rust
+FROM rust:1.100.0-slim@sha256:6f14b2b4b278ec0d50aa1d69541c304ce0f95e0f6268487aa9924af1c2e9aebe AS rust
 
 # The release build: the production binary and the end-to-end fake.
 FROM rust AS build
