@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 # The end-to-end suite's Compiler Explorer (tests/common/fake.rs). It runs
 # nothing, and the production stage below never copies it.
-FROM gcr.io/distroless/cc-debian13:nonroot@sha256:cb87acc574abe719b6e5c547384defa2f7b1f24af9605d3f618cf852495d8be2 AS fake-compiler-explorer
+FROM gcr.io/distroless/cc-debian13:nonroot@sha256:532c7a94f9e96ba9db75eb9388f4227751131c7cb0a411d1a8521af4096135de AS fake-compiler-explorer
 COPY --from=build /src/target/release/examples/fake_compiler_explorer /fake-compiler-explorer
 USER nonroot
 EXPOSE 10240
@@ -89,7 +89,7 @@ RUN cargo install --locked "kani-verifier@$KANI_VERSION" && \
 
 # The production image: the binary on distroless, as nonroot (65532). No
 # shell and no package manager. `grader probe` is the health check.
-FROM gcr.io/distroless/cc-debian13:nonroot@sha256:cb87acc574abe719b6e5c547384defa2f7b1f24af9605d3f618cf852495d8be2 AS runtime
+FROM gcr.io/distroless/cc-debian13:nonroot@sha256:532c7a94f9e96ba9db75eb9388f4227751131c7cb0a411d1a8521af4096135de AS runtime
 COPY --from=build /src/target/release/grader /grader
 USER nonroot
 EXPOSE 8080
