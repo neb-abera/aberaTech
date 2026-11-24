@@ -5,75 +5,84 @@ import OutlookCard from "../OutlookCard";
 
 afterEach(cleanup);
 
-const base = {
-  weeksNeeded: 6,
-  runsPerWeek: 3,
-  referenceHr: 152,
-  weeks: [],
+const anchor = {
+  date: "2026-11-23",
+  // 4.5 mph at 2% is 4.905 mph flat: 12:14 a mile.
+  secPerKm: 456.1,
+  averageHr: 159,
+  gradePercent: 2,
+  indoor: true,
 };
 
 describe("OutlookCard", () => {
-  it("says what it still needs instead of a number", () => {
+  it("asks for a drift test and shows no number without one", () => {
     render(
       <OutlookCard
         outlook={{
-          ...base,
           ready: false,
-          qualifyingWeeks: 2,
-          slopeSecPerKmPerWeek: null,
+          referenceHr: 158,
+          anchor: null,
+          needs: "A heart-rate drift test.",
+          weeks: [],
           ahead: [],
         }}
       />,
     );
-    expect(screen.getByText(/Needs more data/).textContent).toContain(
-      "2 of 6 so far",
-    );
+    expect(screen.getByText("Needs: A heart-rate drift test.")).toBeTruthy();
     expect(screen.queryByText(/In 4 weeks/)).toBeNull();
   });
 
-  it("gives the pace 4 and 8 weeks ahead with its range, per mile", () => {
+  it("starts from the drift test's flat pace and gets faster, never slower", () => {
     render(
       <OutlookCard
         outlook={{
-          ...base,
           ready: true,
-          qualifyingWeeks: 6,
-          slopeSecPerKmPerWeek: -5,
+          referenceHr: 158,
+          anchor,
+          needs: null,
+          weeks: [],
           ahead: [
             {
               weeksAhead: 4,
-              secPerKm: 375,
-              lowSecPerKm: 360,
-              highSecPerKm: 390,
+              secPerKm: 448.0,
+              lowSecPerKm: 447.2,
+              highSecPerKm: 448.9,
             },
             {
               weeksAhead: 8,
-              secPerKm: 355,
-              lowSecPerKm: 335,
-              highSecPerKm: 375,
+              secPerKm: 440.3,
+              lowSecPerKm: 438.6,
+              highSecPerKm: 442.0,
             },
           ],
         }}
       />,
     );
-    expect(screen.getByText(/In 4 weeks/).textContent).toContain("10:04/mi");
-    expect(screen.getByText(/Faster by 8.0 s\/mi a week/)).toBeTruthy();
+    expect(screen.getByTestId("outlook-anchor").textContent).toBe(
+      "Your drift test of Mon, Nov 23, 2026: 12:14/mi on the flat at 159 bpm, run at 2% and read as the flat pace of the same cost.",
+    );
+    expect(screen.getByText(/In 8 weeks:/).textContent).toContain("11:49/mi");
+    expect(screen.getByText(/In 8 weeks:/).textContent).toContain(
+      "11:51/mi to 11:46/mi",
+    );
+    expect(screen.queryByText(/Slower/)).toBeNull();
+    expect(screen.queryByText(/straight line/)).toBeNull();
   });
 
-  it("says 1 week, not 1 weeks", () => {
+  it("keeps the test on show when it is too old to carry forward", () => {
     render(
       <OutlookCard
         outlook={{
-          ...base,
           ready: false,
-          qualifyingWeeks: 5,
-          slopeSecPerKmPerWeek: null,
+          referenceHr: 158,
+          anchor,
+          needs: "A new drift test: the last was 9 weeks ago.",
+          weeks: [],
           ahead: [],
         }}
       />,
     );
-    expect(screen.getByText(/Needs more data/).textContent).toContain(
-      "get there in 1 week.",
-    );
+    expect(screen.getByTestId("outlook-anchor")).toBeTruthy();
+    expect(screen.getByText(/A new drift test/)).toBeTruthy();
   });
 });

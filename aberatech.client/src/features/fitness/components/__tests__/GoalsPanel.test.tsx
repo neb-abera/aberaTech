@@ -16,6 +16,7 @@ import GoalsPanel, {
   formatGoalValue,
   goalTag,
   latestDetail,
+  reachLine,
   splitByRows,
   standardLabel,
   TERMS,
@@ -70,6 +71,17 @@ const sections: GoalSection[] = [
           method: "trajectory",
           evidence: "Needs VDOT 48.1.",
           hoursToReach: 8.5,
+          dueOn: "2027-12-31",
+          reachOn: "2028-03-14",
+          readyOn: "2028-09-01",
+          steps: [
+            {
+              label: "Needed",
+              expression: "4254 s over 10 miles",
+              value: "VDOT 48.1",
+              citationId: null,
+            },
+          ],
           dataThrough: "2026-11-05",
           needsData:
             "a new time trial, because the VDOT anchor of 2026-04-03 is 217 days old",
@@ -239,7 +251,36 @@ describe("GoalsPanel", () => {
     expect(button.getAttribute("aria-expanded")).toBe("true");
     expect(await screen.findByText("Needs VDOT 48.1.")).toBeTruthy();
     expect(screen.getByText(/Sheet row 4/)).toBeTruthy();
-    expect(screen.getByText(/Chance of the goal by then: 42%/)).toBeTruthy();
+    // The due date is named, the goal is named, and the reach date is given.
+    expect(
+      screen.getByText(
+        /On the due date, Fri, Dec 31, 2027: 1:13:20\. Chance of 1:10:54 by then: 42%/,
+      ),
+    ).toBeTruthy();
+    expect(screen.getByTestId("forecast-reach").textContent).toBe(
+      "Projected to reach 1:10:54 on Tue, Mar 14, 2028. An 80% chance comes on Fri, Sep 1, 2028.",
+    );
+    // The arithmetic is one click further.
+    fireEvent.click(screen.getByText("Show the arithmetic"));
+    expect(await screen.findByText("4254 s over 10 miles")).toBeTruthy();
+  });
+
+  it("says when a projection never reaches the goal", () => {
+    const base = connected.sections
+      .flatMap((section) => section.rows)
+      .find((r) => r.label === "10 mile run") as GoalRow;
+    const forecast = {
+      ...(base.forecast as NonNullable<typeof base.forecast>),
+      method: "progression" as const,
+      reachOn: null,
+    };
+    expect(reachLine({ ...base, met: false }, forecast)).toBe(
+      "At this rate the projection does not reach 1:10:54. The arithmetic below shows what it reaches.",
+    );
+    expect(reachLine({ ...base, met: true }, forecast)).toBe(
+      "You hold 1:10:54 today.",
+    );
+    expect(reachLine(base, { ...forecast, probability: null })).toBeNull();
   });
 
   it("asks to connect OneDrive when the grant is missing", async () => {
@@ -420,7 +461,7 @@ describe("forecastDataLine", () => {
       forecastDataLine({
         probability: 0.5,
         projected: null,
-        method: "trend",
+        method: "plan",
         evidence: "",
         hoursToReach: null,
         dataThrough: "2026-10-30",

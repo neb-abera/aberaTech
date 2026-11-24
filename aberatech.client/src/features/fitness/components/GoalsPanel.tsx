@@ -28,6 +28,7 @@ import {
   saveAvailableHours,
 } from "../core/api";
 import { formatChance, formatSeconds } from "../core/format";
+import MathPanel from "./MathPanel";
 import { NumberInput } from "./NumberInput";
 
 /** A goal's number in the unit the athlete wrote it in. */
@@ -153,12 +154,40 @@ export function forecastDataLine(forecast: GoalForecast): string {
     : line;
 }
 
+/** A date with its weekday, as the page names every day. */
+export function formatDue(on: string): string {
+  return new Date(`${on}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** When the central projection reaches the goal, or that the forecast cannot say. */
+export function reachLine(row: GoalRow, forecast: GoalForecast): string | null {
+  if (forecast.probability === null || row.goal === null) return null;
+  const goal = formatGoalValue(row.unit, row.goal);
+  if (row.met) return `You hold ${goal} today.`;
+  if (!forecast.reachOn) {
+    return forecast.method === "trajectory"
+      ? null
+      : `At this rate the projection does not reach ${goal}. The arithmetic below shows what it reaches.`;
+  }
+  const ready =
+    forecast.readyOn && forecast.readyOn !== forecast.reachOn
+      ? ` An 80% chance comes on ${formatDue(forecast.readyOn)}.`
+      : "";
+  return `Projected to reach ${goal} on ${formatDue(forecast.reachOn)}.${ready}`;
+}
+
 /** The forecast's model line, or what it does without one. */
 export function forecastModelLine(forecast: GoalForecast): string {
   if (forecast.model) return `Model: ${forecast.model}.`;
   return forecast.method === "held"
     ? "No model: the goal is met today and is held, not forecast."
-    : "No model: there is nothing yet to forecast from.";
+    : "No model: this row is not forecast.";
 }
 
 /** Inferred goals say what inferred means, beside the basis the note gives. */
@@ -383,18 +412,27 @@ function GoalLine({ row, test }: { row: GoalRow; test: GoalSection["test"] }) {
               <Box id={detailId} sx={{ py: 1.5 }}>
                 <Typography variant="body2">
                   {forecast.projected !== null
-                    ? `On the due date: ${formatGoalValue(row.unit, forecast.projected)}. `
+                    ? `On ${forecast.dueOn ? `the due date, ${formatDue(forecast.dueOn)}` : "the due date"}: ${formatGoalValue(row.unit, forecast.projected)}. `
                     : ""}
                   {forecast.probability !== null
-                    ? `Chance of the goal by then: ${formatChance(forecast.probability)}. `
+                    ? `Chance of ${row.goal !== null ? formatGoalValue(row.unit, row.goal) : "the goal"} by then: ${formatChance(forecast.probability)}. `
                     : ""}
                   {forecast.hoursToReach !== null
                     ? `Running hours a week that reach it: ${forecast.hoursToReach.toFixed(1)}.`
                     : ""}
                 </Typography>
+                {reachLine(row, forecast) ? (
+                  <Typography variant="body2" data-testid="forecast-reach">
+                    {reachLine(row, forecast)}
+                  </Typography>
+                ) : null}
                 <Typography variant="body2" color="text.secondary">
                   {forecast.evidence}
                 </Typography>
+                <MathPanel
+                  steps={forecast.steps ?? []}
+                  title="Show the arithmetic"
+                />
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -634,7 +672,10 @@ function SourceLine({
         sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}
       >
         <Typography variant="body2" color="text.secondary">
-          Goals for {goals.dueOn ?? "the sheet's year"}, read from{" "}
+          {goals.dueOn
+            ? `Every goal is due ${formatDue(goals.dueOn)}, the year in your sheet's column F header. They are`
+            : "Goals"}{" "}
+          read from{" "}
           {source.origin === "OneDrive"
             ? "physical fitness goals.xlsx in OneDrive"
             : "the local workbook"}
@@ -679,7 +720,12 @@ function SourceLine({
  * test scored the way its graders score it, every number one click from how
  * it was made.
  */
-export default function GoalsPanel() {
+export default function GoalsPanel({
+  refresh = 0,
+}: {
+  /** Changes when a setting the forecasts read was saved elsewhere on the page. */
+  refresh?: number;
+} = {}) {
   const [goals, setGoals] = React.useState<Goals | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -687,6 +733,7 @@ export default function GoalsPanel() {
 
   React.useEffect(() => {
     void version;
+    void refresh;
     const controller = new AbortController();
     fetchGoals(controller.signal)
       .then(setGoals)
@@ -695,7 +742,7 @@ export default function GoalsPanel() {
         setError(e instanceof Error ? e.message : String(e));
       });
     return () => controller.abort();
-  }, [version]);
+  }, [version, refresh]);
 
   if (error)
     return <Alert severity="error">The goals did not load: {error}</Alert>;

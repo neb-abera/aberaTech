@@ -266,19 +266,67 @@ public static class Citations
 
     public static readonly Citation LatellaStrength = new(
         "latella-strength",
-        "Raw powerlifting totals of 1,271 men rose 0.15 kg a day, about 10.7% a year, over up to 15 years. The strongest quartile gained 0.102 kg a day and the weakest 0.211.",
+        "Raw powerlifting totals of 1,271 men rose 0.15 kg a day, about 10.7% a year, over up to 15 years. The weakest quartile, at 4.57 times bodyweight, gained 0.211 kg a day on a first total of 448.6 kg, which is 17.2% a year. The strongest gained 0.102 kg a day. The rate is each lifter's best total less his first, over his days competing.",
         "Christopher Latella, Daniel van den Hoek, and colleagues at Edith Cowan University, from Australian powerlifting records 2003 to 2018.",
         "Long-term strength adaptation: a 15-year analysis of powerlifting athletes (J Strength Cond Res 34(9):2412-2418)",
         2020,
         "https://pubmed.ncbi.nlm.nih.gov/32865942/");
 
-    public static readonly Citation WilsonConcurrent = new(
-        "wilson-concurrent",
-        "Strength rose by an effect size of 1.76 with strength training alone and 1.44 with endurance training added. Running reduced the gain, and cycling did not.",
-        "Jacob Wilson and colleagues, a meta-analysis of 21 studies of concurrent strength and endurance training.",
-        "Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises (J Strength Cond Res 26(8):2293-2307)",
-        2012,
-        "https://pubmed.ncbi.nlm.nih.gov/22002517/");
+    public static readonly Citation LatellaTimeCourse = new(
+        "latella-time-course",
+        "Powerlifters gained most in their first year of competing, about 7.5 to 12.5%, and up to about 20% after 10 years.",
+        "Christopher Latella, Patrick Owen, and colleagues, from the competition records of powerlifters by age class and weight class.",
+        "Using powerlifting athletes to determine strength adaptations across ages in males and females: a longitudinal growth modelling approach (Sports Med 54(3):753-774)",
+        2024,
+        "https://pubmed.ncbi.nlm.nih.gov/38060089/");
+
+    public static readonly Citation SchumannConcurrent = new(
+        "schumann-concurrent",
+        "Adding aerobic training to strength training did not reduce maximal strength: standardized mean difference −0.06 (95% CI −0.20 to 0.09) across 43 studies. Explosive strength fell, −0.28.",
+        "Moritz Schumann and colleagues, an updated systematic review and meta-analysis.",
+        "Compatibility of concurrent aerobic and strength training for skeletal muscle size and function: an updated systematic review and meta-analysis (Sports Med 52(3):601-612)",
+        2022,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8891239/");
+
+    public static readonly Citation MurphyDeficit = new(
+        "murphy-deficit",
+        "Resistance training in an energy deficit gained less lean mass (effect size −0.57, p = 0.02) and as much strength (−0.31, p = 0.28) as training without one.",
+        "Chaise Murphy and Karsten Koehler, a meta-analysis and meta-regression of randomized trials.",
+        "Energy deficiency impairs resistance training gains in lean mass but not strength: a meta-analysis and meta-regression (Scand J Med Sci Sports 32(1):125-137)",
+        2022,
+        "https://pubmed.ncbi.nlm.nih.gov/34623696/");
+
+    public static readonly Citation ThomasWeightLoss = new(
+        "thomas-weight-loss",
+        "Dieters lost 20.1 ± 11.3 lb where the 3,500 kcal a pound rule predicted 27.6 lb. A kilogram lost held 4,858 kcal at week 4 and 6,569 kcal at week 24, against the rule's 7,700.",
+        "Diana Thomas, Steven Heymsfield, and colleagues, from controlled feeding studies and the CALERIE trial.",
+        "Can a weight loss of one pound a week be achieved with a 3,500 kcal deficit? Commentary on a commonly accepted rule (Int J Obes 37(12):1611-1613); Time to correctly predict the amount of weight loss with dieting (J Acad Nutr Diet 114(6):857-861)",
+        2013,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC4024447/");
+
+    public static readonly Citation HeymsfieldWeightLoss = new(
+        "heymsfield-weight-loss",
+        "The lean share of weight lost was 0.27 ± 0.06 on diet alone and 0.17 ± 0.14 with resistance training, in overweight adults. Ranger students at 15% body fat lost 0.40 lean over 8 weeks of extreme restriction.",
+        "Steven Heymsfield and colleagues, a critical review of the rule that a quarter of weight lost is fat-free mass.",
+        "Weight loss composition is one-fourth fat-free mass: a critical review and critique of this widely cited rule (Obes Rev 15(4):310-321)",
+        2014,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC3970209/");
+
+    public static readonly Citation HelanderWeighIns = new(
+        "helander-weigh-ins",
+        "The change between consecutive weigh-ins carried a residual standard deviation of 0.764% of bodyweight, across 2,838 weigh-ins by 40 adults.",
+        "Elina Helander and colleagues, VTT Technical Research Centre of Finland.",
+        "Are breaks in daily self-weighing associated with weight gain? (PLoS One 9(11):e113164)",
+        2014,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC4232563/");
+
+    public static readonly Citation FestaThresholdSpeed = new(
+        "festa-threshold-speed",
+        "Recreational runners gained 4.0% in speed at the first ventilatory threshold in 8 weeks of polarized training, and 3.2% on a threshold-focused plan.",
+        "Luca Festa and colleagues, University of Verona.",
+        "Effects of different training intensity distribution in recreational runners (Front Sports Act Living 1:70)",
+        2019,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7739641/");
 
     public static readonly Citation StrengthRetraining = new(
         "strength-retraining",
@@ -306,6 +354,7 @@ public static class Citations
         SfasCompetitive,
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
         MaffetoneMaf, FosterMonotony, FbiPft, AcsmRunningEquation, JonesDoustTreadmillGrade,
-        LatellaStrength, WilsonConcurrent, StrengthRetraining, ReynoldsRepMax
+        LatellaStrength, LatellaTimeCourse, SchumannConcurrent, MurphyDeficit, StrengthRetraining, ReynoldsRepMax,
+        ThomasWeightLoss, HeymsfieldWeightLoss, HelanderWeighIns, FestaThresholdSpeed
     ];
 }

@@ -36,7 +36,9 @@ public sealed record SettingsUpdate(
     double? AnchorSeconds = null,
     int? LtHr = null,
     double? TreadmillGradePercent = null,
-    string? TreadmillGradeSince = null);
+    string? TreadmillGradeSince = null,
+    string? WeightPlanStartedOn = null,
+    double? WeightPlanKgPerWeek = null);
 
 public sealed record BodyMetricUpdate(string Date, double WeightKg, double? BodyFatPercent);
 
@@ -511,6 +513,26 @@ public static class FitnessEndpoints
                 return Fail("Weights are 30-250 kg.");
             }
 
+            if ((update.WeightPlanKgPerWeek is null) != string.IsNullOrWhiteSpace(update.WeightPlanStartedOn))
+            {
+                return Fail("A weight plan needs its start date and its rate, both or neither.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(update.WeightPlanStartedOn) && ParseDate(update.WeightPlanStartedOn) is null)
+            {
+                return Fail("The weight plan's start date is yyyy-mm-dd.");
+            }
+
+            if (update.WeightPlanKgPerWeek is <= 0 or > MaxWeightPlanKgPerWeek)
+            {
+                return Fail("A weight plan loses more than 0 and at most 1.5 kg (3.3 lb) a week.");
+            }
+
+            if (update.WeightPlanKgPerWeek is not null && update.GoalWeightKg is null)
+            {
+                return Fail("A weight plan needs a goal weight on the profile.");
+            }
+
             row.PlanMinutesPerWeek = update.PlanMinutesPerWeek;
             row.VdotMeasuredOn = ParseDate(update.VdotMeasuredOn);
             row.BirthYear = update.BirthYear;
@@ -527,6 +549,8 @@ public static class FitnessEndpoints
             row.HomeAltitudeMeters = update.HomeAltitudeMeters;
             row.TreadmillGradePercent = update.TreadmillGradePercent;
             row.TreadmillGradeSince = ParseDate(update.TreadmillGradeSince);
+            row.WeightPlanStartedOn = ParseDate(update.WeightPlanStartedOn);
+            row.WeightPlanKgPerWeek = update.WeightPlanKgPerWeek;
 
             // Races are entered on their own log (/races), and the anchor is
             // worked out from every test when the log is read. A typed VDOT
@@ -725,7 +749,12 @@ public static class FitnessEndpoints
         null,
         row.LtHr,
         row.TreadmillGradePercent,
-        row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        row.WeightPlanStartedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        row.WeightPlanKgPerWeek);
+
+    /// <summary>The fastest weight plan the profile accepts, in kilograms a week.</summary>
+    internal const double MaxWeightPlanKgPerWeek = 1.5;
 
     private static IResult Fail(string message) =>
         Results.Text(message, "text/plain", statusCode: StatusCodes.Status400BadRequest);

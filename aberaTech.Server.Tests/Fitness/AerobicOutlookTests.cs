@@ -4,52 +4,77 @@ using Xunit;
 
 namespace aberaTech.Server.Tests.Fitness;
 
-/// <summary>The short-term AeT pace forecast: what it waits for, and the line once it has it.</summary>
+/// <summary>The short-term AeT pace outlook: a drift test carried ahead at a published rate.</summary>
 public sealed class AerobicOutlookTests
 {
-    private static readonly LocalDate Today = new(2026, 11, 4); // a Wednesday
+    private static readonly LocalDate Today = new(2026, 11, 24);
 
-    /// <summary>Three 40-minute runs at 152 bpm each week, the pace falling 5 s/km a week.</summary>
-    private static IEnumerable<SteadyRun> Weeks(int count, int runsPerWeek = 3)
+    /// <summary>
+    /// His easy runs as the log held them on 2026-11-24, as pace at 158 bpm:
+    /// about 6:08/km through October, about 7:10/km from 1 November, on
+    /// other treadmills, at twice the length, one week at 1,200 m.
+    /// </summary>
+    private static IEnumerable<SteadyRun> HisRuns()
     {
-        var thisWeek = new LocalDate(2026, 11, 2);
-        for (var w = 0; w < count; w++)
-        {
-            var start = thisWeek.PlusWeeks(-(count - 1 - w));
-            var pace = 420 - 5 * w;
-            for (var r = 0; r < runsPerWeek; r++)
-            {
-                yield return new SteadyRun(start.PlusDays(r), 2400 / (double)pace * 1000, 2400, 152);
-            }
-        }
+        (LocalDate Day, double Pace)[] runs =
+        [
+            (new(2026, 10, 21), 357), (new(2026, 10, 23), 362), (new(2026, 10, 25), 373), (new(2026, 10, 26), 370),
+            (new(2026, 10, 30), 378), (new(2026, 10, 31), 399), (new(2026, 11, 1), 433), (new(2026, 11, 2), 407),
+            (new(2026, 11, 4), 449), (new(2026, 11, 8), 440), (new(2026, 11, 9), 436), (new(2026, 11, 11), 439),
+            (new(2026, 11, 13), 411), (new(2026, 11, 17), 434), (new(2026, 11, 19), 386), (new(2026, 11, 21), 465),
+        ];
+        return runs.Select(r => new SteadyRun(r.Day, 2700 / r.Pace * 1000, 2700, 158, Indoor: true));
     }
 
+    // 4.5 mph at 2%: 497.1 s/km on the belt, 456.1 s/km flat.
+    private static FieldTest Test(LocalDate on) =>
+        new(FieldTests.AetKind, Guid.NewGuid(), on, 456.1, 159, 0.012, true, "", 2);
+
     [Fact]
-    public void It_waits_for_six_weeks_of_three_easy_runs_and_says_how_many_it_has()
+    public void Without_a_drift_test_it_gives_no_number_and_asks_for_one()
     {
-        var result = AerobicOutlook.Build(Weeks(4), 152, Today);
+        var result = AerobicOutlook.Build(HisRuns(), 158, Today);
 
         Assert.False(result.Ready);
-        Assert.Equal(4, result.QualifyingWeeks);
         Assert.Empty(result.Ahead);
-
-        // Two runs a week do not count, however many weeks there are.
-        Assert.Equal(0, AerobicOutlook.Build(Weeks(10, runsPerWeek: 2), 152, Today).QualifyingWeeks);
+        Assert.Equal(AerobicOutlook.NeedsTest, result.Needs);
+        Assert.NotEmpty(result.Weeks);
     }
 
     [Fact]
-    public void Six_weeks_carry_the_line_four_and_eight_weeks_ahead_with_a_range()
+    public void A_step_in_the_easy_runs_is_never_carried_ahead_as_a_slowdown()
     {
-        var result = AerobicOutlook.Build(Weeks(6), 152, Today);
+        // The defect of 2026-11-24: a straight line through these weeks
+        // projected 8:05/km, 13:00 a mile, in 8 weeks.
+        var result = AerobicOutlook.Build(HisRuns(), 158, Today, Test(new(2026, 11, 23)));
 
         Assert.True(result.Ready);
-        Assert.Equal(-5, result.SlopeSecPerKmPerWeek!.Value, precision: 6);
-
-        // This week is 395 s/km; four weeks on the line is 375, eight is 355.
         var four = result.Ahead.Single(a => a.WeeksAhead == 4);
         var eight = result.Ahead.Single(a => a.WeeksAhead == 8);
-        Assert.Equal(375, four.SecPerKm, precision: 6);
-        Assert.Equal(355, eight.SecPerKm, precision: 6);
-        Assert.True(four.LowSecPerKm <= four.SecPerKm && four.SecPerKm <= four.HighSecPerKm);
+
+        // Every projection is faster than the test, and later is faster.
+        Assert.True(eight.SecPerKm < four.SecPerKm);
+        Assert.True(four.SecPerKm < 456.1);
+
+        // 3.6% in 8 weeks (Festa 2019): 456.1 ÷ 1.036 = 440.3; the two groups give 3.2% and 4.0%.
+        Assert.Equal(456.1 / 1.036, eight.SecPerKm, precision: 6);
+        Assert.Equal(456.1 / 1.040, eight.LowSecPerKm, precision: 6);
+        Assert.Equal(456.1 / 1.032, eight.HighSecPerKm, precision: 6);
+        Assert.Equal(456.1 / 1.018, four.SecPerKm, precision: 6);
+
+        // The easy runs change nothing: the same test with no runs gives the same answer.
+        var alone = AerobicOutlook.Build([], 158, Today, Test(new(2026, 11, 23)));
+        Assert.Equal(eight, alone.Ahead.Single(a => a.WeeksAhead == 8));
+    }
+
+    [Fact]
+    public void A_test_older_than_the_study_is_shown_and_not_carried_ahead()
+    {
+        var result = AerobicOutlook.Build(HisRuns(), 158, Today, Test(Today.PlusDays(-70)));
+
+        Assert.False(result.Ready);
+        Assert.NotNull(result.Anchor);
+        Assert.Empty(result.Ahead);
+        Assert.Contains("A new drift test: the last was 10 weeks ago", result.Needs);
     }
 }

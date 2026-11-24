@@ -106,17 +106,14 @@ internal static class ReadinessReports
         // named as one, held inside the 5% line. Without a test, the pace at
         // his AeT heart rate across the month's easy runs is an estimate of
         // it, and is shown as modeled.
-        var aetTest = FitnessReports.FieldTestsIn(history.Activities, row, today).Tests
-            .LastOrDefault(t => t.Kind == FieldTests.AetKind
-                                && t.Date >= today.PlusDays(-FieldTests.SuggestionWindowDays)
-                                && t.DriftPercent is <= FieldTests.DriftLimit);
+        var aetTest = FieldTests.LatestAet(FitnessReports.FieldTestsIn(history.Activities, row, today).Tests, today);
         if (aetTest is not null)
         {
             measurements[SelectionReadiness.Metrics.AerobicThresholdPace] = new Measurement(
                 SelectionReadiness.Metrics.AerobicThresholdPace,
                 aetTest.SecPerKm * Vdot.MileMeters / 1000,
                 Basis.Measured,
-                Text($"heart-rate drift test of {aetTest.Date:yyyy-MM-dd}: {aetTest.AverageHr} bpm, drift {aetTest.DriftPercent:0.0%}{(aetTest.Indoor ? ", treadmill" : "")}"),
+                Text($"heart-rate drift test of {aetTest.Date:yyyy-MM-dd}: {aetTest.AverageHr} bpm, drift {aetTest.DriftPercent:0.0%}{(aetTest.Indoor ? aetTest.GradePercent > 0 ? Text($", treadmill at {aetTest.GradePercent:0.#}%, read as the flat pace of the same cost") : ", treadmill" : "")}"),
                 aetTest.Date,
                 "a heart-rate drift test you named as one");
         }

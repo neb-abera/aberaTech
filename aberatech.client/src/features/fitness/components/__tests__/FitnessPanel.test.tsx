@@ -398,6 +398,8 @@ describe("FitnessPanel opening", () => {
     const tabs = await screen.findAllByRole("tab");
     expect(tabs[0].textContent).toBe("Goals");
     expect(tabs[0].getAttribute("aria-selected")).toBe("true");
-    expect(await screen.findByText(/Goals for 2027-12-31/)).toBeTruthy();
+    expect(
+      await screen.findByText(/Every goal is due Fri, Dec 31, 2027/),
+    ).toBeTruthy();
   });
 });

@@ -58,7 +58,10 @@ public sealed record SettingsDto(
     string? TreadmillGradeSince = null,
     /// <summary>The race the anchor VDOT was scored from, when one was given.</summary>
     double? AnchorDistanceMeters = null,
-    double? AnchorSeconds = null);
+    double? AnchorSeconds = null,
+    /// <summary>The first day of the stated weight plan, and its loss in kilograms a week.</summary>
+    string? WeightPlanStartedOn = null,
+    double? WeightPlanKgPerWeek = null);
 
 public sealed record TrainingPaceDto(
     string Zone,
@@ -353,21 +356,23 @@ public sealed record AvailableHoursUpdate(double Hours);
 /// <summary>One week of the short-term outlook: median pace at the AeT heart rate and its run count.</summary>
 public sealed record WeekPaceDto(string WeekStart, double MedianSecPerKm, int Runs);
 
-/// <summary>A projected pace and its 80% range, so many weeks ahead.</summary>
+/// <summary>A projected pace so many weeks ahead, with the paces the study's slower and faster groups give.</summary>
 public sealed record PacePointDto(int WeeksAhead, double SecPerKm, double LowSecPerKm, double HighSecPerKm);
 
+/// <summary>The drift test the outlook starts from: its date, its flat pace, and how it was run.</summary>
+public sealed record AerobicAnchorDto(string Date, double SecPerKm, int AverageHr, double GradePercent, bool Indoor);
+
 /// <summary>
-/// The short-term AeT pace forecast. Not ready until enough weeks hold
-/// enough steady runs; then a straight line with its 80% range.
+/// The short-term AeT pace outlook: the latest drift test, carried ahead at
+/// the rate a training study measured. Not ready without a recent test.
 /// </summary>
+/// <param name="Needs">What it is waiting for, when it is not ready.</param>
 public sealed record AerobicOutlookDto(
     bool Ready,
-    int QualifyingWeeks,
-    int WeeksNeeded,
-    int RunsPerWeek,
     int ReferenceHr,
+    AerobicAnchorDto? Anchor,
+    string? Needs,
     IReadOnlyList<WeekPaceDto> Weeks,
-    double? SlopeSecPerKmPerWeek,
     IReadOnlyList<PacePointDto> Ahead);
 
 /// <summary>An FBI test as entered: any event may be blank, at least one is not.</summary>

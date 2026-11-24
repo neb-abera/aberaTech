@@ -7,18 +7,24 @@ import { formatSeconds } from "../core/format";
 
 const MILE_KM = 1.609344;
 
-export function weeksLabel(weeks: number): string {
-  return weeks === 1 ? "1 week" : `${weeks} weeks`;
-}
-
 function perMile(secPerKm: number): string {
   return `${formatSeconds(secPerKm * MILE_KM)}/mi`;
 }
 
+function day(on: string): string {
+  return new Date(`${on}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /**
- * The forecast that works on a few weeks of training: pace at the AeT heart
- * rate, 4 and 8 weeks ahead. Until enough weeks hold enough easy runs it
- * says what it still needs and shows nothing to be misread.
+ * Pace at the AeT heart rate, 4 and 8 weeks ahead: the latest drift test,
+ * carried forward at the rate a training study measured. Without a recent
+ * test it says what it needs and shows no number.
  */
 export default function OutlookCard({
   outlook,
@@ -26,26 +32,33 @@ export default function OutlookCard({
   outlook: AerobicOutlook | null | undefined;
 }) {
   if (!outlook) return null;
+  const anchor = outlook.anchor;
 
   return (
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h6">Next 8 weeks: AeT pace</Typography>
+        {anchor ? (
+          <Typography
+            variant="body2"
+            sx={{ mb: 1 }}
+            data-testid="outlook-anchor"
+          >
+            Your drift test of {day(anchor.date)}:{" "}
+            <strong>{perMile(anchor.secPerKm)}</strong> on the flat at{" "}
+            {anchor.averageHr} bpm
+            {anchor.gradePercent > 0
+              ? `, run at ${anchor.gradePercent}% and read as the flat pace of the same cost`
+              : ""}
+            .
+          </Typography>
+        ) : null}
         {!outlook.ready ? (
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Needs more data. The forecast starts once {outlook.weeksNeeded}{" "}
-            weeks in the last 12 each hold {outlook.runsPerWeek} or more easy
-            runs. {outlook.qualifyingWeeks} of {outlook.weeksNeeded} so far. The
-            plan&apos;s 4 to 5 runs a week get there in{" "}
-            {weeksLabel(outlook.weeksNeeded - outlook.qualifyingWeeks)}.
+            Needs: {outlook.needs}
           </Typography>
         ) : (
           <>
-            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-              Pace at {outlook.referenceHr} bpm across {outlook.qualifyingWeeks}{" "}
-              weeks of easy runs, carried ahead on a straight line. Modeled from
-              training runs, so it never sets a threshold.
-            </Typography>
             <Stack spacing={0.5}>
               {outlook.ahead.map((point) => (
                 <Typography key={point.weeksAhead} variant="body2">
@@ -56,19 +69,20 @@ export default function OutlookCard({
                     variant="caption"
                     sx={{ color: "text.secondary" }}
                   >
-                    80% range {perMile(point.lowSecPerKm)} to{" "}
-                    {perMile(point.highSecPerKm)}
+                    {perMile(point.highSecPerKm)} to{" "}
+                    {perMile(point.lowSecPerKm)}
                   </Typography>
                 </Typography>
               ))}
-              {outlook.slopeSecPerKmPerWeek !== null ? (
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  {outlook.slopeSecPerKmPerWeek <= 0 ? "Faster" : "Slower"} by{" "}
-                  {Math.abs(outlook.slopeSecPerKmPerWeek * MILE_KM).toFixed(1)}{" "}
-                  s/mi a week.
-                </Typography>
-              ) : null}
             </Stack>
+            <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
+              Modeled. Recreational runners gained 3.2 to 4.0% in speed at the
+              first ventilatory threshold in 8 weeks of training (Festa 2019).
+              The center is 3.6%, and the range is the study&apos;s two groups.
+              Your easy runs do not move this: they were on different
+              treadmills, at different lengths and altitudes. Your next drift
+              test replaces it.
+            </Typography>
           </>
         )}
       </CardContent>

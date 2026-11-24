@@ -191,11 +191,8 @@ function BodyCard({ body }: { body: BodyReport }) {
       <CardContent>
         <Typography variant="h6">Body composition</Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-          What selection made of body composition in the one cohort it was
-          measured in: the leanest quarter was selected at 52%, the fattest at
-          14%; the most muscular quarter at 59%, the least at 20%. These are
-          cohort rates, not your odds. They say nothing about how you run or
-          ruck.
+          Your latest body fat reading and the lean mass it gives. The
+          Bodyweight and Body fat rows on the Goals tab forecast from it.
         </Typography>
         {body.latestBodyFatPercent === null ? (
           <Typography variant="body2">
@@ -206,8 +203,6 @@ function BodyCard({ body }: { body: BodyReport }) {
             <Typography variant="body2">
               Body fat{" "}
               <strong>{Number(body.latestBodyFatPercent.toFixed(1))}%</strong>
-              {body.cohortRateByBodyFat !== null &&
-                `, cohort selection rate ${Math.round(body.cohortRateByBodyFat * 100)}%`}
             </Typography>
             {body.latestLeanMassKg !== null && (
               <Typography variant="body2">
@@ -216,8 +211,6 @@ function BodyCard({ body }: { body: BodyReport }) {
                   {Math.round(kgToLb(body.latestLeanMassKg))} lb (
                   {body.latestLeanMassKg.toFixed(1)} kg)
                 </strong>
-                {body.cohortRateByLeanMass !== null &&
-                  `, cohort selection rate ${Math.round(body.cohortRateByLeanMass * 100)}%`}
               </Typography>
             )}
             {withFat.length > 1 && (

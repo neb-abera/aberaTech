@@ -73,7 +73,10 @@ internal static class OutlookReports
             weight?.WeightKg,
             readings.Measurements,
             readings.Histories.ToDictionary(h => h.Key, h => (IReadOnlyList<DatedValue>)h.Value),
-            today);
+            today,
+            row is { WeightPlanStartedOn: { } started, WeightPlanKgPerWeek: { } perWeek, GoalWeightKg: { } goalKg }
+                ? new WeightPlan(started, perWeek * BodyMass.PoundsPerKg, goalKg * BodyMass.PoundsPerKg)
+                : null);
 
         return new Frame(athlete, p, measured, hours, basis, schedule, readings, context);
     }

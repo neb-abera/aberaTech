@@ -21,7 +21,9 @@
     "treadmillGradePercent": null,
     "treadmillGradeSince": null,
     "anchorDistanceMeters": null,
-    "anchorSeconds": null
+    "anchorSeconds": null,
+    "weightPlanStartedOn": null,
+    "weightPlanKgPerWeek": null
   },
   "aerobicTrend": [
     {
@@ -3054,10 +3056,9 @@
   },
   "aerobicOutlook": {
     "ready": false,
-    "qualifyingWeeks": 0,
-    "weeksNeeded": 6,
-    "runsPerWeek": 3,
     "referenceHr": 150,
+    "anchor": null,
+    "needs": "A heart-rate drift test: 60 minutes at a steady pace, named \u0022HR drift test\u0022. The outlook starts from a test you ran.",
     "weeks": [
       {
         "weekStart": "2026-03-30",
@@ -3115,7 +3116,6 @@
         "runs": 2
       }
     ],
-    "slopeSecPerKmPerWeek": null,
     "ahead": []
   },
   "anchor": {
