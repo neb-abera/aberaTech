@@ -345,6 +345,14 @@ public sealed class FakeNotion : HttpMessageHandler
         });
         SampleTrainingPlan(notion);
 
+        // The career plan, a root of its own: a slide as an image, the deck, then text.
+        var career = notion.Page("Career plan 2026 to 2028", id: SampleCareerPlan);
+        notion.Text(career, "heading_2", Run("Long-term plan"));
+        notion.File(career, "image", "long-term-plan.png", "image/png", OnePixelPng);
+        notion.File(career, "file", "long-term-plan.pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation", Encoding.ASCII.GetBytes("PK fake deck"));
+        notion.Text(career, "heading_2", Run("Near-term goals"));
+        notion.Text(career, "paragraph", Run("Finish the common core by 2028."));
+
         if (root != SampleRoot) throw new InvalidOperationException("The sample's root is always the first id.");
         return notion;
     }
@@ -434,6 +442,13 @@ public sealed class FakeNotion : HttpMessageHandler
 
     /// <summary>The lessons page of <see cref="Sample"/>, which compose.yaml names as Notion__FitnessLessonsPageId.</summary>
     public const string SampleLessons = "0000f17e-0000-0000-0000-000000000000";
+
+    /// <summary>The career plan of <see cref="Sample"/>, which compose.yaml names as Notion__CareerPlanPageId.</summary>
+    public const string SampleCareerPlan = "0000ca2e-0000-0000-0000-000000000000";
+
+    /// <summary>A PNG of one pixel, for the sample's slide.</summary>
+    private static readonly byte[] OnePixelPng = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
 
     /// <summary>The marksmanship plan of <see cref="Sample"/>, which compose.yaml names as Notion__MarksmanshipPlanPageId.</summary>
     public const string SampleMarksmanship = "0000a3c0-0000-0000-0000-000000000000";

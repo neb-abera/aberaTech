@@ -520,6 +520,18 @@ what to set.
 `GET /api/marksmanship` answers `{configured, page, tables}`: the page as
 blocks, and each database in its tree with its rows' properties.
 
+`/plan` reads the career plan page above its runway document. The
+long-term plan sits on that page as one image per slide. Set its id and
+add the integration to the page the same way.
+
+| Environment variable       | Kind    | Value              |
+| -------------------------- | ------- | ------------------ |
+| `Notion__CareerPlanPageId` | setting | the plan page's id |
+
+`GET /api/career-plan` answers `{configured, page}`.
+`GET /api/career-plan/files/{id}` answers a file block on that page: an
+image for the page to draw, any other file as a download.
+
 `/training-plan` reads the training plan page and the rows of its
 Workouts and Plan notes databases by column. It never opens a row, so
 749 workouts and 99 notes cost about ten calls. Set its id and add the

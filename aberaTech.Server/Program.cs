@@ -386,6 +386,13 @@ if (adminOptions.IsConfigured)
         notionOptions,
         notionOptions.MarksmanshipPlanPageId,
         PlaybookEndpoints.MarksmanshipReader));
+    // The career plan: the same reader again, rooted at that page.
+    builder.Services.AddKeyedScoped(PlaybookEndpoints.CareerPlanReader, (services, _) => new PlaybookReader(
+        services.GetRequiredService<NotionClient>(),
+        services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+        notionOptions,
+        notionOptions.CareerPlanPageId,
+        PlaybookEndpoints.CareerPlanReader));
     // The training plan: its page and two databases, read by column.
     builder.Services.AddScoped<TrainingPlanReader>();
     // A hung Notion must not hold the request for the framework's 100 s.
@@ -737,6 +744,7 @@ if (adminOptions.IsConfigured)
     app.MapPlaybookEndpoints(notionOptions);
     app.MapFitnessLessonsEndpoints(notionOptions);
     app.MapMarksmanshipEndpoints(notionOptions);
+    app.MapCareerPlanEndpoints(notionOptions);
     app.MapTrainingPlanEndpoints(notionOptions);
     app.MapTrainingEndpoints();
     app.MapTrainingPoolEndpoints();
