@@ -53,19 +53,28 @@ test("the owner's menu works from the keyboard and names itself to a screen read
   await expect(menu.getByRole("menuitem").first()).toBeFocused();
   await page.keyboard.press("End");
   await expect(
-    menu.getByRole("menuitem", { name: "Training", exact: true }),
+    menu.getByRole("menuitem", { name: "Dev box", exact: true }),
   ).toBeFocused();
-  await page.keyboard.press("ArrowUp");
+  // The arrows pass over the group headings: from the first entry, one
+  // press reaches the Evoke plan, which sits indented under the console.
+  await page.keyboard.press("Home");
+  await expect(
+    menu.getByRole("menuitem", { name: "Military athlete console" }),
+  ).toBeFocused();
+  for (const heading of ["Fitness", "Career", "Study", "Army", "Tools"]) {
+    await expect(menu.getByText(heading, { exact: true })).toBeVisible();
+  }
+  await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/training-plan$/);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Fitness plan" }),
+    page.getByRole("heading", { level: 1, name: "Evoke plan" }),
   ).toBeVisible();
 
   // The page you are on is marked in the menu.
   await button.click();
   await expect(byId).toHaveAttribute("aria-expanded", "true");
   await expect(
-    menu.getByRole("menuitem", { name: "Fitness plan", exact: true }),
+    menu.getByRole("menuitem", { name: "Evoke plan", exact: true }),
   ).toHaveAttribute("aria-current", "page");
 });

@@ -15,7 +15,7 @@ test("a visitor reads the syllabus and is never sent the progress", async ({
   });
   await page.goto("/training");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Training" }),
+    page.getByRole("heading", { level: 1, name: "Math and programming" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Sign in with Google" }),

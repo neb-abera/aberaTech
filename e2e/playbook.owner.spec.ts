@@ -12,7 +12,7 @@ const ready = 'nav[aria-label="Playbook pages"]';
 test("the owner reaches /playbook from the app bar", async ({ page }) => {
   await openAsOwner(page, "/playbook", ready);
   await page.goto("/guides");
-  await openFromBar(page, "Playbook");
+  await openFromBar(page, "Leadership playbook");
   await expect(page).toHaveURL(/\/playbook$/);
   await expect(page.locator(ready)).toBeVisible();
 });

@@ -118,7 +118,7 @@ const structuralMeta: Record<string, PageMeta> = {
   "/projects": {
     title: "Projects",
     description:
-      "Tools I built and run: a graduate course planner that solves prerequisites and degree rules, a military fitness console, a date calculator with countdowns, and a social app for dog owners.",
+      "Tools I built and run: a graduate course planner that solves prerequisites and degree rules, a date calculator with countdowns, and a social app for dog owners.",
   },
   [primaryAction.to]: {
     title: primaryAction.title,
@@ -128,16 +128,20 @@ const structuralMeta: Record<string, PageMeta> = {
     title: "Queue",
     description: "The scheduling queue, for its owner.",
   },
+  "/fitness": {
+    title: "Military athlete console",
+    description: "The owner's fitness console: goals, plan, and training log.",
+  },
   "/links": {
-    title: "Links",
+    title: "Bookmarks",
     description: "The owner's bookmarks.",
   },
   "/plan": {
-    title: "Plan",
+    title: "Career plan",
     description: "The owner's plan, kept on the server.",
   },
   "/alerts": {
-    title: "Alerts",
+    title: "Calendar alerts",
     description: "The owner's calendar alerts: mute, skip and a test send.",
   },
   "/devbox": {
@@ -150,7 +154,7 @@ const structuralMeta: Record<string, PageMeta> = {
     description: "The owner's network, drawn by sector.",
   },
   "/playbook": {
-    title: "Playbook",
+    title: "Leadership playbook",
     description: "The owner's Notion playbook, read live.",
   },
   "/marksmanship": {
@@ -159,11 +163,11 @@ const structuralMeta: Record<string, PageMeta> = {
       "The owner's President's Hundred plan and training log, read live.",
   },
   "/training-plan": {
-    title: "Fitness plan",
+    title: "Evoke plan",
     description: "The owner's fitness plan, read live from Notion.",
   },
   "/training": {
-    title: "Training",
+    title: "Math and programming",
     description:
       "A path in competitive math and programming, from the basics to olympiad level: the order, the sources, and the record.",
   },

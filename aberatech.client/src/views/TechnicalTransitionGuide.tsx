@@ -304,7 +304,7 @@ export default function TechnicalTransitionGuide(props: {
 
           <Typography variant="body1" gutterBottom sx={{ mt: 3 }}>
             My own path past the basics, into competitive math and programming,
-            is on <Link to="/training">Training</Link>.
+            is on <Link to="/training">Math and programming</Link>.
           </Typography>
         </Box>
       </GuideSection>

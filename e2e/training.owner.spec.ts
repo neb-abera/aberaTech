@@ -32,7 +32,7 @@ test("the owner reaches /training from the app bar and works ahead past a sessio
 }) => {
   await open(page, "/training");
   await page.goto("/guides");
-  await openFromBar(page, "Training");
+  await openFromBar(page, "Math and programming");
   await expect(page).toHaveURL(/\/training$/);
   const next = page.getByRole("region", { name: "Next up" });
   await expect(

@@ -1,4 +1,4 @@
-5662 words
+5661 words
 1 "LEARNING"
 1 "Quora"
 1 "Reddit"
@@ -285,13 +285,13 @@
 1 Manager's
 1 Market
 5 Mastering
-2 Math
+3 Math
 1 Medium
 1 Meeting
 1 Michael
 1 Microsoft
 3 Mihailescu
-3 Military
+2 Military
 1 Mission
 1 Modern
 1 Most
@@ -409,7 +409,7 @@
 14 This
 1 To
 1 Tons
-2 Training
+1 Training
 2 Transition
 3 Try
 1 Tutorial
@@ -492,7 +492,7 @@
 2 amount
 16 an
 1 analyze
-184 and
+185 and
 1 another
 2 answer
 2 answer.
@@ -528,7 +528,6 @@
 20 at
 1 at,
 1 at.
-1 athlete
 1 attack.
 1 attaining
 1 attempt
@@ -661,7 +660,6 @@
 1 connections,
 2 consider
 1 consistent
-1 console
 1 constant
 1 constraints,
 3 content
@@ -1297,7 +1295,7 @@
 1 programmer
 5 programmer.
 1 programmers.
-24 programming
+25 programming
 4 programming,
 4 programming.
 2 programs

@@ -1,4 +1,4 @@
-8844 words
+8841 words
 1 "Closed
 1 "Most
 1 "No"
@@ -461,7 +461,7 @@
 1 Memo:
 1 Memory:
 2 Microsoft
-3 Military
+2 Military
 1 Mission
 4 Months
 9 Moore
@@ -861,7 +861,6 @@
 2 assume
 60 at
 1 at.
-1 athlete
 2 attach
 1 attached).
 1 attempts
@@ -1055,7 +1054,6 @@
 1 connect
 1 cons
 1 consequence
-1 console
 2 consult
 7 contact
 3 content

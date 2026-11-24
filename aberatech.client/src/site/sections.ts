@@ -62,12 +62,6 @@ export const projects: Entry[] = [
       "A constraint solver over the 138 courses of the Johns Hopkins electrical and computer engineering master’s: prerequisites, degree rules and the five-year clock, checked as you drag courses between terms.",
   },
   {
-    title: "Military athlete console",
-    to: "/fitness",
-    blurb:
-      "A training model for military fitness tests. Sessions in, a predicted score out, and the cost of a goal by a date. The data is mine, so it asks you to sign in.",
-  },
-  {
     title: "Dates and countdowns",
     to: "/dates",
     blurb:
@@ -102,23 +96,60 @@ export const primaryAction: Entry = {
  * /projects and the footer, and Neb had to ask how to reach it.
  *
  * On a desktop they sit under one button in the bar, `ownerMenuLabel`, so
- * each is two clicks from any page and no label wraps from 1024px up. In
- * the phone drawer they are listed flat.
+ * each is two clicks from any page and no label wraps from 1024px up. The
+ * menu and the phone drawer both show them under the headings below. Ten
+ * flat links in build order read as a long list on 23 Nov 2026, and Neb
+ * asked for them grouped by what they are for.
  */
 export const ownerMenuLabel = "My pages";
 
-export const ownerPages: { label: string; to: string }[] = [
-  { label: "Links", to: "/links" },
-  { label: "Plan", to: "/plan" },
-  { label: "Dev box", to: "/devbox" },
-  { label: "Alerts", to: "/alerts" },
-  { label: "Dates", to: "/dates" },
-  { label: "Network", to: "/network" },
-  { label: "Playbook", to: "/playbook" },
-  { label: "Marksmanship", to: "/marksmanship" },
-  { label: "Fitness plan", to: "/training-plan" },
-  { label: "Training", to: "/training" },
+export interface OwnerPage {
+  /** The menu entry and the page's own heading. */
+  label: string;
+  to: string;
+  /** Set on a page that belongs to the entry above it, drawn indented. */
+  under?: string;
+}
+
+export const ownerGroups: { heading: string; pages: OwnerPage[] }[] = [
+  {
+    heading: "Fitness",
+    pages: [
+      { label: "Military athlete console", to: "/fitness" },
+      { label: "Evoke plan", to: "/training-plan", under: "/fitness" },
+      { label: "Marksmanship", to: "/marksmanship" },
+    ],
+  },
+  {
+    heading: "Career",
+    pages: [
+      { label: "Career plan", to: "/plan" },
+      { label: "Network", to: "/network" },
+    ],
+  },
+  {
+    heading: "Study",
+    pages: [{ label: "Math and programming", to: "/training" }],
+  },
+  {
+    heading: "Army",
+    pages: [{ label: "Leadership playbook", to: "/playbook" }],
+  },
+  {
+    heading: "Tools",
+    pages: [
+      { label: "Bookmarks", to: "/links" },
+      { label: "Calendar alerts", to: "/alerts" },
+      { label: "Dates and countdowns", to: "/dates" },
+      { label: "Dev box", to: "/devbox" },
+    ],
+  },
 ];
+
+/** Every owner page, in menu order. */
+export const ownerPages: OwnerPage[] = ownerGroups.flatMap(
+  (group) => group.pages,
+);
 
 /**
  * Every page that is not structural, not a guide and not in ownerPages,
@@ -128,8 +159,6 @@ export const ownerPages: { label: string; to: string }[] = [
 export const notInBar: Record<string, string> = {
   "/planner":
     "A project for visitors, reached from Projects in the bar. The owner does not keep state there.",
-  "/fitness":
-    "A project for visitors, reached from Projects in the bar. Its data is the owner's, read on the page itself.",
   "/schedule/admin":
     "The queue's admin, reached from the booking flow and by address. Neb has not asked for it in the bar.",
 };

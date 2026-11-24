@@ -8,7 +8,7 @@ import PushoverWarning from "../features/alerts/components/PushoverWarning";
  */
 export default function Alerts(props: { disableCustomTheme?: boolean }) {
   return (
-    <PageShell {...props} maxWidth="md" title="Alerts">
+    <PageShell {...props} maxWidth="md" title="Calendar alerts">
       <PushoverWarning />
       <AlertsPanel />
     </PageShell>

@@ -79,24 +79,26 @@ export const structural: string[] = ["/", "/guides", "/projects", "/schedule"];
  * protecting belongs here — it belongs behind the account check.
  */
 export const unlisted: Record<string, string> = {
+  "/fitness":
+    "The owner's fitness console. Its data is the owner's, so a visitor gets a sign-in button and nothing else. It sat under Projects until 23 Nov 2026, where it read as something a visitor could use. The app bar shows it to the signed-in owner, under Fitness.",
   "/schedule/admin":
     "Useful only when signed in as the queue owner. Everyone else would open a panel they cannot act on, so it is reached by address and gated by the API.",
   "/links":
-    "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API; the app bar adds a Links entry only once the owner is signed in.",
+    "The owner's bookmarks, kept on the server so they follow the owner between devices. A visitor gets a sign-in button and nothing else, so it is reached by address and gated by the API; the app bar adds a Bookmarks entry only once the owner is signed in.",
   "/plan":
-    "The owner's plan, a Markdown document kept on the server. Same shape as /links: a visitor gets a sign-in button, the app bar shows a Plan entry only to the signed-in owner.",
+    "The owner's plan, a Markdown document kept on the server. Same shape as /links: a visitor gets a sign-in button, the app bar shows a Career plan entry only to the signed-in owner.",
   "/devbox":
     "The owner's dev box: its power state, a Start button, the terminal and desktop in a browser tab (devbox.abera.tech, devbox-desktop.abera.tech, behind Cloudflare Access) and the runbook for getting a session back from a phone or a locked-down work computer. A visitor gets a sign-in button; the app bar shows a Dev box entry only to the signed-in owner.",
   "/alerts":
-    "The owner's calendar alerts: mute, skip and a test send. Same shape as /devbox: a visitor gets a sign-in button, the app bar shows an Alerts entry only to the signed-in owner.",
+    "The owner's calendar alerts: mute, skip and a test send. Same shape as /devbox: a visitor gets a sign-in button, the app bar shows a Calendar alerts entry only to the signed-in owner.",
   "/network":
     "The owner's network, drawn from a document kept on the server. Same shape as /plan: a visitor gets a sign-in button and the document is never requested, the app bar shows a Network entry only to the signed-in owner.",
   "/playbook":
-    "The owner's Notion playbook, read live from Notion for a computer that cannot reach it. Same shape as /devbox: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Playbook entry only to the signed-in owner.",
+    "The owner's Notion playbook, read live from Notion for a computer that cannot reach it. Same shape as /devbox: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Leadership playbook entry only to the signed-in owner.",
   "/marksmanship":
     "The owner's President's Hundred plan and pistol training log, read live from one Notion page. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Marksmanship entry only to the signed-in owner.",
   "/training":
-    "The owner's competitive math and programming course player. A visitor sees the syllabus read-only and never the progress or notes. It is linked from /technical, and the app bar shows a Training entry to the signed-in owner.",
+    "The owner's competitive math and programming course player. A visitor sees the syllabus read-only and never the progress or notes. It is linked from /technical, and the app bar shows a Math and programming entry to the signed-in owner.",
   "/training-plan":
-    "The owner's fitness plan (Evoke), read live from one Notion page and its two databases. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows a Fitness plan entry only to the signed-in owner.",
+    "The owner's fitness plan (Evoke), read live from one Notion page and its two databases. Same shape as /playbook: a visitor gets a sign-in button and Notion is never asked, the app bar shows an Evoke plan entry only to the signed-in owner.",
 };
