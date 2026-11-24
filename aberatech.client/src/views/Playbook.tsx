@@ -10,7 +10,7 @@ export default function Playbook(props: { disableCustomTheme?: boolean }) {
     <PageShell
       {...props}
       maxWidth="lg"
-      title="Playbook"
+      title="Leadership playbook"
       intro="My Notion playbook, read live. Notion holds it. This site keeps no copy."
     >
       <PlaybookPanel />

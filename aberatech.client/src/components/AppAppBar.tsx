@@ -9,6 +9,7 @@ import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
+import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
@@ -21,6 +22,7 @@ import { signInHref, signOut, useAccount } from "../hooks/useAccount";
 import {
   guides,
   label,
+  ownerGroups,
   ownerMenuLabel,
   ownerPages,
   primaryAction,
@@ -75,6 +77,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
  * time with me" across lines at 1300px (11 Nov 2026). MUI's Menu gives the
  * keyboard behavior: Enter, Space or the down arrow opens it on the first
  * item, the arrows move, Escape closes it and returns focus to the button.
+ * The group headings are not items: the arrows pass over them.
  */
 function OwnerMenu() {
   const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
@@ -106,21 +109,33 @@ function OwnerMenu() {
           paper: { variant: "outlined", elevation: 0, sx: { my: "4px" } },
         }}
       >
-        {ownerPages.map((page) => {
-          const current = location.pathname === page.to;
-          return (
-            <MenuItem
-              key={page.to}
-              component={Link}
-              to={page.to}
-              selected={current}
-              aria-current={current ? "page" : undefined}
-              onClick={close}
-            >
-              {page.label}
-            </MenuItem>
-          );
-        })}
+        {/* A flat array: MUI's Menu reads its direct children for the
+            keyboard, so a group cannot be wrapped in a fragment. */}
+        {ownerGroups.flatMap((group) => [
+          <ListSubheader
+            key={group.heading}
+            role="presentation"
+            sx={{ lineHeight: "28px", bgcolor: "transparent" }}
+          >
+            {group.heading}
+          </ListSubheader>,
+          ...group.pages.map((page) => {
+            const current = location.pathname === page.to;
+            return (
+              <MenuItem
+                key={page.to}
+                component={Link}
+                to={page.to}
+                selected={current}
+                aria-current={current ? "page" : undefined}
+                onClick={close}
+                sx={page.under ? { pl: 4 } : undefined}
+              >
+                {page.label}
+              </MenuItem>
+            );
+          }),
+        ])}
       </Menu>
     </>
   );
@@ -133,6 +148,12 @@ export default function AppAppBar() {
   // agree (no account yet), and the extra entries appear once the server has
   // answered.
   const { signedIn, resolved } = useAccount();
+  // Each page once in the drawer: the owner's groups already list /dates.
+  const drawerProjects = signedIn
+    ? projects.filter(
+        (entry) => !ownerPages.some((page) => page.to === entry.to),
+      )
+    : projects;
   const location = useLocation();
   const signIn = signInHref(location.pathname + location.search);
 
@@ -283,11 +304,30 @@ export default function AppAppBar() {
                     Home
                   </MenuItem>
                   {signedIn &&
-                    ownerPages.map((page) => (
-                      <MenuItem key={page.to} component={Link} to={page.to}>
-                        {page.label}
-                      </MenuItem>
-                    ))}
+                    ownerGroups.flatMap((group) => [
+                      <Typography
+                        key={group.heading}
+                        variant="caption"
+                        sx={{
+                          color: "text.disabled",
+                          px: 2,
+                          pt: 1,
+                          display: "block",
+                        }}
+                      >
+                        {group.heading}
+                      </Typography>,
+                      ...group.pages.map((page) => (
+                        <MenuItem
+                          key={page.to}
+                          component={Link}
+                          to={page.to}
+                          sx={page.under ? { pl: 4 } : undefined}
+                        >
+                          {page.label}
+                        </MenuItem>
+                      )),
+                    ])}
                   <Divider sx={{ my: 1 }} />
                   <Typography
                     variant="caption"
@@ -317,7 +357,7 @@ export default function AppAppBar() {
                   >
                     Projects
                   </Typography>
-                  {projects.map((entry) =>
+                  {drawerProjects.map((entry) =>
                     entry.external ? (
                       <MenuItem
                         key={entry.to}

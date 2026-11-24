@@ -52,8 +52,9 @@ describe("the navigation", () => {
     expect(broken).toEqual([]);
   });
 
-  it("carries the fitness console, the page that was missing from it", () => {
-    expect(internal(projects)).toContain("/fitness");
+  it("keeps the fitness console out of Projects, where a visitor cannot use it", () => {
+    expect(internal(projects)).not.toContain("/fitness");
+    expect(ownerPages.map((page) => page.to)).toContain("/fitness");
   });
 });
 
@@ -99,6 +100,7 @@ describe("the app bar", () => {
   it("carries the owner's pages, /dates among them", () => {
     expect([...inBar]).toEqual(
       expect.arrayContaining([
+        "/fitness",
         "/links",
         "/plan",
         "/devbox",
@@ -111,6 +113,13 @@ describe("the app bar", () => {
         "/training",
       ]),
     );
+  });
+
+  it("lists each owner page once, and under a page that is in the menu", () => {
+    expect(inBar.size).toBe(ownerPages.length);
+    for (const page of ownerPages) {
+      if (page.under) expect(inBar.has(page.under), page.to).toBe(true);
+    }
   });
 
   it("names only served pages, each decided once", () => {

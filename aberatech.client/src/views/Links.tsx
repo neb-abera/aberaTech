@@ -11,7 +11,7 @@ export default function Links(props: { disableCustomTheme?: boolean }) {
     <PageShell
       {...props}
       maxWidth="md"
-      title="Links"
+      title="Bookmarks"
       intro="One list, kept on the server, so it is the same on every device."
     >
       <LinksPanel />

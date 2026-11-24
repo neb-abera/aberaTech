@@ -28,6 +28,7 @@ import { resetAccountProbeForTests } from "../../hooks/useAccount";
 import {
   guides,
   label,
+  ownerGroups,
   ownerMenuLabel,
   ownerPages,
   projects,
@@ -109,20 +110,26 @@ describe("the account controls", () => {
     expect(signIn.getAttribute("href")).toBe(
       "/api/scheduling/admin/sign-in?returnUrl=%2Fguides%3Fx%3D1",
     );
-    expect(screen.queryByRole("link", { name: "Links" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Plan" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Bookmarks" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Career plan" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Dev box" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Alerts" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Dates" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Calendar alerts" })).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Dates and countdowns" }),
+    ).toBeNull();
     expect(screen.queryByRole("link", { name: "Network" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Playbook" })).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Leadership playbook" }),
+    ).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Menu button" }));
     expect(screen.getByRole("menuitem", { name: "Sign in" })).toBeTruthy();
-    expect(screen.queryByRole("menuitem", { name: "Links" })).toBeNull();
-    expect(screen.queryByRole("menuitem", { name: "Plan" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Bookmarks" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Career plan" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Dev box" })).toBeNull();
-    expect(screen.queryByRole("menuitem", { name: "Alerts" })).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: "Calendar alerts" }),
+    ).toBeNull();
   });
 
   it("puts the owner's pages under one menu in the bar, and a way out", async () => {
@@ -133,8 +140,8 @@ describe("the account controls", () => {
     expect(button.getAttribute("aria-haspopup")).toBe("menu");
     expect(button.getAttribute("aria-expanded")).toBe("false");
     // Flat in the bar no longer: nothing but the menu button until it opens.
-    expect(screen.queryByRole("link", { name: "Links" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Fitness plan" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Bookmarks" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Evoke plan" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
 
     fireEvent.click(button);
@@ -149,9 +156,16 @@ describe("the account controls", () => {
     }
     expect(
       within(menu)
-        .getByRole("menuitem", { name: "Fitness plan" })
+        .getByRole("menuitem", { name: "Evoke plan" })
         .getAttribute("href"),
     ).toBe("/training-plan");
+    // Grouped under headings, which are not entries.
+    for (const group of ownerGroups) {
+      expect(within(menu).getByText(group.heading)).toBeTruthy();
+      expect(
+        within(menu).queryByRole("menuitem", { name: group.heading }),
+      ).toBeNull();
+    }
     fireEvent.keyDown(menu, { key: "Escape" });
     await waitFor(() => {
       expect(button.getAttribute("aria-expanded")).toBe("false");

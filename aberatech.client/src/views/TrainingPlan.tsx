@@ -10,7 +10,7 @@ export default function TrainingPlan(props: { disableCustomTheme?: boolean }) {
     <PageShell
       {...props}
       maxWidth="lg"
-      title="Fitness plan"
+      title="Evoke plan"
       intro="My fitness plan, read live from Notion. I edit it there."
     >
       <TrainingPlanPanel />

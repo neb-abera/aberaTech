@@ -18,7 +18,7 @@ test("a visitor is asked to sign in and no playbook page is requested", async ({
   await page.goto("/playbook");
   expect((await tree).status()).toBe(401);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Playbook" }),
+    page.getByRole("heading", { level: 1, name: "Leadership playbook" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Sign in with Google" }),

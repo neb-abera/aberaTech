@@ -7,7 +7,7 @@ import PlanPanel from "../features/plan/components/PlanPanel";
  */
 export default function Plan(props: { disableCustomTheme?: boolean }) {
   return (
-    <PageShell {...props} maxWidth="md" title="Plan">
+    <PageShell {...props} maxWidth="md" title="Career plan">
       <PlanPanel />
     </PageShell>
   );

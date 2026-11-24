@@ -48,9 +48,11 @@ test("the owner reaches /dates from the app bar's menu on any page, and the bar 
     await page.goto("/guides");
     if (menu) {
       await page.getByRole("button", { name: "Menu button" }).click();
-      await page.getByRole("menuitem", { name: "Dates", exact: true }).click();
+      await page
+        .getByRole("menuitem", { name: "Dates and countdowns", exact: true })
+        .click();
     } else {
-      await openFromBar(page, "Dates");
+      await openFromBar(page, "Dates and countdowns");
       // Every entry stays inside the bar: nothing wraps out or scrolls.
       await page.goto("/guides");
       const overflow = await page.evaluate(() => {
@@ -58,7 +60,7 @@ test("the owner reaches /dates from the app bar's menu on any page, and the bar 
         return toolbar ? toolbar.scrollWidth - toolbar.clientWidth : -1;
       });
       expect(overflow, `toolbar overflow at ${width}px`).toBe(0);
-      await openFromBar(page, "Dates");
+      await openFromBar(page, "Dates and countdowns");
     }
     await expect(page).toHaveURL(/\/dates$/);
     await expect(

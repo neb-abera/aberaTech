@@ -52,14 +52,14 @@ describe("build-time rendering", () => {
     ["/schedule", "Schedule time with me"],
     ["/schedule/admin", "Run the queue"],
     ["/fitness", "Military athlete console"],
-    ["/plan", "Plan"],
+    ["/plan", "Career plan"],
     ["/devbox", "Dev box"],
-    ["/alerts", "Alerts"],
+    ["/alerts", "Calendar alerts"],
     ["/dates", "Dates and countdowns"],
     ["/network", "Network"],
-    ["/playbook", "Playbook"],
+    ["/playbook", "Leadership playbook"],
     ["/marksmanship", "Marksmanship"],
-    ["/training-plan", "Fitness plan"],
+    ["/training-plan", "Evoke plan"],
   ]) {
     it(`renders the frame of ${path} around its spinner, and nothing of the owner's`, async () => {
       const html = await render(path);

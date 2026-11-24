@@ -12,7 +12,7 @@ const ready = 'nav[aria-label="Weeks"]';
 test("the owner reaches /training-plan from the app bar", async ({ page }) => {
   await openAsOwner(page, "/training-plan", ready);
   await page.goto("/guides");
-  await openFromBar(page, "Fitness plan");
+  await openFromBar(page, "Evoke plan");
   await expect(page).toHaveURL(/\/training-plan$/);
   await expect(page.locator(ready)).toBeVisible();
 });
