@@ -52,11 +52,12 @@ public class Activity
     public List<Lap> Laps { get; set; } = [];
 
     /// <summary>
-    /// The recording split in two at its midpoint: average heart rate and
+    /// The recording's settled time split in two: average heart rate and
     /// speed of each half, read from the second-by-second records of the FIT
-    /// file. A heart-rate drift test is read from these, the way Evoke reads
-    /// it in TrainingPeaks, so no laps are needed. Null when the file carried
-    /// no records.
+    /// file. The climb to a settled heart rate after each start is left out.
+    /// A heart-rate drift test is read from these, the way Evoke reads it in
+    /// TrainingPeaks, so no laps are needed. Null when the file carried no
+    /// records.
     /// </summary>
     public double? FirstHalfHr { get; set; }
 
@@ -65,6 +66,13 @@ public class Activity
     public double? FirstHalfMetersPerSecond { get; set; }
 
     public double? SecondHalfMetersPerSecond { get; set; }
+
+    /// <summary>
+    /// How many seconds of the recording the halves cover: the stretches at a
+    /// settled heart rate. Null on a row read before the halves left out the
+    /// climb after each start, where they cover the whole recording.
+    /// </summary>
+    public double? HalvesSeconds { get; set; }
 
     /// <summary>
     /// The fastest continuous 1.5, 2, 5, and 10 miles inside the run, in
@@ -82,8 +90,8 @@ public class Activity
 
     /// <summary>
     /// Which reading of the FIT records this row holds: 0 none, 1 the halves,
-    /// 2 the halves and the best efforts. The sync re-reads rows below the
-    /// current version from their files.
+    /// 2 the halves and the best efforts, 3 the halves of the settled time.
+    /// The sync re-reads rows below the current version from their files.
     /// </summary>
     public int RecordsVersion { get; set; }
 }

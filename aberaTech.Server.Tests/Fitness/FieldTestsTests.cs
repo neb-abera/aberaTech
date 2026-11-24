@@ -205,5 +205,24 @@ public sealed class FieldTestsTests
         var indoor = Run("HR drift test", 3600, 400, 143, indoor: true) with { Halves = new RecordingHalves(140, 147, null, null) };
         Assert.Equal(7.0 / 140, FieldTests.AsAetTest(indoor, Bands)!.DriftPercent!.Value, precision: 6);
     }
+
+    [Fact]
+    public void An_indoor_drift_test_says_which_minutes_it_read_and_what_each_half_held()
+    {
+        // 70 minutes recorded, 65 of them at a settled heart rate: 158.5 bpm
+        // in the first half and 160.4 in the second, a 1.2% rise. The
+        // recording's own average, 157, includes the climbs.
+        var run = Run("Military Aerobic Threshold Test", 4207, 496, 157, indoor: true)
+            with { Halves = new RecordingHalves(158.5, 160.4, null, null, 3896) };
+
+        var test = FieldTests.AsAetTest(run, Bands)!;
+
+        Assert.Equal(1.9 / 158.5, test.DriftPercent!.Value, precision: 6);
+        Assert.Equal(159, test.AverageHr);
+        Assert.Contains("read from the 65 min at a settled heart rate", test.Evidence);
+        Assert.Contains("the 5 min of climb after each start left out", test.Evidence);
+        Assert.Contains("158.5 bpm in the first half, 160.4 in the second", test.Evidence);
+        Assert.DoesNotContain("full recording", test.Evidence);
+    }
 }
 
