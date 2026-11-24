@@ -9,7 +9,7 @@ version = "0.0.0"
 edition = "2024"
 # Minimum supported Rust version. Kept in lockstep with rust-toolchain.toml
 # and the Dockerfile base image by scripts/check-toolchain.sh.
-rust-version = "1.99"
+rust-version = "1.100"
 description = "Grades /training drills on Compiler Explorer for abera.tech"
 license = "Apache-2.0"
 repository = "https://github.com/neb-abera/aberaTech"
