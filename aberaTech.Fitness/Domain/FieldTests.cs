@@ -15,8 +15,10 @@ public sealed record FieldTestRun(
     IReadOnlyList<LoggedLap> Laps,
     RecordingHalves? Halves = null);
 
-/// <summary>The recording split at its midpoint: each half's average heart rate and speed.</summary>
-public sealed record RecordingHalves(double FirstHr, double SecondHr, double? FirstMetersPerSecond, double? SecondMetersPerSecond);
+/// <summary>The recording's settled time split in two: each half's average heart rate and speed.</summary>
+/// <param name="Seconds">How much of the recording the halves cover, when it is less than all of it.</param>
+public sealed record RecordingHalves(
+    double FirstHr, double SecondHr, double? FirstMetersPerSecond, double? SecondMetersPerSecond, double? Seconds = null);
 
 /// <summary>A field test the log turned out to contain.</summary>
 /// <param name="Kind">aet or threshold.</param>
@@ -58,8 +60,10 @@ public sealed record ThresholdSuggestion(int? AetHr, int? LtHr, double? LtSecPer
 /// at least 10 to 15 minutes at nose-breathing effort, find the pace where
 /// the heart rate holds within 2 to 3 beats for 3 minutes, then run 60
 /// minutes on a treadmill at 2% without touching the speed, or 30 to 45
-/// minutes on a flat loop or track outdoors. The recording that is read is
-/// the test alone, so the warm-up is saved as its own activity first.
+/// minutes on a flat loop or track outdoors. The warm-up is saved as its
+/// own activity first. The recording is read over its settled time: the
+/// climb to a steady heart rate at the start, and after any stop, is left
+/// out, because Evoke starts the test only once the heart rate holds.
 /// Indoors the belt holds the pace, so the drift is the rise in heart rate
 /// between the halves. Outdoors it is Friel's pace-to-heart-rate decoupling.
 /// 5% or less and the starting heart rate was at or below the AeT. More and
@@ -125,7 +129,7 @@ public static class FieldTests
     public static FieldTest? AsAetTest(FieldTestRun run, HeartRateBands bands)
     {
         if (run.DistanceMeters is not > 0 || run.Seconds < MinimumAetSeconds) return null;
-        if (run.AverageHr is not { } hr || hr <= 0) return null;
+        if (run.AverageHr is not { } recorded || recorded <= 0) return null;
 
         if (!AetName.IsMatch(run.Name)) return null;
 
@@ -135,7 +139,21 @@ public static class FieldTests
         // only for a run imported before the halves were kept.
         var fromRecording = HalvesDrift(run.Halves, indoor);
         var drift = fromRecording ?? (indoor ? HeartRateDrift(run.Laps) : Drift(run.Laps));
-        var readFrom = fromRecording is not null ? "read from the full recording" : "read from the laps";
+
+        // The settled time, when the halves cover less than the recording.
+        var settled = fromRecording is not null && run.Halves!.Seconds is { } covered && covered < run.Seconds - 30
+            ? covered
+            : (double?)null;
+        var readFrom = fromRecording is null ? "read from the laps"
+            : settled is null ? "read from the full recording"
+            : $"read from the {settled / 60:0} min at a settled heart rate, with the {(run.Seconds - settled) / 60:0} min of climb after each start left out";
+        if (fromRecording is not null && indoor)
+        {
+            readFrom += $" ({run.Halves!.FirstHr:0.0} bpm in the first half, {run.Halves.SecondHr:0.0} in the second)";
+        }
+
+        // The heart rate held is the settled time's, when that is what was read.
+        var hr = settled is null ? recorded : (int)Math.Round((run.Halves!.FirstHr + run.Halves.SecondHr) / 2);
         var pace = run.Seconds / (run.DistanceMeters.Value / 1000.0);
         var how = indoor
             ? "Named as a heart-rate drift test, indoors (drift is the heart-rate rise at a fixed belt speed)"

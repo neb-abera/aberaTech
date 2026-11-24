@@ -74,12 +74,30 @@ public static class FitImport
     }
 
     /// <summary>
-    /// Splits the second-by-second records at the midpoint of the recording
-    /// and stores each half's average heart rate and speed. Heart rate is
-    /// averaged over time, so a watch that records every few seconds weighs
-    /// each sample by how long it stood. Speed is distance over time, from the
-    /// distance field the watch accumulates.
+    /// Stores the average heart rate and speed of the two halves of the
+    /// recording's settled time, from the second-by-second records.
     /// </summary>
+    /// <remarks>
+    /// A heart-rate drift test compares the halves of a steady effort. Evoke
+    /// starts its test only once the heart rate has held for 3 minutes, so
+    /// the climb to that heart rate is no part of it. The same holds after a
+    /// stop: on 2026-11-23 Neb's treadmill ended its program at 60 minutes,
+    /// and his heart rate took 86 seconds to come back after the restart.
+    /// Read whole, that recording gave 157.3 then 160.1 bpm. Read settled it
+    /// gave 158.5 then 160.4.
+    ///
+    /// A break in the records longer than <see cref="BreakSeconds"/> ends a
+    /// stretch. In each stretch the heart rate has settled at the first
+    /// moment its one-minute average differs from the minute before by less
+    /// than <see cref="SettleRiseBpm"/> bpm. What follows is settled time,
+    /// when it lasts <see cref="MinimumSettledSeconds"/> or more. The halves
+    /// split the settled time in two. A recording with no settled stretch is
+    /// split at its midpoint, whole.
+    ///
+    /// Heart rate is averaged over time, so a watch that records every few
+    /// seconds weighs each sample by how long it stood. Speed is distance
+    /// over time, from the distance field the watch accumulates.
+    /// </remarks>
     internal static void Halves(IEnumerable<RecordMesg> records, Activity activity)
     {
         // The file was read, whatever it held, so the sync need not read it again.
@@ -95,23 +113,7 @@ public static class FitImport
 
         var start = points[0].Seconds;
         var end = points[^1].Seconds;
-        var middle = (start + end) / 2;
         if (end - start < 2 * 60) return;
-
-        double? MeanHr(double from, double to)
-        {
-            double weighted = 0, span = 0;
-            for (var i = 0; i < points.Length - 1; i++)
-            {
-                var a = Math.Max(points[i].Seconds, from);
-                var b = Math.Min(points[i + 1].Seconds, to);
-                if (b <= a || points[i].Hr is not > 0) continue;
-                weighted += points[i].Hr!.Value * (b - a);
-                span += b - a;
-            }
-
-            return span > 0 ? weighted / span : null;
-        }
 
         double? DistanceAt(double at)
         {
@@ -119,19 +121,147 @@ public static class FitImport
             return before.Distance;
         }
 
-        double? Speed(double from, double to) =>
-            DistanceAt(from) is { } a && DistanceAt(to) is { } b && b > a ? (b - a) / (to - from) : null;
-
         BestEfforts(points.Where(p => p.Distance is not null).Select(p => (p.Seconds, p.Distance!.Value)).ToArray(), activity);
 
-        activity.FirstHalfHr = MeanHr(start, middle);
-        activity.SecondHalfHr = MeanHr(middle, end);
-        activity.FirstHalfMetersPerSecond = Speed(start, middle);
-        activity.SecondHalfMetersPerSecond = Speed(middle, end);
+        var heartRates = points.Select(p => (p.Seconds, p.Hr)).ToArray();
+        var settled = SettledStretches(heartRates);
+        if (settled.Count == 0) settled = [(start, end)];
+
+        // The first half takes settled time until half of it is used.
+        var total = settled.Sum(s => s.To - s.From);
+        var first = new List<(double From, double To)>();
+        var second = new List<(double From, double To)>();
+        var left = total / 2;
+        foreach (var (from, to) in settled)
+        {
+            var taken = Math.Clamp(left, 0, to - from);
+            if (taken > 0) first.Add((from, from + taken));
+            if (to - from - taken > 0) second.Add((from + taken, to));
+            left -= to - from;
+        }
+
+        double? MeanHr(List<(double From, double To)> pieces)
+        {
+            double weighted = 0, span = 0;
+            foreach (var (from, to) in pieces)
+            {
+                var (w, s) = WeightedHr(heartRates, 0, heartRates.Length - 1, from, to);
+                weighted += w;
+                span += s;
+            }
+
+            return span > 0 ? weighted / span : null;
+        }
+
+        double? Speed(List<(double From, double To)> pieces)
+        {
+            double meters = 0, seconds = 0;
+            foreach (var (from, to) in pieces)
+            {
+                if (DistanceAt(from) is not { } a || DistanceAt(to) is not { } b) return null;
+                meters += b - a;
+                seconds += to - from;
+            }
+
+            return meters > 0 && seconds > 0 ? meters / seconds : null;
+        }
+
+        activity.FirstHalfHr = MeanHr(first);
+        activity.SecondHalfHr = MeanHr(second);
+        activity.FirstHalfMetersPerSecond = Speed(first);
+        activity.SecondHalfMetersPerSecond = Speed(second);
+        activity.HalvesSeconds = total;
     }
 
-    /// <summary>The reading of the records this importer writes: halves and best efforts.</summary>
-    public const int CurrentRecordsVersion = 2;
+    /// <summary>A gap between records longer than this is a stop: the watch was paused.</summary>
+    public const double BreakSeconds = 20;
+
+    /// <summary>The heart rate is averaged over windows this long to see whether it still climbs.</summary>
+    public const double SettleWindowSeconds = 60;
+
+    /// <summary>Settled: one window's average is within this many bpm of the window before.</summary>
+    public const double SettleRiseBpm = 2;
+
+    /// <summary>A stretch that has not settled this long after its start is not steady work.</summary>
+    public const double SettleSearchSeconds = 15 * 60;
+
+    /// <summary>Settled time shorter than this is left out.</summary>
+    public const double MinimumSettledSeconds = 5 * 60;
+
+    /// <summary>
+    /// The parts of a recording at a settled heart rate, in order: each
+    /// unbroken stretch of records, from where its heart rate stopped
+    /// climbing to its end.
+    /// </summary>
+    internal static List<(double From, double To)> SettledStretches(IReadOnlyList<(double Seconds, double? Hr)> points)
+    {
+        var stretches = new List<(double From, double To)>();
+        var first = 0;
+        for (var i = 1; i <= points.Count; i++)
+        {
+            if (i < points.Count && points[i].Seconds - points[i - 1].Seconds <= BreakSeconds) continue;
+
+            var last = i - 1;
+            if (SettledAt(points, first, last) is { } from && points[last].Seconds - from >= MinimumSettledSeconds)
+            {
+                stretches.Add((from, points[last].Seconds));
+            }
+
+            first = i;
+        }
+
+        return stretches;
+    }
+
+    /// <summary>When the heart rate of one unbroken stretch settled, or null when it did not.</summary>
+    private static double? SettledAt(IReadOnlyList<(double Seconds, double? Hr)> points, int first, int last)
+    {
+        var from = points[first].Seconds;
+        var to = points[last].Seconds;
+        var earliest = true;
+        for (var i = first; i <= last; i++)
+        {
+            var at = points[i].Seconds;
+            if (at < from + SettleWindowSeconds) continue;
+            if (at + SettleWindowSeconds > to || at > from + SettleSearchSeconds) return null;
+
+            var before = WeightedHr(points, first, last, at - SettleWindowSeconds, at);
+            var after = WeightedHr(points, first, last, at, at + SettleWindowSeconds);
+            if (before.Span > 0 && after.Span > 0
+                && Math.Abs(after.Weighted / after.Span - before.Weighted / before.Span) < SettleRiseBpm)
+            {
+                // Settled at the first look: the stretch began settled.
+                return earliest ? from : at;
+            }
+
+            earliest = false;
+        }
+
+        return null;
+    }
+
+    /// <summary>Heart rate times seconds, and the seconds that carried a heart rate, between two moments.</summary>
+    private static (double Weighted, double Span) WeightedHr(
+        IReadOnlyList<(double Seconds, double? Hr)> points, int first, int last, double from, double to)
+    {
+        double weighted = 0, span = 0;
+        for (var i = first; i < last; i++)
+        {
+            if (points[i + 1].Seconds <= from) continue;
+            if (points[i].Seconds >= to) break;
+
+            var a = Math.Max(points[i].Seconds, from);
+            var b = Math.Min(points[i + 1].Seconds, to);
+            if (b <= a || points[i].Hr is not > 0) continue;
+            weighted += points[i].Hr!.Value * (b - a);
+            span += b - a;
+        }
+
+        return (weighted, span);
+    }
+
+    /// <summary>The reading of the records this importer writes: settled halves and best efforts.</summary>
+    public const int CurrentRecordsVersion = 3;
 
     public const double Mile = 1609.344;
 

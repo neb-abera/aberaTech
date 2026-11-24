@@ -150,10 +150,19 @@ public static class ActivityStore
         stored.Indoor ??= richer.Indoor;
         stored.AverageHr ??= richer.AverageHr;
         stored.MaxHr ??= richer.MaxHr;
-        stored.FirstHalfHr ??= richer.FirstHalfHr;
-        stored.SecondHalfHr ??= richer.SecondHalfHr;
-        stored.FirstHalfMetersPerSecond ??= richer.FirstHalfMetersPerSecond;
-        stored.SecondHalfMetersPerSecond ??= richer.SecondHalfMetersPerSecond;
+
+        // The halves travel as one reading. A newer reading of the records
+        // replaces the stored one, so a row read whole is read settled.
+        var newer = richer.RecordsVersion > stored.RecordsVersion && richer.FirstHalfHr is not null;
+        if (stored.FirstHalfHr is null || newer)
+        {
+            stored.FirstHalfHr = richer.FirstHalfHr;
+            stored.SecondHalfHr = richer.SecondHalfHr;
+            stored.FirstHalfMetersPerSecond = richer.FirstHalfMetersPerSecond;
+            stored.SecondHalfMetersPerSecond = richer.SecondHalfMetersPerSecond;
+            stored.HalvesSeconds = richer.HalvesSeconds;
+        }
+
         CopyBestEfforts(stored, richer);
 
         if (stored.Laps.Count == 0)
@@ -191,6 +200,7 @@ public static class ActivityStore
         existing.SecondHalfHr = activity.SecondHalfHr ?? existing.SecondHalfHr;
         existing.FirstHalfMetersPerSecond = activity.FirstHalfMetersPerSecond ?? existing.FirstHalfMetersPerSecond;
         existing.SecondHalfMetersPerSecond = activity.SecondHalfMetersPerSecond ?? existing.SecondHalfMetersPerSecond;
+        if (activity.FirstHalfHr is not null) existing.HalvesSeconds = activity.HalvesSeconds;
         CopyBestEfforts(existing, activity);
 
         // Laps travel with the record that carries them; a file without laps

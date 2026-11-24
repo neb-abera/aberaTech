@@ -112,6 +112,80 @@ public sealed class FitLapsTests
         Assert.Equal(2.9, activity.SecondHalfMetersPerSecond!.Value, precision: 2);
     }
 
+    /// <summary>One record a second from <paramref name="from"/>, at the heart rate the function gives.</summary>
+    private static void Records(List<RecordMesg> records, System.DateTime start, int from, int to, Func<int, double> hr, ref double meters)
+    {
+        for (var second = from; second <= to; second++)
+        {
+            var record = new RecordMesg();
+            record.SetTimestamp(new Dynastream.Fit.DateTime(start.AddSeconds(second)));
+            record.SetHeartRate((byte)Math.Round(hr(second)));
+            record.SetDistance((float)meters);
+            records.Add(record);
+            meters += 2.0;
+        }
+    }
+
+    [Fact]
+    public void The_halves_leave_out_the_climb_after_each_start()
+    {
+        // Neb's drift test of 2026-11-23 in outline. The heart rate climbs
+        // from 110 to 158 over four minutes, holds 158 to minute 36 and 161
+        // to minute 60, when the treadmill stops. The watch is paused for a
+        // minute. The heart rate then climbs from 148 to 158 over 90 seconds
+        // and holds 161 to minute 70.
+        var start = new System.DateTime(2026, 11, 23, 11, 20, 0, DateTimeKind.Utc);
+        var records = new List<RecordMesg>();
+        var meters = 0.0;
+        Records(records, start, 0, 3600, s => s < 240 ? 110 + 48.0 * s / 240 : s < 2170 ? 158 : 161, ref meters);
+        Records(records, start, 3660, 4260, s => s < 3750 ? 148 + 10.0 * (s - 3660) / 90 : 161, ref meters);
+
+        var activity = new aberaTech.Fitness.Data.Activity { Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "", Indoor = true };
+        FitImport.Halves(records, activity);
+
+        // Read whole, the first half holds both climbs' worth of low heart
+        // rate: about 155 bpm. Read settled, it is the 158 he held.
+        Assert.InRange(activity.FirstHalfHr!.Value, 157.9, 158.1);
+        Assert.InRange(activity.SecondHalfHr!.Value, 160.9, 161.0);
+
+        // 71 minutes recorded, about 5.5 of them climbing: about 64 settled.
+        Assert.InRange(activity.HalvesSeconds!.Value, 63 * 60, 65.5 * 60);
+        Assert.Equal(2.0, activity.FirstHalfMetersPerSecond!.Value, precision: 2);
+        Assert.Equal(2.0, activity.SecondHalfMetersPerSecond!.Value, precision: 2);
+    }
+
+    [Fact]
+    public void A_recording_that_starts_settled_is_read_whole()
+    {
+        var start = new System.DateTime(2026, 11, 16, 6, 0, 0, DateTimeKind.Utc);
+        var records = new List<RecordMesg>();
+        var meters = 0.0;
+        Records(records, start, 0, 3600, s => s < 1800 ? 140 : 146, ref meters);
+
+        var activity = new aberaTech.Fitness.Data.Activity { Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "" };
+        FitImport.Halves(records, activity);
+
+        Assert.Equal(3600, activity.HalvesSeconds!.Value, precision: 0);
+        Assert.Equal(140, activity.FirstHalfHr!.Value, precision: 1);
+    }
+
+    [Fact]
+    public void A_run_too_short_to_settle_keeps_the_whole_recording()
+    {
+        // Six minutes, climbing all the way: no stretch is settled, so the
+        // halves are the recording's, as they were before.
+        var start = new System.DateTime(2026, 11, 16, 6, 0, 0, DateTimeKind.Utc);
+        var records = new List<RecordMesg>();
+        var meters = 0.0;
+        Records(records, start, 0, 360, s => 100 + s / 6.0, ref meters);
+
+        var activity = new aberaTech.Fitness.Data.Activity { Id = Guid.NewGuid(), Source = "test", Sport = "run", Name = "" };
+        FitImport.Halves(records, activity);
+
+        Assert.Equal(360, activity.HalvesSeconds!.Value, precision: 0);
+        Assert.True(activity.FirstHalfHr < activity.SecondHalfHr);
+    }
+
     [Fact]
     public void The_fastest_stretch_of_each_goal_distance_is_found_inside_the_run()
     {

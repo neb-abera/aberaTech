@@ -839,7 +839,7 @@ public static class FitnessReports
             a.Indoor,
             a.Laps.OrderBy(l => l.Index).Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr)).ToArray(),
             a.FirstHalfHr is { } first && a.SecondHalfHr is { } second
-                ? new RecordingHalves(first, second, a.FirstHalfMetersPerSecond, a.SecondHalfMetersPerSecond)
+                ? new RecordingHalves(first, second, a.FirstHalfMetersPerSecond, a.SecondHalfMetersPerSecond, a.HalvesSeconds)
                 : null));
 
         var bands = Bands(row);
