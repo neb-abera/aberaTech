@@ -48,7 +48,9 @@ test("the owner reaches /dates from the app bar's menu on any page, and the bar 
     await page.goto("/guides");
     if (menu) {
       await page.getByRole("button", { name: "Menu button" }).click();
-      await page.getByRole("menuitem", { name: "Dates and countdowns", exact: true }).click();
+      await page
+        .getByRole("menuitem", { name: "Dates and countdowns", exact: true })
+        .click();
     } else {
       await openFromBar(page, "Dates and countdowns");
       // Every entry stays inside the bar: nothing wraps out or scrolls.
