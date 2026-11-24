@@ -3,13 +3,16 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
+import { Link as RouterLink } from "react-router";
 import SignInToSee from "../../progress/components/SignInToSee";
 import { useOwnerDocument } from "../../progress/hooks/useOwnerDocument";
 import { planDocumentKey } from "../core/document";
+import LongTermPlan from "./LongTermPlan";
 import Markdown from "./Markdown";
 
 export interface PlanDocument {
@@ -28,8 +31,10 @@ function coerce(value: unknown): PlanDocument {
 }
 
 /**
- * The owner's plan: one Markdown document, kept on the server behind the
- * same sign-in as the bookmark list, shown rendered and edited in place.
+ * The owner's career plan. First the plan page read live from Notion, with
+ * the long-term plan's slides. Under it the runway: one Markdown document,
+ * kept on the server behind the same sign-in as the bookmark list, shown
+ * rendered and edited in place.
  *
  * The text never enters the site's code. A visitor gets a sign-in button;
  * the owner reads the rendered page, presses Edit to change it, and can
@@ -103,80 +108,92 @@ export default function PlanPanel() {
       : { label: "Saved", color: "success" as const };
 
   return (
-    <Stack spacing={3}>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{ alignItems: "center", flexWrap: "wrap" }}
-      >
-        <Button
-          variant={editing ? "contained" : "outlined"}
-          size="small"
-          onClick={() => setEditing((on) => !on)}
-        >
-          {editing ? "Done" : "Edit"}
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => fileInput.current?.click()}
-        >
-          Upload
-        </Button>
-        <input
-          ref={fileInput}
-          type="file"
-          accept=".md,.markdown,.txt,text/markdown,text/plain"
-          onChange={upload}
-          hidden
-          aria-label="Markdown file to upload"
-        />
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={download}
-          disabled={document.markdown.trim() === ""}
-        >
-          Download
-        </Button>
-        <Chip
-          size="small"
-          label={saveState.label}
-          color={saveState.color}
-          variant="outlined"
-        />
-      </Stack>
-
-      {problem && (
-        <Alert severity="warning" onClose={() => setProblem(null)}>
-          {problem}
-        </Alert>
-      )}
-
-      {editing ? (
-        <TextField
-          label="Plan, in Markdown"
-          value={document.markdown}
-          onChange={(e) => change(e.target.value)}
-          multiline
-          minRows={20}
-          fullWidth
-          slotProps={{
-            htmlInput: {
-              spellCheck: false,
-              style: { fontFamily: "monospace", fontSize: "0.9rem" },
-            },
-          }}
-        />
-      ) : document.markdown.trim() === "" ? (
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Nothing here yet. Press Edit and write, or upload a Markdown file.
+    <Stack spacing={4}>
+      <Typography variant="body1">
+        <Link component={RouterLink} to="/network">
+          Network
+        </Link>{" "}
+        is how I build the relationships I need to execute this plan.
+      </Typography>
+      <LongTermPlan />
+      <Stack component="section" aria-labelledby="edited-here" spacing={3}>
+        <Typography variant="h5" component="h2" id="edited-here">
+          Edited on this site
         </Typography>
-      ) : (
-        <Box>
-          <Markdown source={document.markdown} />
-        </Box>
-      )}
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: "center", flexWrap: "wrap" }}
+        >
+          <Button
+            variant={editing ? "contained" : "outlined"}
+            size="small"
+            onClick={() => setEditing((on) => !on)}
+          >
+            {editing ? "Done" : "Edit"}
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => fileInput.current?.click()}
+          >
+            Upload
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            onChange={upload}
+            hidden
+            aria-label="Markdown file to upload"
+          />
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={download}
+            disabled={document.markdown.trim() === ""}
+          >
+            Download
+          </Button>
+          <Chip
+            size="small"
+            label={saveState.label}
+            color={saveState.color}
+            variant="outlined"
+          />
+        </Stack>
+
+        {problem && (
+          <Alert severity="warning" onClose={() => setProblem(null)}>
+            {problem}
+          </Alert>
+        )}
+
+        {editing ? (
+          <TextField
+            label="Plan, in Markdown"
+            value={document.markdown}
+            onChange={(e) => change(e.target.value)}
+            multiline
+            minRows={20}
+            fullWidth
+            slotProps={{
+              htmlInput: {
+                spellCheck: false,
+                style: { fontFamily: "monospace", fontSize: "0.9rem" },
+              },
+            }}
+          />
+        ) : document.markdown.trim() === "" ? (
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Nothing here yet. Press Edit and write, or upload a Markdown file.
+          </Typography>
+        ) : (
+          <Box>
+            <Markdown source={document.markdown} />
+          </Box>
+        )}
+      </Stack>
     </Stack>
   );
 }

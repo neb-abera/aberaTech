@@ -28,6 +28,11 @@ public static class PlaybookEndpoints
     /// <summary>The keyed service name of the reader rooted at the marksmanship plan page.</summary>
     public const string MarksmanshipReader = "marksmanship";
 
+    public const string CareerPlanNotConfigured = "The career plan is not connected. Set Notion__CareerPlanPageId on the container app and share the page with the integration.";
+
+    /// <summary>The keyed service name of the reader rooted at the career plan page.</summary>
+    public const string CareerPlanReader = "career-plan";
+
     public static IEndpointRouteBuilder MapPlaybookEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
     {
         var group = routes
@@ -115,6 +120,59 @@ public static class PlaybookEndpoints
                     context))
             .RequireAuthorization(AdminAuth.PolicyName)
             .WithTags("Playbook");
+
+        return routes;
+    }
+
+    /// <summary>
+    /// The career plan for /plan: one Notion page read live as blocks, and
+    /// the files on it. The long-term plan is kept there as one image per
+    /// slide, so an image is answered for the page to draw and any other
+    /// file as a download. Same owner policy and the same failure answers
+    /// as the playbook. Only that page's tree is served.
+    /// </summary>
+    public static IEndpointRouteBuilder MapCareerPlanEndpoints(this IEndpointRouteBuilder routes, NotionOptions options)
+    {
+        var group = routes
+            .MapGroup("/api/career-plan")
+            .RequireAuthorization(AdminAuth.PolicyName)
+            .WithTags("Playbook");
+
+        group.MapGet("", (HttpContext context, ILogger<PlaybookReader> logger, CancellationToken cancellationToken) =>
+            Answer(
+                options.HasCareerPlan,
+                CareerPlanNotConfigured,
+                () => context.RequestServices.GetRequiredKeyedService<PlaybookReader>(CareerPlanReader),
+                logger,
+                async reader =>
+                {
+                    var tree = await reader.TreeAsync(cancellationToken);
+                    var page = await reader.PageAsync(tree.Root.Id, cancellationToken);
+                    return Results.Json(new { configured = true, page }, PlaybookJson.Options);
+                },
+                context));
+
+        group.MapGet("/files/{blockId}", (string blockId, HttpContext context, NotionClient notion, ILogger<PlaybookReader> logger, CancellationToken cancellationToken) =>
+            Answer(
+                options.HasCareerPlan,
+                CareerPlanNotConfigured,
+                () => context.RequestServices.GetRequiredKeyedService<PlaybookReader>(CareerPlanReader),
+                logger,
+                async reader =>
+                {
+                    if (!NotionIds.TryNormalize(blockId, out var id)) return Results.NotFound();
+                    var file = await reader.FileAsync(id, cancellationToken);
+                    if (file is null) return Results.NotFound();
+
+                    var response = await notion.DownloadAsync(file.Address, cancellationToken);
+                    context.Response.RegisterForDispose(response);
+                    var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    var type = ContentType(response);
+                    return type is "image/png" or "image/jpeg" or "image/gif" or "image/webp"
+                        ? Results.Stream(stream, type)
+                        : Results.Stream(stream, type, file.Name);
+                },
+                context));
 
         return routes;
     }

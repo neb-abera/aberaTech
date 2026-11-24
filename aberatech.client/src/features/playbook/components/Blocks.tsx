@@ -2,9 +2,19 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import type * as React from "react";
+import * as React from "react";
 import { Link as RouterLink } from "react-router";
 import { fileUrl, type PlaybookBlock, type PlaybookText } from "../core/api";
+
+/**
+ * Where a page's files are served from, and whether an image is drawn in
+ * the page. The playbook links every file as a download. A page that keeps
+ * slides as images sets `images`.
+ */
+export const FilesContext = React.createContext<{
+  url: (blockId: string) => string;
+  images: boolean;
+}>({ url: fileUrl, images: false });
 
 /** A run of text with its marks. A link to a playbook page stays on this site. */
 export function Rich({ runs }: { runs?: PlaybookText[] }) {
@@ -110,6 +120,7 @@ function Children({ block }: { block: PlaybookBlock }) {
 }
 
 function Block({ block }: { block: PlaybookBlock }) {
+  const files = React.useContext(FilesContext);
   switch (block.type) {
     case "heading": {
       const level = Math.min(3, Math.max(1, block.level ?? 1));
@@ -223,7 +234,40 @@ function Block({ block }: { block: PlaybookBlock }) {
           </Box>
         </Box>
       );
-    case "file":
+    case "file": {
+      if (files.images && block.kind === "image" && !block.url && block.id) {
+        const source = files.url(block.id);
+        const caption = (block.caption ?? []).map((run) => run.text).join("");
+        return (
+          <Box component="figure" sx={{ mx: 0, my: 2 }}>
+            <Link href={source} target="_blank" rel="noopener noreferrer">
+              <Box
+                component="img"
+                src={source}
+                alt={caption || block.name || "Image"}
+                loading="lazy"
+                sx={{
+                  display: "block",
+                  width: "100%",
+                  height: "auto",
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: 1,
+                }}
+              />
+            </Link>
+            {caption && (
+              <Typography
+                component="figcaption"
+                variant="body2"
+                sx={{ mt: 0.5, color: "text.secondary" }}
+              >
+                <Rich runs={block.caption} />
+              </Typography>
+            )}
+          </Box>
+        );
+      }
       return (
         <Box sx={{ my: 1 }}>
           {block.url ? (
@@ -231,7 +275,7 @@ function Block({ block }: { block: PlaybookBlock }) {
               {block.name}
             </Link>
           ) : (
-            <Link href={fileUrl(block.id ?? "")} download={block.name}>
+            <Link href={files.url(block.id ?? "")} download={block.name}>
               Download {block.name}
             </Link>
           )}
@@ -242,6 +286,7 @@ function Block({ block }: { block: PlaybookBlock }) {
           )}
         </Box>
       );
+    }
     case "link":
       return (
         <Box sx={{ my: 1 }}>

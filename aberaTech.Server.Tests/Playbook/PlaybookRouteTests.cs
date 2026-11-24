@@ -52,6 +52,7 @@ public sealed class PlaybookRouteTests : IDisposable
         settings["Notion:PlaybookPageId"] = root;
         settings["Notion:FitnessLessonsPageId"] = FakeNotion.SampleLessons;
         settings["Notion:MarksmanshipPlanPageId"] = FakeNotion.SampleMarksmanship;
+        settings["Notion:CareerPlanPageId"] = FakeNotion.SampleCareerPlan;
         return settings;
     }
 
@@ -72,7 +73,9 @@ public sealed class PlaybookRouteTests : IDisposable
         ["GET", $"/api/playbook/pages/{FakeNotion.SampleRoot}"],
         ["GET", "/api/playbook/files/00000002-0000-0000-0000-000000000000"],
         ["GET", "/api/fitness/lessons"],
-        ["GET", "/api/marksmanship"]
+        ["GET", "/api/marksmanship"],
+        ["GET", "/api/career-plan"],
+        ["GET", "/api/career-plan/files/00000000-0000-0000-0000-000000000002"]
     ];
 
     [Theory]
@@ -309,6 +312,77 @@ public sealed class PlaybookRouteTests : IDisposable
 
         Assert.False(plan.GetProperty("configured").GetBoolean());
         Assert.Contains("Notion__MarksmanshipPlanPageId", plan.GetProperty("message").GetString());
+        Assert.Empty(_notion.Requests);
+    }
+
+    [Fact]
+    public async Task The_owner_reads_the_career_plan_and_its_slide_is_answered_to_be_drawn()
+    {
+        using var owner = Owner();
+
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/career-plan");
+
+        Assert.True(plan.GetProperty("configured").GetBoolean());
+        var page = plan.GetProperty("page");
+        Assert.Equal("Career plan 2026 to 2028", page.GetProperty("title").GetString());
+        Assert.Equal("Long-term plan", page.GetProperty("blocks")[0].GetProperty("text")[0].GetProperty("text").GetString());
+        var files = page.GetProperty("blocks").EnumerateArray().Where(block => block.GetProperty("type").GetString() == "file").ToList();
+        var slide = files.Single(file => file.GetProperty("kind").GetString() == "image");
+        var deck = files.Single(file => file.GetProperty("kind").GetString() == "file");
+        Assert.Equal("long-term-plan.png", slide.GetProperty("name").GetString());
+
+        using var image = await owner.GetAsync($"/api/career-plan/files/{slide.GetProperty("id").GetString()}");
+        using var download = await owner.GetAsync($"/api/career-plan/files/{deck.GetProperty("id").GetString()}");
+
+        Assert.Equal(HttpStatusCode.OK, image.StatusCode);
+        Assert.Equal("image/png", image.Content.Headers.ContentType?.MediaType);
+        Assert.Null(image.Content.Headers.ContentDisposition);
+        Assert.Equal([0x89, (byte)'P', (byte)'N', (byte)'G'], (await image.Content.ReadAsByteArrayAsync())[..4]);
+        Assert.Equal(HttpStatusCode.OK, download.StatusCode);
+        Assert.Equal("attachment", download.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("long-term-plan.pptx", download.Content.Headers.ContentDisposition?.FileName);
+        // The signed addresses were never sent the token.
+        Assert.All(_notion.Requests.Where(seen => seen.Request.StartsWith("GET /secure/", StringComparison.Ordinal)),
+            seen => Assert.Null(seen.Authorization));
+    }
+
+    [Fact]
+    public async Task The_career_plan_route_and_the_playbook_cannot_reach_each_other()
+    {
+        using var owner = Owner();
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/career-plan");
+        var slide = plan.GetProperty("page").GetProperty("blocks").EnumerateArray()
+            .First(block => block.GetProperty("type").GetString() == "file").GetProperty("id").GetString();
+        var root = await owner.GetFromJsonAsync<JsonElement>($"/api/playbook/pages/{FakeNotion.SampleRoot}");
+        var example = root.GetProperty("blocks").EnumerateArray()
+            .First(block => block.GetProperty("type").GetString() == "file").GetProperty("id").GetString();
+
+        using var pageThroughPlaybook = await owner.GetAsync($"/api/playbook/pages/{FakeNotion.SampleCareerPlan}");
+        using var slideThroughPlaybook = await owner.GetAsync($"/api/playbook/files/{slide}");
+        using var fileThroughPlan = await owner.GetAsync($"/api/career-plan/files/{example}");
+        using var outsideThroughPlan = await owner.GetAsync($"/api/career-plan/files/{_outsideFile}");
+
+        Assert.Equal(HttpStatusCode.NotFound, pageThroughPlaybook.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, slideThroughPlaybook.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, fileThroughPlan.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, outsideThroughPlan.StatusCode);
+        Assert.DoesNotContain("Field notes", plan.GetRawText(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Without_a_career_plan_page_the_routes_say_what_to_set_and_ask_notion_nothing()
+    {
+        var settings = Settings();
+        settings["Notion:CareerPlanPageId"] = null;
+        using var app = App(settings, _notion);
+        using var owner = app.CreateClient().SignedInAs(app.Factory.Services, AdminRouteTests.Owner);
+
+        var plan = await owner.GetFromJsonAsync<JsonElement>("/api/career-plan");
+        var file = await owner.GetFromJsonAsync<JsonElement>("/api/career-plan/files/00000000-0000-0000-0000-000000000002");
+
+        Assert.False(plan.GetProperty("configured").GetBoolean());
+        Assert.Contains("Notion__CareerPlanPageId", plan.GetProperty("message").GetString());
+        Assert.False(file.GetProperty("configured").GetBoolean());
         Assert.Empty(_notion.Requests);
     }
 

@@ -40,6 +40,13 @@ public sealed class NotionOptions
     /// </summary>
     public string? TrainingPlanPageId { get; init; }
 
+    /// <summary>
+    /// The page /plan shows above the runway document: "Career plan 2026 to
+    /// 2028 (SMART)" in Notes, with the long-term plan as one image per
+    /// slide. The integration has to be shared with it. Optional.
+    /// </summary>
+    public string? CareerPlanPageId { get; init; }
+
     /// <summary>The API's origin. A test points it at a fake.</summary>
     public string BaseUrl { get; init; } = "https://api.notion.com";
 
@@ -61,6 +68,9 @@ public sealed class NotionOptions
 
     public bool HasMarksmanshipPlan =>
         !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(MarksmanshipPlanPageId, out _);
+
+    public bool HasCareerPlan =>
+        !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(CareerPlanPageId, out _);
 
     public bool HasTrainingPlan =>
         !string.IsNullOrWhiteSpace(Token) && NotionIds.TryNormalize(TrainingPlanPageId, out _);

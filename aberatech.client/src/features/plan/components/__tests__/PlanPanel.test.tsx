@@ -12,7 +12,9 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { respond } from "../../../../test/fakeFetch";
 import PlanPanel, { type PlanDocument } from "../PlanPanel";
@@ -29,6 +31,13 @@ function visit(saved: PlanDocument | null | "visitor") {
   }
   vi.stubGlobal("fetch", fetchMock);
 }
+
+const draw = () =>
+  render(
+    <MemoryRouter>
+      <PlanPanel />
+    </MemoryRouter>,
+  );
 
 const settle = async () => {
   await act(async () => {
@@ -67,20 +76,44 @@ afterEach(() => {
 describe("for a visitor", () => {
   it("offers sign-in that returns here, and writes nothing", async () => {
     visit("visitor");
-    render(<PlanPanel />);
+    draw();
     await settle();
 
     const button = screen.getByRole("link", { name: /sign in with google/i });
     expect(button.getAttribute("href")).toContain("returnUrl=/plan");
     expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Network" })).toBeNull();
+    // A visitor is never shown the plan, so the plan is never asked for.
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/progress/plan",
+    ]);
     expect(puts()).toHaveLength(0);
   });
 });
 
 describe("for the owner", () => {
+  it("links Network, asks for the plan page, and puts the runway under it", async () => {
+    visit(saved);
+    draw();
+    await settle();
+
+    expect(
+      screen.getByRole("link", { name: "Network" }).getAttribute("href"),
+    ).toBe("/network");
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/progress/plan",
+      "/api/career-plan",
+    ]);
+    const runway = screen.getByRole("region", { name: "Edited on this site" });
+    expect(
+      within(runway).getByRole("heading", { name: "Runway" }),
+    ).toBeTruthy();
+    expect(within(runway).getByRole("button", { name: "Edit" })).toBeTruthy();
+  });
+
   it("renders the document", async () => {
     visit(saved);
-    render(<PlanPanel />);
+    draw();
     await settle();
 
     expect(screen.getByRole("heading", { name: "Runway" })).toBeTruthy();
@@ -92,7 +125,7 @@ describe("for the owner", () => {
 
   it("edits in place and saves a beat later", async () => {
     visit(null);
-    render(<PlanPanel />);
+    draw();
     await settle();
 
     expect(screen.getByText(/nothing here yet/i)).toBeTruthy();
@@ -117,7 +150,7 @@ describe("for the owner", () => {
 
   it("replaces the document with an uploaded file", async () => {
     visit(saved);
-    render(<PlanPanel />);
+    draw();
     await settle();
 
     const file = new File(["# Uploaded\n\n- one"], "plan.md", {
@@ -140,7 +173,7 @@ describe("for the owner", () => {
 
   it("downloads the document as a Markdown file", async () => {
     visit(saved);
-    render(<PlanPanel />);
+    draw();
     await settle();
 
     const blobs: Blob[] = [];
