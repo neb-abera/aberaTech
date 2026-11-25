@@ -127,7 +127,11 @@ updates:
   # The browser image `make e2e` runs, pinned by digest in e2e/Dockerfile.
   - package-ecosystem: docker
     directory: /e2e
-    patterns: ["mcr.microsoft.com/playwright"]
+    # Dependabot names a Docker dependency by its image, without the
+    # registry: mcr.microsoft.com/playwright is `playwright`. The full name
+    # matched nothing, and every docker job logged "Skipping update group
+    # for 'playwright'", so #319 and #442 carried the npm half alone.
+    patterns: ["playwright"]
     multi-ecosystem-group: playwright
     cooldown:
       default-days: 5
