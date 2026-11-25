@@ -38,6 +38,7 @@ import ThresholdsCard from "./ThresholdsCard";
 import TrainingDoseCard from "./TrainingDoseCard";
 import TrainingPacesCard from "./TrainingPacesCard";
 import TreadmillGradeCard from "./TreadmillGradeCard";
+import WeightPlanCard from "./WeightPlanCard";
 import Workbench from "./Workbench";
 
 /** The tabs, in order. The slug is what goes in the URL. */
@@ -116,6 +117,7 @@ export default function FitnessPanel() {
    * blip (or a session quietly expiring) replaced the whole console, tabs and
    * all, with "the service did not answer".
    */
+  const [goalsVersion, setGoalsVersion] = React.useState(0);
   const reloadSummary = React.useCallback(() => {
     fetchSummary()
       .then((next) => {
@@ -213,11 +215,18 @@ export default function FitnessPanel() {
       </Tabs>
 
       <Section index={0} tab={tab} visited={visited}>
-        <GoalsPanel />
+        <GoalsPanel refresh={goalsVersion} />
       </Section>
       <Section index={1} tab={tab} visited={visited}>
         <Stack spacing={3}>
           <OutlookCard outlook={summary.aerobicOutlook} />
+          <WeightPlanCard
+            settings={summary.settings}
+            onSaved={() => {
+              reloadSummary();
+              setGoalsVersion((v) => v + 1);
+            }}
+          />
           <TrainingPacesCard summary={summary} />
           <TestProtocolCard />
           <ProjectionPanel summary={summary} onGoalsChanged={reloadSummary} />

@@ -78,12 +78,13 @@ describe("ReadinessPanel", () => {
     expect(screen.getByText("35 lb (15.9 kg)")).toBeTruthy();
   });
 
-  it("shows the scored fitness test and the body-composition cohort rates", () => {
+  it("shows the scored fitness test and body composition without selection rates", () => {
     render(<ReadinessPanel readiness={readiness} />);
 
     expect(screen.getByText("2026-04-05: 428 points")).toBeTruthy();
     expect(screen.getByText("combat standard met")).toBeTruthy();
-    expect(screen.getByText(/cohort selection rate 37%/)).toBeTruthy();
+    expect(screen.queryByText(/selection rate/)).toBeNull();
+    expect(screen.queryByText(/selected at/)).toBeNull();
     expect(screen.getByText(/155 lb \(70.1 kg\)/)).toBeTruthy();
   });
 });

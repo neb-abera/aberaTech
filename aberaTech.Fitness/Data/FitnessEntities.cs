@@ -414,6 +414,16 @@ public class AthleteSettings
     /// </summary>
     public double? GoalWeightKg { get; set; }
 
+    /// <summary>
+    /// The first day of a deliberate weight change toward <see cref="GoalWeightKg"/>.
+    /// Weigh-ins before it say nothing about its rate, so the forecast leaves
+    /// them out. Null when no plan is stated.
+    /// </summary>
+    public LocalDate? WeightPlanStartedOn { get; set; }
+
+    /// <summary>The plan's loss, in kilograms a week.</summary>
+    public double? WeightPlanKgPerWeek { get; set; }
+
     /// <summary>Where races happen; thin air slows aerobic times (~1% at El Paso).</summary>
     public double HomeAltitudeMeters { get; set; }
 

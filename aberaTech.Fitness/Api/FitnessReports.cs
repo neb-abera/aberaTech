@@ -137,7 +137,7 @@ public static class FitnessReports
                 durability.DaysOfLog,
                 durability.Days.Select(d => new DailyLoadDto(d.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), d.Load, d.Impact)).ToArray(),
                 Steps(durability.Steps)),
-            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, row), settings.ReferenceHr, today), settings.ReferenceHr),
+            Outlook(AerobicOutlook.Build(SteadyRuns(history.Activities, row), settings.ReferenceHr, today, FieldTests.LatestAet(tests, today)), settings.ReferenceHr),
             AnchorOf(history),
             (history.Efforts ?? []).Select(e => new EffortDto(
                 e.Id?.ToString(),
@@ -191,12 +191,13 @@ public static class FitnessReports
     private static AerobicOutlookDto Outlook(AerobicOutlookResult result, int referenceHr) =>
         new(
             result.Ready,
-            result.QualifyingWeeks,
-            AerobicOutlook.WeeksNeeded,
-            AerobicOutlook.RunsPerWeek,
             referenceHr,
+            result.Anchor is { } anchor
+                ? new AerobicAnchorDto(
+                    anchor.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), anchor.SecPerKm, anchor.AverageHr, anchor.GradePercent, anchor.Indoor)
+                : null,
+            result.Needs,
             result.Weeks.Select(w => new WeekPaceDto(w.WeekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), w.MedianSecPerKm, w.Runs)).ToArray(),
-            result.SlopeSecPerKmPerWeek,
             result.Ahead.Select(a => new PacePointDto(a.WeeksAhead, a.SecPerKm, a.LowSecPerKm, a.HighSecPerKm)).ToArray());
 
     public static async Task<PredictionDto> PredictionsAsync(
@@ -840,7 +841,8 @@ public static class FitnessReports
             a.Laps.OrderBy(l => l.Index).Select(l => new LoggedLap(l.DistanceMeters, l.Seconds, l.AverageHr)).ToArray(),
             a.FirstHalfHr is { } first && a.SecondHalfHr is { } second
                 ? new RecordingHalves(first, second, a.FirstHalfMetersPerSecond, a.SecondHalfMetersPerSecond, a.HalvesSeconds)
-                : null));
+                : null,
+            TreadmillGrade.For(a.Indoor == true, a.StartedAt.InZone(zone).Date, a.Name, row.TreadmillGradePercent, row.TreadmillGradeSince)));
 
         var bands = Bands(row);
         var tests = FieldTests.Detect(candidates, bands, row.StartVdot);
@@ -871,7 +873,9 @@ public static class FitnessReports
             row.TreadmillGradePercent,
             row.TreadmillGradeSince?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             row.AnchorDistanceMeters,
-            row.AnchorSeconds);
+            row.AnchorSeconds,
+            row.WeightPlanStartedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            row.WeightPlanKgPerWeek);
     }
 
     /// <summary>Days kept for the rolling windows: 26 weeks, the span the weekly chart shows.</summary>

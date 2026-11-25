@@ -6,6 +6,11 @@ import { expect, test } from "@playwright/test";
 // without Google (compose.yaml, Fitness__DevelopmentOwner). The activity
 // uploaded here is removed before the test ends.
 
+// The treadmill incline and the weight plan are both fields of the one
+// settings record, and a save writes the record back. Side by side, one
+// test's save could undo the other's, so this file's tests run in order.
+test.describe.configure({ mode: "default" });
+
 test("the open tab is in the address and survives a reload", async ({
   page,
 }) => {
@@ -175,4 +180,78 @@ test("a treadmill incline is saved with its start date, read in the trend, and c
   const remove = page.getByRole("button", { name: `Remove ${name} of ${day}` });
   await remove.click();
   await expect(remove).toHaveCount(0);
+});
+
+// The weight plan is a setting on the Plan tab. The Bodyweight forecast on
+// the Goals tab reads it with the weigh-ins since it began, and shows its
+// arithmetic. The test logs its own weigh-ins and clears the plan and the
+// goal weight before it ends.
+test("a weight plan is saved, and the Bodyweight forecast shows its date and arithmetic", async ({
+  page,
+}) => {
+  const iso = (daysAgo: number) =>
+    new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+  const began = iso(21);
+
+  // A goal weight and two weigh-ins three weeks apart: 175 lb, then 172 lb.
+  const patched = await page.request.patch("/api/fitness/settings", {
+    data: { goalWeightKg: 74.84 },
+  });
+  expect(patched.status()).toBe(204);
+  for (const [date, weightKg] of [
+    [began, 79.38],
+    [iso(0), 78.02],
+  ] as const) {
+    const logged = await page.request.post("/api/fitness/body-metrics", {
+      data: { date, weightKg, bodyFatPercent: null },
+    });
+    expect(logged.ok()).toBe(true);
+  }
+
+  await page.goto("/fitness?tab=plan");
+  const card = page.locator(".MuiCard-root").filter({
+    has: page.getByRole("heading", { name: "Weight plan" }),
+  });
+  await expect(card).toBeVisible({ timeout: 15_000 });
+  await expect(card).toContainText("stop at 165 lb");
+
+  await card.getByLabel("Loss (lb a week)").fill("1.5");
+  await card.getByLabel("Began").fill(began);
+  await card.getByRole("button", { name: "Save weight plan" }).click();
+  await expect(card.getByRole("alert")).toContainText(
+    `Saved. 1.5 lb a week from ${began} to 165 lb.`,
+  );
+
+  await page
+    .getByRole("tablist", { name: "Fitness sections" })
+    .getByRole("tab", { name: "Goals" })
+    .click();
+  const forecast = page.getByRole("button", {
+    name: "Forecast for Bodyweight",
+  });
+  await expect(forecast).toHaveText(/\d+%/, { timeout: 15_000 });
+  await forecast.click();
+  await expect(page.getByTestId("forecast-reach")).toHaveText(
+    /^Projected to reach \d+ lb on [A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}, \d{4}\./,
+  );
+  await expect(page.getByTestId("forecast-model")).toContainText(
+    "Your stated weight plan and the weigh-ins since it began",
+  );
+  await page.getByText("Show the arithmetic").click();
+  await expect(
+    page.getByRole("cell", { name: "Less early water", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: /^Reaches \d+ lb$/ }),
+  ).toBeVisible();
+
+  // Put the profile back as it was found.
+  const cleared = await page.request.patch("/api/fitness/settings", {
+    data: {
+      weightPlanKgPerWeek: null,
+      weightPlanStartedOn: null,
+      goalWeightKg: null,
+    },
+  });
+  expect(cleared.status()).toBe(204);
 });

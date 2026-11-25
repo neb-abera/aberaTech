@@ -23,6 +23,10 @@ public sealed record GoalSourceDto(
 /// <param name="DataFrom">The date of the oldest reading the forecast was made from.</param>
 /// <param name="Sources">Where those readings came from.</param>
 /// <param name="Model">The model that made the forecast, with its authors and years; null when nothing was forecast.</param>
+/// <param name="DueOn">The date the forecast was asked about.</param>
+/// <param name="ReachOn">The date the central projection first reaches the goal; null when no method could say or it does not.</param>
+/// <param name="ReadyOn">The date the chance of the goal first reaches 80%.</param>
+/// <param name="Steps">The arithmetic, line by line.</param>
 public sealed record GoalForecastDto(
     double? Probability,
     double? Projected,
@@ -33,7 +37,11 @@ public sealed record GoalForecastDto(
     string? NeedsData = null,
     string? DataFrom = null,
     string? Sources = null,
-    string? Model = null);
+    string? Model = null,
+    string? DueOn = null,
+    string? ReachOn = null,
+    string? ReadyOn = null,
+    IReadOnlyList<StepDto>? Steps = null);
 
 /// <summary>One essential workbook row, against the log.</summary>
 /// <param name="Row">The sheet row, for "see row 7".</param>
@@ -290,8 +298,11 @@ internal static class GoalReports
                 Citations.NebFitnessGoals.Id);
             var line = GateOutlook.Line(requirement, months, frame.Context);
             var made = Provenance(line, definition.Metric, frame, runLog, today);
+            LocalDate? On(double? ahead) => ahead is { } m ? today.PlusDays((int)Math.Round(m * 30.4375)) : null;
             forecast = new GoalForecastDto(line.Probability, line.Projected, line.Method, line.Evidence, line.HoursToReach,
-                Iso(made.Through), made.Needs, Iso(made.From), made.Sources, made.Model);
+                Iso(made.Through), made.Needs, Iso(made.From), made.Sources, made.Model,
+                Iso(On(months)), Iso(On(line.ReachMonths)), Iso(On(line.ReadyInMonths)),
+                line.Steps?.Select(s => new StepDto(s.Label, s.Expression, s.Value, s.CitationId)).ToArray());
         }
 
         return (new GoalRowDto(
@@ -334,8 +345,11 @@ internal static class GoalReports
         return new GoalSectionDto(name, test, now, goal, max, note, rows);
     }
 
-    /// <summary>A reading older than this no longer moves a trend forward.</summary>
+    /// <summary>A reading older than this is too old to forecast from without a warning.</summary>
     internal const int TrendStaleAfterDays = 120;
+
+    /// <summary>A weigh-in older than this no longer says where a cut stands.</summary>
+    internal const int WeighInStaleAfterDays = 14;
 
     /// <summary>The runs in the log: their first and last dates and where they came from.</summary>
     internal sealed record RunLog(LocalDate? First, LocalDate? Last, IReadOnlyList<string> Sources);
@@ -346,17 +360,15 @@ internal static class GoalReports
     internal const string TrajectoryModel =
         "Banister impulse-response training model (Banister 1975, Busso 2003) fitted to your runs by nonlinear least squares (Seber and Wild 1989), turned into times by Daniels and Gilbert VDOT (1979)";
 
-    internal const string TrendModel =
-        "Ordinary least-squares straight line through your dated readings, with its prediction interval";
-
     /// <summary>
     /// How a forecast was made. A trajectory line reads every run in the
     /// log, starts from the VDOT anchor, and fits its rate to the months of
     /// easy runs. It needs a time trial when the anchor is missing or past
     /// <see cref="Highlights.AnchorStaleAfterDays"/> days, and more months
     /// while fewer than <see cref="ModelFit.MinimumObservations"/> fitted it.
-    /// A trend line needs a reading newer than <see cref="TrendStaleAfterDays"/>
-    /// days. A line with no trend needs the readings that make one.
+    /// A lift needs a set newer than <see cref="TrendStaleAfterDays"/> days. A
+    /// body line reads the weigh-ins since the weight plan began, and body
+    /// fat needs a reading taken since then.
     /// </summary>
     internal static Made Provenance(
         LineOutlook line, string metric, OutlookReports.Frame frame, RunLog runs, LocalDate today)
@@ -400,22 +412,43 @@ internal static class GoalReports
                         : null);
             }
 
-            case OutlookMethod.Trend:
-                // The year the line was drawn through, not the whole log.
-                if (history is { Count: > 0 })
+            case OutlookMethod.Plan:
+            {
+                var plan = frame.Context.WeightPlan!;
+                var weighIns = (frame.Readings.Histories.GetValueOrDefault(SelectionReadiness.Metrics.BodyweightLb) ?? [])
+                    .Where(w => w.Date >= plan.StartedOn).ToArray();
+                LocalDate? from = weighIns.Length > 0 ? weighIns.Min(w => w.Date) : null;
+                LocalDate? through = weighIns.Length > 0 ? weighIns.Max(w => w.Date) : null;
+                var sources = Text($"your weight plan from {plan.StartedOn:yyyy-MM-dd} on the Plan tab, and {ReadinessReports.Sources.WeighIn}");
+
+                if (metric == SelectionReadiness.Metrics.BodyFat)
                 {
-                    var latest = history.Max(h => h.Date);
-                    first = history.Where(h => h.Date > latest.PlusDays(-GateOutlook.TrendWindowDays)).Min(h => h.Date);
+                    var reading = GateOutlook.LatestFat(frame.Context);
+                    return new Made(reading?.Date ?? from, through, sources, BodyFatForecast.Model,
+                        reading is { } fat && fat.Date < plan.StartedOn
+                            ? Text($"a body fat reading taken since the plan began, because the newest is from {fat.Date:yyyy-MM-dd}")
+                            : null);
                 }
 
-                return new Made(first, last, current?.Source, TrendModel,
-                    last is { } newest && Period.Between(newest, today, PeriodUnits.Days).Days is var stale && stale > TrendStaleAfterDays
-                        ? Text($"a new reading, because the newest is {stale} days old")
-                        : null);
+                return new Made(from, through, sources, WeightForecast.Model,
+                    weighIns.Length < 2 || Period.Between(from!.Value, through!.Value, PeriodUnits.Days).Days < WeightForecast.MinimumSpanDays
+                        ? Text($"two weigh-ins {WeightForecast.MinimumSpanDays} days apart since the plan began, to measure your own rate")
+                        : through is { } newest && Period.Between(newest, today, PeriodUnits.Days).Days is var stale && stale > WeighInStaleAfterDays
+                            ? Text($"a new weigh-in, because the newest is {stale} days old")
+                            : null);
+            }
 
             default:
                 return new Made(first, last, current?.Source, null,
-                    Text($"{GateOutlook.MinimumTrendPoints} dated readings over {GateOutlook.MinimumTrendSpanDays} days to make a trend; the log has {history?.Count ?? 0}"));
+                    line.Method == OutlookMethod.Held
+                        ? null
+                        : metric is SelectionReadiness.Metrics.BodyweightLb or SelectionReadiness.Metrics.BodyFat
+                            ? frame.Context.WeightPlan is null
+                                ? "a weight plan on the Plan tab: its start date and pounds a week"
+                                : metric == SelectionReadiness.Metrics.BodyFat
+                                    ? "a body fat reading, entered with a weigh-in on the Log tab"
+                                    : "a weigh-in since the plan began"
+                            : "a model for this event; none is built yet");
         }
     }
 

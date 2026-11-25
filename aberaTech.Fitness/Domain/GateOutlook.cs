@@ -12,13 +12,13 @@ public static class OutlookMethod
     /// <summary>The Banister trajectory with its fitted covariance, through VDOT.</summary>
     public const string Trajectory = "trajectory";
 
-    /// <summary>A straight line through the metric's own dated history.</summary>
-    public const string Trend = "trend";
+    /// <summary>Bodyweight or body fat, from the stated weight plan and the weigh-ins since it began.</summary>
+    public const string Plan = "plan";
 
-    /// <summary>Today's lift carried forward at the trained-lifter rate.</summary>
+    /// <summary>Today's lift carried forward at the rate lifters of his level gain.</summary>
     public const string Progression = "progression";
 
-    /// <summary>Passing now, with too little history to project.</summary>
+    /// <summary>Passing now, with no model to project it.</summary>
     public const string Held = "held";
 
     /// <summary>Nothing to forecast from.</summary>
@@ -31,6 +31,8 @@ public static class OutlookMethod
 /// <param name="ReadyInMonths">When the chance first reaches <see cref="GateOutlook.ReadyProbability"/>; null when it never does within the horizon.</param>
 /// <param name="HoursToReach">Weekly running hours whose central trajectory clears the line by the date; trajectory lines only.</param>
 /// <param name="Target">The standard this line was asked against: its own gate's, not the first gate that shares the metric.</param>
+/// <param name="ReachMonths">When the central projection first reaches the target; null when no method could say or it never does.</param>
+/// <param name="Steps">The arithmetic, line by line, for the methods that can show it.</param>
 public sealed record LineOutlook(
     string Metric,
     string Label,
@@ -42,7 +44,9 @@ public sealed record LineOutlook(
     double? HoursToReach,
     double Target,
     string Unit,
-    Comparison Comparison);
+    Comparison Comparison,
+    double? ReachMonths = null,
+    IReadOnlyList<CalculationStep>? Steps = null);
 
 /// <summary>Everything a forecast of a goal is made from.</summary>
 /// <param name="P">The athlete's trajectory.</param>
@@ -53,6 +57,7 @@ public sealed record LineOutlook(
 /// <param name="BodyKg">For the load-carriage model.</param>
 /// <param name="Current">What the log says today, by metric.</param>
 /// <param name="Histories">Dated readings by metric, for the metrics no trajectory covers.</param>
+/// <param name="WeightPlan">The weight change the athlete has stated; null when the profile names none.</param>
 public sealed record OutlookContext(
     TrajectoryParameters P,
     FitResult Fit,
@@ -62,7 +67,8 @@ public sealed record OutlookContext(
     double? BodyKg,
     IReadOnlyDictionary<string, Measurement> Current,
     IReadOnlyDictionary<string, IReadOnlyList<DatedValue>> Histories,
-    LocalDate Today);
+    LocalDate Today,
+    WeightPlan? WeightPlan = null);
 
 /// <summary>
 /// Turns the selection gates from a scoreboard into a forecast: for every
@@ -74,12 +80,17 @@ public sealed record OutlookContext(
 /// runs, the rucks read through the load-carriage model, the pace at the
 /// aerobic threshold) are all functions of VDOT, so each is turned into the
 /// VDOT that clears it and asked of the Banister trajectory, whose fitted
-/// covariance gives the probability (<see cref="Forecast"/>). The rest
-/// (reps, lifts, body fat, the fitness test) have no dose-response model
-/// here. A barbell lift is carried forward from today's max at the rate
-/// trained lifters gain (<see cref="StrengthProgression"/>). The rest are
-/// projected along a straight line through the last year of their own dated
-/// history, with the prediction interval of that regression as the spread.
+/// covariance gives the probability (<see cref="Forecast"/>). A barbell
+/// lift is carried forward from today's max at the rate lifters of his
+/// level gain (<see cref="StrengthProgression"/>). Bodyweight and body fat
+/// follow the weight plan he stated and the weigh-ins since it began
+/// (<see cref="WeightForecast"/>, <see cref="BodyFatForecast"/>).
+///
+/// The rest (reps, holds, sprints, carries) have no model here and get no
+/// forecast. Until 2026-11-24 they were projected along a straight line
+/// through their dated history. That line gave his bodyweight a 14% chance
+/// of 165 lb three weeks into a cut, and projected his push-ups at −1 rep.
+/// A line through readings knows nothing of a plan, a ceiling, or zero.
 ///
 /// A gate's probability is the product of its lines', which treats them as
 /// independent. They are not, because a stronger athlete is stronger everywhere.
@@ -94,19 +105,10 @@ public static class GateOutlook
     /// <summary>The chance at which a line counts as ready.</summary>
     public const double ReadyProbability = 0.80;
 
-    /// <summary>A trend needs this many dated readings…</summary>
-    public const int MinimumTrendPoints = 3;
-
-    /// <summary>…spanning at least this long, or it is a couple of days, not a trend.</summary>
-    public const int MinimumTrendSpanDays = 42;
-
-    /// <summary>A trend reads only the readings of the last year before its newest one.</summary>
-    public const int TrendWindowDays = 365;
-
     /// <summary>When the workbook names no year, every goal is asked about this far out.</summary>
     public const double DefaultHorizonMonths = 12;
 
-    /// <summary>How far ahead a trend is searched for its ready date.</summary>
+    /// <summary>How far ahead a line is searched for its ready date.</summary>
     public const double TrendHorizonMonths = 36;
 
     private const double DaysPerMonth = 30.4375;
@@ -125,25 +127,123 @@ public static class GateOutlook
             return ByProgression(requirement, lift, months, context);
         }
 
-        if (context.Histories.TryGetValue(requirement.Metric, out var history)
-            && TrendAt(history, context.Today.PlusDays((int)Math.Round(months * DaysPerMonth))) is { } trend)
+        if (requirement.Metric is SelectionReadiness.Metrics.BodyweightLb or SelectionReadiness.Metrics.BodyFat)
         {
-            return ByTrend(requirement, history, trend, months, context);
+            return ByPlan(requirement, months, context);
         }
 
         var passing = context.Current.TryGetValue(requirement.Metric, out var current)
                       && Passes(requirement, current.Value);
-        var count = context.Histories.TryGetValue(requirement.Metric, out var some) ? some.Count : 0;
-        var need = $"{MinimumTrendPoints} dated readings over {MinimumTrendSpanDays} days make a trend; the log has {count}";
 
         return passing
             ? new LineOutlook(requirement.Metric, requirement.Label, null, OutlookMethod.Held,
-                $"Clear today, held rather than forecast: {need}.", current!.Value, null, null,
+                "Clear today, held and not forecast: this event has no model.", current!.Value, null, null,
                 requirement.Target, requirement.Unit, requirement.Comparison)
             : new LineOutlook(requirement.Metric, requirement.Label, null, OutlookMethod.None,
-                $"Nothing to project from: {need}.", null, null, null,
+                NoModel, null, null, null,
                 requirement.Target, requirement.Unit, requirement.Comparison);
     }
+
+    /// <summary>What a line with no model says in place of a forecast.</summary>
+    public const string NoModel =
+        "No forecast: this event has no model here yet. Readings are not joined by a straight line.";
+
+    /// <summary>What a body line says when the profile names no weight plan.</summary>
+    public const string NoPlan =
+        "No forecast: the profile names no weight plan. Enter its start date and pounds a week on the Plan tab.";
+
+    private static LineOutlook ByPlan(Requirement requirement, double months, OutlookContext context)
+    {
+        LineOutlook Blank(string why) => new(requirement.Metric, requirement.Label, null, OutlookMethod.None,
+            why, null, null, null, requirement.Target, requirement.Unit, requirement.Comparison);
+
+        if (context.WeightPlan is not { } plan) return Blank(NoPlan);
+
+        var weighIns = context.Histories.GetValueOrDefault(SelectionReadiness.Metrics.BodyweightLb) ?? [];
+        if (WeightForecast.Fit(plan, weighIns) is not { } state)
+        {
+            return Blank(Text($"No forecast: no weigh-in since the plan began on {WeightForecast.Day(plan.StartedOn)}."));
+        }
+
+        var due = context.Today.PlusDays((int)Math.Round(months * DaysPerMonth));
+        var isWeight = requirement.Metric == SelectionReadiness.Metrics.BodyweightLb;
+        var goalWeight = isWeight ? requirement.Target : plan.GoalLb;
+        var weight = WeightForecast.At(state, goalWeight, due);
+
+        if (isWeight)
+        {
+            var chance = WeightForecast.ChanceReached(state, goalWeight, due);
+            var reach = WeightForecast.ReachOn(state, goalWeight);
+            double? ready = null;
+            for (var m = 0.0; m <= TrendHorizonMonths; m += 0.25)
+            {
+                if (WeightForecast.ChanceReached(state, goalWeight, context.Today.PlusDays((int)Math.Round(m * DaysPerMonth))) >= ReadyProbability)
+                {
+                    ready = m;
+                    break;
+                }
+            }
+
+            var evidence = Text(
+                $"From {state.LevelLb:0.0} lb on {WeightForecast.Day(state.LevelOn)} at {state.RateLbPerWeek:0.00} ± {state.RateSd:0.00} lb a week: ")
+                + (reach is { } on
+                    ? Text($"{goalWeight:0.#} lb on about {WeightForecast.Day(on)}, then held. ")
+                    : "the rate is not a loss, so the goal is not reached. ")
+                + "Holding the goal is your plan and is not forecast.";
+
+            return new LineOutlook(requirement.Metric, requirement.Label, chance, OutlookMethod.Plan, evidence, weight.Projected, ready, null,
+                requirement.Target, requirement.Unit, requirement.Comparison,
+                reach is { } day ? MonthsFrom(context.Today, day) : null,
+                WeightForecast.Explain(plan, state, goalWeight, due, weight, chance));
+        }
+
+        if (LatestFat(context) is not { } reading)
+        {
+            return Blank("No forecast: the log holds no body fat reading. Enter one with a weigh-in on the Log tab.");
+        }
+
+        var fat = BodyFatForecast.At(reading, weight);
+        var fatChance = TrendProbability(requirement, fat);
+
+        // Body fat falls only while the weight does, so it is reached when
+        // the weight that gives it is, or not by this plan.
+        double? fatReach = null;
+        for (var m = 0.0; m <= TrendHorizonMonths; m += 0.25)
+        {
+            var then = WeightForecast.At(state, goalWeight, context.Today.PlusDays((int)Math.Round(m * DaysPerMonth)));
+            if (BodyFatForecast.At(reading, then.Projected) <= requirement.Target)
+            {
+                fatReach = m;
+                break;
+            }
+        }
+
+        var floor = BodyFatForecast.At(reading, Math.Min(goalWeight, state.LevelLb));
+        var fatEvidence = Text(
+            $"From {reading.Percent:0.#}% at {reading.WeightLb:0.0} lb on {WeightForecast.Day(reading.Date)}: {BodyFatForecast.At(reading, weight.Projected):0.0}% at {weight.Projected:0.0} lb. ")
+            + (floor > requirement.Target
+                ? Text($"The plan stops at {goalWeight:0.#} lb, which gives {floor:0.0}%. {requirement.Target:0.#}% there needs {(floor - requirement.Target) / 100 * goalWeight:0.0} lb more fat lost at the same weight. ")
+                : "")
+            + "The forecast moves point for point with the reading it starts from.";
+
+        return new LineOutlook(requirement.Metric, requirement.Label, fatChance, OutlookMethod.Plan, fatEvidence, fat.Projected, null, null,
+            requirement.Target, requirement.Unit, requirement.Comparison,
+            fatReach,
+            BodyFatForecast.Explain(reading, weight, fat, due, requirement.Target, fatChance));
+    }
+
+    /// <summary>The newest body fat reading, with the weight logged the same day.</summary>
+    internal static BodyFatReading? LatestFat(OutlookContext context)
+    {
+        if (!context.Histories.TryGetValue(SelectionReadiness.Metrics.BodyFat, out var fats) || fats.Count == 0) return null;
+        var latest = fats.MaxBy(f => f.Date)!;
+        var weights = context.Histories.GetValueOrDefault(SelectionReadiness.Metrics.BodyweightLb) ?? [];
+        var weight = weights.LastOrDefault(w => w.Date == latest.Date);
+        return weight is null ? null : new BodyFatReading(latest.Date, latest.Value, weight.Value);
+    }
+
+    private static double MonthsFrom(LocalDate today, LocalDate day) =>
+        Math.Max(0, Period.Between(today, day, PeriodUnits.Days).Days) / DaysPerMonth;
 
     /// <summary>The VDOT that clears a running line, or null when the line is not a running one.</summary>
     internal static double? TargetVdot(Requirement requirement, OutlookContext context)
@@ -259,87 +359,18 @@ public static class GateOutlook
 
         var evidence = StrengthProgression.Explain(current.Value, best, at, requirement.Unit, SelectionReadiness.Describe);
         return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Progression, evidence, at.Projected, ready, null,
-            requirement.Target, requirement.Unit, requirement.Comparison);
+            requirement.Target, requirement.Unit, requirement.Comparison,
+            StrengthProgression.MonthsToReach(current.Value, best, requirement.Target),
+            StrengthProgression.Steps(current.Value, best, requirement.Target, months, age, at, probability, requirement.Unit, SelectionReadiness.Describe));
     }
 
-    private static LineOutlook ByTrend(
-        Requirement requirement, IReadOnlyList<DatedValue> history, (double Projected, double Sd) trend, double months, OutlookContext context)
-    {
-        var probability = TrendProbability(requirement, trend);
-
-        double? ready = null;
-        for (var m = 0.0; m <= TrendHorizonMonths; m += 0.25)
-        {
-            var at = TrendAt(history, context.Today.PlusDays((int)Math.Round(m * DaysPerMonth)));
-            if (at is { } point && TrendProbability(requirement, point) >= ReadyProbability)
-            {
-                ready = m;
-                break;
-            }
-        }
-
-        // The readings the line was drawn through, not every one in the log.
-        var last = history.Max(h => h.Date);
-        var used = history.Where(h => h.Date > last.PlusDays(-TrendWindowDays)).ToArray();
-        var first = used.Min(h => h.Date);
-        var evidence = Text(
-            $"Straight line through {used.Length} readings from {first:yyyy-MM-dd} to {last:yyyy-MM-dd} projects {SelectionReadiness.Describe(requirement.Unit, trend.Projected)} ± {SelectionReadiness.Describe(requirement.Unit, trend.Sd)} at the date.");
-
-        return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Trend, evidence, trend.Projected, ready, null,
-            requirement.Target, requirement.Unit, requirement.Comparison);
-    }
-
+    /// <summary>The chance a normal projection clears the line.</summary>
     private static double TrendProbability(Requirement requirement, (double Projected, double Sd) trend)
     {
         var margin = requirement.Comparison == Comparison.AtLeast
             ? trend.Projected - requirement.Target
             : requirement.Target - trend.Projected;
         return trend.Sd <= 0 ? (margin >= 0 ? 1 : 0) : Linear.NormalCdf(margin / trend.Sd);
-    }
-
-    /// <summary>
-    /// Ordinary least squares through the readings, evaluated at a date, with
-    /// the prediction-interval spread: residual scatter, widened by how far
-    /// the date sits from the readings' center. Null when there is no trend
-    /// to speak of. Readings more than a year older than the newest are left
-    /// out: on 2026-11-21 the bodyweight line ran through weigh-ins from 2017.
-    /// </summary>
-    internal static (double Projected, double Sd)? TrendAt(IReadOnlyList<DatedValue> history, LocalDate at)
-    {
-        if (history.Count == 0) return null;
-        var newest = history.Max(h => h.Date);
-        var points = history
-            .Where(h => h.Date > newest.PlusDays(-TrendWindowDays))
-            .GroupBy(h => h.Date)
-            .Select(g => g.OrderByDescending(h => h.Value).First())
-            .OrderBy(h => h.Date)
-            .ToArray();
-        if (points.Length < MinimumTrendPoints) return null;
-
-        var origin = points[0].Date;
-        var span = Period.Between(origin, points[^1].Date, PeriodUnits.Days).Days;
-        if (span < MinimumTrendSpanDays) return null;
-
-        var xs = points.Select(p => (double)Period.Between(origin, p.Date, PeriodUnits.Days).Days).ToArray();
-        var ys = points.Select(p => p.Value).ToArray();
-        var n = xs.Length;
-        var xBar = xs.Average();
-        var yBar = ys.Average();
-        var sxx = xs.Sum(x => (x - xBar) * (x - xBar));
-        var slope = xs.Zip(ys, (x, y) => (x - xBar) * (y - yBar)).Sum() / sxx;
-        var intercept = yBar - slope * xBar;
-
-        var residual = xs.Zip(ys, (x, y) => y - (intercept + slope * x)).Sum(e => e * e);
-        var sd = Math.Sqrt(residual / Math.Max(1, n - 2));
-
-        // A perfectly straight history has no measured scatter; a floor keeps
-        // the interval from collapsing to a point nobody believes.
-        var floor = 0.02 * Math.Max(Math.Abs(yBar), 1e-9);
-        sd = Math.Max(sd, floor);
-
-        var x = (double)Period.Between(origin, at, PeriodUnits.Days).Days;
-        var widen = Math.Sqrt(1 + 1.0 / n + (x - xBar) * (x - xBar) / sxx);
-        return (intercept + slope * x, sd * widen);
     }
 
     private static bool Passes(Requirement requirement, double value) =>

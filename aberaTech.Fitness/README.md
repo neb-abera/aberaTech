@@ -42,6 +42,17 @@ sourced predictions out.
   triple, and the fitness test from the tables the Army published. Every line
   says whether its number was measured or modeled, and every line that the
   log cannot score is listed rather than dropped.
+- **Forecasts each goal from where he is**: a run from the VDOT
+  trajectory, a lift from today's max at 12% ± 6 in the first year
+  (`StrengthProgression`), bodyweight and body fat from the weight plan on
+  the Plan tab and the weigh-ins since it began (`WeightForecast`), and
+  pace at the AeT heart rate from the latest drift test at the 3.2 to 4.0%
+  in 8 weeks a training study measured (`AerobicOutlook`). No forecast is a
+  straight line through past readings. Until 2026-11-24 three were: they
+  gave a 14% chance of 165 lb three weeks into a cut, −1 push-ups, and a
+  13:00 mile at AeT in 8 weeks. An event with no model gets no forecast.
+  Each forecast carries its due date, the date the goal is reached, and
+  its arithmetic line by line.
 - **Reads the pack**: a ruck's load is parsed from the activity name
   ("Ruck 45lb", "12 mi @ 20 kg") or typed per ruck on the page, kept in
   kilograms and shown in both units. Rucks are trended as pace at the
@@ -49,8 +60,7 @@ sourced predictions out.
   the run VDOT it implies.
 - **Scores the AFT**: five raw results in, points per event and the combat
   standard out, on the athlete's age band, from the 1 June 2025 tables
-  transcribed row for row. Body fat and lean mass are placed against the
-  selection cohort's published quartile rates.
+  transcribed row for row.
 - **Cites**: every model carries a discipline-matched citation (Daniels,
   Banister/Busso, Seiler, San-Millán & Brooks, Johnston/Kuenzle/Paikowski,
   Cureton & Sparling, Rønnestad & Mujika, Gabbett, Coggan, Epley, Brzycki,

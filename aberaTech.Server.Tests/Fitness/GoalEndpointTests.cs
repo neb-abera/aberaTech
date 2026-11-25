@@ -377,9 +377,13 @@ public sealed class GoalEndpointTests : IDisposable
         var running = Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trajectory").ToArray();
         Assert.All(running, f => Assert.DoesNotContain("time trial", f.GetProperty("needsData").GetString() ?? ""));
 
-        var bare = Forecasts(goals).Where(f => f.GetProperty("method").GetString() is "none" or "held").ToArray();
+        var bare = Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "none").ToArray();
         Assert.NotEmpty(bare);
-        Assert.All(bare, f => Assert.StartsWith("3 dated readings over 42 days to make a trend; the log has ", f.GetProperty("needsData").GetString()));
+        Assert.All(bare, f => Assert.Contains(f.GetProperty("needsData").GetString(), new[]
+        {
+            "a model for this event; none is built yet",
+            "a weight plan on the Plan tab: its start date and pounds a week",
+        }));
     }
 
     [Fact]
@@ -412,8 +416,9 @@ public sealed class GoalEndpointTests : IDisposable
         Assert.Contains("the VDOT typed into your profile on ", trajectory.GetProperty("sources").GetString());
         Assert.True(LocalDatePattern(trajectory.GetProperty("dataFrom").GetString()!) <= LocalDatePattern(trajectory.GetProperty("dataThrough").GetString()!));
 
-        Assert.All(Forecasts(goals).Where(f => f.GetProperty("method").GetString() == "trend"),
-            f => Assert.StartsWith("Ordinary least-squares straight line", f.GetProperty("model").GetString()));
+        // No forecast is a straight line through past readings.
+        Assert.DoesNotContain(Forecasts(goals), f => f.GetProperty("method").GetString() == "trend");
+        Assert.DoesNotContain(Forecasts(goals), f => (f.GetProperty("model").GetString() ?? "").Contains("straight line"));
     }
 
     private static LocalDate LocalDatePattern(string text) =>

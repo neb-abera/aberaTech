@@ -41,6 +41,9 @@ export interface SettingsDto {
   treadmillGradePercent?: number | null;
   /** yyyy-mm-dd: the first day treadmill runs were at that incline. */
   treadmillGradeSince?: string | null;
+  /** The first day of the stated weight plan, and its loss in kilograms a week. */
+  weightPlanStartedOn?: string | null;
+  weightPlanKgPerWeek?: number | null;
   /** The race the anchor VDOT was scored from, when one was given. */
   anchorDistanceMeters?: number | null;
   anchorSeconds?: number | null;
@@ -112,6 +115,8 @@ export interface SettingsUpdate {
   ltHr: number | null;
   treadmillGradePercent: number | null;
   treadmillGradeSince: string | null;
+  weightPlanStartedOn: string | null;
+  weightPlanKgPerWeek: number | null;
 }
 
 export interface AerobicPoint {
@@ -149,12 +154,18 @@ export interface ThresholdSuggestion {
 /** The short-term AeT pace forecast, or what it still needs. */
 export interface AerobicOutlook {
   ready: boolean;
-  qualifyingWeeks: number;
-  weeksNeeded: number;
-  runsPerWeek: number;
   referenceHr: number;
+  /** The drift test the outlook starts from, at its flat pace. */
+  anchor: {
+    date: string;
+    secPerKm: number;
+    averageHr: number;
+    gradePercent: number;
+    indoor: boolean;
+  } | null;
+  /** What the outlook is waiting for, when it is not ready. */
+  needs: string | null;
   weeks: { weekStart: string; medianSecPerKm: number; runs: number }[];
-  slopeSecPerKmPerWeek: number | null;
   ahead: {
     weeksAhead: number;
     secPerKm: number;
@@ -1071,7 +1082,7 @@ export interface GoalSource {
 export interface GoalForecast {
   probability: number | null;
   projected: number | null;
-  method: "trajectory" | "progression" | "trend" | "held" | "none";
+  method: "trajectory" | "progression" | "plan" | "held" | "none";
   evidence: string;
   hoursToReach: number | null;
   /** The date of the newest reading the forecast was made from. */
@@ -1084,6 +1095,14 @@ export interface GoalForecast {
   sources?: string | null;
   /** The model that made the forecast, with its authors and years. */
   model?: string | null;
+  /** The date the forecast was asked about. */
+  dueOn?: string | null;
+  /** The date the central projection first reaches the goal. */
+  reachOn?: string | null;
+  /** The date the chance of the goal first reaches 80%. */
+  readyOn?: string | null;
+  /** The arithmetic, line by line. */
+  steps?: Step[] | null;
 }
 
 /** One essential workbook row, against the log. */

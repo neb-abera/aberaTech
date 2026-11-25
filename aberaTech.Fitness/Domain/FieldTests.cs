@@ -13,7 +13,8 @@ public sealed record FieldTestRun(
     int? AverageHr,
     bool? Indoor,
     IReadOnlyList<LoggedLap> Laps,
-    RecordingHalves? Halves = null);
+    RecordingHalves? Halves = null,
+    double GradePercent = 0);
 
 /// <summary>The recording's settled time split in two: each half's average heart rate and speed.</summary>
 /// <param name="Seconds">How much of the recording the halves cover, when it is less than all of it.</param>
@@ -22,7 +23,8 @@ public sealed record RecordingHalves(
 
 /// <summary>A field test the log turned out to contain.</summary>
 /// <param name="Kind">aet or threshold.</param>
-/// <param name="SecPerKm">The pace held, over the part of the run that is the measurement.</param>
+/// <param name="SecPerKm">The pace held, over the part of the run that is the measurement. A drift test on an incline gives the flat pace of the same cost.</param>
+/// <param name="GradePercent">The treadmill incline the test was run at; 0 outdoors.</param>
 /// <param name="AverageHr">The heart rate held, likewise.</param>
 /// <param name="DriftPercent">Pace-to-heart-rate decoupling between the halves, when laps allowed it.</param>
 /// <param name="Evidence">How it was recognized and what it showed, in one sentence.</param>
@@ -34,7 +36,8 @@ public sealed record FieldTest(
     int AverageHr,
     double? DriftPercent,
     bool Indoor,
-    string Evidence);
+    string Evidence,
+    double GradePercent = 0);
 
 /// <summary>What the latest tests say the profile's thresholds should be.</summary>
 /// <param name="AetHr">A new aerobic-threshold heart rate, or null to leave it.</param>
@@ -126,6 +129,12 @@ public static class FieldTests
             .ToArray();
     }
 
+    /// <summary>The newest drift test that held inside the 5% line, when it is recent enough to stand on.</summary>
+    public static FieldTest? LatestAet(IReadOnlyList<FieldTest> tests, LocalDate today) =>
+        tests.LastOrDefault(t => t.Kind == AetKind
+                                 && t.Date >= today.PlusDays(-SuggestionWindowDays)
+                                 && t.DriftPercent is <= DriftLimit);
+
     public static FieldTest? AsAetTest(FieldTestRun run, HeartRateBands bands)
     {
         if (run.DistanceMeters is not > 0 || run.Seconds < MinimumAetSeconds) return null;
@@ -154,7 +163,13 @@ public static class FieldTests
 
         // The heart rate held is the settled time's, when that is what was read.
         var hr = settled is null ? recorded : (int)Math.Round((run.Halves!.FirstHr + run.Halves.SecondHr) / 2);
-        var pace = run.Seconds / (run.DistanceMeters.Value / 1000.0);
+        // An incline costs more than the belt speed shows. The goal is a
+        // flat pace, so the test is read as the flat run of the same cost.
+        // On 2026-11-24 his test at 4.5 mph and 2% stood as 13:18 a mile
+        // against a goal written for the flat.
+        var belt = run.Seconds / (run.DistanceMeters.Value / 1000.0);
+        var grade = indoor ? run.GradePercent : 0;
+        var pace = run.Seconds / (TreadmillGrade.FlatEquivalentMeters(run.DistanceMeters.Value, grade) / 1000.0);
         var how = indoor
             ? "Named as a heart-rate drift test, indoors (drift is the heart-rate rise at a fixed belt speed)"
             : "Named as a heart-rate drift test, outdoors (drift is pace-to-heart-rate decoupling)";
@@ -165,9 +180,12 @@ public static class FieldTests
             _ => $"drift {drift:0.0%} {readFrom}, past the 5% line: {hr} bpm is above your AeT"
         };
 
+        var held = grade > 0
+            ? $"{Format.Pace(belt)}/km on the belt at {grade:0.#}%, which is {Format.Pace(pace)}/km flat,"
+            : $"{Format.Pace(pace)}/km";
         return new FieldTest(
             AetKind, run.ActivityId, run.Date, pace, hr, drift, run.Indoor == true,
-            $"{how}; {Format.Pace(pace)}/km at {hr} bpm over {run.Seconds / 60:0} min; {verdict}.");
+            $"{how}; {held} at {hr} bpm over {run.Seconds / 60:0} min; {verdict}.", grade);
     }
 
     public static FieldTest? AsThresholdTest(FieldTestRun run, HeartRateBands bands, double vdot)

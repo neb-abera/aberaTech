@@ -17,7 +17,7 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124220000_HalvesSeconds";
+    public override string LastMigrationId => "20261125010000_WeightPlan";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -216,6 +216,12 @@ partial class FitnessDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("date");
 
                 b.Property<LocalDate?>("VdotMeasuredOn")
+                    .HasColumnType("date");
+
+                b.Property<double?>("WeightPlanKgPerWeek")
+                    .HasColumnType("double precision");
+
+                b.Property<LocalDate?>("WeightPlanStartedOn")
                     .HasColumnType("date");
 
                 b.HasKey("Id");
