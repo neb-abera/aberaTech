@@ -275,7 +275,7 @@ describe("GoalsPanel", () => {
       reachOn: null,
     };
     expect(reachLine({ ...base, met: false }, forecast)).toBe(
-      "At this rate the projection does not reach 1:10:54. The arithmetic below shows what it reaches.",
+      "The average curve does not reach 1:10:54 within 10 years. It is the mean of many people, and it sets no ceiling on you. The arithmetic below shows the rate assumed.",
     );
     expect(reachLine({ ...base, met: true }, forecast)).toBe(
       "You hold 1:10:54 today.",

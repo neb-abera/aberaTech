@@ -344,24 +344,51 @@ public static class GateOutlook
             : null;
         var age = current.On is { } on ? Math.Max(0, Period.Between(on, context.Today, PeriodUnits.Days).Days) / DaysPerMonth : 0;
 
-        var at = StrengthProgression.At(current.Value, best, months, age);
+        var entry = LifterEntry(requirement, context.BodyKg);
+        var at = StrengthProgression.At(current.Value, best, months, age, entry);
         var probability = TrendProbability(requirement, at);
 
         double? ready = null;
         for (var m = 0.0; m <= TrendHorizonMonths; m += 0.25)
         {
-            if (TrendProbability(requirement, StrengthProgression.At(current.Value, best, m, age)) >= ReadyProbability)
+            if (TrendProbability(requirement, StrengthProgression.At(current.Value, best, m, age, entry)) >= ReadyProbability)
             {
                 ready = m;
                 break;
             }
         }
 
-        var evidence = StrengthProgression.Explain(current.Value, best, at, requirement.Unit, SelectionReadiness.Describe);
+        var evidence = StrengthProgression.Explain(current.Value, best, at, requirement.Unit, SelectionReadiness.Describe, entry);
         return new LineOutlook(requirement.Metric, requirement.Label, probability, OutlookMethod.Progression, evidence, at.Projected, ready, null,
             requirement.Target, requirement.Unit, requirement.Comparison,
-            StrengthProgression.MonthsToReach(current.Value, best, requirement.Target),
-            StrengthProgression.Steps(current.Value, best, requirement.Target, months, age, at, probability, requirement.Unit, SelectionReadiness.Describe));
+            StrengthProgression.MonthsToReach(current.Value, best, requirement.Target, entry),
+            StrengthProgression.Steps(current.Value, best, requirement.Target, months, age, at, probability, requirement.Unit, SelectionReadiness.Describe, entry));
+    }
+
+    /// <summary>
+    /// The level competing lifters start at, in the line's own unit: the
+    /// table's one-rep max over bodyweight, turned into pounds where the
+    /// line is in pounds and into a rep max by Epley where the line is one.
+    /// Null for a lift the table does not cover, or without a bodyweight.
+    /// </summary>
+    internal static double? LifterEntry(Requirement requirement, double? bodyKg)
+    {
+        (double Ratio, int Reps, bool Pounds)? line = requirement.Metric switch
+        {
+            SelectionReadiness.Metrics.BackSquatLb => (StrengthProgression.SquatEntry, 1, true),
+            SelectionReadiness.Metrics.BackSquatFiveLb => (StrengthProgression.SquatEntry, 5, true),
+            SelectionReadiness.Metrics.BenchPressLb => (StrengthProgression.BenchEntry, 1, true),
+            SelectionReadiness.Metrics.BenchPressToBodyweight => (StrengthProgression.BenchEntry, 1, false),
+            SelectionReadiness.Metrics.DeadliftTripleLb => (StrengthProgression.DeadliftEntry, 3, true),
+            SelectionReadiness.Metrics.DeadliftTripleToBodyweight => (StrengthProgression.DeadliftEntry, 3, false),
+            _ => null
+        };
+        if (line is not { } found) return null;
+
+        // Epley: a set of n reps is a one-rep max over 1 + n ÷ 30.
+        var ratio = found.Reps == 1 ? found.Ratio : found.Ratio / (1 + found.Reps / 30.0);
+        if (!found.Pounds) return ratio;
+        return bodyKg is { } kg ? ratio * kg * BodyMass.PoundsPerKg : null;
     }
 
     /// <summary>The chance a normal projection clears the line.</summary>

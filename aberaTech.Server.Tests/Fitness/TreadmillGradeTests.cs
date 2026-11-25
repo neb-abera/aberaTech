@@ -46,6 +46,14 @@ public sealed class TreadmillGradeTests
         Assert.Equal(0, TreadmillGrade.For(true, since, "Back to 0%", 1, since));
         Assert.Equal(0, TreadmillGrade.For(false, since, "Hill 4%", 1, since));
         Assert.Equal(0, TreadmillGrade.For(true, since, "Easy", null, null));
+
+        // A drift test is run at the protocol's 2%, whatever the standing
+        // setting says. His test of 2026-11-23 was read at his 1%.
+        Assert.Equal(2, TreadmillGrade.For(true, since, "HR drift test", 1, since));
+        Assert.Equal(2, TreadmillGrade.For(true, since.PlusDays(-30), "Heart rate drift test", null, null));
+        Assert.Equal(3, TreadmillGrade.For(true, since, "HR drift test 3%", 1, since));
+        Assert.Equal(0, TreadmillGrade.For(true, since, "HR drift test 0%", 1, since));
+        Assert.Equal(0, TreadmillGrade.For(false, since, "HR drift test", 1, since));
     }
 
     [Fact]

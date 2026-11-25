@@ -43,8 +43,9 @@ sourced predictions out.
   says whether its number was measured or modeled, and every line that the
   log cannot score is listed rather than dropped.
 - **Forecasts each goal from where he is**: a run from the VDOT
-  trajectory, a lift from today's max at 12% ± 6 in the first year
-  (`StrengthProgression`), bodyweight and body fat from the weight plan on
+  trajectory, a lift from today's max (`StrengthProgression`: 40% ± 10 in
+  the first year below the level competing lifters start at, 12% ± 6 from
+  it), bodyweight and body fat from the weight plan on
   the Plan tab and the weigh-ins since it began (`WeightForecast`), and
   pace at the AeT heart rate from the latest drift test at the 3.2 to 4.0%
   in 8 weeks a training study measured (`AerobicOutlook`). No forecast is a

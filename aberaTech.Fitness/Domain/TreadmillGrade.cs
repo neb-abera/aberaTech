@@ -28,6 +28,13 @@ public static partial class TreadmillGrade
     /// <summary>The steepest grade the setting or a title may give, in percent.</summary>
     public const double MaxPercent = 15;
 
+    /// <summary>
+    /// The incline a heart-rate drift test is run at on a treadmill. Evoke's
+    /// protocol sets it ("Runners should do this running on a 2% grade",
+    /// Scott Johnston, 26 Oct 2022), and the Plan tab prescribes it.
+    /// </summary>
+    public const double DriftTestPercent = 2;
+
     /// <summary>The ACSM equation's vertical cost over its horizontal cost: 0.9 / 0.2.</summary>
     public const double CostRatio = 0.9 / 0.2;
 
@@ -51,14 +58,21 @@ public static partial class TreadmillGrade
     }
 
     /// <summary>
-    /// The grade a run was set to: the title's when it names one, else the
-    /// standing setting from its start date on, else 0. An outdoor run has no
-    /// treadmill grade.
+    /// The grade a run was set to: the title's when it names one, else 2% for
+    /// a run named as a heart-rate drift test, else the standing setting from
+    /// its start date on, else 0. An outdoor run has no treadmill grade.
     /// </summary>
+    /// <remarks>
+    /// A drift test is run at the protocol's grade, whatever his easy runs
+    /// are set to. On 2026-11-24 his test of 23 Nov, run at 4.5 mph and 2%,
+    /// was read at the 1% of his standing setting: 12:43 a mile flat where
+    /// 2% gives 12:14. He had said 2% when he logged it.
+    /// </remarks>
     public static double For(bool indoor, LocalDate date, string? title, double? settingPercent, LocalDate? since)
     {
         if (!indoor) return 0;
         if (FromTitle(title) is { } titled) return titled;
+        if (FieldTests.IsDriftTestName(title)) return DriftTestPercent;
         if (settingPercent is { } percent && since is { } start && date >= start) return percent;
         return 0;
     }
