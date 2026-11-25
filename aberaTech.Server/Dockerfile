@@ -24,7 +24,7 @@ FROM rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fe
 # Base stage for .NET runtime
 # Chiseled: distroless-style, no shell, no package manager, non-root by
 # default - and none of the ~30 unfixable distro CVEs the full image carries.
-FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled@sha256:fc0ee12f9ea79bde6cda88c7a34e5467fe383dbb62276be0ec13e5e9cc1654ac AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled@sha256:045ba65412b8edcc2f70a779163bf4353d450f72535a0dddf6188d6d945bfaef AS base
 ARG IN_DOCKER
 ENV IN_DOCKER=$IN_DOCKER
 
