@@ -106,7 +106,9 @@ export default function TreadmillGradeCard({
           run at and the day you started. The Aerobic base trend and the model
           then read each of those runs at the flat pace that costs the same
           (ACSM running equation: pace ÷ (1 + 4.5 × grade)). A grade in a run's
-          title, such as "2%" or "0%", overrides this for that run.
+          title, such as "2%" or "0%", overrides this for that run. A run named
+          as an HR drift test reads at 2%, the grade the test is run at, unless
+          its title names another.
         </Typography>
         {example && (
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>

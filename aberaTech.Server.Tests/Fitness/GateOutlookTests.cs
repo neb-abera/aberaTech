@@ -159,13 +159,94 @@ public sealed class GateOutlookTests
         // The arithmetic names the rate needed and the rate assumed.
         var steps = line.Steps!;
         Assert.Contains(steps, s => s.Label == "Back to your best");
-        Assert.Contains(steps, s => s.Label == "Needed" && s.Value == "against 12% ± 6%");
+        Assert.Contains(steps, s => s.Label == "Needed" && s.Value == "17.9% past your best");
+        Assert.Contains(steps, s => s.Label == "A lifter's gain");
         Assert.Contains(steps, s => s.Label == "Chance by the date");
 
         // A goal inside reach is likely, and ready on a stated month.
         var near = GateOutlook.Line(Line(bench, Comparison.AtLeast, 215, "lb"), 13.3, context);
         Assert.True(near.Probability > 0.8);
         Assert.NotNull(near.ReadyInMonths);
+    }
+
+    [Fact]
+    public void A_squat_below_where_lifters_start_gains_as_a_beginner_and_reaches_315()
+    {
+        // His squat on 2026-11-24: 193 lb from 165 × 5, best logged 221 lb,
+        // at 170 lb bodyweight. On the lifters' curve alone the page said
+        // 315 lb was not reached in ten years.
+        var today = new LocalDate(2026, 11, 24);
+        var squat = SelectionReadiness.Metrics.BackSquatLb;
+        IReadOnlyList<DatedValue> history = [new(new(2026, 4, 10), 221), new(new(2026, 11, 23), 193)];
+        var current = new Dictionary<string, Measurement>
+        {
+            [squat] = new(squat, 193, Basis.Modeled, "", new LocalDate(2026, 11, 23), "Hevy")
+        };
+        var context = Context(current: current, histories: new Dictionary<string, IReadOnlyList<DatedValue>> { [squat] = history })
+            with { Today = today, BodyKg = 170 / BodyMass.PoundsPerKg };
+        var goal = Line(squat, Comparison.AtLeast, 315, "lb");
+
+        // Competing lifters start at 1.75 × bodyweight: 297.5 lb at 170 lb.
+        Assert.Equal(297.5, GateOutlook.LifterEntry(goal, context.BodyKg)!.Value, precision: 6);
+
+        var line = GateOutlook.Line(goal, 13.2, context);
+
+        // 221 lb back in 8 weeks. 40% a year takes it to 297.5 lb in 10.4
+        // months, and 12% a year from there gives 300 lb on the date.
+        Assert.InRange(line.Projected!.Value, 298, 303);
+        Assert.InRange(line.Probability!.Value, 0.15, 0.35);
+
+        // The central projection reaches 315 lb in mid 2028.
+        Assert.NotNull(line.ReachMonths);
+        Assert.InRange(line.ReachMonths!.Value, 16, 21);
+
+        Assert.Contains("as a beginner gains, up to the 298 lb", line.Evidence);
+        Assert.Contains(line.Steps!, s => s.Label == "Where competing lifters start");
+        Assert.Contains(line.Steps!, s => s.Label == "Below it, a beginner's gain");
+        Assert.Contains(line.Steps!, s => s.Label == "From it, a lifter's gain");
+
+        // Without the table, the lifters' curve alone never gets there: the defect.
+        Assert.Null(StrengthProgression.MonthsToReach(193, 221, 315));
+        Assert.NotNull(StrengthProgression.MonthsToReach(193, 221, 315, 297.5));
+    }
+
+    [Fact]
+    public void The_lifters_entry_level_is_read_in_each_lines_own_unit()
+    {
+        double? Entry(string metric, string unit) => GateOutlook.LifterEntry(Line(metric, Comparison.AtLeast, 1, unit), 170 / BodyMass.PoundsPerKg);
+
+        Assert.Equal(1.19 * 170, Entry(SelectionReadiness.Metrics.BenchPressLb, "lb")!.Value, precision: 6);
+        Assert.Equal(1.19, Entry(SelectionReadiness.Metrics.BenchPressToBodyweight, "xbw")!.Value, precision: 6);
+
+        // A triple is a one-rep max over 1.1, and five reps over 1 + 5 ÷ 30 (Epley).
+        Assert.Equal(2.03 * 170 / 1.1, Entry(SelectionReadiness.Metrics.DeadliftTripleLb, "lb")!.Value, precision: 6);
+        Assert.Equal(1.75 * 170 / (1 + 5 / 30.0), Entry(SelectionReadiness.Metrics.BackSquatFiveLb, "lb")!.Value, precision: 6);
+
+        // No table for the front squat, and no pounds without a bodyweight.
+        Assert.Null(Entry(SelectionReadiness.Metrics.FrontSquatLb, "lb"));
+        Assert.Null(GateOutlook.LifterEntry(Line(SelectionReadiness.Metrics.BackSquatLb, Comparison.AtLeast, 315, "lb"), null));
+    }
+
+    [Fact]
+    public void A_beginners_curve_hands_over_to_a_lifters_at_the_entry_level()
+    {
+        // Below the line: 40% of the start in a year.
+        Assert.Equal(200 * 1.2, StrengthProgression.At(200, null, 6, 0, 400).Projected, precision: 6);
+        Assert.Equal(200 * 1.4, StrengthProgression.At(200, null, 12, 0, 400).Projected, precision: 6);
+
+        // It slows after a year: 55% at six years.
+        Assert.Equal(200 * 1.55, StrengthProgression.At(200, null, 72, 0, 400).Projected, precision: 6);
+
+        // The line is crossed at 240 lb after 6 months, and the lifter's year runs from there.
+        Assert.Equal(240, StrengthProgression.At(200, null, 6, 0, 240).Projected, precision: 6);
+        Assert.Equal(240 * 1.12, StrengthProgression.At(200, null, 18, 0, 240).Projected, precision: 6);
+
+        // At or past the line the beginner's curve never applies.
+        Assert.Equal(StrengthProgression.At(200, null, 12, 0), StrengthProgression.At(200, null, 12, 0, 200));
+        Assert.Equal(StrengthProgression.At(200, null, 12, 0), StrengthProgression.At(200, null, 12, 0, 150));
+
+        // The beginner's rate is the less certain one.
+        Assert.True(StrengthProgression.At(200, null, 12, 0, 400).Sd > StrengthProgression.At(200, null, 12, 0).Sd);
     }
 
     [Fact]

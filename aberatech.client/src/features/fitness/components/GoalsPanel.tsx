@@ -173,7 +173,7 @@ export function reachLine(row: GoalRow, forecast: GoalForecast): string | null {
   if (!forecast.reachOn) {
     return forecast.method === "trajectory"
       ? null
-      : `At this rate the projection does not reach ${goal}. The arithmetic below shows what it reaches.`;
+      : `The average curve does not reach ${goal} within 10 years. It is the mean of many people, and it sets no ceiling on you. The arithmetic below shows the rate assumed.`;
   }
   const ready =
     forecast.readyOn && forecast.readyOn !== forecast.reachOn

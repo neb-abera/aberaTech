@@ -114,6 +114,9 @@ public static class FieldTests
         @"\b(maf[- ]test|aet[- ]test|aerobic[- ]threshold[- ]test|(hr|heart[- ]rate)[- ]drift([- ]test)?|drift[- ]test)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
+    /// <summary>Whether a run is named as a heart-rate drift test.</summary>
+    public static bool IsDriftTestName(string? name) => !string.IsNullOrWhiteSpace(name) && AetName.IsMatch(name);
+
     private static readonly Regex ThresholdName = new(
         @"\b(lthr|lactate[- ]threshold[- ]test|lt[- ]test|threshold[- ]test|time[- ]trial|tt|30[- ]?min(ute)?[- ]test)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);

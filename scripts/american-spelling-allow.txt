@@ -43,3 +43,4 @@ aberaTech.Server.Tests/Calendar/BookingSyncTests.cs	"cancelled	Google Calendar e
 aberaTech.Server.Tests/Scheduling/BookingCalendarSyncTests.cs	\.Cancelled	stored column Appointment.Cancelled and enum value NotificationKind.Cancelled
 aberaTech.Fitness/Domain/Citations.cs	longitudinal growth modelling approach	title of Latella 2024, as published in Sports Med
 aberaTech.Fitness/Domain/Citations.cs	VTT Technical Research Centre of Finland	name of the institute
+aberaTech.Fitness/Domain/Citations.cs	retrospective longitudinal growth modelling	title of Steele 2023, as published in Res Q Exerc Sport

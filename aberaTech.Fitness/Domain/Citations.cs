@@ -280,6 +280,22 @@ public static class Citations
         2024,
         "https://pubmed.ncbi.nlm.nih.gov/38060089/");
 
+    public static readonly Citation SteeleBeginners = new(
+        "steele-beginners",
+        "Adults training once a week gained about 30 to 50% in strength over their first year, and 50 to 60% of where they started after six. By one to two years the gain had nearly flattened. Leg press gained fastest and chest press slowest.",
+        "James Steele, James Fisher, and colleagues, from the training records of 14,690 members of a Dutch gym chain.",
+        "Long-term time-course of strength adaptation to minimal dose resistance training through retrospective longitudinal growth modelling (Res Q Exerc Sport 94(4):913-930)",
+        2023,
+        "https://doi.org/10.1080/02701367.2022.2070592");
+
+    public static readonly Citation VanDenHoekNorms = new(
+        "van-den-hoek-norms",
+        "Among drug-tested, unequipped male powerlifters aged 18 to 35, the 10th percentile lifts 1.75 times bodyweight in the squat, 1.19 in the bench press, and 2.03 in the deadlift. The median lifts 2.28, 1.56, and 2.63, and the 90th percentile 2.83, 1.96, and 3.25.",
+        "Daniel van den Hoek and colleagues, from 809,986 competition entries.",
+        "Normative data for the squat, bench press and deadlift exercises in powerlifting: data from 809,986 competition entries (J Sci Med Sport 27(10):734-742)",
+        2024,
+        "https://doi.org/10.1016/j.jsams.2024.07.005");
+
     public static readonly Citation SchumannConcurrent = new(
         "schumann-concurrent",
         "Adding aerobic training to strength training did not reduce maximal strength: standardized mean difference −0.06 (95% CI −0.20 to 0.09) across 43 studies. Explosive strength fell, −0.28.",
@@ -355,6 +371,7 @@ public static class Citations
         EvokeSfasReady, MtiGrip, NebFitnessGoals, UphillAthleteHrDrift, FrielLthr,
         MaffetoneMaf, FosterMonotony, FbiPft, AcsmRunningEquation, JonesDoustTreadmillGrade,
         LatellaStrength, LatellaTimeCourse, SchumannConcurrent, MurphyDeficit, StrengthRetraining, ReynoldsRepMax,
-        ThomasWeightLoss, HeymsfieldWeightLoss, HelanderWeighIns, FestaThresholdSpeed
+        ThomasWeightLoss, HeymsfieldWeightLoss, HelanderWeighIns, FestaThresholdSpeed,
+        SteeleBeginners, VanDenHoekNorms
     ];
 }
