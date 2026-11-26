@@ -170,7 +170,10 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
             ["id", "label", "hour", "minute", "days", "enabled", "snoozeMinutes", "updatedAt", "steps"],
             routine.EnumerateObject().Select(field => field.Name));
         var steps = routine.GetProperty("steps").EnumerateArray().ToList();
-        Assert.All(steps, step => Assert.Equal(["id", "label", "offsetMinutes"], step.EnumerateObject().Select(field => field.Name)));
+        Assert.All(steps, step => Assert.Equal(
+            ["id", "label", "offsetMinutes", "everyDays", "startsOn"], step.EnumerateObject().Select(field => field.Name)));
+        Assert.All(steps, step => Assert.Equal(1, step.GetProperty("everyDays").GetInt32()));
+        Assert.All(steps, step => Assert.Equal(JsonValueKind.Null, step.GetProperty("startsOn").ValueKind));
         Assert.Equal([Meds, Beauty], steps.Select(step => step.GetProperty("id").GetGuid()));
         Assert.Equal(["Take medication", "Beauty care routine"], steps.Select(step => step.GetProperty("label").GetString()));
         Assert.Equal([5, 5], steps.Select(step => step.GetProperty("offsetMinutes").GetInt32()));
@@ -264,6 +267,10 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
         ["[{\"label\":\"a\",\"offsetMinutes\":-1}]", "steps[0].offsetMinutes"],
         ["[{\"label\":\"a\",\"offsetMinutes\":1441}]", "steps[0].offsetMinutes"],
         ["[{\"label\":\"a\"}]", "steps[0].offsetMinutes"],
+        ["[{\"label\":\"a\",\"offsetMinutes\":1,\"everyDays\":0}]", "steps[0].everyDays"],
+        ["[{\"label\":\"a\",\"offsetMinutes\":1,\"everyDays\":366,\"startsOn\":\"2026-10-28\"}]", "steps[0].everyDays"],
+        ["[{\"label\":\"a\",\"offsetMinutes\":1,\"everyDays\":2}]", "steps[0].startsOn"],
+        ["[{\"label\":\"a\",\"offsetMinutes\":1,\"everyDays\":2,\"startsOn\":\"28 Oct\"}]", "steps[0].startsOn"],
     ];
 
     [Theory]
@@ -317,6 +324,99 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
         Assert.Equal(
             (Noon + Duration.FromMinutes(5) + Duration.FromHours(3)).ToDateTimeOffset(),
             rings[1].GetProperty("startsAt").GetDateTimeOffset());
+    }
+
+    // ------------------------------------------------------------------ steps every N days
+
+    private static readonly Guid Wash = Guid.Parse("5a1e0000-0000-4000-8000-000000000011");
+    private static readonly Guid Tretinoin = Guid.Parse("5a1e0000-0000-4000-8000-000000000012");
+    private static readonly Guid Serum = Guid.Parse("5a1e0000-0000-4000-8000-000000000013");
+    private static readonly Guid Murad = Guid.Parse("5a1e0000-0000-4000-8000-000000000014");
+
+    /// <summary>
+    /// Neb's night routine as one alarm, asked for on 2026-11-26: tretinoin
+    /// 24 minutes after washing on one night, night serum 3 minutes after on
+    /// the next, then the moisturizer.
+    /// </summary>
+    private static readonly string Night =
+        $"[{{\"id\":\"{Wash}\",\"label\":\"Wash face\",\"offsetMinutes\":1}}," +
+        $"{{\"id\":\"{Tretinoin}\",\"label\":\"Tretinoin\",\"offsetMinutes\":24,\"everyDays\":2,\"startsOn\":\"2026-10-28\"}}," +
+        $"{{\"id\":\"{Serum}\",\"label\":\"Night serum\",\"offsetMinutes\":3,\"everyDays\":2,\"startsOn\":\"2026-10-29\"}}," +
+        $"{{\"id\":\"{Murad}\",\"label\":\"Moisturizer\",\"offsetMinutes\":3}}]";
+
+    [Fact]
+    public async Task A_step_every_other_day_rings_on_its_days_and_a_day_it_skips_takes_no_time()
+    {
+        using var phone = await PhoneAsync();
+        _clock.Now = Noon - Duration.FromMinutes(30);
+        await CreateAsync(phone, steps: Night);
+
+        async Task<List<(string?, Instant)>> StepsBefore(Instant until) =>
+        [
+            .. (await RingsIn(phone))
+                .Where(ring => ring.GetProperty("stepId").ValueKind != JsonValueKind.Null)
+                .Select(ring => (ring.GetProperty("label").GetString(), Instant.FromDateTimeOffset(ring.GetProperty("alertAt").GetDateTimeOffset())))
+                .Where(step => step.Item2 < until),
+        ];
+
+        Assert.Equal(
+            [("Wash face", Noon + Duration.FromMinutes(1)),
+             ("Tretinoin", Noon + Duration.FromMinutes(25)),
+             ("Moisturizer", Noon + Duration.FromMinutes(28))],
+            await StepsBefore(Noon + Duration.FromHours(2)));
+
+        var thursday = Noon + Duration.FromDays(1);
+        _clock.Now = thursday - Duration.FromMinutes(30);
+        Assert.Equal(
+            [("Wash face", thursday + Duration.FromMinutes(1)),
+             ("Night serum", thursday + Duration.FromMinutes(4)),
+             ("Moisturizer", thursday + Duration.FromMinutes(7))],
+            (await StepsBefore(thursday + Duration.FromHours(2))).Where(step => step.Item2 >= thursday));
+    }
+
+    [Fact]
+    public async Task A_step_every_other_day_reads_back_its_days_and_first_day()
+    {
+        using var phone = await PhoneAsync();
+        _clock.Now = Noon - Duration.FromMinutes(30);
+        await CreateAsync(phone, steps: Night);
+
+        var steps = (await phone.GetFromJsonAsync<JsonElement>("/api/alerts/status"))
+            .GetProperty("routines")[0].GetProperty("steps").EnumerateArray().ToList();
+
+        Assert.Equal([1, 2, 2, 1], steps.Select(step => step.GetProperty("everyDays").GetInt32()));
+        Assert.Equal(
+            [null, "2026-10-28", "2026-10-29", null],
+            steps.Select(step => step.GetProperty("startsOn").ValueKind == JsonValueKind.Null ? null : step.GetProperty("startsOn").GetString()));
+    }
+
+    [Fact]
+    public async Task A_step_counts_its_days_back_before_its_first_day_too()
+    {
+        using var phone = await PhoneAsync();
+        _clock.Now = Noon - Duration.FromMinutes(30);
+        // First day Friday 30 October: Wednesday 28 October is two days before it.
+        var id = await CreateAsync(phone,
+            steps: $"[{{\"id\":\"{Tretinoin}\",\"label\":\"Tretinoin\",\"offsetMinutes\":5,\"everyDays\":2,\"startsOn\":\"2026-10-30\"}}]");
+
+        Assert.Contains(Key(id, "2026-10-28T12:00", Tretinoin), (await RingsIn(phone)).Select(ring => ring.GetProperty("key").GetString()));
+        _clock.Now = Noon + Duration.FromDays(1) - Duration.FromMinutes(30);
+        var thursday = (await RingsIn(phone)).Select(ring => ring.GetProperty("key").GetString()).ToList();
+        Assert.Contains(Key(id, "2026-10-29T12:00"), thursday);
+        Assert.DoesNotContain(Key(id, "2026-10-29T12:00", Tretinoin), thursday);
+    }
+
+    [Fact]
+    public async Task Checking_off_a_step_in_a_cycle_it_does_not_ring_in_is_400()
+    {
+        using var phone = await PhoneAsync();
+        _clock.Now = Noon - Duration.FromMinutes(30);
+        var id = await CreateAsync(phone, steps: Night);
+
+        using var response = await Send(phone, "PUT", CompletionPath(id, Serum, "2026-10-28T12:00"), "{}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(await _store.CompletionsAsync(Instant.MinValue, CancellationToken.None));
     }
 
     [Fact]

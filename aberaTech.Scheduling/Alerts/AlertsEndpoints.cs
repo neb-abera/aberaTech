@@ -626,7 +626,15 @@ public static class AlertsEndpoints
 
             var key = RoutineRings.StepKey(id, cycle, stepId);
             var ringing = (await RoutineRings.RingingAsync(store, devices, settings, now, cancellationToken)).Any(ring => ring.Key == key);
-            var minutes = AlertRoutines.Offsets(routine).Single(pair => pair.Step.Id == stepId).Minutes;
+            var offset = AlertRoutines.Offsets(routine, cycle).FirstOrDefault(pair => pair.Step.Id == stepId);
+            if (offset.Step is null)
+            {
+                return Results.Problem(
+                    detail: "This step does not ring in that cycle.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var minutes = offset.Minutes;
             await store.SaveCompletionAsync(
                 new RoutineCompletion(
                     Guid.NewGuid(), id, stepId, cycle, routine.Label, step.Label, cycleAt, cycleAt + Duration.FromMinutes(minutes),
@@ -1269,6 +1277,13 @@ public static class AlertsEndpoints
         var skipped = await store.SkippedAsync(cancellationToken);
         var chosen = await store.EventTypesAsync(cancellationToken);
         var acknowledged = await store.AcknowledgementsAsync(cancellationToken);
+        // A delay of up to RoutineDelays.Longest moves a cycle from before the
+        // two listed days into them. Its delay, completions, and outcome are
+        // listed while its moved ring is, so the phone keeps them.
+        var delays = (await store.DelaysAsync(now - RoutineCompletions.ListedFor - RoutineDelays.Longest, cancellationToken))
+            .Where(delay => delay.CycleAt + delay.Shift >= now - RoutineCompletions.ListedFor)
+            .ToList();
+        var delayed = delays.Select(delay => (delay.RoutineId, delay.Cycle)).ToHashSet();
 
         return new AlertsState(
             Configured: true,
@@ -1360,7 +1375,9 @@ public static class AlertsEndpoints
             Rules: settings.Rules,
             RoutineCompletions:
             [
-                .. (await store.CompletionsAsync(now - RoutineCompletions.ListedFor, cancellationToken))
+                .. (await store.CompletionsAsync(now - RoutineCompletions.ListedFor - RoutineDelays.Longest, cancellationToken))
+                    .Where(completion => completion.CycleAt >= now - RoutineCompletions.ListedFor
+                                         || delayed.Contains((completion.RoutineId, completion.Cycle)))
                     .Select(completion => new RoutineCompletionView(
                         completion.RoutineId,
                         completion.StepId,
@@ -1372,13 +1389,15 @@ public static class AlertsEndpoints
             ],
             RoutineOutcomes:
             [
-                .. (await store.OutcomesAsync(now - RoutineCompletions.ListedFor, cancellationToken))
+                .. (await store.OutcomesAsync(now - RoutineCompletions.ListedFor - RoutineDelays.Longest, cancellationToken))
+                    .Where(outcome => outcome.CycleAt >= now - RoutineCompletions.ListedFor
+                                      || delayed.Contains((outcome.RoutineId, outcome.Cycle)))
                     .Select(outcome => new RoutineOutcomeView(
                         outcome.RoutineId, outcome.Cycle, outcome.Status, outcome.At.ToDateTimeOffset(), outcome.Note))
             ],
             RoutineDelays:
             [
-                .. (await store.DelaysAsync(now - RoutineCompletions.ListedFor, cancellationToken))
+                .. delays
                     .Select(delay => new RoutineDelayView(delay.RoutineId, delay.Cycle, delay.Minutes, delay.At.ToDateTimeOffset()))
             ],
             CalendarWrite: calendarWrite);
@@ -1604,11 +1623,23 @@ public static class AlertsEndpoints
             routine.Enabled,
             routine.SnoozeMinutes,
             routine.UpdatedAt.ToDateTimeOffset(),
-            [.. routine.Steps.Select(step => new RoutineStepView(step.Id, step.Label, step.OffsetMinutes))]);
+            [
+                .. routine.Steps.Select(step => new RoutineStepView(
+                    step.Id,
+                    step.Label,
+                    step.OffsetMinutes,
+                    step.EveryDays,
+                    step.StartsOn is { } start ? NodaTime.Text.LocalDatePattern.Iso.Format(start) : null)),
+            ]);
     }
 
     /// <summary>A step as the page and the phone read it. Never its creation time.</summary>
-    public sealed record RoutineStepView(Guid Id, string Label, int OffsetMinutes);
+    /// <summary>
+    /// A step as the page and the phone read it. EveryDays 1 rings at every
+    /// ring. Above 1 it rings every that many days from StartsOn ("yyyy-MM-dd"),
+    /// and a day it does not ring takes no time.
+    /// </summary>
+    public sealed record RoutineStepView(Guid Id, string Label, int OffsetMinutes, int EveryDays, string? StartsOn);
 
     public sealed record SettingsView(
         int RepeatSeconds,

@@ -337,6 +337,7 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.HasKey(step => new { step.RoutineId, step.Id });
             entity.Property(step => step.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
             entity.HasOne<AlertRoutineRecord>().WithMany().HasForeignKey(step => step.RoutineId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(step => step.EveryDays).HasDefaultValue((short)1);
         });
 
         builder.Entity<AlertRoutineCompletionRecord>(entity =>

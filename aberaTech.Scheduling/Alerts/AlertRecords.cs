@@ -352,6 +352,12 @@ public class AlertRoutineStepRecord
 
     /// <summary>When the server first stored it. Kept across edits.</summary>
     public Instant CreatedAt { get; set; }
+
+    /// <summary>1 rings at every ring of the routine. Above 1, every that many days from StartsOn.</summary>
+    public short EveryDays { get; set; } = 1;
+
+    /// <summary>The first day it rings when EveryDays is above 1.</summary>
+    public LocalDate? StartsOn { get; set; }
 }
 
 /// <summary>
@@ -425,7 +431,7 @@ public class AlertRoutineDelayRecord
     /// <summary>The cycle's stamp, the routine's scheduled local time: 2026-11-23T07:00.</summary>
     public string Cycle { get; set; } = string.Empty;
 
-    /// <summary>1 to 720, after the planned ring.</summary>
+    /// <summary>1 to 10080 (7 days), after the planned ring.</summary>
     public int Minutes { get; set; }
 
     /// <summary>The routine's planned ring for that cycle. Retention and the windows read it.</summary>

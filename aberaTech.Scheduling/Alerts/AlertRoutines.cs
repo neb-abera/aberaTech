@@ -1,4 +1,5 @@
 using NodaTime;
+using NodaTime.Text;
 
 namespace aberaTech.Scheduling.Alerts;
 
@@ -31,10 +32,28 @@ public sealed record AlertRoutine(
 /// phone's own when the phone made it. CreatedAt is when the server first
 /// stored it, so history lists it only for cycles after that.
 /// </summary>
-public sealed record AlertRoutineStep(Guid Id, string Label, int OffsetMinutes, Instant CreatedAt);
+public sealed record AlertRoutineStep(Guid Id, string Label, int OffsetMinutes, Instant CreatedAt)
+{
+    /// <summary>1 rings at every ring of the routine. 2 rings every other day, from StartsOn.</summary>
+    public int EveryDays { get; init; } = 1;
 
-/// <summary>A step as the page and the phone send it. A missing id gets a new one.</summary>
-public sealed record RoutineStepRequest(Guid? Id, string? Label, int? OffsetMinutes);
+    /// <summary>The first day it rings when EveryDays is above 1, in the routine's zone. Null when EveryDays is 1.</summary>
+    public LocalDate? StartsOn { get; init; }
+
+    /// <summary>
+    /// True when it rings in the routine's ring on <paramref name="date"/>:
+    /// every ring, or a whole number of EveryDays from StartsOn, before or after it.
+    /// </summary>
+    public bool RingsOn(LocalDate date) =>
+        EveryDays <= 1 || StartsOn is not { } start
+        || ((Period.Between(start, date, PeriodUnits.Days).Days % EveryDays) + EveryDays) % EveryDays == 0;
+}
+
+/// <summary>
+/// A step as the page and the phone send it. A missing id gets a new one.
+/// EveryDays missing is 1. StartsOn is "yyyy-MM-dd", and needed when EveryDays is above 1.
+/// </summary>
+public sealed record RoutineStepRequest(Guid? Id, string? Label, int? OffsetMinutes, int? EveryDays = null, string? StartsOn = null);
 
 /// <summary>The bounds of a routine alarm, and the check a create or an update passes before it is stored.</summary>
 public static class AlertRoutines
@@ -58,6 +77,9 @@ public static class AlertRoutines
 
     /// <summary>One offset, and the sum of them all: a day.</summary>
     public const int MaxStepOffsetMinutes = 1440;
+
+    /// <summary>A step rings at most this many days apart.</summary>
+    public const int MaxEveryDays = 365;
 
     /// <summary>What an empty, blank or missing step label is stored as.</summary>
     public const string DefaultStepLabel = "Step";
@@ -158,10 +180,30 @@ public static class AlertRoutines
                 continue;
             }
 
+            var every = step.EveryDays ?? 1;
+            if (every is < 1 or > MaxEveryDays)
+            {
+                errors[$"steps[{index}].everyDays"] = [$"1 (every ring) to {MaxEveryDays} days."];
+                continue;
+            }
+
+            LocalDate? startsOn = null;
+            if (every > 1)
+            {
+                if (step.StartsOn is not { } text
+                    || !LocalDatePattern.Iso.Parse(text).TryGetValue(default, out var date))
+                {
+                    errors[$"steps[{index}].startsOn"] = ["The first day it rings, yyyy-MM-dd."];
+                    continue;
+                }
+
+                startsOn = date;
+            }
+
             sum += offset;
             var id = step.Id is { } sent && sent != Guid.Empty ? sent : Guid.NewGuid();
             if (!ids.Add(id)) errors["steps"] = ["Each step id once."];
-            steps.Add(new AlertRoutineStep(id, label, offset, now));
+            steps.Add(new AlertRoutineStep(id, label, offset, now) { EveryDays = every, StartsOn = startsOn });
         }
 
         if (sum > MaxStepOffsetMinutes)
@@ -187,12 +229,22 @@ public static class AlertRoutines
                 : saved.Steps,
         };
 
-    /// <summary>The minutes from the routine's own ring to each step's ring, in order.</summary>
-    public static IReadOnlyList<(AlertRoutineStep Step, int Minutes)> Offsets(AlertRoutine routine)
+    /// <summary>
+    /// The minutes from the routine's own ring to each step's ring, in order,
+    /// for its ring on <paramref name="date"/>. A step that does not ring that
+    /// day is left out and takes no time: the step after it follows the one
+    /// before it by its own offset. Neb asked on 2026-11-26 for one night
+    /// routine with tretinoin and night serum on alternate days.
+    /// </summary>
+    public static IReadOnlyList<(AlertRoutineStep Step, int Minutes)> Offsets(AlertRoutine routine, LocalDate date)
     {
         var total = 0;
-        return [.. routine.Steps.Select(step => (step, total += step.OffsetMinutes))];
+        return [.. routine.Steps.Where(step => step.RingsOn(date)).Select(step => (step, total += step.OffsetMinutes))];
     }
+
+    /// <summary>The steps of the ring with this stamp, or none when the stamp is not one.</summary>
+    public static IReadOnlyList<(AlertRoutineStep Step, int Minutes)> Offsets(AlertRoutine routine, string cycle) =>
+        RoutineRings.ParseStamp(cycle) is { } scheduled ? Offsets(routine, scheduled.Date) : [];
 
     /// <summary>The order the status lists them in: hour, minute, then label.</summary>
     public static IReadOnlyList<AlertRoutine> Sorted(IEnumerable<AlertRoutine> routines) =>

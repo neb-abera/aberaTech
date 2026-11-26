@@ -619,7 +619,14 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                 row.UpdatedAt)
             {
                 CreatedAt = row.CreatedAt,
-                Steps = [.. steps[row.Id].Select(step => new AlertRoutineStep(step.Id, step.Label, step.OffsetMinutes, step.CreatedAt))],
+                Steps =
+                [
+                    .. steps[row.Id].Select(step => new AlertRoutineStep(step.Id, step.Label, step.OffsetMinutes, step.CreatedAt)
+                    {
+                        EveryDays = step.EveryDays,
+                        StartsOn = step.StartsOn,
+                    }),
+                ],
             }));
     }
 
@@ -631,8 +638,9 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
             var step = routine.Steps[position];
             await database.Database.ExecuteSqlAsync(
                 $"""
-                 INSERT INTO "AlertRoutineSteps" ("RoutineId", "Id", "Position", "Label", "OffsetMinutes", "CreatedAt")
-                 VALUES ({routine.Id}, {step.Id}, {(short)position}, {step.Label}, {(short)step.OffsetMinutes}, {step.CreatedAt})
+                 INSERT INTO "AlertRoutineSteps" ("RoutineId", "Id", "Position", "Label", "OffsetMinutes", "CreatedAt", "EveryDays", "StartsOn")
+                 VALUES ({routine.Id}, {step.Id}, {(short)position}, {step.Label}, {(short)step.OffsetMinutes}, {step.CreatedAt},
+                         {(short)step.EveryDays}, {step.StartsOn})
                  """,
                 cancellationToken);
         }
