@@ -1012,6 +1012,14 @@ public static class AlertsEndpoints
         group.MapGet("/devices", async (IAlertDeviceStore devices, CancellationToken cancellationToken) =>
             Results.Ok((await devices.ListAsync(cancellationToken)).Select(DeviceView.From)));
 
+        // The cloud routines the site starts on the phone's clock: the zone,
+        // where it came from, each next run and the latest ones.
+        group.MapGet("/cloud-routines", async (
+            CloudRoutineClock cloud, IAlertStore store, IAlertDeviceStore devices, ICloudRoutineFireStore fires,
+            IClock clock, CancellationToken cancellationToken) =>
+            Results.Ok(await CloudRoutineStatus.ReadAsync(
+                cloud, store, devices, fires, options, clock.GetCurrentInstant(), cancellationToken)));
+
         group.MapPost("/devices", async (
             DeviceRequest request, HttpContext context, IAlertDeviceStore devices, IClock clock, CancellationToken cancellationToken) =>
         {

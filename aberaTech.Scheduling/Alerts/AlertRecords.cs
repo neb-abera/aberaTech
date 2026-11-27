@@ -492,3 +492,24 @@ public class AlertCountdownRecord
 
     public Instant UpdatedAt { get; set; }
 }
+
+/// <summary>
+/// One cloud routine run the site's clock started, or tried to. The key
+/// names the routine and its local date and time, and its row is the claim:
+/// a second claim, from a restart, another replica, or a phone that moved
+/// west into the same local minute, is refused by the database.
+/// </summary>
+public class CloudRoutineFireRecord
+{
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>The zone the run was started in.</summary>
+    public string Zone { get; set; } = string.Empty;
+
+    public Instant ClaimedAt { get; set; }
+
+    /// <summary>"claimed" until the API trigger answers, then "fired" or "failed: …".</summary>
+    public string Outcome { get; set; } = "claimed";
+
+    public Instant? CompletedAt { get; set; }
+}

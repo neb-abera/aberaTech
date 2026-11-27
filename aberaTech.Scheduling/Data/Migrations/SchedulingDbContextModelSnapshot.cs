@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126220325_RoutineStepEveryDays";
+    public override string LastMigrationId => "20261127031858_CloudRoutineFires";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -712,6 +712,35 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Position");
 
                 b.ToTable("AlertTypeRules");
+            });
+
+        modelBuilder.Entity("aberaTech.Scheduling.Alerts.CloudRoutineFireRecord", b =>
+            {
+                b.Property<string>("Key")
+                    .HasMaxLength(96)
+                    .HasColumnType("character varying(96)");
+
+                b.Property<Instant>("ClaimedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Instant?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<string>("Outcome")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
+
+                b.Property<string>("Zone")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
+
+                b.HasKey("Key");
+
+                b.HasIndex("ClaimedAt");
+
+                b.ToTable("CloudRoutineFires");
             });
 
         modelBuilder.Entity("aberaTech.Scheduling.AppAccess.AppSessionRecord", b =>

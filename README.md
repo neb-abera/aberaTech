@@ -724,6 +724,57 @@ The deploy workflow changes only the image, so these stay set across
 deploys, like the Pushover secrets. The Phones section then shows no
 missing names.
 
+### Cloud routines: started on the phone's clock
+
+The owner's Claude cloud routines run at local times, such as a morning
+brief at 05:30. A routine's own schedule holds one fixed zone, and nothing
+outside a Claude session can change it. So the site starts them.
+
+Every 30 seconds the clock reads the zone of the paired phone seen most
+recently, else the alerts' fallback zone. It starts each routine whose
+local minute has come, through the routine's API trigger, and tells the
+run the zone and the local time. One row per routine and local minute is
+the claim. A minute that comes round twice, when the phone moves west or
+the clocks go back, starts one run. A run more than 20 minutes late is
+not started.
+
+Each routine is five settings, numbered from 0. With none, the clock is
+off.
+
+| Environment variable                | Value                                                                      |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `CloudRoutines__Routines__0__Name`  | the routine's name, such as `morning-brief`                                |
+| `CloudRoutines__Routines__0__Id`    | the routine's id, `trig_...`                                               |
+| `CloudRoutines__Routines__0__Token` | the secret `cr-0-token`: the routine's API trigger token                   |
+| `CloudRoutines__Routines__0__At`    | local times: `05:30`, or a range with a step in minutes, `06:15-20:15/120` |
+| `CloudRoutines__Routines__0__Days`  | `Sun`, or `Mon,Wed,Fri`. Leave it out for every day                        |
+
+The token is made on the routine's page at claude.ai/code/routines: edit
+the routine, add an API trigger, and generate a token. It is shown once.
+It can start that routine and nothing else. A routine the site starts
+keeps no schedule of its own, or it runs twice.
+
+```bash
+az containerapp secret set -n aberatechserver-app-202412211749 \
+  -g aberatechserver-app-202412211749ResourceGroup \
+  --secrets cr-0-token=<TOKEN>
+
+az containerapp update -n aberatechserver-app-202412211749 \
+  -g aberatechserver-app-202412211749ResourceGroup \
+  --container-name aberatechserver \
+  --set-env-vars CloudRoutines__Routines__0__Name=morning-brief \
+  CloudRoutines__Routines__0__Id=<ID> \
+  CloudRoutines__Routines__0__Token=secretref:cr-0-token \
+  CloudRoutines__Routines__0__At=05:30
+```
+
+A bad value stops the start. The error names the setting and leaves
+the value out.
+
+`GET /api/alerts/cloud-routines`, for the owner alone, answers the zone,
+whether it came from the phone, each routine's next run, and the latest
+40 runs with their outcomes. It never answers an id or a token.
+
 ### Calendar alerts: settings
 
 The Settings section on `/alerts` changes these without a deploy. Save
