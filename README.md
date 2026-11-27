@@ -741,13 +741,13 @@ not started.
 Each routine is five settings, numbered from 0. With none, the clock is
 off.
 
-| Environment variable                | Value                                                                    |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| `CloudRoutines__Routines__0__Name`  | the routine's name, such as `morning-brief`                              |
-| `CloudRoutines__Routines__0__Id`    | the routine's id, `trig_...`                                             |
-| `CloudRoutines__Routines__0__Token` | the secret `cr-0-token`: the routine's API trigger token                 |
+| Environment variable                | Value                                                                      |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `CloudRoutines__Routines__0__Name`  | the routine's name, such as `morning-brief`                                |
+| `CloudRoutines__Routines__0__Id`    | the routine's id, `trig_...`                                               |
+| `CloudRoutines__Routines__0__Token` | the secret `cr-0-token`: the routine's API trigger token                   |
 | `CloudRoutines__Routines__0__At`    | local times: `05:30`, or a range with a step in minutes, `06:15-20:15/120` |
-| `CloudRoutines__Routines__0__Days`  | `Sun`, or `Mon,Wed,Fri`. Leave it out for every day                      |
+| `CloudRoutines__Routines__0__Days`  | `Sun`, or `Mon,Wed,Fri`. Leave it out for every day                        |
 
 The token is made on the routine's page at claude.ai/code/routines: edit
 the routine, add an API trigger, and generate a token. It is shown once.
