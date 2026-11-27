@@ -318,12 +318,24 @@ public class AlertRoutineRecord
 
     public short Minute { get; set; }
 
-    /// <summary>ISO weekdays, Monday 1 to Sunday 7, sorted. Empty rings once at the next hour:minute.</summary>
+    /// <summary>ISO weekdays, Monday 1 to Sunday 7, sorted. Empty with Repeat "weekdays" rings once at the next hour:minute.</summary>
     public short[] Days { get; set; } = [];
 
     public bool Enabled { get; set; } = true;
 
     public short SnoozeMinutes { get; set; } = AlertRoutines.DefaultSnoozeMinutes;
+
+    /// <summary>"weekdays" or "interval". A row from before the column reads "weekdays".</summary>
+    public string Repeat { get; set; } = RoutineRepeats.Weekdays;
+
+    /// <summary>The N of "every N": 1 to 999.</summary>
+    public int Every { get; set; } = 1;
+
+    /// <summary>minutes, hours, days, weeks, months or years.</summary>
+    public string Unit { get; set; } = RoutineRepeats.Weeks;
+
+    /// <summary>The local date the series counts from. Null for weekdays every week.</summary>
+    public LocalDate? StartsOn { get; set; }
 
     public Instant CreatedAt { get; set; }
 

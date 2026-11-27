@@ -1,6 +1,8 @@
 /**
- * Routine alarms: a time of day, the weekdays it repeats on, a label and a
- * snooze. Stored on the server, rung by a paired phone. Nothing here rings.
+ * Routine alarms: a time of day, how it repeats, a label and a snooze.
+ * It repeats on weekdays, every week or every N weeks, or every N minutes,
+ * hours, days, weeks, months or years from a start date. Stored on the
+ * server, rung by a paired phone. Nothing here rings.
  */
 
 import { changeState, type StateChangeResult } from "./api";
@@ -11,8 +13,22 @@ export interface Routine {
   /** Wall-clock time. The server never converts it. */
   hour: number;
   minute: number;
-  /** ISO weekdays, Monday 1 to Sunday 7, sorted. Empty does not repeat. */
+  /**
+   * ISO weekdays, Monday 1 to Sunday 7, sorted. Empty with repeat
+   * "weekdays" does not repeat. Always empty with repeat "interval".
+   */
   days: number[];
+  /**
+   * "weekdays": on days, every `every` weeks. "interval": every `every`
+   * units from startsOn. An older server leaves all four out, and the
+   * routine reads as weekdays every week.
+   */
+  repeat?: string;
+  /** The N of "every N": 1 to 999. */
+  every?: number;
+  unit?: string;
+  /** "yyyy-MM-dd": the date the series counts from. Null for weekdays every week. */
+  startsOn?: string | null;
   enabled: boolean;
   snoozeMinutes: number;
   updatedAt: string;
@@ -72,8 +88,29 @@ export function stepSummary(step: RoutineStep): string {
   return `${base}, every ${every} days from ${stepDay(step.startsOn)}`;
 }
 
-/** What a create or an update sends. */
-export interface RoutineFields {
+export type RoutineRepeat = "weekdays" | "interval";
+
+export type RoutineUnit =
+  | "minutes"
+  | "hours"
+  | "days"
+  | "weeks"
+  | "months"
+  | "years";
+
+/** How a routine repeats, with every field present. */
+export interface RepeatFields {
+  repeat: RoutineRepeat;
+  every: number;
+  unit: RoutineUnit;
+  startsOn: string | null;
+}
+
+/**
+ * What a create or an update sends. An update that leaves the four repeat
+ * fields out keeps the stored ones: the on and off switch sends none.
+ */
+export interface RoutineFields extends Partial<RepeatFields> {
   label: string;
   hour: number;
   minute: number;
@@ -88,7 +125,22 @@ export const routineBounds = {
   snooze: { min: 1, max: 30 },
   defaultSnooze: 9,
   max: 50,
+  every: { min: 1, max: 999 },
 } as const;
+
+/** The units of an interval, each as the select reads it for 1 and for more. */
+export const routineUnits: readonly {
+  value: RoutineUnit;
+  one: string;
+  many: string;
+}[] = [
+  { value: "minutes", one: "minute", many: "minutes" },
+  { value: "hours", one: "hour", many: "hours" },
+  { value: "days", one: "day", many: "days" },
+  { value: "weeks", one: "week", many: "weeks" },
+  { value: "months", one: "month", many: "months" },
+  { value: "years", one: "year", many: "years" },
+];
 
 /** Monday first, as ISO numbers them. */
 export const dayNames = [
@@ -115,6 +167,108 @@ export function daySummary(days: number[]): string {
   if (key === "1,2,3,4,5") return "Weekdays";
   if (key === "6,7") return "Weekends";
   return sorted.map((day) => dayNames[day - 1]).join(" ");
+}
+
+/**
+ * The four repeat fields of a routine, with the defaults for any the
+ * server left out and for a repeat or unit this page does not know.
+ */
+export function repeatOf(
+  routine: Partial<
+    Pick<Routine, "days" | "repeat" | "every" | "unit" | "startsOn">
+  >,
+): RepeatFields {
+  return {
+    repeat: routine.repeat === "interval" ? "interval" : "weekdays",
+    every: routine.every ?? 1,
+    unit:
+      routineUnits.find((unit) => unit.value === routine.unit)?.value ??
+      "weeks",
+    startsOn: routine.startsOn ?? null,
+  };
+}
+
+/**
+ * How a routine repeats, in the words the phone uses too: "No repeat",
+ * "Weekdays", "Mon Wed Fri", "Every 2 weeks on Mon Wed Fri",
+ * "Every 97 minutes", "Every hour".
+ */
+export function repeatSummary(
+  routine: Pick<Routine, "days" | "repeat" | "every" | "unit" | "startsOn">,
+): string {
+  const { repeat, every, unit } = repeatOf(routine);
+  if (repeat === "interval") {
+    const names = routineUnits.find((choice) => choice.value === unit);
+    return every === 1
+      ? `Every ${names?.one}`
+      : `Every ${every} ${names?.many}`;
+  }
+  if (every > 1 && routine.days.length > 0) {
+    const sorted = [...new Set(routine.days)].sort((a, b) => a - b);
+    return `Every ${every} weeks on ${sorted.map((day) => dayNames[day - 1]).join(" ")}`;
+  }
+  return daySummary(routine.days);
+}
+
+/** The calendar date a "yyyy-MM-dd" names, or null when it names none. */
+function parseDay(text: string | null | undefined): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text ?? "");
+  if (!match) return null;
+  const [year, month, day] = [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+  ];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCFullYear(year);
+  return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+    ? date
+    : null;
+}
+
+/**
+ * "Wed 25 Nov": a start date with its weekday, and its year when that is
+ * not `thisYear`. Empty for no date.
+ */
+export function startDay(
+  startsOn: string | null | undefined,
+  thisYear: number = new Date().getFullYear(),
+): string {
+  const date = parseDay(startsOn);
+  if (!date) return "";
+  const year = date.getUTCFullYear();
+  const text = `${dayNames[(date.getUTCDay() + 6) % 7]} ${date.getUTCDate()} ${monthNames[date.getUTCMonth()]}`;
+  return year === thisYear ? text : `${text} ${year}`;
+}
+
+/** Today on this computer's calendar, as "yyyy-MM-dd". */
+export function todayDay(now: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
+ * What the server would refuse in a repeat, by the field it names. The
+ * server checks the same rules and stays the authority.
+ */
+export function repeatErrors(
+  fields: RepeatFields & { days: number[] },
+): Record<string, string[]> {
+  const errors: Record<string, string[]> = {};
+  const { min, max } = routineBounds.every;
+  const everyOk =
+    Number.isInteger(fields.every) &&
+    fields.every >= min &&
+    fields.every <= max;
+  if (!everyOk) errors.every = [`A whole number, ${min} to ${max}.`];
+  const dated = fields.repeat === "interval" || fields.every !== 1;
+  if (fields.repeat === "weekdays" && everyOk && fields.every > 1) {
+    if (fields.days.length === 0) errors.days = ["Pick at least one day."];
+  }
+  if (dated && everyOk && !parseDay(fields.startsOn)) {
+    errors.startsOn = ["A start date."];
+  }
+  return errors;
 }
 
 /** A routine alarm's create, update or delete. */

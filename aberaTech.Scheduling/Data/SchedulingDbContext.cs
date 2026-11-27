@@ -330,6 +330,10 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             entity.Property(routine => routine.Id).ValueGeneratedNever();
             entity.Property(routine => routine.Label).HasMaxLength(Alerts.AlertRoutines.MaxLabelLength).IsRequired();
             entity.Property(routine => routine.Days).IsRequired();
+            // Defaults, so the release before these columns still inserts a routine.
+            entity.Property(routine => routine.Repeat).HasMaxLength(RoutineRepeats.MaxLength).HasDefaultValue(RoutineRepeats.Weekdays).IsRequired();
+            entity.Property(routine => routine.Every).HasDefaultValue(1);
+            entity.Property(routine => routine.Unit).HasMaxLength(RoutineRepeats.MaxLength).HasDefaultValue(RoutineRepeats.Weeks).IsRequired();
         });
 
         builder.Entity<AlertRoutineStepRecord>(entity =>

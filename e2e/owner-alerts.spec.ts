@@ -1335,6 +1335,116 @@ test.describe("/alerts", () => {
     expect(status.routines).toEqual([]);
   });
 
+  test("the owner adds an alarm every 97 minutes, then edits it to every 2 weeks on Monday and Wednesday", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await reset(page);
+    await page.reload();
+
+    // Add: every 97 minutes from 25 November 2026 at 06:30.
+    const add = page.getByRole("form", { name: "Add routine alarm" });
+    await add.getByLabel("Time").fill("06:30");
+    await add.getByRole("button", { name: "Every…", exact: true }).click();
+    await expect(
+      add.getByRole("button", { name: "Repeat on Monday" }),
+    ).toHaveCount(0);
+    await add.getByLabel("Every", { exact: true }).fill("97");
+    await add.getByRole("combobox", { name: "Unit" }).click();
+    await page.getByRole("option", { name: "minutes", exact: true }).click();
+    await add.getByLabel("Starting").fill("2026-11-25");
+    await expect(
+      add.getByText(
+        /^Repeats: Every 97 minutes, from Wed 25 Nov( 2026)? at 06:30\. It rings until you stop it\.$/,
+      ),
+    ).toBeVisible();
+    await add.getByLabel("Label").fill("E2E meds");
+    await add.getByRole("button", { name: "Add routine alarm" }).click();
+
+    const list = page.getByRole("list", { name: "Routine alarms" });
+    const item = list.getByRole("listitem").filter({ hasText: "E2E meds" });
+    await expect(item.getByText("Every 97 minutes, E2E meds")).toBeVisible();
+    await expect(item.getByText(/From Wed 25 Nov/)).toBeVisible();
+    await page.reload();
+    await expect(item.getByText("Every 97 minutes, E2E meds")).toBeVisible();
+
+    // Stored as the phone reads it.
+    let status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.routines).toHaveLength(1);
+    expect(status.routines[0]).toMatchObject({
+      label: "E2E meds",
+      hour: 6,
+      minute: 30,
+      days: [],
+      repeat: "interval",
+      every: 97,
+      unit: "minutes",
+      startsOn: "2026-11-25",
+    });
+    // Each ring's key carries that ring's own date and time.
+    const id = status.routines[0].id as string;
+    const keys = (status.routineRings as { key: string }[]).map(
+      (ring) => ring.key,
+    );
+    expect(keys.length).toBeGreaterThan(10);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const key of keys)
+      expect(key).toMatch(
+        new RegExp(`^routine:${id}:\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$`),
+      );
+
+    // Edit: the form fills from the stored fields, then every 2 weeks on Monday and Wednesday.
+    await item.getByRole("button", { name: "Edit E2E meds at 06:30" }).click();
+    const edit = page.getByRole("form", { name: "Edit routine alarm" });
+    await expect(edit.getByLabel("Every", { exact: true })).toHaveValue("97");
+    await expect(edit.getByRole("combobox", { name: "Unit" })).toHaveText(
+      "minutes",
+    );
+    await expect(edit.getByLabel("Starting")).toHaveValue("2026-11-25");
+    await edit.getByRole("button", { name: "Days of the week" }).click();
+    for (const day of ["Monday", "Wednesday"])
+      await edit.getByRole("button", { name: `Repeat on ${day}` }).click();
+    await edit.getByLabel("Every", { exact: true }).fill("2");
+    await expect(edit.getByLabel("Starting")).toHaveValue("2026-11-25");
+    await edit.getByRole("button", { name: "Save routine alarm" }).click();
+    await expect(
+      item.getByText("Every 2 weeks on Mon Wed, E2E meds"),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      item.getByText("Every 2 weeks on Mon Wed, E2E meds"),
+    ).toBeVisible();
+    status = await (await page.request.get("/api/alerts/status")).json();
+    expect(status.routines[0]).toMatchObject({
+      days: [1, 3],
+      repeat: "weekdays",
+      every: 2,
+      unit: "weeks",
+      startsOn: "2026-11-25",
+    });
+
+    // An update that leaves the four fields out keeps them, as an older phone build sends it.
+    const kept = await page.request.put(`/api/alerts/routines/${id}`, {
+      data: {
+        label: "E2E meds",
+        hour: 6,
+        minute: 30,
+        days: [1, 3],
+        enabled: false,
+        snoozeMinutes: 9,
+      },
+    });
+    expect(kept.status()).toBe(200);
+    expect((await kept.json()).routines[0]).toMatchObject({
+      enabled: false,
+      repeat: "weekdays",
+      every: 2,
+      unit: "weeks",
+      startsOn: "2026-11-25",
+    });
+    await reset(page);
+  });
+
   test("a routine's steps show under it, survive an edit on the page, and a completion reaches history", async ({
     page,
   }) => {
