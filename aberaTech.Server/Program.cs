@@ -485,6 +485,11 @@ if (builder.Environment.IsDevelopment()
 var alertsOptions = builder.Configuration.GetSection(AlertsOptions.Section).Get<AlertsOptions>()
                     ?? new AlertsOptions();
 builder.Services.AddSingleton(alertsOptions);
+var cloudRoutines = builder.Configuration.GetSection(CloudRoutinesOptions.Section).Get<CloudRoutinesOptions>()
+                    ?? new CloudRoutinesOptions();
+// A bad schedule stops the start here, naming its setting.
+cloudRoutines.Parsed();
+builder.Services.AddSingleton(cloudRoutines);
 var alertsMissing = alertsOptions.Missing(hasDatabase: !string.IsNullOrWhiteSpace(connectionString));
 var alertsEnabled = adminOptions.IsConfigured && alertsMissing.Count == 0;
 
@@ -497,6 +502,9 @@ if (alertsEnabled)
     builder.Services.AddScoped<IAlertStore, DatabaseAlertStore>();
     builder.Services.AddScoped<IAlertDeviceStore, DatabaseAlertDeviceStore>();
     builder.Services.AddCalendarAlerts();
+    // Starts the owner's Claude cloud routines on his phone's clock. Off until one is configured.
+    builder.Services.AddScoped<ICloudRoutineFireStore, DatabaseCloudRoutineFireStore>();
+    builder.Services.AddCloudRoutineClock();
     // Writes to Google Calendar go through the connection /schedule/admin stores.
     builder.Services.AddScoped<IAlertCalendarGrant, DatabaseAlertCalendarGrant>();
 

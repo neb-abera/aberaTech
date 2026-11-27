@@ -82,6 +82,8 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
 
     public DbSet<AlertRoutineDelayRecord> AlertRoutineDelays => Set<AlertRoutineDelayRecord>();
 
+    public DbSet<CloudRoutineFireRecord> CloudRoutineFires => Set<CloudRoutineFireRecord>();
+
     /// <summary>Rings of routine alarms that were ringing when the routine was edited. Kept until they stop.</summary>
     public DbSet<AlertHeldRingRecord> AlertHeldRings => Set<AlertHeldRingRecord>();
 
@@ -404,6 +406,17 @@ public class SchedulingDbContext(DbContextOptions<SchedulingDbContext> options)
             // Pushover's acknowledgment callback names the receipt alone, so
             // one delivery holds it.
             entity.HasIndex(delivery => delivery.Receipt).IsUnique();
+        });
+
+        builder.Entity<CloudRoutineFireRecord>(entity =>
+        {
+            // The key is the claim: one row per routine and local minute, ever.
+            entity.HasKey(fire => fire.Key);
+            entity.Property(fire => fire.Key).HasMaxLength(CloudRoutineSchedule.MaxKeyLength);
+            entity.Property(fire => fire.Zone).HasMaxLength(AlertDeviceZones.MaxLength).IsRequired();
+            entity.Property(fire => fire.Outcome).HasMaxLength(64).IsRequired();
+            // The status reads the newest and the clock prunes the oldest.
+            entity.HasIndex(fire => fire.ClaimedAt);
         });
 
         builder.Entity<OutboxMessage>(entity =>
