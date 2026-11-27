@@ -107,7 +107,7 @@ public static class OneTimeAlarms
         var cycle = RoutineRings.Stamp(scheduled);
         var at = planned + RoutineDelays.Shift(delays, routine.Id, cycle);
         if (outcome is null && at > now) return false;
-        return AlertRoutines.Offsets(routine).All(pair =>
+        return AlertRoutines.Offsets(routine, scheduled.Date).All(pair =>
         {
             var key = RoutineRings.StepKey(routine.Id, cycle, pair.Step.Id);
             return at + Duration.FromMinutes(pair.Minutes) + stopAfter <= now

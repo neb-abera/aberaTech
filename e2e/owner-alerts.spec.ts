@@ -1351,6 +1351,12 @@ test.describe("/alerts", () => {
         steps: [
           { id: meds, label: "Take medication", offsetMinutes: 5 },
           { label: "Beauty care routine", offsetMinutes: 5 },
+          {
+            label: "Tretinoin",
+            offsetMinutes: 24,
+            everyDays: 2,
+            startsOn: "2026-11-27",
+          },
         ],
       },
     });
@@ -1368,6 +1374,7 @@ test.describe("/alerts", () => {
     await expect(steps.getByRole("listitem")).toHaveText([
       "Take medication, 5 min after",
       "Beauty care routine, 5 min after",
+      "Tretinoin, 24 min after, every 2 days from Fri 27 Nov 2026",
     ]);
 
     // An edit on the page sends no steps, and the server keeps them.
@@ -1385,6 +1392,7 @@ test.describe("/alerts", () => {
     expect(routine.steps.map((step: { label: string }) => step.label)).toEqual([
       "Take medication",
       "Beauty care routine",
+      "Tretinoin",
     ]);
 
     // Check off the last cycle that rang, the day before the next ring,

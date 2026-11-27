@@ -240,6 +240,33 @@ public sealed class AlertRoutineDelayRouteTests : IDisposable
         Assert.Equal(At(730), rings[Key(id, "2026-10-28T12:00", Beauty)]);
     }
 
+    /// <summary>
+    /// Neb asked on 2026-11-26 to delay past three hours. A ring moved three
+    /// days rings then with its steps, and the status still lists its delay
+    /// and a step checked off in it after the two days it lists.
+    /// </summary>
+    [Fact]
+    public async Task A_three_day_delay_rings_then_with_its_steps_and_the_status_keeps_its_delay_and_check_offs()
+    {
+        using var phone = await PhoneAsync();
+        _clock.Now = Noon - Duration.FromMinutes(30);
+        var id = await CreateAsync(phone, days: "[3]");
+
+        using var response = await Send(phone, "PUT", DelayPath(id, "2026-10-28T12:00"), $"{{\"minutes\":{3 * 1440}}}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        _clock.Now = Noon + Duration.FromDays(3) - Duration.FromMinutes(30);
+
+        var rings = (await RingsIn(phone)).ToDictionary(ring => ring.GetProperty("key").GetString()!, ring => ring.GetProperty("alertAt").GetDateTimeOffset());
+        Assert.Equal(At(3 * 1440), rings[Key(id, "2026-10-28T12:00")]);
+        Assert.Equal(At(3 * 1440 + 10), rings[Key(id, "2026-10-28T12:00", Beauty)]);
+
+        using var done = await Send(phone, "PUT", $"/api/alerts/routines/{id}/steps/{Meds}/cycles/2026-10-28T12:00/completion", "{}");
+        Assert.Equal(HttpStatusCode.OK, done.StatusCode);
+        var status = await phone.GetFromJsonAsync<JsonElement>("/api/alerts/status");
+        Assert.Equal(3 * 1440, Assert.Single(status.GetProperty("routineDelays").EnumerateArray()).GetProperty("minutes").GetInt32());
+        Assert.Equal(Meds, Assert.Single(status.GetProperty("routineCompletions").EnumerateArray()).GetProperty("stepId").GetGuid());
+    }
+
     [Fact]
     public async Task Done_still_silences_the_routines_own_ring_and_the_delay_moves_its_steps()
     {
@@ -437,9 +464,9 @@ public sealed class AlertRoutineDelayRouteTests : IDisposable
     [InlineData("{\"minutes\":null}")]
     [InlineData("{\"minutes\":0}")]
     [InlineData("{\"minutes\":-5}")]
-    [InlineData("{\"minutes\":721}")]
+    [InlineData("{\"minutes\":10081}")]
     [InlineData("null")]
-    public async Task Minutes_outside_1_to_720_are_refused_under_minutes(string body)
+    public async Task Minutes_outside_1_to_10080_are_refused_under_minutes(string body)
     {
         using var phone = await PhoneAsync();
         var id = await CreateAsync(phone);
@@ -453,7 +480,7 @@ public sealed class AlertRoutineDelayRouteTests : IDisposable
 
     [Theory]
     [InlineData(1)]
-    [InlineData(720)]
+    [InlineData(10080)]
     public async Task Each_end_of_the_range_is_taken(int minutes)
     {
         using var phone = await PhoneAsync();

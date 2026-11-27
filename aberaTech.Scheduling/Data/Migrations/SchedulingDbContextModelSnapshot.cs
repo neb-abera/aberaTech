@@ -17,13 +17,13 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261123121456_RoutineDelays";
+    public override string LastMigrationId => "20261126220325_RoutineStepEveryDays";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder
-            .HasAnnotation("ProductVersion", "11.0.0-rc.3.26522.148")
+            .HasAnnotation("ProductVersion", "11.0.0")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "btree_gist");
@@ -570,6 +570,11 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.Property<Instant>("CreatedAt")
                     .HasColumnType("timestamp with time zone");
 
+                b.Property<short>("EveryDays")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("smallint")
+                    .HasDefaultValue((short)1);
+
                 b.Property<string>("Label")
                     .IsRequired()
                     .HasMaxLength(60)
@@ -580,6 +585,9 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<short>("Position")
                     .HasColumnType("smallint");
+
+                b.Property<LocalDate?>("StartsOn")
+                    .HasColumnType("date");
 
                 b.HasKey("RoutineId", "Id");
 

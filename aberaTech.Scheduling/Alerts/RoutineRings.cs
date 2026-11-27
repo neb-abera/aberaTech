@@ -128,9 +128,8 @@ public static class RoutineRings
         foreach (var routine in routines)
         {
             if (!routine.Enabled) continue;
-            var offsets = AlertRoutines.Offsets(routine);
             // A delayed cycle from before the window can ring inside it.
-            var reach = Duration.FromMinutes(offsets.Count == 0 ? 0 : offsets[^1].Minutes)
+            var reach = Duration.FromMinutes(routine.Steps.Sum(step => step.OffsetMinutes))
                         + (delays is { Count: > 0 } ? RoutineDelays.Longest : Duration.Zero);
 
             void Add(Instant at, string key, string label, Guid? stepId)
@@ -144,7 +143,7 @@ public static class RoutineRings
                 var cycle = Stamp(scheduled);
                 var at = planned + RoutineDelays.Shift(delays, routine.Id, cycle);
                 if (!RoutineOutcomes.Silences(outcomes, routine.Id, cycle, null)) Add(at, Key(routine.Id, scheduled), routine.Label, null);
-                foreach (var (step, minutes) in offsets)
+                foreach (var (step, minutes) in AlertRoutines.Offsets(routine, scheduled.Date))
                 {
                     var key = StepKey(routine.Id, cycle, step.Id);
                     if (completed?.Contains(key) == true || RoutineOutcomes.Silences(outcomes, routine.Id, cycle, step.Id)) continue;

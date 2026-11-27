@@ -26,8 +26,11 @@ public static class RoutineDelays
 {
     public const int MinMinutes = 1;
 
-    /// <summary>Twelve hours.</summary>
-    public const int MaxMinutes = 720;
+    /// <summary>
+    /// Seven days. Neb asked on 2026-11-26 to delay past three hours, with a
+    /// number and a unit. Twelve hours until then.
+    /// </summary>
+    public const int MaxMinutes = 10080;
 
     /// <summary>The longest a delay moves a ring.</summary>
     public static readonly Duration Longest = Duration.FromMinutes(MaxMinutes);
@@ -48,14 +51,14 @@ public static class RoutineDelays
     public static IEnumerable<(string Key, Instant At)> CycleRings(AlertRoutine routine, string cycle, Instant cycleAt, Duration shift)
     {
         yield return ($"{RoutineRings.KeyPrefix}{routine.Id:D}:{cycle}", cycleAt + shift);
-        foreach (var (step, minutes) in AlertRoutines.Offsets(routine))
+        foreach (var (step, minutes) in AlertRoutines.Offsets(routine, cycle))
         {
             yield return (RoutineRings.StepKey(routine.Id, cycle, step.Id), cycleAt + shift + Duration.FromMinutes(minutes));
         }
     }
 }
 
-/// <summary>The body of a delay: minutes after the planned ring, 1 to 720.</summary>
+/// <summary>The body of a delay: minutes after the planned ring, 1 to 10080 (7 days).</summary>
 public sealed record DelayRequest(int? Minutes);
 
 /// <summary>A delay as the status lists it, for cycles from two days ago on.</summary>

@@ -30,11 +30,46 @@ export interface RoutineStep {
   label: string;
   /** Minutes after the item before it: the routine's ring for the first step. */
   offsetMinutes: number;
+  /**
+   * 1 rings at every ring. Above 1, every that many days from startsOn, and
+   * a day it does not ring takes no time. An older server leaves it out.
+   */
+  everyDays?: number;
+  /** "2026-11-27": the first day it rings when everyDays is above 1. */
+  startsOn?: string | null;
 }
 
-/** "Take medication, 5 min after": a step and its offset, as the list reads it. */
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/** "Fri 27 Nov 2026" for "2026-11-27", with no time zone involved. */
+export function stepDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return `${dayNames[(weekday + 6) % 7]} ${day} ${monthNames[month - 1]} ${year}`;
+}
+
+/**
+ * "Take medication, 5 min after", and for a step on alternate days
+ * "Tretinoin, 24 min after, every 2 days from Fri 27 Nov 2026".
+ */
 export function stepSummary(step: RoutineStep): string {
-  return `${step.label}, ${step.offsetMinutes} min after`;
+  const base = `${step.label}, ${step.offsetMinutes} min after`;
+  const every = step.everyDays ?? 1;
+  if (every <= 1 || !step.startsOn) return base;
+  return `${base}, every ${every} days from ${stepDay(step.startsOn)}`;
 }
 
 /** What a create or an update sends. */

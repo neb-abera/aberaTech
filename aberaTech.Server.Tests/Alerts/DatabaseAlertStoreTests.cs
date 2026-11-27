@@ -137,7 +137,11 @@ public sealed class DatabaseAlertStoreTests : IDisposable
         var floss = Guid.NewGuid();
         var routine = Routine("Wake up", id: id) with
         {
-            Steps = [new AlertRoutineStep(meds, "Take medication", 5, Now), new AlertRoutineStep(floss, "Floss", 1440, Now)],
+            Steps =
+            [
+                new AlertRoutineStep(meds, "Take medication", 5, Now),
+                new AlertRoutineStep(floss, "Floss", 1440, Now) { EveryDays = 2, StartsOn = new LocalDate(2026, 11, 27) },
+            ],
         };
         await using (var context = Context())
         {

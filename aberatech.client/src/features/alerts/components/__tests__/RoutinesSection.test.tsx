@@ -122,6 +122,13 @@ describe("the list", () => {
         steps: [
           { id: "s1", label: "Take medication", offsetMinutes: 5 },
           { id: "s2", label: "Beauty care routine", offsetMinutes: 5 },
+          {
+            id: "s3",
+            label: "Tretinoin",
+            offsetMinutes: 24,
+            everyDays: 2,
+            startsOn: "2026-11-27",
+          },
         ],
       },
       gym,
@@ -137,6 +144,7 @@ describe("the list", () => {
     ).toEqual([
       "Take medication, 5 min after",
       "Beauty care routine, 5 min after",
+      "Tretinoin, 24 min after, every 2 days from Fri 27 Nov 2026",
     ]);
     expect(
       screen.queryByRole("list", { name: "Steps of Gym at 05:00" }),

@@ -107,7 +107,6 @@ public static class RoutineCompletions
         foreach (var routine in routines)
         {
             if (!routine.Enabled || routine.Steps.Count == 0) continue;
-            var offsets = AlertRoutines.Offsets(routine);
             foreach (var (scheduled, at) in RoutineRings.Cycles(routine, zone, from, now))
             {
                 if (at < from || at > now || at < routine.CreatedAt) continue;
@@ -115,7 +114,7 @@ public static class RoutineCompletions
                 var entry = new HistoryCycle(
                     routine.Id, routine.Label, cycle, at, acknowledged.GetValueOrDefault(RoutineRings.Key(routine.Id, scheduled)),
                     marked.GetValueOrDefault((routine.Id, cycle)));
-                foreach (var (step, minutes) in offsets)
+                foreach (var (step, minutes) in AlertRoutines.Offsets(routine, scheduled.Date))
                 {
                     var stepAt = at + Duration.FromMinutes(minutes);
                     var key = RoutineRings.StepKey(routine.Id, cycle, step.Id);
