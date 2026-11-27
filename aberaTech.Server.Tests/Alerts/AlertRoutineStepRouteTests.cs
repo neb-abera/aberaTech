@@ -167,7 +167,7 @@ public sealed class AlertRoutineStepRouteTests : IDisposable
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var routine = (await StateOf(response)).GetProperty("routines").EnumerateArray().Single();
         Assert.Equal(
-            ["id", "label", "hour", "minute", "days", "enabled", "snoozeMinutes", "updatedAt", "steps"],
+            ["id", "label", "hour", "minute", "days", "repeat", "every", "unit", "startsOn", "enabled", "snoozeMinutes", "updatedAt", "steps"],
             routine.EnumerateObject().Select(field => field.Name));
         var steps = routine.GetProperty("steps").EnumerateArray().ToList();
         Assert.All(steps, step => Assert.Equal(

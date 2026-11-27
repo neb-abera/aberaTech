@@ -510,11 +510,14 @@ public static class AlertsEndpoints
             CancellationToken cancellationToken) =>
         {
             var now = clock.GetCurrentInstant();
-            var (errors, valid) = AlertRoutines.Validate(id, request, whole: true, now);
+            // Repeat, every, unit and startsOn left out keep the stored
+            // values, as a countdown's repeat does: an older phone build
+            // sends none of them.
+            var saved = (await store.RoutinesAsync(cancellationToken)).FirstOrDefault(routine => routine.Id == id);
+            var (errors, valid) = AlertRoutines.Validate(id, request, whole: true, now, saved);
             if (valid is null) return Results.ValidationProblem(errors);
 
             // No steps in the body keeps the stored ones: the page sends none.
-            var saved = (await store.RoutinesAsync(cancellationToken)).FirstOrDefault(routine => routine.Id == id);
             if (saved is null) return Results.NotFound();
             var routine = AlertRoutines.KeepCreated(valid, saved, stepsSent: request.Steps is not null);
 
@@ -1599,9 +1602,11 @@ public static class AlertsEndpoints
 
     /// <summary>
     /// A routine alarm as the page and the phone read it. Hour and minute
-    /// are wall-clock time. Days are ISO weekdays, Monday 1, sorted, and
-    /// empty rings once. Steps ring in order, each OffsetMinutes after the
-    /// item before it.
+    /// are wall-clock time. Days are ISO weekdays, Monday 1, sorted. Repeat
+    /// is "weekdays" (on Days, every Every weeks, and empty Days rings once)
+    /// or "interval" (every Every Units from StartsOn at the hour and
+    /// minute). StartsOn is "yyyy-MM-dd", or null for weekdays every week.
+    /// Steps ring in order, each OffsetMinutes after the item before it.
     /// </summary>
     public sealed record RoutineView(
         Guid Id,
@@ -1609,6 +1614,10 @@ public static class AlertsEndpoints
         int Hour,
         int Minute,
         IReadOnlyList<int> Days,
+        string Repeat,
+        int Every,
+        string Unit,
+        string? StartsOn,
         bool Enabled,
         int SnoozeMinutes,
         DateTimeOffset UpdatedAt,
@@ -1620,6 +1629,10 @@ public static class AlertsEndpoints
             routine.Hour,
             routine.Minute,
             routine.Days,
+            routine.Repeat,
+            routine.Every,
+            routine.Unit,
+            RoutineRepeats.Format(routine.StartsOn),
             routine.Enabled,
             routine.SnoozeMinutes,
             routine.UpdatedAt.ToDateTimeOffset(),

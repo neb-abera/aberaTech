@@ -4,11 +4,15 @@ using NodaTime.Text;
 namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
-/// A routine alarm: a wall-clock time, the weekdays it repeats on, a label
-/// and a snooze. It rings on a paired phone as a phone alarm. The server
-/// stores it and never fires it, and never converts its time.
+/// A routine alarm: a wall-clock time, how it repeats, a label and a
+/// snooze. It rings on a paired phone as a phone alarm. The server stores
+/// it and never fires it, and never converts its time.
 /// </summary>
-/// <param name="Days">ISO weekdays, Monday 1 to Sunday 7, unique and sorted. Empty rings once at the next hour:minute.</param>
+/// <param name="Days">
+/// ISO weekdays, Monday 1 to Sunday 7, unique and sorted. Empty with
+/// Repeat "weekdays" rings once at the next hour:minute. Always empty with
+/// Repeat "interval".
+/// </param>
 public sealed record AlertRoutine(
     Guid Id,
     string Label,
@@ -24,6 +28,67 @@ public sealed record AlertRoutine(
 
     /// <summary>When it was first stored. History lists no cycle before it.</summary>
     public Instant CreatedAt { get; init; } = UpdatedAt;
+
+    /// <summary>"weekdays": on Days, every Every weeks. "interval": every Every Units from StartsOn.</summary>
+    public string Repeat { get; init; } = RoutineRepeats.Weekdays;
+
+    /// <summary>The N of "every N": 1 to 999.</summary>
+    public int Every { get; init; } = 1;
+
+    /// <summary>minutes, hours, days, weeks, months or years. Always weeks with Repeat "weekdays".</summary>
+    public string Unit { get; init; } = RoutineRepeats.Weeks;
+
+    /// <summary>
+    /// The local date the series counts from. Null for weekdays every week,
+    /// which counts from nothing.
+    /// </summary>
+    public LocalDate? StartsOn { get; init; }
+
+    /// <summary>It rings once and then deletes itself: weekdays with no days.</summary>
+    public bool RingsOnce => Repeat == RoutineRepeats.Weekdays && Days.Count == 0;
+
+    /// <summary>It rings again after a ring: anything that does not ring once.</summary>
+    public bool Repeats => !RingsOnce;
+}
+
+/// <summary>How a routine alarm repeats, as the page and the phone spell it.</summary>
+public static class RoutineRepeats
+{
+    public const string Weekdays = "weekdays";
+
+    public const string Interval = "interval";
+
+    public const string Minutes = "minutes";
+
+    public const string Hours = "hours";
+
+    public const string Days = "days";
+
+    public const string Weeks = "weeks";
+
+    public const string Months = "months";
+
+    public const string Years = "years";
+
+    /// <summary>The column width of Repeat and of Unit.</summary>
+    public const int MaxLength = 16;
+
+    public const int MinEvery = 1;
+
+    public const int MaxEvery = 999;
+
+    public static readonly IReadOnlyList<string> Choices = [Weekdays, Interval];
+
+    public static readonly IReadOnlyList<string> Units = [Minutes, Hours, Days, Weeks, Months, Years];
+
+    private static readonly LocalDatePattern Date = LocalDatePattern.CreateWithInvariantCulture("uuuu'-'MM'-'dd");
+
+    /// <summary>"2026-11-25": StartsOn as the page and the phone read and send it.</summary>
+    public static string? Format(LocalDate? date) => date is { } given ? Date.Format(given) : null;
+
+    /// <summary>The date a "yyyy-MM-dd" text names, or null when it names none.</summary>
+    public static LocalDate? Parse(string? text) =>
+        text is { Length: 10 } && Date.Parse(text) is { Success: true } parsed ? parsed.Value : null;
 }
 
 /// <summary>
@@ -87,10 +152,13 @@ public static class AlertRoutines
     /// <summary>
     /// The fields that are wrong, by the name the body spells them, or the
     /// routine to store. A create may leave out enabled (true) and
-    /// snoozeMinutes (9). An update sends the whole body.
+    /// snoozeMinutes (9). An update sends the whole body. Repeat, every,
+    /// unit and startsOn may be left out of either: a create takes weekdays,
+    /// 1, weeks and no date, and an update keeps what <paramref name="saved"/>
+    /// holds, so a phone build that knows none of them erases none of them.
     /// </summary>
     public static (Dictionary<string, string[]> Errors, AlertRoutine? Valid) Validate(
-        Guid id, RoutineRequest request, bool whole, Instant now)
+        Guid id, RoutineRequest request, bool whole, Instant now, AlertRoutine? saved = null)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -115,6 +183,8 @@ public static class AlertRoutines
             days = [.. given.Order()];
         }
 
+        var (repeat, every, unit, startsOn) = ValidateRepeat(request, saved, days, errors);
+
         if (whole && request.Enabled is null) errors["enabled"] = ["true or false."];
 
         if (request.SnoozeMinutes is { } snooze ? snooze is < MinSnoozeMinutes or > MaxSnoozeMinutes : whole)
@@ -137,7 +207,58 @@ public static class AlertRoutines
             now)
         {
             Steps = steps ?? [],
+            Repeat = repeat,
+            Every = every,
+            Unit = unit,
+            StartsOn = startsOn,
         });
+    }
+
+    /// <summary>
+    /// How the routine repeats, once checked. Weekdays repeat by weeks, and
+    /// every 2 weeks or more needs a day and a start date. Weekdays every
+    /// week stores no start date. An interval takes no days and needs a
+    /// start date.
+    /// </summary>
+    private static (string Repeat, int Every, string Unit, LocalDate? StartsOn) ValidateRepeat(
+        RoutineRequest request, AlertRoutine? saved, int[] days, Dictionary<string, string[]> errors)
+    {
+        var repeat = request.Repeat ?? saved?.Repeat ?? RoutineRepeats.Weekdays;
+        var every = request.Every ?? saved?.Every ?? RoutineRepeats.MinEvery;
+        var unit = request.Unit ?? saved?.Unit ?? RoutineRepeats.Weeks;
+        var startsOn = request.StartsOn is null ? saved?.StartsOn : RoutineRepeats.Parse(request.StartsOn);
+
+        if (!RoutineRepeats.Choices.Contains(repeat)) errors["repeat"] = ["weekdays or interval."];
+        if (!RoutineRepeats.Units.Contains(unit)) errors["unit"] = ["minutes, hours, days, weeks, months or years."];
+        if (every is < RoutineRepeats.MinEvery or > RoutineRepeats.MaxEvery)
+        {
+            errors["every"] = [$"{RoutineRepeats.MinEvery} to {RoutineRepeats.MaxEvery}."];
+        }
+
+        if (request.StartsOn is not null && startsOn is null) errors["startsOn"] = ["A date as yyyy-MM-dd."];
+
+        if (repeat == RoutineRepeats.Weekdays)
+        {
+            if (!errors.ContainsKey("unit") && unit != RoutineRepeats.Weeks) errors["unit"] = ["weeks when it repeats on weekdays."];
+            if (every == RoutineRepeats.MinEvery)
+            {
+                // Every week counts from nothing. A date sent with it is not kept.
+                errors.Remove("startsOn");
+                startsOn = null;
+            }
+            else if (!errors.ContainsKey("every"))
+            {
+                if (days.Length == 0 && !errors.ContainsKey("days")) errors["days"] = ["At least one weekday when it repeats every 2 weeks or more."];
+                if (startsOn is null && !errors.ContainsKey("startsOn")) errors["startsOn"] = ["The date the weeks count from, as yyyy-MM-dd."];
+            }
+        }
+        else if (repeat == RoutineRepeats.Interval)
+        {
+            if (days.Length > 0) errors["days"] = ["Empty when it repeats by an interval."];
+            if (startsOn is null && !errors.ContainsKey("startsOn")) errors["startsOn"] = ["The date the interval counts from, as yyyy-MM-dd."];
+        }
+
+        return (repeat, every, unit, startsOn);
     }
 
     /// <summary>
@@ -260,7 +381,9 @@ public static class AlertRoutines
 /// <summary>
 /// A routine alarm as the page and the phone send it. Every field is checked
 /// by <see cref="AlertRoutines.Validate"/>. Steps null or missing on an
-/// update keeps the stored steps, and an empty list removes them.
+/// update keeps the stored steps, and an empty list removes them. Repeat,
+/// Every, Unit and StartsOn null or missing take the defaults on a create
+/// and keep the stored values on an update.
 /// </summary>
 public sealed record RoutineRequest(
     string? Label,
@@ -269,4 +392,8 @@ public sealed record RoutineRequest(
     IReadOnlyList<int>? Days,
     bool? Enabled,
     int? SnoozeMinutes,
-    IReadOnlyList<RoutineStepRequest?>? Steps = null);
+    IReadOnlyList<RoutineStepRequest?>? Steps = null,
+    string? Repeat = null,
+    int? Every = null,
+    string? Unit = null,
+    string? StartsOn = null);

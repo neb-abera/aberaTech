@@ -2,23 +2,33 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { type AlertsState, isUnreachable } from "../core/api";
 import {
   createRoutine,
   dayNames,
-  daySummary,
   deleteRoutine,
+  type RepeatFields,
   type Routine,
   type RoutineFields,
   type RoutineResult,
+  type RoutineUnit,
+  repeatErrors,
+  repeatOf,
+  repeatSummary,
   routineBounds,
   routineTime,
+  routineUnits,
+  startDay,
   stepSummary,
+  todayDay,
   updateRoutine,
 } from "../core/routines";
 import SyncNote from "./SyncNote";
@@ -47,27 +57,92 @@ const dayLongNames = [
   "Sunday",
 ] as const;
 
+/** The form's three ways to repeat: once, on weekdays, or every N units. */
+type Mode = "none" | "weekdays" | "interval";
+
 interface Draft {
   time: string;
+  mode: Mode;
   days: number[];
+  /** The N of "every N", as typed. Weeks on weekdays, the unit on an interval. */
+  every: string;
+  unit: RoutineUnit;
+  /** "yyyy-MM-dd": the date an interval, or weekdays every N weeks, counts from. */
+  startsOn: string;
   label: string;
   snooze: string;
 }
 
-const blank: Draft = {
+/** A new alarm: no repeat, and a start date of today on this computer. */
+const blank = (): Draft => ({
   time: "07:00",
+  mode: "none",
   days: [],
+  every: "1",
+  unit: "weeks",
+  startsOn: todayDay(),
   label: "",
   snooze: String(routineBounds.defaultSnooze),
-};
+});
 
 function draftOf(routine: Routine): Draft {
+  const repeat = repeatOf(routine);
+  const interval = repeat.repeat === "interval";
   return {
     time: routineTime(routine.hour, routine.minute),
-    days: [...routine.days],
+    mode: interval ? "interval" : routine.days.length > 0 ? "weekdays" : "none",
+    days: interval ? [] : [...routine.days],
+    every: String(repeat.every),
+    unit: repeat.unit,
+    startsOn: repeat.startsOn ?? todayDay(),
     label: routine.label,
     snooze: String(routine.snoozeMinutes),
   };
+}
+
+/** The repeat a draft would save, with the days it would send. */
+function repeatFrom(draft: Draft): RepeatFields & { days: number[] } {
+  if (draft.mode === "interval") {
+    return {
+      days: [],
+      repeat: "interval",
+      every: Number(draft.every),
+      unit: draft.unit,
+      startsOn: draft.startsOn || null,
+    };
+  }
+  const every = draft.mode === "none" ? 1 : Number(draft.every);
+  return {
+    days: draft.mode === "none" ? [] : [...draft.days].sort((a, b) => a - b),
+    repeat: "weekdays",
+    every,
+    unit: "weeks",
+    // Every week counts from nothing, and the server stores no date for it.
+    startsOn: every === 1 ? null : draft.startsOn || null,
+  };
+}
+
+/** The sentence under the repeat controls: what the alarm will do as the form stands. */
+function repeatHelp(draft: Draft): string {
+  if (draft.mode === "none") {
+    return "No repeat. It rings at the next time shown until you stop it, then switches off.";
+  }
+  const repeat = repeatFrom(draft);
+  if (draft.mode === "weekdays" && repeat.days.length === 0) {
+    return "Pick the days it rings on.";
+  }
+  if (Object.keys(repeatErrors(repeat)).length > 0) {
+    return draft.mode === "interval"
+      ? "Every so many minutes, hours, days, weeks, months, or years, counted from the start date."
+      : "Every so many weeks on the days picked, counted from the week of the start date.";
+  }
+  const from =
+    draft.mode === "interval"
+      ? `, from ${startDay(repeat.startsOn)} at ${draft.time}`
+      : repeat.startsOn
+        ? `, from ${startDay(repeat.startsOn)}`
+        : "";
+  return `Repeats: ${repeatSummary(repeat)}${from}. It rings until you stop it.`;
 }
 
 function fieldsOf(routine: Routine): RoutineFields {
@@ -105,9 +180,11 @@ function explain(result: Exclude<RoutineResult, { ok: true }>): string {
 
 /**
  * Routine alarms: the phone's everyday alarms, kept here so they can be
- * seen and changed from any computer. Each shows its time, its days, its
- * label and an on or off switch, with Edit and Delete. The form adds one,
- * or changes the one being edited.
+ * seen and changed from any computer. Each shows its time, how it
+ * repeats, its label and an on or off switch, with Edit and Delete. The
+ * form adds one, or changes the one being edited. It repeats on days of
+ * the week, every week or every N weeks, or every N minutes, hours, days,
+ * weeks, months or years from a start date.
  */
 export default function RoutinesSection({
   routines,
@@ -180,12 +257,24 @@ export default function RoutinesSection({
       setErrors({ hour: ["A time of day."] });
       return;
     }
+    const { days, ...repeat } = repeatFrom(draft);
+    // The server's rules, checked here first so the reason shows at once.
+    const refused =
+      draft.mode === "weekdays" && days.length === 0 && repeat.every === 1
+        ? { days: ["Pick at least one day, or choose No repeat."] }
+        : repeatErrors({ days, ...repeat });
+    if (Object.keys(refused).length > 0) {
+      setErrors(refused);
+      setProblem("Check the fields marked below.");
+      return;
+    }
     setErrors({});
     const fields: RoutineFields = {
       label: draft.label.trim(),
       hour: Number(match[1]),
       minute: Number(match[2]),
-      days: [...draft.days].sort((a, b) => a - b),
+      days,
+      ...repeat,
       enabled: editing ? editing.enabled : true,
       snoozeMinutes: Number(draft.snooze),
     };
@@ -201,17 +290,63 @@ export default function RoutinesSection({
         );
     if (saved) {
       setEditing(null);
-      setDraft(blank);
+      setDraft(blank());
     }
   };
 
+  // A day pressed is a repeat on days of the week, with no trip to the
+  // choice above it. The last day pressed off is no repeat again.
   const toggleDay = (day: number) =>
+    setDraft((current) => {
+      const days = current.days.includes(day)
+        ? current.days.filter((d) => d !== day)
+        : [...current.days, day];
+      return { ...current, days, mode: days.length > 0 ? "weekdays" : "none" };
+    });
+
+  const chooseMode = (mode: Mode) =>
     setDraft((current) => ({
       ...current,
-      days: current.days.includes(day)
-        ? current.days.filter((d) => d !== day)
-        : [...current.days, day],
+      mode,
+      days: mode === "none" ? [] : current.days,
+      // The number belongs to its unit, so another way to repeat starts at 1.
+      every: mode === current.mode ? current.every : "1",
     }));
+
+  const everyField = (
+    <TextField
+      label="Every"
+      type="number"
+      value={draft.every}
+      onChange={(event) =>
+        setDraft((current) => ({ ...current, every: event.target.value }))
+      }
+      error={Boolean(errors.every)}
+      helperText={errors.every?.[0]}
+      slotProps={{
+        htmlInput: {
+          min: routineBounds.every.min,
+          max: routineBounds.every.max,
+          step: 1,
+        },
+      }}
+      sx={{ width: "9rem" }}
+    />
+  );
+  const startField = (
+    <TextField
+      label="Starting"
+      type="date"
+      value={draft.startsOn}
+      onChange={(event) =>
+        setDraft((current) => ({ ...current, startsOn: event.target.value }))
+      }
+      error={Boolean(errors.startsOn)}
+      helperText={errors.startsOn?.[0]}
+      slotProps={{ inputLabel: { shrink: true } }}
+      sx={{ width: "12rem" }}
+    />
+  );
 
   const help = (field: string, text: string) => errors[field]?.[0] ?? text;
   const timeError = errors.hour ?? errors.minute;
@@ -266,9 +401,12 @@ export default function RoutinesSection({
                     {time}
                   </Typography>
                   <Typography variant="body2">
-                    {daySummary(routine.days)}, {routine.label}
+                    {repeatSummary(routine)}, {routine.label}
                   </Typography>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    {routine.startsOn
+                      ? `From ${startDay(routine.startsOn)}. `
+                      : ""}
                     Snooze {routine.snoozeMinutes} min.{" "}
                     {routine.enabled ? "On" : "Off"}
                   </Typography>
@@ -325,7 +463,7 @@ export default function RoutinesSection({
                         setConfirming(null);
                         if (editing?.id === routine.id) {
                           setEditing(null);
-                          setDraft(blank);
+                          setDraft(blank());
                         }
                         void run(
                           () => api.remove(routine.id),
@@ -425,31 +563,111 @@ export default function RoutinesSection({
           direction="row"
           spacing={1}
           useFlexGap
-          role="group"
-          aria-label="Days"
           sx={{ alignItems: "center", flexWrap: "wrap" }}
         >
-          <Typography variant="body2">Days:</Typography>
-          {dayNames.map((day, index) => {
-            const number = index + 1;
-            const on = draft.days.includes(number);
-            return (
-              <Chip
-                key={day}
-                label={day}
-                aria-label={`Repeat on ${dayLongNames[index]}`}
-                aria-pressed={on}
-                color={on ? "primary" : "default"}
-                variant={on ? "filled" : "outlined"}
-                onClick={() => toggleDay(number)}
-              />
-            );
-          })}
+          <Typography variant="body2" id="routine-repeat-label">
+            Repeat:
+          </Typography>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={draft.mode}
+            onChange={(_, value: Mode | null) => value && chooseMode(value)}
+            aria-labelledby="routine-repeat-label"
+            // The theme's toggle text measured 4.26:1 picked in the dark
+            // scheme and 4.45:1 unpicked in the light one. The page's own
+            // text color clears 4.5:1 in both, and the fill marks the pick.
+            sx={{
+              "& .MuiToggleButton-root, & .MuiToggleButton-root.Mui-selected": {
+                color: "text.primary",
+              },
+              "& .MuiToggleButton-root.Mui-selected": { fontWeight: 600 },
+            }}
+          >
+            <ToggleButton value="none">No repeat</ToggleButton>
+            <ToggleButton value="weekdays">Days of the week</ToggleButton>
+            <ToggleButton value="interval">Every…</ToggleButton>
+          </ToggleButtonGroup>
         </Stack>
+        {draft.mode !== "interval" && (
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            role="group"
+            aria-label="Days"
+            sx={{ alignItems: "center", flexWrap: "wrap" }}
+          >
+            <Typography variant="body2">Days:</Typography>
+            {dayNames.map((day, index) => {
+              const number = index + 1;
+              const on = draft.days.includes(number);
+              return (
+                <Chip
+                  key={day}
+                  label={day}
+                  aria-label={`Repeat on ${dayLongNames[index]}`}
+                  aria-pressed={on}
+                  color={on ? "primary" : "default"}
+                  variant={on ? "filled" : "outlined"}
+                  onClick={() => toggleDay(number)}
+                />
+              );
+            })}
+          </Stack>
+        )}
+        {errors.days && (
+          <Typography variant="body2" role="alert" sx={{ color: "error.main" }}>
+            {errors.days[0]}
+          </Typography>
+        )}
+        {draft.mode === "weekdays" && (
+          <Stack
+            direction="row"
+            spacing={2}
+            useFlexGap
+            sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+          >
+            {everyField}
+            <Typography variant="body1" sx={{ pt: 2 }}>
+              {Number(draft.every) === 1 ? "week" : "weeks"}
+            </Typography>
+            {Number(draft.every) > 1 && startField}
+          </Stack>
+        )}
+        {draft.mode === "interval" && (
+          <Stack
+            direction="row"
+            spacing={2}
+            useFlexGap
+            sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+          >
+            {everyField}
+            <TextField
+              select
+              label="Unit"
+              value={draft.unit}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  unit: event.target.value as RoutineUnit,
+                }))
+              }
+              error={Boolean(errors.unit)}
+              helperText={errors.unit?.[0]}
+              sx={{ width: "10rem" }}
+            >
+              {routineUnits.map((choice) => (
+                <MenuItem key={choice.value} value={choice.value}>
+                  {Number(draft.every) === 1 ? choice.one : choice.many}
+                </MenuItem>
+              ))}
+            </TextField>
+            {startField}
+          </Stack>
+        )}
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          {draft.days.length === 0
-            ? "No repeat. It rings at the next time shown until you stop it, then switches off."
-            : `Repeats: ${daySummary(draft.days)}. It rings until you stop it.`}
+          {errors.repeat?.[0] ?? repeatHelp(draft)}
         </Typography>
         <TextField
           label="Label"
@@ -472,7 +690,7 @@ export default function RoutinesSection({
             <Button
               onClick={() => {
                 setEditing(null);
-                setDraft(blank);
+                setDraft(blank());
                 setErrors({});
               }}
             >

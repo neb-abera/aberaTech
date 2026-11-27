@@ -73,7 +73,11 @@ public static class RoutineRings
     public static string StepKey(Guid routineId, string cycle, Guid stepId) =>
         $"{KeyPrefix}{routineId:D}:{cycle}{StepInfix}{stepId:D}";
 
-    /// <summary>"2026-10-28T06:30": a cycle, the scheduled local time of the routine's own ring.</summary>
+    /// <summary>
+    /// "2026-10-28T06:30": a cycle, the scheduled local date and time of the
+    /// routine's own ring. For an interval of minutes or hours that is the
+    /// time of the ring, which is not the routine's hour:minute.
+    /// </summary>
     public static string Stamp(LocalDateTime scheduled) => KeyTime.Format(scheduled);
 
     /// <summary>The cycle a stamp names, or null when it is not one.</summary>
@@ -157,31 +161,144 @@ public static class RoutineRings
 
     /// <summary>
     /// The routine's own rings by its current schedule, whether or not it is
-    /// switched on, with a day either side of the window so a zone far from
-    /// UTC never cuts it: every one of its weekdays, or for one with no days
-    /// its single ring, the next hour:minute after it was saved. The caller
+    /// switched on. A wall-clock schedule (weekdays, or an interval of days,
+    /// weeks, months or years) gets a day either side of the window, so a
+    /// zone far from UTC never cuts it. An interval of minutes or hours is
+    /// elapsed time and gets the window itself. One that rings once gets its
+    /// single ring, the next hour:minute after it was saved. The caller
     /// keeps the ones it wants by instant.
     /// </summary>
+    /// <remarks>
+    /// The work is in proportion to the window. A series from years ago
+    /// starts at the first ring near <paramref name="from"/>, found by
+    /// arithmetic.
+    /// </remarks>
     public static IEnumerable<(LocalDateTime Scheduled, Instant At)> Cycles(
         AlertRoutine routine, DateTimeZone zone, Instant from, Instant until)
     {
-        var time = new LocalTime(routine.Hour, routine.Minute);
-        if (routine.Days.Count == 0)
+        if (routine.RingsOnce)
         {
             if (Once(routine, zone) is { } once) yield return once;
             yield break;
         }
 
+        if (until < from) yield break;
+        var time = new LocalTime(routine.Hour, routine.Minute);
+        var first = from.InZone(zone).Date.PlusDays(-1);
         var last = until.InZone(zone).Date.PlusDays(1);
-        for (var date = from.InZone(zone).Date.PlusDays(-1); date <= last; date = date.PlusDays(1))
+        var every = Math.Clamp(routine.Every, RoutineRepeats.MinEvery, RoutineRepeats.MaxEvery);
+
+        if (routine.Repeat != RoutineRepeats.Interval)
         {
-            if (!routine.Days.Contains((int)date.DayOfWeek)) continue;
-            var scheduled = date.At(time);
-            yield return (scheduled, zone.ResolveLocal(scheduled, PhoneRules).ToInstant());
+            // Weekdays. Every week needs no start. Every N weeks counts whole
+            // weeks, Monday first, from the week of the start date.
+            LocalDate? start = every > 1 ? routine.StartsOn : null;
+            if (every > 1 && start is null) yield break;
+            if (start is { } begins && begins > first) first = begins;
+            for (var date = first; date <= last; date = date.PlusDays(1))
+            {
+                if (!routine.Days.Contains((int)date.DayOfWeek)) continue;
+                if (start is { } counted && WeeksBetween(counted, date) % every != 0) continue;
+                var scheduled = date.At(time);
+                yield return (scheduled, zone.ResolveLocal(scheduled, PhoneRules).ToInstant());
+            }
+
+            yield break;
+        }
+
+        // A series that starts after the window has no ring in it. Checked
+        // by date, before any instant is made from a date at the calendar's end.
+        if (routine.StartsOn is not { } anchor || anchor > last) yield break;
+
+        switch (routine.Unit)
+        {
+            case RoutineRepeats.Minutes or RoutineRepeats.Hours:
+                foreach (var ring in Elapsed(zone, anchor.At(time), routine.Unit == RoutineRepeats.Minutes
+                             ? Duration.FromMinutes(every)
+                             : Duration.FromHours(every), from, until))
+                {
+                    yield return ring;
+                }
+
+                break;
+
+            case RoutineRepeats.Days or RoutineRepeats.Weeks:
+                var step = routine.Unit == RoutineRepeats.Days ? every : every * 7;
+                var behind = Period.DaysBetween(anchor, first);
+                for (var date = behind <= 0 ? anchor : anchor.PlusDays((behind + step - 1) / step * step); date <= last; date = date.PlusDays(step))
+                {
+                    var scheduled = date.At(time);
+                    yield return (scheduled, zone.ResolveLocal(scheduled, PhoneRules).ToInstant());
+                }
+
+                break;
+
+            case RoutineRepeats.Months or RoutineRepeats.Years:
+                var months = routine.Unit == RoutineRepeats.Months ? every : every * 12;
+                var elapsed = (first.Year - anchor.Year) * 12 + first.Month - anchor.Month;
+                // Each ring is counted from the start date, never from the
+                // ring before it, so the 31st stays the 31st.
+                for (var count = Math.Max(0, elapsed / months - 1); ; count++)
+                {
+                    var date = anchor.PlusMonths(count * months);
+                    if (date > last) break;
+                    // A month or year without the day is skipped, as a countdown skips it.
+                    if (date.Day != anchor.Day || date < first) continue;
+                    var scheduled = date.At(time);
+                    yield return (scheduled, zone.ResolveLocal(scheduled, PhoneRules).ToInstant());
+                }
+
+                break;
         }
     }
 
-    /// <summary>The single ring of a routine with no days: the next hour:minute after it was saved.</summary>
+    /// <summary>Whole weeks from the Monday of <paramref name="start"/>'s week to the Monday of <paramref name="date"/>'s.</summary>
+    private static int WeeksBetween(LocalDate start, LocalDate date) =>
+        Period.DaysBetween(Monday(start), Monday(date)) / 7;
+
+    private static LocalDate Monday(LocalDate date) => date.PlusDays(1 - (int)date.DayOfWeek);
+
+    /// <summary>
+    /// The rings of an interval of minutes or hours from
+    /// <paramref name="from"/> to <paramref name="until"/>: the start, then
+    /// every <paramref name="step"/> of elapsed time after it. Each ring's
+    /// stamp is its own local date and time. When the clocks go back, a ring
+    /// whose stamp an earlier ring of the series already has is dropped, so
+    /// no two rings share a key.
+    /// </summary>
+    private static IEnumerable<(LocalDateTime Scheduled, Instant At)> Elapsed(
+        DateTimeZone zone, LocalDateTime start, Duration step, Instant from, Instant until)
+    {
+        var anchor = zone.ResolveLocal(start, PhoneRules).ToInstant();
+        var minute = Duration.FromMinutes(1);
+        for (var at = Aligned(anchor, step, from); at <= until; at += step)
+        {
+            var local = at.InZone(zone).LocalDateTime;
+            var scheduled = local.Date.At(new LocalTime(local.Hour, local.Minute));
+            var passes = zone.MapLocal(scheduled);
+            if (passes.Count == 2
+                && passes.First().ToInstant() is var earlier
+                && earlier + minute <= at
+                && Aligned(anchor, step, earlier) < earlier + minute)
+            {
+                continue;
+            }
+
+            yield return (scheduled, at);
+        }
+    }
+
+    /// <summary>The first instant of the series from <paramref name="anchor"/> every <paramref name="step"/> that is at or after <paramref name="from"/>.</summary>
+    private static Instant Aligned(Instant anchor, Duration step, Instant from)
+    {
+        if (from <= anchor) return anchor;
+        // Whole numbers: a double loses the last ring of a series decades long.
+        var behind = (from - anchor).ToBigIntegerNanoseconds();
+        var length = step.ToBigIntegerNanoseconds();
+        return anchor + step * (long)((behind + length - 1) / length);
+    }
+
+    /// <summary>The single ring of a routine that rings once: the next hour:minute after it was saved.</summary>
     public static (LocalDateTime Scheduled, Instant At)? Once(AlertRoutine routine, DateTimeZone zone)
     {
         var time = new LocalTime(routine.Hour, routine.Minute);
@@ -222,15 +339,16 @@ public static class RoutineRings
     {
         var zone = await ZoneAsync(devices, settings, cancellationToken);
         var routines = await store.RoutinesAsync(cancellationToken);
-        // A step rings at most a day after its cycle's ring.
-        var completed = (await store.CompletionsAsync(
-                from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken))
+        // A step rings at most a day after its cycle's ring, and a delay
+        // moves a cycle up to RoutineDelays.Longest. A cycle moved into the
+        // window is read with its check-offs and its outcome, or a step
+        // checked off, or a ring marked Done, would ring at the moved time.
+        var cyclesFrom = from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - RoutineDelays.Longest - Duration.FromDays(1);
+        var completed = (await store.CompletionsAsync(cyclesFrom, cancellationToken))
             .Select(completion => completion.StepKey)
             .ToHashSet(StringComparer.Ordinal);
-        var outcomes = RoutineOutcomes.ByCycle(await store.OutcomesAsync(
-            from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - Duration.FromDays(1), cancellationToken));
-        var delays = RoutineDelays.ByCycle(await store.DelaysAsync(
-            from - Duration.FromMinutes(AlertRoutines.MaxStepOffsetMinutes) - RoutineDelays.Longest - Duration.FromDays(1), cancellationToken));
+        var outcomes = RoutineOutcomes.ByCycle(await store.OutcomesAsync(cyclesFrom, cancellationToken));
+        var delays = RoutineDelays.ByCycle(await store.DelaysAsync(cyclesFrom, cancellationToken));
         var planned = Plan(routines, zone, from, until, Duration.FromMinutes(settings.StopAfterMinutes), completed, outcomes, delays);
 
         var enabled = routines.Where(routine => routine.Enabled).Select(routine => routine.Id).ToHashSet();

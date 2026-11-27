@@ -4,8 +4,9 @@ namespace aberaTech.Scheduling.Alerts;
 
 /// <summary>
 /// A one-time alarm deletes itself once its ring is acknowledged, on the
-/// phone, in Pushover or in a browser. That is a routine alarm with no
-/// repeat days, and a countdown with its alarm on that does not repeat. A
+/// phone, in Pushover or in a browser. That is a routine alarm that rings
+/// once (weekdays with no days, never an interval), and a countdown with
+/// its alarm on that does not repeat. A
 /// countdown's calendar event stays, as the record of the day. Neb asked
 /// for this on 2026-11-03.
 ///
@@ -42,7 +43,7 @@ public static class OneTimeAlarms
 
         foreach (var routine in await store.RoutinesAsync(cancellationToken))
         {
-            if (routine.Days.Count > 0) continue;
+            if (routine.Repeats) continue;
             zone ??= await RoutineRings.ZoneAsync(devices, settings, cancellationToken);
             outcomes ??= RoutineOutcomes.ByCycle(await store.OutcomesAsync(now - RoutineCompletions.KeepFor, cancellationToken));
             // An outcome counts on the cycle the routine rings now: one on a

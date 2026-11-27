@@ -49,6 +49,9 @@ public static class RoutineCompletions
     /// <summary>How far ahead a cycle may be checked off: the next one may be done early.</summary>
     public static readonly Duration EarlyFor = Duration.FromDays(2);
 
+    /// <summary>How far a ring can be from the local time its stamp names: a clock change, with room to spare.</summary>
+    private static readonly Duration Near = Duration.FromDays(2);
+
     /// <summary>How far ahead of the server's clock a completion time may be, for a phone's clock that runs fast.</summary>
     public static readonly Duration ClockSkew = Duration.FromMinutes(5);
 
@@ -63,10 +66,17 @@ public static class RoutineCompletions
     /// </summary>
     public static Instant? CycleAt(AlertRoutine routine, string cycle, DateTimeZone zone, Instant now)
     {
-        if (RoutineRings.ParseStamp(cycle) is null) return null;
+        if (RoutineRings.ParseStamp(cycle) is not { } named) return null;
         var from = now - KeepFor;
         var until = now + EarlyFor;
-        foreach (var (scheduled, at) in RoutineRings.Cycles(routine, zone, from, until))
+        // A ring is within hours of its stamp, so two days either side of the
+        // stamp finds it. An alarm every minute then costs days of rings, not weeks.
+        // A stamp weeks from now names no ring that is kept, and one at the calendar's end has no instant.
+        if (Math.Abs(Period.DaysBetween(now.InZone(zone).Date, named.Date)) > (int)(KeepFor + Near + Near).TotalDays) return null;
+        var near = named.InZoneLeniently(zone).ToInstant();
+        var first = Instant.Max(from, near - Near);
+        var last = Instant.Min(until, near + Near);
+        foreach (var (scheduled, at) in RoutineRings.Cycles(routine, zone, first, last))
         {
             if (at < from || at > until) continue;
             if (RoutineRings.Stamp(scheduled) == cycle) return at;

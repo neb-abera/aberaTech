@@ -350,7 +350,10 @@ One acknowledgment anywhere stops all of them (`AlertRoutines.cs`, table
 The rings follow the phone's rules. A routine with days rings on those
 weekdays. One with none rings once, at the next `hour:minute` after it was
 saved, and deletes itself once that ring is stopped. With steps, it waits
-for its steps instead (below). A time a clock change skips rings at the first time that exists
+for its steps instead (below). A routine can also repeat every N weeks on
+its weekdays, or every N minutes, hours, days, weeks, months, or years
+from a start date ("How a routine repeats", below). One that repeats that
+way is never deleted as a one-time alarm. A time a clock change skips rings at the first time that exists
 after it, and a time that happens twice rings the first time. An edit
 changes later rings only: a ring that is ringing when the edit is saved
 keeps ringing as it was (table `AlertHeldRings`), unless the edit turns
@@ -375,12 +378,16 @@ phone app does not schedule them as calendar alarms. Each is:
 }
 ```
 
-`key` is the routine's id and the scheduled local date and time, never a
-snoozed one. `startsAt` is the ring and the saved Pushover stop time.
+`key` is the routine's id and the scheduled local date and time of that
+ring. A snooze does not change it. For an interval of minutes or hours the
+key carries the ring's own time. The routine's `hour:minute` is the time
+of the first ring only.
+`startsAt` is the ring and the saved Pushover stop time.
 `POST /api/alerts/ack` takes a listed key, or one Pushover sent.
 
-A routine is `{id, label, hour, minute, days, enabled, snoozeMinutes,
-updatedAt, steps}`. `hour` is 0 to 23 and `minute` 0 to 59, in wall-clock time.
+A routine is `{id, label, hour, minute, days, repeat, every, unit,
+startsOn, enabled, snoozeMinutes, updatedAt, steps}`. `hour` is 0 to 23 and
+`minute` 0 to 59, in wall-clock time.
 The server never converts them. `days` are ISO weekdays, Monday 1 to
 Sunday 7, stored sorted. Empty rings once at the next `hour:minute`, and
 the phone then turns it off with a `PUT` setting `enabled` false. `label`
@@ -398,6 +405,66 @@ Each change pushes the phones.
 | `POST /api/alerts/routines`        | `{label?, hour, minute, days, enabled?, snoozeMinutes?}`. `enabled` is true when left out | 201. 400 by field. 409 with a `detail` past 50 |
 | `PUT /api/alerts/routines/{id}`    | the whole body: `{label, hour, minute, days, enabled, snoozeMinutes}`                     | 200. 400 by field. 404 for an unknown id       |
 | `DELETE /api/alerts/routines/{id}` | none                                                                                      | 200. 404 for an unknown id                     |
+
+Both bodies also take `repeat`, `every`, `unit`, and `startsOn`, each
+optional.
+
+### Calendar alerts: how a routine repeats
+
+Four fields say how a routine repeats. Every answer carries all four.
+
+| Field      | Value                                                  | Default    |
+| ---------- | ------------------------------------------------------ | ---------- |
+| `repeat`   | `weekdays` or `interval`                               | `weekdays` |
+| `every`    | 1 to 999                                               | 1          |
+| `unit`     | `minutes`, `hours`, `days`, `weeks`, `months`, `years` | `weeks`    |
+| `startsOn` | `yyyy-MM-dd`, a local date, or null                    | null       |
+
+A `POST` that leaves one out takes its default. A `PUT` that leaves one
+out keeps the stored value, as a countdown's `repeat` does. An older phone
+build sends none of them and erases none of them.
+
+The checks, each a 400 under the field it names:
+
+- `repeat` is one of the two values, `unit` one of the six, and `every`
+  1 to 999.
+- With `weekdays`, `unit` is `weeks`. `every` 1 is a routine as it was
+  before these fields. `startsOn` is ignored and stored null. `every` 2
+  or more needs at least one day and a `startsOn`.
+- With `interval`, `days` is empty and `startsOn` is required.
+- A routine rings once exactly when `repeat` is `weekdays` and `days` is
+  empty. Only that routine deletes itself after its ring.
+
+When it rings (`RoutineRings.Cycles`):
+
+- `weekdays`, `every` 2 or more: on each listed weekday at `hour:minute`,
+  in the weeks a whole multiple of `every` after the week of `startsOn`.
+  Weeks start on Monday. A date before `startsOn` never rings.
+- `interval`: the first ring is `startsOn` at `hour:minute`.
+  - `minutes` and `hours` add elapsed time to that first ring. Every 2
+    hours stays 2 hours apart across a clock change.
+  - `days` and `weeks` add days to the date and keep `hour:minute` on the
+    clock.
+  - `months` and `years` add months to the start date and keep
+    `hour:minute` on the clock. A month or year without that day is
+    skipped, as a countdown skips it: the 31st, and 29 February.
+- A ring at or before the routine's `updatedAt` does not ring.
+
+The stamp in a ring's key is that ring's own local date and time. Two
+rings of one series never share a stamp. When the clocks go back, a ring
+of minutes or hours whose stamp an earlier ring of the series has is
+dropped. Every 30 minutes rings 01:00 and 01:30 once that night, and next
+at 02:00.
+
+A step that rings every N days (`everyDays`, with its own `startsOn`)
+counts calendar days from that date to the date in the ring's stamp. The
+rule is the same for every repeat. Under an interval of minutes or hours
+it rings in every ring stamped on one of its days. A delayed cycle keeps
+the steps of the date it was planned for.
+
+The page and the phone show a repeat in the same words: `No repeat`,
+`Weekdays`, `Mon Wed Fri`, `Every 2 weeks on Mon Wed Fri`,
+`Every 97 minutes`, `Every hour`.
 
 ### Calendar alerts: routine steps
 

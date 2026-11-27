@@ -17,7 +17,7 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126220325_RoutineStepEveryDays";
+    public override string LastMigrationId => "20261127023059_RoutineRepeat";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -537,6 +537,11 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Enabled")
                     .HasColumnType("boolean");
 
+                b.Property<int>("Every")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
+
                 b.Property<short>("Hour")
                     .HasColumnType("smallint");
 
@@ -548,8 +553,25 @@ partial class SchedulingDbContextModelSnapshot : ModelSnapshot
                 b.Property<short>("Minute")
                     .HasColumnType("smallint");
 
+                b.Property<string>("Repeat")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)")
+                    .HasDefaultValue("weekdays");
+
                 b.Property<short>("SnoozeMinutes")
                     .HasColumnType("smallint");
+
+                b.Property<LocalDate?>("StartsOn")
+                    .HasColumnType("date");
+
+                b.Property<string>("Unit")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasMaxLength(16)
+                    .HasColumnType("character varying(16)")
+                    .HasDefaultValue("weeks");
 
                 b.Property<Instant>("UpdatedAt")
                     .HasColumnType("timestamp with time zone");

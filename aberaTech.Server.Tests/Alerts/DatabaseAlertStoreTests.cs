@@ -130,6 +130,60 @@ public sealed class DatabaseAlertStoreTests : IDisposable
     }
 
     [PostgresFact]
+    public async Task A_routines_repeat_reads_back_whole_an_update_replaces_it_and_a_row_without_it_reads_the_defaults()
+    {
+        var id = Guid.NewGuid();
+        var plain = Guid.NewGuid();
+        var interval = Routine("Meds", days: [], id: id) with
+        {
+            Repeat = RoutineRepeats.Interval,
+            Every = 97,
+            Unit = RoutineRepeats.Minutes,
+            StartsOn = new LocalDate(2026, 11, 25),
+        };
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            Assert.True(await store.AddRoutineAsync(interval, CancellationToken.None));
+            // The release before these columns inserts none of them.
+            await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT INTO "AlertRoutines" ("Id", "Label", "Hour", "Minute", "Days", "Enabled", "SnoozeMinutes", "CreatedAt", "UpdatedAt")
+                 VALUES ({plain}, 'Old', 7, 0, ARRAY[1,2]::smallint[], true, 9, {Now}, {Now})
+                 """);
+        }
+
+        await using (var context = Context())
+        {
+            var store = new DatabaseAlertStore(context);
+            var read = (await store.RoutinesAsync(CancellationToken.None)).ToDictionary(routine => routine.Id);
+            Assert.Equal(
+                (RoutineRepeats.Interval, 97, RoutineRepeats.Minutes, (LocalDate?)new LocalDate(2026, 11, 25)),
+                (read[id].Repeat, read[id].Every, read[id].Unit, read[id].StartsOn));
+            Assert.Empty(read[id].Days);
+            Assert.Equal(
+                (RoutineRepeats.Weekdays, 1, RoutineRepeats.Weeks, (LocalDate?)null),
+                (read[plain].Repeat, read[plain].Every, read[plain].Unit, read[plain].StartsOn));
+
+            Assert.True(await store.UpdateRoutineAsync(
+                Routine("Gym", days: [1, 3], id: id) with { Every = 2, StartsOn = new LocalDate(2026, 12, 2) }, CancellationToken.None));
+            Assert.True(await store.UpdateRoutineAsync(Routine("Old", days: [], id: plain), CancellationToken.None));
+        }
+
+        await using (var context = Context())
+        {
+            var read = (await new DatabaseAlertStore(context).RoutinesAsync(CancellationToken.None)).ToDictionary(routine => routine.Id);
+            Assert.Equal(
+                (RoutineRepeats.Weekdays, 2, RoutineRepeats.Weeks, (LocalDate?)new LocalDate(2026, 12, 2)),
+                (read[id].Repeat, read[id].Every, read[id].Unit, read[id].StartsOn));
+            Assert.Equal([1, 3], read[id].Days);
+            Assert.Null(read[plain].StartsOn);
+            var row = await context.AlertRoutines.AsNoTracking().SingleAsync(row => row.Id == id);
+            Assert.Equal(new LocalDate(2026, 12, 2), row.StartsOn);
+        }
+    }
+
+    [PostgresFact]
     public async Task A_routines_steps_read_back_in_order_an_update_replaces_them_and_a_delete_takes_them()
     {
         var id = Guid.NewGuid();

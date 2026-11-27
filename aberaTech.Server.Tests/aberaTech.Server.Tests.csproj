@@ -48,6 +48,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Fitness\Golden\*.json" />
+    <!-- The routine ring vectors the iPhone app tests too (RoutineRingVectorsTests). -->
+    <EmbeddedResource Include="Alerts\Golden\*.json" />
   </ItemGroup>
 
   <ItemGroup>

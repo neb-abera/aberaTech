@@ -16,7 +16,12 @@ import {
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { bounds, settings } from "../../../../test/alertsFixtures";
 import type { AlertsState } from "../../core/api";
-import type { Routine, RoutineResult } from "../../core/routines";
+import {
+  type Routine,
+  type RoutineResult,
+  startDay,
+  todayDay,
+} from "../../core/routines";
 import RoutinesSection, { type RoutinesApi } from "../RoutinesSection";
 
 const wake: Routine = {
@@ -37,6 +42,27 @@ const gym: Routine = {
   hour: 5,
   minute: 0,
   days: [1, 3, 5],
+};
+
+/** Every 97 minutes from Wednesday 25 November 2026 at 06:30. */
+const meds: Routine = {
+  ...wake,
+  id: "7b2e3f90-ac3d-4e4f-9051-2c3d4e5f6071",
+  label: "Meds",
+  days: [],
+  repeat: "interval",
+  every: 97,
+  unit: "minutes",
+  startsOn: "2026-11-25",
+};
+
+/** Monday, Wednesday and Friday of every other week. */
+const fortnight: Routine = {
+  ...gym,
+  repeat: "weekdays",
+  every: 2,
+  unit: "weeks",
+  startsOn: "2026-11-25",
 };
 
 const state = (routines: Routine[]): AlertsState => ({
@@ -80,6 +106,10 @@ const press = async (element: HTMLElement) => {
   });
 };
 
+/** Whether a choice of the Repeat group is the one picked. */
+const pressed = (form: HTMLElement, name: string) =>
+  within(form).getByRole("button", { name }).getAttribute("aria-pressed");
+
 beforeAll(() => {
   // The first MUI mount in a worker pays for the theme.
   mount([wake]);
@@ -100,6 +130,27 @@ describe("the list", () => {
     expect(within(items[1]).getByText("06:30")).toBeTruthy();
     expect(within(items[1]).getByText("Weekdays, Wake up")).toBeTruthy();
     expect(within(items[2]).getByText("No repeat, Alarm")).toBeTruthy();
+  });
+
+  it("shows an interval and weekdays every 2 weeks in the phone's words, with the start date", () => {
+    mount([fortnight, meds]);
+
+    const items = within(
+      screen.getByRole("list", { name: "Routine alarms" }),
+    ).getAllByRole("listitem");
+    expect(
+      within(items[0]).getByText("Every 2 weeks on Mon Wed Fri, Gym"),
+    ).toBeTruthy();
+    expect(within(items[1]).getByText("Every 97 minutes, Meds")).toBeTruthy();
+    expect(
+      within(items[1]).getByText(
+        `From ${startDay("2026-11-25")}. Snooze 9 min. On`,
+      ),
+    ).toBeTruthy();
+    // A routine with no start date says nothing of one.
+    cleanup();
+    mount([wake]);
+    expect(screen.getByText("Snooze 9 min. On")).toBeTruthy();
     expect(
       screen.getByText(
         "Routine alarms ring on the paired phone like Clock alarms. They also ring through Pushover, and here when Ring in this browser is on. Acknowledging one anywhere stops it everywhere.",
@@ -432,6 +483,10 @@ describe("the add form", () => {
       hour: 6,
       minute: 30,
       days: [1, 3, 5],
+      repeat: "weekdays",
+      every: 1,
+      unit: "weeks",
+      startsOn: null,
       enabled: true,
       snoozeMinutes: 5,
     });
@@ -456,6 +511,227 @@ describe("the add form", () => {
     expect(api.create).toHaveBeenCalledWith(
       expect.objectContaining({ days: [], label: "", snoozeMinutes: 9 }),
     );
+  });
+
+  it("starts on No repeat and offers the three ways to repeat", () => {
+    mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    expect(pressed(form, "No repeat")).toBe("true");
+    expect(pressed(form, "Days of the week")).toBe("false");
+    expect(pressed(form, "Every…")).toBe("false");
+    expect(within(form).queryByLabelText("Every")).toBeNull();
+    expect(within(form).queryByLabelText("Starting")).toBeNull();
+  });
+
+  it("a day pressed moves the choice to Days of the week, and No repeat clears the days", async () => {
+    const { api } = mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Repeat on Monday" }));
+    expect(pressed(form, "Days of the week")).toBe("true");
+    expect(
+      (within(form).getByLabelText("Every") as HTMLInputElement).value,
+    ).toBe("1");
+    expect(within(form).getByText("week")).toBeTruthy();
+    // Every week counts from nothing, so no start date is asked for.
+    expect(within(form).queryByLabelText("Starting")).toBeNull();
+
+    await press(within(form).getByRole("button", { name: "No repeat" }));
+    expect(
+      within(form)
+        .getByRole("button", { name: "Repeat on Monday" })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        days: [],
+        repeat: "weekdays",
+        every: 1,
+        unit: "weeks",
+        startsOn: null,
+      }),
+    );
+  });
+
+  it("every 97 minutes sends an interval with no days and its start date", async () => {
+    const { api } = mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    fireEvent.change(within(form).getByLabelText(/^Time/), {
+      target: { value: "06:30" },
+    });
+    await press(within(form).getByRole("button", { name: "Every…" }));
+    expect(
+      within(form).queryByRole("button", { name: "Repeat on Monday" }),
+    ).toBeNull();
+    // The start date is today on this computer until another is picked.
+    expect(
+      (within(form).getByLabelText("Starting") as HTMLInputElement).value,
+    ).toBe(todayDay());
+    const every = within(form).getByLabelText("Every") as HTMLInputElement;
+    expect([every.type, every.min, every.max]).toEqual(["number", "1", "999"]);
+    fireEvent.change(every, { target: { value: "97" } });
+    await act(async () => {
+      fireEvent.mouseDown(within(form).getByRole("combobox", { name: "Unit" }));
+    });
+    expect(
+      screen.getAllByRole("option").map((option) => option.textContent),
+    ).toEqual(["minutes", "hours", "days", "weeks", "months", "years"]);
+    await press(screen.getByRole("option", { name: "minutes" }));
+    fireEvent.change(within(form).getByLabelText("Starting"), {
+      target: { value: "2026-11-25" },
+    });
+    expect(
+      within(form).getByText(
+        `Repeats: Every 97 minutes, from ${startDay("2026-11-25")} at 06:30. It rings until you stop it.`,
+      ),
+    ).toBeTruthy();
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(api.create).toHaveBeenCalledExactlyOnceWith({
+      label: "",
+      hour: 6,
+      minute: 30,
+      days: [],
+      repeat: "interval",
+      every: 97,
+      unit: "minutes",
+      startsOn: "2026-11-25",
+      enabled: true,
+      snoozeMinutes: 9,
+    });
+  });
+
+  it("the unit reads singular at 1", async () => {
+    mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Every…" }));
+
+    expect(
+      within(form).getByRole("combobox", { name: "Unit" }).textContent,
+    ).toBe("week");
+    expect(
+      within(form).getByText(
+        `Repeats: Every week, from ${startDay(todayDay())} at 07:00. It rings until you stop it.`,
+      ),
+    ).toBeTruthy();
+  });
+
+  it("days every 2 weeks asks for a start date and sends it", async () => {
+    const { api } = mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Repeat on Friday" }));
+    await press(within(form).getByRole("button", { name: "Repeat on Monday" }));
+    fireEvent.change(within(form).getByLabelText("Every"), {
+      target: { value: "2" },
+    });
+    expect(within(form).getByText("weeks")).toBeTruthy();
+    fireEvent.change(within(form).getByLabelText("Starting"), {
+      target: { value: "2026-11-25" },
+    });
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        days: [1, 5],
+        repeat: "weekdays",
+        every: 2,
+        unit: "weeks",
+        startsOn: "2026-11-25",
+      }),
+    );
+  });
+
+  it.each([["0"], ["1000"], ["2.5"], [""]])(
+    "every %s is refused here with the bounds, and nothing is sent",
+    async (typed) => {
+      const { api } = mount([]);
+      const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+      await press(within(form).getByRole("button", { name: "Every…" }));
+      fireEvent.change(within(form).getByLabelText("Every"), {
+        target: { value: typed },
+      });
+      await press(
+        within(form).getByRole("button", { name: "Add routine alarm" }),
+      );
+
+      expect(within(form).getByText("A whole number, 1 to 999.")).toBeTruthy();
+      expect(screen.getByText("Check the fields marked below.")).toBeTruthy();
+      expect(api.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it("an interval with no start date is refused here", async () => {
+    const { api } = mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Every…" }));
+    fireEvent.change(within(form).getByLabelText("Starting"), {
+      target: { value: "" },
+    });
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(within(form).getByText("A start date.")).toBeTruthy();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it("Days of the week with no day picked says to pick one", async () => {
+    const { api } = mount([]);
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Days of the week" }));
+    expect(within(form).getByText("Pick the days it rings on.")).toBeTruthy();
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(
+      within(form).getByText("Pick at least one day, or choose No repeat."),
+    ).toBeTruthy();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it("shows the server's message under the repeat field it refused", async () => {
+    mount(
+      [],
+      fakeApi({
+        create: vi.fn(async () => ({
+          ok: false as const,
+          reason: "invalid" as const,
+          errors: {
+            every: ["1 to 999."],
+            startsOn: ["The date the interval counts from, as yyyy-MM-dd."],
+          },
+        })),
+      }),
+    );
+    const form = screen.getByRole("form", { name: "Add routine alarm" });
+
+    await press(within(form).getByRole("button", { name: "Every…" }));
+    await press(
+      within(form).getByRole("button", { name: "Add routine alarm" }),
+    );
+
+    expect(within(form).getByText("1 to 999.")).toBeTruthy();
+    expect(
+      within(form).getByText(
+        "The date the interval counts from, as yyyy-MM-dd.",
+      ),
+    ).toBeTruthy();
   });
 
   it("snooze is a typed number with the server's bounds", () => {
@@ -545,6 +821,10 @@ describe("edit", () => {
       hour: 7,
       minute: 15,
       days: [1, 2, 3, 4, 5, 6],
+      repeat: "weekdays",
+      every: 1,
+      unit: "weeks",
+      startsOn: null,
       enabled: false,
       snoozeMinutes: 9,
     });
@@ -568,6 +848,101 @@ describe("edit", () => {
       hour: 6,
       minute: 30,
       days: [1, 2, 3, 4, 5],
+      repeat: "weekdays",
+      every: 1,
+      unit: "weeks",
+      startsOn: null,
+      enabled: true,
+      snoozeMinutes: 9,
+    });
+  });
+
+  it("fills the form from an interval and saves a change of its number", async () => {
+    const { api } = mount([meds]);
+
+    await press(screen.getByRole("button", { name: "Edit Meds at 06:30" }));
+    const form = screen.getByRole("form", { name: "Edit routine alarm" });
+    expect(pressed(form, "Every…")).toBe("true");
+    expect(
+      (within(form).getByLabelText("Every") as HTMLInputElement).value,
+    ).toBe("97");
+    expect(
+      within(form).getByRole("combobox", { name: "Unit" }).textContent,
+    ).toBe("minutes");
+    expect(
+      (within(form).getByLabelText("Starting") as HTMLInputElement).value,
+    ).toBe("2026-11-25");
+    expect(
+      within(form).queryByRole("button", { name: "Repeat on Monday" }),
+    ).toBeNull();
+
+    fireEvent.change(within(form).getByLabelText("Every"), {
+      target: { value: "45" },
+    });
+    await press(
+      within(form).getByRole("button", { name: "Save routine alarm" }),
+    );
+
+    expect(api.update).toHaveBeenCalledExactlyOnceWith(meds.id, {
+      label: "Meds",
+      hour: 6,
+      minute: 30,
+      days: [],
+      repeat: "interval",
+      every: 45,
+      unit: "minutes",
+      startsOn: "2026-11-25",
+      enabled: true,
+      snoozeMinutes: 9,
+    });
+  });
+
+  it("fills the form from weekdays every 2 weeks and changes an interval to it", async () => {
+    const { api } = mount([fortnight, meds]);
+
+    await press(screen.getByRole("button", { name: "Edit Gym at 05:00" }));
+    let form = screen.getByRole("form", { name: "Edit routine alarm" });
+    expect(pressed(form, "Days of the week")).toBe("true");
+    expect(
+      (within(form).getByLabelText("Every") as HTMLInputElement).value,
+    ).toBe("2");
+    expect(
+      (within(form).getByLabelText("Starting") as HTMLInputElement).value,
+    ).toBe("2026-11-25");
+    expect(
+      within(form)
+        .getByRole("button", { name: "Repeat on Wednesday" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+
+    await press(screen.getByRole("button", { name: "Edit Meds at 06:30" }));
+    form = screen.getByRole("form", { name: "Edit routine alarm" });
+    await press(within(form).getByRole("button", { name: "Days of the week" }));
+    await press(within(form).getByRole("button", { name: "Repeat on Monday" }));
+    await press(
+      within(form).getByRole("button", { name: "Repeat on Wednesday" }),
+    );
+    fireEvent.change(within(form).getByLabelText("Every"), {
+      target: { value: "2" },
+    });
+    expect(
+      within(form).getByText(
+        `Repeats: Every 2 weeks on Mon Wed, from ${startDay("2026-11-25")}. It rings until you stop it.`,
+      ),
+    ).toBeTruthy();
+    await press(
+      within(form).getByRole("button", { name: "Save routine alarm" }),
+    );
+
+    expect(api.update).toHaveBeenCalledExactlyOnceWith(meds.id, {
+      label: "Meds",
+      hour: 6,
+      minute: 30,
+      days: [1, 3],
+      repeat: "weekdays",
+      every: 2,
+      unit: "weeks",
+      startsOn: "2026-11-25",
       enabled: true,
       snoozeMinutes: 9,
     });

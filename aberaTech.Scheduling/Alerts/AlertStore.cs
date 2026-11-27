@@ -627,6 +627,10 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                         StartsOn = step.StartsOn,
                     }),
                 ],
+                Repeat = row.Repeat,
+                Every = row.Every,
+                Unit = row.Unit,
+                StartsOn = row.StartsOn,
             }));
     }
 
@@ -658,9 +662,11 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
         var days = Days(routine);
         await database.Database.ExecuteSqlAsync(
             $"""
-             INSERT INTO "AlertRoutines" ("Id", "Label", "Hour", "Minute", "Days", "Enabled", "SnoozeMinutes", "CreatedAt", "UpdatedAt")
+             INSERT INTO "AlertRoutines" ("Id", "Label", "Hour", "Minute", "Days", "Enabled", "SnoozeMinutes", "CreatedAt", "UpdatedAt",
+                 "Repeat", "Every", "Unit", "StartsOn")
              VALUES ({routine.Id}, {routine.Label}, {(short)routine.Hour}, {(short)routine.Minute}, {days},
-                 {routine.Enabled}, {(short)routine.SnoozeMinutes}, {routine.CreatedAt}, {routine.UpdatedAt})
+                 {routine.Enabled}, {(short)routine.SnoozeMinutes}, {routine.CreatedAt}, {routine.UpdatedAt},
+                 {routine.Repeat}, {routine.Every}, {routine.Unit}, {routine.StartsOn})
              """,
             cancellationToken);
         await InsertStepsAsync(routine, cancellationToken);
@@ -682,6 +688,10 @@ public sealed class DatabaseAlertStore(SchedulingDbContext database) : IAlertSto
                     .SetProperty(row => row.Days, days)
                     .SetProperty(row => row.Enabled, routine.Enabled)
                     .SetProperty(row => row.SnoozeMinutes, (short)routine.SnoozeMinutes)
+                    .SetProperty(row => row.Repeat, routine.Repeat)
+                    .SetProperty(row => row.Every, routine.Every)
+                    .SetProperty(row => row.Unit, routine.Unit)
+                    .SetProperty(row => row.StartsOn, routine.StartsOn)
                     .SetProperty(row => row.UpdatedAt, routine.UpdatedAt),
                 cancellationToken) == 1;
         if (!updated) return false;
