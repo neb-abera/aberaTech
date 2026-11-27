@@ -30,6 +30,15 @@ public sealed class DevBoxOptions
     public bool HasHeartbeat => !string.IsNullOrWhiteSpace(HeartbeatToken);
 
     /// <summary>
+    /// A second shared secret that may call the notify route and nothing
+    /// else: a scheduled routine outside the box presents it to put a notice
+    /// on the owner's phone. It is refused on the heartbeat, so its holder
+    /// cannot report as the box. A container app secret. Unset, only the
+    /// box's own token notifies.
+    /// </summary>
+    public string? NotifyToken { get; init; }
+
+    /// <summary>
     /// Development only: an in-memory VM in place of Azure, so the compose
     /// app can be driven through Start, running, Hold and Park by the
     /// Playwright suite. Ignored outside Development.
