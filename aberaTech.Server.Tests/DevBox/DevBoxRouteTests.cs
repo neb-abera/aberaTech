@@ -24,6 +24,7 @@ public sealed class DevBoxRouteTests : IDisposable
 {
     private const string Subscription = "00000000-0000-0000-0000-00000000dead";
     private const string HeartbeatToken = "box-token-for-tests";
+    private const string NotifyToken = "notify-token-for-tests";
 
     private readonly FakeResourceManager _azure = new();
     private readonly TestApp _app;
@@ -33,6 +34,7 @@ public sealed class DevBoxRouteTests : IDisposable
         var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
         settings["DevBox:SubscriptionId"] = Subscription;
         settings["DevBox:HeartbeatToken"] = HeartbeatToken;
+        settings["DevBox:NotifyToken"] = NotifyToken;
 
         _app = new TestApp(settings, services =>
         {
@@ -302,6 +304,65 @@ public sealed class DevBoxRouteTests : IDisposable
         right.Headers.Authorization = new("Bearer", HeartbeatToken);
         using var accepted = await box.SendAsync(right);
         Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_notify_token_sends_a_notice_and_is_refused_as_the_box()
+    {
+        using var routine = _app.CreateClient();
+        var body = new { kind = "urgent-email", title = "t", message = "m", url = "https://mail.google.com/mail/u/0/#all/18c0ffee" };
+
+        using var notice = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/notify") { Content = JsonContent.Create(body) };
+        notice.Headers.Authorization = new("Bearer", NotifyToken);
+        using var accepted = await routine.SendAsync(notice);
+        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+
+        // The same token on the heartbeat is a wrong token: it cannot report as the box.
+        using var heartbeat = Heartbeat(routine, NotifyToken, new { sessions = 1 });
+        using var refused = await routine.SendAsync(heartbeat);
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+    }
+
+    [Fact]
+    public async Task Without_a_notify_token_only_the_box_token_notifies()
+    {
+        var settings = ProbeSurfaceLimitsTests.Configured(DatabaseMigrationsTests.Unreachable);
+        settings["DevBox:SubscriptionId"] = Subscription;
+        settings["DevBox:HeartbeatToken"] = HeartbeatToken;
+        using var app = new TestApp(settings, services =>
+        {
+            services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+            services.AddSingleton<TokenCredential>(new FakeCredential());
+        });
+        using var caller = app.CreateClient();
+        var body = new { kind = "done", title = "t", message = "m" };
+
+        // An unset token is no token: an empty bearer value is refused.
+        foreach (var token in new[] { NotifyToken, "" })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/notify") { Content = JsonContent.Create(body) };
+            request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {token}");
+            using var response = await caller.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        using var box = new HttpRequestMessage(HttpMethod.Post, "/api/devbox/notify") { Content = JsonContent.Create(body) };
+        box.Headers.Authorization = new("Bearer", HeartbeatToken);
+        using var accepted = await caller.SendAsync(box);
+        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("https://mail.google.com/mail/u/0/#all/18c0ffee", "https://mail.google.com/mail/u/0/#all/18c0ffee")]
+    [InlineData("https://mail.google.com.evil.example/mail", null)]
+    [InlineData("http://mail.google.com/mail/u/0/", null)]
+    [InlineData("https://user@mail.google.com/mail/", null)]
+    [InlineData("https://example.com/", null)]
+    [InlineData("not a link", null)]
+    [InlineData(null, null)]
+    public void A_notice_links_to_Gmail_or_to_nothing(string? url, string? expected)
+    {
+        Assert.Equal(expected, DevBoxNotice.MailLink(url));
     }
 
     [Theory]

@@ -143,12 +143,18 @@ public static partial class DevBoxEndpoints
             }).RequireRateLimiting(HeartbeatPolicy).AllowAnonymous();
 
             // A session on the box telling the owner's phone it finished or
-            // needs him. Pushover's secrets stay here, off the box.
+            // needs him. Pushover's secrets stay here, off the box. A notice
+            // from the box links into the Claude app. The notify token is a
+            // scheduled routine outside the box: its notice links to the
+            // email it is about, or to nothing.
             routes.MapPost(NotifyPath, async (HttpRequest request, DevBoxNotice notice, DevBoxAgentState agent, DevBoxNotifier notifier) =>
             {
-                if (!Authorized(request, options)) return Results.Unauthorized();
+                string? link;
+                if (Authorized(request, options)) link = agent.Last()?.Heartbeat.EnvironmentUrl;
+                else if (Presents(request, options.NotifyToken)) link = DevBoxNotice.MailLink(notice.Url);
+                else return Results.Unauthorized();
 
-                await notifier.SendAsync(notice, agent.Last()?.Heartbeat.EnvironmentUrl, request.HttpContext.RequestAborted);
+                await notifier.SendAsync(notice, link, request.HttpContext.RequestAborted);
                 return Results.Accepted();
             }).RequireRateLimiting(HeartbeatPolicy).AllowAnonymous();
         }
@@ -202,11 +208,18 @@ public static partial class DevBoxEndpoints
         && parsed.Host is "claude.com" or "claude.ai"
         && parsed.AbsolutePath.EndsWith("/oauth/authorize", StringComparison.Ordinal);
 
-    private static bool Authorized(HttpRequest request, DevBoxOptions options)
+    /// <summary>The box's own token: the heartbeat, and a notice from a session on the box.</summary>
+    private static bool Authorized(HttpRequest request, DevBoxOptions options) =>
+        Presents(request, options.HeartbeatToken);
+
+    /// <summary>The request carries this bearer token. An unset token is never presented, whatever the header says.</summary>
+    private static bool Presents(HttpRequest request, string? token)
     {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+
         var header = request.Headers.Authorization.ToString();
         return header.StartsWith("Bearer ", StringComparison.Ordinal)
-               && FixedTimeEquals(header["Bearer ".Length..].Trim(), options.HeartbeatToken!);
+               && FixedTimeEquals(header["Bearer ".Length..].Trim(), token);
     }
 
     private static bool IsAzure(Exception exception) =>

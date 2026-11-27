@@ -8,7 +8,25 @@ public sealed record DevBoxNotice(
     [property: JsonPropertyName("kind")] string? Kind,
     [property: JsonPropertyName("title")] string? Title,
     [property: JsonPropertyName("message")] string? Message,
-    [property: JsonPropertyName("session")] string? Session = null);
+    [property: JsonPropertyName("session")] string? Session = null,
+    [property: JsonPropertyName("url")] string? Url = null)
+{
+    private const string Gmail = "mail.google.com";
+
+    /// <summary>
+    /// The link a notice from outside the box may carry: an https address on
+    /// Gmail's own host, so a tap opens the email. Anything else is no link.
+    /// The phone opens what it is sent, so the host is checked here.
+    /// </summary>
+    public static string? MailLink(string? url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var parsed)
+        && parsed.Scheme == Uri.UriSchemeHttps
+        && parsed.Host == Gmail
+        && parsed.UserInfo.Length == 0
+        && parsed.IsDefaultPort
+            ? url
+            : null;
+}
 
 /// <summary>
 /// Sends dev box notices through Pushover at normal priority, at most
